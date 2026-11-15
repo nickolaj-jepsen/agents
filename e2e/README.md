@@ -116,7 +116,7 @@ The scenarios of a run are played first, together, then the tests read what each
   `start`.
 - **A shared session must not change a snapshot.** A scenario that fails or differs in a
   shared session is run again alone and the difference is printed (`e2e: ... failed in the
-session of ...`): a leak between scenarios, which is a plugin bug to fix, not a snapshot to
+  session of ...`): a leak between scenarios, which is a plugin bug to fix, not a snapshot to
   update.
 - Claude Code now and then starts in its classic renderer ("fullscreen didn't finish
   starting last time"); that start is dropped and made once more, and the run says so.

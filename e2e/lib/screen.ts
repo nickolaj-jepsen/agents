@@ -242,7 +242,7 @@ export function serialize(title: string, grid: Grid): string {
     while (ids[ids.length - 1] === ".") ids.pop();
     // Runs: `2x58` is fifty-eight cells of style 2; `.` is the default style.
     const runs: string[] = [];
-    for (let i = 0; i < ids.length; ) {
+    for (let i = 0; i < ids.length;) {
       let j = i;
       while (ids[j] === ids[i]) j++;
       runs.push(j - i > 1 ? `${ids[i]}x${j - i}` : (ids[i] as string));

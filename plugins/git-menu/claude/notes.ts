@@ -41,15 +41,13 @@ export const notesMenu = ({
     return { kind: "notes", title: "Notes", rows: [], error: "No notes yet." };
   const rows = [...notes]
     .sort((a, b) => b.at - a.at)
-    .map(
-      (note): Row => ({
-        id: note.path,
-        label: note.name,
-        description: age(now - note.at),
-        ...(opener
-          ? { action: { kind: "launch", argv: [...opener, note.path] } }
-          : { unavailable: `no editor: ${note.path}` }),
-      }),
-    );
+    .map((note): Row => ({
+      id: note.path,
+      label: note.name,
+      description: age(now - note.at),
+      ...(opener
+        ? { action: { kind: "launch", argv: [...opener, note.path] } }
+        : { unavailable: `no editor: ${note.path}` }),
+    }));
   return { kind: "notes", title: "Notes", rows, preferred: rows[0]?.id };
 };

@@ -9,7 +9,7 @@ export function decode(buf: Uint8Array): Image {
   let h = 0;
   let channels = 4;
   const idat: Buffer[] = [];
-  for (let at = 8; at < b.length; ) {
+  for (let at = 8; at < b.length;) {
     const len = b.readUInt32BE(at);
     const type = b.toString("latin1", at + 4, at + 8);
     const body = b.subarray(at + 8, at + 8 + len);
