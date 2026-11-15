@@ -3,7 +3,6 @@
  * count in the footer. What a call does to the queue is the core's
  * (`../core/docfix.ts`), the one Claude Code's mod runs.
  */
-import { StringEnum } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
@@ -25,6 +24,12 @@ import { DocsPanel, EMPTY_TEXT } from "./panel.ts";
 import { isTracked, loadAll, remove, repoRoot, save, storeDir } from "./store.ts";
 
 const STATUS_KEY = "docfix";
+
+// `{ type: "string", enum }`, the shape pi-ai's StringEnum emits for providers without anyOf/const,
+// built with TypeBox so `Type.Object` infers the union. StringEnum returns a pi-schema `Schema`,
+// which TypeBox reads as `unknown` once pi ships pi-schema (1.5.2).
+const stringEnum = <const T extends readonly string[]>(values: T) =>
+  Type.Unsafe<T[number]>({ type: "string", enum: [...values] });
 
 type Place = { root: string; dir: string };
 
@@ -53,9 +58,9 @@ export default function (pi: ExtensionAPI) {
     label: "Doc fix",
     description: TOOL_DESCRIPTION,
     parameters: Type.Object({
-      action: StringEnum(["suggest", "resolve"] as const),
+      action: stringEnum(["suggest", "resolve"]),
       file: Type.Optional(Type.String({ description: "Repo-relative path of the doc (suggest)." })),
-      kind: Type.Optional(StringEnum(KINDS)),
+      kind: Type.Optional(stringEnum(KINDS)),
       claim: Type.Optional(
         Type.String({ description: "One line: what the doc should say, or why it is wrong." }),
       ),
