@@ -1,0 +1,117 @@
+# docfix/claude/extreme 240x60 @164,0 (76x54)
+│                                                                         ✕
+│ ─ Doc suggestions  5 ────────────────────────────────────────────────────
+│
+│ AGENTS.md ───────────────────────────────────────────────────────────────
+│ □ The section says the build verifies a pi change, but the build only
+│   type-checks the cores and the pi halves and never starts an agent, so …
+│   ! wrong  12×  ••
+│ □ UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbroke
+│   nUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbro…
+│   + missing  3×  ••
+│
+│ docs/a-very-long-directory-name/with/several/nested/levels/and-an-equall…
+│ □ A claim under a very long target path, so the group header must be cut.
+│   ↻ stale  1×  age
+│
+│ docs/hosts.md ───────────────────────────────────────────────────────────
+│ □ Short.
+│   ↻ stale  1×  ••
+│
+│ docs/日本語のドキュメント.md ────────────────────────────────────────────
+│ □ この節は古くなっています。ビルドが検証するのは型だけで、エージェントを
+│   起動しないことを書き足す必要があります。全角文字と半角文字が混ざった長…
+│   + missing  100×  ••
+│
+│ Enter marks a row; apply or dismiss the marked rows, or the focused one.
+│
+│ a: apply   d: dismiss   q: later
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+--- styles
+1 .x73 2
+1 . 2x2 3x15 2x56
+1
+1 . 3x9 2x64
+1
+1
+1 .x3 4x7 .x2 5x3 .x2 2x2
+1
+1
+1 .x3 2x9 .x2 5x2 .x2 2x2
+1
+1 . 3x73
+1
+1 .x3 2x7 .x2 2x2 .x2 2x4
+1
+1 . 3x13 2x60
+1
+1 .x3 2x7 .x2 2x2 .x2 2x2
+1
+1 . 3x28 2x45
+1
+1
+1 .x3 2x9 .x2 5x4 .x2 2x2
+1
+1 . 2x72
+1
+1 . 6 2x7 .x3 6 2x9 .x3 6 2x7
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+--- legend
+1 dim
+2 fg=#999999
+3 bold
+4 fg=#ff6b80
+5 fg=#ffc107
+6 fg=#b1b9f9

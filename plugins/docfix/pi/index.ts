@@ -20,7 +20,8 @@ import {
   TOOL_NAME,
   type Suggestion,
 } from "../core/docfix.ts";
-import { DocsPanel } from "./panel.ts";
+import { overlayOptions } from "../../../kit/pi/ui.ts";
+import { DocsPanel, EMPTY_TEXT } from "./panel.ts";
 import { isTracked, loadAll, remove, repoRoot, save, storeDir } from "./store.ts";
 
 const STATUS_KEY = "docfix";
@@ -121,6 +122,8 @@ export default function (pi: ExtensionAPI) {
         );
         return;
       }
+      const initial = await load();
+      const empty = openQueue(initial).length === 0;
       const picked = await ctx.ui.custom<Suggestion[] | undefined>(
         (tui, theme, _keybindings, done) =>
           new DocsPanel(
@@ -134,11 +137,15 @@ export default function (pi: ExtensionAPI) {
                 await refresh(ctx);
               },
             },
+            initial,
             done,
           ),
         {
           overlay: true,
-          overlayOptions: { anchor: "center", width: "92%", minWidth: 40, margin: 1 },
+          // Two panes while there is a queue; the empty state is a small dialog.
+          overlayOptions: empty
+            ? overlayOptions("auto", EMPTY_TEXT.length + 4)
+            : overlayOptions("split"),
         },
       );
       await refresh(ctx);

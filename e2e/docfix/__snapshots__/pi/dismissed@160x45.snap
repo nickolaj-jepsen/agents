@@ -1,0 +1,34 @@
+# docfix/pi/dismissed 160x45 @18,16 (124x12)
+╭─ Doc suggestions  2 ─────────────────────────────────────────────┬───────────────────────────────────────────────────────╮
+│                                                                  │                                                       │
+│ docs/hosts.md ────────────────────────────────────────────────── │ The `legacy` card was removed; the section still      │
+│ ❯ □ The `legacy` card was removed; the section    ↻    2×    ••• │ describes it.                                         │
+│     still describes it.                                          │                                                       │
+│                                                                  │ ↻ stale   seen 2×   <age>                             │
+│ docs/modules.md ──────────────────────────────────────────────── │                                                       │
+│   □ A leaf that imports a third-party module      +    1×     •• │ Evidence ──────────────────────────────────────────── │
+│     imports it on every host; the page should s…                 │ <date>      docs/hosts.md: the line contradicts what  │
+│                                                                  │             the code does now.                        │
+│ Dismissed 1                                                                                                              │
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────┴───────────────────────────────────────────────────────╯
+--- styles
+1x3 2x15 .x2 3 . 1x102
+1 .x66 1 .x55 1
+1 . 4x13 . 3x50 . 1 . 5x48 .x6 1
+1 . 6 . 3 . 6x42 .x4 5 .x2 3x4 .x2 3x5 . 1 . 5x13 .x41 1
+1 .x5 6x19 .x42 1 .x55 1
+1 .x66 1 . 5 . 3x5 .x3 3x7 .x3 3x11 .x23 1
+1 . 4x15 . 3x48 . 1 .x55 1
+1 .x3 3 . 5x40 .x6 5 .x2 3x4 .x2 3x5 . 1 . 4x8 . 3x44 . 1
+1 .x5 5x43 .x18 1 . 3x10 .x2 5x40 .x2 1
+1 .x66 1 .x13 5x18 .x24 1
+1 . 7x11 .x110 1
+1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x2 . 5x3 . 3x5 . 1x62
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#878580
+4 fg=#dad8ce bold
+5 fg=#dad8ce
+6 fg=#cf6a4c
+7 fg=#879a39

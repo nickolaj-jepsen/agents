@@ -1,0 +1,17 @@
+# docfix/pi/empty 160x45 @50,20 (60x5)
+╭─ Doc suggestions ────────────────────────────────────────╮
+│                                                          │
+│ Nothing to review: no open doc suggestions in this repo. │
+│                                                          │
+╰─ esc close ──────────────────────────────────────────────╯
+--- styles
+1x3 2x15 . 1x41
+1 .x58 1
+1 . 3x56 . 1
+1 .x58 1
+1x3 4x3 . 3x5 . 1x47
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#878580
+4 fg=#dad8ce

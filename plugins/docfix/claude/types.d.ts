@@ -16,6 +16,9 @@ export type Suggestion = {
   evidence: Evidence[];
 };
 
+/** What the line under the list says after an action, and in which role. */
+export type Said = { text: string; status: "success" | "warning" | "error" };
+
 declare module "claude-code" {
   interface PluginState {
     docfix: {
@@ -26,7 +29,7 @@ declare module "claude-code" {
       /** The key of the pane element holding the focus ring. */
       focused: string | null;
       /** One line under the list after an action. */
-      notice: string;
+      notice: Shaped<Said>;
     };
   }
 }

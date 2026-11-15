@@ -1,0 +1,87 @@
+# docfix/claude/focused 160x45 @88,0 (72x39)
+│                                                                     ✕
+│ ─ Doc suggestions  3 ────────────────────────────────────────────────
+│
+│ AGENTS.md ───────────────────────────────────────────────────────────
+│ □ `just build` is not enough to verify a pi change; the docs say it
+│   is.
+│   ! wrong  3×  ••
+│
+│ docs/hosts.md ───────────────────────────────────────────────────────
+│ □ The `legacy` card was removed; the section still describes it.
+│   ↻ stale  2×  age
+│
+│ docs/modules.md ─────────────────────────────────────────────────────
+│ □ A leaf that imports a third-party module imports it on every host;
+│   the page should say that module must be inert when the feature is …
+│   + missing  1×  ••
+│
+│ Evidence ────────────────────────────────────────────────────────────
+│ <date>      docs/hosts.md: the line contradicts what the code does
+│             now.
+│
+│ a: apply   d: dismiss   q: later
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+--- styles
+1 .x69 2
+1 . 2x2 3x15 2x52
+1
+1 . 3x9 2x60
+1
+1
+1 .x3 4x7 .x2 5x2 .x2 2x2
+1
+1 . 3x13 2x56
+1
+1 .x3 2x7 .x2 2x2 .x2 2x3
+1
+1 . 3x15 2x54
+1
+1
+1 .x3 2x9 .x2 2x2 .x2 2x2
+1
+1 . 3x8 2x61
+1 . 2x10
+1
+1
+1 . 6 2x7 .x3 6 2x9 .x3 6 2x7
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+--- legend
+1 dim
+2 fg=#999999
+3 bold
+4 fg=#ff6b80
+5 fg=#ffc107
+6 fg=#b1b9f9

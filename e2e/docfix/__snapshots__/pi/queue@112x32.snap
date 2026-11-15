@@ -1,0 +1,41 @@
+# docfix/pi/queue 112x32 @1,8 (110x15)
+╭─ Doc suggestions  3 ──────────────────────────────────────┬────────────────────────────────────────────────╮
+│                                                           │                                                │
+│ AGENTS.md ─────────────────────────────────────────────── │ `just build` is not enough to verify a pi      │
+│ ❯ □ `just build` is not enough to verify   !    3×     •• │ change; the docs say it is.                    │
+│     a pi change; the docs say it is.                      │                                                │
+│                                                           │ ! wrong   seen 3×   <age>                      │
+│ docs/hosts.md ─────────────────────────────────────────── │                                                │
+│   □ The `legacy` card was removed; the     ↻    2×    ••• │ Evidence ───────────────────────────────────── │
+│     section still describes it.                           │ <date>                                         │
+│                                                           │ AGENTS.md: the line contradicts what the code  │
+│ docs/modules.md ───────────────────────────────────────── │ does now.                                      │
+│   □ A leaf that imports a third-party      +    1×     •• │                                                │
+│     module imports it on every host; the…                 │                                                │
+│                                                           │                                                │
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ───────────┴─ esc later ────────────────────────────────────╯
+--- styles
+1x3 2x15 .x2 3 . 1x88
+1 .x59 1 .x48 1
+1 . 4x9 . 3x47 . 1 . 5x41 .x6 1
+1 . 6 . 3 . 6x36 .x3 7 .x2 8x4 .x2 3x5 . 1 . 5x27 .x20 1
+1 .x5 6x32 .x22 1 .x48 1
+1 .x59 1 . 7 . 3x5 .x3 8x7 .x3 3x10 .x17 1
+1 . 4x13 . 3x43 . 1 .x48 1
+1 .x3 3 . 5x34 .x5 5 .x2 3x4 .x2 3x5 . 1 . 4x8 . 3x37 . 1
+1 .x5 5x27 .x27 1 . 3x10 .x37 1
+1 .x59 1 . 5x45 .x2 1
+1 . 4x15 . 3x41 . 1 . 5x9 .x38 1
+1 .x3 3 . 5x33 .x6 5 .x2 3x4 .x2 3x5 . 1 .x48 1
+1 .x5 5x36 .x18 1 .x48 1
+1 .x59 1 .x48 1
+1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x13 . 5x3 . 3x5 . 1x37
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#878580
+4 fg=#dad8ce bold
+5 fg=#dad8ce
+6 fg=#cf6a4c
+7 fg=#d14d41
+8 fg=#d0a215

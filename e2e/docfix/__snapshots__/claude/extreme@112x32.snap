@@ -1,0 +1,60 @@
+# docfix/claude/extreme 112x32 @62,0 (50x26)
+│                                               ✕
+│ ─ Doc suggestions  5 ──────────────────────────
+│
+│ AGENTS.md ─────────────────────────────────────
+│ □ The section says the build verifies a pi
+│   change, but the build only type-checks the
+│   cores and the pi halves and never starts an …
+│   ! wrong  12×  ••
+│ □ UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbro
+│   kenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUn
+│   brokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrok…
+│   + missing  3×  ••
+│
+│ docs/a-very-long-directory-name/with/several/n…
+│ □ A claim under a very long target path, so the
+│   group header must be cut.
+│   ↻ stale  1×  age
+│
+│ docs/hosts.md ─────────────────────────────────
+│ □ Short.
+│   ↻ stale  1×  ••
+│
+│ docs/日本語のドキュメント.md ──────────────────
+│ □ この節は古くなっています。ビルドが検証するの
+│   は型だけで、エージェントを起動しないことを書
+│
+--- styles
+1 .x47 2
+1 . 2x2 3x15 2x30
+1
+1 . 3x9 2x38
+1
+1
+1
+1 .x3 4x7 .x2 5x3 .x2 2x2
+1
+1
+1
+1 .x3 2x9 .x2 5x2 .x2 2x2
+1
+1 . 3x47
+1
+1
+1 .x3 2x7 .x2 2x2 .x2 2x4
+1
+1 . 3x13 2x34
+1
+1 .x3 2x7 .x2 2x2 .x2 2x2
+1
+1 . 3x28 2x19
+1
+1
+1
+--- legend
+1 dim
+2 fg=#999999
+3 bold
+4 fg=#ff6b80
+5 fg=#ffc107

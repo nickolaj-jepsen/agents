@@ -1,0 +1,55 @@
+# docfix/pi/wheel 70x24 @1,1 (68x22)
+╭─ Doc suggestions  28 ────────────────────────────────────────────╮
+│                                                                  │
+│     ↑ 15 more                                                    │
+│ docs/modules.md ──────────────────────────────────────────────── │
+│   □ Claim number 16 about docs/modules.md: the    !    4×    ••• │
+│     page no longer matches what the code does.                   │
+│   □ Claim number 18 about docs/modules.md: the    ↻    2×    ••• │
+│     page no longer matches what the code does.                   │
+│ ❯ □ Claim number 17 about docs/modules.md: the    +    1×    ••• │
+│     page no longer matches what the code does.                   │
+│     ↓ 10 more                                                    │
+│                                                                  │
+│ Claim number 17 about docs/modules.md: the page no longer        │
+│ matches what the code does.                                      │
+│                                                                  │
+│ + missing   seen 1×   <age>                                      │
+│                                                                  │
+│ Evidence ─────────────────────────────────────────────────────── │
+│ <date>      docs/modules.md: the line contradicts what the code  │
+│             does now.                                            │
+│                                                                  │
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
+--- styles
+1x3 2x15 .x2 3x2 . 1x45
+1 .x66 1
+1 .x5 3x9 .x52 1
+1 . 4x15 . 3x48 . 1
+1 .x3 3 . 5x42 .x4 6 .x2 7x4 .x2 3x5 . 1
+1 .x5 5x42 .x19 1
+1 .x3 3 . 5x42 .x4 5 .x2 3x4 .x2 3x5 . 1
+1 .x5 5x42 .x19 1
+1 . 8 . 3 . 8x42 .x4 5 .x2 3x4 .x2 3x5 . 1
+1 .x5 8x42 .x19 1
+1 .x5 3x9 .x52 1
+1 .x66 1
+1 . 5x57 .x8 1
+1 . 5x27 .x38 1
+1 .x66 1
+1 . 5 . 3x7 .x3 3x7 .x3 3x11 .x32 1
+1 .x66 1
+1 . 4x8 . 3x55 . 1
+1 . 3x10 .x2 5x51 .x2 1
+1 .x13 5x9 .x44 1
+1 .x66 1
+1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x2 . 5x3 . 3x5 . 1x6
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#878580
+4 fg=#dad8ce bold
+5 fg=#dad8ce
+6 fg=#d14d41
+7 fg=#d0a215
+8 fg=#cf6a4c

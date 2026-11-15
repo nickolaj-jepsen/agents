@@ -1,0 +1,86 @@
+# docfix/claude/many 160x45 @88,0 (72x39)
+│                                                                     ✕
+│ ─ Doc suggestions  28 ───────────────────────────────────────────────
+│
+│ AGENTS.md ───────────────────────────────────────────────────────────
+│ □ Claim number 4 about AGENTS.md: the page no longer matches what the
+│   code does.
+│   ! wrong  4×  age
+│ □ Claim number 3 about AGENTS.md: the page no longer matches what the
+│   code does.
+│   ↻ stale  3×  age
+│ □ Claim number 2 about AGENTS.md: the page no longer matches what the
+│   code does.
+│   + missing  2×  ••
+│ □ Claim number 1 about AGENTS.md: the page no longer matches what the
+│   code does.
+│   ! wrong  1×  ••
+│
+│ docs/agents.md ──────────────────────────────────────────────────────
+│ □ Claim number 8 about docs/agents.md: the page no longer matches
+│   what the code does.
+│   + missing  4×  ••
+│ □ Claim number 7 about docs/agents.md: the page no longer matches
+│   what the code does.
+│   ! wrong  3×  age
+│ □ Claim number 6 about docs/agents.md: the page no longer matches
+│   what the code does.
+│   ↻ stale  2×  age
+│ □ Claim number 5 about docs/agents.md: the page no longer matches
+│   what the code does.
+│   + missing  1×  age
+│
+│ docs/homelab.md ─────────────────────────────────────────────────────
+│ □ Claim number 11 about docs/homelab.md: the page no longer matches
+│   what the code does.
+│   + missing  3×  age
+│ □ Claim number 10 about docs/homelab.md: the page no longer matches
+│   what the code does.
+│   ! wrong  2×  age
+│
+--- styles
+1 .x69 2
+1 . 2x2 3x15 2x52
+1
+1 . 3x9 2x60
+1
+1
+1 .x3 4x7 .x2 5x2 .x2 2x3
+1
+1
+1 .x3 2x7 .x2 5x2 .x2 2x3
+1
+1
+1 .x3 2x9 .x2 2x2 .x2 2x2
+1
+1
+1 .x3 4x7 .x2 2x2 .x2 2x2
+1
+1 . 3x14 2x55
+1
+1
+1 .x3 2x9 .x2 5x2 .x2 2x2
+1
+1
+1 .x3 4x7 .x2 5x2 .x2 2x3
+1
+1
+1 .x3 2x7 .x2 2x2 .x2 2x3
+1
+1
+1 .x3 2x9 .x2 2x2 .x2 2x3
+1
+1 . 3x15 2x54
+1
+1
+1 .x3 2x9 .x2 5x2 .x2 2x3
+1
+1
+1 .x3 4x7 .x2 2x2 .x2 2x3
+1
+--- legend
+1 dim
+2 fg=#999999
+3 bold
+4 fg=#ff6b80
+5 fg=#ffc107

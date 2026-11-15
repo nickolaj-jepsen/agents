@@ -24,6 +24,22 @@ import {
   type Input,
   type Suggestion,
 } from "../core/docfix";
+import type { Said } from "./types.d.ts";
+import {
+  buttonRow,
+  emptyState,
+  entries,
+  kitOf,
+  list as listOf,
+  notice,
+  paneOptions,
+  paneTitle,
+  section,
+  tokens,
+  widthCap,
+  type Cell,
+  type ListGroup,
+} from "./ui";
 
 const PANE = "docfix";
 
@@ -33,7 +49,16 @@ const queue = atom({ plugin: "docfix", key: "queue" } as const, [] as Suggestion
 });
 const marked = atom({ plugin: "docfix", key: "marked" } as const, [] as string[]);
 const focused = atom({ plugin: "docfix", key: "focused" } as const, null as string | null);
-const notice = atom({ plugin: "docfix", key: "notice" } as const, "");
+const said = atom(
+  { plugin: "docfix", key: "notice" } as const,
+  { text: "", status: "warning" } as Said,
+  {
+    shape: "notice-2",
+  },
+);
+
+const say = ($: EngineInterface, text: string, status: Said["status"] = "warning") =>
+  update($, said, () => ({ text, status }));
 
 type Place = { root: string; dir: string };
 
@@ -79,14 +104,16 @@ async function refresh($: EngineInterface, where?: Place | string) {
 }
 
 async function openPane($: EngineInterface) {
-  await update($, notice, () => "");
+  await say($, "");
   await refresh($);
-  const opened = await $.ui.open({
-    id: PANE,
-    title: "Doc suggestions",
-    focus: true,
-    closeOnEscape: true,
-  });
+  const opened = await $.ui.open(
+    paneOptions({
+      id: PANE,
+      title: "Doc suggestions",
+      focus: true,
+      closeOnEscape: true,
+    }),
+  );
   if (!opened.isPlaced) $.ui.toast(`The doc suggestions pane can't show yet: ${opened.reason}`);
 }
 
@@ -103,7 +130,7 @@ async function picked($: EngineInterface): Promise<Suggestion[]> {
 
 async function applyPicked($: EngineInterface) {
   const chosen = await picked($);
-  if (chosen.length === 0) return update($, notice, () => "Mark a suggestion, or focus one, first");
+  if (chosen.length === 0) return say($, "Mark a suggestion, or focus one, first");
   await update($, marked, () => []);
   await $.ui.close({ id: PANE });
   for (const [target, list] of byTarget(chosen))
@@ -112,15 +139,53 @@ async function applyPicked($: EngineInterface) {
 
 async function dismissPicked($: EngineInterface) {
   const chosen = await picked($);
-  if (chosen.length === 0) return update($, notice, () => "Mark a suggestion, or focus one, first");
+  if (chosen.length === 0) return say($, "Mark a suggestion, or focus one, first");
   const where = await place($);
-  if (typeof where === "string") return update($, notice, () => where);
+  if (typeof where === "string") return say($, where, "error");
   const now = new Date(await $.clock.now()).toISOString();
   for (const s of chosen) await save($, where.dir, dismiss(s, now));
   await update($, marked, (ids) => ids.filter((id) => !chosen.some((s) => s.id === id)));
   await refresh($, where);
-  await update($, notice, () => `Dismissed ${chosen.length}`);
+  await say($, `Dismissed ${chosen.length}`, "success");
 }
+
+/** Rows a title may take; `TITLE_TARGET` characters of it, so a wider pane shows fewer lines. */
+const TITLE_LINES = 3;
+const TITLE_TARGET = 120;
+/** The newest evidence shown for the focused suggestion, and the lines each may take. */
+const EVIDENCE = 3;
+const EVIDENCE_LINES = 4;
+/** From this width an inline pane puts metadata in columns. */
+const WIDE = 72;
+
+const DAY = 86_400_000;
+/** `5m`, `3h`, `40d`: how long ago, in at most four cells. */
+const age = (iso: string, now: number) => {
+  const ms = Math.max(0, now - Date.parse(iso));
+  if (Number.isNaN(ms)) return "";
+  if (ms >= DAY) return `${Math.floor(ms / DAY)}d`;
+  if (ms >= 3_600_000) return `${Math.floor(ms / 3_600_000)}h`;
+  return `${Math.floor(ms / 60_000)}m`;
+};
+
+/** `icon word`, `N×` and the age: dim, but `!` is error and a count from 3× is warning. */
+const metaOf = (s: Suggestion, now: number): Cell[] => {
+  const count = seen(s);
+  return [
+    {
+      text: `${tokens.glyph.kind[s.kind]} ${s.kind}`,
+      width: 9,
+      role: s.kind === "wrong" ? "error" : "dim",
+    },
+    {
+      text: `${count}${tokens.glyph.times}`,
+      width: 4,
+      align: "right",
+      role: count >= 3 ? "warning" : "dim",
+    },
+    { text: age(s.updated, now), width: 4, align: "right" },
+  ];
+};
 
 export const register: Register = (on) => {
   on("session.start", async ($, e, next) => {
@@ -189,90 +254,85 @@ export const register: Register = (on) => {
   }).catch((_$, e, next) => next(e));
 
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
-    const { Box, Text, Button } = $.ui.resolve(e);
-    const list = await read($, queue);
+    const els = $.ui.resolve(e);
+    const { Box } = els;
+    const kit = kitOf(els, e.surface);
+    const queued = await read($, queue);
     const ids = new Set(await read($, marked));
     const focus = await read($, focused);
-    const said = await read($, notice);
-    const width = e.props.bodyColumns;
+    const { text: noted, status } = await read($, said);
+    const now = await $.clock.now();
+    const isInline = e.props.placement === "inline";
+    // One cell of padding, which the inline box's own border already gives; and never wider
+    // than a reading column.
+    const padding = isInline ? 0 : tokens.padding;
+    const width = widthCap("reading", e.props.bodyColumns - 2 * padding);
     const toggle = (id: string) =>
       update($, marked, (current) =>
         current.includes(id) ? current.filter((x) => x !== id) : [...current, id],
       );
-
-    if (list.length === 0)
-      return (
-        <Box flexDirection="column">
-          <Text dimColor>Nothing to review: no open doc suggestions in this repo.</Text>
-          <Button
-            key="close"
-            role="dismiss"
-            hotkey="q"
-            label="Close"
-            onPress={() => $.ui.close({ id: PANE })}
-          />
-        </Box>
-      );
-
-    const rows: RenderNode[] = [];
-    let last = "";
-    for (const s of list) {
-      if (s.target !== last) {
-        rows.push(
-          <Text key={`t:${s.target}`} color="claude">
-            {s.target}
-          </Text>,
-        );
-        last = s.target;
-      }
-      const claim =
-        s.claim.length > width - 24 ? `${s.claim.slice(0, Math.max(10, width - 25))}…` : s.claim;
-      rows.push(
-        <Button key={`row:${s.id}`} plain onPress={() => toggle(s.id)}>
-          {ids.has(s.id) ? "■ " : "□ "}
-          {claim}{" "}
-          <Text dimColor>
-            · {s.kind} · seen {seen(s)}×
-          </Text>
-        </Button>,
-      );
-    }
-    const current = list.find((s) => `row:${s.id}` === focus);
-    const evidence = current?.evidence.at(-1);
-
-    return (
-      <Box flexDirection="column">
-        {rows}
-        <Box marginTop={1} flexDirection="column">
-          {evidence ? (
-            <Text dimColor>
-              {evidence.at.slice(0, 10)} {evidence.session}: {evidence.text}
-            </Text>
-          ) : (
-            <Text dimColor>
-              Enter marks a row; apply or dismiss the marked rows, or the focused one.
-            </Text>
-          )}
-          {said ? <Text color="warning">{said}</Text> : null}
-        </Box>
-        <Box marginTop={1} gap={2}>
-          <Button
-            key="apply"
-            hotkey="a"
-            variant="primary"
-            label="Apply"
-            onPress={() => applyPicked($)}
-          />
-          <Button key="dismiss" hotkey="d" label="Dismiss" onPress={() => dismissPicked($)} />
-          <Button
-            key="close"
-            role="dismiss"
-            hotkey="q"
-            label="Later"
-            onPress={() => $.ui.close({ id: PANE })}
-          />
-        </Box>
+    const close = () => $.ui.close({ id: PANE });
+    const frame = (...blocks: (JSX.Element | null)[]) => (
+      <Box flexDirection="column" rowGap={1} paddingX={padding}>
+        {blocks}
       </Box>
+    );
+    const head = paneTitle(kit, width, "Doc suggestions", queued.length || undefined);
+
+    if (queued.length === 0)
+      return frame(
+        head,
+        emptyState(kit, width, "Nothing to review: no open doc suggestions in this repo."),
+        buttonRow(kit, [{ hotkey: "q", label: "close", press: close, isLit: true }]),
+      );
+
+    const groups: ListGroup[] = [];
+    for (const s of queued) {
+      const last = groups.at(-1);
+      const row = {
+        key: `row:${s.id}`,
+        title: s.claim,
+        isMarked: ids.has(s.id),
+        meta: metaOf(s, now),
+        onPress: () => toggle(s.id),
+      };
+      if (last?.title === s.target) last.rows.push(row);
+      else groups.push({ title: s.target, rows: [row] });
+    }
+    const current = queued.find((s) => `row:${s.id}` === focus);
+    const wide = isInline && width >= WIDE;
+    return frame(
+      head,
+      listOf(kit, groups, {
+        width,
+        isColumns: wide,
+        title: { target: TITLE_TARGET, max: TITLE_LINES },
+      }),
+      current ? (
+        <Box flexDirection="column">
+          {section(kit, width, "Evidence")}
+          {entries(
+            kit,
+            width,
+            current.evidence
+              .slice(-EVIDENCE)
+              .map((ev) => ({ date: ev.at.slice(0, 10), text: ev.text })),
+            { lines: { max: EVIDENCE_LINES } },
+          )}
+        </Box>
+      ) : (
+        emptyState(
+          kit,
+          width,
+          "Enter marks a row; apply or dismiss the marked rows, or the focused one.",
+        )
+      ),
+      noted ? notice(kit, width, noted, status) : null,
+      buttonRow(kit, [
+        { hotkey: "a", label: "apply", press: () => applyPicked($), isLit: ids.size > 0 },
+        { hotkey: "d", label: "dismiss", press: () => dismissPicked($) },
+        { hotkey: "q", label: "later", press: close },
+      ]),
     );
   });
 };
