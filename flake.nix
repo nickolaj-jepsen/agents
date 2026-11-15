@@ -24,10 +24,27 @@
         skillsDir = ./skills;
         dirs = dir: lib.filterAttrs (_: type: type == "directory") (builtins.readDir dir);
       in {
-        # Adds `pkgs.agent-tools` and `pkgs.tui-test`. agent-tools type-checks the pi halves
-        # against `pkgs.pi-coding-agent`, so a system that ships its own pi gets checked
-        # against that one; apply this on a pkgs that has it.
-        overlays.default = final: _prev: {
+        # The pins: Claude Code and pi, ahead of nixpkgs, from the nixpkgs-unstable this flake
+        # locks (the pi pin overrides that derivation, so it is only known to build on that rev).
+        # The plugins' checks and the pi halves' type-check run against exactly these.
+        overlays.pins = final: _prev: let
+          unstable = import inputs.nixpkgs-unstable {
+            inherit (final.stdenv.hostPlatform) system;
+            inherit (final) config;
+          };
+        in {
+          claude-code = final.callPackage ./pkgs/claude-code/package.nix {inherit unstable;};
+          pi-coding-agent = final.callPackage ./pkgs/pi-coding-agent/package.nix {inherit unstable;};
+        };
+
+        # The pins, plus `pkgs.agent-tools` (checked against them) and `pkgs.tui-test`. A
+        # consumer that wants only the tools takes `overlays.tools` and brings its own
+        # `pkgs.pi-coding-agent`.
+        overlays.default = lib.composeManyExtensions [
+          self.overlays.pins
+          self.overlays.tools
+        ];
+        overlays.tools = final: _prev: {
           agent-tools = final.callPackage ./pkgs/agent-tools/package.nix {};
           tui-test = final.callPackage ./pkgs/tui-test/package.nix {};
         };
@@ -70,17 +87,9 @@
         ...
       }: let
         inherit (nixpkgs) lib;
-        unstable = import inputs.nixpkgs-unstable {
-          inherit system;
-          config.allowUnfree = true;
-        };
-        # The pi the pi halves are type-checked against and the Claude Code each mod is tested
-        # against are pinned in pkgs/, ahead of nixpkgs. A system that pins others builds the
-        # same outputs against its own.
-        pi-coding-agent = pkgs.callPackage ./pkgs/pi-coding-agent/package.nix {inherit unstable;};
-        claude-code = pkgs.callPackage ./pkgs/claude-code/package.nix {inherit unstable;};
-        checkPkgs = pkgs.extend (_: _: {inherit pi-coding-agent;});
-        agent-tools = checkPkgs.callPackage ./pkgs/agent-tools/package.nix {};
+        # Everything the checks build runs against the pins.
+        checkPkgs = pkgs.extend self.overlays.default;
+        inherit (checkPkgs) agent-tools claude-code pi-coding-agent tui-test;
         claudePlugins = lib.attrNames (lib.filterAttrs (_: plugin: plugin.claude) self.lib.plugins);
 
         # The marketplace publishes each Claude half from its folder; `skills` is the other entry.
@@ -97,7 +106,7 @@
         packages =
           {
             inherit agent-tools;
-            tui-test = pkgs.callPackage ./pkgs/tui-test/package.nix {};
+            inherit tui-test;
             default = agent-tools;
           }
           // lib.optionalAttrs pkgs.stdenv.isLinux {
