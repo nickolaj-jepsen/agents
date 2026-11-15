@@ -19,13 +19,13 @@ dev-setup: _dev-setup-direnv _dev-setup-pi _dev-setup-claude
 _dev-setup-direnv:
     if command -v direnv >/dev/null 2>&1; then direnv allow .; fi
 
-# Links nixpkgs-unstable's pi into node_modules, so `npm run typecheck` reads the plugins' pi
+# Links nixpkgs' pi (master) into node_modules, so `npm run typecheck` reads the plugins' pi
 # halves against it, as `nix build .#agent-tools` does. `npm ci` prunes the links; re-run this.
 [private]
 [script]
 _dev-setup-pi:
     [ -d node_modules ] || npm ci
-    pi=$({{ nixcmd }} build --no-link --print-out-paths --inputs-from . nixpkgs-unstable#pi-coding-agent)/lib/node_modules/pi-monorepo
+    pi=$({{ nixcmd }} build --no-link --print-out-paths --inputs-from . nixpkgs#pi-coding-agent)/lib/node_modules/pi-monorepo
     mkdir -p node_modules/@earendil-works node_modules/@types
     ln -sfn "$pi" node_modules/@earendil-works/pi-coding-agent
     for dep in "$pi"/node_modules/@earendil-works/*; do ln -sfn "$dep" node_modules/@earendil-works/; done

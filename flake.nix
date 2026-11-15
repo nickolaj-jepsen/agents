@@ -70,12 +70,9 @@
         ...
       }: let
         inherit (nixpkgs) lib;
-        # The checks run against nixpkgs-unstable's Claude Code and pi, which track upstream.
-        unstable = import inputs.nixpkgs-unstable {
-          inherit system;
-          config.allowUnfree = true;
-        };
-        inherit (unstable) claude-code pi-coding-agent;
+        # nixpkgs is master: Claude Code and pi land there days before unstable, and the
+        # plugins follow their newest API. A consumer overrides it with its own.
+        inherit (pkgs) claude-code pi-coding-agent;
         checkPkgs = (pkgs.extend (_: _: {inherit claude-code pi-coding-agent;})).extend self.overlays.default;
         inherit (checkPkgs) agent-tools tui-test;
         claudePlugins = lib.attrNames (lib.filterAttrs (_: plugin: plugin.claude) self.lib.plugins);
@@ -103,8 +100,8 @@
             marketplace = assert lib.assertMsg marketplaceMatches ".claude-plugin/marketplace.json lists ${toString published}; plugins/ has ${toString expected}";
               pkgs.emptyFile;
           }
-          # Every plugin with a Claude half, validated and tested against the pinned Claude Code.
-          // lib.optionalAttrs pkgs.stdenv.isLinux (lib.genAttrs (map (name: "claude-${name}") claudePlugins) (
+          # Every plugin with a Claude half, validated and tested against nixpkgs' Claude Code.
+          // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux (lib.genAttrs (map (name: "claude-${name}") claudePlugins) (
             check:
               self.lib.mkClaudePlugin {
                 pkgs = checkPkgs;
@@ -117,9 +114,8 @@
     };
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
-    # pi and Claude Code, which the checks run the plugins against; the stable channel lags them.
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    # master, for the newest claude-code and pi-coding-agent the checks run the plugins against.
+    nixpkgs.url = "github:nixos/nixpkgs/master";
 
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";

@@ -11,7 +11,7 @@ wires the plugins and skills into the agents; that wiring does not live here.
 All operations use `just`; run `just` for the full list.
 
 ```bash
-just dev-setup           # npm ci, link nixpkgs-unstable's pi into node_modules, lay the mods' Claude Code types
+just dev-setup           # npm ci, link nixpkgs' pi into node_modules, lay the mods' Claude Code types
 just test                # vitest over the harness-free cores
 just typecheck           # tsc -b over cores, pi halves, kit and e2e
 just kit-sync            # after editing kit/claude/ui.tsx or kit/catalog/samples.ts
@@ -47,7 +47,7 @@ New files must be `git add`ed or the flake ignores them.
   under `pi` (`"agentTools": {"subagents": true}` loads it in subagents too, else only the session you
   started), and it imports the plugin's `core/` directly. A plugin can be pi-only, with no Claude half.
 - The pi halves type-check against the `pi-coding-agent` of the `pkgs` that builds `agent-tools`
-  (nixpkgs-unstable's in this flake's checks, the system's own when consumed through the overlay).
+  (nixpkgs master's in this flake's checks, the system's own when consumed through the overlay).
   That resolves `@earendil-works/pi-ai` to its
   published types, which carry no TypeBox re-exports, so code imports `Type` from `typebox`, the copy pi
   aliases to the one it loads.
@@ -84,7 +84,7 @@ New files must be `git add`ed or the flake ignores them.
 ## Dependencies
 
 Dependabot updates `flake.lock` in one daily PR (`.github/dependabot.yml`), auto-merged after `CI gate`. There
-are no pinned tool versions: the checks use nixpkgs-unstable's claude-code and pi, so a lock bump can fail on a
+are no pinned tool versions: the checks use claude-code and pi from nixpkgs master, so a lock bump can fail on a
 plugin that targets another version.
 
 ## Maintaining these files
