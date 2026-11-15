@@ -5,7 +5,7 @@
  *
  * Usage:
  *   FIXTURE=$PWD/turns.json pi \
- *     --extension agent-tools/e2e/assets/fixture-provider.ts \
+ *     --extension e2e/assets/fixture-provider.ts \
  *     --provider fixture --model replay
  *
  * turns.json is a list consumed in order, one entry per assistant turn. A turn

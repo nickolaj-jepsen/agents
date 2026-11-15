@@ -43,7 +43,7 @@ export interface Harness {
 }
 
 const here = dirname(fileURLToPath(import.meta.url));
-export const checkoutRoot = resolve(here, "..", "..", "..");
+export const checkoutRoot = resolve(here, "..", "..");
 
 const onPath = (bin: string) => {
   try {
@@ -112,7 +112,7 @@ export const pi: Harness = {
       env.FIXTURE = file;
       args.push(
         "--extension",
-        join(checkoutRoot, "agent-tools/e2e/assets/fixture-provider.ts"),
+        join(checkoutRoot, "e2e/assets/fixture-provider.ts"),
         "--provider",
         "fixture",
         "--model",

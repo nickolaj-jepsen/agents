@@ -177,7 +177,7 @@ export function tuiTestBin(): string {
       execFileSync("which", ["tui-test"], { stdio: "ignore" });
       bin = "tui-test";
     } catch {
-      const root = join(import.meta.dirname, "..", "..", "..");
+      const root = join(import.meta.dirname, "..", "..");
       const out = execFileSync(
         "nix",
         ["build", `${root}#tui-test`, "--no-link", "--print-out-paths"],

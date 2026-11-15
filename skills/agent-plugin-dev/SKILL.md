@@ -1,7 +1,7 @@
 ---
 name: agent-plugin-dev
-description: Design, build and check the UI of an agent-tools plugin, for Claude Code (a mod's pane, band, status) and pi (an extension's overlay, form, widget) — the house style, the shared UI kit, and a driver that parks a real session on any screen and photographs it at four sizes. Use when developing, fixing or reviewing what a mod or pi extension draws, its keys, mouse or focus; before handing any plugin UI change back; when a plugin seems to do nothing; or when asking how one renders.
-compatibility: Works in a checkout of agent-tools, with nix, Claude Code signed in and pi.
+description: Design, build and check the UI of a plugin in this repo, for Claude Code (a mod's pane, band, status) and pi (an extension's overlay, form, widget) — the house style, the shared UI kit, and a driver that parks a real session on any screen and photographs it at four sizes. Use when developing, fixing or reviewing what a mod or pi extension draws, its keys, mouse or focus; before handing any plugin UI change back; when a plugin seems to do nothing; or when asking how one renders.
+compatibility: Works in a checkout of nickolaj-jepsen/agents, with nix, Claude Code signed in and pi.
 ---
 
 A plugin's logic can be right while its screen is unusable: a title cut to nothing, lines 200 columns wide, metadata at a different column on every row. Tests don't see that, and neither does a text capture read as text. So this skill has three parts: a style that says what good looks like, a kit that already does it, and a driver that makes you look.
@@ -12,7 +12,7 @@ Most plugins have a Claude half and a pi half. Design both together: the harness
 - `references/claude.md`: what a mod can draw, the engine's limits and traps. Load `plugin-authoring` too; it holds the API.
 - `references/pi.md`: what a pi extension can draw, pi-tui's components, traps, and reading a session file.
 - `references/sources.md`: where to look for how others solved a component.
-- `e2e/README.md` in agent-tools: writing scenarios and reading snapshots.
+- `e2e/README.md`: writing scenarios and reading snapshots.
 
 ## What each harness can draw
 
@@ -46,7 +46,7 @@ The catalogue shows every component in every state, in both harnesses side by si
 
 ## The driver
 
-A scenario is a named screen of a plugin: its fixture, how the agent starts, and the steps that reach it. Scenarios live in `e2e/<plugin>/`, and the same file drives the tests and `goto`. Run these from `agent-tools/`:
+A scenario is a named screen of a plugin: its fixture, how the agent starts, and the steps that reach it. Scenarios live in `e2e/<plugin>/`, and the same file drives the tests and `goto`. Run these from the repo root:
 
 ```bash
 npm run e2e:cli -- ls docfix

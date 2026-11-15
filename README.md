@@ -1,9 +1,9 @@
-# agent-tools
+# agents
 
 Plugins for [Claude Code](https://claude.com/claude-code), for the
 [pi](https://github.com/earendil-works/pi) coding agent, or for both, and agent skills for any
-agent that reads them. On my own machines home-manager installs these same folders,
-so what's published here is what I run.
+agent that reads them. On my own machines home-manager installs these same folders from this
+flake, so what's published here is what I run.
 
 - [Install](#install)
 - [Plugins](#plugins)
@@ -13,7 +13,7 @@ so what's published here is what I run.
 ## Install
 
 ```bash
-claude plugin marketplace add nickolaj-jepsen/nixos
+claude plugin marketplace add nickolaj-jepsen/agents
 claude plugin install linear-issue@nickolaj-jepsen
 claude plugin install answer@nickolaj-jepsen
 claude plugin install git-menu@nickolaj-jepsen
@@ -25,13 +25,14 @@ The skills, all of them or one by its subpath, with [`npx skills`](https://githu
 or as one Claude Code plugin:
 
 ```bash
-npx skills add nickolaj-jepsen/nixos
-npx skills add https://github.com/nickolaj-jepsen/nixos/tree/main/agent-tools/skills/land
+npx skills add nickolaj-jepsen/agents
+npx skills add https://github.com/nickolaj-jepsen/agents/tree/main/skills/land
 claude plugin install skills@nickolaj-jepsen
 ```
 
-My nix build tests each plugin against the Claude Code version it ships with. A
-marketplace install gets no such check, so a Claude Code update can break one.
+The flake (`nix flake check`) tests each plugin against Claude Code from nixpkgs-unstable, and my
+machines against the version they ship. A marketplace install gets no such check, so a
+Claude Code update can break one.
 
 ## Plugins
 
@@ -252,19 +253,43 @@ Unfinished, and not ready for anyone else to use. Their frontmatter says `status
 
 ## Development
 
+`nix develop` (or direnv) gives node, just and the formatters; `just` lists the recipes.
+
+```bash
+just dev-setup   # npm ci, plus the pi and Claude Code types an editor and tsc read
+just test        # the cores' tests
+just typecheck   # tsc -b
+just check       # nix flake check: the above in a sandbox, each Claude half validated, formatting
+just fmt
+```
+
+### As a flake input
+
+The flake exposes what a system config needs to consume this repo:
+
+- `lib.plugins`: `{ <name> = { claude; pi; subagents; path; }; }`, read from the folders.
+- `lib.skills`: `{ <name> = <path to the skill folder>; }`.
+- `packages.<system>.agent-tools`: the checked sources, with each plugin at
+  `$out/plugins/<name>`; `overlays.default` adds it (and `tui-test`) to a `pkgs`, where it
+  type-checks the pi halves against that `pkgs.pi-coding-agent`.
+- `lib.mkClaudePlugin { pkgs; claude-code; agentTools?; } <name>`: one plugin's Claude half validated and
+  tested against the given claude-code.
+- `packages.<system>.pi-coding-agent`, `tui-test`: the pi the pi halves are checked against,
+  and the e2e daemon.
+
 ### Layout
 
-Laid out to be split into a repository of its own. Each `plugins/<name>/` is a
-Claude Code plugin (built by `mkToolMod`), a pi package, or both. The folder says
-which, and home-manager loads every one it finds (`agentToolPlugins` in `lib/`): a
+Each `plugins/<name>/` is a Claude Code plugin (built by `lib.mkClaudePlugin`), a pi
+package, or both. The folder says which, and a consumer loads every one it finds
+(the flake's `lib.plugins`): a
 Claude half has `.claude-plugin/plugin.json`, a pi half a `pi` key in `package.json`.
 Only one with a Claude half goes in the marketplace and the Install section, and
-`just build` fails while `.claude-plugin/marketplace.json` disagrees with the folders.
+`nix flake check` fails while `.claude-plugin/marketplace.json` disagrees with the folders.
 
 - `core/`: harness-free TypeScript shared with pi, in a single file with no imports
   and no Node or DOM APIs.
   - Tests are `core/*.spec.ts`, run by vitest (`npm test`) and by
-    `pkgs/agent-tools`.
+    `nix build .#agent-tools`.
   - `claude plugin test` runs only `*.test.ts(x)`, so the two never overlap.
 - `claude/`: the Claude half. It holds the hooks module, its contract `types.d.ts`
   (`plugin.json`'s `"types"`), its `*.test.tsx` for `claude plugin test`, and a
@@ -293,7 +318,7 @@ Only one with a Claude half goes in the marketplace and the Install section, and
 for its `core/` or `pi/`: `tsconfig.core.json` holds the cores to no types at all (a
 Node import there fails), and `tsconfig.pi.json` checks the pi halves and the cores'
 specs with Node's types. `npm run typecheck` is `tsc -b`. A pi half type-checks
-against the pi that ships, not an npm copy of it: `pkgs/agent-tools` links that pi
+against the pi that ships, not an npm copy of it: `pkgs/agent-tools` links the pi pinned in `pkgs/pi-coding-agent`
 into its `node_modules` before `tsc`, and `just dev-setup` makes the same links for
 an editor.
 
@@ -313,10 +338,10 @@ None of these show up in `tsc`:
   over types only `just dev-setup` lays. `vitest.config.ts` passes its own
   `tsconfigRaw` so none is read.
 - A pi half's imports resolve to the pi that runs only through the links
-  `pkgs/agent-tools` and `just dev-setup` make; `npm install` in `agent-tools/`
+  `pkgs/agent-tools` and `just dev-setup` make; `npm install`
   prunes them, so re-run `just dev-setup` when `npm run typecheck` starts failing to
   find `@earendil-works/*`.
-- Don't add pi's packages to `agent-tools/package.json`: a physical copy drifts from
+- Don't add pi's packages to `package.json`: a physical copy drifts from
   the pi that loads the half, and the links are what keep the two in step.
 
 ### End-to-end tests

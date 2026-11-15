@@ -50,7 +50,7 @@ publishes only `plugins/`). It registers `/kit <component> [state]`, which draws
 component alone with sample data, and `/kit` alone lists them:
 
 ```bash
-pi-dev --extension agent-tools/kit/catalog/pi/index.ts
+pi-dev --extension kit/catalog/pi/index.ts
 ```
 
 Every story but the `frame` and `split` ones is drawn on the stage (`kit/catalog/pi/stage.ts`):

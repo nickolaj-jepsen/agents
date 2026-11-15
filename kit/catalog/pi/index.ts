@@ -2,7 +2,7 @@
  * The kit catalogue, a dev-only pi extension: `/kit <component> [state]` draws one kit
  * component alone with sample data; `/kit` lists them. Not a plugin: it lives under
  * `kit/catalog/`, so home-manager never loads or publishes it. Load it by path:
- * `pi-dev -e agent-tools/kit/catalog/pi/index.ts`.
+ * `pi-dev -e kit/catalog/pi/index.ts`.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import type { Theme } from "@earendil-works/pi-coding-agent";

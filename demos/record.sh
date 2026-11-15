@@ -4,7 +4,7 @@
 # renders the recording. A demo, not a test: a run that goes another way (the model answered
 # differently, nothing showed up in time) fails and keeps the old GIF; run it again.
 #
-# Usage: agent-tools/demos/record.sh <name>    (or: just demo <name>)
+# Usage: demos/record.sh <name>    (or: just demo <name>)
 #
 # demos/<name>.sh defines `demo`, the steps, may define `setup`, called with the session's
 # empty working directory to fill before it starts, and may set:
