@@ -1,0 +1,152 @@
+# House style
+
+One style for every plugin UI, in Claude Code and pi. Each rule is a default: depart from it when a screen reads better another way, and say why in the hand-back. The numbers and glyphs live in the kit's tokens, so a change there restyles every plugin.
+
+## What comes out by default, and is wrong
+
+An agent left alone draws these. Each is a defect here:
+
+- a panel that grows with the terminal, so lines run 200 columns wide;
+- a title cut to one line while half the panel is empty;
+- metadata appended to the title, so it floats at a different column on every row and falls off first;
+- `·` between fields. Never use the centre dot as a separator;
+- no blank rows and no padding: every row touching the next and the border;
+- inverse video across a selected row;
+- hints that vanish all at once when the panel is narrow;
+- widths measured with `.length`, or text cut with `.slice`;
+- a key that works but is not shown, or a shown key that does nothing;
+- emoji.
+
+## Decide the surface first
+
+Say which one the UI is before laying anything out.
+
+| Surface         | What it is                                                | Width                             |
+| --------------- | --------------------------------------------------------- | --------------------------------- |
+| Input-replacing | takes over the prompt: a question form, a draft           | full width                        |
+| Content panel   | something you read or pick from: a queue, a picker, a log | a width class, below              |
+| Chrome          | footer, status, band row                                  | one line, dim unless it needs you |
+
+Content panels take a width class. It is a cap, never a target: the panel is as wide as the terminal allows up to the cap.
+
+| Class     | For                                 | Cap                                     |
+| --------- | ----------------------------------- | --------------------------------------- |
+| `reading` | a list with descriptions, prose     | 96 columns, prose wrapped at 80         |
+| `split`   | a list with a detail pane beside it | 124 columns                             |
+| `dialog`  | a short form, a confirm             | 72 columns                              |
+| `wide`    | a log, a table, a diff              | the terminal less a 2-column margin     |
+| `auto`    | little content                      | fits the content, within `dialog`'s cap |
+
+In Claude Code the surface decides a pane's place, not the mod: it docks beside the transcript from 110 columns in fullscreen (24 columns to 45% of the terminal) and sits inline above the prompt otherwise. So:
+
+- a form or a prompt goes in the band above the prompt, never a pane;
+- a pane is for reference content or a short list, and is laid out for about 48 columns as well as for the inline width;
+- a pane is opened through the kit's `paneOptions({...})`, which makes it transparent with no fill; never pass `backgroundColor` yourself;
+- `Box` has no `maxWidth`: compute a cap from `bodyColumns`.
+
+## List with detail
+
+In pi, a list whose rows have detail is two panes from 110 columns: the list on the left, the selected row's detail on the right, one border around both with a `┬`/`┴` divider. Below 110 columns it stacks, list above detail. The detail pane shows the selected title in full, then its metadata spelled out, then the body.
+
+In a Claude pane there is no room for two panes: rows carry their own metadata line and the detail follows the list.
+
+## Rows
+
+- The title is the content and is the last thing cut. Wrap it with the kit's text component (below); never cut it to one line while there is room.
+- Metadata sits in right-aligned columns with a 2-cell gutter, at the same column on every row, so it can be scanned downwards. Each field has a fixed width. When the row is too narrow for the columns (a docked pane), metadata takes its own dim line under the title.
+- Hide the lowest-priority metadata column before shortening the title.
+- Selection is a `❯` pointer in the gutter plus the accent colour on the title. No inverse video.
+- Marks: `□` and `■` for several-of-many, `○` and `●` for one-of-many.
+- Every row is the same height whether or not it is selected, so the list does not jump as the cursor moves.
+
+## The text component
+
+`clamp(text, width, {min?, max?, target?})` wraps to the width and returns lines.
+
+- `target` is a length in characters: it shows as many lines as that much text needs at this width, so a narrow pane gets more lines than a wide list.
+- `min` and `max` bound the line count. None of the three has a default; `{min: 1, max: 1}` is the one-line truncation, and no options means wrap without limit.
+- When text is cut, the last line is filled to its end before the `…`. Never cut early and leave the line short.
+- It measures in terminal cells, not characters.
+
+Use it for every title and description.
+
+## Sections and spacing
+
+- One cell of padding inside any border. One blank row under the title and above the hints.
+- One blank row between groups while the whole list fits. When it would have to scroll, drop the blank rows first.
+- A section header is bold, followed by a dim rule to the edge: `docs/agents.md ─────────`. The rule separates when there is no room for a blank row.
+- One border around a pi modal, rounded. No border inside a border, and no horizontal rule where a blank row would do.
+- A Claude pane already has its frame: no border, one cell of padding, and the title as `─ Title  count ─────` so both harnesses share a title line.
+- Two spaces between unrelated things on a line. Spaces only, never tabs.
+- A pi modal that takes focus is centred. It covers only its own cells; the transcript stays visible around it.
+- A list shows a row whole or not at all. When rows are hidden, say so (`↓ 2 more`).
+
+## Key hints
+
+- Every key the UI accepts is shown, and nothing is shown that does nothing.
+- In pi they are set into the bottom border, left-aligned, the border running between them: `╰─ ↑↓ move ── space mark ── a apply ── esc later ─╯`. Key in normal weight, label dim.
+- When they do not fit, drop the lowest-priority hint first. Never drop the way out (`esc`), and never drop them all.
+- In Claude Code keys belong to `Button`s, which the engine draws; put them in one row, 2 cells apart, after a blank row.
+
+## Colour
+
+Four roles, taken from the theme, never hard-coded:
+
+| Role   | For                                                             |
+| ------ | --------------------------------------------------------------- |
+| text   | what you read                                                   |
+| dim    | anything that needs no attention: metadata, rules, hints, paths |
+| accent | the title and the selection, nothing else                       |
+| status | success, warning, error, only for an actual state               |
+
+- A colour on metadata marks a state or a threshold, and most rows should carry none: in docfix, `!` is error and the seen count turns warning from 3×. If most rows are coloured, the colour says nothing.
+- No background fills. No emoji.
+- Focus and selection must still read with colour off: that is what the pointer is for.
+
+## Glyphs
+
+All one cell wide. Check a new one in a screenshot before using it; some fonts draw symbols two cells wide.
+
+| Glyph       | Use                                                              |
+| ----------- | ---------------------------------------------------------------- |
+| `❯`         | selection pointer                                                |
+| `□` `■`     | several-of-many, off and on                                      |
+| `○` `●`     | one-of-many, off and on                                          |
+| `…`         | cut text                                                         |
+| `─`         | rules and title lines                                            |
+| `✓`         | done                                                             |
+| `×`         | a count: `3×`                                                    |
+| `│` `╰▸`    | a note's gutter: `│` on each line but the last, `╰▸` on the last |
+| `+` `↻` `!` | docfix kinds: missing, stale, wrong (`!` in error)               |
+
+An icon stands alone where the word is spelled out nearby (a detail pane), and is followed by its word where it is not.
+
+## A note
+
+```
+│  first line of the note
+│  second line
+╰▸ third line
+```
+
+A one-line note is `╰▸ the note`. The gutter is dim.
+
+The gutter points at the one thing the note belongs to. Never use it for a list of several entries.
+
+## Dated entries
+
+A log, a history, evidence: several entries, each with a date. From 50 columns the date is a fixed dim column on the left and the text hangs beside it, so entries are found by scanning down the edge. Narrower, the date is a dim line above the text. One blank row between entries, no bullets and no gutter. Leave out identifiers nobody reads, such as a session id.
+
+```
+2026-11-13  `just build` printed error:
+            derivation failed while…
+
+2026-10-16  The section says the build
+            verifies a pi change, but…
+```
+
+## States every UI has
+
+Design each of these, not only the full one: empty; one item; more items than fit; text far longer than expected, in every field; wide characters; an error or notice; the narrowest size it supports.
+
+Say what happens at the narrowest size. A review that does not name it has not finished.

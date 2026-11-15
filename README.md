@@ -218,8 +218,7 @@ Servers come from the JSON file `PI_LSP_SERVERS` names (the pi leaf writes it fr
 
 Each starts the real program and drives it with keys, screenshots and logs.
 
-- [pi-plugin-dev](skills/pi-plugin-dev/): pi extensions, in a tmux session.
-- [claude-mod-dev](skills/claude-mod-dev/): Claude Code mods, in a tmux session.
+- [agent-plugin-dev](skills/agent-plugin-dev/): the UI of a Claude Code mod or pi extension, with a house style, a shared kit and a driver that parks a real session on any screen.
 - [dms-plugin-dev](skills/dms-plugin-dev/): DankMaterialShell plugins, in a headless sway.
 
 ### Utilities
@@ -278,8 +277,10 @@ Only one with a Claude half goes in the marketplace and the Install section, and
   folder is a pi package as it stands and imports `../core` directly. The session
   you started loads it, and subagents too when its `package.json` sets
   `"agentTools": {"subagents": true}`.
-- A pi half imports only pi, typebox, Node and its own plugin, never the pi leaf's
-  `shared/`: the two are built into different store paths.
+- A pi half imports only pi, typebox, Node, its own plugin and the pi UI kit (`kit/pi/`,
+  by relative path: pi's loader reads no tsconfig paths, and a package `imports` alias
+  can't point out of the plugin), never the pi leaf's `shared/`: the two are built into
+  different store paths.
 - Plugin root: only `.claude-plugin/`, `hooks/`, `claude/`, `core/`, `pi/`, that
   `package.json` and, with a Claude half, a `tsconfig.json` that only points the
   editor at `claude/`'s project and the cores' and pi halves'. Claude Code writes a
@@ -318,6 +319,13 @@ None of these show up in `tsc`:
 - Don't add pi's packages to `agent-tools/package.json`: a physical copy drifts from
   the pi that loads the half, and the links are what keep the two in step.
 
+### End-to-end tests
+
+`e2e/` plays each plugin's screens in a real Claude Code and a real pi, compares them
+with stored snapshots (`npm run e2e`), and parks a live session on one for driving by
+hand (`npm run e2e:cli -- goto <plugin> <scenario>`). Local only: nothing in `npm test`,
+the nix build or `just check` starts an agent. See `e2e/README.md`.
+
 ### Demos
 
 Each plugin's GIFs are recorded from a live Claude Code session. Re-record after
@@ -327,7 +335,7 @@ changing what a plugin draws or its keys:
 just demo linear-issue   # or any other demos/<name>.sh
 ```
 
-- `demos/record.sh` drives the session with `skills/claude-mod-dev`'s driver,
+- `demos/record.sh` drives the session with `demos/tui.sh`, a tmux driver,
   loading the checkout's plugins, and records the GIF with asciinema and agg.
 - `demos/<name>.sh` holds the steps, and may fill the session's folder first.
 - A run that goes another way keeps the old GIF, so run it again.

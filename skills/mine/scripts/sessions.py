@@ -4,7 +4,7 @@
 Sources: ~/.claude/projects and ~/.claude-work/projects (top-level sessions; subagent
 transcripts too with --subagents, .zst through the `zstd` CLI), and
 ~/.pi/agent/sessions. `claude -p` sessions, pi subagent sessions and the test sessions
-claude-mod-dev drives are skipped,
+the e2e harness and the demo recorder drive are skipped,
 sidechains dropped, and a session stored twice (a resume, a fork, a worktree slug)
 counts once. Sessions that ran /mine are never runs, so mining doesn't count itself.
 A session counts only up to its first /retro, which quotes the session's failures and
@@ -72,8 +72,9 @@ LOCAL_COMMANDS = {
 }  # fmt: skip
 # A pi session whose first user turn starts like this is a subagent's brief.
 PI_SUBAGENT = ("You are ", "CONTEXT for")
-# claude-mod-dev's driver runs its test sessions in a directory under this name.
-DRIVEN = "/claude-mod-dev/"
+# Test sessions run in a directory under one of these: the e2e harness's run folders and
+# the demo recorder's.
+DRIVEN = ("/e2e-", "/agent-tools-e2e/", "/claude-mod-dev/")
 EDIT_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit", "edit", "write"}
 BASH_TOOLS = {"Bash", "bash"}
 WIDTH = {"prompt": 1500, "say": 1200, "result": 240}
@@ -181,7 +182,7 @@ def parse_claude(source, path, sidechains=False):
             s.cwd = s.cwd or r["cwd"]
             s.cwds.add(r["cwd"])
         s.started = s.started or ts
-        if r.get("entrypoint") == "sdk-cli" or DRIVEN in (r.get("cwd") or ""):
+        if r.get("entrypoint") == "sdk-cli" or any(d in (r.get("cwd") or "") for d in DRIVEN):
             s.skip = True
         content = (r.get("message") or {}).get("content")
         if r.get("type") == "assistant":
