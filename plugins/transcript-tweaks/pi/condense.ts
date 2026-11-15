@@ -22,6 +22,8 @@ const KEEP_BODY = new Set([
   "write",
   // A hidden question is a bug.
   "ask_user_question",
+  // Its one line is where a repeat says `seen N×`.
+  "docfix",
 ]);
 
 // Only a command ends on a line worth quoting; in a file or a result list the

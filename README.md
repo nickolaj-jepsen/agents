@@ -18,6 +18,7 @@ claude plugin install linear-issue@nickolaj-jepsen
 claude plugin install answer@nickolaj-jepsen
 claude plugin install git-menu@nickolaj-jepsen
 claude plugin install spellfix@nickolaj-jepsen
+claude plugin install docfix@nickolaj-jepsen
 ```
 
 The skills, all of them or one by its subpath, with [`npx skills`](https://github.com/vercel-labs/skills)
@@ -134,6 +135,31 @@ Options (`claude plugin configure answer`):
 
 An open form takes the band above the prompt to itself; the other plugins' rows come back
 when it closes.
+
+### docfix
+
+Agents file doc suggestions instead of editing docs outside their change; you
+review them and hand the ones you want back to the agent.
+
+- A `docfix` tool the model always sees. It files a suggestion when a doc it
+  happens on doesn't match reality: it contradicts the code, misses a trap the
+  agent just hit, or describes something gone or finished. A doc covering the
+  code an agent is changing is still updated in that change.
+- Targets are git-tracked Markdown files in the repo. Each suggestion is one
+  Markdown file in the checkout's note store (`.agents/store/docfix/`), which
+  every worktree of the repo shares.
+- A repeat bumps the existing suggestion's seen count instead of adding one; the
+  tool's result says `seen N×` in the transcript, and the status line shows
+  `docs N` while any are open.
+- `/docfix` lists the open ones by doc. Mark several, then **Apply**: one prompt
+  per doc asks the agent to check each claim, edit the doc as it stands now, and
+  resolve the suggestion. Nothing is committed. **Dismiss** keeps the
+  suggestion, so the same claim isn't filed again.
+- pi has the same tool, panel and footer count from the same core
+  (`core/docfix.ts`), subagents included.
+
+Needs a git repository with a note store (`.agents/store`, `agent-notes root
+--ensure`). Claude Code ships `/docs`, so the command is `/docfix` in both.
 
 ### transcript-tweaks
 
