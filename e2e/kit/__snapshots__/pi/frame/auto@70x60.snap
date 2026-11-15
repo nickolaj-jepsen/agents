@@ -1,0 +1,17 @@
+# kit/pi/frame/auto 70x60 @23,27 (24x5)
+╭─ Auto ───────────────╮
+│                      │
+│ Little content.      │
+│                      │
+╰─ esc close ──────────╯
+--- styles
+1x3 2x4 . 1x16
+1 .x22 1
+1 .x22 1
+1 .x22 1
+1x3 3x3 . 4x5 . 1x11
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#dad8ce
+4 fg=#878580

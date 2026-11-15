@@ -1,0 +1,27 @@
+# kit/claude/detail/block 70x60 @2,43 (66x10)
+`just build` is not enough to verify a pi change; the docs say it
+is.
+
+! wrong   seen 3×   2 days ago
+
+Evidence ─────────────────────────────────────────────────────────
+<date>      AGENTS.md: the line contradicts what the code does
+            now, in two places.
+
+<date>      one line.
+--- styles
+-
+-
+-
+1 2x6 .x3 3x7 .x3 2x10
+-
+4x8 2x58
+2x10
+-
+-
+2x10
+--- legend
+1 fg=#ff6b80
+2 fg=#999999
+3 fg=#ffc107
+4 bold

@@ -1,0 +1,12 @@
+# kit/pi/clamp/min-lines 160x45 @2,2 (96x4)
+width 22                width 30                        width 36
+A short title.          A short title.                  A short title.
+
+
+--- styles
+1x8 .x16 1x8 .x24 1x8
+-
+-
+-
+--- legend
+1 fg=#878580

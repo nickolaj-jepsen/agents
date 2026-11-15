@@ -1,0 +1,23 @@
+# kit/pi/frame/wide 160x45 @1,18 (158x8)
+╭─ Width class wide  3 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                                                                            │
+│ the terminal less a 2-column margin. The panel is as wide as the terminal allows                                                                           │
+│ up to the cap, never wider.                                                                                                                                │
+│                                                                                                                                                            │
+│ 158 columns here                                                                                                                                           │
+│                                                                                                                                                            │
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ───────────────────────────────────────────────────────────────────────────────────────────────╯
+--- styles
+1x3 2x16 .x2 3 . 1x135
+1 .x156 1
+1 . 4x80 .x75 1
+1 . 4x27 .x128 1
+1 .x156 1
+1 . 3x16 .x139 1
+1 .x156 1
+1x3 4x2 . 3x4 . 1x2 . 4x5 . 3x4 . 1x2 . 4 . 3x5 . 1x2 . 4 . 3x7 . 1x2 . 4x3 . 3x5 . 1x96
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#878580
+4 fg=#dad8ce

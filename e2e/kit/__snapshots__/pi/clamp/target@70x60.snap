@@ -1,0 +1,16 @@
+# kit/pi/clamp/target 70x60 @2,2 (66x6)
+width 22                width 30
+The section says the    The section says the build
+build verifies a pi     verifies a pi change, but the
+change, but the build   build only type-checks the co…
+only type-checks the
+cores and the pi halv…
+--- styles
+1x8 .x16 1x8
+-
+-
+-
+-
+-
+--- legend
+1 fg=#878580

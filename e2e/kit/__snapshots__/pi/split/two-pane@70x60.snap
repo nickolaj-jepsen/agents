@@ -1,0 +1,75 @@
+# kit/pi/split/two-pane 70x60 @1,14 (68x32)
+╭─ Split frame  6 ─────────────────────────────────────────────────╮
+│                                                                  │
+│ AGENTS.md ────────────────────────────────────────────────────── │
+│   `just build` is not enough to verify a pi       !    3×     2d │
+│   change; the docs say it is.                                    │
+│                                                                  │
+│ docs/hosts.md ────────────────────────────────────────────────── │
+│ ❯ The `legacy` card was removed; the section      ↻    2×    1mo │
+│   still describes it.                                            │
+│   Darwin hosts need the app leaf to work on both  +    1×     5d │
+│   halves.                                                        │
+│                                                                  │
+│ docs/modules.md ──────────────────────────────────────────────── │
+│   A leaf that imports a third-party module        +    1×     9d │
+│   imports it on every host; the page should say…                 │
+│                                                                  │
+│ docs/secrets.md ──────────────────────────────────────────────── │
+│   Rekeying needs the YubiKey.                     !    5×  today │
+│   The edit command takes the path to the .age     ↻    1×    12d │
+│   file, not a bare name.                                         │
+│                                                                  │
+│ The `legacy` card was removed; the section still describes it.   │
+│                                                                  │
+│ ↻ stale   seen 2×                                                │
+│                                                                  │
+│ Evidence ─────────────────────────────────────────────────────── │
+│ <date>      AGENTS.md: the line contradicts what the code does   │
+│             now, in two places.                                  │
+│                                                                  │
+│ <date>      one line.                                            │
+│                                                                  │
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
+--- styles
+1x3 2x11 .x2 3 . 1x50
+1 .x66 1
+1 . 4x9 . 3x54 . 1
+1 .x3 5x41 .x7 6 .x2 7x4 .x2 3x5 . 1
+1 .x3 5x27 .x36 1
+1 .x66 1
+1 . 4x13 . 3x50 . 1
+1 . 8 . 8x42 .x6 5 .x2 3x4 .x2 3x5 . 1
+1 .x3 8x19 .x44 1
+1 .x3 5x46 .x2 5 .x2 3x4 .x2 3x5 . 1
+1 .x3 5x7 .x56 1
+1 .x66 1
+1 . 4x15 . 3x48 . 1
+1 .x3 5x40 .x8 5 .x2 3x4 .x2 3x5 . 1
+1 .x3 5x45 .x18 1
+1 .x66 1
+1 . 4x15 . 3x48 . 1
+1 .x3 5x27 .x21 6 .x2 7x4 .x2 3x5 . 1
+1 .x3 5x43 .x5 5 .x2 3x4 .x2 3x5 . 1
+1 .x3 5x22 .x41 1
+1 .x66 1
+1 . 5x62 .x3 1
+1 .x66 1
+1 .x66 1
+1 .x66 1
+1 . 4x8 . 3x55 . 1
+1 . 3x10 .x2 5x50 .x3 1
+1 .x13 5x19 .x34 1
+1 .x66 1
+1 . 3x10 .x2 5x9 .x44 1
+1 .x66 1
+1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x2 . 5x3 . 3x5 . 1x6
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#878580
+4 fg=#dad8ce bold
+5 fg=#dad8ce
+6 fg=#d14d41
+7 fg=#d0a215
+8 fg=#cf6a4c

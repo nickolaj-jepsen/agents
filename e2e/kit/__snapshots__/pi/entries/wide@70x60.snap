@@ -1,0 +1,17 @@
+# kit/pi/entries/wide 70x60 @2,2 (66x6)
+<date>      `just build` printed an error: derivation failed while
+            evaluating the attribute.
+
+<date>      The section says the build verifies a pi change.
+
+<date>      Short.
+--- styles
+1x10 .x2 2x54
+.x12 2x25
+-
+1x10 .x2 2x48
+-
+1x10 .x2 2x6
+--- legend
+1 fg=#878580
+2 fg=#dad8ce

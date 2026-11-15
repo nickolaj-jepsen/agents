@@ -1,0 +1,23 @@
+# kit/pi/frame/dialog 70x60 @1,26 (68x8)
+╭─ Width class dialog  3 ──────────────────────────────────────────╮
+│                                                                  │
+│ 72 columns. The panel is as wide as the terminal allows up to    │
+│ the cap, never wider.                                            │
+│                                                                  │
+│ 68 columns here                                                  │
+│                                                                  │
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
+--- styles
+1x3 2x18 .x2 3 . 1x43
+1 .x66 1
+1 . 4x61 .x4 1
+1 . 4x21 .x44 1
+1 .x66 1
+1 . 3x15 .x50 1
+1 .x66 1
+1x3 4x2 . 3x4 . 1x2 . 4x5 . 3x4 . 1x2 . 4 . 3x5 . 1x2 . 4 . 3x7 . 1x2 . 4x3 . 3x5 . 1x6
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#878580
+4 fg=#dad8ce

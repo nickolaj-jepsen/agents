@@ -1,0 +1,10 @@
+# kit/claude/clamp/max-lines 160x45 @89,1 (71x3)
+width 22                width 30
+The section says the    The section says the build
+build verifies a pi c…  verifies a pi change, but the…
+--- styles
+1x8 .x16 1x8
+-
+-
+--- legend
+1 fg=#999999

@@ -1,0 +1,7 @@
+# kit/claude/buttons/row 70x60 @2,52 (66x1)
+a: apply   d: dismiss   q: later
+--- styles
+1 .x10 1 2x9 .x3 1 2x7
+--- legend
+1 fg=#b1b9f9
+2 fg=#999999

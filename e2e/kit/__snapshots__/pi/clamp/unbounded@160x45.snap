@@ -1,0 +1,20 @@
+# kit/pi/clamp/unbounded 160x45 @2,2 (96x8)
+width 22                width 30                        width 36
+The section says the    The section says the build      The section says the build verifies
+build verifies a pi     verifies a pi change, but the   a pi change, but the build only
+change, but the build   build only type-checks the      type-checks the cores and the pi
+only type-checks the    cores and the pi halves and     halves and never starts an agent.
+cores and the pi        never starts an agent.
+halves and never
+starts an agent.
+--- styles
+1x8 .x16 1x8 .x24 1x8
+-
+-
+-
+-
+-
+-
+-
+--- legend
+1 fg=#878580

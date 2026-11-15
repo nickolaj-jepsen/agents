@@ -1,0 +1,17 @@
+# kit/pi/frame/title-count 160x45 @44,20 (72x5)
+╭─ Doc suggestions  28 ────────────────────────────────────────────────╮
+│                                                                      │
+│ A count follows the title.                                           │
+│                                                                      │
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────────╯
+--- styles
+1x3 2x15 .x2 3x2 . 1x49
+1 .x70 1
+1 .x70 1
+1 .x70 1
+1x3 4x2 . 3x4 . 1x2 . 4x5 . 3x4 . 1x2 . 4 . 3x5 . 1x2 . 4 . 3x7 . 1x2 . 4x3 . 3x5 . 1x10
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#878580
+4 fg=#dad8ce

@@ -1,0 +1,12 @@
+# kit/pi/empty/long 160x45 @2,2 (72x4)
+The section says the build verifies a pi change, but the build only
+type-checks the cores and the pi halves and never starts an agent. The
+section says the build verifies a pi change, but the build only
+type-checks the cores and the pi halves and never starts an agent.
+--- styles
+1x67
+1x70
+1x63
+1x66
+--- legend
+1 fg=#878580

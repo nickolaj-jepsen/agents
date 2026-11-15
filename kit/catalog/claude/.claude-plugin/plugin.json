@@ -1,0 +1,6 @@
+{
+  "name": "kit-catalog",
+  "version": "0.0.0",
+  "description": "Dev only: /kit <component> [state] draws one Claude kit component alone on a bare stage, for the catalogue's screenshots",
+  "types": "./claude/types.d.ts"
+}

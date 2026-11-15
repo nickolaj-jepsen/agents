@@ -1,0 +1,23 @@
+# kit/pi/frame/split 160x45 @18,18 (124x8)
+╭─ Width class split  3 ───────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                                          │
+│ 124 columns. The panel is as wide as the terminal allows up to the cap, never                                            │
+│ wider.                                                                                                                   │
+│                                                                                                                          │
+│ 124 columns here                                                                                                         │
+│                                                                                                                          │
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────────────────────────────────────────────────────────────╯
+--- styles
+1x3 2x17 .x2 3 . 1x100
+1 .x122 1
+1 . 4x77 .x44 1
+1 . 4x6 .x115 1
+1 .x122 1
+1 . 3x16 .x105 1
+1 .x122 1
+1x3 4x2 . 3x4 . 1x2 . 4x5 . 3x4 . 1x2 . 4 . 3x5 . 1x2 . 4 . 3x7 . 1x2 . 4x3 . 3x5 . 1x62
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#878580
+4 fg=#dad8ce

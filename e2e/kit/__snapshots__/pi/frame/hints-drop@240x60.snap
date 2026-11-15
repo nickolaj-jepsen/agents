@@ -1,0 +1,17 @@
+# kit/pi/frame/hints-drop 240x60 @84,27 (72x5)
+╭─ Hints drop ─────────────────────────────────────────────────────────╮
+│                                                                      │
+│ Lowest priority first.                                               │
+│                                                                      │
+╰─ ↑↓ move ── space mark ── enter open ── tab next pane ── esc close ──╯
+--- styles
+1x3 2x10 . 1x58
+1 .x70 1
+1 .x70 1
+1 .x70 1
+1x3 3x2 . 4x4 . 1x2 . 3x5 . 4x4 . 1x2 . 3x5 . 4x4 . 1x2 . 3x3 . 4x9 . 1x2 . 3x3 . 4x5 . 1x3
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#dad8ce
+4 fg=#878580

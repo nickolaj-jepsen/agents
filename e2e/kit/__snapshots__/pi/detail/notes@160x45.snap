@@ -1,0 +1,16 @@
+# kit/pi/detail/notes 160x45 @2,2 (96x6)
+│  The section says the build verifies a pi
+│  change, but the build only type-checks the
+│  cores and the pi halves and never starts an
+╰▸ agent.
+
+╰▸ One line.
+--- styles
+1x3
+1x3
+1x3
+1x3
+-
+1x3
+--- legend
+1 fg=#878580

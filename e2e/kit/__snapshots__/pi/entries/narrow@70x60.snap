@@ -1,0 +1,27 @@
+# kit/pi/entries/narrow 70x60 @2,2 (66x11)
+<date>
+`just build` printed an error:
+derivation failed while evaluating the
+attribute.
+
+<date>
+The section says the build verifies a pi
+change.
+
+<date>
+Short.
+--- styles
+1x10
+2x30
+2x38
+2x10
+-
+1x10
+2x40
+2x7
+-
+1x10
+2x6
+--- legend
+1 fg=#878580
+2 fg=#dad8ce

@@ -1,0 +1,12 @@
+# kit/pi/list/one 160x45 @2,2 (96x2)
+AGENTS.md ──────────────────────────────────────────────────────────────────────────────────────
+❯ `just build` is not enough to verify a pi change; the docs say it is.           !    3×     2d
+--- styles
+1x9 . 2x86
+3 . 3x69 .x11 4 .x2 5x4 .x2 2x5
+--- legend
+1 fg=#dad8ce bold
+2 fg=#878580
+3 fg=#cf6a4c
+4 fg=#d14d41
+5 fg=#d0a215

@@ -1,0 +1,20 @@
+# kit/claude/clamp/unbounded 160x45 @89,1 (71x8)
+width 22                width 30
+The section says the    The section says the build
+build verifies a pi     verifies a pi change, but the
+change, but the build   build only type-checks the
+only type-checks the    cores and the pi halves and
+cores and the pi        never starts an agent.
+halves and never
+starts an agent.
+--- styles
+1x8 .x16 1x8
+-
+-
+-
+-
+-
+-
+-
+--- legend
+1 fg=#999999

@@ -1,0 +1,63 @@
+# kit/pi/list/column-drop 160x45 @2,2 (96x27)
+width 44
+AGENTS.md ──────────────────────────────────
+❯ `just build` is not enough  !    3×     2d
+  to verify a pi change; th…
+
+docs/hosts.md ──────────────────────────────
+  The `legacy` card was       ↻    2×    1mo
+  removed; the section stil…
+
+width 32
+AGENTS.md ──────────────────────
+❯ `just build` is not    !    3×
+  enough to verify a p…
+
+docs/hosts.md ──────────────────
+  The `legacy` card was  ↻    2×
+  removed; the section…
+
+width 24
+AGENTS.md ──────────────
+❯ `just build` is not  !
+  enough to verify a…
+
+docs/hosts.md ──────────
+  The `legacy` card    ↻
+  was removed; the s…
+
+--- styles
+1x8
+2x9 . 1x34
+3 . 3x26 .x2 4 .x2 5x4 .x2 1x5
+.x2 3x25
+-
+2x13 . 1x30
+.x2 6x21 .x7 6 .x2 1x4 .x2 1x5
+.x2 6x25
+-
+1x8
+2x9 . 1x22
+3 . 3x19 .x4 4 .x2 5x4
+.x2 3x20
+-
+2x13 . 1x18
+.x2 6x21 .x2 6 .x2 1x4
+.x2 6x20
+-
+1x8
+2x9 . 1x14
+3 . 3x19 .x2 4
+.x2 3x18
+-
+2x13 . 1x10
+.x2 6x17 .x4 6
+.x2 6x18
+-
+--- legend
+1 fg=#878580
+2 fg=#dad8ce bold
+3 fg=#cf6a4c
+4 fg=#d14d41
+5 fg=#d0a215
+6 fg=#dad8ce

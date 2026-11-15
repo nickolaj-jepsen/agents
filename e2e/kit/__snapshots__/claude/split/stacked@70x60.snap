@@ -1,0 +1,41 @@
+# kit/claude/split/stacked 70x60 @2,36 (66x17)
+AGENTS.md ────────────────────────────────────────────────────────
+`just build` is not enough to verify a pi change; the docs say it
+is.
+! wrong  3×  2d
+
+docs/hosts.md ────────────────────────────────────────────────────
+The `legacy` card was removed; the section still describes it.
+↻ stale  2×  1mo
+Darwin hosts need the app leaf to work on both halves.
++ missing  1×  5d
+
+Evidence ─────────────────────────────────────────────────────────
+
+<date>      `just build` printed an error: derivation failed while
+            evaluating the attribute.
+
+<date>      The section says the build verifies a pi change.
+--- styles
+1x9 2x57
+-
+-
+3x7 .x2 4x2 .x2 2x2
+-
+1x13 2x53
+-
+2x7 .x2 2x2 .x2 2x3
+-
+2x9 .x2 2x2 .x2 2x2
+-
+1x8 2x58
+-
+2x10
+-
+-
+2x10
+--- legend
+1 bold
+2 fg=#999999
+3 fg=#ff6b80
+4 fg=#ffc107

@@ -1,0 +1,18 @@
+# kit/claude/entries/long-text 70x60 @2,46 (66x7)
+<date>      The section says the build verifies a pi change, but
+            the build only type-checks the cores and the pi halves
+            and never starts an agent. The section says the build…
+
+<date>      The section says the build verifies a pi change.
+
+<date>      Short.
+--- styles
+1x10
+-
+-
+-
+1x10
+-
+1x10
+--- legend
+1 fg=#999999

@@ -1,0 +1,8 @@
+# kit/pi/clamp/truncate 160x45 @2,2 (96x2)
+width 22                width 30                        width 36
+The section says the …  The section says the build ve…  The section says the build verifies…
+--- styles
+1x8 .x16 1x8 .x24 1x8
+-
+--- legend
+1 fg=#878580

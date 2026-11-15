@@ -1,0 +1,29 @@
+# kit/claude/list/extreme-titles 70x60 @2,42 (66x11)
+docs/a-very-long-directory-name/with/several/nested/levels/and-an…
+The section says the build verifies a pi change, but the build
+only type-checks the cores and the pi halves and never starts an …
+! wrong  12×  1mo
+
+AGENTS.md ────────────────────────────────────────────────────────
+UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUn
+brokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnb…
++ missing  100×  today
+Short.
+↻ stale  1×  1d
+--- styles
+1x66
+-
+-
+2x7 .x2 3x3 .x2 4x3
+-
+1x9 4x57
+-
+-
+4x9 .x2 3x4 .x2 4x5
+-
+4x7 .x2 4x2 .x2 4x2
+--- legend
+1 bold
+2 fg=#ff6b80
+3 fg=#ffc107
+4 fg=#999999

@@ -1,0 +1,31 @@
+# kit/pi/list/more 70x60 @2,2 (66x11)
+  ↑ 9 more
+  Claim 10: the page no longer matches what the     !    2×     8d
+  code does.
+  Claim 11: the page no longer matches what the     +    3×    15d
+  code does.
+  Claim 12: the page no longer matches what the     ↻    4×    22d
+  code does.
+docs/page-4.md ───────────────────────────────────────────────────
+❯ Claim 13: the page no longer matches what the     !    1×     1d
+  code does.
+  ↓ 17 more
+--- styles
+.x2 1x8
+.x2 2x45 .x5 3 .x2 1x4 .x2 1x5
+.x2 2x10
+.x2 2x45 .x5 2 .x2 4x4 .x2 1x5
+.x2 2x10
+.x2 2x45 .x5 2 .x2 4x4 .x2 1x5
+.x2 2x10
+5x14 . 1x51
+6 . 6x45 .x5 3 .x2 1x4 .x2 1x5
+.x2 6x10
+.x2 1x9
+--- legend
+1 fg=#878580
+2 fg=#dad8ce
+3 fg=#d14d41
+4 fg=#d0a215
+5 fg=#dad8ce bold
+6 fg=#cf6a4c

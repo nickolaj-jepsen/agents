@@ -1,0 +1,44 @@
+# kit/pi/list/selected 70x60 @2,2 (66x18)
+AGENTS.md ────────────────────────────────────────────────────────
+  `just build` is not enough to verify a pi         !    3×     2d
+  change; the docs say it is.
+
+docs/hosts.md ────────────────────────────────────────────────────
+  The `legacy` card was removed; the section still  ↻    2×    1mo
+  describes it.
+❯ Darwin hosts need the app leaf to work on both    +    1×     5d
+  halves.
+
+docs/modules.md ──────────────────────────────────────────────────
+  A leaf that imports a third-party module imports  +    1×     9d
+  it on every host; the page should say that modu…
+
+docs/secrets.md ──────────────────────────────────────────────────
+  Rekeying needs the YubiKey.                       !    5×  today
+  The edit command takes the path to the .age       ↻    1×    12d
+  file, not a bare name.
+--- styles
+1x9 . 2x56
+.x2 3x41 .x9 4 .x2 2x4 .x2 2x5
+.x2 3x27
+-
+1x13 . 2x52
+.x2 3x48 .x2 3 .x2 2x4 .x2 2x5
+.x2 3x13
+5 . 5x46 .x4 3 .x2 2x4 .x2 2x5
+.x2 5x7
+-
+1x15 . 2x50
+.x2 3x48 .x2 3 .x2 2x4 .x2 2x5
+.x2 3x47
+-
+1x15 . 2x50
+.x2 1x27 .x23 4 .x2 2x4 .x2 2x5
+.x2 3x43 .x7 3 .x2 2x4 .x2 2x5
+.x2 3x22
+--- legend
+1 fg=#dad8ce bold
+2 fg=#878580
+3 fg=#dad8ce
+4 fg=#d14d41
+5 fg=#cf6a4c

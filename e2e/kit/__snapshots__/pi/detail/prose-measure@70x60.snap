@@ -1,0 +1,22 @@
+# kit/pi/detail/prose-measure 70x60 @2,2 (66x8)
+Prose at width 66 ────────────────────────────────────────────────
+The section says the build verifies a pi change, but the build
+only type-checks the cores and the pi halves and never starts an
+agent. The section says the build verifies a pi change, but the
+build only type-checks the cores and the pi halves and never
+starts an agent. The section says the build verifies a pi change,
+but the build only type-checks the cores and the pi halves and
+never starts an agent.
+--- styles
+1x17 . 2x48
+3x62
+3x64
+3x63
+3x60
+3x65
+3x62
+3x22
+--- legend
+1 fg=#dad8ce bold
+2 fg=#878580
+3 fg=#dad8ce

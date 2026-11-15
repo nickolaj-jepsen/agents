@@ -1,0 +1,39 @@
+# kit/pi/entries/few-rows 160x45 @2,2 (96x17)
+width 60, rows 8
+<date>      The section says the build verifies a pi change,
+            but the build only type-checks the cores and the
+            pi halves and never starts an agent. The section
+            says the build verifies a pi change, but the
+            build only type-checks the cores and the pi
+            halves and never starts an agent. The section
+            says the build verifies a pi change, but the bu…
+↓ 2 more
+
+width 40, rows 6
+<date>
+The section says the build verifies a pi
+change, but the build only type-checks
+the cores and the pi halves and never
+starts an agent. The section says the b…
+↓ 2 more
+--- styles
+1x16
+1x10 .x2 2x48
+.x12 2x48
+.x12 2x48
+.x12 2x44
+.x12 2x43
+.x12 2x45
+.x12 2x47
+1x8
+-
+1x16
+1x10
+2x40
+2x38
+2x37
+2x39
+1x8
+--- legend
+1 fg=#878580
+2 fg=#dad8ce

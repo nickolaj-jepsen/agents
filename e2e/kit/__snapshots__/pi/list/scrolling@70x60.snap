@@ -1,0 +1,27 @@
+# kit/pi/list/scrolling 70x60 @2,2 (66x9)
+  ↑ 10 more
+  Claim 11: the page no longer matches what the     +    3×    15d
+  code does.
+  Claim 12: the page no longer matches what the     ↻    4×    22d
+  code does.
+docs/page-4.md ───────────────────────────────────────────────────
+❯ Claim 13: the page no longer matches what the     !    1×     1d
+  code does.
+  ↓ 17 more
+--- styles
+.x2 1x9
+.x2 2x45 .x5 2 .x2 3x4 .x2 1x5
+.x2 2x10
+.x2 2x45 .x5 2 .x2 3x4 .x2 1x5
+.x2 2x10
+4x14 . 1x51
+5 . 5x45 .x5 6 .x2 1x4 .x2 1x5
+.x2 5x10
+.x2 1x9
+--- legend
+1 fg=#878580
+2 fg=#dad8ce
+3 fg=#d0a215
+4 fg=#dad8ce bold
+5 fg=#cf6a4c
+6 fg=#d14d41

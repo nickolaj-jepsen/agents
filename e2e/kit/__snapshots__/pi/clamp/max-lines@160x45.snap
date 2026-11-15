@@ -1,0 +1,10 @@
+# kit/pi/clamp/max-lines 160x45 @2,2 (96x3)
+width 22                width 30                        width 36
+The section says the    The section says the build      The section says the build verifies
+build verifies a pi c…  verifies a pi change, but the…  a pi change, but the build only typ…
+--- styles
+1x8 .x16 1x8 .x24 1x8
+-
+-
+--- legend
+1 fg=#878580

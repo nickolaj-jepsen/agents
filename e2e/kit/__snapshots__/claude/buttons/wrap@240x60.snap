@@ -1,0 +1,11 @@
+# kit/claude/buttons/wrap 240x60 @165,1 (72x3)
+1: back   2: next   3: skip   4: note
+5: multi   6: quit   7: review   8: yes
+9: more
+--- styles
+1 .x9 1 2x6 .x3 1 2x6 .x3 1 2x6
+1 2x7 .x3 1 2x6 .x3 1 2x8 .x3 1 2x5
+1 2x6
+--- legend
+1 fg=#b1b9f9
+2 fg=#999999

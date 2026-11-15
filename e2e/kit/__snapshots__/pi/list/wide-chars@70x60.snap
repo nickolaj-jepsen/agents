@@ -1,0 +1,27 @@
+# kit/pi/list/wide-chars 70x60 @2,2 (66x9)
+docs/日本語のドキュメント.md ─────────────────────────────────────
+❯ □ この節は古くなっています。ビルドが検証するのは  +    3×     5d
+    型だけで、エージェントを起動しないことを書き…
+  □ 混在 mixed ＡＢＣ text この節は古くなっていま   !    1×     2d
+    す。ビルドが検証するのは型だけで、エージェン…
+
+docs/emoji.md ────────────────────────────────────────────────────
+  □ A pointer, a mark and a 🙂 in a title that is   ↻    2×     9d
+    long enough to be cut somewhere.
+--- styles
+1x28 . 2x37
+3 . 2 . 3x46 .x2 4 .x2 5x4 .x2 2x5
+.x4 3x44
+.x2 2 . 4x45 .x3 6 .x2 2x4 .x2 2x5
+.x4 4x44
+-
+1x13 . 2x52
+.x2 2 . 4x45 .x3 4 .x2 2x4 .x2 2x5
+.x4 4x32
+--- legend
+1 fg=#dad8ce bold
+2 fg=#878580
+3 fg=#cf6a4c
+4 fg=#dad8ce
+5 fg=#d0a215
+6 fg=#d14d41

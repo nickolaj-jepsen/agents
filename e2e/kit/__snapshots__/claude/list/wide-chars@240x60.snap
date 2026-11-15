@@ -1,0 +1,31 @@
+# kit/claude/list/wide-chars 240x60 @165,1 (75x12)
+docs/日本語のドキュメント.md ──────────────────────────────────────────────
+この節は古くなっています。ビルドが検証するのは型だけで、エージェントを起動
+しないことを書き足す必要があります。
++ missing  3×  5d
+混在 mixed ＡＢＣ text
+この節は古くなっています。ビルドが検証するのは型だけで、エージェントを起動…
+! wrong  1×  2d
+
+docs/emoji.md ─────────────────────────────────────────────────────────────
+A pointer, a mark and a 🙂 in a title that is long enough to be cut
+somewhere.
+↻ stale  2×  9d
+--- styles
+1x28 2x47
+-
+-
+2x9 .x2 3x2 .x2 2x2
+-
+-
+4x7 .x2 2x2 .x2 2x2
+-
+1x13 2x62
+-
+-
+2x7 .x2 2x2 .x2 2x2
+--- legend
+1 bold
+2 fg=#999999
+3 fg=#ffc107
+4 fg=#ff6b80

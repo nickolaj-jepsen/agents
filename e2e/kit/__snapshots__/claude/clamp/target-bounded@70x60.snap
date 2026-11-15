@@ -1,0 +1,12 @@
+# kit/claude/clamp/target-bounded 70x60 @2,49 (66x4)
+width 22                width 30
+The section says the    The section says the build
+build verifies a pi     verifies a pi change, but the
+change, but the build…  build only type-checks the co…
+--- styles
+1x8 .x16 1x8
+-
+-
+-
+--- legend
+1 fg=#999999
