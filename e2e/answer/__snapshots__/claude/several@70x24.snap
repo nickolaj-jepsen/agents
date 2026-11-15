@@ -1,0 +1,21 @@
+# answer/claude/several 70x24 @0,12 (70x6)
+1: [x] A. lint (recommended)                                      [-]
+   ╰▸ A note on this answer, or Enter to go on
+2: [x] B. types (recommended)
+3: [x] C. tests (recommended)
+4: ✎ Write your own answer
+↑ 3 more · ↓ 4 more
+--- styles
+1 .x13 2x14 .x38 2x3
+.x3 3x3 2x40
+4 5x14 6x14
+1 .x14 2x14
+1 2x25
+2x19
+--- legend
+1 fg=#b1b9f9
+2 fg=#999999
+3 fg=#b1b9f9 italic
+4 fg=#b1b9f9 inverse
+5 inverse
+6 fg=#999999 inverse

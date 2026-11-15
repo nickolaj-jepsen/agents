@@ -1,0 +1,60 @@
+# answer/pi/fill-click 70x24 @0,0 (70x24)
+
+ Warning: codemode_only: not registered, declarations stay visible:
+ subagent, get_subagent_result, steer_subagent
+
+
+ ask
+
+
+ ▌ Q1. Use SQLite?
+
+ - A. SQLite
+ - B. Postgres
+
+ Q2. Add caching?
+
+ - A. Yes
+ - B. No
+
+ Answer 2 questions · 2 answered · alt+a or /answer
+── ask ────────────────────────────────────────  ──  ── 3% / 200k ──
+Q1: A
+Q2: B
+──────────────────────────────────────────────────────────────────────
+  fixture  Replay (fixture)
+--- styles
+-
+. 1x69
+. 1x45
+-
+2x70
+2 3x3 2x66
+2x70
+-
+.x3 4x15
+-
+. 5x2 4x2
+. 5x2 4x2
+-
+. 4x16
+-
+. 5x2 4x2
+. 5x2 4x2
+-
+. 5x18 6x32
+7x3 6x3 . 7x40 . 6 7x4 8 7x4 6x9 7x3
+-
+-
+7x70
+.x2 6x7 .x2 9x16
+--- legend
+1 fg=#d0a215
+2 bg=#282726
+3 fg=#dad8ce bg=#282726
+4 bold
+5 fg=#cf6a4c
+6 fg=#878580
+7 fg=#343331
+8 fg=#cf6a4c bold
+9 fg=#878580 bold

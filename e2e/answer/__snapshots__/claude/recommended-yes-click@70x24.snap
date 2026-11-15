@@ -1,0 +1,21 @@
+# answer/claude/recommended-yes-click 70x24 @0,12 (70x6)
+1: A. Yes, one default for every kind. (recommended) ✓            [-]
+   ╰▸ A note on this answer, or Enter to go on
+2: B. Default by kind.
+3: C. Add the bar as a second pick.
+4: ✎ Write your own answer
+↑ 3 more · ↓ 5 more
+--- styles
+1 .x37 2x14 3x2 .x12 2x3
+.x3 4x3 2x40
+5 6x21
+1
+1 2x25
+2x19
+--- legend
+1 fg=#b1b9f9
+2 fg=#999999
+3 fg=#4eba65
+4 fg=#b1b9f9 italic
+5 fg=#b1b9f9 inverse
+6 inverse

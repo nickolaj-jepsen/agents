@@ -303,6 +303,16 @@ describe("apply", () => {
     expect(steps(form, [pick(writeIn)])).toEqual(newDraft(form));
   });
 
+  test("a note, an overall note and a write-in of several lines stay one block in the reply", () => {
+    const form = formOf(GRILLING_ROUND);
+    expect(reply(form, steps(form, [note("a\nb\nc"), write("first\nsecond")]))).toBe(
+      "Q1: first\n    second\n    Note: a\n          b\n          c",
+    );
+    expect(reply(form, steps(form, [pick(0), REVIEW, note("x\ny")]))).toBe(
+      "Q1: A\nOverall: x\n         y",
+    );
+  });
+
   test("a round of recommendations collapses to yes unless something else is said", () => {
     const form = formOf(ROUND_AFTER_RESEARCH);
     const draft = steps(form, [pick(0), FORWARD, pick(0), FORWARD]);

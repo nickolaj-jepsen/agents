@@ -1,0 +1,33 @@
+# answer/claude/recommended 160x45 @0,27 (160x12)
+──   ○ Q1   ○ Q2   ○ Q3   r: review   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
+Should every focus default to the same bar?
+
+1: A. Yes, one default for every kind. (recommended)
+2: B. Default by kind.
+3: C. Add the bar as a second pick.
+4: ✎ Write your own answer
+
+Recommended: A. A per-kind table is one more thing to keep in sync.
+
+
+h: back   l: next   y: yes   s: skip   n: note   m: multi   q: quit
+--- styles
+1x2 .x3 1x2 .x5 1x4 .x3 1x4 .x3 2 1x8 .x3 1x116 .x2 1x3
+3x43
+-
+4 5x37 6x14
+2
+2
+2 1x25
+-
+3x12
+-
+-
+2 1x6 .x3 2 1x6 .x3 2 .x8 2 1x6 .x3 2 1x6 .x3 2 1x7 .x3 2 1x6
+--- legend
+1 fg=#999999
+2 fg=#b1b9f9
+3 bold
+4 fg=#b1b9f9 inverse
+5 inverse
+6 fg=#999999 inverse

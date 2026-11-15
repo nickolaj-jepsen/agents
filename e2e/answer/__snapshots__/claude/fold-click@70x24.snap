@@ -1,0 +1,22 @@
+# answer/claude/fold-click 70x24 @0,17 (70x7)
+▸ plugin panel hidden · ctrl+x ctrl+a or click to show
+
+──────────────────────────────────────────────────────────────────────
+❯
+──────────────────────────────────────────────────────────────────────
+  <model>   · medium · 0%
+  ⏵⏵ auto mode on (shift+tab to cycle) · ← 8 agents
+--- styles
+1x54
+-
+2x70
+.x2 3
+2x70
+.x2 1x9 4x3 1x6 4x5
+.x2 5x15 1x34
+--- legend
+1 fg=#999999
+2 fg=#888888
+3 inverse
+4 fg=#999999 dim
+5 fg=#ffc107

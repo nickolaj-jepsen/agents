@@ -1,0 +1,31 @@
+# answer/pi/wide-chars 70x24 @0,11 (70x12)
+╭─ Q1 1 of 1 ────────────────────────────────────────────────────────╮
+│ 数据库を使いますか？ 🚀 Use émoji?                                 │
+│                                                                    │
+│ ›1 A. 是的，使用 SQLite 🗃️                                         │
+│  2 B. いいえ、Postgres 🐘                                          │
+│  3 C. 👨‍👩‍👧‍👦 family ＡＢＣ                                       │
+│                                                                    │
+│  4 Write your own answer                                           │
+│                                                                    │
+│                                                                    │
+│ b back  f forward  s skip  r review  n note  m several             │
+╰───── 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
+--- styles
+1x2 . 2x2 . 3x6 . 1x57
+1 . 4x34 .x33 1
+1 .x68 1
+1 . 2x2 . 2x22 .x41 1
+1 .x2 2 .x65 1
+1 .x2 2 .x65 1
+1 .x68 1
+1 .x2 2 . 3x21 .x43 1
+1 .x68 1
+1 .x68 1
+1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x7 2 .x21 1
+1x6 3x62 1x2
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c
+3 fg=#878580
+4 bold

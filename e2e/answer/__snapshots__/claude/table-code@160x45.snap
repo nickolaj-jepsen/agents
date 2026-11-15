@@ -1,0 +1,38 @@
+# answer/claude/table-code 160x45 @0,24 (160x15)
+──   ○ Q1   r: review   ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
+Pick the storage layer?
+┌──────────┬─────────┬────────────────┐
+│  Engine  │ Latency │     Notes      │
+├──────────┼─────────┼────────────────┤
+│ SQLite   │ •••     │ embedded       │
+├──────────┼─────────┼────────────────┤
+│ Postgres │ •••     │ needs a server │
+└──────────┴─────────┴────────────────┘
+… more above
+
+1: A. SQLite
+2: B. Postgres
+3: ✎ Write your own answer
+h: back   l: next   s: skip   n: note   m: multi   q: quit
+--- styles
+1x2 .x3 1x2 .x5 2 1x8 .x3 1x130 .x2 1x3
+3x23
+-
+-
+-
+-
+-
+-
+-
+1x12
+-
+4 5x11
+2
+2 1x25
+2 1x6 .x3 2 1x6 .x3 2 1x6 .x3 2 1x6 .x3 2 1x7 .x3 2 1x6
+--- legend
+1 fg=#999999
+2 fg=#b1b9f9
+3 bold
+4 fg=#b1b9f9 inverse
+5 inverse

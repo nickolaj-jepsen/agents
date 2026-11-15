@@ -1,0 +1,32 @@
+# answer/pi/note-typed 70x24 @0,11 (70x12)
+╭─ Q1 1 of 2 ────────────────────────────────────────────────────────╮
+│ Use SQLite?                                                        │
+│                                                                    │
+│  1 A. SQLite ✓                                                     │
+│    note › keep the flag                                            │
+│  2 B. Postgres                                                     │
+│                                                                    │
+│  3 Write your own answer                                           │
+│                                                                    │
+│                                                                    │
+│ b back  f forward  s skip  r review  n note  m several             │
+╰───────────────────────────── enter goes on · esc leaves the field ─╯
+--- styles
+1x2 . 2x2 . 3x6 . 1x57
+1 . 4x11 .x56 1
+1 .x68 1
+1 .x2 2 . 5x11 .x53 1
+1 . 3x7 .x60 1
+1 .x2 2 .x65 1
+1 .x68 1
+1 .x2 2 . 3x21 .x43 1
+1 .x68 1
+1 .x68 1
+1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x7 2 .x21 1
+1x30 3x38 1x2
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c
+3 fg=#878580
+4 bold
+5 fg=#879a39

@@ -134,9 +134,13 @@ export default function (pi: ExtensionAPI) {
       view(answering.form, { ...answering.draft, step: at }),
     );
     let result: FormResult;
+    // The form's own handle on the screen: setting the editor's text asks for no redraw, and
+    // with the form gone nothing else does until the next input.
+    let redraw: (() => void) | undefined;
     try {
       result = await ctx.ui.custom<FormResult>(
         (tui, theme, _keybindings, done) => {
+          redraw = () => tui.requestRender();
           form = new AnswerForm(tui, theme, opened, step, done, steps);
           return form;
         },
@@ -147,8 +151,10 @@ export default function (pi: ExtensionAPI) {
     }
     // A turn that ended while the form was up has replaced what it answered.
     const now = viewOf(held);
-    if (now?.id === opened.id && result.fill && now.reply)
+    if (now?.id === opened.id && result.fill && now.reply) {
       ctx.ui.setEditorText(placeReply(ctx.ui.getEditorText(), now.reply));
+      redraw?.();
+    }
   };
 
   pi.registerShortcut(SHORTCUT, {

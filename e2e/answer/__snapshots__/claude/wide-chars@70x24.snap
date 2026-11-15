@@ -1,0 +1,20 @@
+# answer/claude/wide-chars 70x24 @0,12 (70x6)
+数据库を使いますか？ 🚀 Use émoji?                                [-]
+
+1: A. 是的，使用 SQLite 🗃️
+2: B. いいえ、Postgres 🐘
+3: C. 👨‍👩‍👧‍👦 family ＡＢＣ
+↑ 1 more · ↓ 2 more
+--- styles
+1x34 .x32 2x3
+-
+3 4x25
+5
+5
+2x19
+--- legend
+1 bold
+2 fg=#999999
+3 fg=#b1b9f9 inverse
+4 inverse
+5 fg=#b1b9f9

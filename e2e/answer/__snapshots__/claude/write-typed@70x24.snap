@@ -1,0 +1,18 @@
+# answer/claude/write-typed 70x24 @0,12 (70x6)
+                                                                  [-]
+1: A. SQLite
+2: B. Postgres
+✎ DuckDB, it is embedded  ⏎ save
+h: back   l: next   s: skip   n: note   m: multi   q: quit
+↑ 2 more
+--- styles
+.x66 1x3
+2
+2
+.x24 3 1x7
+2 1x6 .x3 2 1x6 .x3 2 1x6 .x3 2 1x6 .x3 2 1x7 .x3 2 1x6
+1x8
+--- legend
+1 fg=#999999
+2 fg=#b1b9f9
+3 inverse

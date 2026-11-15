@@ -566,8 +566,17 @@ function said(item: FormItem, answer: Answer): string {
 
 const NO_ANSWER = "no answer yet";
 
+/** A text's lines after the first, indented to sit under the first: one block in the reply. */
+const under = (text: string, indent: number) => text.split("\n").join(`\n${" ".repeat(indent)}`);
+
+const NOTE_LEAD = "    Note: ";
+
 /** A reply line and, under it, the note it carries. */
-const noted = (line: string, note: string) => (note ? [line, `    Note: ${note}`] : [line]);
+const noted = (line: string, note: string) =>
+  note ? [line, `${NOTE_LEAD}${under(note, NOTE_LEAD.length)}`] : [line];
+
+/** What a question's answer says in the reply, a write-in's lines kept under its first. */
+const saying = (label: string, said: string) => `${label}: ${under(said, label.length + 2)}`;
 
 const rowsOf = (form: Form, draft: Draft) =>
   form.items.map((item, i) => ({
@@ -582,7 +591,7 @@ function roundReply(form: Form, draft: Draft): string[] {
     return ["yes"];
   return rows.flatMap(({ item, answer, note }) => {
     if (answer)
-      return noted(`${item.label}: ${answer.kind === "accept" ? "yes" : said(item, answer)}`, note);
+      return noted(saying(item.label, answer.kind === "accept" ? "yes" : said(item, answer)), note);
     return note ? noted(`${item.label}: ${NO_ANSWER}`, note) : [];
   });
 }
@@ -599,7 +608,7 @@ function picksReply(form: Form, draft: Draft): string[] {
     const what = said(item, answer);
     if (what === "build" && !note) builds.push(label);
     else if (what === "build") rest.push(...noted(`do ${label}`, note));
-    else if (answer.kind === "text") rest.push(...noted(`${label}: ${answer.text}`, note));
+    else if (answer.kind === "text") rest.push(...noted(saying(label, answer.text), note));
     else rest.push(...noted(`${label} → ${what}`, note));
   }
   return [...(builds.length ? [`do ${builds.join(", ")}`] : []), ...rest];
@@ -608,7 +617,7 @@ function picksReply(form: Form, draft: Draft): string[] {
 /** The reply as the person would type it; "" when nothing was answered. */
 export function reply(form: Form, draft: Draft): string {
   const lines = form.kind === "round" ? roundReply(form, draft) : picksReply(form, draft);
-  if (draft.note) lines.push(`Overall: ${draft.note}`);
+  if (draft.note) lines.push(saying("Overall", draft.note));
   return lines.join("\n");
 }
 

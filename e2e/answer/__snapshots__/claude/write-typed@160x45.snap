@@ -1,0 +1,25 @@
+# answer/claude/write-typed 160x45 @0,30 (160x9)
+──   ○ Q1   ○ Q2   r: review   ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
+Use SQLite?
+
+1: A. SQLite
+2: B. Postgres
+✎ DuckDB, it is embedded  ⏎ save
+
+
+h: back   l: next   s: skip   n: note   m: multi   q: quit
+--- styles
+1x2 .x3 1x2 .x5 1x4 .x3 2 1x8 .x3 1x123 .x2 1x3
+3x11
+-
+2
+2
+.x24 4 1x7
+-
+-
+2 1x6 .x3 2 1x6 .x3 2 1x6 .x3 2 1x6 .x3 2 1x7 .x3 2 1x6
+--- legend
+1 fg=#999999
+2 fg=#b1b9f9
+3 bold
+4 inverse

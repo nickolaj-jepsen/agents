@@ -1,0 +1,59 @@
+# answer/pi/none 70x24 @0,0 (70x24)
+             ^
+
+
+
+ Warning: codemode_only: not registered, declarations stay visible:
+ subagent, get_subagent_result, steer_subagent
+
+
+ ask
+
+
+ ▌ Done. What changed:
+
+ 1. The parser takes Q labels and numbers.
+ 2. The review screen fills the prompt.
+
+ Tests pass.
+
+ Nothing to answer: the last turn asked no questions.
+
+── ask ────────────────────────────────────────  ──  ── 3% / 200k ──
+
+──────────────────────────────────────────────────────────────────────
+  fixture  Replay (fixture)
+--- styles
+1x70
+-
+-
+-
+. 1x69
+. 1x45
+-
+2x70
+2 3x3 2x66
+2x70
+-
+-
+-
+. 4x3
+. 4x3
+-
+-
+-
+. 5x52
+-
+6x3 5x3 . 6x40 . 5 6x4 7 6x4 5x9 6x3
+-
+6x70
+.x2 5x7 .x2 8x16
+--- legend
+1 fg=#d0a215
+2 bg=#282726
+3 fg=#dad8ce bg=#282726
+4 fg=#cf6a4c
+5 fg=#878580
+6 fg=#343331
+7 fg=#cf6a4c bold
+8 fg=#878580 bold

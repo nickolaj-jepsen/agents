@@ -1,0 +1,19 @@
+# answer/claude/multi-picked 70x24 @0,12 (70x6)
+                                                                  [-]
+1: [x] A. SQLite
+2: [x] B. Postgres
+3: ✎ Write your own answer
+h: back   l: next   s: skip   n: note   m: multi   q: quit
+↑ 2 more
+--- styles
+.x66 1x3
+2
+3 4x17
+2 1x25
+2 1x6 .x3 2 .x9 2 1x6 .x3 2 1x6 .x3 2 .x10 2 1x6
+1x8
+--- legend
+1 fg=#999999
+2 fg=#b1b9f9
+3 fg=#b1b9f9 inverse
+4 inverse

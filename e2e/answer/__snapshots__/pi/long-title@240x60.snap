@@ -1,0 +1,43 @@
+# answer/pi/long-title 240x60 @0,41 (240x18)
+╭─ Q1 1 of 1 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Why this matters: the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy    │
+│ dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick    │
+│ brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps  │
+│ over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy    │
+│ dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick    │
+│ brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps  │
+│ over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy    │
+│ dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog?                                                                                                     │
+│                                                                                                                                                                                                                                              │
+│ ›1 A. Yes                                                                                                                                                                                                                                    │
+│  2 B. No                                                                                                                                                                                                                                     │
+│                                                                                                                                                                                                                                              │
+│  3 Write your own answer                                                                                                                                                                                                                     │
+│                                                                                                                                                                                                                                              │
+│                                                                                                                                                                                                                                              │
+│ b back  f forward  s skip  r review  n note  m several                                                                                                                                                                                       │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
+--- styles
+1x2 . 2x2 . 3x6 . 1x227
+1 . 4x233 .x4 1
+1 . 4x233 .x4 1
+1 . 4x235 .x2 1
+1 . 4x233 .x4 1
+1 . 4x233 .x4 1
+1 . 4x235 .x2 1
+1 . 4x233 .x4 1
+1 . 4x136 .x101 1
+1 .x238 1
+1 . 2x2 . 2x6 .x228 1
+1 .x2 2 .x235 1
+1 .x238 1
+1 .x2 2 . 3x21 .x213 1
+1 .x238 1
+1 .x238 1
+1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x7 2 .x191 1
+1x176 3x62 1x2
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c
+3 fg=#878580
+4 bold

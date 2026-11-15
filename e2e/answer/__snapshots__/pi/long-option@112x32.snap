@@ -1,0 +1,51 @@
+# answer/pi/long-option 112x32 @0,9 (112x22)
+╭─ Q1 1 of 1 ──────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Which one?                                                                                                   │
+│                                                                                                              │
+│ ›1 A. a very long option text that keeps going and going a very long option text that keeps going and going  │
+│    a very long option text that keeps going and going a very long option text that keeps going and going a   │
+│    very long option text that keeps going and going a very long option text that keeps going and going a     │
+│    very long option text that keeps going and going a very long option text that keeps going and going a     │
+│    very long option text that keeps going and going a very long option text that keeps going and going a     │
+│    very long option text that keeps going and going a very long option text that keeps going and going       │
+│  2 B. Short                                                                                                  │
+│    a very long option text that keeps going and going a very long option text that keeps going and going a   │
+│    very long option text that keeps going and going a very long option text that keeps going and going a     │
+│    very long option text that keeps going and going a very long option text that keeps going and going a     │
+│    very long option text that keeps going and going a very long option text that keeps going and going a     │
+│    very long option text that keeps going and going a very long option text that keeps going and going a     │
+│    very long option text that keeps going and going a very long option text that keeps going and going       │
+│                                                                                                              │
+│  3 Write your own answer                                                                                     │
+│                                                                                                              │
+│                                                                                                              │
+│ b back  f forward  s skip  r review  n note  m several                                                       │
+╰─────────────────────────────────────────────── 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
+--- styles
+1x2 . 2x2 . 3x6 . 1x99
+1 . 4x10 .x99 1
+1 .x110 1
+1 . 2x2 . 2x104 .x2 1
+1 .x4 2x103 .x3 1
+1 .x4 2x101 .x5 1
+1 .x4 2x101 .x5 1
+1 .x4 2x101 .x5 1
+1 .x4 2x99 .x7 1
+1 .x2 2 .x107 1
+1 .x4 3x103 .x3 1
+1 .x4 3x101 .x5 1
+1 .x4 3x101 .x5 1
+1 .x4 3x101 .x5 1
+1 .x4 3x101 .x5 1
+1 .x4 3x99 .x7 1
+1 .x110 1
+1 .x2 2 . 3x21 .x85 1
+1 .x110 1
+1 .x110 1
+1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x7 2 .x63 1
+1x48 3x62 1x2
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c
+3 fg=#878580
+4 bold

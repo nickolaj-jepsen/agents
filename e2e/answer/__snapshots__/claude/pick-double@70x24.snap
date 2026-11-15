@@ -1,0 +1,23 @@
+# answer/claude/pick-double 70x24 @0,12 (70x7)
+1: A. SQLite                                                      [-]
+2: B. Postgres ✓
+   ╰▸ A note on this answer, or Enter to go on ⏎ next
+3: ✎ Write your own answer
+h: back   l: next   s: skip   n: note   m: multi   q: quit
+↑ 3 more
+          copied 8 chars to clipboard · disable auto-copy in /config
+--- styles
+1 .x65 2x3
+1 .x13 3x2
+.x3 4x3 5 6x39 2x7
+1 2x25
+1 2x6 .x3 1 .x9 1 2x6 .x3 1 2x6 .x3 1 2x7 .x3 1 2x6
+2x8
+.x10 1x58
+--- legend
+1 fg=#b1b9f9
+2 fg=#999999
+3 fg=#4eba65
+4 fg=#b1b9f9 italic
+5 inverse
+6 dim

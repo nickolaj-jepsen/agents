@@ -1,0 +1,16 @@
+# answer/claude/none 160x45 @0,9 (160x6)
+● Done. What changed:
+
+  1. The parser takes Q labels and numbers.
+  2. The review screen fills the prompt.
+
+  Tests pass.
+--- styles
+1
+-
+-
+-
+-
+-
+--- legend
+1 fg=#ffffff

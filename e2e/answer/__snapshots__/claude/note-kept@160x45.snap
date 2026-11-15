@@ -1,0 +1,29 @@
+# answer/claude/note-kept 160x45 @0,30 (160x9)
+──   ✓ Q1   ○ Q2   r: review   ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
+Use SQLite?
+
+1: A. SQLite ✓
+   ╰▸ keep the flag
+2: B. Postgres
+3: ✎ Write your own answer
+
+h: back   l: next   s: skip   n: note   m: multi   q: quit
+--- styles
+1x2 .x3 2x2 .x5 1x4 .x3 3 1x8 .x3 1x123 .x2 1x3
+4x11
+-
+5 6x11 7x2
+.x3 1x3 8x13
+3
+3 1x25
+-
+3 1x6 .x3 3 .x9 3 1x6 .x3 3 1x6 .x3 3 1x7 .x3 3 1x6
+--- legend
+1 fg=#999999
+2 fg=#4eba65
+3 fg=#b1b9f9
+4 bold
+5 fg=#b1b9f9 inverse
+6 inverse
+7 fg=#4eba65 inverse
+8 fg=#b1b9f9 italic

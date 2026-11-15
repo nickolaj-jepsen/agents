@@ -1,0 +1,54 @@
+# answer/claude/long-body 240x60 @0,31 (240x23)
+──   ○ Q1   r: review   ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
+Keep the journal?
+Line 1 of what it hangs on.
+Line 2 of what it hangs on.
+Line 3 of what it hangs on.
+Line 4 of what it hangs on.
+Line 5 of what it hangs on.
+Line 6 of what it hangs on.
+Line 7 of what it hangs on.
+Line 8 of what it hangs on.
+Line 9 of what it hangs on.
+Line 10 of what it hangs on.
+Line 11 of what it hangs on.
+Line 12 of what it hangs on.
+Line 13 of what it hangs on.
+… more above
+
+1: A. Keep it.
+2: B. Drop it.
+3: ✎ Write your own answer
+
+
+h: back   l: next   s: skip   n: note   m: multi   q: quit
+--- styles
+1x2 .x3 1x2 .x5 2 1x8 .x3 1x210 .x2 1x3
+3x17
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+1x12
+-
+4 5x13
+2
+2 1x25
+-
+-
+2 1x6 .x3 2 1x6 .x3 2 1x6 .x3 2 1x6 .x3 2 1x7 .x3 2 1x6
+--- legend
+1 fg=#999999
+2 fg=#b1b9f9
+3 bold
+4 fg=#b1b9f9 inverse
+5 inverse

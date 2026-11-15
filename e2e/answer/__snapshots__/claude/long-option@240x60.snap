@@ -1,0 +1,36 @@
+# answer/claude/long-option 240x60 @0,40 (240x14)
+──   ○ Q1   r: review   ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
+Which one?
+
+1: A. a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text
+that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a
+very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going
+2: B. Short
+   a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that
+keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very
+long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going
+3: ✎ Write your own answer
+
+
+h: back   l: next   s: skip   n: note   m: multi   q: quit
+--- styles
+1x2 .x3 1x2 .x5 2 1x8 .x3 1x210 .x2 1x3
+3x10
+-
+4 5x233
+5x233
+5x150
+2
+1x235
+1x233
+1x145
+2 1x25
+-
+-
+2 1x6 .x3 2 1x6 .x3 2 1x6 .x3 2 1x6 .x3 2 1x7 .x3 2 1x6
+--- legend
+1 fg=#999999
+2 fg=#b1b9f9
+3 bold
+4 fg=#b1b9f9 inverse
+5 inverse

@@ -1,0 +1,108 @@
+# answer/pi/fill-click 160x45 @0,0 (160x45)
+
+ ▀▀█  <ver>
+ █▀ █ escape interrupt · ctrl+c/ctrl+d clear/exit · / commands · ! bash · ctrl+o more
+ Press ctrl+o to show full startup help.
+
+ Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.
+
+[Skill warnings]
+  ~/.agents/skills/avoid-ai-tropes/SKILL.md
+    Nested mappings are not allowed in compact mappings at line 2, column 14:
+
+description: Review human-facing prose (docs, READMEs, PR and commit descriptio…
+             ^
+
+
+
+ Warning: codemode_only: not registered, declarations stay visible: subagent, get_subagent_result, steer_subagent
+
+
+ ask
+
+
+ ▌ Q1. Use SQLite?
+
+ - A. SQLite
+ - B. Postgres
+
+ Q2. Add caching?
+
+ - A. Yes
+ - B. No
+
+
+
+
+
+
+
+
+ Answer 2 questions · 2 answered · alt+a or /answer
+── ask ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  ──  ── 3% / 200k ──
+Q1: A
+Q2: B
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  fixture  Replay (fixture)                                                                            ~/.local/state/agents<tmp>
+--- styles
+-
+. 1 2x2 .x2 3x6
+. 4x2 . 5 . 3x6 6x13 3x13 6x14 3 6x12 3 6x8 3x6 6x5
+. 3x39
+-
+. 3x85
+-
+7x16
+7x43
+7x160
+7x160
+7x160
+7x160
+-
+-
+-
+. 7x112
+-
+8x160
+8 9x3 8x156
+8x160
+-
+.x3 ax15
+-
+. bx2 ax2
+. bx2 ax2
+-
+. ax16
+-
+. bx2 ax2
+. bx2 ax2
+-
+-
+-
+-
+-
+-
+-
+-
+. bx18 3x32
+cx3 3x3 . cx130 . 3 cx4 d cx4 3x9 cx3
+-
+-
+cx160
+.x2 3x7 .x2 ex16 .x76 3x52 fx3
+--- legend
+1 fg=#e48a7a bg=#4f8eb3
+2 fg=#e48a7a
+3 fg=#878580
+4 fg=#4f8eb3
+5 fg=#eab65d
+6 fg=#b7b5ac
+7 fg=#d0a215
+8 bg=#282726
+9 fg=#dad8ce bg=#282726
+a bold
+b fg=#cf6a4c
+c fg=#343331
+d fg=#cf6a4c bold
+e fg=#878580 bold
+f fg=#dad8ce
