@@ -2,6 +2,7 @@ import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register, RenderElement, RenderNode } from "claude-code";
 
 import type { Duplicate, Filed, Form, Last, Option } from "./types.d.ts";
+import { paneOptions } from "./ui";
 
 // The built-in's card has no extension point, so the button is spliced into the
 // tree it draws, found by these labels. A rename only hides the button (see warnDrift).
@@ -528,13 +529,15 @@ async function fill($: EngineInterface, brief: string) {
 }
 
 async function openPane($: EngineInterface) {
-  const opened = await $.ui.open({
-    id: PANE,
-    title: "Linear draft",
-    focus: true,
-    closeOnEscape: true,
-    rows: 30,
-  });
+  const opened = await $.ui.open(
+    paneOptions({
+      id: PANE,
+      title: "Linear draft",
+      focus: true,
+      closeOnEscape: true,
+      rows: 30,
+    }),
+  );
   await update($, isPaneOpen, () => true);
   if (!opened.isPlaced) $.ui.toast(`The Linear draft pane can't show yet: ${opened.reason}`);
 }

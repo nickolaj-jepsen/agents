@@ -8,6 +8,7 @@ import type {
 } from "claude-code";
 
 import type { FolderApp, Menu, MenuKind, Row } from "./types.d.ts";
+import { paneOptions } from "./ui";
 import {
   chooseRemote,
   editorCandidates,
@@ -267,7 +268,9 @@ async function show($: EngineInterface, kind: MenuKind) {
   const cwd = await $.session.cwd();
   const title = TITLES[kind];
   await update($, menu, () => ({ kind, title, rows: null }));
-  const opened = await $.ui.open({ id: PANE, title, focus: true, closeOnEscape: true, rows: 10 });
+  const opened = await $.ui.open(
+    paneOptions({ id: PANE, title, focus: true, closeOnEscape: true, rows: 10 }),
+  );
   if (!opened.isPlaced) $.ui.toast(`The ${title} menu can't show yet: ${opened.reason}`);
   const built =
     kind === "git"
