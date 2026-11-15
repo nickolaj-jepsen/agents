@@ -269,13 +269,17 @@ The flake exposes what a system config needs to consume this repo:
 
 - `lib.plugins`: `{ <name> = { claude; pi; subagents; path; }; }`, read from the folders.
 - `lib.skills`: `{ <name> = <path to the skill folder>; }`.
-- `packages.<system>.agent-tools`: the checked sources, with each plugin at
-  `$out/plugins/<name>`; `overlays.default` adds it (and `tui-test`) to a `pkgs`, where it
-  type-checks the pi halves against that `pkgs.pi-coding-agent`.
-- `lib.mkClaudePlugin { pkgs; claude-code; agentTools?; } <name>`: one plugin's Claude half validated and
-  tested against the given claude-code.
-- `packages.<system>.pi-coding-agent`, `tui-test`: the pi the pi halves are checked against,
-  and the e2e daemon.
+- `overlays.default` (also `overlays.tools`): `pkgs.agent-tools` and `pkgs.tui-test`. agent-tools
+  type-checks the pi halves against the consumer's `pkgs.pi-coding-agent`.
+- `packages.<system>.agent-tools`: the checked sources, with each plugin at `$out/plugins/<name>`,
+  type-checked against nixpkgs-unstable's pi. Also `tui-test`.
+- `lib.mkClaudePlugin { pkgs; claude-code; agentTools?; } <name>`: one plugin's Claude half validated
+  and tested against the given claude-code.
+
+The checks run against nixpkgs-unstable's `claude-code` and `pi-coding-agent`. Dependabot (`.github/dependabot.yml`)
+opens at most one PR a day that updates every flake input together; `CI gate` checks it and
+`.github/workflows/dependabot-auto-merge.yml` merges it. The repo needs "Allow auto-merge" and a ruleset
+on `main` requiring `CI gate`.
 
 ### Layout
 
@@ -318,7 +322,7 @@ Only one with a Claude half goes in the marketplace and the Install section, and
 for its `core/` or `pi/`: `tsconfig.core.json` holds the cores to no types at all (a
 Node import there fails), and `tsconfig.pi.json` checks the pi halves and the cores'
 specs with Node's types. `npm run typecheck` is `tsc -b`. A pi half type-checks
-against the pi that ships, not an npm copy of it: `pkgs/agent-tools` links the pi pinned in `pkgs/pi-coding-agent`
+against the pi that ships, not an npm copy of it: `pkgs/agent-tools` links nixpkgs-unstable's pi (or the consumer's)
 into its `node_modules` before `tsc`, and `just dev-setup` makes the same links for
 an editor.
 

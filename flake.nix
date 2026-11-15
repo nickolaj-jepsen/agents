@@ -24,30 +24,13 @@
         skillsDir = ./skills;
         dirs = dir: lib.filterAttrs (_: type: type == "directory") (builtins.readDir dir);
       in {
-        # The pins: Claude Code and pi, ahead of nixpkgs, from the nixpkgs-unstable this flake
-        # locks (the pi pin overrides that derivation, so it is only known to build on that rev).
-        # The plugins' checks and the pi halves' type-check run against exactly these.
-        overlays.pins = final: _prev: let
-          unstable = import inputs.nixpkgs-unstable {
-            inherit (final.stdenv.hostPlatform) system;
-            inherit (final) config;
-          };
-        in {
-          claude-code = final.callPackage ./pkgs/claude-code/package.nix {inherit unstable;};
-          pi-coding-agent = final.callPackage ./pkgs/pi-coding-agent/package.nix {inherit unstable;};
-        };
-
-        # The pins, plus `pkgs.agent-tools` (checked against them) and `pkgs.tui-test`. A
-        # consumer that wants only the tools takes `overlays.tools` and brings its own
-        # `pkgs.pi-coding-agent`.
-        overlays.default = lib.composeManyExtensions [
-          self.overlays.pins
-          self.overlays.tools
-        ];
-        overlays.tools = final: _prev: {
+        # `pkgs.agent-tools` (the plugins' sources, with the pi halves type-checked against the
+        # consumer's `pkgs.pi-coding-agent`) and `pkgs.tui-test`.
+        overlays.default = final: _prev: {
           agent-tools = final.callPackage ./pkgs/agent-tools/package.nix {};
           tui-test = final.callPackage ./pkgs/tui-test/package.nix {};
         };
+        overlays.tools = self.overlays.default;
 
         lib = {
           # The plugins as their folders describe them (README.md, Layout): a Claude half has
@@ -87,9 +70,14 @@
         ...
       }: let
         inherit (nixpkgs) lib;
-        # Everything the checks build runs against the pins.
-        checkPkgs = pkgs.extend self.overlays.default;
-        inherit (checkPkgs) agent-tools claude-code pi-coding-agent tui-test;
+        # The checks run against nixpkgs-unstable's Claude Code and pi, which track upstream.
+        unstable = import inputs.nixpkgs-unstable {
+          inherit system;
+          config.allowUnfree = true;
+        };
+        inherit (unstable) claude-code pi-coding-agent;
+        checkPkgs = (pkgs.extend (_: _: {inherit claude-code pi-coding-agent;})).extend self.overlays.default;
+        inherit (checkPkgs) agent-tools tui-test;
         claudePlugins = lib.attrNames (lib.filterAttrs (_: plugin: plugin.claude) self.lib.plugins);
 
         # The marketplace publishes each Claude half from its folder; `skills` is the other entry.
@@ -103,15 +91,11 @@
           config.allowUnfree = true;
         };
 
-        packages =
-          {
-            inherit agent-tools;
-            inherit tui-test;
-            default = agent-tools;
-          }
-          // lib.optionalAttrs pkgs.stdenv.isLinux {
-            inherit pi-coding-agent claude-code;
-          };
+        packages = {
+          inherit agent-tools;
+          inherit tui-test;
+          default = agent-tools;
+        };
 
         checks =
           {
