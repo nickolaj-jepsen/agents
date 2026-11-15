@@ -4,3 +4,6 @@ plugins/*/.claude-plugin/types/
 kit/catalog/claude/.claude-plugin/types/
 kit/catalog/index.html
 kit/catalog/crops/
+result
+result-*
+.direnv/
