@@ -34,41 +34,80 @@ const turns: Turn[] = [
   { text: "Both claims checked against the code and resolved; nothing is committed." },
 ];
 
+/** The same story in pi, where the tool is `docfix` and Apply sends one prompt per doc; marking one doc keeps it to one turn. */
+const PI_TURNS: Turn[] = [
+  {
+    text: turns[0]!.text,
+    toolCall: { name: "docfix", arguments: FILED },
+  },
+  turns[1]!,
+  { toolCall: { name: "docfix", arguments: { action: "resolve", id: FILED_ID } } },
+  { text: "The `just build` claim checked against the code and resolved." },
+];
+
 const ask = "Point the install steps in README.md at `just dev-setup`";
 // The pane docks beside the transcript from 110 columns.
 const ROWS = [{ click: "is not enough" }, { click: "legacy" }];
 
 export default site({
   plugin: "docfix",
-  demo: {
-    caption:
-      "The agent files a doc suggestion instead of editing a doc outside its change; /docfix lists them, and Apply hands the marked ones back.",
-    project: "shop-api",
-    setup,
-    start: {
-      hermetic: true,
-      args: ["--allowedTools", "mcp__docfix__docfix"],
-      turns,
+  demo: [
+    {
+      caption:
+        "The agent files a doc suggestion instead of editing a doc outside its change; /docfix lists them, and Apply hands the marked ones back.",
+      project: "shop-api",
+      setup,
+      start: {
+        hermetic: true,
+        args: ["--allowedTools", "mcp__docfix__docfix"],
+        turns,
+      },
+      steps: [
+        { sleep: 800 },
+        slow(ask),
+        { sleep: 400 },
+        { press: "Enter" },
+        { wait: "Filed. The install steps", timeout: 20_000 },
+        { sleep: 1500 },
+        slow("/docfix"),
+        { press: "Enter" },
+        { wait: "Doc suggestions" },
+        { sleep: 2600 },
+        ...ROWS,
+        { sleep: 2400 },
+        poster,
+        { press: "a" },
+        { wait: "Both claims checked", timeout: 20_000 },
+        { sleep: 4500 },
+      ],
     },
-    steps: [
-      { sleep: 800 },
-      slow(ask),
-      { sleep: 400 },
-      { press: "Enter" },
-      { wait: "Filed. The install steps", timeout: 20_000 },
-      { sleep: 1500 },
-      slow("/docfix"),
-      { press: "Enter" },
-      { wait: "Doc suggestions" },
-      { sleep: 2600 },
-      ...ROWS,
-      { sleep: 2400 },
-      poster,
-      { press: "a" },
-      { wait: "Both claims checked", timeout: 20_000 },
-      { sleep: 4500 },
-    ],
-  },
+    {
+      harness: "pi",
+      caption:
+        "pi has the same tool and panel: the agent files the suggestion, /docfix lists them, and Apply hands the marked one back.",
+      project: "shop-api",
+      setup,
+      start: { hermetic: true, plugins: ["docfix"], turns: PI_TURNS },
+      steps: [
+        { sleep: 800 },
+        slow(ask),
+        { sleep: 400 },
+        { press: "Enter" },
+        { wait: "Filed. The install steps", timeout: 20_000 },
+        { sleep: 1500 },
+        slow("/docfix"),
+        { press: "Enter" },
+        { wait: "Doc suggestions" },
+        { sleep: 2600 },
+        { press: "Space" },
+        { sleep: 2400 },
+        poster,
+        { press: "a" },
+        { wait: "claim checked against the code", timeout: 30_000 },
+        { sleep: 4500 },
+      ],
+    },
+  ],
   stills: {
     queue: {
       caption:
