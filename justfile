@@ -85,10 +85,10 @@ site-build:
     [ -d node_modules ] || npm ci
     npm run build
 
-# Re-records a demo GIF in a live Claude Code session (README.md, Demos).
+[doc("Record the site's demos and screenshots from the e2e scenarios into site/media/ (no sign-in, no model); name plugins to redo only those")]
 [group('dev')]
-demo name:
-    demos/record.sh {{ name }}
+site-shots *PLUGINS:
+    npm run site-shots -- {{ PLUGINS }}
 
 [doc('Build the checked plugin sources')]
 [group('maintenance')]

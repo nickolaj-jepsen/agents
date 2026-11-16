@@ -110,6 +110,10 @@ const merge = (a: StartOptions, b: StartOptions = {}): StartOptions => ({
   args: [...(a.args ?? []), ...(b.args ?? [])],
   env: { ...a.env, ...b.env },
   turns: b.turns ?? a.turns,
+  mcp: b.mcp ?? a.mcp,
+  hermetic: b.hermetic ?? a.hermetic,
+  plugins: b.plugins ?? a.plugins,
+  bin: b.bin ?? a.bin,
 });
 
 export function resolveScenario(set: ScenarioSet, name: string, seen: string[] = []): Resolved {

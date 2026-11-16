@@ -33,6 +33,10 @@ export type Cell = {
 };
 export type Grid = Cell[][];
 
+/** How a screenshot or recording is drawn: the scale of the image and its canvas colour. */
+export type ImageOptions = { zoom?: number; background?: string };
+export type RecordOptions = ImageOptions & { fps?: number; idleTimeLimit?: number };
+
 export type LaunchSpec = {
   program: string;
   args: string[];
@@ -57,7 +61,10 @@ export interface Term {
   move(x: number, y: number): Promise<void>;
   resize(cols: number, rows: number): Promise<void>;
   /** A full-colour PNG of the whole terminal. */
-  screenshot(path: string): Promise<void>;
+  screenshot(path: string, opts?: ImageOptions): Promise<void>;
+  /** Records the terminal to a video (the extension picks the format: `.mp4`) until `stopRecording`. */
+  startRecording(path: string, opts?: RecordOptions): Promise<void>;
+  stopRecording(): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -140,7 +147,7 @@ export class LibTerm implements Term {
   move = (x: number, y: number) => this.t.mouse.move(x, y);
   resize = (cols: number, rows: number) => this.t.resize(cols, rows);
 
-  async screenshot(path: string) {
+  async screenshot(path: string, opts: ImageOptions = {}) {
     // The rasterizer finds fonts under $HOME only; swap it for the call. One at a time, since
     // the swap is the whole process's and sessions run side by side.
     const turn = shots;
@@ -151,7 +158,25 @@ export class LibTerm implements Term {
     const saved = process.env.HOME;
     if (home) process.env.HOME = home;
     try {
-      await this.t.screenshot(path);
+      await this.t.screenshot(path, opts);
+    } finally {
+      process.env.HOME = saved;
+      done();
+    }
+  }
+
+  // The recording rasterizes frames when it stops, and wants the fonts like a screenshot does.
+  startRecording = (path: string, opts: RecordOptions = {}) => this.t.startRecording(path, opts);
+  async stopRecording() {
+    const turn = shots;
+    let done!: () => void;
+    shots = new Promise<void>((resolve) => (done = resolve));
+    await turn;
+    const home = fakeFontHome();
+    const saved = process.env.HOME;
+    if (home) process.env.HOME = home;
+    try {
+      await this.t.stopRecording();
     } finally {
       process.env.HOME = saved;
       done();
@@ -287,8 +312,25 @@ export class DaemonTerm implements Term {
   async resize(cols: number, rows: number) {
     await this.cli("resize", String(cols), String(rows));
   }
-  async screenshot(path: string) {
-    await this.cli("screenshot", "-o", path);
+  private imageFlags = (o: ImageOptions) => [
+    ...(o.zoom ? ["--zoom", String(o.zoom)] : []),
+    ...(o.background ? ["--background", o.background] : []),
+  ];
+  async screenshot(path: string, opts: ImageOptions = {}) {
+    await this.cli("screenshot", "-o", path, ...this.imageFlags(opts));
+  }
+  async startRecording(path: string, opts: RecordOptions = {}) {
+    await this.cli(
+      "record",
+      "start",
+      ...this.imageFlags(opts),
+      ...(opts.fps ? ["--fps", String(opts.fps)] : []),
+      ...(opts.idleTimeLimit ? ["--idle-time-limit", String(opts.idleTimeLimit)] : []),
+      path,
+    );
+  }
+  async stopRecording() {
+    await this.cli("record", "stop");
   }
   async close() {
     await this.cli("close").catch(() => undefined);

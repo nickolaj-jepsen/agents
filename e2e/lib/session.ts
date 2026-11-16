@@ -20,7 +20,14 @@ import {
   type Region,
 } from "./screen.ts";
 import { startStub, stopStub } from "./stub.ts";
-import { DaemonTerm, LibTerm, sleep, type Term } from "./term.ts";
+import {
+  DaemonTerm,
+  LibTerm,
+  sleep,
+  type ImageOptions,
+  type RecordOptions,
+  type Term,
+} from "./term.ts";
 
 export type Size = readonly [cols: number, rows: number];
 
@@ -97,6 +104,8 @@ export type OpenOptions = {
   name: string;
   /** Reuse a run dir instead of making one (the CLI's, which outlives the invocation). */
   runDir?: string;
+  /** The name of the folder the agent runs in, which shows in its header: default `cwd`. */
+  project?: string;
 };
 
 export class Session {
@@ -105,12 +114,14 @@ export class Session {
   readonly cwd: string;
   readonly harness: HarnessName;
   private ownsRun: boolean;
+  /** Where a demo's `poster` step writes its picture; set by the site runner. */
+  poster?: { path: string; opts: ImageOptions };
 
-  constructor(term: Term, harness: HarnessName, runDir: string, ownsRun: boolean) {
+  constructor(term: Term, harness: HarnessName, runDir: string, ownsRun: boolean, project = "cwd") {
     this.term = term;
     this.harness = harness;
     this.runDir = runDir;
-    this.cwd = join(runDir, "cwd");
+    this.cwd = join(runDir, project);
     this.ownsRun = ownsRun;
   }
 
@@ -134,7 +145,7 @@ export class Session {
   private static async openOnce(o: OpenOptions): Promise<Session> {
     const ownsRun = !o.runDir;
     const runDir = o.runDir ?? mkdtempSync(join(tmpdir(), "e2e-"));
-    const cwd = join(runDir, "cwd");
+    const cwd = join(runDir, o.project ?? "cwd");
     mkdirSync(cwd, { recursive: true });
     const git = (...args: string[]) => void execFileSync("git", args, { cwd, stdio: "ignore" });
     const ctx: SetupContext = {
@@ -193,7 +204,7 @@ export class Session {
       stopStub(runDir);
       throw err;
     }
-    const session = new Session(term, o.harness, runDir, ownsRun);
+    const session = new Session(term, o.harness, runDir, ownsRun, o.project);
     if (o.backend === "lib") track(session);
     try {
       await session.waitReady();
@@ -335,11 +346,19 @@ export class Session {
   }
 
   /** The full-colour PNG of the whole terminal. */
-  async png(path: string) {
+  async png(path: string, opts?: ImageOptions) {
     mkdirSync(dirname(path), { recursive: true });
-    await this.term.screenshot(path);
+    await this.term.screenshot(path, opts);
     return path;
   }
+
+  /** Records the terminal into `path` (an `.mp4`) until `stopRecording`. */
+  async record(path: string, opts?: RecordOptions) {
+    mkdirSync(dirname(path), { recursive: true });
+    await this.term.startRecording(path, opts);
+  }
+
+  stopRecording = () => this.term.stopRecording();
 
   // ---- snapshots
 

@@ -9,7 +9,7 @@
  */
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
-import { readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { appendFileSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ServerResponse } from "node:http";
 import type { Turn } from "./harness.ts";
@@ -94,13 +94,48 @@ function reply(res: ServerResponse, model: string, content: Block[], stream: boo
 
 const withSignature = (b: Block) => (b.type === "thinking" ? { ...b, signature: "stub" } : b);
 
-function serve(turns: Turn[]) {
+/**
+ * What a request is about, for `Turn.match`: its system prompt and every message. Plain text of
+ * the body only; headers are never looked at.
+ */
+const requestText = (body: { system?: unknown; messages?: unknown }) =>
+  JSON.stringify([body.system ?? "", body.messages ?? []]);
+
+/** A debugging aid: `STUB_LOG=<file>` appends one line per request, its model and what it carries. Never headers. */
+const logRequest = (body: Record<string, unknown>, served: string) => {
+  const file = process.env.STUB_LOG;
+  if (!file) return;
+  const text = requestText(body);
+  appendFileSync(
+    file,
+    `${JSON.stringify({
+      model: body.model,
+      tools: Array.isArray(body.tools) ? body.tools.length : 0,
+      maxTokens: body.max_tokens,
+      served,
+      head: text.slice(0, 200),
+      tail: text.slice(-200),
+    })}\n`,
+  );
+};
+
+function serve(all: Turn[]) {
+  // Turns with a `match` wait for the request that carries it; the rest are the main loop's, in order.
+  const keyed = all.filter((t) => t.match !== undefined);
+  const turns = all.filter((t) => t.match === undefined);
   let next = 0;
   return createServer((req, res) => {
     const chunks: Buffer[] = [];
     req.on("data", (c: Buffer) => chunks.push(c));
     req.on("end", () => {
-      let body: { model?: string; stream?: boolean; tools?: unknown[]; max_tokens?: number } = {};
+      let body: {
+        model?: string;
+        stream?: boolean;
+        tools?: unknown[];
+        max_tokens?: number;
+        system?: unknown;
+        messages?: unknown;
+      } = {};
       try {
         body = JSON.parse(Buffer.concat(chunks).toString() || "{}");
       } catch {
@@ -115,6 +150,23 @@ function serve(turns: Turn[]) {
       if (req.method === "POST" && path.endsWith("/messages/count_tokens"))
         return json(200, '{"input_tokens":10}');
       if (req.method === "POST" && path.endsWith("/messages")) {
+        // A side call a scenario scripted by what it says: served from its own queue, so the order
+        // the main loop and the side agents interleave in never decides who gets which turn.
+        const text = requestText(body);
+        const at = keyed.findIndex((t) => text.includes(t.match!));
+        const side = at >= 0 ? keyed.splice(at, 1)[0] : undefined;
+        logRequest(body as Record<string, unknown>, side ? "keyed" : "main");
+        if (side) {
+          if (side.error)
+            return json(
+              400,
+              JSON.stringify({
+                type: "error",
+                error: { type: "invalid_request_error", message: side.error },
+              }),
+            );
+          return reply(res, model, blocksOf(side), !!body.stream);
+        }
         // A side call (the startup probe, a title): no tools or a tiny budget. Not a scripted turn.
         if (!body.tools?.length || (body.max_tokens ?? Infinity) <= 64)
           return reply(res, model, [{ type: "text", text: "Stub" }], !!body.stream);
