@@ -13,15 +13,32 @@ interface Props {
   options?: Harness[];
   /** A first "Both" choice, which is also the pressed one. Else the first harness is. */
   both?: boolean;
+  /**
+   * Instead of "Both", the two ways to show both at once: side by side or stacked (the catalogue,
+   * where there is something to arrange). Choosing a harness shows it alone.
+   */
+  layouts?: boolean;
 }
-const { options = ['claude', 'pi'], both = false } = Astro.props;
+const { options = ['claude', 'pi'], both = false, layouts = false } = Astro.props;
 ---
 
 <div class="seg box harness" role="group" aria-label="Harness" data-js hidden>
-  {both && <button type="button" data-set-h="both" aria-pressed="true">Both</button>}
+  {both && !layouts && <button type="button" data-set-h="both" aria-pressed="true">Both</button>}
+  {
+    layouts && (
+      <>
+        <button type="button" data-set-lay="side" aria-pressed="true" title="Both harnesses, side by side">
+          Side by side
+        </button>
+        <button type="button" data-set-lay="stack" aria-pressed="false" title="Both harnesses, one above the other">
+          Stacked
+        </button>
+      </>
+    )
+  }
   {
     options.map((h, i) => (
-      <button type="button" data-set-h={h} aria-pressed={!both && i === 0 ? 'true' : 'false'}>
+      <button type="button" data-set-h={h} aria-pressed={!both && !layouts && i === 0 ? 'true' : 'false'}>
         <span class={`k ${h}`}>
           <Glyph h={h} />
         </span>

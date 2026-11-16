@@ -1,8 +1,8 @@
 ---
 /**
  * The catalogue's controls, one sticky bar for the whole page: the harness, the terminal size, how
- * the two harnesses are laid out (side by side or stacked, for every story and props column) and
- * actual size. It starts hidden; catalog.ts shows it.
+ * actual size. The harness switch is also the layout: side by side or stacked show both harnesses,
+ * for every story and props column, and a harness shows it alone. It starts hidden; catalog.ts shows it.
  */
 import HarnessSwitch from '../HarnessSwitch.astro';
 import { sizeKey } from '../../lib/catalog.ts';
@@ -19,7 +19,7 @@ const { sizes = [], layout = false, renders = false } = Astro.props;
 ---
 
 <div class="toolbar" data-js hidden>
-  <HarnessSwitch options={['claude', 'pi']} both />
+  <HarnessSwitch options={['claude', 'pi']} both layouts={layout} />
   {
     sizes.length > 1 && (
       <div class="ctl">
@@ -29,16 +29,6 @@ const { sizes = [], layout = false, renders = false } = Astro.props;
               {sizeKey(x)}
             </button>
           ))}
-        </div>
-      </div>
-    )
-  }
-  {
-    layout && (
-      <div class="ctl" data-both>
-        <div class="seg box" role="group" aria-label="Layout">
-          <button type="button" data-set-lay="side" aria-pressed="true">Side by side</button>
-          <button type="button" data-set-lay="stack" aria-pressed="false">Stacked</button>
         </div>
       </div>
     )

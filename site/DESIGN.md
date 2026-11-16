@@ -28,7 +28,7 @@ Fireproof, from `~/nixos/modules/base/theme.nix`. Text is `fg`, `fg-alt` or `mut
 | Plate and listing frame   | `uiAlt` #403E3C                                      |
 | Link underline            | #676764, `ui-hi` nudged to 3:1                       |
 | Accent #CF6A4C            | focus ring, the current nav entry, the brand bar     |
-| Harness logos             | Claude Code `accent`, pi `purple`                    |
+| Harness logos             | Claude Code `accent`, pi its own colours             |
 | In progress               | `yellow`: a framed tag, and a 2px rule on its notice |
 
 Code blocks sit on the page ground in a hairline frame, like the plates, and use a Shiki theme from the
@@ -60,7 +60,7 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
 - One column of 76rem at most, a 16px gutter on phones; prose holds a 42rem measure. Every page,
   the developer pages too, has the masthead at that width.
 - A harness is its logo (`Glyph.astro`, drawn from one sprite in `Base.astro`) in its colour, never a
-  letter: a spark of rays for Claude Code, the letter π for pi. The harness switch (`HarnessSwitch.astro`)
+  letter: Claude Code's pixel mascot (thesvg.org, in `accent`) and pi's press-kit mark (pi.dev/press-kit, in its own colours). The harness switch (`HarnessSwitch.astro`)
   is one control wherever there is one: the home page's plugins, a plugin's gallery, the catalogue's
   sticky bar. The choice is remembered across them.
 - The home page is one plain sentence, then the plugins as a two-column grid of posters (name, harness
@@ -88,11 +88,11 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
   as far as the screen has margin, and the content takes the rest: on a wide screen it is exactly the
   masthead's width, on a narrow one it is indented by what did not fit; below 64rem the sidebar follows.
 - `/dev/` is the overview. A component's page is its name and purpose, one line of summary (the kit in
-  each harness, the counts, a way to the props), then one sticky bar (harness, terminal size, layout,
+  each harness, the counts, a way to the props), then one sticky bar (the harness switch, terminal size,
   actual size) that applies to everything under it: the stories, then the props. On a phone the bar
   scrolls away.
-- Layout is side by side or stacked, for the stories and the props alike. To see one harness alone,
-  choose it in the harness switch; the key `f` moves between the two.
+- The harness switch is also the layout: Side by side and Stacked show both harnesses (for the stories
+  and the props alike), Claude Code and pi show one alone. The key `f` moves between the two.
 - A story's compatibility is one line under its renders (the features it shows), which opens into what
   each harness does and the caveat. There is no separate compatibility table.
 - A render is a terminal window: a bright frame and a title bar a step off the page, with the harness's

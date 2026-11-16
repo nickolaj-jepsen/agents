@@ -63,8 +63,6 @@ function syncUrl(): void {
 function applyHarness(): void {
   document.documentElement.dataset.kitH = state.h;
   press("[data-set-h]", "data-set-h", state.h);
-  // Layout means two harnesses side by side: with one, it has nothing to arrange.
-  for (const el of $$("[data-both]")) el.hidden = state.h !== "both";
 }
 
 // ---- size -------------------------------------------------------------------------------
@@ -106,7 +104,9 @@ function applySize(): void {
 // ---- layout, actual size ------------------------------------------------------------
 
 function applyLayout(): void {
-  press("[data-set-lay]", "data-set-lay", state.lay);
+  // The layout buttons are the switch's "both": pressed only while both harnesses are shown.
+  for (const b of $$<HTMLButtonElement>("[data-set-lay]"))
+    b.setAttribute("aria-pressed", String(state.h === "both" && b.dataset.setLay === state.lay));
   document.querySelector("[data-actual]")?.setAttribute("aria-pressed", String(state.actual));
   // With one harness chosen there is nothing to arrange.
   const lay = state.h === "both" ? state.lay : "side";
@@ -137,8 +137,11 @@ document.addEventListener("click", (e) => {
   } else if (b.dataset.setSize) {
     state.size = b.dataset.setSize;
     store.set("size", state.size);
-  } else if (b.dataset.setLay) state.lay = b.dataset.setLay as typeof state.lay;
-  else if (b.hasAttribute("data-actual")) state.actual = !state.actual;
+  } else if (b.dataset.setLay) {
+    state.lay = b.dataset.setLay as typeof state.lay;
+    state.h = "both";
+    writeHarness(null);
+  } else if (b.hasAttribute("data-actual")) state.actual = !state.actual;
   else return;
   apply();
 });
