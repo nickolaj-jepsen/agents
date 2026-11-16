@@ -7,12 +7,31 @@
  * cells and 0-based coordinates.
  */
 import { execFile, execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { TuiTest } from "@microsoft/tui-test";
 import { FONT_FAMILIES, fakeFontHome, realHome } from "./fonts.ts";
 
 const run = promisify(execFile);
+/** The terminal's colours and how a picture is drawn: e2e/tui-test.toml. */
+const TUI_TEST_CONFIG = join(import.meta.dirname, "..", "tui-test.toml");
+
+/**
+ * The file's `[profiles.default.colors]`, for the in-process engine, which takes colours as an
+ * option and reads no config: its screenshots keep tui-test's window (the kit catalogue crops
+ * inside it), while the daemon's, which read the file, have none (the site media use those).
+ */
+const profileColors = (): Record<string, string> => {
+  const out: Record<string, string> = {};
+  let inside = false;
+  for (const line of readFileSync(TUI_TEST_CONFIG, "utf8").split("\n")) {
+    if (line.startsWith("[")) inside = line.trim() === "[profiles.default.colors]";
+    const m = inside ? /^(\w+)\s*=\s*"(#[0-9A-Fa-f]{6})"/.exec(line) : null;
+    if (m) out[m[1]!.replace(/_(\w)/g, (_, c: string) => c.toUpperCase())] = m[2]!;
+  }
+  return out;
+};
 export const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export type Color = "default" | number | string;
@@ -114,6 +133,7 @@ export class LibTerm implements Term {
 
   static async launch(spec: LaunchSpec, session: string): Promise<LibTerm> {
     process.env.TUI_TEST_RECORDING_FONT_FAMILIES = FONT_FAMILIES;
+    process.env.TUI_TEST_CONFIG = TUI_TEST_CONFIG;
     const t = new TuiTest(session);
     const { program, args } = wrap(spec);
     await t.run(program, args, {
@@ -122,6 +142,7 @@ export class LibTerm implements Term {
       rows: spec.rows,
       cwd: spec.cwd,
       env: { ...spec.env, HOME: realHome },
+      profile: { colors: profileColors() },
       waitReady: false,
     });
     return new LibTerm(t);
@@ -220,6 +241,7 @@ function cliEnv(): NodeJS.ProcessEnv {
     ...process.env,
     TUI_TEST_HOME: daemonHome(),
     TUI_TEST_RECORDING_FONT_FAMILIES: FONT_FAMILIES,
+    TUI_TEST_CONFIG,
   };
   const home = fakeFontHome();
   if (home) env.HOME = home;

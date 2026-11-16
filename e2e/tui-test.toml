@@ -1,0 +1,45 @@
+# How tui-test draws the e2e screenshots and recordings (TUI_TEST_CONFIG, set in lib/term.ts).
+#
+# The colours are the person's terminal: the fireproof theme in ~/nixos/modules/base/theme.nix, as
+# ghostty gets them in ~/nixos/modules/programs/ghostty.nix (bg, fg, the cursor in fg, and the
+# palette as the *Alt shades for 0-7 and the plain ones for 8-15). This is the one place they are
+# written down; the site's media and the kit catalogue's crops (kit/catalog/crops.ts) read the
+# geometry below, so change a padding or the font size and re-run `just site-shots` and
+# `npm run catalog`.
+
+[profiles.default.colors]
+background = "#1C1B1A"
+foreground = "#DAD8CE"
+cursor = "#DAD8CE"
+black = "#100F0F"
+red = "#AF3029"
+green = "#66800B"
+yellow = "#AD8301"
+blue = "#205EA6"
+magenta = "#A02F6F"
+cyan = "#24837B"
+white = "#DAD8CE"
+bright_black = "#878580"
+bright_red = "#D14D41"
+bright_green = "#879A39"
+bright_yellow = "#D0A215"
+bright_blue = "#4385BE"
+bright_magenta = "#CE5D97"
+bright_cyan = "#3AA99F"
+bright_white = "#F2F0E5"
+
+# No window: the terminal fills the image, inset evenly so the grid is not flush with its edge.
+[recording.style]
+canvas_background = "#1C1B1A"
+canvas_padding = 0
+content_padding = 16
+
+[recording.style.window]
+title_bar = false
+
+[recording.style.border]
+width = 0
+radius = 0
+
+[recording.style.shadow]
+enabled = false

@@ -13,12 +13,6 @@ import type { HarnessName } from "./harness.ts";
 import { e2eRoot, type Scenario, type ScenarioSet, type Step } from "./scenario.ts";
 import type { Size } from "./session.ts";
 
-/**
- * The canvas of every image and video: the user's terminal background (the fireproof theme in
- * ~/nixos/modules/base/theme.nix), so the media sit on the site's dark page like a window of it.
- */
-export const BACKGROUND = "#1C1B1A";
-
 /** The terminal a site scenario runs in unless it sets `size`: wide enough for a ~1000px column. */
 export const SITE_SIZE: Size = [120, 34];
 

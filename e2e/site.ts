@@ -22,17 +22,7 @@ import { join, relative } from "node:path";
 import { execFileSync } from "node:child_process";
 import { checkoutRoot } from "./lib/harness.ts";
 import { loadSet, play, resolveScenario } from "./lib/scenario.ts";
-import {
-  asSet,
-  BACKGROUND,
-  BUDGET,
-  FPS,
-  IDLE,
-  siteFiles,
-  VIDEO_ZOOM,
-  ZOOM,
-  type SiteSet,
-} from "./lib/site.ts";
+import { asSet, BUDGET, FPS, IDLE, siteFiles, VIDEO_ZOOM, ZOOM, type SiteSet } from "./lib/site.ts";
 import { WRITES } from "./lib/linear-mcp.ts";
 import { Session } from "./lib/session.ts";
 
@@ -108,12 +98,12 @@ async function play1(
     start: r.start,
     setup: r.setup,
     size: r.size,
-    backend: "lib",
+    backend: "daemon",
     name: `site-${set.plugin}-${name}`,
     runDir,
     project: (name === "demo" ? set.demo : set.stills[name])?.project ?? "app",
   });
-  const look = { zoom: ZOOM, background: BACKGROUND };
+  const look = { zoom: ZOOM };
   try {
     if (record) {
       await play(session, set.demo?.prepare ?? []);
@@ -122,7 +112,6 @@ async function play1(
       const mp4 = join(out, "demo.mp4");
       session.poster = { path: join(out, "demo.png"), opts: look };
       await session.record(mp4, {
-        background: BACKGROUND,
         zoom: VIDEO_ZOOM,
         fps: FPS,
         idleTimeLimit: IDLE,

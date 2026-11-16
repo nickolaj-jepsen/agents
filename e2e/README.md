@@ -246,7 +246,17 @@ like `mcp__linear__save_issue`. A write is answered with a made-up key and recor
 
 Each `.mp4` is at most 1 MB and each `.png` at most 300 KB (the site's check enforces them). A
 recording is drawn at twice an image's scale for the same zoom, so `VIDEO_ZOOM` is 0.5 and a 120x34
-video is 1278x818 like its poster; `FPS` and `IDLE` (the longest quiet stretch kept, in seconds) are
+video is 1232x746 like its poster; `FPS` and `IDLE` (the longest quiet stretch kept, in seconds) are
 in `lib/site.ts` too. A PNG over budget goes through oxipng; a video over budget fails the run with
-its size: shorten the tour, or lower `FPS`. The canvas colour is `BACKGROUND`, the terminal
-background of the person's theme.
+its size: shorten the tour, or lower `FPS`. Colours, padding and window chrome (none) are in `e2e/tui-test.toml`: the terminal
+background and palette of the person's theme.
+
+### The terminal's colours, and no window
+
+`e2e/tui-test.toml` (named by `TUI_TEST_CONFIG`) holds the person's terminal colours (the fireproof
+theme: background, foreground, cursor and palette) and draws pictures with no title bar, shadow or
+border and 16 px of padding. The site runner plays on the daemon backend, which reads that file, so
+its media are the bare terminal. The in-process engine takes colours as an option instead (`lib/term.ts`
+reads them from the same file) and has no config for the window, so the kit catalogue's screenshots
+keep tui-test's window in the right colours; `kit/catalog/crops.ts` crops inside it, so its geometry
+is unchanged.
