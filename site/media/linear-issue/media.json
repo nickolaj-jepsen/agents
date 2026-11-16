@@ -4,29 +4,29 @@
       "png": "site/media/linear-issue/draft.png",
       "caption": "The draft arrives filled in: title, team, priority, status, labels and a description. Every field is editable.",
       "harness": "claude",
-      "width": 1278,
-      "height": 818
+      "width": 1232,
+      "height": 746
     },
     {
       "png": "site/media/linear-issue/duplicate.png",
       "caption": "When an open issue already covers it, the draft offers a comment on that issue instead of a second one.",
       "harness": "claude",
-      "width": 1278,
-      "height": 818
+      "width": 1232,
+      "height": 746
     },
     {
       "png": "site/media/linear-issue/chip.png",
       "caption": "Esc hides the draft to a chip above the prompt; 8 reopens it, 9 twice discards it.",
       "harness": "claude",
-      "width": 1278,
-      "height": 818
+      "width": 1232,
+      "height": 746
     }
   ],
   "video": {
     "mp4": "site/media/linear-issue/demo.mp4",
     "poster": "site/media/linear-issue/demo.png",
     "caption": "/linear drafts an issue from a note: team, priority, status, labels and a description you can edit. Esc hides the draft to a chip, 8 brings it back.",
-    "width": 1278,
-    "height": 818
+    "width": 1232,
+    "height": 746
   }
 }

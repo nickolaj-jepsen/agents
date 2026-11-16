@@ -4,29 +4,29 @@
       "png": "site/media/git-menu/git.png",
       "caption": "/git: the repository, the branch and a new pull request on GitHub, GitLab or Codeberg.",
       "harness": "claude",
-      "width": 1278,
-      "height": 818
+      "width": 1232,
+      "height": 746
     },
     {
       "png": "site/media/git-menu/folder.png",
       "caption": "/open: this checkout in an editor, the file manager or a terminal.",
       "harness": "claude",
-      "width": 1278,
-      "height": 818
+      "width": 1232,
+      "height": 746
     },
     {
       "png": "site/media/git-menu/notes.png",
       "caption": "/open plan: the checkout's notes, newest first, for the editor.",
       "harness": "claude",
-      "width": 1278,
-      "height": 818
+      "width": 1232,
+      "height": 746
     }
   ],
   "video": {
     "mp4": "site/media/git-menu/demo.mp4",
     "poster": "site/media/git-menu/demo.png",
     "caption": "/git opens the repository, branch or a pull request on the forge; /open hands the checkout, or one of its notes, to an editor.",
-    "width": 1278,
-    "height": 818
+    "width": 1232,
+    "height": 746
   }
 }
