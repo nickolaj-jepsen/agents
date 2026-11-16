@@ -78,6 +78,11 @@ New files must be `git add`ed or the flake ignores them.
 - The e2e harness starts `claude-dev` / `pi-dev` when they are on PATH (wrappers a system config
   provides that load the checkout's plugins), else plain `claude` / `pi`, which then load none of them
   unless given `--plugin-dir` / `-e`.
+- A script that starts a Claude session and may kill it before its screen is up sets
+  `CLAUDE_CODE_NO_FLICKER=1`. Fullscreen from settings arms a boot canary; two sessions that die
+  early record `fullscreenAutoDisabled` in `~/.claude.json`, and every later session, the person's
+  own included, starts in the classic renderer, where a mod's pane draws inline instead of docked.
+  `/tui fullscreen` clears it.
 - `pkgs/agent-tools` builds only the files its type-check reads, so a skill, demo or README edit doesn't
   rebuild it; a new top-level file it needs must be added to its fileset.
 

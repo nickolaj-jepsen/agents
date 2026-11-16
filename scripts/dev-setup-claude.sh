@@ -13,11 +13,14 @@ for m in "${mods[@]}"; do
 done
 
 # The store copies in CLAUDE_CODE_PLUGIN_DIRS would otherwise load beside the folders
-# under the same names.
+# under the same names. CLAUDE_CODE_NO_FLICKER: killed before its screen is healthy, a
+# session whose fullscreen comes from settings counts a strike in ~/.claude.json, and two
+# turn fullscreen off for every later session; one the env forces arms no such canary.
+export CLAUDE_CODE_PLUGIN_DIRS= CLAUDE_CODE_NO_FLICKER=1
 if [ "$(uname)" = Darwin ]; then
-    CLAUDE_CODE_PLUGIN_DIRS= script -q /dev/null claude "${args[@]}" </dev/null >/dev/null 2>&1 &
+    script -q /dev/null claude "${args[@]}" </dev/null >/dev/null 2>&1 &
 else
-    CLAUDE_CODE_PLUGIN_DIRS= script -qec "claude ${args[*]@Q}" /dev/null </dev/null >/dev/null 2>&1 &
+    script -qec "claude ${args[*]@Q}" /dev/null </dev/null >/dev/null 2>&1 &
 fi
 pid=$!
 trap 'kill $pid 2>/dev/null || true' EXIT

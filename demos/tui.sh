@@ -87,7 +87,9 @@ start)
   done
   # AGENT_HUB_HIDDEN: a test session stays off the agent hub's bar.
   # WT_NO_AUTOCLOSE: ending it leaves the worktree it ran in open for the caller.
-  tmux new-session -d -s "$sess" -x "$cols" -y "$lines" -c "$cwd" "AGENT_HUB_HIDDEN=1 WT_NO_AUTOCLOSE=1 $claude_cmd"
+  # CLAUDE_CODE_NO_FLICKER: fullscreen from the env, so a session stopped before its
+  # screen is up counts no strike against the person's own fullscreen (AGENTS.md, Traps).
+  tmux new-session -d -s "$sess" -x "$cols" -y "$lines" -c "$cwd" "AGENT_HUB_HIDDEN=1 WT_NO_AUTOCLOSE=1 CLAUDE_CODE_NO_FLICKER=1 $claude_cmd"
   # Return only once the TUI accepts input, so callers can drive it straight
   # away. A new directory asks whether to trust it first; only the driver's
   # own empty one is answered for you.
