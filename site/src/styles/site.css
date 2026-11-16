@@ -525,13 +525,13 @@ pre {
 /* Harness marks: the catalogue's letters, in the harness's colour. */
 .marks {
   display: inline-flex;
-  gap: calc(2 * var(--u));
+  gap: calc(1.5 * var(--u)) calc(3 * var(--u));
   flex-wrap: wrap;
 }
 .hm {
   display: inline-flex;
   align-items: center;
-  gap: 0.4em;
+  gap: 0.6em;
   white-space: nowrap;
 }
 .hm .k {
@@ -539,13 +539,17 @@ pre {
   align-self: center;
 }
 /* A harness logo: sized by the text it sits in, coloured by its .k. */
+/* A logo is sized by height, --gl for pi's square mark. Claude Code's is short and wide, so it gets
+   a bit more height to weigh the same. */
 .gl {
-  height: 1.3em;
+  --gl: 1.2em;
+  height: var(--gl);
   aspect-ratio: 1;
   display: block;
   flex: none;
 }
 .gl.claude {
+  height: calc(var(--gl) * 1.15);
   aspect-ratio: 24 / 15;
 }
 .hm.claude .k {
@@ -1318,7 +1322,7 @@ pre {
   margin-right: 0.45em;
 }
 .seg .gl {
-  height: 1.35em;
+  --gl: 1.25em;
 }
 .seg[hidden] {
   display: none;
