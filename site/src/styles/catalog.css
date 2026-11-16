@@ -159,9 +159,6 @@
   height: 1.15rem;
   flex: none;
 }
-.mk.claude {
-  height: calc(1.15rem * 1.2);
-}
 .mk .gl {
   height: 100%;
 }
