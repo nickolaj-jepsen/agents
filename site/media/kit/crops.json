@@ -1,0 +1,1142 @@
+{
+  "claude/band/default@160x45": {
+    "png": "site/media/kit/claude/band/default@160x45.png",
+    "width": 1600,
+    "height": 168,
+    "hash": "b5a17c35f3b702c3"
+  },
+  "claude/band/default@70x60": {
+    "png": "site/media/kit/claude/band/default@70x60.png",
+    "width": 700,
+    "height": 168,
+    "hash": "0b46e7099b464518"
+  },
+  "claude/band/height@112x32": {
+    "png": "site/media/kit/claude/band/height@112x32.png",
+    "width": 1120,
+    "height": 189,
+    "hash": "528230fce61cff38"
+  },
+  "claude/band/height@160x45": {
+    "png": "site/media/kit/claude/band/height@160x45.png",
+    "width": 1600,
+    "height": 189,
+    "hash": "8a46121f1b2f8ed4"
+  },
+  "claude/band/height@240x60": {
+    "png": "site/media/kit/claude/band/height@240x60.png",
+    "width": 2400,
+    "height": 189,
+    "hash": "d3aa057824ee836b"
+  },
+  "claude/band/height@70x60": {
+    "png": "site/media/kit/claude/band/height@70x60.png",
+    "width": 700,
+    "height": 189,
+    "hash": "7741897f0c1c84ad"
+  },
+  "claude/band/title-only@160x45": {
+    "png": "site/media/kit/claude/band/title-only@160x45.png",
+    "width": 1600,
+    "height": 168,
+    "hash": "89687e049508a58f"
+  },
+  "claude/band/title-only@70x60": {
+    "png": "site/media/kit/claude/band/title-only@70x60.png",
+    "width": 700,
+    "height": 168,
+    "hash": "04c087d366c845cd"
+  },
+  "claude/buttons/row@160x45": {
+    "png": "site/media/kit/claude/buttons/row@160x45.png",
+    "width": 710,
+    "height": 21,
+    "hash": "fdb861daecd67fc8"
+  },
+  "claude/buttons/row@70x60": {
+    "png": "site/media/kit/claude/buttons/row@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "0730f6b8c5f90b12"
+  },
+  "claude/buttons/wrap@112x32": {
+    "png": "site/media/kit/claude/buttons/wrap@112x32.png",
+    "width": 490,
+    "height": 63,
+    "hash": "ad9633188b6df764"
+  },
+  "claude/buttons/wrap@160x45": {
+    "png": "site/media/kit/claude/buttons/wrap@160x45.png",
+    "width": 710,
+    "height": 63,
+    "hash": "4929022fe01bd7c5"
+  },
+  "claude/buttons/wrap@240x60": {
+    "png": "site/media/kit/claude/buttons/wrap@240x60.png",
+    "width": 720,
+    "height": 63,
+    "hash": "1c8db25d166c78ba"
+  },
+  "claude/buttons/wrap@70x60": {
+    "png": "site/media/kit/claude/buttons/wrap@70x60.png",
+    "width": 660,
+    "height": 63,
+    "hash": "f7050f77e7c22602"
+  },
+  "claude/clamp/max-lines@160x45": {
+    "png": "site/media/kit/claude/clamp/max-lines@160x45.png",
+    "width": 710,
+    "height": 63,
+    "hash": "0bf6f4f8d8d71ea5"
+  },
+  "claude/clamp/max-lines@70x60": {
+    "png": "site/media/kit/claude/clamp/max-lines@70x60.png",
+    "width": 660,
+    "height": 63,
+    "hash": "063d5e034053d468"
+  },
+  "claude/clamp/min-lines@160x45": {
+    "png": "site/media/kit/claude/clamp/min-lines@160x45.png",
+    "width": 710,
+    "height": 42,
+    "hash": "df620c6889d5aef7"
+  },
+  "claude/clamp/min-lines@70x60": {
+    "png": "site/media/kit/claude/clamp/min-lines@70x60.png",
+    "width": 660,
+    "height": 42,
+    "hash": "513fd60558cc862d"
+  },
+  "claude/clamp/target-bounded@160x45": {
+    "png": "site/media/kit/claude/clamp/target-bounded@160x45.png",
+    "width": 710,
+    "height": 84,
+    "hash": "f93f1f0ac8332bd0"
+  },
+  "claude/clamp/target-bounded@70x60": {
+    "png": "site/media/kit/claude/clamp/target-bounded@70x60.png",
+    "width": 660,
+    "height": 84,
+    "hash": "05f7e1ccaf1bd4a0"
+  },
+  "claude/clamp/target@160x45": {
+    "png": "site/media/kit/claude/clamp/target@160x45.png",
+    "width": 710,
+    "height": 126,
+    "hash": "f0a7cd8dac33e4a4"
+  },
+  "claude/clamp/target@70x60": {
+    "png": "site/media/kit/claude/clamp/target@70x60.png",
+    "width": 660,
+    "height": 126,
+    "hash": "2cdb0a4ba116c3b9"
+  },
+  "claude/clamp/truncate@160x45": {
+    "png": "site/media/kit/claude/clamp/truncate@160x45.png",
+    "width": 710,
+    "height": 42,
+    "hash": "730c56c013bea53b"
+  },
+  "claude/clamp/truncate@70x60": {
+    "png": "site/media/kit/claude/clamp/truncate@70x60.png",
+    "width": 660,
+    "height": 42,
+    "hash": "0295ac07db24d97b"
+  },
+  "claude/clamp/unbounded@160x45": {
+    "png": "site/media/kit/claude/clamp/unbounded@160x45.png",
+    "width": 710,
+    "height": 168,
+    "hash": "70b2139f9137c063"
+  },
+  "claude/clamp/unbounded@70x60": {
+    "png": "site/media/kit/claude/clamp/unbounded@70x60.png",
+    "width": 660,
+    "height": 168,
+    "hash": "38261fc7258c5581"
+  },
+  "claude/clamp/wide-chars@112x32": {
+    "png": "site/media/kit/claude/clamp/wide-chars@112x32.png",
+    "width": 490,
+    "height": 84,
+    "hash": "3f7794055bf1f046"
+  },
+  "claude/clamp/wide-chars@160x45": {
+    "png": "site/media/kit/claude/clamp/wide-chars@160x45.png",
+    "width": 710,
+    "height": 84,
+    "hash": "622850b2e6d5c886"
+  },
+  "claude/clamp/wide-chars@240x60": {
+    "png": "site/media/kit/claude/clamp/wide-chars@240x60.png",
+    "width": 750,
+    "height": 84,
+    "hash": "bd75cbb5a427c707"
+  },
+  "claude/clamp/wide-chars@70x60": {
+    "png": "site/media/kit/claude/clamp/wide-chars@70x60.png",
+    "width": 660,
+    "height": 84,
+    "hash": "6be7a3ea697eac0c"
+  },
+  "claude/detail/block@160x45": {
+    "png": "site/media/kit/claude/detail/block@160x45.png",
+    "width": 710,
+    "height": 189,
+    "hash": "4de22668a583ce58"
+  },
+  "claude/detail/block@70x60": {
+    "png": "site/media/kit/claude/detail/block@70x60.png",
+    "width": 660,
+    "height": 210,
+    "hash": "9f349d792cd28f50"
+  },
+  "claude/detail/notes@160x45": {
+    "png": "site/media/kit/claude/detail/notes@160x45.png",
+    "width": 710,
+    "height": 126,
+    "hash": "3469cf77c0f15706"
+  },
+  "claude/detail/notes@70x60": {
+    "png": "site/media/kit/claude/detail/notes@70x60.png",
+    "width": 660,
+    "height": 126,
+    "hash": "c0c7cfc3d0748136"
+  },
+  "claude/detail/prose-measure@160x45": {
+    "png": "site/media/kit/claude/detail/prose-measure@160x45.png",
+    "width": 690,
+    "height": 147,
+    "hash": "9f7c7287a336325d"
+  },
+  "claude/detail/prose-measure@70x60": {
+    "png": "site/media/kit/claude/detail/prose-measure@70x60.png",
+    "width": 640,
+    "height": 168,
+    "hash": "5669918cabf45771"
+  },
+  "claude/detail/section@160x45": {
+    "png": "site/media/kit/claude/detail/section@160x45.png",
+    "width": 710,
+    "height": 105,
+    "hash": "ea8c7967253e04c3"
+  },
+  "claude/detail/section@70x60": {
+    "png": "site/media/kit/claude/detail/section@70x60.png",
+    "width": 660,
+    "height": 105,
+    "hash": "522fe1759eb385aa"
+  },
+  "claude/empty/default@160x45": {
+    "png": "site/media/kit/claude/empty/default@160x45.png",
+    "width": 710,
+    "height": 21,
+    "hash": "dac47ea1d37ea857"
+  },
+  "claude/empty/default@70x60": {
+    "png": "site/media/kit/claude/empty/default@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "2c06c14527e323f1"
+  },
+  "claude/empty/long@160x45": {
+    "png": "site/media/kit/claude/empty/long@160x45.png",
+    "width": 710,
+    "height": 84,
+    "hash": "0a4d6eba64da260f"
+  },
+  "claude/empty/long@70x60": {
+    "png": "site/media/kit/claude/empty/long@70x60.png",
+    "width": 660,
+    "height": 105,
+    "hash": "4ad31c3ba37f8f2d"
+  },
+  "claude/entries/long-text@160x45": {
+    "png": "site/media/kit/claude/entries/long-text@160x45.png",
+    "width": 710,
+    "height": 147,
+    "hash": "eb9f2d09d69a73e6"
+  },
+  "claude/entries/long-text@70x60": {
+    "png": "site/media/kit/claude/entries/long-text@70x60.png",
+    "width": 660,
+    "height": 147,
+    "hash": "a1574d148c841e8c"
+  },
+  "claude/entries/narrow@160x45": {
+    "png": "site/media/kit/claude/entries/narrow@160x45.png",
+    "width": 710,
+    "height": 231,
+    "hash": "ae98deef4122e30b"
+  },
+  "claude/entries/narrow@70x60": {
+    "png": "site/media/kit/claude/entries/narrow@70x60.png",
+    "width": 660,
+    "height": 231,
+    "hash": "5a06feab40f281c5"
+  },
+  "claude/entries/one@160x45": {
+    "png": "site/media/kit/claude/entries/one@160x45.png",
+    "width": 710,
+    "height": 42,
+    "hash": "6ab113f9029dd567"
+  },
+  "claude/entries/one@70x60": {
+    "png": "site/media/kit/claude/entries/one@70x60.png",
+    "width": 660,
+    "height": 42,
+    "hash": "5f59dcd757cf36ab"
+  },
+  "claude/entries/wide-chars@112x32": {
+    "png": "site/media/kit/claude/entries/wide-chars@112x32.png",
+    "width": 490,
+    "height": 189,
+    "hash": "3b04a35c1a82cd24"
+  },
+  "claude/entries/wide-chars@160x45": {
+    "png": "site/media/kit/claude/entries/wide-chars@160x45.png",
+    "width": 710,
+    "height": 126,
+    "hash": "d150aa7632963dc5"
+  },
+  "claude/entries/wide-chars@240x60": {
+    "png": "site/media/kit/claude/entries/wide-chars@240x60.png",
+    "width": 750,
+    "height": 126,
+    "hash": "39227e4c1bde5cbe"
+  },
+  "claude/entries/wide-chars@70x60": {
+    "png": "site/media/kit/claude/entries/wide-chars@70x60.png",
+    "width": 660,
+    "height": 147,
+    "hash": "13b856c54eed6e06"
+  },
+  "claude/entries/wide@160x45": {
+    "png": "site/media/kit/claude/entries/wide@160x45.png",
+    "width": 710,
+    "height": 126,
+    "hash": "f825b464631bdf40"
+  },
+  "claude/entries/wide@70x60": {
+    "png": "site/media/kit/claude/entries/wide@70x60.png",
+    "width": 660,
+    "height": 126,
+    "hash": "b08530e59d8e1cc4"
+  },
+  "claude/frame/dialog@160x45": {
+    "png": "site/media/kit/claude/frame/dialog@160x45.png",
+    "width": 710,
+    "height": 84,
+    "hash": "7a37ec382f3340ab"
+  },
+  "claude/frame/dialog@70x60": {
+    "png": "site/media/kit/claude/frame/dialog@70x60.png",
+    "width": 660,
+    "height": 105,
+    "hash": "1fde5fdf615f52a1"
+  },
+  "claude/frame/reading@160x45": {
+    "png": "site/media/kit/claude/frame/reading@160x45.png",
+    "width": 710,
+    "height": 84,
+    "hash": "7a37ec382f3340ab"
+  },
+  "claude/frame/reading@70x60": {
+    "png": "site/media/kit/claude/frame/reading@70x60.png",
+    "width": 660,
+    "height": 105,
+    "hash": "1fde5fdf615f52a1"
+  },
+  "claude/frame/title-bare@160x45": {
+    "png": "site/media/kit/claude/frame/title-bare@160x45.png",
+    "width": 710,
+    "height": 21,
+    "hash": "5d465bf5e75003ea"
+  },
+  "claude/frame/title-bare@70x60": {
+    "png": "site/media/kit/claude/frame/title-bare@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "4ac1057f8b71eece"
+  },
+  "claude/frame/title-count@160x45": {
+    "png": "site/media/kit/claude/frame/title-count@160x45.png",
+    "width": 710,
+    "height": 21,
+    "hash": "ec214dff4da1876e"
+  },
+  "claude/frame/title-count@70x60": {
+    "png": "site/media/kit/claude/frame/title-count@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "a487ccebcc59f228"
+  },
+  "claude/list/coloured-metadata@160x45": {
+    "png": "site/media/kit/claude/list/coloured-metadata@160x45.png",
+    "width": 710,
+    "height": 420,
+    "hash": "08b51f3903c4164e"
+  },
+  "claude/list/coloured-metadata@70x60": {
+    "png": "site/media/kit/claude/list/coloured-metadata@70x60.png",
+    "width": 660,
+    "height": 378,
+    "hash": "c0eab568594cc26f"
+  },
+  "claude/list/column-drop@160x45": {
+    "png": "site/media/kit/claude/list/column-drop@160x45.png",
+    "width": 710,
+    "height": 546,
+    "hash": "e2b4cee0d6063024"
+  },
+  "claude/list/column-drop@70x60": {
+    "png": "site/media/kit/claude/list/column-drop@70x60.png",
+    "width": 660,
+    "height": 378,
+    "hash": "3c02354758cd8c24"
+  },
+  "claude/list/empty@160x45": {
+    "png": "site/media/kit/claude/list/empty@160x45.png",
+    "width": 710,
+    "height": 21,
+    "hash": "43c02815c73cc2a3"
+  },
+  "claude/list/empty@70x60": {
+    "png": "site/media/kit/claude/list/empty@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "cc249901832b8ce7"
+  },
+  "claude/list/extreme-titles@112x32": {
+    "png": "site/media/kit/claude/list/extreme-titles@112x32.png",
+    "width": 490,
+    "height": 273,
+    "hash": "477ac64f86223428"
+  },
+  "claude/list/extreme-titles@160x45": {
+    "png": "site/media/kit/claude/list/extreme-titles@160x45.png",
+    "width": 710,
+    "height": 231,
+    "hash": "7355b2f5b8a66268"
+  },
+  "claude/list/extreme-titles@240x60": {
+    "png": "site/media/kit/claude/list/extreme-titles@240x60.png",
+    "width": 750,
+    "height": 231,
+    "hash": "919df3428102b7ff"
+  },
+  "claude/list/extreme-titles@70x60": {
+    "png": "site/media/kit/claude/list/extreme-titles@70x60.png",
+    "width": 660,
+    "height": 231,
+    "hash": "7bae61fda7e2ac96"
+  },
+  "claude/list/grouped@160x45": {
+    "png": "site/media/kit/claude/list/grouped@160x45.png",
+    "width": 710,
+    "height": 420,
+    "hash": "3a519de3015f02fa"
+  },
+  "claude/list/grouped@70x60": {
+    "png": "site/media/kit/claude/list/grouped@70x60.png",
+    "width": 660,
+    "height": 378,
+    "hash": "0dfe3defeef76fdf"
+  },
+  "claude/list/marks-multi@160x45": {
+    "png": "site/media/kit/claude/list/marks-multi@160x45.png",
+    "width": 710,
+    "height": 420,
+    "hash": "b742f0eb39903edc"
+  },
+  "claude/list/marks-multi@70x60": {
+    "png": "site/media/kit/claude/list/marks-multi@70x60.png",
+    "width": 660,
+    "height": 378,
+    "hash": "5886dc2f534f2b9a"
+  },
+  "claude/list/marks-single@160x45": {
+    "png": "site/media/kit/claude/list/marks-single@160x45.png",
+    "width": 710,
+    "height": 420,
+    "hash": "fed0fe686b197ee2"
+  },
+  "claude/list/marks-single@70x60": {
+    "png": "site/media/kit/claude/list/marks-single@70x60.png",
+    "width": 660,
+    "height": 378,
+    "hash": "f11b483238d31733"
+  },
+  "claude/list/one@160x45": {
+    "png": "site/media/kit/claude/list/one@160x45.png",
+    "width": 710,
+    "height": 63,
+    "hash": "802f695ccd4151dc"
+  },
+  "claude/list/one@70x60": {
+    "png": "site/media/kit/claude/list/one@70x60.png",
+    "width": 660,
+    "height": 84,
+    "hash": "b17a1e0d6afe0abb"
+  },
+  "claude/notice/error@160x45": {
+    "png": "site/media/kit/claude/notice/error@160x45.png",
+    "width": 710,
+    "height": 21,
+    "hash": "30ad7ef79780f38f"
+  },
+  "claude/notice/error@70x60": {
+    "png": "site/media/kit/claude/notice/error@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "82466275559139c6"
+  },
+  "claude/notice/long@160x45": {
+    "png": "site/media/kit/claude/notice/long@160x45.png",
+    "width": 710,
+    "height": 21,
+    "hash": "cd51d117c12278bd"
+  },
+  "claude/notice/long@70x60": {
+    "png": "site/media/kit/claude/notice/long@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "19712fabc42a4aa2"
+  },
+  "claude/notice/success@160x45": {
+    "png": "site/media/kit/claude/notice/success@160x45.png",
+    "width": 710,
+    "height": 21,
+    "hash": "c080bf492930f7f2"
+  },
+  "claude/notice/success@70x60": {
+    "png": "site/media/kit/claude/notice/success@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "b5188dcdf296b24e"
+  },
+  "claude/notice/warning@160x45": {
+    "png": "site/media/kit/claude/notice/warning@160x45.png",
+    "width": 710,
+    "height": 21,
+    "hash": "ad6f386be7f02435"
+  },
+  "claude/notice/warning@70x60": {
+    "png": "site/media/kit/claude/notice/warning@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "495cfeac34695720"
+  },
+  "claude/split/stacked@160x45": {
+    "png": "site/media/kit/claude/split/stacked@160x45.png",
+    "width": 710,
+    "height": 336,
+    "hash": "172d2e50916e7598"
+  },
+  "claude/split/stacked@70x60": {
+    "png": "site/media/kit/claude/split/stacked@70x60.png",
+    "width": 660,
+    "height": 357,
+    "hash": "1824200a0450d7ea"
+  },
+  "pi/clamp/max-lines@160x45": {
+    "png": "site/media/kit/pi/clamp/max-lines@160x45.png",
+    "width": 960,
+    "height": 63,
+    "hash": "999a43088d705fa2"
+  },
+  "pi/clamp/max-lines@70x60": {
+    "png": "site/media/kit/pi/clamp/max-lines@70x60.png",
+    "width": 660,
+    "height": 63,
+    "hash": "88867c85f4032a7d"
+  },
+  "pi/clamp/min-lines@160x45": {
+    "png": "site/media/kit/pi/clamp/min-lines@160x45.png",
+    "width": 960,
+    "height": 84,
+    "hash": "3e1e7fcf6971b834"
+  },
+  "pi/clamp/min-lines@70x60": {
+    "png": "site/media/kit/pi/clamp/min-lines@70x60.png",
+    "width": 660,
+    "height": 84,
+    "hash": "12b5cde0ffc7c846"
+  },
+  "pi/clamp/target-bounded@160x45": {
+    "png": "site/media/kit/pi/clamp/target-bounded@160x45.png",
+    "width": 960,
+    "height": 84,
+    "hash": "8f90d5ef6035c5ca"
+  },
+  "pi/clamp/target-bounded@70x60": {
+    "png": "site/media/kit/pi/clamp/target-bounded@70x60.png",
+    "width": 660,
+    "height": 84,
+    "hash": "38d601d3d4174bda"
+  },
+  "pi/clamp/target@160x45": {
+    "png": "site/media/kit/pi/clamp/target@160x45.png",
+    "width": 960,
+    "height": 126,
+    "hash": "c44b623f991bc607"
+  },
+  "pi/clamp/target@70x60": {
+    "png": "site/media/kit/pi/clamp/target@70x60.png",
+    "width": 660,
+    "height": 126,
+    "hash": "1f5a464f2fc256cc"
+  },
+  "pi/clamp/truncate@160x45": {
+    "png": "site/media/kit/pi/clamp/truncate@160x45.png",
+    "width": 960,
+    "height": 42,
+    "hash": "ae32f83da931ffda"
+  },
+  "pi/clamp/truncate@70x60": {
+    "png": "site/media/kit/pi/clamp/truncate@70x60.png",
+    "width": 660,
+    "height": 42,
+    "hash": "bc9ef1442f15a450"
+  },
+  "pi/clamp/unbounded@160x45": {
+    "png": "site/media/kit/pi/clamp/unbounded@160x45.png",
+    "width": 960,
+    "height": 168,
+    "hash": "79d7c49be3616d72"
+  },
+  "pi/clamp/unbounded@70x60": {
+    "png": "site/media/kit/pi/clamp/unbounded@70x60.png",
+    "width": 660,
+    "height": 168,
+    "hash": "16eb8a2736319a29"
+  },
+  "pi/clamp/wide-chars@112x32": {
+    "png": "site/media/kit/pi/clamp/wide-chars@112x32.png",
+    "width": 960,
+    "height": 84,
+    "hash": "d466994459530aab"
+  },
+  "pi/clamp/wide-chars@160x45": {
+    "png": "site/media/kit/pi/clamp/wide-chars@160x45.png",
+    "width": 960,
+    "height": 84,
+    "hash": "d466994459530aab"
+  },
+  "pi/clamp/wide-chars@240x60": {
+    "png": "site/media/kit/pi/clamp/wide-chars@240x60.png",
+    "width": 960,
+    "height": 84,
+    "hash": "d466994459530aab"
+  },
+  "pi/clamp/wide-chars@70x60": {
+    "png": "site/media/kit/pi/clamp/wide-chars@70x60.png",
+    "width": 660,
+    "height": 84,
+    "hash": "78fdac9d2a256d6c"
+  },
+  "pi/detail/block@160x45": {
+    "png": "site/media/kit/pi/detail/block@160x45.png",
+    "width": 960,
+    "height": 168,
+    "hash": "e30da7f13c0bab3b"
+  },
+  "pi/detail/block@70x60": {
+    "png": "site/media/kit/pi/detail/block@70x60.png",
+    "width": 660,
+    "height": 210,
+    "hash": "7abca4ce12b2a80f"
+  },
+  "pi/detail/notes@160x45": {
+    "png": "site/media/kit/pi/detail/notes@160x45.png",
+    "width": 960,
+    "height": 126,
+    "hash": "0d8ebf65c3425591"
+  },
+  "pi/detail/notes@70x60": {
+    "png": "site/media/kit/pi/detail/notes@70x60.png",
+    "width": 660,
+    "height": 126,
+    "hash": "2f41904554130498"
+  },
+  "pi/detail/prose-measure@160x45": {
+    "png": "site/media/kit/pi/detail/prose-measure@160x45.png",
+    "width": 1560,
+    "height": 147,
+    "hash": "80af6e01053ef7fd"
+  },
+  "pi/detail/prose-measure@70x60": {
+    "png": "site/media/kit/pi/detail/prose-measure@70x60.png",
+    "width": 660,
+    "height": 168,
+    "hash": "67505bbeb06c0937"
+  },
+  "pi/detail/section@160x45": {
+    "png": "site/media/kit/pi/detail/section@160x45.png",
+    "width": 960,
+    "height": 105,
+    "hash": "c3374b7a3d24aec4"
+  },
+  "pi/detail/section@70x60": {
+    "png": "site/media/kit/pi/detail/section@70x60.png",
+    "width": 660,
+    "height": 105,
+    "hash": "019e0ce054d8af39"
+  },
+  "pi/empty/default@160x45": {
+    "png": "site/media/kit/pi/empty/default@160x45.png",
+    "width": 720,
+    "height": 21,
+    "hash": "2150f17211081cb8"
+  },
+  "pi/empty/default@70x60": {
+    "png": "site/media/kit/pi/empty/default@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "80efab8c4a5e35b6"
+  },
+  "pi/empty/long@160x45": {
+    "png": "site/media/kit/pi/empty/long@160x45.png",
+    "width": 720,
+    "height": 84,
+    "hash": "0bf7c1ac286ba7a9"
+  },
+  "pi/empty/long@70x60": {
+    "png": "site/media/kit/pi/empty/long@70x60.png",
+    "width": 660,
+    "height": 105,
+    "hash": "20f88cf86cf63803"
+  },
+  "pi/entries/few-rows@160x45": {
+    "png": "site/media/kit/pi/entries/few-rows@160x45.png",
+    "width": 960,
+    "height": 357,
+    "hash": "1b38cda9a524cd52"
+  },
+  "pi/entries/few-rows@70x60": {
+    "png": "site/media/kit/pi/entries/few-rows@70x60.png",
+    "width": 660,
+    "height": 357,
+    "hash": "4be158a1e075e619"
+  },
+  "pi/entries/long-text@160x45": {
+    "png": "site/media/kit/pi/entries/long-text@160x45.png",
+    "width": 960,
+    "height": 147,
+    "hash": "76306927685544bf"
+  },
+  "pi/entries/long-text@70x60": {
+    "png": "site/media/kit/pi/entries/long-text@70x60.png",
+    "width": 660,
+    "height": 147,
+    "hash": "1e9cbf3e350ea0ca"
+  },
+  "pi/entries/narrow@160x45": {
+    "png": "site/media/kit/pi/entries/narrow@160x45.png",
+    "width": 960,
+    "height": 231,
+    "hash": "8f40c4b312684bc6"
+  },
+  "pi/entries/narrow@70x60": {
+    "png": "site/media/kit/pi/entries/narrow@70x60.png",
+    "width": 660,
+    "height": 231,
+    "hash": "d8900d502724b641"
+  },
+  "pi/entries/one@160x45": {
+    "png": "site/media/kit/pi/entries/one@160x45.png",
+    "width": 960,
+    "height": 21,
+    "hash": "2ad8eac5f6756c82"
+  },
+  "pi/entries/one@70x60": {
+    "png": "site/media/kit/pi/entries/one@70x60.png",
+    "width": 660,
+    "height": 42,
+    "hash": "b8176981c64e5cd0"
+  },
+  "pi/entries/wide-chars@112x32": {
+    "png": "site/media/kit/pi/entries/wide-chars@112x32.png",
+    "width": 960,
+    "height": 105,
+    "hash": "e3cb92c17e680e15"
+  },
+  "pi/entries/wide-chars@160x45": {
+    "png": "site/media/kit/pi/entries/wide-chars@160x45.png",
+    "width": 960,
+    "height": 105,
+    "hash": "e3cb92c17e680e15"
+  },
+  "pi/entries/wide-chars@240x60": {
+    "png": "site/media/kit/pi/entries/wide-chars@240x60.png",
+    "width": 960,
+    "height": 105,
+    "hash": "e3cb92c17e680e15"
+  },
+  "pi/entries/wide-chars@70x60": {
+    "png": "site/media/kit/pi/entries/wide-chars@70x60.png",
+    "width": 660,
+    "height": 147,
+    "hash": "b5479c3b897805df"
+  },
+  "pi/entries/wide@160x45": {
+    "png": "site/media/kit/pi/entries/wide@160x45.png",
+    "width": 960,
+    "height": 105,
+    "hash": "bc365fc24625b885"
+  },
+  "pi/entries/wide@70x60": {
+    "png": "site/media/kit/pi/entries/wide@70x60.png",
+    "width": 660,
+    "height": 126,
+    "hash": "2aa9656a07f613f0"
+  },
+  "pi/frame/auto@160x45": {
+    "png": "site/media/kit/pi/frame/auto@160x45.png",
+    "width": 240,
+    "height": 105,
+    "hash": "523c12d79fe10a07"
+  },
+  "pi/frame/auto@70x60": {
+    "png": "site/media/kit/pi/frame/auto@70x60.png",
+    "width": 240,
+    "height": 105,
+    "hash": "523c12d79fe10a07"
+  },
+  "pi/frame/dialog@160x45": {
+    "png": "site/media/kit/pi/frame/dialog@160x45.png",
+    "width": 720,
+    "height": 168,
+    "hash": "eb1e5062da2acfe4"
+  },
+  "pi/frame/dialog@70x60": {
+    "png": "site/media/kit/pi/frame/dialog@70x60.png",
+    "width": 680,
+    "height": 168,
+    "hash": "cb9f2911529d3c94"
+  },
+  "pi/frame/hints-drop@112x32": {
+    "png": "site/media/kit/pi/frame/hints-drop@112x32.png",
+    "width": 720,
+    "height": 105,
+    "hash": "f4dd150654375d88"
+  },
+  "pi/frame/hints-drop@160x45": {
+    "png": "site/media/kit/pi/frame/hints-drop@160x45.png",
+    "width": 720,
+    "height": 105,
+    "hash": "b9d5575b3d2a79ac"
+  },
+  "pi/frame/hints-drop@240x60": {
+    "png": "site/media/kit/pi/frame/hints-drop@240x60.png",
+    "width": 720,
+    "height": 105,
+    "hash": "b9d5575b3d2a79ac"
+  },
+  "pi/frame/hints-drop@70x60": {
+    "png": "site/media/kit/pi/frame/hints-drop@70x60.png",
+    "width": 680,
+    "height": 105,
+    "hash": "18dac18d9cfec431"
+  },
+  "pi/frame/hints-fit@160x45": {
+    "png": "site/media/kit/pi/frame/hints-fit@160x45.png",
+    "width": 1240,
+    "height": 105,
+    "hash": "fcb25a194de8a40d"
+  },
+  "pi/frame/hints-fit@70x60": {
+    "png": "site/media/kit/pi/frame/hints-fit@70x60.png",
+    "width": 680,
+    "height": 105,
+    "hash": "32413127f0bd52f1"
+  },
+  "pi/frame/reading@160x45": {
+    "png": "site/media/kit/pi/frame/reading@160x45.png",
+    "width": 960,
+    "height": 168,
+    "hash": "d0f1dadc75a266ee"
+  },
+  "pi/frame/reading@70x60": {
+    "png": "site/media/kit/pi/frame/reading@70x60.png",
+    "width": 680,
+    "height": 168,
+    "hash": "105e296d8c06e736"
+  },
+  "pi/frame/split@160x45": {
+    "png": "site/media/kit/pi/frame/split@160x45.png",
+    "width": 1240,
+    "height": 168,
+    "hash": "ea98baf9025f5de3"
+  },
+  "pi/frame/split@70x60": {
+    "png": "site/media/kit/pi/frame/split@70x60.png",
+    "width": 680,
+    "height": 168,
+    "hash": "cd4ed9aee6402147"
+  },
+  "pi/frame/title-bare@160x45": {
+    "png": "site/media/kit/pi/frame/title-bare@160x45.png",
+    "width": 720,
+    "height": 105,
+    "hash": "e973d35d51c9c4b0"
+  },
+  "pi/frame/title-bare@70x60": {
+    "png": "site/media/kit/pi/frame/title-bare@70x60.png",
+    "width": 680,
+    "height": 105,
+    "hash": "af23bb7f6c4535e9"
+  },
+  "pi/frame/title-count@160x45": {
+    "png": "site/media/kit/pi/frame/title-count@160x45.png",
+    "width": 720,
+    "height": 105,
+    "hash": "a667816b9a8676ad"
+  },
+  "pi/frame/title-count@70x60": {
+    "png": "site/media/kit/pi/frame/title-count@70x60.png",
+    "width": 680,
+    "height": 105,
+    "hash": "e1466b307c003284"
+  },
+  "pi/frame/wide@160x45": {
+    "png": "site/media/kit/pi/frame/wide@160x45.png",
+    "width": 1580,
+    "height": 168,
+    "hash": "abd7bee9682cd545"
+  },
+  "pi/frame/wide@70x60": {
+    "png": "site/media/kit/pi/frame/wide@70x60.png",
+    "width": 680,
+    "height": 168,
+    "hash": "a8f77cd7002ffbad"
+  },
+  "pi/list/coloured-metadata@160x45": {
+    "png": "site/media/kit/pi/list/coloured-metadata@160x45.png",
+    "width": 960,
+    "height": 294,
+    "hash": "d1f44e1ff55aa1a4"
+  },
+  "pi/list/coloured-metadata@70x60": {
+    "png": "site/media/kit/pi/list/coloured-metadata@70x60.png",
+    "width": 660,
+    "height": 378,
+    "hash": "55ec8d74a80059f4"
+  },
+  "pi/list/column-drop@160x45": {
+    "png": "site/media/kit/pi/list/column-drop@160x45.png",
+    "width": 960,
+    "height": 567,
+    "hash": "d31efb9a68fb018e"
+  },
+  "pi/list/column-drop@70x60": {
+    "png": "site/media/kit/pi/list/column-drop@70x60.png",
+    "width": 660,
+    "height": 567,
+    "hash": "4f384608d6bc10f3"
+  },
+  "pi/list/empty@160x45": {
+    "png": "site/media/kit/pi/list/empty@160x45.png",
+    "width": 960,
+    "height": 21,
+    "hash": "b4606a01f8c65a51"
+  },
+  "pi/list/empty@70x60": {
+    "png": "site/media/kit/pi/list/empty@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "9b0e2f8372a9b877"
+  },
+  "pi/list/extreme-titles@112x32": {
+    "png": "site/media/kit/pi/list/extreme-titles@112x32.png",
+    "width": 960,
+    "height": 168,
+    "hash": "fcf281d773339020"
+  },
+  "pi/list/extreme-titles@160x45": {
+    "png": "site/media/kit/pi/list/extreme-titles@160x45.png",
+    "width": 960,
+    "height": 168,
+    "hash": "fcf281d773339020"
+  },
+  "pi/list/extreme-titles@240x60": {
+    "png": "site/media/kit/pi/list/extreme-titles@240x60.png",
+    "width": 960,
+    "height": 168,
+    "hash": "fcf281d773339020"
+  },
+  "pi/list/extreme-titles@70x60": {
+    "png": "site/media/kit/pi/list/extreme-titles@70x60.png",
+    "width": 660,
+    "height": 168,
+    "hash": "71bd234cc22cbe80"
+  },
+  "pi/list/grouped@160x45": {
+    "png": "site/media/kit/pi/list/grouped@160x45.png",
+    "width": 960,
+    "height": 294,
+    "hash": "46a95ff6dac6f00d"
+  },
+  "pi/list/grouped@70x60": {
+    "png": "site/media/kit/pi/list/grouped@70x60.png",
+    "width": 660,
+    "height": 378,
+    "hash": "b6c2564c96d2fdaf"
+  },
+  "pi/list/marks-multi@160x45": {
+    "png": "site/media/kit/pi/list/marks-multi@160x45.png",
+    "width": 960,
+    "height": 294,
+    "hash": "aca3a27c6904c9f7"
+  },
+  "pi/list/marks-multi@70x60": {
+    "png": "site/media/kit/pi/list/marks-multi@70x60.png",
+    "width": 660,
+    "height": 378,
+    "hash": "f6a17a7a88b14855"
+  },
+  "pi/list/marks-single@160x45": {
+    "png": "site/media/kit/pi/list/marks-single@160x45.png",
+    "width": 960,
+    "height": 294,
+    "hash": "68fb0257821d7211"
+  },
+  "pi/list/marks-single@70x60": {
+    "png": "site/media/kit/pi/list/marks-single@70x60.png",
+    "width": 660,
+    "height": 378,
+    "hash": "5252dd25aac30da0"
+  },
+  "pi/list/more@160x45": {
+    "png": "site/media/kit/pi/list/more@160x45.png",
+    "width": 960,
+    "height": 231,
+    "hash": "cf16ca69c9df08c0"
+  },
+  "pi/list/more@70x60": {
+    "png": "site/media/kit/pi/list/more@70x60.png",
+    "width": 660,
+    "height": 231,
+    "hash": "1479c5b413f67af0"
+  },
+  "pi/list/one@160x45": {
+    "png": "site/media/kit/pi/list/one@160x45.png",
+    "width": 960,
+    "height": 42,
+    "hash": "f60ff5fa07dc6006"
+  },
+  "pi/list/one@70x60": {
+    "png": "site/media/kit/pi/list/one@70x60.png",
+    "width": 660,
+    "height": 63,
+    "hash": "468e8251a2829e3b"
+  },
+  "pi/list/scrolling@160x45": {
+    "png": "site/media/kit/pi/list/scrolling@160x45.png",
+    "width": 960,
+    "height": 210,
+    "hash": "380617c1c9294827"
+  },
+  "pi/list/scrolling@70x60": {
+    "png": "site/media/kit/pi/list/scrolling@70x60.png",
+    "width": 660,
+    "height": 189,
+    "hash": "1c928f0b1e469d59"
+  },
+  "pi/list/selected@160x45": {
+    "png": "site/media/kit/pi/list/selected@160x45.png",
+    "width": 960,
+    "height": 294,
+    "hash": "95cd4dee4c1c7877"
+  },
+  "pi/list/selected@70x60": {
+    "png": "site/media/kit/pi/list/selected@70x60.png",
+    "width": 660,
+    "height": 378,
+    "hash": "5ce8791fff150976"
+  },
+  "pi/notice/error@160x45": {
+    "png": "site/media/kit/pi/notice/error@160x45.png",
+    "width": 720,
+    "height": 21,
+    "hash": "860f398825f225c9"
+  },
+  "pi/notice/error@70x60": {
+    "png": "site/media/kit/pi/notice/error@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "e8ae2ae6fc1ab971"
+  },
+  "pi/notice/long@160x45": {
+    "png": "site/media/kit/pi/notice/long@160x45.png",
+    "width": 720,
+    "height": 21,
+    "hash": "1fd1ae02a6b1e723"
+  },
+  "pi/notice/long@70x60": {
+    "png": "site/media/kit/pi/notice/long@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "f4f4386b2547194c"
+  },
+  "pi/notice/success@160x45": {
+    "png": "site/media/kit/pi/notice/success@160x45.png",
+    "width": 720,
+    "height": 21,
+    "hash": "2d7f8f8f4c3adf80"
+  },
+  "pi/notice/success@70x60": {
+    "png": "site/media/kit/pi/notice/success@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "07f7dfe056a879e3"
+  },
+  "pi/notice/warning@160x45": {
+    "png": "site/media/kit/pi/notice/warning@160x45.png",
+    "width": 720,
+    "height": 21,
+    "hash": "10888982a9b300ec"
+  },
+  "pi/notice/warning@70x60": {
+    "png": "site/media/kit/pi/notice/warning@70x60.png",
+    "width": 660,
+    "height": 21,
+    "hash": "8568ea0945db8efc"
+  },
+  "pi/split/hints-junction@160x45": {
+    "png": "site/media/kit/pi/split/hints-junction@160x45.png",
+    "width": 960,
+    "height": 462,
+    "hash": "f791e685bd3c9fb9"
+  },
+  "pi/split/hints-junction@70x60": {
+    "png": "site/media/kit/pi/split/hints-junction@70x60.png",
+    "width": 680,
+    "height": 483,
+    "hash": "c56ca7a0bd845495"
+  },
+  "pi/split/stacked@160x45": {
+    "png": "site/media/kit/pi/split/stacked@160x45.png",
+    "width": 1240,
+    "height": 567,
+    "hash": "07bc88242a3097cc"
+  },
+  "pi/split/stacked@70x60": {
+    "png": "site/media/kit/pi/split/stacked@70x60.png",
+    "width": 680,
+    "height": 672,
+    "hash": "3e4a2687864b54b2"
+  },
+  "pi/split/two-pane@160x45": {
+    "png": "site/media/kit/pi/split/two-pane@160x45.png",
+    "width": 1240,
+    "height": 462,
+    "hash": "31cb36e44064d53d"
+  },
+  "pi/split/two-pane@70x60": {
+    "png": "site/media/kit/pi/split/two-pane@70x60.png",
+    "width": 680,
+    "height": 672,
+    "hash": "3e4a2687864b54b2"
+  }
+}

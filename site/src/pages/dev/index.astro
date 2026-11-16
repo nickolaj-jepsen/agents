@@ -1,6 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { content, docHref, github } from '../../lib/content.ts';
+import { content, docHref, github, href } from '../../lib/content.ts';
 
 const c = content();
 /** The first sentence of a doc, as its line in the list. */
@@ -24,7 +24,20 @@ const elsewhere = [
     <p class="lead">How this repo is put together, for working on its plugins and skills.</p>
   </header>
 
-  <section aria-labelledby="docs-h">
+  <section aria-labelledby="kit-h">
+    <div class="section-head"><h2 id="kit-h">UI kit</h2></div>
+    <ul class="rows">
+      <li>
+        <a href={href('dev/components/')}>
+          <span class="name">Components</span>
+          <span class="what">Each component of the shared UI kit in pi and in Claude Code: what it supports, its props, its renders side by side.</span>
+          <span />
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <section class="section" aria-labelledby="docs-h">
     <div class="section-head"><h2 id="docs-h">Docs</h2></div>
     <ul class="rows">
       {

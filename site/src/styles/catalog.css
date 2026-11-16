@@ -1,0 +1,670 @@
+/* The UI kit's catalogue (/dev/components/): site.css's system, plus a sidebar, renders and tables. */
+
+/* The catalogue compares pictures side by side, so its pages take more of a wide screen. */
+.page:has(> main.catalog) {
+  max-width: calc(100rem + 2 * var(--gutter));
+}
+.kc {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: calc(4 * var(--u));
+}
+@media (min-width: 64rem) {
+  .kc {
+    grid-template-columns: 13rem minmax(0, 1fr);
+  }
+  .cat-side {
+    grid-column: 1;
+    grid-row: 1;
+    position: sticky;
+    top: calc(3 * var(--u));
+    max-height: calc(100vh - 6 * var(--u));
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ui-hi) transparent;
+  }
+  .cat-main {
+    grid-column: 2;
+  }
+}
+/* On phones the component list follows the page, after a rule. */
+@media (max-width: 63.99rem) {
+  .cat-side {
+    padding-top: calc(3 * var(--u));
+    background: linear-gradient(var(--rule-strong), var(--rule-strong)) top / 100% 1px no-repeat;
+  }
+}
+
+.cat-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--u) calc(3 * var(--u));
+  margin-bottom: calc(3 * var(--u));
+}
+.cat-top .crumb {
+  margin: 0;
+}
+.kc .lede {
+  margin-bottom: calc(4 * var(--u));
+}
+
+/* Segmented switches: text buttons, the pressed one in text colour and underlined. */
+.seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 calc(2 * var(--u));
+}
+.seg button,
+.seg-btn {
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  line-height: calc(3 * var(--u));
+  padding: var(--u) 0;
+  background: none;
+  border: 0;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.seg button:hover,
+.seg-btn:hover {
+  color: var(--text);
+}
+.seg button[aria-pressed="true"],
+.seg-btn[aria-pressed="true"] {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.45em;
+  text-decoration-color: var(--accent);
+}
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--u) calc(4 * var(--u));
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  margin-bottom: calc(2 * var(--u));
+}
+.bar .grow {
+  flex: 1;
+}
+.ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(2 * var(--u));
+  flex-wrap: wrap;
+}
+.ctl .label {
+  color: var(--text-3);
+}
+.check {
+  display: inline-flex;
+  gap: var(--u);
+  align-items: center;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.check input {
+  accent-color: var(--accent);
+  margin: 0;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u) calc(3 * var(--u));
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  margin: calc(2 * var(--u)) 0;
+}
+.dim {
+  color: var(--text-3);
+}
+.mono {
+  font-size: 0.875rem;
+}
+
+/* Harness marks: the letter lit, dim, or struck. */
+.mk {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  display: inline-block;
+  min-width: 1ch;
+  text-align: center;
+}
+.mk.pi.on {
+  color: var(--pi);
+}
+.mk.claude.on {
+  color: var(--claude);
+}
+.mk.plan {
+  color: var(--text-3);
+  font-weight: 400;
+}
+.mk.none {
+  color: var(--ui-hi);
+  text-decoration: line-through;
+  font-weight: 400;
+}
+
+/* Statuses: the glyph in its colour, the word in text. */
+.status {
+  white-space: nowrap;
+  color: var(--text);
+}
+.status .g {
+  font-family: var(--mono);
+  font-weight: 700;
+  margin-right: 0.4em;
+}
+.status.yes .g {
+  color: var(--green);
+}
+.status.partial .g {
+  color: var(--yellow);
+}
+.status.no .g {
+  color: var(--red);
+}
+.status.planned .g {
+  color: var(--text-3);
+}
+
+/* ---- sidebar ---------------------------------------------------------------------------- */
+
+.cat-side {
+  font-size: 0.9375rem;
+  line-height: calc(3 * var(--u));
+}
+.cat-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--u);
+  margin-bottom: calc(2 * var(--u));
+  background: linear-gradient(var(--control, #676764), var(--control, #676764)) bottom / 100% 1px
+    no-repeat;
+}
+.cat-filter[hidden] {
+  display: none;
+}
+.cat-filter input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  padding: var(--u) 0;
+  line-height: calc(3 * var(--u));
+  font-size: 1rem;
+}
+.cat-filter input:focus {
+  outline: none;
+}
+.cat-filter:focus-within {
+  background-image: linear-gradient(var(--accent), var(--accent));
+}
+kbd {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-2);
+  border: 1px solid var(--ui-alt);
+  padding: 0 0.35em;
+  margin-right: 0.15em;
+}
+.cat-list a {
+  display: flex;
+  align-items: baseline;
+  gap: var(--u);
+  padding: calc(0.5 * var(--u)) 0;
+  color: var(--text-2);
+}
+.cat-list a:hover,
+.cat-list a[aria-current] {
+  color: var(--text);
+}
+.cat-list a[aria-current="page"] .name {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+  text-decoration-color: var(--accent);
+}
+.cat-list .name {
+  flex: 1;
+  min-width: 0;
+}
+.cat-list .comp {
+  font-weight: 600;
+}
+.cat-list > li + li {
+  margin-top: calc(0.5 * var(--u));
+}
+.marks-sm {
+  display: inline-flex;
+  gap: 0.5ch;
+}
+.stories {
+  display: none;
+  padding-left: calc(1.5 * var(--u));
+  margin-left: 2px;
+  background: linear-gradient(var(--rule), var(--rule)) left / 1px 100% no-repeat;
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+}
+.cat-list > li.here > .stories,
+.cat-side.filtering .stories {
+  display: block;
+}
+.nomatch,
+.keys {
+  margin-top: calc(2 * var(--u));
+  color: var(--text-3);
+  font-size: 0.875rem;
+}
+.keys kbd {
+  font-size: 0.6875rem;
+}
+
+/* ---- the harness switch hides the other harness's columns and renders ---------------------- */
+
+:root[data-kit-h="pi"] [data-h="claude"],
+:root[data-kit-h="claude"] [data-h="pi"] {
+  display: none !important;
+}
+
+/* ---- overview matrix and compatibility tables ------------------------------------------ */
+
+.scroll {
+  position: relative;
+  overflow-x: auto;
+}
+.matrix,
+.compat {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+}
+.matrix th,
+.matrix td,
+.compat th,
+.compat td {
+  text-align: left;
+  vertical-align: top;
+  padding: calc(1.5 * var(--u)) calc(3 * var(--u)) calc(1.5 * var(--u) - 1px) 0;
+  border-bottom: 1px solid var(--rule);
+}
+.matrix thead th,
+.compat thead th {
+  font-variant-caps: all-small-caps;
+  font-synthesis-small-caps: none;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  color: var(--text-2);
+  border-bottom-color: var(--rule-strong);
+  padding-top: 0;
+}
+.matrix tbody th a {
+  font-weight: 650;
+  color: var(--white);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: var(--link-line);
+}
+.matrix tbody th a:hover {
+  text-decoration-color: currentColor;
+}
+.matrix .purpose {
+  display: block;
+  font-weight: 400;
+  color: var(--text-2);
+  max-width: 22rem;
+}
+.matrix tbody th {
+  min-width: 14rem;
+}
+.matrix td {
+  min-width: 13rem;
+}
+.matrix tfoot th,
+.matrix tfoot td {
+  border-bottom: 0;
+  color: var(--text-2);
+}
+.cellrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 calc(2 * var(--u));
+}
+.counts {
+  display: inline-flex;
+  gap: calc(1.5 * var(--u));
+  font-family: var(--mono);
+  font-size: 0.875rem;
+}
+.count.yes > span:first-child {
+  color: var(--green);
+}
+.count.partial > span:first-child {
+  color: var(--yellow);
+}
+.count.no > span:first-child {
+  color: var(--red);
+}
+.count > span:first-child {
+  margin-right: 0.3em;
+}
+.count.zero {
+  color: var(--text-3);
+}
+.count.zero > span:first-child {
+  color: var(--text-3);
+}
+.note {
+  color: var(--text-2);
+  margin-top: calc(0.5 * var(--u));
+}
+.note code,
+.matrix code,
+.compat code,
+.impl code {
+  font-size: var(--mono-em);
+  color: var(--white);
+}
+.compat tbody th {
+  font-weight: 500;
+  color: var(--text);
+  min-width: 14rem;
+}
+.compat td {
+  min-width: 14rem;
+}
+.compat .flag {
+  display: block;
+  margin-top: calc(0.5 * var(--u));
+}
+.compat.only-diff tbody tr:not(.differs) {
+  display: none;
+}
+.cat-about {
+  margin-top: calc(5 * var(--u));
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+}
+
+/* ---- a component page -------------------------------------------------------------------- */
+
+.facts.impl {
+  margin-bottom: calc(3 * var(--u));
+  grid-template-columns: 10rem minmax(0, 1fr);
+}
+.facts.impl > dt {
+  font-variant-caps: normal;
+  letter-spacing: 0;
+  color: var(--text);
+}
+@media (max-width: 40rem) {
+  .facts.impl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 calc(3 * var(--u));
+  font-family: var(--mono);
+  font-size: 0.9375rem;
+  line-height: calc(3 * var(--u));
+  margin-bottom: calc(2 * var(--u));
+}
+.tabs a {
+  padding: var(--u) 0;
+  color: var(--text-2);
+}
+.tabs a:hover {
+  color: var(--text);
+}
+.tabs .n {
+  color: var(--text-3);
+  margin-left: 0.4em;
+}
+.cat-section {
+  margin-top: calc(6 * var(--u));
+}
+
+/* Story rows: the state, its line, then the renders side by side. */
+.story-rows > li {
+  padding: calc(3 * var(--u)) 0;
+  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+}
+.story-rows > li:first-child {
+  padding-top: var(--u);
+}
+.rhead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 calc(2 * var(--u));
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  margin-bottom: calc(2 * var(--u));
+}
+.rhead .title {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--white);
+}
+.rhead .about {
+  color: var(--text-2);
+  flex: 1;
+}
+.rhead .open {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+}
+.rhead:hover .title {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+.rhead:hover .open {
+  color: var(--text);
+}
+
+/* Two renders side by side while each keeps 33rem (a 70-column render at three quarters of its
+   size), else one above the other. */
+.pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 33rem), 1fr));
+  gap: calc(3 * var(--u)) calc(3 * var(--u));
+  align-items: start;
+}
+:root[data-kit-h="pi"] .pair,
+:root[data-kit-h="claude"] .pair {
+  grid-template-columns: minmax(0, 1fr);
+}
+.cell figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 calc(1.5 * var(--u));
+  align-items: baseline;
+  font-size: 0.9375rem;
+  line-height: calc(3 * var(--u));
+  margin-bottom: var(--u);
+}
+.cell figcaption strong {
+  font-weight: 600;
+}
+.cell figcaption code {
+  font-size: 0.8125rem;
+  color: var(--text-2);
+}
+.view {
+  position: relative;
+}
+.view img {
+  width: 100%;
+  height: auto;
+  outline: 1px solid var(--plate-edge);
+  outline-offset: -1px;
+  background: #000;
+}
+.pair.clip .view {
+  max-height: calc(48 * var(--u));
+  overflow: hidden;
+}
+.pair.clip .view.clipped::after {
+  content: "Cut short here; open the story for all of it";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: calc(0.5 * var(--u)) var(--u);
+  font-size: 0.8125rem;
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+  background: var(--bg);
+  border-top: 1px solid var(--plate-edge);
+}
+.tag {
+  font-size: 0.875rem;
+  line-height: calc(3 * var(--u));
+  color: var(--yellow);
+  margin-top: calc(0.5 * var(--u));
+}
+.why {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+  padding: calc(2 * var(--u));
+  border: 1px dashed var(--ui-alt);
+}
+
+/* Props: the two kits side by side. */
+.api-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+  gap: calc(4 * var(--u)) calc(5 * var(--u));
+  align-items: start;
+}
+:root[data-kit-h="pi"] .api-cols,
+:root[data-kit-h="claude"] .api-cols {
+  grid-template-columns: minmax(0, 1fr);
+}
+.api h3 {
+  font-weight: 650;
+  color: var(--white);
+  margin-bottom: calc(2 * var(--u));
+}
+.api .block + .block {
+  margin-top: calc(4 * var(--u));
+}
+.api .sig pre {
+  font-size: 0.8125rem;
+  line-height: calc(3 * var(--u));
+  padding: var(--u) calc(1.5 * var(--u)) calc(var(--u) - 2px);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.api .doc {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+  margin-top: var(--u);
+}
+.api h4 {
+  margin-top: calc(2 * var(--u));
+}
+.props {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+}
+.props dt {
+  padding-top: var(--u);
+  background: linear-gradient(var(--rule), var(--rule)) top / 100% 1px no-repeat;
+  margin-top: var(--u);
+}
+.props dt code {
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+.props .pname {
+  color: var(--white);
+  font-weight: 700;
+}
+.props .ptype {
+  color: var(--yellow);
+}
+.props .pdef {
+  color: var(--purple);
+}
+.props dd {
+  color: var(--text-2);
+}
+.props dd code {
+  font-size: var(--mono-em);
+  color: var(--text);
+}
+
+/* ---- a story page ---------------------------------------------------------------------- */
+
+.story-bar .pos {
+  white-space: nowrap;
+}
+.steps {
+  display: inline-flex;
+  gap: calc(3 * var(--u));
+  font-family: var(--mono);
+  font-size: 0.875rem;
+}
+.steps a {
+  color: var(--text-2);
+}
+.steps a:hover {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+.steps [aria-disabled] {
+  color: var(--ui-hi);
+}
+.demonstrates {
+  margin-top: calc(2 * var(--u));
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+}
+.story-stage {
+  margin-top: calc(2 * var(--u));
+}
+.story-stage[data-lay="stack"] .pair {
+  grid-template-columns: minmax(0, 1fr);
+}
+.story-stage[data-lay="flip"] .pair {
+  grid-template-columns: minmax(0, 1fr);
+  user-select: none;
+  cursor: pointer;
+}
+.story-stage .cell.flip-off {
+  display: none;
+}
+.story-stage.actual .pair {
+  grid-template-columns: minmax(0, 1fr);
+}
+.story-stage.actual .cell {
+  overflow-x: auto;
+}
+.story-stage.actual .view img {
+  max-width: none !important;
+  width: auto;
+}
+.flip-hint {
+  margin-top: calc(2 * var(--u));
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+}

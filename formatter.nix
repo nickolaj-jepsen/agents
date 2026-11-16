@@ -15,6 +15,9 @@
         "result"
         "skills/mermaid/scripts/vendor/*" # Vendored Pele, kept byte-identical to upstream
         "*.{gitignore,pub,svg,snap,gif}"
+        # Written by `npm run catalog`, byte for byte what its --check compares.
+        "kit/catalog/catalog.json"
+        "site/media/kit/crops.json"
       ];
     };
     formatter = config.treefmt.build.wrapper;

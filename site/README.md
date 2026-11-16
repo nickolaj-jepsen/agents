@@ -14,12 +14,13 @@ the root's `yaml`.
 
 ## Where the pages come from
 
-| Page                   | Source                                                                  |
-| ---------------------- | ----------------------------------------------------------------------- |
-| `/`                    | `docs/_intro.md`, `docs/_install.md`, and every plugin's and skill's    |
-| `/plugins/<name>/`     | `plugins/<name>/README.md` (frontmatter and prose), `site/media/<name>` |
-| `/skills/<name>/`      | `skills/<name>/SKILL.md`                                                |
-| `/dev/`, `/dev/<doc>/` | `docs/<doc>.md`                                                         |
+| Page                   | Source                                                                   |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `/`                    | `docs/_intro.md`, `docs/_install.md`, and every plugin's and skill's     |
+| `/plugins/<name>/`     | `plugins/<name>/README.md` (frontmatter and prose), `site/media/<name>`  |
+| `/skills/<name>/`      | `skills/<name>/SKILL.md`                                                 |
+| `/dev/`, `/dev/<doc>/` | `docs/<doc>.md`                                                          |
+| `/dev/components/...`  | `kit/catalog/catalog.json` and `site/media/kit/`, from `npm run catalog` |
 
 - Edit those, never the pages: `src/lib/content.ts` reads them with `scripts/content.ts`, the loader
   `README.md` is generated from.
@@ -29,6 +30,10 @@ the root's `yaml`.
   it into the build and serves it in dev.
 - `AGENTS_ROOT=<dir> just site` reads the content from another copy of the repo, such as a fixture with
   media in it.
+- The UI kit's catalogue is a page per component (stories, compatibility, props) and per story
+  (side by side, stacked or flipped). Its data is generated and committed (`kit/README.md`, The
+  catalogue); the switches, filter and keys are `src/client/catalog.ts`, and every page reads whole
+  without them.
 - `scripts/fonts.sh` remakes the Hack subsets in `src/assets/fonts/`.
 
 ## Deploy

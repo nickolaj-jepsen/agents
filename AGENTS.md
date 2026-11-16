@@ -16,6 +16,7 @@ just dev-setup           # npm ci, link nixpkgs' pi into node_modules, lay the m
 just test                # vitest over the harness-free cores
 just typecheck           # tsc -b over cores, pi halves, kit and e2e
 just kit-sync            # after editing kit/claude/ui.tsx or kit/catalog/samples.ts
+just catalog             # replay the kit's stories; rewrites its crops, catalog.json, COMPONENTS.md
 just readme              # regenerate README.md; run after editing a plugin README, a SKILL.md or docs/
 just site                # the site (site/) on a dev server; `just site-build` builds it
 just fmt                 # ALWAYS run before finishing
@@ -33,7 +34,7 @@ New files must be `git add`ed or the flake ignores them.
 | Claude Code mod      | `plugins/<name>/`      | `claude plugin validate`/`test`, per-plugin check | `claude --plugin-dir`, `tsc -p` |
 | A plugin's pi half   | `plugins/<name>/pi/`   | `nix build .#agent-tools` (`tsc -b`)              | `just dev-setup`, `pi -e`       |
 | Harness-free core    | `plugins/<name>/core/` | `npm test` in `.#agent-tools`                     | `just test`                     |
-| Shared UI kit        | `kit/`                 | `nix build .#agent-tools`                         | `just kit-sync`, `kit/catalog`  |
+| Shared UI kit        | `kit/`                 | `nix build .#agent-tools`                         | `just kit-sync`, `just catalog` |
 | Screens (end-to-end) | `e2e/`                 | none: local only, needs a signed-in agent         | `just e2e`, `e2e:cli goto`      |
 | The site             | `site/`                | none in the flake; `.github/workflows/pages.yml`  | `just site`, `site/README.md`   |
 

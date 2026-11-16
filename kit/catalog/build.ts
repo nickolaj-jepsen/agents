@@ -1,22 +1,26 @@
 /**
- * Builds the catalogue: `kit/catalog/index.html` (git-ignored) and `COMPONENTS.md`
- * (committed, generated) from the component manifests in `components/`, each kit's source
- * (props tables) and the kit scenarios' PNGs (`e2e/kit/__snapshots__/`, git-ignored). The
- * page is one file; `page.js` builds its DOM from the embedded model.
+ * Builds the catalogue's data from the component manifests in `components/`, each kit's source
+ * (props tables) and each harness's stories: `COMPONENTS.md` (what agents read) and
+ * `catalog.json` (what the site's catalogue pages, `site/src/pages/dev/components/`, read), both
+ * committed and generated; and the stories' crops, `site/media/kit/` (committed, from the kit
+ * scenarios' git-ignored PNGs).
  *
- *   npm run catalog              play the kit scenarios in PNG mode, then write both files; fail
- *                                on a manifest problem or a scenario that no longer matches
- *   npm run catalog -- --no-shots  write both files from the PNGs already there
- *   npm run catalog -- --check   no PNGs needed: fail on a problem or a stale COMPONENTS.md
+ *   npm run catalog                play the kit scenarios in PNG mode, then write all three; fail
+ *                                  on a manifest problem or a scenario that no longer matches
+ *   npm run catalog -- --no-shots  write all three from the PNGs already there, if any
+ *   npm run catalog -- --check     no PNGs needed: fail on a problem or a stale COMPONENTS.md or
+ *                                  catalog.json
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cropShots } from "./crops.ts";
-import { here, loadModel, markdown } from "./model.ts";
+import { here, loadModel, markdown, siteData } from "./model.ts";
 
-const index = join(here, "index.html");
-const components = join(here, "COMPONENTS.md");
+const outputs = {
+  components: join(here, "COMPONENTS.md"),
+  catalog: join(here, "catalog.json"),
+};
 const check = process.argv.includes("--check");
 
 if (!check && !process.argv.includes("--no-shots")) {
@@ -42,56 +46,22 @@ if (model.problems.length > 0) {
 if (model.notMirrored.length > 0)
   console.log(`catalog: not yet mirrored:\n- ${model.notMirrored.join("\n- ")}`);
 
-const md = markdown(model);
+const wanted = { components: markdown(model), catalog: siteData(model) };
 if (check) {
-  const current = existsSync(components) ? readFileSync(components, "utf8") : "";
-  if (current !== md) {
-    console.error("catalog: kit/catalog/COMPONENTS.md is out of date; run `npm run catalog`");
-    process.exit(1);
+  let stale = false;
+  for (const k of ["components", "catalog"] as const) {
+    const current = existsSync(outputs[k]) ? readFileSync(outputs[k], "utf8") : "";
+    if (current !== wanted[k]) {
+      console.error(`catalog: ${outputs[k]} is out of date; run \`npm run catalog -- --no-shots\``);
+      stale = true;
+    }
   }
+  if (stale) process.exit(1);
   console.log("catalog: ok");
   process.exit(0);
 }
-writeFileSync(components, md);
-cropShots(model);
-
-const style = readFileSync(join(here, "page.css"), "utf8");
-
-/** Pixel size of the PNG the page will show, so it can lay images out before they load. */
-function pixels(shot: { src: string; crop?: string }): { pw?: number; ph?: number } {
-  const file = join(here, shot.crop ?? shot.src);
-  if (!existsSync(file)) return {};
-  const head = readFileSync(file).subarray(0, 24);
-  return { pw: head.readUInt32BE(16), ph: head.readUInt32BE(20) };
-}
-
-const data = JSON.stringify({
-  components: model.components.map((c) => ({
-    ...c,
-    stories: c.stories.map((s) => ({
-      ...s,
-      by: Object.fromEntries(
-        Object.entries(s.by).map(([k, own]) => [
-          k,
-          { ...own, shots: own.shots.map((x) => ({ ...x, ...pixels(x) })) },
-        ]),
-      ),
-    })),
-  })),
-}).replace(/</g, "\\u003c");
-const script = readFileSync(join(here, "page.js"), "utf8");
-
-writeFileSync(
-  index,
-  `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kit catalogue</title>
-<style>${style}</style></head><body>
-<noscript><p>This page builds itself with a little script; enable it to read the catalogue.</p></noscript>
-<div id="app"></div>
-<script type="application/json" id="model">${data}</script>
-<script>${script}</script>
-</body></html>
-`,
+for (const k of ["components", "catalog"] as const) writeFileSync(outputs[k], wanted[k]);
+const crops = cropShots();
+console.log(
+  `catalog: ${crops.written} crop(s) written, ${crops.kept} unchanged, ${crops.removed} removed; COMPONENTS.md and catalog.json written`,
 );
-console.log(index);

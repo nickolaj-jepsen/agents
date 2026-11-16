@@ -1,0 +1,14 @@
+---
+/** A harness's letter, lit when it has the thing, dim when not yet, struck when it cannot. */
+import { MARK, MARK_TEXT, TITLES, type Harness, type Mark } from '../../lib/catalog.ts';
+
+interface Props {
+  h: Harness;
+  state: Mark;
+  /** What the state means here, for the name; defaults to has it / not yet / not possible. */
+  what?: string;
+}
+const { h, state, what = MARK_TEXT[state] } = Astro.props;
+---
+
+<span class={`mk ${h} ${state}`} role="img" aria-label={`${TITLES[h]}: ${what}`} title={`${TITLES[h]}: ${what}`}>{MARK[h]}</span>

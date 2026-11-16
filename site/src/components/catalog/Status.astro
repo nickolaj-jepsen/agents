@@ -1,0 +1,11 @@
+---
+/** A support status: its glyph in its colour, then its word. */
+import { STATUS_GLYPH, STATUS_LABEL, statusKind, type StatusKey } from '../../lib/catalog.ts';
+
+interface Props {
+  status: StatusKey;
+}
+const { status } = Astro.props;
+---
+
+<span class={`status ${statusKind(status)}`}><span class="g" aria-hidden="true">{STATUS_GLYPH[status]}</span>{STATUS_LABEL[status]}</span>

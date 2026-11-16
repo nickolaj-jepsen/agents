@@ -52,7 +52,7 @@ typecheck:
 kit-sync *PLUGINS:
     node kit/claude/sync.ts {{ PLUGINS }}
 
-[doc("Rebuild the UI kit's catalogue (kit/catalog)")]
+[doc("Replay the UI kit's stories and rewrite the catalogue: its crops (site/media/kit), catalog.json, COMPONENTS.md")]
 [group('dev')]
 catalog:
     npm run catalog

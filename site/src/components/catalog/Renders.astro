@@ -1,0 +1,64 @@
+---
+/**
+ * A story's renders, one figure per harness: every size it was drawn at, the one nearest the
+ * chosen size shown (catalog.ts switches them), or why the harness has none.
+ */
+import Mark from './Mark.astro';
+import { HARNESSES, sizeKey, TITLES, whyNot, type Component, type Story } from '../../lib/catalog.ts';
+
+interface Props {
+  c: Component;
+  s: Story;
+  size?: { w: number; h: number };
+  /** Overview rows: cap a tall render's height (the story page shows all of it). */
+  clip?: boolean;
+  /** Load the pictures at once. */
+  eager?: boolean;
+}
+const { c, s, size, clip = false, eager = false } = Astro.props;
+/** The shot at the size, else the nearest by width. */
+const pick = (shots: NonNullable<Story['shots']['pi']>) =>
+  size && shots.length
+    ? (shots.find((x) => x.w === size.w && x.h === size.h) ??
+      shots.reduce((a, b) => (Math.abs(b.w - size.w) < Math.abs(a.w - size.w) ? b : a)))
+    : shots[0];
+---
+
+<div class:list={['pair', { clip }]}>
+  {
+    HARNESSES.map((h) => {
+      const shots = s.shots[h] ?? [];
+      const shown = pick(shots);
+      return (
+        <figure class:list={['cell', { gone: !shots.length }]} data-h={h}>
+          <figcaption>
+            <strong>{TITLES[h]}</strong>
+            {s.by[h]?.settings && <code>{s.by[h]!.settings}</code>}
+          </figcaption>
+          {shots.length ? (
+            shots.map((x) => (
+              <div class="view" data-size={sizeKey(x)} data-w={x.w} hidden={x !== shown}>
+                <img
+                  src={x.src}
+                  width={x.width}
+                  height={x.height}
+                  style={`max-width: min(100%, ${x.width}px)`}
+                  alt={`${TITLES[h]}: ${s.id} at ${sizeKey(x)}`}
+                  loading={eager ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+                <p class="tag" data-near hidden={!size || sizeKey(x) === sizeKey(size)}>
+                  No render at the size chosen; this is {sizeKey(x)}.
+                </p>
+              </div>
+            ))
+          ) : (
+            <p class="why">
+              <Mark h={h} state={c.impl[h].state === 'none' ? 'none' : 'plan'} /> {whyNot(c, s, h)}
+            </p>
+          )}
+        </figure>
+      );
+    })
+  }
+</div>

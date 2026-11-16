@@ -130,10 +130,12 @@ export function extractKit(file: string): KitApi {
     return rows;
   };
 
+  // A key union (`keyof typeof tokens.role`) is a string, whose properties are String's own.
   const propRows = (declared: ts.Type): Row[] =>
     declared.getProperties().flatMap((p) => {
       const decl = p.declarations?.[0];
       if (!decl || !(ts.isPropertySignature(decl) || ts.isMethodSignature(decl))) return [];
+      if (program.isSourceFileDefaultLibrary(decl.getSourceFile())) return [];
       return [
         {
           name: p.name,

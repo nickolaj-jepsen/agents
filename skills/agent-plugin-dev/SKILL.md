@@ -45,7 +45,7 @@ One source per harness, with the style's numbers and glyphs in its tokens:
 
 Never hand-roll a frame, a padded row, a truncation or a hint bar in a plugin. If a kit component can't do what the screen needs, change the component.
 
-The catalogue shows every component in every state, in both harnesses side by side, with its props and what each harness supports: `npm run catalog`, then open `kit/catalog/index.html`. Look there before designing, to see what exists and what a harness can't do. `kit/README.md` says how to add a component: the kit code, its entry in `kit/catalog/components/`, its stories in both harnesses over the shared samples, and nothing drawn that a story does not show.
+The catalogue shows every component in every state, in both harnesses side by side, with its props and what each harness supports: `/dev/components/` on the site (`just site` locally; `npm run catalog` replays the stories first). Look there before designing, to see what exists and what a harness can't do. `kit/README.md` says how to add a component: the kit code, its entry in `kit/catalog/components/`, its stories in both harnesses over the shared samples, and nothing drawn that a story does not show.
 
 ## The driver
 

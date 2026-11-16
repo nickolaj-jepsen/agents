@@ -64,6 +64,17 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
 - A skill's `SKILL.md` is "What the agent reads": its description, then the body, behind a rule, a step
   smaller, after the human facts.
 
+## The catalogue
+
+- The component pages take a wider page (100rem) and a sidebar of components and stories, since
+  their job is comparing two pictures.
+- Two renders sit side by side while each keeps 33rem, a 70-column render at three quarters of its
+  size; below that they stack, so the text in a render stays readable. A render is never enlarged.
+- Status reads glyph then word: ✓ green, ~ yellow, ✗ red, ○ muted. A harness is its letter, π in
+  purple and C in accent: lit when it has the thing, muted when not yet, struck when it cannot.
+- Switches are text buttons; the pressed one is in text colour with the accent underline of the
+  current nav entry.
+
 ## Motion
 
 A plugin's demo plays, muted and looping, while it is on screen, only when the visitor has not asked for

@@ -1,0 +1,104 @@
+---
+/**
+ * The catalogue's page shell: the site's Base, a sidebar of components and their stories with a
+ * filter, and the harness switch. Slots: default (the view), `bar` (controls beside the switch).
+ */
+import Base from '../../layouts/Base.astro';
+import Mark from './Mark.astro';
+import { catalogHref, components, HARNESSES, implMark, storyMark, type Component, type Story } from '../../lib/catalog.ts';
+import { href } from '../../lib/content.ts';
+import '../../styles/catalog.css';
+
+interface Props {
+  title: string;
+  description: string;
+  current?: Component;
+  story?: Story;
+  /** Breadcrumb trail after "Components", each a link but the last. */
+  crumbs?: { name: string; href?: string }[];
+}
+const { title, description, current, story, crumbs = [] } = Astro.props;
+---
+
+<Base title={title} description={description} nav="dev" mainClass="catalog">
+  <div class="kc">
+    <div class="cat-main">
+      <div class="cat-top">
+        <nav class="crumb" aria-label="Breadcrumb">
+          <a href={href('dev/')}>Developers</a>
+          {' / '}
+          {
+            crumbs.length === 0 ? (
+              <span aria-current="page">Components</span>
+            ) : (
+              <a href={catalogHref()}>Components</a>
+            )
+          }
+          {
+            crumbs.map((c, i) => (
+              <>
+                {' / '}
+                {c.href && i < crumbs.length - 1 ? <a href={c.href}>{c.name}</a> : <span aria-current="page">{c.name}</span>}
+              </>
+            ))
+          }
+        </nav>
+        <div class="cat-tools" data-js hidden>
+          <div class="seg" role="group" aria-label="Show">
+            <button type="button" data-set-h="both" aria-pressed="true" title="Both harnesses (1)">Both</button>
+            <button type="button" data-set-h="pi" aria-pressed="false" title="pi only (2)">pi</button>
+            <button type="button" data-set-h="claude" aria-pressed="false" title="Claude Code only (3)">Claude Code</button>
+          </div>
+        </div>
+      </div>
+      <slot />
+    </div>
+
+    <nav class="cat-side" aria-label="Components">
+      <div class="cat-filter" data-js hidden>
+        <input id="cat-q" type="search" placeholder="Filter" autocomplete="off" spellcheck="false" aria-label="Filter components and stories" />
+        <kbd aria-hidden="true">/</kbd>
+      </div>
+      <ul class="cat-list">
+        <li>
+          <a href={catalogHref()} class="comp" aria-current={!current ? 'page' : undefined}><span class="name">Overview</span></a>
+        </li>
+        {
+          components.map((c) => (
+            <li data-text={`${c.name} ${c.id}`.toLowerCase()} class:list={{ here: c === current }}>
+              <a href={catalogHref(c)} class="comp" aria-current={c === current ? (story ? 'true' : 'page') : undefined}>
+                <span class="name">{c.name}</span>
+                <span class="marks-sm">
+                  {HARNESSES.map((h) => (
+                    <Mark h={h} state={implMark(c, h)} what={{ on: 'implemented', plan: 'planned', none: 'not possible' }[implMark(c, h)]} />
+                  ))}
+                </span>
+              </a>
+              <ul class="stories">
+                {c.stories.map((s) => (
+                  <li data-text={s.state.toLowerCase()}>
+                    <a href={catalogHref(c, s)} aria-current={s === story ? 'page' : undefined}>
+                      <span class="name">{s.state}</span>
+                      <span class="marks-sm">
+                        {HARNESSES.map((h) => (
+                          <Mark h={h} state={storyMark(c, s, h)} what={{ on: 'has a render', plan: 'no render yet', none: 'not possible' }[storyMark(c, s, h)]} />
+                        ))}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="nomatch" hidden>No match.</p>
+      <p class="keys" data-js hidden>
+        <kbd>/</kbd> filter · <kbd>j</kbd><kbd>k</kbd> next and previous story · <kbd>f</kbd> flip · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> both, pi, Claude Code
+      </p>
+    </nav>
+  </div>
+  <script>
+    import '../../client/catalog.ts';
+  </script>
+</Base>

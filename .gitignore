@@ -2,8 +2,6 @@ node_modules/
 # Laid by Claude Code when it loads a mod from its folder (`claude --plugin-dir`).
 plugins/*/.claude-plugin/types/
 kit/catalog/claude/.claude-plugin/types/
-kit/catalog/index.html
-kit/catalog/crops/
 result
 result-*
 .direnv/

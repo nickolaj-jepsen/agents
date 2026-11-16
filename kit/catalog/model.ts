@@ -1,7 +1,8 @@
 /**
  * Everything the catalogue knows, as data: the component manifests, each kit's API read from
- * its source, each harness's stories and their screenshots. `build.ts` turns it into the page
- * and `COMPONENTS.md`; `problems` is what makes the build fail.
+ * its source and each harness's stories. `build.ts` turns it into `COMPONENTS.md` and
+ * `catalog.json` (what the site's catalogue pages read); `problems` is what makes the build fail.
+ * The screenshots are not in it: `crops.ts` keeps them, under `site/media/kit/`.
  */
 import { existsSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
@@ -18,11 +19,8 @@ import {
 
 export const here = dirname(fileURLToPath(import.meta.url));
 const kitRoot = join(here, "..");
-const snapshots = join(here, "../../e2e/kit/__snapshots__");
 
 type Meta = { component: string; state: string; about?: string; settings?: string };
-/** `src` is the full-terminal PNG; `crop`, set by `crops.ts`, is the region alone. */
-export type Shot = { w: number; h: number; src: string; crop?: string };
 
 export type ImplState = {
   state: "exists" | "planned" | "none";
@@ -31,14 +29,14 @@ export type ImplState = {
   reason?: string;
 };
 
-export type HarnessStory = { about?: string; settings?: string; shots: Shot[]; hasStory: boolean };
+export type HarnessStory = { about?: string; settings?: string };
 
 export type StoryModel = {
   id: string;
   state: string;
-  /** Per harness; undefined when that harness has neither a story nor a screenshot. */
+  /** Per harness; undefined when that harness has no story with this id. */
   by: Partial<Record<Harness, HarnessStory>>;
-  /** Why a harness has no render, shown in its place. */
+  /** Why a harness has no story, shown in its place. */
   missing: Partial<Record<Harness, string>>;
 };
 
@@ -72,26 +70,6 @@ const kitFiles: Record<Harness, string> = {
   pi: join(kitRoot, "pi/ui.ts"),
   claude: join(kitRoot, "claude/ui.tsx"),
 };
-
-function walk(dir: string): string[] {
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
-    e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)],
-  );
-}
-
-function shotsOf(harness: Harness): Map<string, Shot[]> {
-  const root = join(snapshots, harness);
-  const out = new Map<string, Shot[]>();
-  for (const file of walk(root)) {
-    const m = /^(.+\/[^/]+)@(\d+)x(\d+)\.png$/.exec(relative(root, file));
-    if (!m) continue;
-    const list = out.get(m[1]!) ?? [];
-    list.push({ w: Number(m[2]), h: Number(m[3]), src: relative(here, file) });
-    out.set(m[1]!, list);
-  }
-  return out;
-}
 
 async function storiesOf(harness: Harness): Promise<Map<string, Meta> | undefined> {
   const file = ["stories.ts", "stories.tsx"]
@@ -130,10 +108,6 @@ export async function loadModel(): Promise<Model> {
   const stories = Object.fromEntries(
     await Promise.all(harnesses.map(async (h) => [h, await storiesOf(h)] as const)),
   ) as Record<Harness, Map<string, Meta> | undefined>;
-  const shots = Object.fromEntries(harnesses.map((h) => [h, shotsOf(h)])) as Record<
-    Harness,
-    Map<string, Shot[]>
-  >;
 
   const list = await manifests();
   const seen = new Set<string>();
@@ -215,27 +189,23 @@ export async function loadModel(): Promise<Model> {
       );
 
     const storyIds = new Set<string>();
-    for (const h of harnesses) {
+    for (const h of harnesses)
       for (const id of stories[h]?.keys() ?? []) if (id.startsWith(`${c.id}/`)) storyIds.add(id);
-      for (const id of shots[h].keys()) if (id.startsWith(`${c.id}/`)) storyIds.add(id);
-    }
     const storyModels = [...storyIds].map((id): StoryModel => {
       const by: StoryModel["by"] = {};
       const missing: StoryModel["missing"] = {};
       for (const h of harnesses) {
         const meta = stories[h]?.get(id);
-        const own = (shots[h].get(id) ?? []).sort((x, y) => x.w - y.w);
-        if (meta || own.length > 0)
-          by[h] = { about: meta?.about, settings: meta?.settings, shots: own, hasStory: !!meta };
-        if (own.length > 0) continue;
+        if (meta) {
+          by[h] = { about: meta.about, settings: meta.settings };
+          continue;
+        }
         missing[h] =
           impl[h].state === "none"
             ? (impl[h].reason ?? "not possible")
             : !kits[h].present
               ? `the ${h} kit is not built yet`
-              : meta
-                ? "the story has no screenshot yet; run `npm run e2e kit`"
-                : `the ${h} kit has no story with this id`;
+              : `the ${h} kit has no story with this id`;
       }
       return { id, state: id.slice(c.id.length + 1), by, missing };
     });
@@ -266,7 +236,7 @@ export function markdown(model: Model): string {
     "",
     "# Kit components",
     "",
-    "Which component each harness has, and which features each supports. Status: `yes`, `partial`, `no` (the engine cannot) and `planned` (can, not built yet). The props of each component are in the catalogue page (`npm run catalog`), read from the kit's own doc comments.",
+    "Which component each harness has, and which features each supports. Status: `yes`, `partial`, `no` (the engine cannot) and `planned` (can, not built yet). The props and renders of each component are on the site's catalogue (`site/`, `/dev/components/`), read from the kit's own doc comments.",
     "",
   ];
   for (const c of model.components) {
@@ -283,4 +253,10 @@ export function markdown(model: Model): string {
     out.push("");
   }
   return out.join("\n");
+}
+
+/** `catalog.json`: the model the site's catalogue pages read, everything but the problems. */
+export function siteData(model: Model): string {
+  const { kits, components } = model;
+  return JSON.stringify({ kits, components }, null, 2) + "\n";
 }

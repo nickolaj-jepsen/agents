@@ -1,0 +1,190 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Shell from '../../../../components/catalog/Shell.astro';
+import Mark from '../../../../components/catalog/Mark.astro';
+import Status from '../../../../components/catalog/Status.astro';
+import Renders from '../../../../components/catalog/Renders.astro';
+import Api from '../../../../components/catalog/Api.astro';
+import {
+  catalogHref,
+  components,
+  differs,
+  HARNESSES,
+  implMark,
+  sizeKey,
+  sizesOf,
+  TITLES,
+  type Component,
+} from '../../../../lib/catalog.ts';
+
+export const getStaticPaths = (() =>
+  components.map((c) => ({ params: { id: c.id }, props: { c } }))) satisfies GetStaticPaths;
+
+interface Props {
+  c: Component;
+}
+const { c } = Astro.props;
+const sizes = sizesOf(c.stories);
+const size = sizes[0];
+const nd = c.features.filter(differs).length;
+const storyOf = (id?: string) => (id ? c.stories.find((s) => s.id === id) : undefined);
+---
+
+<Shell title={`${c.name} · Components`} description={c.purpose} current={c} crumbs={[{ name: c.name }]}>
+  <header class="lede">
+    <h1>{c.name}</h1>
+    <p class="lead">{c.purpose}</p>
+  </header>
+
+  <dl class="facts impl">
+    {
+      HARNESSES.map((h) => (
+        <>
+          <dt data-h={h}>
+            <Mark h={h} state={implMark(c, h)} /> {TITLES[h]}
+          </dt>
+          <dd data-h={h}>
+            <Status status={c.impl[h].state} />{' '}
+            {c.impl[h].state === 'none' ? (
+              <span class="sub">{c.impl[h].reason}</span>
+            ) : (
+              c.impl[h].exports.map((e, i) => (
+                <>
+                  {i > 0 && ', '}
+                  <code>{e}</code>
+                </>
+              ))
+            )}
+          </dd>
+        </>
+      ))
+    }
+  </dl>
+
+  <nav class="tabs" aria-label={`${c.name} sections`}>
+    <a href="#stories">Stories <span class="n">{c.stories.length}</span></a>
+    <a href="#compat">Compatibility <span class="n">{c.features.length}</span></a>
+    <a href="#props">Props</a>
+  </nav>
+
+  <section id="stories" class="cat-section" aria-labelledby="stories-h">
+    <div class="section-head">
+      <h2 id="stories-h">Stories</h2>
+      <span class="count">{c.stories.length}</span>
+    </div>
+    {
+      sizes.length > 0 && (
+        <div class="bar">
+          <div class="ctl">
+            <span class="label">Terminal size</span>
+            <div class="seg" role="group" aria-label="Terminal size" data-sizes data-js hidden>
+              {sizes.map((s, i) => (
+                <button type="button" data-set-size={sizeKey(s)} aria-pressed={i === 0 ? 'true' : 'false'}>
+                  {sizeKey(s)}
+                </button>
+              ))}
+            </div>
+            <noscript>
+              <span class="mono">{size && sizeKey(size)}</span>
+            </noscript>
+          </div>
+        </div>
+      )
+    }
+    {
+      c.stories.length === 0 ? (
+        <p class="sub">No stories yet.</p>
+      ) : (
+        <ul class="story-rows">
+          {c.stories.map((s) => {
+            const about = HARNESSES.map((h) => s.by[h]?.about).find(Boolean);
+            return (
+              <li id={`s-${s.state}`}>
+                <a class="rhead" href={catalogHref(c, s)}>
+                  <span class="title">{s.state}</span>
+                  {about && <span class="about">{about}</span>}
+                  <span class="open" aria-hidden="true">
+                    Open →
+                  </span>
+                </a>
+                <Renders c={c} s={s} size={size} clip />
+              </li>
+            );
+          })}
+        </ul>
+      )
+    }
+  </section>
+
+  <section id="compat" class="cat-section" aria-labelledby="compat-h">
+    <div class="section-head">
+      <h2 id="compat-h">Compatibility</h2>
+      <span class="count">{c.features.length}</span>
+    </div>
+    <div class="bar">
+      <span class="sub">{nd} of {c.features.length} features differ between pi and Claude Code</span>
+      {
+        nd > 0 && (
+          <label class="check" data-js hidden>
+            <input type="checkbox" data-diff /> Only differences
+          </label>
+        )
+      }
+    </div>
+    <p class="sub legend">
+      <span><Status status="yes" /> works</span>
+      <span><Status status="partial" /> with a caveat</span>
+      <span><Status status="no" /> the engine cannot</span>
+      <span><Status status="planned" /> can, not built yet</span>
+    </p>
+    <div class="table scroll" role="region" aria-label="Features by harness" tabindex="0">
+      <table class="compat">
+        <thead>
+          <tr>
+            <th scope="col">Feature</th>
+            {HARNESSES.map((h) => <th scope="col" data-h={h}>{TITLES[h]}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {
+            c.features.map((f) => (
+              <tr class:list={{ differs: differs(f) }}>
+                <th scope="row">
+                  {f.label}
+                  {differs(f) && <span class="flag">differs</span>}
+                </th>
+                {HARNESSES.map((h) => {
+                  const st = f.support[h];
+                  const story = storyOf(f.story[h]);
+                  return (
+                    <td data-h={h} data-label={TITLES[h]}>
+                      <Status status={st.status} />
+                      {st.note && <div class="note">{st.note}</div>}
+                      {story && (st.status === 'yes' || st.status === 'partial') && (
+                        <div class="note">
+                          <a class="lnk" href={catalogHref(c, story)}>
+                            See {story.state} →
+                          </a>
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="props" class="cat-section" aria-labelledby="props-h">
+    <div class="section-head">
+      <h2 id="props-h">Props</h2>
+      <span class="aside">Read from the kits' source and doc comments</span>
+    </div>
+    <div class="api-cols">
+      {HARNESSES.map((h) => <Api c={c} h={h} />)}
+    </div>
+  </section>
+</Shell>

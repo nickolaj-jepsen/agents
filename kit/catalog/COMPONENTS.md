@@ -2,7 +2,7 @@
 
 # Kit components
 
-Which component each harness has, and which features each supports. Status: `yes`, `partial`, `no` (the engine cannot) and `planned` (can, not built yet). The props of each component are in the catalogue page (`npm run catalog`), read from the kit's own doc comments.
+Which component each harness has, and which features each supports. Status: `yes`, `partial`, `no` (the engine cannot) and `planned` (can, not built yet). The props and renders of each component are on the site's catalogue (`site/`, `/dev/components/`), read from the kit's own doc comments.
 
 ## Band shell
 
