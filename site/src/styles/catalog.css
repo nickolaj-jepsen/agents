@@ -157,27 +157,30 @@
 .mk {
   position: relative;
   display: inline-block;
-  width: 1.05rem;
   height: 1.05rem;
   flex: none;
 }
 .mk .gl {
-  width: 100%;
   height: 100%;
-}
-.mk.pi.on {
-  color: var(--pi);
 }
 .mk.claude.on {
   color: var(--claude);
 }
+/* Not yet: the logo greyed. Not possible: greyed further and struck through. pi's has colours of
+   its own, so the grey is a filter. */
 .mk.plan {
   color: var(--text-3);
-  opacity: 0.6;
 }
-/* Not possible: the logo dimmed and struck through. */
+.mk.plan .gl {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
 .mk.none {
   color: var(--ui-hi);
+}
+.mk.none .gl {
+  filter: grayscale(1);
+  opacity: 0.4;
 }
 .mk.none::after {
   content: "";
@@ -588,7 +591,6 @@ kbd {
   line-height: calc(4 * var(--u) - 1px);
 }
 .cell figcaption .gl {
-  width: 1.1em;
   height: 1.1em;
 }
 .cell figcaption .k.claude {

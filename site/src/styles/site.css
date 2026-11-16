@@ -533,10 +533,13 @@ pre {
 }
 /* A harness logo: sized by the text it sits in, coloured by its .k. */
 .gl {
-  width: 1.15em;
   height: 1.15em;
+  aspect-ratio: 1;
   display: block;
   flex: none;
+}
+.gl.claude {
+  aspect-ratio: 24 / 17;
 }
 .hm.claude .k {
   color: var(--claude);
@@ -1388,7 +1391,6 @@ pre {
   margin-right: 0.45em;
 }
 .seg .gl {
-  width: 1.2em;
   height: 1.2em;
 }
 .seg[hidden] {

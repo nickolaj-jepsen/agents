@@ -1,25 +1,23 @@
 ---
-/** The harness logos, once per page; Glyph.astro refers to them. Stroked, so they take the text colour. */
+/**
+ * The harness logos, once per page; Glyph.astro refers to them. Claude Code's is the pixel mascot
+ * (thesvg.org/icon/claude-code, mono), which takes the text colour; pi's is the press kit's
+ * (pi.dev/press-kit), in its own three colours, cropped to the mark.
+ */
 ---
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <!-- Claude Code: a spark of twelve uneven rays. -->
-  <symbol id="h-claude" viewBox="0 0 24 24">
+  <symbol id="h-claude" viewBox="0 3.5 24 17">
     <path
-      d="M12.27 9.82L13.17 2.47M13.32 10.24L16.09 6.57M14.03 11.14L19.92 8.64M14.18 12.27L18.15 12.76M13.76 13.32L19.67 17.78M12.86 14.03L14.74 18.44M11.73 14.18L10.88 21.13M10.68 13.76L8.15 17.11M9.97 12.86L2.98 15.83M9.82 11.73L5.45 11.2M10.24 10.68L4.97 6.7M11.14 9.97L9.19 5.37"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.3"
-      stroke-linecap="round"></path>
+      fill="currentColor"
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M20.998 10.949H24v3.102h-3v3.028h-1.487V20H18v-2.921h-1.487V20H15v-2.921H9V20H7.488v-2.921H6V20H4.487v-2.921H3V14.05H0V10.95h3V5h17.998v5.949zM6 10.949h1.488V8.102H6v2.847zm10.51 0H18V8.102h-1.49v2.847z"
+    ></path>
   </symbol>
-  <!-- pi: the letter, its right leg hooked. -->
-  <symbol id="h-pi" viewBox="0 0 24 24">
-    <path
-      d="M4 6.5H20M9 6.5L8.2 19M15 6.5V15.5Q15 19 18.5 19"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.4"
-      stroke-linecap="round"
-      stroke-linejoin="round"></path>
+  <symbol id="h-pi" viewBox="165.29 165.29 469.43 469.43">
+    <path fill="#F09082" d="M165.29 165.29H517.36V400H400V282.65H165.29Z"></path>
+    <path fill="#4D9ABF" d="M165.29 282.65H282.65V400H400V517.36H282.65V634.72H165.29Z"></path>
+    <path fill="#F1BE58" d="M517.36 400H634.72V634.72H517.36Z"></path>
   </symbol>
 </svg>
