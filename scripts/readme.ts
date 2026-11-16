@@ -1,10 +1,8 @@
 // Writes README.md from the plugins', skills' and docs' sources (`just readme`).
-// `--check` fails when README.md is stale or a file under site/media is over budget.
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { join, relative } from "node:path";
+// `--check` fails when README.md is stale.
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { type Content, type Plugin, REPO_URL, SITE_URL, loadContent, repoRoot } from "./content.ts";
-
-const BUDGETS: Record<string, number> = { ".mp4": 1_000_000, ".png": 300_000 };
 
 function harnesses(p: Plugin): string {
   return [p.harness.claude && "Claude Code", p.harness.pi && "pi"].filter(Boolean).join(" / ");
@@ -24,8 +22,11 @@ export function render(c: Content): string {
   const ready = c.plugins.filter((p) => !p.status);
   for (const p of ready.filter((p) => p.featured)) {
     out.push(`### [${p.name}](${SITE_URL}/plugins/${p.name}/)`, "", p.tagline, "");
-    const v = p.media?.video;
-    if (v) out.push(`[![${v.caption}](${v.poster})](${SITE_URL}/plugins/${p.name}/)`, "");
+    // The poster of its first demo, from the site: the media are recorded there, not committed.
+    out.push(
+      `[![${p.name}](${SITE_URL}/media/${p.name}/demo.png)](${SITE_URL}/plugins/${p.name}/)`,
+      "",
+    );
   }
   const line = (p: Plugin) =>
     `- [${p.name}](${SITE_URL}/plugins/${p.name}/): ${p.tagline} (${harnesses(p)})`;
@@ -40,7 +41,7 @@ export function render(c: Content): string {
     if (cat.blurb) out.push(cat.blurb, "");
     for (const s of cat.skills)
       out.push(
-        `- [${s.name}](${SITE_URL}/skills/${s.name}/): ${s.summary}${s.credit ? " " + s.credit : ""}`,
+        `- [${s.name}](${SITE_URL}/skills/${s.name}/): ${s.summary}${s.credit ? " " + s.credit : ""}${s.status ? " _(in progress)_" : ""}`,
       );
     out.push("");
   }
@@ -52,26 +53,6 @@ export function render(c: Content): string {
   return out.join("\n").replace(/\n{3,}/g, "\n\n");
 }
 
-function overBudget(root: string): string[] {
-  const dir = join(root, "site/media");
-  if (!existsSync(dir)) return [];
-  const bad: string[] = [];
-  const walk = (d: string) => {
-    for (const e of readdirSync(d, { withFileTypes: true })) {
-      const f = join(d, e.name);
-      if (e.isDirectory()) walk(f);
-      else {
-        const limit = BUDGETS[f.slice(f.lastIndexOf(".")).toLowerCase()];
-        const size = statSync(f).size;
-        if (limit !== undefined && size > limit)
-          bad.push(`${relative(root, f)} is ${size} bytes, over the ${limit} byte budget`);
-      }
-    }
-  };
-  walk(dir);
-  return bad;
-}
-
 const root = repoRoot;
 const wanted = render(loadContent(root));
 const file = join(root, "README.md");
@@ -80,7 +61,6 @@ if (process.argv.includes("--check")) {
   const have = existsSync(file) ? readFileSync(file, "utf8") : "";
   if (have !== wanted)
     problems.push("README.md is stale: run `just readme` (then `just fmt`) and commit it.");
-  problems.push(...overBudget(root));
   if (problems.length) {
     console.error(problems.join("\n"));
     process.exit(1);

@@ -14,29 +14,36 @@ the root's `yaml`.
 
 ## Where the pages come from
 
-| Page                   | Source                                                                   |
-| ---------------------- | ------------------------------------------------------------------------ |
-| `/`                    | `docs/_intro.md`, `docs/_install.md`, and every plugin's and skill's     |
-| `/plugins/<name>/`     | `plugins/<name>/README.md` (frontmatter and prose), `site/media/<name>`  |
-| `/skills/<name>/`      | `skills/<name>/SKILL.md`                                                 |
-| `/dev/`, `/dev/<doc>/` | `docs/<doc>.md`                                                          |
-| `/dev/components/...`  | `kit/catalog/catalog.json` and `site/media/kit/`, from `npm run catalog` |
+| Page                    | Source                                                                   |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `/`                     | `docs/_intro.md`, `docs/_install.md`, and every plugin's and skill's     |
+| `/plugins/<name>/`      | `plugins/<name>/README.md` (frontmatter and prose), `site/media/<name>/` |
+| `/skills/<name>/`       | `skills/<name>/SKILL.md`                                                 |
+| `/dev/`                 | `kit/catalog/catalog.json` and `site/media/kit/`, from `just catalog`    |
+| `/dev/components/<id>/` | the same, a component with its stories inline                            |
+| `/dev/<doc>/`           | `docs/<doc>.md`                                                          |
 
 - Edit those, never the pages: `src/lib/content.ts` reads them with `scripts/content.ts`, the loader
   `README.md` is generated from.
 - A relative link in a source resolves against its file: one to a plugin, skill or doc lands on its page,
   anything else in the repo on GitHub (`src/lib/markdown.ts`).
-- `site/media/` is served at `/agents/media/` (the `media.json` files stay out); `astro.config.mjs` copies
-  it into the build and serves it in dev.
+- `site/media/` is recorded, not committed: `just media` (in `nix develop .#media`, signed out) plays
+  `e2e/<plugin>/site.scenarios.ts` and the kit's stories into it, and the Pages workflow does the same
+  before it builds. Without it the pages build with no pictures. It is served at `/agents/media/` (the
+  `media.json` files stay out); `astro.config.mjs` copies it into the build and serves it in dev.
 - `AGENTS_ROOT=<dir> just site` reads the content from another copy of the repo, such as a fixture with
   media in it.
-- The UI kit's catalogue is a page per component (stories, compatibility, props) and per story
-  (side by side, stacked or flipped). Its data is generated and committed (`kit/README.md`, The
-  catalogue); the switches, filter and keys are `src/client/catalog.ts`, and every page reads whole
-  without them.
+- The UI kit's catalogue is `/dev/` (the overview) and a page per component: its stories inline (side
+  by side, stacked or flipped), compatibility and props. Its data is generated (`kit/README.md`, The
+  catalogue); the switches, filter and flip key are `src/client/catalog.ts`, and every page reads whole
+  without them. The developer docs share its sidebar.
+- A plugin page's media is one gallery (`src/components/Gallery.astro`, `src/client/gallery.ts`); the
+  harness a visitor picks there or in the catalogue is remembered for both (`src/client/prefs.ts`).
 - `scripts/fonts.sh` remakes the Hack subsets in `src/assets/fonts/`.
 
 ## Deploy
 
-`.github/workflows/pages.yml` builds on every push to `main` that touches the site or its sources, and
-deploys to the `github-pages` environment. The repo's Pages source must be "GitHub Actions".
+`.github/workflows/pages.yml` records the media in `nix develop .#media` (cached by a hash of what they
+are made from), builds, and deploys to the `github-pages` environment, on every push to `main` that
+touches the site or its sources. A recording that fails fails the deploy, and the live site stays as it
+was. The repo's Pages source must be "GitHub Actions".

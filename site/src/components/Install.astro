@@ -1,0 +1,55 @@
+---
+/**
+ * An install control: a small button that opens the commands for each harness, each with a copy
+ * button, under it. A `<details>`, so it opens without script; site.ts closes it on Escape or a
+ * click elsewhere.
+ */
+import Command from './Command.astro';
+
+interface Cmd {
+  /** The harness or way, over the command when there is more than one. */
+  label?: string;
+  command: string;
+}
+interface Props {
+  /** What it installs, for the buttons' names. */
+  what: string;
+  commands: Cmd[];
+  /** Other ways, behind a second disclosure. */
+  more?: Cmd[];
+  /** A line under the commands, as HTML. */
+  note?: string;
+  /** Which edge of the button the panel lines up with. */
+  align?: 'start' | 'end';
+}
+const { what, commands, more = [], note, align = 'start' } = Astro.props;
+const labelled = commands.length > 1;
+---
+
+<details class="inst" data-align={align}>
+  <summary aria-label={`Install ${what}`}>install</summary>
+  <div class="inst-pop">
+    {
+      commands.map((c) => (
+        <div class="inst-cmd">
+          {labelled && c.label && <span class="cmd-label">{c.label}</span>}
+          <Command command={c.command} what={`${what}${c.label ? ` for ${c.label}` : ''}`} />
+        </div>
+      ))
+    }
+    {
+      more.length > 0 && (
+        <details class="inst-more">
+          <summary>More ways</summary>
+          {more.map((c) => (
+            <div class="inst-cmd">
+              {c.label && <span class="cmd-label">{c.label}</span>}
+              <Command command={c.command} what={c.label ?? what} />
+            </div>
+          ))}
+        </details>
+      )
+    }
+    {note && <p class="inst-note" set:html={note} />}
+  </div>
+</details>

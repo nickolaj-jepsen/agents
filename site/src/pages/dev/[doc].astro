@@ -1,8 +1,8 @@
 ---
 import type { GetStaticPaths } from 'astro';
-import Base from '../../layouts/Base.astro';
+import Shell from '../../components/catalog/Shell.astro';
 import Pager from '../../components/Pager.astro';
-import { content, docHref, github, href, type Doc } from '../../lib/content.ts';
+import { content, docHref, github, type Doc } from '../../lib/content.ts';
 import { renderMarkdown } from '../../lib/markdown.ts';
 
 export const getStaticPaths = (() =>
@@ -20,9 +20,8 @@ const { doc, prev, next } = Astro.props;
 const body = await renderMarkdown(doc.body, doc.path);
 ---
 
-<Base title={doc.title} description={`${doc.title}: developer notes for the agents repo.`} nav="dev">
+<Shell title={doc.title} description={`${doc.title}: developer notes for the agents repo.`} doc={doc.slug} crumbs={[{ name: doc.title }]} harness={false}>
   <header class="lede">
-    <p class="crumb"><a href={href('dev/')}>Developers</a></p>
     <h1>{doc.title}</h1>
     <p class="sub doc-src"><a class="lnk" href={github(doc.path)}><code>{doc.path}</code></a></p>
   </header>
@@ -32,4 +31,4 @@ const body = await renderMarkdown(doc.body, doc.path);
     prev={prev && { href: docHref(prev.slug), name: prev.title }}
     next={next && { href: docHref(next.slug), name: next.title }}
   />
-</Base>
+</Shell>

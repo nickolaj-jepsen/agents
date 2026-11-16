@@ -10,12 +10,10 @@ interface Props {
   c: Component;
   s: Story;
   size?: { w: number; h: number };
-  /** Overview rows: cap a tall render's height (the story page shows all of it). */
-  clip?: boolean;
   /** Load the pictures at once. */
   eager?: boolean;
 }
-const { c, s, size, clip = false, eager = false } = Astro.props;
+const { c, s, size, eager = false } = Astro.props;
 /** The shot at the size, else the nearest by width. */
 const pick = (shots: NonNullable<Story['shots']['pi']>) =>
   size && shots.length
@@ -24,7 +22,7 @@ const pick = (shots: NonNullable<Story['shots']['pi']>) =>
     : shots[0];
 ---
 
-<div class:list={['pair', { clip }]}>
+<div class="pair">
   {
     HARNESSES.map((h) => {
       const shots = s.shots[h] ?? [];
@@ -47,7 +45,7 @@ const pick = (shots: NonNullable<Story['shots']['pi']>) =>
                   loading={eager ? 'eager' : 'lazy'}
                   decoding="async"
                 />
-                <p class="tag" data-near hidden={!size || sizeKey(x) === sizeKey(size)}>
+                <p class="near" data-near hidden={!size || sizeKey(x) === sizeKey(size)}>
                   No render at the size chosen; this is {sizeKey(x)}.
                 </p>
               </div>

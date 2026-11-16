@@ -1,73 +1,145 @@
 ---
-import Base from '../../layouts/Base.astro';
-import { content, docHref, github, href } from '../../lib/content.ts';
+import Shell from '../../components/catalog/Shell.astro';
+import Mark from '../../components/catalog/Mark.astro';
+import Status from '../../components/catalog/Status.astro';
+import { catalogHref, components, differs, HARNESSES, TITLES, type Component, type Harness } from '../../lib/catalog.ts';
+import { github } from '../../lib/content.ts';
 
-const c = content();
-/** The first sentence of a doc, as its line in the list. */
-const first = (md: string) =>
-  (md.split(/\n\s*\n/).find((p) => !/^(#|```|\||- )/.test(p.trim())) ?? '')
-    .replace(/\s+/g, ' ')
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .replace(/`/g, '')
-    .split(/(?<=\.)\s/)[0];
-const elsewhere = [
-  ['AGENTS.md', 'What an agent working here reads first: the recipes, where things go, the traps.'],
-  ['e2e/README.md', 'The end-to-end screens: scenarios, snapshots and parking a live session on one.'],
-  ['kit/README.md', 'The shared UI kit for pi and Claude Code, and how its catalogue is built.'],
-  ['skills/agent-plugin-dev/references/style.md', 'The house style every plugin screen follows.'],
+const counts = (c: Component, h: Harness) => {
+  const n = { yes: 0, partial: 0, no: 0 };
+  for (const f of c.features) n[f.support[h].status === 'planned' ? 'no' : f.support[h].status]++;
+  return n;
+};
+const rendered = (c: Component, h: Harness) => c.stories.filter((s) => (s.shots[h]?.length ?? 0) > 0).length;
+const total = Object.fromEntries(
+  HARNESSES.map((h) => {
+    const n = { yes: 0, partial: 0, no: 0, r: 0 };
+    for (const c of components) {
+      const k = counts(c, h);
+      n.yes += k.yes;
+      n.partial += k.partial;
+      n.no += k.no;
+      n.r += rendered(c, h);
+    }
+    return [h, n];
+  }),
+) as Record<Harness, { yes: number; partial: number; no: number; r: number }>;
+const stories = components.reduce((n, c) => n + c.stories.length, 0);
+const diffs = components.reduce((n, c) => n + c.features.filter(differs).length, 0);
+const chips = [
+  ['yes', '✓', 'yes'],
+  ['partial', '~', 'partial'],
+  ['no', '✗', 'no'],
 ] as const;
 ---
 
-<Base title="Developers" description="How the agents repo is built: its layout, recipes, tests and UI kit." nav="dev">
+<Shell title="Developers" overview description="How the agents repo is built: the shared UI kit's components in pi and in Claude Code, and the developer notes.">
   <header class="lede">
     <h1>Developers</h1>
-    <p class="lead">How this repo is put together, for working on its plugins and skills.</p>
+    <p class="lead">
+      The shared UI kit, each component in pi and in Claude Code side by side. The notes for working on
+      the repo are in the sidebar.
+    </p>
+    <p class="sub legend">
+      <span><Mark h="pi" state="on" /> pi</span>
+      <span><Mark h="claude" state="on" /> Claude Code</span>
+      <span>lit has it, dim not yet, struck not possible</span>
+    </p>
   </header>
 
-  <section aria-labelledby="kit-h">
-    <div class="section-head"><h2 id="kit-h">UI kit</h2></div>
-    <ul class="rows">
-      <li>
-        <a href={href('dev/components/')}>
-          <span class="name">Components</span>
-          <span class="what">Each component of the shared UI kit in pi and in Claude Code: what it supports, its props, its renders side by side.</span>
-          <span />
-        </a>
-      </li>
-    </ul>
-  </section>
+  <div class="table scroll" role="region" aria-label="Components by harness" tabindex="0">
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th scope="col">Component</th>
+          {HARNESSES.map((h) => <th scope="col" class={`h-${h}`}>{TITLES[h]}</th>)}
+          <th scope="col">Features that differ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          components.map((c) => {
+            const nd = c.features.filter(differs).length;
+            return (
+              <tr>
+                <th scope="row">
+                  <a href={catalogHref(c)}>{c.name}</a>
+                  <span class="purpose">{c.purpose}</span>
+                </th>
+                {HARNESSES.map((h) => {
+                  const n = counts(c, h);
+                  return (
+                    <td class={`h-${h}`}>
+                      <div class="cellrow">
+                        <Status status={c.impl[h].state} />
+                        {c.impl[h].state !== 'none' && (
+                          <span class="counts">
+                            {chips.map(([k, g, t]) => (
+                              <span class:list={['count', k, { zero: n[k] === 0 }]} title={`${n[k]} ${t}`}>
+                                <span aria-hidden="true">{g}</span>
+                                {n[k]}
+                                <span class="vh"> {t}</span>
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                      </div>
+                      <div class="note">
+                        {c.impl[h].state === 'none' ? (
+                          c.impl[h].reason
+                        ) : (
+                          <>
+                            {rendered(c, h)} of {c.stories.length} stories rendered ·{' '}
+                            {c.impl[h].exports.map((e, i) => (
+                              <>
+                                {i > 0 && ', '}
+                                <code>{e}</code>
+                              </>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  );
+                })}
+                <td>{nd ? <a href={`${catalogHref(c)}?diff=1#compat`}>{nd} of {c.features.length}</a> : <span class="dim">none</span>}</td>
+              </tr>
+            );
+          })
+        }
+      </tbody>
+      <tfoot>
+        <tr>
+          <th scope="row">All</th>
+          {
+            HARNESSES.map((h) => (
+              <td class={`h-${h}`}>
+                <div class="cellrow">
+                  <span class="counts">
+                    {chips.map(([k, g, t]) => (
+                      <span class={`count ${k}`} title={`${total[h][k]} ${t}`}>
+                        <span aria-hidden="true">{g}</span>
+                        {total[h][k]}
+                        <span class="vh"> {t}</span>
+                      </span>
+                    ))}
+                  </span>
+                </div>
+                <div class="note">
+                  {total[h].r} of {stories} stories rendered
+                </div>
+              </td>
+            ))
+          }
+          <td>{diffs} features</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
 
-  <section class="section" aria-labelledby="docs-h">
-    <div class="section-head"><h2 id="docs-h">Docs</h2></div>
-    <ul class="rows">
-      {
-        c.docs.map((d) => (
-          <li>
-            <a href={docHref(d.slug)}>
-              <span class="name">{d.title}</span>
-              <span class="what">{first(d.body)}</span>
-              <span />
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
-
-  <section class="section" aria-labelledby="more-h">
-    <div class="section-head"><h2 id="more-h">In the repo</h2></div>
-    <ul class="rows">
-      {
-        elsewhere.map(([path, what]) => (
-          <li>
-            <a href={github(path)}>
-              <span class="name">{path}</span>
-              <span class="what">{what}</span>
-              <span class="ext" aria-hidden="true">↗</span>
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
-</Base>
+  <div class="prose cat-about">
+    <p>
+      Each component's manifest is in <a href={github('kit/catalog/components/')}><code>kit/catalog/components/</code></a>; the renders come from the kit's end-to-end scenarios, cropped to the component, and the props from the kits' doc comments. <code>just catalog</code> rebuilds all of it (the Pages workflow does, before every build), and <a href={github('kit/README.md')}><code>kit/README.md</code></a> says how to add a component. Agents read the same model as <a href={github('kit/catalog/COMPONENTS.md')}><code>COMPONENTS.md</code></a>.
+    </p>
+  </div>
+</Shell>

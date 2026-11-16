@@ -1,0 +1,133 @@
+---
+/**
+ * A plugin's media as one stage: the item shown full width with its caption, a strip of thumbnails
+ * under it, and, when both harnesses have media, a switch between them. Without script every
+ * item is shown, one under another. gallery.ts does the switching and the full-size view.
+ */
+import Plate from './Plate.astro';
+import { HARNESS, mediaUrl, type Harness, type Plugin } from '../lib/content.ts';
+
+interface Props {
+  plugin: Plugin;
+}
+const { plugin } = Astro.props;
+type Item = {
+  kind: 'video' | 'image';
+  src: string;
+  poster?: string;
+  thumb: string;
+  width: number;
+  height: number;
+  caption: string;
+  harness: Harness;
+};
+const media = plugin.media;
+const items: Item[] = [
+  ...(media?.videos ?? []).map((v) => ({
+    kind: 'video' as const,
+    src: mediaUrl(v.mp4),
+    poster: mediaUrl(v.poster),
+    thumb: mediaUrl(v.poster),
+    width: v.width,
+    height: v.height,
+    caption: v.caption,
+    harness: v.harness,
+  })),
+  ...(media?.stills ?? []).map((s) => ({
+    kind: 'image' as const,
+    src: mediaUrl(s.png),
+    thumb: mediaUrl(s.png),
+    width: s.width,
+    height: s.height,
+    caption: s.caption,
+    harness: s.harness,
+  })),
+];
+const harnesses = (['claude', 'pi'] as const).filter((h) => items.some((i) => i.harness === h));
+const letter = { claude: 'C', pi: 'π' } as const;
+---
+
+{
+  items.length > 0 && (
+    <section class="gallery" aria-label={`${plugin.name} in use`} data-gallery data-default={harnesses[0]}>
+      {harnesses.length > 1 && (
+        <div class="g-bar" data-js hidden>
+          <div class="seg box" role="group" aria-label="Harness">
+            {harnesses.map((h, i) => (
+              <button type="button" data-set-h={h} aria-pressed={i === 0 ? 'true' : 'false'}>
+                <span class={`k ${h}`} aria-hidden="true">
+                  {letter[h]}
+                </span>
+                {HARNESS[h]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <div class="g-stage">
+        {items.map((it, i) => (
+          <div class="g-item" data-i={i} data-h={it.harness}>
+            {it.kind === 'video' ? (
+              <Plate src={it.src} poster={it.poster} width={it.width} height={it.height} alt={it.caption} />
+            ) : (
+              <Plate src={it.src} width={it.width} height={it.height} alt={it.caption} eager={i === 0} zoom />
+            )}
+            <div class="g-cap">
+              <p>
+                {harnesses.length > 1 || plugin.harness.claude !== plugin.harness.pi ? (
+                  <span class={`k ${it.harness}`} title={HARNESS[it.harness]}>
+                    {letter[it.harness]}
+                  </span>
+                ) : null}
+                {it.caption}
+              </p>
+              {it.kind === 'image' && (
+                <button type="button" class="g-zoom" data-zoom={i} data-js hidden>
+                  actual size
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      {items.length > 1 && (
+        <ol class="g-thumbs" data-js hidden aria-label="Pictures">
+          {items.map((it, i) => (
+            <li data-h={it.harness}>
+              <button type="button" data-show={i} aria-label={`${it.kind === 'video' ? 'Video' : 'Picture'}: ${it.caption}`} aria-pressed="false">
+                <img src={it.thumb} width={it.width} height={it.height} alt="" loading="lazy" decoding="async" />
+                {it.kind === 'video' && (
+                  <span class="play" aria-hidden="true">
+                    ▶
+                  </span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
+      <dialog class="lightbox" aria-label="Actual size">
+        <div class="lb-bar">
+          <span class="lb-cap" />
+          <span class="lb-pos" />
+          <button type="button" data-lb="prev" aria-label="Previous picture">
+            ←
+          </button>
+          <button type="button" data-lb="next" aria-label="Next picture">
+            →
+          </button>
+          <button type="button" data-lb="close" aria-label="Close">
+            close
+          </button>
+        </div>
+        <div class="lb-body">
+          <img alt="" />
+        </div>
+      </dialog>
+    </section>
+  )
+}
+
+<script>
+  import '../client/gallery.ts';
+</script>

@@ -9,16 +9,28 @@ import { parse } from "yaml";
 export const SITE_URL = "https://nickolaj-jepsen.github.io/agents";
 export const REPO_URL = "https://github.com/nickolaj-jepsen/agents";
 
-export type Media = {
-  video?: { mp4: string; poster: string; caption: string; width: number; height: number };
-  stills: {
-    png: string;
-    caption: string;
-    harness: "claude" | "pi";
-    width: number;
-    height: number;
-  }[];
+export type Harness = "claude" | "pi";
+export type Video = {
+  mp4: string;
+  poster: string;
+  caption: string;
+  harness: Harness;
+  width: number;
+  height: number;
 };
+export type Still = {
+  png: string;
+  caption: string;
+  harness: Harness;
+  width: number;
+  height: number;
+};
+/**
+ * A plugin's demos (one per harness, the first shown first) and stills: `site/media/<name>/media.json`,
+ * which `just site-shots` writes from `e2e/<name>/site.scenarios.ts`. Not committed: the Pages
+ * workflow records it before it builds.
+ */
+export type Media = { videos: Video[]; stills: Still[] };
 
 export type Plugin = {
   name: string;
@@ -60,7 +72,7 @@ export type Content = {
   docs: Doc[];
 };
 
-/** The skill categories in display order; `in-progress` collects every skill marked `status: in-progress`. */
+/** The skill categories in display order. A skill marked `status: in-progress` stays in its own, listed last. */
 export const CATEGORIES: { slug: string; title: string; blurb?: string }[] = [
   { slug: "plan-build-ship", title: "Plan, build and ship" },
   { slug: "understand-decide", title: "Understand and decide" },
@@ -76,12 +88,13 @@ export const CATEGORIES: { slug: string; title: string; blurb?: string }[] = [
     title: "Modified public skills",
     blurb: "My variants of public skills. Prefer the originals.",
   },
-  {
-    slug: "in-progress",
-    title: "In progress",
-    blurb: "Unfinished, and not ready for anyone else to use.",
-  },
 ];
+
+/** What an in-progress plugin or skill says about itself. */
+export const IN_PROGRESS = "Unfinished, and not ready for anyone else to use.";
+
+/** Adds the marketplace once per machine; a plugin's Claude install runs it first. */
+export const MARKETPLACE_ADD = "claude plugin marketplace add nickolaj-jepsen/agents";
 
 export const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -112,7 +125,7 @@ function readMedia(root: string, name: string): Media | undefined {
   const file = join(root, "site/media", name, "media.json");
   if (!existsSync(file)) return undefined;
   const m = JSON.parse(readFileSync(file, "utf8")) as Partial<Media>;
-  return { video: m.video, stills: m.stills ?? [] };
+  return { videos: m.videos ?? [], stills: m.stills ?? [] };
 }
 
 function loadPlugins(root: string): Plugin[] {
@@ -146,7 +159,7 @@ function loadPlugins(root: string): Plugin[] {
         );
       const install: Plugin["install"] = {};
       if (harness.claude && listed.has(name))
-        install.claude = `claude plugin install ${name}@nickolaj-jepsen`;
+        install.claude = `${MARKETPLACE_ADD} && claude plugin install ${name}@nickolaj-jepsen`;
       if (harness.pi) install.pi = `git clone ${REPO_URL} && pi install ./agents/plugins/${name}`;
       return {
         name,
@@ -186,11 +199,9 @@ function loadSkills(root: string): Skill[] {
     const { data, body } = frontmatter(file);
     const meta = (data.metadata ?? {}) as Record<string, unknown>;
     const category = meta.category;
-    if (typeof category !== "string" || !known.has(category) || category === "in-progress")
+    if (typeof category !== "string" || !known.has(category))
       throw new Error(
-        `${file}: metadata.category must be one of ${CATEGORIES.slice(0, -1)
-          .map((c) => c.slug)
-          .join(", ")}`,
+        `${file}: metadata.category must be one of ${CATEGORIES.map((c) => c.slug).join(", ")}`,
       );
     if (typeof meta.summary !== "string" || meta.summary === "")
       throw new Error(`${file}: metadata.summary must be a non-empty string`);
@@ -202,7 +213,7 @@ function loadSkills(root: string): Skill[] {
       ...(meta.status === "in-progress" ? { status: "in-progress" as const } : {}),
       ...(typeof meta.credit === "string" ? { credit: meta.credit } : {}),
       ...(typeof data["argument-hint"] === "string" ? { argumentHint: data["argument-hint"] } : {}),
-      install: [`npx skills add ${REPO_URL}/tree/main/skills/${name}`],
+      install: [`npx skills add nickolaj-jepsen/agents --skill ${name}`],
       body: body.trimEnd(),
       path: `skills/${name}`,
       files: listFiles(dir).filter((f) => f !== "SKILL.md"),
@@ -237,10 +248,11 @@ function readPart(root: string, name: string): string {
 export function loadContent(root: string = repoRoot): Content {
   const plugins = loadPlugins(root);
   const skills = loadSkills(root);
-  const slugOf = (s: Skill) => (s.status === "in-progress" ? "in-progress" : s.category);
   const categories = CATEGORIES.map((c) => ({
     ...c,
-    skills: skills.filter((s) => slugOf(s) === c.slug),
+    skills: skills
+      .filter((s) => s.category === c.slug)
+      .sort((a, b) => Number(!!a.status) - Number(!!b.status) || a.name.localeCompare(b.name)),
   })).filter((c) => c.skills.length > 0);
   return {
     intro: readPart(root, "_intro.md"),

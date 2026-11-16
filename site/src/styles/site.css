@@ -585,19 +585,6 @@ pre {
 .plate figcaption .hm {
   margin-right: 0.5em;
 }
-.media {
-  margin-bottom: calc(6 * var(--u));
-}
-.media > * + * {
-  margin-top: calc(4 * var(--u));
-}
-.stills {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
-  gap: calc(4 * var(--u)) calc(3 * var(--u));
-  align-items: start;
-}
-
 /* ---- sections and rows --------------------------------------------------------------- */
 
 .section {
@@ -669,165 +656,6 @@ pre {
   }
 }
 
-/* ---- home ----------------------------------------------------------------------------- */
-
-.intro {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: calc(4 * var(--u)) calc(6 * var(--u));
-  align-items: start;
-}
-.intro .lead {
-  margin-top: 0;
-  font-size: 1.625rem;
-  line-height: calc(5 * var(--u));
-}
-.intro .install {
-  font-size: var(--fs-ui);
-  line-height: calc(3 * var(--u));
-  color: var(--text-2);
-  max-width: none;
-}
-.intro .install > * + * {
-  margin-top: calc(2 * var(--u));
-}
-.intro .install pre {
-  color: var(--text);
-}
-@media (max-width: 60rem) {
-  .intro {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-/* A featured plugin: what it is beside how it looks. */
-.feature {
-  display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 8fr);
-  gap: calc(3 * var(--u)) calc(5 * var(--u));
-  padding: calc(4 * var(--u)) 0;
-  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
-}
-.feature:first-child {
-  padding-top: var(--u);
-}
-.feature.no-media {
-  grid-template-columns: minmax(0, 1fr);
-}
-.feature h3 {
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 1.375rem;
-  line-height: var(--l);
-  color: var(--white);
-}
-.feature h3 a:hover {
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
-}
-.feature .tagline {
-  margin-top: var(--u);
-  text-wrap: pretty;
-}
-.feature .meta {
-  margin-top: calc(2 * var(--u));
-  font-size: var(--fs-ui);
-  line-height: calc(3 * var(--u));
-  color: var(--text-2);
-}
-.feature .meta > * + * {
-  margin-top: var(--u);
-}
-@media (max-width: 60rem) {
-  .feature {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.cats {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
-  gap: calc(5 * var(--u)) calc(6 * var(--u));
-}
-.cat h3 {
-  padding-bottom: var(--u);
-  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
-}
-.cat .blurb {
-  font-size: var(--fs-ui);
-  line-height: calc(3 * var(--u));
-  color: var(--text-3);
-  margin-top: var(--u);
-}
-.cat ul {
-  font-size: var(--fs-ui);
-  line-height: calc(3 * var(--u));
-}
-.cat li a {
-  display: block;
-  padding: var(--u) 0;
-  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
-}
-.cat .name {
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 0.9375rem;
-  color: var(--white);
-}
-.cat .what {
-  display: block;
-  color: var(--text-2);
-}
-.cat li a:hover .name {
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.25em;
-}
-.cat li a:hover .what {
-  color: var(--text);
-}
-
-/* ---- skill page: what the agent reads ------------------------------------------------ */
-
-.agent-reads {
-  margin-top: 0;
-  max-width: calc(var(--measure) + 4 * var(--u) + 1px);
-}
-.agent-reads > header {
-  margin-bottom: calc(3 * var(--u));
-}
-.agent-reads h2 {
-  font-size: var(--fs-h2);
-  line-height: var(--l);
-  font-weight: 600;
-  color: var(--white);
-}
-.agent-reads header p {
-  font-size: var(--fs-ui);
-  line-height: calc(3 * var(--u));
-  color: var(--text-2);
-  margin-top: var(--u);
-}
-.agent-reads .sheet {
-  padding-left: calc(3 * var(--u));
-  background: linear-gradient(var(--rule-strong), var(--rule-strong)) left / 1px 100% no-repeat;
-}
-.agent-reads .sheet .prose {
-  font-size: 1.0625rem;
-}
-.agent-reads .description {
-  font-size: var(--fs-ui);
-  line-height: calc(3 * var(--u));
-  color: var(--text-2);
-  padding-bottom: calc(3 * var(--u));
-  margin-bottom: calc(3 * var(--u));
-  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
-}
-.agent-reads .description .sc {
-  display: block;
-}
-
 /* ---- pager --------------------------------------------------------------------------- */
 
 .pager {
@@ -852,12 +680,6 @@ pre {
 .pager .next {
   text-align: right;
   margin-left: auto;
-}
-
-/* ---- dev index ------------------------------------------------------------------------- */
-
-.docs-list {
-  max-width: var(--measure);
 }
 
 /* ---- phones -------------------------------------------------------------------------- */
@@ -906,79 +728,652 @@ pre {
   .facts > dt,
   .facts > dd,
   .rows > li,
-  .feature,
-  .cat li a,
+  .srows > li,
   .pager {
     border-bottom: 1px solid CanvasText;
   }
 }
-.more-head {
-  margin-top: calc(6 * var(--u));
-  margin-bottom: var(--u);
+
+/* ---- tags: small square labels ---------------------------------------------------------- */
+
+.tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: calc(2.5 * var(--u));
+  padding: 0 0.6em;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+  vertical-align: middle;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.tag.wip {
+  color: var(--yellow);
+}
+/* An in-progress page says so under its title, on a yellow rule. */
+.notice {
+  margin-top: calc(3 * var(--u));
+  padding: var(--u) 0 var(--u) calc(2 * var(--u));
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text);
+  background: linear-gradient(var(--yellow), var(--yellow)) left / 2px 100% no-repeat;
+}
+.notice .tag {
+  margin-right: var(--u);
 }
 
-/* ---- plugin and skill pages: the reading column beside a rail of facts ------------------ */
+/* ---- the install control: a button, and a hairline panel under it ----------------------- */
 
+.inst {
+  position: relative;
+  display: inline-block;
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+}
+.inst > summary {
+  list-style: none;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  line-height: calc(3 * var(--u) - 2px);
+  padding: 0 var(--u);
+  border: 1px solid var(--ui-hi);
+  color: var(--text-2);
+  white-space: nowrap;
+  user-select: none;
+}
+.inst > summary::-webkit-details-marker {
+  display: none;
+}
+.inst > summary::after {
+  content: " ▾";
+  color: var(--text-3);
+}
+.inst > summary:hover,
+.inst[open] > summary {
+  color: var(--white);
+  border-color: var(--text-2);
+}
+.inst[open] > summary::after {
+  content: " ▴";
+}
+.inst-pop {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + var(--u));
+  left: 0;
+  width: min(34rem, calc(100vw - 2 * var(--gutter)));
+  padding: calc(2 * var(--u));
+  background: var(--bg);
+  border: 1px solid var(--ui-hi);
+  color: var(--text-2);
+}
+.inst[data-align="end"] .inst-pop {
+  left: auto;
+  right: 0;
+}
+.inst-pop > * + * {
+  margin-top: calc(1.5 * var(--u));
+}
+.inst-pop .cmd pre {
+  color: var(--text);
+}
+.inst-more > summary {
+  cursor: pointer;
+  color: var(--text-2);
+}
+.inst-more > summary:hover {
+  color: var(--text);
+}
+.inst-more > .inst-cmd {
+  margin-top: var(--u);
+}
+.inst-note {
+  font-size: 0.875rem;
+  color: var(--text-3);
+}
+/* In a tile or a skill row the panel hangs from the whole tile or row, so it never leaves the page. */
+.tile,
+.srows > li {
+  position: relative;
+}
+.tile .inst,
+.srows .inst {
+  position: static;
+}
+.tile .inst-pop {
+  top: auto;
+  margin-top: var(--u);
+  left: 0;
+  right: 0;
+  width: auto;
+}
+.tile .inst[data-align="end"] .inst-pop {
+  left: 0;
+}
+.srows .inst-pop {
+  top: calc(100% - var(--u));
+}
+/* On a phone the panel opens in the flow, the page's width. */
+@media (max-width: 40rem) {
+  .inst {
+    position: static;
+  }
+  .inst-pop {
+    left: var(--gutter);
+    right: var(--gutter);
+    width: auto;
+  }
+  .inst[data-align="end"] .inst-pop {
+    left: var(--gutter);
+    right: var(--gutter);
+  }
+}
+
+/* ---- home ----------------------------------------------------------------------------- */
+
+.intro .lead {
+  margin-top: 0;
+  max-width: 40rem;
+  font-size: 1.625rem;
+  line-height: calc(5 * var(--u));
+  color: var(--white);
+}
+.intro .lead a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: var(--link-line);
+}
+.intro .lead a:hover {
+  text-decoration-color: currentColor;
+}
+
+/* Plugins: a two-column grid of posters, each with its name, marks, install and tagline. */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr));
+  gap: calc(5 * var(--u)) calc(4 * var(--u));
+}
+.tile-pic {
+  display: block;
+  aspect-ratio: 1232 / 746;
+  overflow: hidden;
+  background: var(--bg);
+  outline: 1px solid var(--plate-edge);
+  outline-offset: -1px;
+}
+.tile-pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+  transition: opacity 0.15s;
+}
+.tile-pic .no-pic {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font-family: var(--mono);
+  color: var(--text-3);
+}
+.tile:hover .tile-pic {
+  outline-color: var(--text-3);
+}
+.tile-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--u) calc(1.5 * var(--u));
+  margin-top: calc(2 * var(--u));
+}
+.tile-head h3 {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 1.25rem;
+  line-height: var(--l);
+  color: var(--white);
+}
+.tile-head h3 a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+.tile-head .marks {
+  font-size: var(--fs-ui);
+}
+.grow {
+  flex: 1;
+}
+.tile .tagline {
+  margin-top: var(--u);
+  font-size: 1.0625rem;
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+  text-wrap: pretty;
+}
+
+/* Skills: rows under a head per category. */
+.group + .group {
+  margin-top: calc(5 * var(--u));
+}
+.group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 calc(2 * var(--u));
+  padding-bottom: var(--u);
+  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+}
+.group-head .blurb {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-3);
+}
+.srows {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+}
+.srows > li {
+  display: grid;
+  grid-template-columns: 12rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0 calc(3 * var(--u));
+  padding: calc(1.5 * var(--u)) 0;
+  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+}
+.srows .name {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--white);
+}
+.srows .name:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+.srows .what {
+  color: var(--text-2);
+}
+.srows .end {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(1.5 * var(--u));
+  justify-self: end;
+}
+@media (max-width: 48rem) {
+  .srows > li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .srows .what {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+/* ---- plugin and skill pages ------------------------------------------------------------ */
+
+.lede.wide {
+  max-width: 52rem;
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--u) calc(2 * var(--u));
+}
+.head-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--u) calc(3 * var(--u));
+  margin-top: calc(3 * var(--u));
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+}
+.head-meta .usage {
+  font-size: 0.9375rem;
+  color: var(--white);
+}
+
+/* The reading column beside a rail of facts. */
 .spread {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  gap: calc(5 * var(--u)) calc(8 * var(--u));
+  align-items: start;
 }
-.spread > .lede {
-  margin-bottom: calc(5 * var(--u));
-}
-@media (min-width: 72rem) {
+@media (min-width: 64rem) {
   .spread {
     grid-template-columns: minmax(0, 46rem) minmax(0, 1fr);
-    column-gap: calc(8 * var(--u));
-    align-items: start;
-  }
-  .spread > * {
-    grid-column: 1;
   }
   .spread > .rail {
-    grid-column: 2;
-    grid-row: 1 / span 2;
     position: sticky;
     top: calc(3 * var(--u));
-  }
-  .spread > .span {
-    grid-column: 1 / -1;
-  }
-  .rail {
     grid-template-columns: 7rem minmax(0, 1fr);
   }
 }
-.title-flag {
-  margin-left: calc(2 * var(--u));
-  vertical-align: 0.6em;
-  font-weight: 400;
-  letter-spacing: 0;
+.spread > .rail {
+  margin-bottom: 0;
 }
-.ext {
-  color: var(--text-3);
+
+/* The gallery: one item on the stage, thumbnails under it. */
+.gallery {
+  margin-bottom: calc(6 * var(--u));
 }
-.intro .install h2 {
-  margin: 0;
-  padding: 0;
-  background: none;
+.g-bar {
+  display: flex;
+  margin-bottom: calc(2 * var(--u));
+}
+.g-cap .k {
+  font-family: var(--mono);
+  font-weight: 700;
+  margin-right: 0.4em;
+}
+.g-stage > .g-item + .g-item {
+  margin-top: calc(4 * var(--u));
+}
+.gallery.js .g-stage > .g-item + .g-item {
+  margin-top: 0;
+}
+.g-cap {
+  display: flex;
+  align-items: baseline;
+  gap: calc(2 * var(--u));
+  margin-top: var(--u);
   font-size: var(--fs-ui);
-  font-weight: 500;
+  line-height: calc(3 * var(--u));
   color: var(--text-2);
 }
-.agent-reads .sheet .prose > h2:first-child {
+.g-cap p {
+  max-width: 52rem;
+  text-wrap: pretty;
+}
+.g-zoom {
+  flex: none;
+  margin-left: auto;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  color: var(--text-2);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--link-line);
+  text-underline-offset: 0.25em;
+}
+.g-zoom:hover {
+  color: var(--text);
+}
+.plate.zoom img {
+  cursor: zoom-in;
+}
+.g-thumbs {
+  display: flex;
+  gap: calc(1.5 * var(--u));
+  margin-top: calc(2 * var(--u));
+  overflow-x: auto;
+  padding: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ui-hi) transparent;
+}
+.g-thumbs button {
+  position: relative;
+  display: block;
+  width: 9.5rem;
+  padding: 0;
+  border: 0;
+  background: var(--bg);
+  cursor: pointer;
+  outline: 1px solid var(--plate-edge);
+  outline-offset: -1px;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+.g-thumbs button:hover {
+  opacity: 0.9;
+}
+.g-thumbs button[aria-pressed="true"] {
+  opacity: 1;
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+}
+.g-thumbs img {
+  width: 100%;
+  aspect-ratio: 1232 / 746;
+  object-fit: cover;
+  object-position: top left;
+}
+.g-thumbs .play {
+  position: absolute;
+  left: var(--u);
+  bottom: var(--u);
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0.35em 0.5em;
+  background: var(--bg);
+  color: var(--white);
+  border: 1px solid var(--ui-hi);
+}
+
+/* A picture at its actual size, scrolling inside the dialog when it is wider than the screen. */
+.lightbox {
+  padding: 0;
+  border: 1px solid var(--ui-hi);
+  background: var(--bg);
+  color: var(--text);
+  max-width: calc(100vw - 2 * var(--u));
+  max-height: calc(100vh - 2 * var(--u));
+  overflow: hidden;
+}
+.lightbox[open] {
+  display: flex;
+  flex-direction: column;
+}
+.lightbox::backdrop {
+  background: rgb(0 0 0 / 0.8);
+}
+.lb-bar {
+  display: flex;
+  align-items: baseline;
+  gap: calc(2 * var(--u));
+  padding: var(--u) calc(2 * var(--u));
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+}
+.lb-cap {
+  flex: 1;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lb-pos {
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+}
+.lb-bar button {
+  background: none;
+  border: 1px solid var(--ui-hi);
+  padding: 0 var(--u);
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.lb-bar button:hover {
+  color: var(--white);
+  border-color: var(--text-2);
+}
+.lb-body {
+  overflow: auto;
+}
+.lb-body img {
+  max-width: none;
+  width: auto;
+  height: auto;
+}
+
+/* ---- skill page: the SKILL.md as a file ------------------------------------------------- */
+
+.agent-reads h2 {
+  font-size: var(--fs-h2);
+  line-height: var(--l);
+  font-weight: 600;
+  color: var(--white);
+}
+.agent-reads > .sub {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  margin-top: var(--u);
+}
+.file {
+  margin-top: calc(3 * var(--u));
+  border: 1px solid var(--ui-hi);
+}
+.file-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: calc(2 * var(--u));
+  padding: var(--u) calc(2 * var(--u));
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+  border-bottom: 1px solid var(--ui-hi);
+}
+.file-head code {
+  color: var(--white);
+}
+.file-head a {
+  color: var(--text-2);
+  text-decoration: underline;
+  text-decoration-color: var(--link-line);
+  text-underline-offset: 0.25em;
+}
+.file-head a:hover {
+  color: var(--white);
+}
+.file-desc {
+  padding: calc(2 * var(--u)) calc(3 * var(--u));
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+  border-bottom: 1px dashed var(--ui-alt);
+}
+.file-desc .sc {
+  display: block;
+  color: var(--text-3);
+}
+.file-body {
+  padding: calc(3 * var(--u));
+  font-size: 1.0625rem;
+  max-width: none;
+}
+.file-body > h2:first-child {
   margin-top: 0;
   padding-top: 0;
   background: none;
 }
-.agent-reads .sheet .prose h2 {
+.file-body h2 {
   font-size: 1.25rem;
 }
-.feature .meta .sc {
-  margin-right: 0.25em;
-}
-@media (min-width: 72rem) {
-  .spread.with-media > .rail {
-    grid-row: 1;
-    position: static;
+@media (max-width: 40rem) {
+  .file-desc,
+  .file-body {
+    padding-left: calc(2 * var(--u));
+    padding-right: calc(2 * var(--u));
   }
+}
+
+/* ---- controls: switches and toggles (the gallery, the catalogue) ------------------------ */
+
+/* Segmented switches: text buttons, the pressed one in text colour and underlined. */
+.seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 calc(2 * var(--u));
+}
+.seg button,
+.seg-btn {
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  line-height: calc(3 * var(--u));
+  padding: var(--u) 0;
+  background: none;
+  border: 0;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.seg button:hover,
+.seg-btn:hover {
+  color: var(--text);
+}
+.seg button[aria-pressed="true"],
+.seg-btn[aria-pressed="true"] {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.45em;
+  text-decoration-color: var(--accent);
+}
+/* Boxed switches: a hairline row of buttons, the pressed one lit with the accent under it. */
+.seg.box {
+  gap: 0;
+  border: 1px solid var(--ui-hi);
+  flex-wrap: nowrap;
+}
+.seg.box button {
+  padding: 0 calc(1.5 * var(--u));
+  line-height: calc(4 * var(--u) - 2px);
+  white-space: nowrap;
+}
+.seg.box button + button {
+  box-shadow: inset 1px 0 0 var(--ui-alt);
+}
+.seg.box button[aria-pressed="true"] {
+  color: var(--white);
+  text-decoration: none;
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.seg.box button + button[aria-pressed="true"] {
+  box-shadow:
+    inset 1px 0 0 var(--ui-alt),
+    inset 0 -2px 0 var(--accent);
+}
+.seg .k {
+  font-weight: 700;
+  margin-right: 0.45em;
+}
+.k.pi {
+  color: var(--pi);
+}
+.k.claude {
+  color: var(--claude);
+}
+/* A button that stays pressed: the same box, alone. */
+.toggle {
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  line-height: calc(4 * var(--u) - 2px);
+  padding: 0 calc(1.5 * var(--u));
+  background: none;
+  border: 1px solid var(--ui-hi);
+  color: var(--text-2);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.toggle:hover {
+  color: var(--text);
+}
+.toggle[aria-pressed="true"] {
+  color: var(--white);
+  box-shadow: inset 0 -2px 0 var(--accent);
 }

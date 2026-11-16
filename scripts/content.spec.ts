@@ -31,9 +31,12 @@ describe("content", () => {
     expect(content.categories.flatMap((c) => c.skills)).toHaveLength(content.skills.length);
   });
 
-  it("lists in-progress skills last", () => {
-    expect(content.categories.at(-1)?.slug).toBe("in-progress");
-    for (const s of content.categories.at(-1)?.skills ?? []) expect(s.status).toBe("in-progress");
+  it("lists in-progress skills last in their own category", () => {
+    for (const c of content.categories) {
+      const flags = c.skills.map((s) => s.status === "in-progress");
+      expect(flags, c.slug).toEqual([...flags].sort((a, b) => Number(a) - Number(b)));
+      for (const s of c.skills) expect(s.category).toBe(c.slug);
+    }
   });
 
   it("gives every doc a title", () => {

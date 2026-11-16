@@ -1,15 +1,14 @@
 /**
  * Builds the catalogue's data from the component manifests in `components/`, each kit's source
- * (props tables) and each harness's stories: `COMPONENTS.md` (what agents read) and
- * `catalog.json` (what the site's catalogue pages, `site/src/pages/dev/components/`, read), both
- * committed and generated; and the stories' crops, `site/media/kit/` (committed, from the kit
- * scenarios' git-ignored PNGs).
+ * (props tables) and each harness's stories: `COMPONENTS.md` (what agents read, committed),
+ * `catalog.json` (what the site's catalogue pages, `site/src/pages/dev/`, read) and the stories'
+ * crops, `site/media/kit/` (from the kit scenarios' PNGs). The last two are not committed: the
+ * Pages workflow writes them (`just media`) before it builds.
  *
  *   npm run catalog                play the kit scenarios in PNG mode, then write all three; fail
  *                                  on a manifest problem or a scenario that no longer matches
  *   npm run catalog -- --no-shots  write all three from the PNGs already there, if any
- *   npm run catalog -- --check     no PNGs needed: fail on a problem or a stale COMPONENTS.md or
- *                                  catalog.json
+ *   npm run catalog -- --check     no PNGs needed: fail on a problem or a stale COMPONENTS.md
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -49,7 +48,7 @@ if (model.notMirrored.length > 0)
 const wanted = { components: markdown(model), catalog: siteData(model) };
 if (check) {
   let stale = false;
-  for (const k of ["components", "catalog"] as const) {
+  for (const k of ["components"] as const) {
     const current = existsSync(outputs[k]) ? readFileSync(outputs[k], "utf8") : "";
     if (current !== wanted[k]) {
       console.error(`catalog: ${outputs[k]} is out of date; run \`npm run catalog -- --no-shots\``);

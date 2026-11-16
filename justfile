@@ -25,7 +25,8 @@ _dev-setup-direnv:
 [script]
 _dev-setup-pi:
     [ -d node_modules ] || npm ci
-    pi=$({{ nixcmd }} build --no-link --print-out-paths --inputs-from . nixpkgs#pi-coding-agent)/lib/node_modules/pi-monorepo
+    # The media shell names its own pi; elsewhere, build this flake's.
+    pi=${PI_MONOREPO:-$({{ nixcmd }} build --no-link --print-out-paths --inputs-from . nixpkgs#pi-coding-agent)/lib/node_modules/pi-monorepo}
     mkdir -p node_modules/@earendil-works node_modules/@types
     ln -sfn "$pi" node_modules/@earendil-works/pi-coding-agent
     for dep in "$pi"/node_modules/@earendil-works/*; do ln -sfn "$dep" node_modules/@earendil-works/; done
@@ -72,6 +73,8 @@ readme:
 [script]
 site:
     [ -d node_modules ] || npm ci
+    # The catalogue's model, without its pictures: `just media` records those.
+    [ -f kit/catalog/catalog.json ] || npm run catalog -- --no-shots
     cd site
     [ -d node_modules ] || npm ci
     npm run dev
@@ -81,6 +84,7 @@ site:
 [script]
 site-build:
     [ -d node_modules ] || npm ci
+    [ -f kit/catalog/catalog.json ] || npm run catalog -- --no-shots
     cd site
     [ -d node_modules ] || npm ci
     npm run build
@@ -89,6 +93,17 @@ site-build:
 [group('dev')]
 site-shots *PLUGINS:
     npm run site-shots -- {{ PLUGINS }}
+
+[doc("Record all of the site's media, signed out, in the shell the Pages workflow uses: the kit catalogue's crops, then every plugin's demos and stills")]
+[group('site')]
+media:
+    {{ nixcmd }} develop .#media -c just _media
+
+# Inside the media shell: the kit's pi stories import pi's packages, which _dev-setup-pi links.
+[private]
+_media: _dev-setup-pi
+    npm run catalog
+    npm run site-shots
 
 [doc('Build the checked plugin sources')]
 [group('maintenance')]

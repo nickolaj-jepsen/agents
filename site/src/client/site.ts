@@ -1,6 +1,7 @@
 /**
- * The little the pages do in the browser: copy buttons on commands and shell listings, and a demo
- * video that plays while it is on screen, only for a visitor who has not asked for less motion.
+ * The little the pages do in the browser: copy buttons on commands and shell listings, install
+ * panels that close like menus, and a demo video that plays while it is on screen, only for a
+ * visitor who has not asked for less motion.
  */
 
 async function copy(button: HTMLButtonElement, text: string): Promise<void> {
@@ -59,6 +60,23 @@ for (const pre of document.querySelectorAll<HTMLPreElement>(
     ),
   );
 }
+
+// An open install panel closes on Escape, a click outside it, or another one opening.
+const installs = [...document.querySelectorAll<HTMLDetailsElement>("details.inst")];
+for (const d of installs)
+  d.addEventListener("toggle", () => {
+    if (d.open) for (const o of installs) if (o !== d) o.open = false;
+  });
+document.addEventListener("click", (e) => {
+  for (const d of installs) if (d.open && !d.contains(e.target as Node)) d.open = false;
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  const open = installs.find((d) => d.open);
+  if (!open) return;
+  open.open = false;
+  open.querySelector("summary")?.focus();
+});
 
 const calm = matchMedia("(prefers-reduced-motion: reduce)");
 const videos = document.querySelectorAll<HTMLVideoElement>("video[data-autoplay]");

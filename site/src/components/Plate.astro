@@ -12,12 +12,14 @@ interface Props {
   poster?: string;
   /** Load the picture at once (the first plate on a page). */
   eager?: boolean;
+  /** A picture that opens at its actual size when clicked (the gallery's). */
+  zoom?: boolean;
   class?: string;
 }
-const { src, width, height, alt, poster, eager = false, class: cls } = Astro.props;
+const { src, width, height, alt, poster, eager = false, zoom = false, class: cls } = Astro.props;
 ---
 
-<figure class:list={['plate', cls]} style={`--pw: ${width}; --ph: ${height}`}>
+<figure class:list={['plate', cls, { zoom }]} style={`--pw: ${width}; --ph: ${height}`}>
   <div class="well">
     <div class="frame">
       {

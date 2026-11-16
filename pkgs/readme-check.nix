@@ -1,5 +1,5 @@
-# README.md is generated from the plugins', skills' and docs' sources: fails while it is stale, or a
-# file under site/media is over budget (scripts/readme.ts --check). Reads only those sources, so a
+# README.md is generated from the plugins', skills' and docs' sources: fails while it is stale
+# (scripts/readme.ts --check). Reads only those sources, so a
 # change to a plugin's code never reruns it, and agent-tools never reruns for a README or skill edit.
 {
   lib,
@@ -20,7 +20,6 @@
       (root + "/scripts/readme.ts")
       # Each plugin's README.md, package.json and manifest: what the loader reads.
       (lib.fileset.fileFilter (file: file.name == "README.md" || file.name == "package.json" || file.name == "plugin.json") (root + "/plugins"))
-      (lib.fileset.maybeMissing (root + "/site/media"))
     ];
   };
 in

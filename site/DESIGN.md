@@ -8,7 +8,8 @@ stays inside the system. It adapts walldye's (`walldye/docs/site.md`) to a refer
 - A reference, read in a terminal user's colours: the screen captures are the plates, and they carry the
   colour. Everything else is type, hairline rules and the page ground.
 - One theme, dark: fireproof. No light mode.
-- Hairline rules instead of cards; no radius, no shadow, no tinted surface to mark state.
+- Hairline rules instead of cards; no radius, no shadow, no tinted surface to mark state. Where a thing is
+  an object or a control, a hairline frame marks it: a plate, a listing, a file, a panel, a switch, a tag.
 - Every line box and vertical space is a multiple of the 8px unit (`--u`). Rules are 1px background
   gradients inside an existing padding, so they take no height. A plate's box rounds its height up to the
   unit (CSS `round()`), the picture at its top, so what follows stays on the grid.
@@ -28,7 +29,7 @@ Fireproof, from `~/nixos/modules/base/theme.nix`. Text is `fg`, `fg-alt` or `mut
 | Link underline            | #676764, `ui-hi` nudged to 3:1                        |
 | Accent #CF6A4C            | focus ring, the current nav entry, the brand bar, `C` |
 | Harness marks             | Claude Code `accent`, pi `purple`                     |
-| In progress               | `yellow`                                              |
+| In progress               | `yellow`: a framed tag, and a 2px rule on its notice  |
 
 Code blocks sit on the page ground in a hairline frame, like the plates, and use a Shiki theme from the
 same colours (`src/lib/fireproof.ts`): keywords green, strings cyan, numbers purple, functions and the
@@ -57,23 +58,37 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
 ## Layout
 
 - One column of 76rem at most, a 16px gutter on phones; prose holds a 42rem measure.
-- Plugin and skill pages put the facts (where it runs, install, needs, files) in a rail beside the reading
-  column from 72rem; below that they follow the lede. A plugin's video and stills span both columns.
+- The home page is one plain sentence, then the plugins as a two-column grid of posters (name, harness
+  letters, install, tagline), then the skills as rows under a head per category. An in-progress plugin or
+  skill keeps its place in its group, listed last, with its tag.
+- Install is a small framed button (`install ▾`) that opens a panel of commands, one per harness, each
+  with its copy button; other ways sit behind "More ways". The same control on the home page and in a
+  page's header.
+- Plugin and skill pages read top to bottom: the header (name, tagline, harness, install, the
+  in-progress notice), then a plugin's gallery across the column, then the body with a rail of facts
+  (needs, files, source) beside it from 64rem; below that the rail follows the body.
+- A plugin's gallery is one stage and a strip of thumbnails: the demo first, then the stills, the caption
+  under the stage, and a harness switch when both have media. A still opens at its actual size in a
+  dialog. Without script every item shows, one under another.
 - Commands wrap inside their frame rather than scroll, so the copy button and the whole command stay in
   view; listings scroll sideways inside themselves. Nothing scrolls the page sideways at 320px.
-- A skill's `SKILL.md` is "What the agent reads": its description, then the body, behind a rule, a step
-  smaller, after the human facts.
+- A skill's `SKILL.md` is "What the agent reads", framed as a file: a title bar with its path and a link
+  to the source, the description, then the body, a step smaller.
 
 ## The catalogue
 
-- The component pages take a wider page (100rem) and a sidebar of components and stories, since
-  their job is comparing two pictures.
+- The developer pages take a wider page (100rem) and a sidebar: the components (the current one's
+  stories under it, as anchors), the docs, and the repo's other guides. `/dev/` is the overview; a
+  component's page holds its stories inline, under a sticky toolbar of terminal size, layout and actual
+  size that applies to all of them.
 - Two renders sit side by side while each keeps 33rem, a 70-column render at three quarters of its
   size; below that they stack, so the text in a render stays readable. A render is never enlarged.
 - Status reads glyph then word: ✓ green, ~ yellow, ✗ red, ○ muted. A harness is its letter, π in
   purple and C in accent: lit when it has the thing, muted when not yet, struck when it cannot.
-- Switches are text buttons; the pressed one is in text colour with the accent underline of the
-  current nav entry.
+- Switches are a hairline row of buttons; the pressed one is in white with a 2px accent rule under it. A
+  toggle is the same box alone.
+- The pages are for the mouse. The one key is `f`, which flips the stories in flip layout; a click on a
+  render flips it too.
 
 ## Motion
 
@@ -82,5 +97,6 @@ reduced motion; a pause or seek by the visitor ends that. Nothing else moves.
 
 ## Rejected
 
-Light mode, cards, pill badges, gradient text, icon sets, a hero with a call to action, a footer, and an
-autoplaying video that ignores `prefers-reduced-motion`.
+Light mode, cards, pill badges (tags are square), gradient text, icon sets, a hero with a call to
+action, install commands on the home page, a footer, tinted surfaces for hover or state, keyboard
+shortcuts beyond the flip, and an autoplaying video that ignores `prefers-reduced-motion`.

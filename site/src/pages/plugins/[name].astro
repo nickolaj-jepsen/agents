@@ -1,11 +1,23 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
-import Command from '../../components/Command.astro';
+import Gallery from '../../components/Gallery.astro';
+import Install from '../../components/Install.astro';
 import Marks from '../../components/Marks.astro';
-import Media from '../../components/Media.astro';
+import Notice from '../../components/Notice.astro';
 import Pager from '../../components/Pager.astro';
-import { bodyAfterTagline, content, github, harnesses, HARNESS, href, pluginHref, type Plugin } from '../../lib/content.ts';
+import Wip from '../../components/Wip.astro';
+import {
+  bodyAfterTagline,
+  CLAUDE_NOTE,
+  content,
+  github,
+  harnesses,
+  href,
+  pluginHref,
+  pluginInstall,
+  type Plugin,
+} from '../../lib/content.ts';
 import { renderInline, renderMarkdown } from '../../lib/markdown.ts';
 
 export const getStaticPaths = (() =>
@@ -24,64 +36,46 @@ const file = `${p.path}/README.md`;
 const tagline = await renderInline(p.tagline, file);
 const requires = await Promise.all(p.requires.map((r) => renderInline(r, file)));
 const body = await renderMarkdown(bodyAfterTagline(p), file);
-const installs = (['claude', 'pi'] as const).filter((h) => p.install[h]);
-// With media, the rail sits beside the lede and the media spans both columns; without, the rail runs beside the body.
-const hasMedia = !!(p.media?.video || p.media?.stills.length);
+const install = pluginInstall(p);
 ---
 
 <Base title={p.name} description={p.tagline.replace(/`/g, '')} nav="plugins">
-  <div class:list={["spread", { "with-media": hasMedia }]}>
-  <header class="lede">
+  <header class="lede wide">
     <p class="crumb"><a href={href('#plugins')}>Plugins</a></p>
-    <h1 class="mono">{p.name}{p.status === 'in-progress' && <span class="flag title-flag">in progress</span>}</h1>
+    <div class="title-row">
+      <h1 class="mono">{p.name}</h1>
+      {p.status === 'in-progress' && <Wip />}
+    </div>
     <p class="lead" set:html={tagline} />
-    {p.status === 'in-progress' && <p class="sub">Unfinished, and not ready for anyone else to use.</p>}
+    <div class="head-meta">
+      <Marks harnesses={harnesses(p)} />
+      {install.length > 0 && <Install what={p.name} commands={install} note={p.install.claude ? CLAUDE_NOTE : undefined} />}
+    </div>
+    {p.status === 'in-progress' && <Notice />}
   </header>
 
-  <dl class="facts rail">
-    <dt>Runs in</dt>
-    <dd><Marks harnesses={harnesses(p)} /></dd>
-    {
-      installs.length > 0 && (
-        <>
-          <dt>Install</dt>
-          <dd>
-            {installs.map((h) => (
-              <div>
-                {installs.length > 1 && <span class="cmd-label">{HARNESS[h]}</span>}
-                <Command command={p.install[h]!} what={`${p.name} for ${HARNESS[h]}`} />
-              </div>
-            ))}
-            {p.install.claude && (
-              <p class="sub">
-                Once per machine first: <code>claude plugin marketplace add nickolaj-jepsen/agents</code>
-              </p>
-            )}
-          </dd>
-        </>
-      )
-    }
-    {
-      requires.length > 0 && (
-        <>
-          <dt>Needs</dt>
-          <dd>
-            <ul class="plain">
-              {requires.map((r) => (
-                <li set:html={r} />
-              ))}
-            </ul>
-          </dd>
-        </>
-      )
-    }
-    <dt>Source</dt>
-    <dd><a href={github(`${p.path}/`)}><code>{p.path}/</code></a> on GitHub</dd>
-  </dl>
+  <Gallery plugin={p} />
 
-  {hasMedia && <div class="span"><Media plugin={p} /></div>}
-
-  <div class="prose body" set:html={body} />
+  <div class="spread">
+    <div class="prose body" set:html={body} />
+    <dl class="facts rail">
+      {
+        requires.length > 0 && (
+          <>
+            <dt>Needs</dt>
+            <dd>
+              <ul class="plain">
+                {requires.map((r) => (
+                  <li set:html={r} />
+                ))}
+              </ul>
+            </dd>
+          </>
+        )
+      }
+      <dt>Source</dt>
+      <dd><a href={github(`${p.path}/`)}><code>{p.path}/</code></a> on GitHub</dd>
+    </dl>
   </div>
 
   <Pager

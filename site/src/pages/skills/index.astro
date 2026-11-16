@@ -1,0 +1,19 @@
+---
+/** /skills/ has no page of its own: the list is on the home page. */
+import { href } from '../../lib/content.ts';
+const to = href('#skills');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content={`0; url=${to}`} />
+    <meta name="robots" content="noindex" />
+    <link rel="canonical" href={to} />
+    <title>skills · agents</title>
+  </head>
+  <body>
+    <a href={to}>The skills are on the home page.</a>
+  </body>
+</html>

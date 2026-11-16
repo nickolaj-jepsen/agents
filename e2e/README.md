@@ -170,9 +170,11 @@ just site-shots                  # every plugin with an e2e/<plugin>/site.scenar
 just site-shots docfix answer    # only those
 ```
 
-A run writes `site/media/<plugin>/`: `demo.mp4` and its poster `demo.png`, a `<still>.png` per still,
-and `media.json` (the captions, sizes and paths, relative to the repo root, that the site reads). The
-files are committed. A plugin whose run fails keeps its old files; the failed screens are left in the
+A run writes `site/media/<plugin>/`: `demo.mp4` and its poster `demo.png` (`demo-pi.*` for a second
+harness's demo), a `<still>.png` per still, and `media.json` (the captions, sizes and paths, relative to
+the repo root, that the site reads). The files are not committed: the Pages workflow records them
+before every build, in the same shell as `just media` (`nix develop .#media`: the agents from this
+flake's nixpkgs, the fonts, ffmpeg and hunspell, and nothing of the machine's). A plugin whose run fails keeps its old files; the failed screens are left in the
 temp folder it names. `E2E_KEEP=1` and `SITE_JOBS=<n>` (scenarios side by side, default 2) work as in
 the regression run. Needs `tui-test`, and `ffmpeg` for the video: without one on PATH the runner
 builds nixpkgs' and clears `LD_LIBRARY_PATH` for it.
@@ -199,6 +201,8 @@ export default site({
 });
 ```
 
+- A plugin with both halves gives a demo per harness: `demo: [claudeDemo, { harness: "pi", … }]`,
+  the first shown first.
 - The demo is a tour of 15 to 40 seconds. Its poster is the last screen unless a `poster` step
   takes it earlier. `slow(text)` types a key at a time, `slowPress(key, n)` repeats a key at a pace a
   field that redraws on every key keeps up with.
@@ -209,7 +213,8 @@ export default site({
 
 ### What makes it hermetic
 
-- `start.hermetic: true` gives Claude a config folder of its own (`lib/harness.ts`): onboarding done,
+- `start.hermetic: true` runs plain `claude` with every mod of the checkout (`start.plugins` narrows
+  it), never the `claude-dev` wrapper, so the screens are the same on any machine; it gives Claude a config folder of its own (`lib/harness.ts`): onboarding done,
   the stub's API key approved, fullscreen, manual permissions, the keys the READMEs ask for, no
   hooks, status line, debug banner or account. pi gets its own agent folder and loads only
   `start.plugins` (`plugins/<name>`), no skills or context files, theme `dark`.

@@ -1,0 +1,19 @@
+---
+/** /plugins/ has no page of its own: the list is on the home page. */
+import { href } from '../../lib/content.ts';
+const to = href('#plugins');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content={`0; url=${to}`} />
+    <meta name="robots" content="noindex" />
+    <link rel="canonical" href={to} />
+    <title>plugins · agents</title>
+  </head>
+  <body>
+    <a href={to}>The plugins are on the home page.</a>
+  </body>
+</html>

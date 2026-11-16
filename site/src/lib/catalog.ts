@@ -48,8 +48,11 @@ export const components: Component[] = model.components.map((c) => ({
 
 export const kits = model.kits;
 
+/** The overview is `/dev/`; a component has a page; a story is an anchor on it. */
 export const catalogHref = (c?: Component, s?: Story) =>
-  href(`dev/components/${c ? `${c.id}/` : ""}${s ? `${s.state}/` : ""}`);
+  c ? href(`dev/components/${c.id}/${s ? `#${storyAnchor(s)}` : ""}`) : href("dev/");
+
+export const storyAnchor = (s: Story) => `s-${s.state}`;
 
 export const sizeKey = (s: { w: number; h: number }) => `${s.w}x${s.h}`;
 
@@ -84,7 +87,7 @@ export const differs = (f: Component["features"][number]) =>
 export function whyNot(c: Component, s: Story, h: Harness): string {
   if (c.impl[h].state === "none") return `not possible: ${s.missing[h] ?? c.impl[h].reason ?? ""}`;
   if (!s.by[h]) return "no story yet";
-  return "no render yet; run `npm run catalog`";
+  return "no render yet; run `just catalog`";
 }
 
 export const STATUS_GLYPH = {

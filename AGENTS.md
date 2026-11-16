@@ -17,6 +17,7 @@ just test                # vitest over the harness-free cores
 just typecheck           # tsc -b over cores, pi halves, kit and e2e
 just kit-sync            # after editing kit/claude/ui.tsx or kit/catalog/samples.ts
 just catalog             # replay the kit's stories; rewrites its crops, catalog.json, COMPONENTS.md
+just media               # record the site's media and the kit's crops, signed out, as the Pages workflow does
 just readme              # regenerate README.md; run after editing a plugin README, a SKILL.md or docs/
 just site                # the site (site/) on a dev server; `just site-build` builds it
 just fmt                 # ALWAYS run before finishing

@@ -13,6 +13,7 @@ import {
   implMark,
   sizeKey,
   sizesOf,
+  storyAnchor,
   TITLES,
   type Component,
 } from '../../../../lib/catalog.ts';
@@ -30,7 +31,7 @@ const nd = c.features.filter(differs).length;
 const storyOf = (id?: string) => (id ? c.stories.find((s) => s.id === id) : undefined);
 ---
 
-<Shell title={`${c.name} · Components`} description={c.purpose} current={c} crumbs={[{ name: c.name }]}>
+<Shell title={`${c.name} · Components`} description={c.purpose} current={c} crumbs={[{ name: 'UI kit', href: catalogHref() }, { name: c.name }]}>
   <header class="lede">
     <h1>{c.name}</h1>
     <p class="lead">{c.purpose}</p>
@@ -73,21 +74,29 @@ const storyOf = (id?: string) => (id ? c.stories.find((s) => s.id === id) : unde
       <span class="count">{c.stories.length}</span>
     </div>
     {
-      sizes.length > 0 && (
-        <div class="bar">
-          <div class="ctl">
-            <span class="label">Terminal size</span>
-            <div class="seg" role="group" aria-label="Terminal size" data-sizes data-js hidden>
-              {sizes.map((s, i) => (
-                <button type="button" data-set-size={sizeKey(s)} aria-pressed={i === 0 ? 'true' : 'false'}>
-                  {sizeKey(s)}
-                </button>
-              ))}
+      c.stories.length > 0 && (
+        <div class="toolbar" data-js hidden>
+          {sizes.length > 1 && (
+            <div class="ctl">
+              <span class="label">Terminal</span>
+              <div class="seg box" role="group" aria-label="Terminal size" data-sizes>
+                {sizes.map((x, i) => (
+                  <button type="button" data-set-size={sizeKey(x)} aria-pressed={i === 0 ? 'true' : 'false'}>
+                    {sizeKey(x)}
+                  </button>
+                ))}
+              </div>
             </div>
-            <noscript>
-              <span class="mono">{size && sizeKey(size)}</span>
-            </noscript>
+          )}
+          <div class="ctl" data-both>
+            <span class="label">Layout</span>
+            <div class="seg box" role="group" aria-label="Layout">
+              <button type="button" data-set-lay="side" aria-pressed="true">Side by side</button>
+              <button type="button" data-set-lay="stack" aria-pressed="false">Stacked</button>
+              <button type="button" data-set-lay="flip" aria-pressed="false" title="One at a time; f or a click switches">Flip</button>
+            </div>
           </div>
+          <button type="button" class="toggle" data-actual aria-pressed="false">Actual size</button>
         </div>
       )
     }
@@ -98,16 +107,30 @@ const storyOf = (id?: string) => (id ? c.stories.find((s) => s.id === id) : unde
         <ul class="story-rows">
           {c.stories.map((s) => {
             const about = HARNESSES.map((h) => s.by[h]?.about).find(Boolean);
+            const shows = c.features.filter((f) => HARNESSES.some((h) => f.story[h] === s.id));
             return (
-              <li id={`s-${s.state}`}>
-                <a class="rhead" href={catalogHref(c, s)}>
-                  <span class="title">{s.state}</span>
+              <li id={storyAnchor(s)} class="story-stage" data-lay="side">
+                <div class="rhead">
+                  <a class="title" href={`#${storyAnchor(s)}`}>
+                    {s.state}
+                  </a>
                   {about && <span class="about">{about}</span>}
-                  <span class="open" aria-hidden="true">
-                    Open →
-                  </span>
-                </a>
-                <Renders c={c} s={s} size={size} clip />
+                  <button type="button" class="toggle flip-btn" data-flip hidden>
+                    flip
+                  </button>
+                </div>
+                {shows.length > 0 && (
+                  <p class="shows">
+                    Shows{' '}
+                    {shows.map((f, i) => (
+                      <>
+                        {i > 0 && ' · '}
+                        <a href={`#f-${f.id}`}>{f.label}</a>
+                      </>
+                    ))}
+                  </p>
+                )}
+                <Renders c={c} s={s} size={size} />
               </li>
             );
           })}
@@ -121,7 +144,7 @@ const storyOf = (id?: string) => (id ? c.stories.find((s) => s.id === id) : unde
       <h2 id="compat-h">Compatibility</h2>
       <span class="count">{c.features.length}</span>
     </div>
-    <div class="bar">
+    <div class="cbar">
       <span class="sub">{nd} of {c.features.length} features differ between pi and Claude Code</span>
       {
         nd > 0 && (
@@ -148,7 +171,7 @@ const storyOf = (id?: string) => (id ? c.stories.find((s) => s.id === id) : unde
         <tbody>
           {
             c.features.map((f) => (
-              <tr class:list={{ differs: differs(f) }}>
+              <tr id={`f-${f.id}`} class:list={{ differs: differs(f) }}>
                 <th scope="row">
                   {f.label}
                   {differs(f) && <span class="flag">differs</span>}
@@ -162,7 +185,7 @@ const storyOf = (id?: string) => (id ? c.stories.find((s) => s.id === id) : unde
                       {st.note && <div class="note">{st.note}</div>}
                       {story && (st.status === 'yes' || st.status === 'partial') && (
                         <div class="note">
-                          <a class="lnk" href={catalogHref(c, story)}>
+                          <a class="lnk" href={`#${storyAnchor(story)}`}>
                             See {story.state} →
                           </a>
                         </div>

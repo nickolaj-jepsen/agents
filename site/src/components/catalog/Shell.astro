@@ -1,23 +1,37 @@
 ---
 /**
- * The catalogue's page shell: the site's Base, a sidebar of components and their stories with a
- * filter, and the harness switch. Slots: default (the view), `bar` (controls beside the switch).
+ * The developer pages' shell: the site's Base and a sidebar of the kit's components (the current
+ * one's stories under it), the docs and the repo's other guides. The catalogue's harness switch
+ * sits at the top right of its pages.
  */
 import Base from '../../layouts/Base.astro';
 import Mark from './Mark.astro';
-import { catalogHref, components, HARNESSES, implMark, storyMark, type Component, type Story } from '../../lib/catalog.ts';
-import { href } from '../../lib/content.ts';
+import { catalogHref, components, HARNESSES, implMark, storyMark, type Component } from '../../lib/catalog.ts';
+import { content, docHref, github, href } from '../../lib/content.ts';
 import '../../styles/catalog.css';
 
 interface Props {
   title: string;
   description: string;
+  /** The component whose page this is. */
   current?: Component;
-  story?: Story;
-  /** Breadcrumb trail after "Components", each a link but the last. */
+  /** The doc whose page this is. */
+  doc?: string;
+  /** The overview, which has no trail of its own. */
+  overview?: boolean;
+  /** Breadcrumb trail after "Developers", each a link but the last. */
   crumbs?: { name: string; href?: string }[];
+  /** The harness switch (the catalogue's pages). */
+  harness?: boolean;
 }
-const { title, description, current, story, crumbs = [] } = Astro.props;
+const { title, description, current, doc, overview = false, crumbs = [], harness = true } = Astro.props;
+const docs = content().docs;
+const elsewhere = [
+  ['AGENTS.md', 'What an agent working here reads first'],
+  ['e2e/README.md', 'The end-to-end screens and site media'],
+  ['kit/README.md', 'The UI kit, and how this catalogue is built'],
+  ['skills/agent-plugin-dev/references/style.md', 'The house style of plugin screens'],
+] as const;
 ---
 
 <Base title={title} description={description} nav="dev" mainClass="catalog">
@@ -25,13 +39,11 @@ const { title, description, current, story, crumbs = [] } = Astro.props;
     <div class="cat-main">
       <div class="cat-top">
         <nav class="crumb" aria-label="Breadcrumb">
-          <a href={href('dev/')}>Developers</a>
-          {' / '}
           {
-            crumbs.length === 0 ? (
-              <span aria-current="page">Components</span>
+            overview ? (
+              <span aria-current="page">Developers</span>
             ) : (
-              <a href={catalogHref()}>Components</a>
+              <a href={href('dev/')}>Developers</a>
             )
           }
           {
@@ -43,30 +55,34 @@ const { title, description, current, story, crumbs = [] } = Astro.props;
             ))
           }
         </nav>
-        <div class="cat-tools" data-js hidden>
-          <div class="seg" role="group" aria-label="Show">
-            <button type="button" data-set-h="both" aria-pressed="true" title="Both harnesses (1)">Both</button>
-            <button type="button" data-set-h="pi" aria-pressed="false" title="pi only (2)">pi</button>
-            <button type="button" data-set-h="claude" aria-pressed="false" title="Claude Code only (3)">Claude Code</button>
-          </div>
-        </div>
+        {
+          harness && (
+            <div class="cat-tools" data-js hidden>
+              <div class="seg box" role="group" aria-label="Harness">
+                <button type="button" data-set-h="both" aria-pressed="true">Both</button>
+                <button type="button" data-set-h="pi" aria-pressed="false"><span class="k pi" aria-hidden="true">π</span>pi</button>
+                <button type="button" data-set-h="claude" aria-pressed="false"><span class="k claude" aria-hidden="true">C</span>Claude Code</button>
+              </div>
+            </div>
+          )
+        }
       </div>
       <slot />
     </div>
 
-    <nav class="cat-side" aria-label="Components">
+    <nav class="cat-side" aria-label="Developer pages">
       <div class="cat-filter" data-js hidden>
-        <input id="cat-q" type="search" placeholder="Filter" autocomplete="off" spellcheck="false" aria-label="Filter components and stories" />
-        <kbd aria-hidden="true">/</kbd>
+        <input id="cat-q" type="search" placeholder="Filter components" autocomplete="off" spellcheck="false" aria-label="Filter components and stories" />
       </div>
+      <h2 class="side-h sc">UI kit</h2>
       <ul class="cat-list">
         <li>
-          <a href={catalogHref()} class="comp" aria-current={!current ? 'page' : undefined}><span class="name">Overview</span></a>
+          <a href={catalogHref()} class="comp" aria-current={overview ? 'page' : undefined}><span class="name">Overview</span></a>
         </li>
         {
           components.map((c) => (
             <li data-text={`${c.name} ${c.id}`.toLowerCase()} class:list={{ here: c === current }}>
-              <a href={catalogHref(c)} class="comp" aria-current={c === current ? (story ? 'true' : 'page') : undefined}>
+              <a href={catalogHref(c)} class="comp" aria-current={c === current ? 'page' : undefined}>
                 <span class="name">{c.name}</span>
                 <span class="marks-sm">
                   {HARNESSES.map((h) => (
@@ -77,7 +93,7 @@ const { title, description, current, story, crumbs = [] } = Astro.props;
               <ul class="stories">
                 {c.stories.map((s) => (
                   <li data-text={s.state.toLowerCase()}>
-                    <a href={catalogHref(c, s)} aria-current={s === story ? 'page' : undefined}>
+                    <a href={catalogHref(c, s)}>
                       <span class="name">{s.state}</span>
                       <span class="marks-sm">
                         {HARNESSES.map((h) => (
@@ -93,9 +109,31 @@ const { title, description, current, story, crumbs = [] } = Astro.props;
         }
       </ul>
       <p class="nomatch" hidden>No match.</p>
-      <p class="keys" data-js hidden>
-        <kbd>/</kbd> filter · <kbd>j</kbd><kbd>k</kbd> next and previous story · <kbd>f</kbd> flip · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> both, pi, Claude Code
-      </p>
+      <h2 class="side-h sc">Docs</h2>
+      <ul class="cat-list">
+        {
+          docs.map((d) => (
+            <li>
+              <a href={docHref(d.slug)} class="comp" aria-current={d.slug === doc ? 'page' : undefined}>
+                <span class="name">{d.title}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <h2 class="side-h sc">In the repo</h2>
+      <ul class="cat-list ext-list">
+        {
+          elsewhere.map(([path, what]) => (
+            <li>
+              <a href={github(path)} title={what}>
+                <span class="name">{path.split('/').slice(-2).join('/')}</span>
+                <span aria-hidden="true">↗</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
     </nav>
   </div>
   <script>

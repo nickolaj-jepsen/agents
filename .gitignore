@@ -8,3 +8,6 @@ result-*
 # The site's build output and the types Astro writes.
 site/dist/
 site/.astro/
+# Recorded, not committed: `just media` writes them, as the Pages workflow does before it builds.
+site/media/
+kit/catalog/catalog.json

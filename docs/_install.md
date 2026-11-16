@@ -5,12 +5,12 @@ claude plugin install answer@nickolaj-jepsen
 claude plugin install spellfix@nickolaj-jepsen
 ```
 
-The skills, all of them or one by its subpath, with [`npx skills`](https://github.com/vercel-labs/skills)
+The skills, all of them or one by name, with [`npx skills`](https://github.com/vercel-labs/skills)
 or as one Claude Code plugin:
 
 ```bash
 npx skills add nickolaj-jepsen/agents
-npx skills add https://github.com/nickolaj-jepsen/agents/tree/main/skills/land
+npx skills add nickolaj-jepsen/agents --skill land
 claude plugin install skills@nickolaj-jepsen
 ```
 

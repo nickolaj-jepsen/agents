@@ -1,6 +1,6 @@
 name: Pages
 
-# The site (site/) on GitHub Pages: built from what is committed, deployed from main.
+# The site (site/) on GitHub Pages: its media recorded (no sign-in, no model), built, deployed from main.
 on:
   push:
     branches: [main]
@@ -9,8 +9,12 @@ on:
       - "plugins/**"
       - "skills/**"
       - "docs/**"
-      - "kit/catalog/**"
+      - "kit/**"
+      - "e2e/**"
       - "scripts/**"
+      - "flake.lock"
+      - "devshell.nix"
+      - "package-lock.json"
       - "README.md"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
@@ -25,13 +29,33 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 60
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # The media are played from the scenarios in real Claude Code and pi on a stubbed model; the
+      # same inputs give the same pictures, so a run whose inputs did not change reuses the last one's.
+      - id: media
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            site/media
+            kit/catalog/catalog.json
+          key: media-${{ hashFiles('e2e/**', 'plugins/**', 'kit/**', 'flake.lock', 'devshell.nix', 'package-lock.json') }}
+      - if: steps.media.outputs.cache-hit != 'true'
+        uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+      # E2E_UPDATE: the kit's snapshots are a local regression check, not a gate on the site; a
+      # newer Claude Code that draws a story differently still gets its picture.
+      - if: steps.media.outputs.cache-hit != 'true'
+        name: Record the media
+        run: nix develop .#media --command just _media
+        env:
+          NIX_CONFIG: access-tokens = github.com=${{ github.token }}
+          E2E_UPDATE: "1"
+          E2E_JOBS: "2"
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24

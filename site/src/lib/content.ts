@@ -3,7 +3,9 @@
  * pages link with. The loader is given the repo root, since the bundle runs from elsewhere.
  */
 import {
+  IN_PROGRESS,
   loadContent,
+  MARKETPLACE_ADD,
   REPO_URL,
   type Content,
   type Doc,
@@ -12,10 +14,12 @@ import {
 } from "../../../scripts/content.ts";
 
 export type { Content, Doc, Plugin, Skill };
-export { REPO_URL };
+export { IN_PROGRESS, MARKETPLACE_ADD, REPO_URL };
 
 let cached: Content | undefined;
+/** Read once per build; in dev on every page, so newly recorded media show without a restart. */
 export function content(): Content {
+  if (import.meta.env.DEV) return loadContent(__REPO_ROOT__);
   cached ??= loadContent(__REPO_ROOT__);
   return cached;
 }
@@ -50,3 +54,33 @@ export function bodyAfterTagline(p: Plugin): string {
   const [first, ...rest] = p.body.split(/\n\s*\n/);
   return first !== undefined && squash(first) === squash(p.tagline) ? rest.join("\n\n") : p.body;
 }
+
+/** The picture a plugin is known by: its first demo's poster, else its first still. */
+export function posterOf(p: Plugin): { src: string; width: number; height: number } | undefined {
+  const v = p.media?.videos[0];
+  if (v) return { src: mediaUrl(v.poster), width: v.width, height: v.height };
+  const s = p.media?.stills[0];
+  return s && { src: mediaUrl(s.png), width: s.width, height: s.height };
+}
+
+/** A plugin's install commands, one per harness, for the install control. */
+export const pluginInstall = (p: Plugin) =>
+  harnesses(p)
+    .filter((h) => p.install[h])
+    .map((h) => ({ label: HARNESS[h], command: p.install[h]! }));
+
+/** Said under a Claude install: what the flake checks and a marketplace install doesn't. */
+export const CLAUDE_NOTE =
+  "Checked against Claude Code from nixpkgs master; a newer Claude Code can break it before the next check.";
+
+/** A skill's install: one command, and the other ways behind "More ways". */
+export const skillInstall = (s: Skill) => ({
+  commands: s.install.map((command) => ({ command })),
+  more: [
+    { label: "Every skill", command: "npx skills add nickolaj-jepsen/agents" },
+    {
+      label: "Every skill, as a Claude Code plugin",
+      command: `${MARKETPLACE_ADD} && claude plugin install skills@nickolaj-jepsen`,
+    },
+  ],
+});

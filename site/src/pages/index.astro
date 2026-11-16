@@ -1,40 +1,30 @@
 ---
 import Base from '../layouts/Base.astro';
+import Install from '../components/Install.astro';
 import Marks from '../components/Marks.astro';
-import Plate from '../components/Plate.astro';
-import { content, docHref, harnesses, href, mediaUrl, pluginHref, skillHref } from '../lib/content.ts';
-import { renderInline, renderMarkdown } from '../lib/markdown.ts';
+import Wip from '../components/Wip.astro';
+import {
+  CLAUDE_NOTE,
+  content,
+  harnesses,
+  pluginHref,
+  pluginInstall,
+  posterOf,
+  skillHref,
+  skillInstall,
+} from '../lib/content.ts';
+import { renderInline } from '../lib/markdown.ts';
 
 const c = content();
 const intro = await renderInline(c.intro, 'docs/_intro.md');
-const install = await renderMarkdown(c.install, 'docs/_install.md');
-const featured = c.plugins.filter((p) => p.featured && !p.status);
-const others = c.plugins.filter((p) => !p.featured && !p.status);
-const unfinished = c.plugins.filter((p) => p.status === 'in-progress');
-const tagline = (md: string) => renderInline(md, 'README.md');
-const taglines = new Map(await Promise.all(c.plugins.map(async (p) => [p.name, await tagline(p.tagline)] as const)));
-const summaries = new Map(await Promise.all(c.skills.map(async (s) => [s.name, await tagline(s.summary)] as const)));
-const requires = new Map(
-  await Promise.all(
-    featured.map(async (p) => [p.name, await Promise.all(p.requires.map((r) => renderInline(r, `${p.path}/README.md`)))] as const),
-  ),
-);
-/** The picture a featured plugin shows here: its video's poster links to its page, else its first still. */
-const lookOf = (p: (typeof featured)[number]) => {
-  const v = p.media?.video;
-  if (v) return { src: mediaUrl(v.poster), width: v.width, height: v.height, alt: v.caption };
-  const s = p.media?.stills[0];
-  return s && { src: mediaUrl(s.png), width: s.width, height: s.height, alt: s.caption };
-};
+const inline = (md: string, file = 'README.md') => renderInline(md, file);
+const taglines = new Map(await Promise.all(c.plugins.map(async (p) => [p.name, await inline(p.tagline)] as const)));
+const summaries = new Map(await Promise.all(c.skills.map(async (s) => [s.name, await inline(s.summary)] as const)));
 ---
 
 <Base description="Plugins for Claude Code and the pi coding agent, and agent skills for any agent that reads them.">
   <section class="intro" aria-label="About">
     <p class="lead" set:html={intro} />
-    <div class="install prose">
-      <h2 class="sc">Install</h2>
-      <Fragment set:html={install} />
-    </div>
   </section>
 
   <section class="section" id="plugins" aria-labelledby="plugins-h">
@@ -42,66 +32,36 @@ const lookOf = (p: (typeof featured)[number]) => {
       <h2 id="plugins-h">Plugins</h2>
       <span class="count">{c.plugins.length}</span>
     </div>
-    <div class="features">
+    <ul class="tiles">
       {
-        featured.map((p, i) => {
-          const look = lookOf(p);
+        c.plugins.map((p, i) => {
+          const look = posterOf(p);
           return (
-            <article class:list={['feature', { 'no-media': !look }]} aria-labelledby={`p-${p.name}`}>
-              <div>
+            <li class="tile" aria-labelledby={`p-${p.name}`}>
+              <a class="tile-pic" href={pluginHref(p.name)} tabindex="-1" aria-hidden="true">
+                {look ? (
+                  <img src={look.src} width={look.width} height={look.height} alt="" loading={i < 2 ? 'eager' : 'lazy'} decoding="async" />
+                ) : (
+                  <span class="no-pic">{p.name}</span>
+                )}
+              </a>
+              <div class="tile-head">
                 <h3 id={`p-${p.name}`}>
                   <a href={pluginHref(p.name)}>{p.name}</a>
                 </h3>
-                <p class="tagline" set:html={taglines.get(p.name)} />
-                <div class="meta">
-                  <Marks harnesses={harnesses(p)} />
-                  {requires.get(p.name)!.length > 0 && (
-                    <p>
-                      <span class="sc">Needs</span> <Fragment set:html={requires.get(p.name)!.join('; ')} />
-                    </p>
-                  )}
-                  <p>
-                    <a class="lnk" href={pluginHref(p.name)}>
-                      Read more<span class="vh"> about {p.name}</span>
-                    </a>
-                  </p>
-                </div>
+                {p.status === 'in-progress' && <Wip />}
+                <Marks harnesses={harnesses(p)} short />
+                <span class="grow" />
+                {pluginInstall(p).length > 0 && (
+                  <Install what={p.name} commands={pluginInstall(p)} note={p.install.claude ? CLAUDE_NOTE : undefined} align="end" />
+                )}
               </div>
-              {look && (
-                <a href={pluginHref(p.name)} tabindex="-1" aria-hidden="true">
-                  <Plate {...look} eager={i === 0} />
-                </a>
-              )}
-            </article>
+              <p class="tagline" set:html={taglines.get(p.name)} />
+            </li>
           );
         })
       }
-    </div>
-    {
-      [
-        { title: 'More plugins', list: others },
-        { title: 'In progress', blurb: 'Unfinished, and not ready for anyone else to use.', list: unfinished },
-      ].map(
-        (group) =>
-          group.list.length > 0 && (
-            <>
-              <h3 class="sc more-head">{group.title}</h3>
-              {group.blurb && <p class="sub">{group.blurb}</p>}
-              <ul class="rows">
-                {group.list.map((p) => (
-                  <li>
-                    <a href={pluginHref(p.name)}>
-                      <span class="name">{p.name}</span>
-                      <span class="what" set:html={taglines.get(p.name)} />
-                      <Marks harnesses={harnesses(p)} short />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ),
-      )
-    }
+    </ul>
   </section>
 
   <section class="section" id="skills" aria-labelledby="skills-h">
@@ -110,53 +70,34 @@ const lookOf = (p: (typeof featured)[number]) => {
       <span class="count">{c.skills.length}</span>
       <span class="aside">For any agent that reads skills</span>
     </div>
-    <div class="cats">
-      {
-        c.categories.map((cat) => (
-          <section class="cat" id={cat.slug} aria-labelledby={`c-${cat.slug}`}>
+    {
+      c.categories.map((cat) => (
+        <section class="group" id={cat.slug} aria-labelledby={`c-${cat.slug}`}>
+          <div class="group-head">
             <h3 class="sc" id={`c-${cat.slug}`}>
               {cat.title}
             </h3>
             {cat.blurb && <p class="blurb">{cat.blurb}</p>}
-            <ul>
-              {cat.skills.map((s) => (
-                <li>
-                  <a href={skillHref(s.name)}>
-                    <span class="name">{s.name}</span>
-                    <span class="what" set:html={summaries.get(s.name)} />
+          </div>
+          <ul class="srows">
+            {cat.skills.map((s) => {
+              const inst = skillInstall(s);
+              return (
+                <li class:list={{ wip: s.status === 'in-progress' }}>
+                  <a class="name" href={skillHref(s.name)}>
+                    {s.name}
                   </a>
+                  <span class="what" set:html={summaries.get(s.name)} />
+                  <span class="end">
+                    {s.status === 'in-progress' && <Wip />}
+                    <Install what={s.name} commands={inst.commands} more={inst.more} align="end" />
+                  </span>
                 </li>
-              ))}
-            </ul>
-          </section>
-        ))
-      }
-    </div>
-  </section>
-
-  <section class="section" id="dev" aria-labelledby="dev-h">
-    <div class="section-head">
-      <h2 id="dev-h">Developers</h2>
-    </div>
-    <ul class="rows">
-      {
-        c.docs.map((d) => (
-          <li>
-            <a href={docHref(d.slug)}>
-              <span class="name">{d.title}</span>
-              <span class="what">{`docs/${d.slug}.md`}</span>
-              <span />
-            </a>
-          </li>
-        ))
-      }
-      <li>
-        <a href={href('dev/components/')}>
-          <span class="name">Components</span>
-          <span class="what">The shared UI kit, each component in pi and in Claude Code side by side.</span>
-          <span />
-        </a>
-      </li>
-    </ul>
+              );
+            })}
+          </ul>
+        </section>
+      ))
+    }
   </section>
 </Base>

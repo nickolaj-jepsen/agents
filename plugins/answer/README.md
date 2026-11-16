@@ -24,7 +24,12 @@ writes your reply into the prompt.
   (`pi/`): the same keys, a double click goes on to the next question, and the form
   stands as tall as its tallest question so stepping moves nothing.
 
-Keys, in `~/.claude/keybindings.json` (a mod can't take the keyboard itself):
+An open form takes the band above the prompt to itself; the other plugins' rows come back
+when it closes.
+
+## Keys
+
+In `~/.claude/keybindings.json` (a mod can't take the keyboard itself):
 
 ```json
 {
@@ -45,10 +50,9 @@ Keys, in `~/.claude/keybindings.json` (a mod can't take the keyboard itself):
 - `alt+a` lands on the offer row, and `Enter` opens the form.
 - `Esc` in a field steps back onto the form instead of out to the prompt.
 
-Options (`claude plugin configure answer`):
+## Options
+
+`claude plugin configure answer`:
 
 - `scrollTranscript` (off): leave a question's body out of the form and scroll the
   transcript to it instead.
-
-An open form takes the band above the prompt to itself; the other plugins' rows come back
-when it closes.

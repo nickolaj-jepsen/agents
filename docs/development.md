@@ -43,13 +43,16 @@ the nix build or `just check` starts an agent. See `e2e/README.md`.
 README.md is generated (`just readme`; `nix flake check` fails while it is stale) from the sources
 `scripts/content.ts` loads:
 
-- `plugins/<name>/README.md`: the plugin's page. Frontmatter `tagline` (one sentence), `featured`,
-  `requires` (a list of markdown strings) and `order`, and optionally `status: in-progress`, which lists
-  it after every other plugin and flags its page; the harnesses and install lines come from the
-  folder, as in Layout.
+- `plugins/<name>/README.md`: the plugin's page. Frontmatter `tagline` (one sentence), `featured`
+  (its poster in the README), `requires` (a list of markdown strings) and `order`, and optionally
+  `status: in-progress`, which lists it after every other plugin and flags its page; the harnesses and
+  install lines come from the folder, as in Layout. The body is what it does; key bindings go under
+  `## Keys` and settings under `## Options`.
 - `skills/<name>/SKILL.md`: `metadata.summary` (one line), `metadata.category` (`plan-build-ship`,
   `understand-decide`, `clean-up`, `harnesses`, `utilities`, `modified-public`) and, optionally,
-  `metadata.credit` and `metadata.status: in-progress`.
-- `docs/*.md`: the developer pages, each starting with a `# Title`. `docs/_intro.md` and
-  `docs/_install.md` are the top of the README and the home page.
-- `site/media/<plugin>/media.json`: the demo video and stills, within budget (`.mp4` 1 MB, `.png` 300 KB).
+  `metadata.credit` and `metadata.status: in-progress`, which flags it and lists it last in its category.
+- `docs/*.md`: the developer pages, each starting with a `# Title`. `docs/_intro.md` is the top of the
+  README and the home page; `docs/_install.md` is the README's install section.
+- `e2e/<plugin>/site.scenarios.ts`: the plugin's demos and stills. They are recorded, not committed:
+  `just media` writes `site/media/` (and the kit catalogue's crops), which the Pages workflow does
+  before every build. The README links the featured plugins' posters on the site.

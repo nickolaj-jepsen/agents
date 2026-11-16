@@ -1,10 +1,11 @@
 /**
- * The catalogue pages' controls. Every page is complete without them (both harnesses, the
+ * The developer pages' controls. Every page is complete without them (both harnesses, the
  * narrowest size, side by side); this adds the harness switch, the size and layout switches, the
- * flip, "only differences", the sidebar filter and the keys. A choice lives in the URL's query
- * (`h`, `size`, `lay`, `diff`), so a link shows what it says, and the last harness, size and layout
- * are remembered for the next page.
+ * flip, "only differences" and the sidebar filter. A choice lives in the URL's query (`h`, `size`,
+ * `lay`, `diff`), so a link shows what it says; the harness is remembered across the site, the
+ * size and layout for the next page. The one key is `f`, which flips the stories in flip layout.
  */
+import { readHarness, writeHarness } from "./prefs.ts";
 
 const store = {
   get(k: string): string | null {
@@ -26,7 +27,7 @@ const q = new URLSearchParams(location.search);
 const oneOf = <T extends string>(v: string | null, ok: readonly T[]): T | null =>
   v && (ok as readonly string[]).includes(v) ? (v as T) : null;
 const state = {
-  h: oneOf(q.get("h") ?? store.get("h"), ["both", "pi", "claude"] as const) ?? "both",
+  h: oneOf(q.get("h"), ["both", "pi", "claude"] as const) ?? readHarness() ?? "both",
   size: /^\d+x\d+$/.test(q.get("size") ?? "") ? q.get("size")! : store.get("size"),
   lay: oneOf(q.get("lay") ?? store.get("lay"), ["side", "stack", "flip"] as const) ?? "side",
   diff: q.get("diff") === "1",
@@ -43,13 +44,15 @@ function press(sel: string, attr: string, value: string): void {
     b.setAttribute("aria-pressed", String(b.getAttribute(attr) === value));
 }
 
+const stages = $$(".story-stage");
+
 function syncUrl(): void {
   const u = new URL(location.href);
   const set = (k: string, v: string | null) =>
     v ? u.searchParams.set(k, v) : u.searchParams.delete(k);
   set("h", state.h === "both" ? null : state.h);
   set("size", $$("[data-sizes]").length && state.size ? state.size : null);
-  set("lay", stage && state.lay !== "side" ? state.lay : null);
+  set("lay", stages.length && state.lay !== "side" ? state.lay : null);
   set("diff", state.diff ? "1" : null);
   history.replaceState(null, "", u);
 }
@@ -59,27 +62,32 @@ function syncUrl(): void {
 function applyHarness(): void {
   document.documentElement.dataset.kitH = state.h;
   press("[data-set-h]", "data-set-h", state.h);
-  store.set("h", state.h === "both" ? null : state.h);
+  // Layout means two harnesses side by side: with one, it has nothing to arrange.
+  for (const el of $$("[data-both]")) el.hidden = state.h !== "both";
 }
 
 // ---- size -------------------------------------------------------------------------------
 
-const sizes = $$<HTMLButtonElement>("[data-set-size]").map((b) => b.dataset.setSize!);
-const sizeKeys = [...new Set(sizes)];
+const sizeKeys = [
+  ...new Set($$<HTMLButtonElement>("[data-set-size]").map((b) => b.dataset.setSize!)),
+];
 
 function applySize(): void {
-  if (!sizeKeys.length) return;
-  const want = state.size && sizeKeys.includes(state.size) ? state.size : null;
-  // The wanted size if the page has it, else the one nearest by width.
+  const all = $$(".cell");
+  if (!all.length) return;
   const w = state.size ? Number(state.size.split("x")[0]) : 0;
+  // The wanted size if the page has it, else the one nearest by width.
   const size =
-    want ??
-    sizeKeys.reduce((a, b) =>
-      Math.abs(+b.split("x")[0]! - w) < Math.abs(+a.split("x")[0]! - w) ? b : a,
-    );
+    (state.size && sizeKeys.includes(state.size) ? state.size : null) ??
+    (sizeKeys.length
+      ? sizeKeys.reduce((a, b) =>
+          Math.abs(+b.split("x")[0]! - w) < Math.abs(+a.split("x")[0]! - w) ? b : a,
+        )
+      : null);
+  if (!size) return;
   press("[data-set-size]", "data-set-size", size);
   const sw = Number(size.split("x")[0]);
-  for (const cell of $$(".cell")) {
+  for (const cell of all) {
     const views = $$(".view", cell);
     if (!views.length) continue;
     const exact = views.find((v) => v.dataset.size === size);
@@ -92,76 +100,54 @@ function applySize(): void {
       if (tag) tag.hidden = v.dataset.size === size;
     }
   }
-  clipCheck();
 }
 
-// ---- layout, flip, actual size (the story page) -----------------------------------------
+// ---- layout, flip, actual size ------------------------------------------------------------
 
-const stage = document.querySelector<HTMLElement>(".story-stage");
-let flipShown: string | null = null;
+const flipShown = new WeakMap<HTMLElement, string>();
+const rendered = (stage: HTMLElement) => $$(".cell", stage).filter((c) => $$(".view", c).length);
 
-function cellsWithRenders(): HTMLElement[] {
-  return stage ? $$(".cell", stage).filter((c) => $$(".view", c).length > 0) : [];
-}
+/** A story's layout: one picture is always alone. */
+const layoutOf = (stage: HTMLElement) =>
+  state.h === "both" && rendered(stage).length > 1 ? state.lay : "side";
 
-/** The layout in effect: one picture is always side by side, alone. */
-const layout = () => (state.h === "both" && cellsWithRenders().length > 1 ? state.lay : "side");
-
-function setFlip(h: string | null): void {
-  if (!stage) return;
-  if (h) flipShown = h;
+function setFlip(stage: HTMLElement, h: string | null): void {
+  if (h) flipShown.set(stage, h);
   for (const c of $$(".cell", stage))
-    c.classList.toggle("flip-off", layout() === "flip" && c.dataset.h !== h);
+    c.classList.toggle("flip-off", layoutOf(stage) === "flip" && c.dataset.h !== h);
 }
 
-function flipOther(): void {
-  const cells = cellsWithRenders();
-  if (layout() !== "flip" || cells.length < 2) return;
-  const other = cells.find((c) => c.dataset.h !== flipShown);
-  if (other) setFlip(other.dataset.h!);
+function flipOther(stage: HTMLElement): void {
+  const cells = rendered(stage);
+  if (layoutOf(stage) !== "flip" || cells.length < 2) return;
+  const other = cells.find((c) => c.dataset.h !== flipShown.get(stage));
+  if (other) setFlip(stage, other.dataset.h!);
 }
 
 function applyLayout(): void {
-  if (!stage) return;
-  const lay = layout();
-  stage.dataset.lay = lay;
   press("[data-set-lay]", "data-set-lay", state.lay);
-  stage.classList.toggle("actual", state.actual);
-  const actual = document.querySelector("[data-actual]");
-  actual?.setAttribute("aria-pressed", String(state.actual));
-  const hint = stage.querySelector<HTMLElement>(".flip-hint");
-  if (hint) hint.hidden = lay !== "flip";
-  if (lay === "flip") setFlip(flipShown ?? cellsWithRenders()[0]?.dataset.h ?? null);
-  else setFlip(null);
+  document.querySelector("[data-actual]")?.setAttribute("aria-pressed", String(state.actual));
+  for (const stage of stages) {
+    const lay = layoutOf(stage);
+    stage.dataset.lay = lay;
+    stage.classList.toggle("actual", state.actual);
+    const btn = stage.querySelector<HTMLElement>("[data-flip]");
+    if (btn) btn.hidden = lay !== "flip";
+    setFlip(
+      stage,
+      lay === "flip" ? (flipShown.get(stage) ?? rendered(stage)[0]?.dataset.h ?? null) : null,
+    );
+  }
   store.set("lay", state.lay === "side" ? null : state.lay);
 }
 
-if (stage) {
-  // Holding the picture shows the other harness until it is let go.
-  let held: string | null = null;
-  stage.addEventListener("pointerdown", (e) => {
-    if (layout() !== "flip" || e.button !== 0 || !(e.target as Element).closest(".view")) return;
-    held = flipShown;
-    flipOther();
+for (const stage of stages) {
+  stage.querySelector("[data-flip]")?.addEventListener("click", () => flipOther(stage));
+  // A click on the picture shows the other harness in the same place.
+  stage.addEventListener("click", (e) => {
+    if ((e.target as Element).closest(".view")) flipOther(stage);
   });
-  const release = () => {
-    if (held) setFlip(held);
-    held = null;
-  };
-  for (const ev of ["pointerup", "pointerleave", "pointercancel"])
-    stage.addEventListener(ev, release);
 }
-
-// ---- overview rows: mark a render cut short ------------------------------------------------
-
-function clipCheck(): void {
-  for (const v of $$(".pair.clip .view")) {
-    if (v.hidden) continue;
-    v.classList.toggle("clipped", v.scrollHeight > v.clientHeight + 1);
-  }
-}
-for (const img of $$<HTMLImageElement>(".pair.clip img")) img.addEventListener("load", clipCheck);
-addEventListener("resize", clipCheck);
 
 // ---- only differences --------------------------------------------------------------------
 
@@ -184,8 +170,10 @@ function apply(): void {
 document.addEventListener("click", (e) => {
   const b = (e.target as Element).closest<HTMLButtonElement>("button");
   if (!b) return;
-  if (b.dataset.setH) state.h = b.dataset.setH as typeof state.h;
-  else if (b.dataset.setSize) {
+  if (b.dataset.setH) {
+    state.h = b.dataset.setH as typeof state.h;
+    writeHarness(state.h);
+  } else if (b.dataset.setSize) {
     state.size = b.dataset.setSize;
     store.set("size", state.size);
   } else if (b.dataset.setLay) state.lay = b.dataset.setLay as typeof state.lay;
@@ -196,6 +184,12 @@ document.addEventListener("click", (e) => {
 diffBox?.addEventListener("change", () => {
   state.diff = diffBox.checked;
   apply();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "f" || e.ctrlKey || e.metaKey || e.altKey) return;
+  if ((e.target as HTMLElement).matches("input, textarea, select, [contenteditable]")) return;
+  for (const stage of stages) flipOther(stage);
 });
 
 // ---- sidebar filter ----------------------------------------------------------------------
@@ -230,48 +224,6 @@ function applyFilter(): void {
 filter?.addEventListener("input", applyFilter);
 filter?.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && firstHit) location.href = firstHit;
-  if (e.key === "Escape") {
-    if (filter.value) {
-      filter.value = "";
-      applyFilter();
-    } else filter.blur();
-  }
-});
-
-// ---- keys -------------------------------------------------------------------------------
-
-document.addEventListener("keydown", (e) => {
-  if (e.ctrlKey || e.metaKey || e.altKey) return;
-  const t = e.target as HTMLElement;
-  if (t.matches("input, textarea, select, [contenteditable]")) return;
-  if (e.key === "/" && filter) {
-    e.preventDefault();
-    filter.focus();
-    filter.select();
-    return;
-  }
-  const h = ({ 1: "both", 2: "pi", 3: "claude" } as const)[e.key as "1" | "2" | "3"];
-  if (h) {
-    state.h = h;
-    apply();
-    return;
-  }
-  if (!stage) return;
-  if (e.key === "f" && layout() === "flip") {
-    flipOther();
-    return;
-  }
-  const dir =
-    e.key === "ArrowLeft" || e.key === "k"
-      ? "prev"
-      : e.key === "ArrowRight" || e.key === "j"
-        ? "next"
-        : null;
-  const link = dir && document.querySelector<HTMLAnchorElement>(`[data-key="${dir}"]`);
-  if (link) {
-    e.preventDefault();
-    location.href = link.href;
-  }
 });
 
 apply();
