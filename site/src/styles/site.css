@@ -539,7 +539,8 @@ pre {
   align-self: center;
 }
 /* A harness logo: sized by the text it sits in, coloured by its .k. */
-/* A logo is sized by height (--gl), so pi's square and Claude Code's wide mark stand equally tall. */
+/* A logo is sized by height (--gl). Claude Code's mark is wide, so it stands a little shorter than
+   pi's square to weigh the same. */
 .gl {
   --gl: 1.2em;
   height: var(--gl);
@@ -548,6 +549,7 @@ pre {
   flex: none;
 }
 .gl.claude {
+  height: calc(var(--gl) * 0.9);
   aspect-ratio: 24 / 15;
 }
 .hm.claude .k {
