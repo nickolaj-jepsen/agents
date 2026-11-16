@@ -261,11 +261,6 @@
 .cat-list > li + li {
   margin-top: calc(0.5 * var(--u));
 }
-.marks-sm {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.8ch;
-}
 .stories {
   display: none;
   padding-left: calc(1.5 * var(--u));

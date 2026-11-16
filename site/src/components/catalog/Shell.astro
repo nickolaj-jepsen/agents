@@ -6,8 +6,7 @@
  * allows, and the content takes what is left. The pages' controls are Toolbar.astro, in the slot.
  */
 import Base from '../../layouts/Base.astro';
-import Mark from './Mark.astro';
-import { catalogHref, components, HARNESSES, implMark, storyMark, type Component } from '../../lib/catalog.ts';
+import { catalogHref, components, type Component } from '../../lib/catalog.ts';
 import { content, docHref, href } from '../../lib/content.ts';
 import '../../styles/catalog.css';
 
@@ -59,42 +58,22 @@ const docs = content().docs;
           <a href={catalogHref()} class="comp" aria-current={overview ? 'page' : undefined}><span class="name">Overview</span></a>
         </li>
         {
-          components.map((c) => {
-            const gaps = HARNESSES.filter((h) => implMark(c, h) !== 'on');
-            return (
-              <li class:list={{ here: c === current }}>
-                <a href={catalogHref(c)} class="comp" aria-current={c === current ? 'page' : undefined}>
-                  <span class="name">{c.name}</span>
-                  {gaps.length > 0 && (
-                    <span class="marks-sm">
-                      {gaps.map((h) => (
-                        <Mark h={h} state={implMark(c, h)} what={{ on: 'implemented', plan: 'planned', none: 'not possible' }[implMark(c, h)]} />
-                      ))}
-                    </span>
-                  )}
-                </a>
-                <ul class="stories">
-                  {c.stories.map((s) => {
-                    const missing = HARNESSES.filter((h) => storyMark(c, s, h) !== 'on');
-                    return (
-                      <li>
-                        <a href={catalogHref(c, s)}>
-                          <span class="name">{s.state}</span>
-                          {missing.length > 0 && (
-                            <span class="marks-sm">
-                              {missing.map((h) => (
-                                <Mark h={h} state={storyMark(c, s, h)} what={{ on: 'has a render', plan: 'no render yet', none: 'not possible' }[storyMark(c, s, h)]} />
-                              ))}
-                            </span>
-                          )}
-                        </a>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </li>
-            );
-          })
+          components.map((c) => (
+            <li class:list={{ here: c === current }}>
+              <a href={catalogHref(c)} class="comp" aria-current={c === current ? 'page' : undefined}>
+                <span class="name">{c.name}</span>
+              </a>
+              <ul class="stories">
+                {c.stories.map((s) => (
+                  <li>
+                    <a href={catalogHref(c, s)}>
+                      <span class="name">{s.state}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))
         }
       </ul>
       <h2 class="side-h sc">Docs</h2>
