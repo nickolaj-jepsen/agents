@@ -82,8 +82,14 @@ export default scenarios({
       {
         about: s.about,
         region: s.surface === "band" ? band : paneBody(s),
-        // The model is pinned, or the account's default (and the status rows it brings) leaks into a snapshot.
-        start: { args: ["--model", "haiku", "--plugin-dir", catalog] },
+        // Hermetic, with no mod but the catalogue's and no model call, so it draws signed out (the
+        // Pages workflow) as it does here; the model is pinned, or a default's status rows leak in.
+        start: {
+          hermetic: true,
+          plugins: [],
+          turns: [],
+          args: ["--model", "haiku", "--plugin-dir", catalog],
+        },
         // The catalogue mod loads after the prompt shows: a command typed first is lost.
         steps: [
           modLoaded,

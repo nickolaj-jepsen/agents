@@ -55,9 +55,9 @@ docs/hosts.md ──────────
 .x2 6x18
 -
 --- legend
-1 fg=#878580
-2 fg=#dad8ce bold
-3 fg=#cf6a4c
-4 fg=#d14d41
-5 fg=#d0a215
-6 fg=#dad8ce
+1 fg=#7e888e
+2 fg=#dee0e1 bold
+3 fg=#a798d7
+4 fg=#ea7f81
+5 fg=#cd9a22
+6 fg=#dee0e1

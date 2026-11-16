@@ -37,8 +37,8 @@ docs/secrets.md ─────────────────────�
 .x2 2 . 4x43 .x5 4 .x2 2x4 .x2 2x5
 .x4 4x22
 --- legend
-1 fg=#dad8ce bold
-2 fg=#878580
-3 fg=#cf6a4c
-4 fg=#dad8ce
-5 fg=#d14d41
+1 fg=#dee0e1 bold
+2 fg=#7e888e
+3 fg=#a798d7
+4 fg=#dee0e1
+5 fg=#ea7f81

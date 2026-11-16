@@ -9,7 +9,7 @@ docs/page-4.md ─────────────────────�
   Claim 15: the page no longer matches what the code does.                        ↻    3×    15d
   Claim 16: the page no longer matches what the code does.                        !    4×    22d
   ↓ 14 more
-           ^
+
 --- styles
 .x2 1x8
 .x2 2x56 .x24 3 .x2 1x4 .x2 1x5
@@ -21,11 +21,11 @@ docs/page-4.md ─────────────────────�
 .x2 2x56 .x24 2 .x2 4x4 .x2 1x5
 .x2 2x56 .x24 3 .x2 4x4 .x2 1x5
 .x2 1x9
-4x96
+-
 --- legend
-1 fg=#878580
-2 fg=#dad8ce
-3 fg=#d14d41
-4 fg=#d0a215
-5 fg=#dad8ce bold
-6 fg=#cf6a4c
+1 fg=#7e888e
+2 fg=#dee0e1
+3 fg=#ea7f81
+4 fg=#cd9a22
+5 fg=#dee0e1 bold
+6 fg=#a798d7

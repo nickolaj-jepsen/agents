@@ -17,9 +17,9 @@ AGENTS.md ───────────────────────�
 .x4 6x75
 .x2 3 . 6x6 .x72 6 .x2 3x4 .x2 3x5
 --- legend
-1 fg=#dad8ce bold
-2 fg=#cf6a4c
-3 fg=#878580
-4 fg=#d14d41
-5 fg=#d0a215
-6 fg=#dad8ce
+1 fg=#dee0e1 bold
+2 fg=#a798d7
+3 fg=#7e888e
+4 fg=#ea7f81
+5 fg=#cd9a22
+6 fg=#dee0e1

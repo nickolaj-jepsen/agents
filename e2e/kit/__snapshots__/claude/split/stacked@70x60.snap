@@ -1,4 +1,4 @@
-# kit/claude/split/stacked 70x60 @2,36 (66x17)
+# kit/claude/split/stacked 70x60 @2,37 (66x17)
 AGENTS.md ────────────────────────────────────────────────────────
 `just build` is not enough to verify a pi change; the docs say it
 is.

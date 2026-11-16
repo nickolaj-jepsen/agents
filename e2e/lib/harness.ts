@@ -3,7 +3,14 @@
  * (`claude-dev` / `pi-dev`), no MCP servers for Claude, a folder of its own.
  */
 import { execFileSync } from "node:child_process";
-import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { LaunchSpec } from "./term.ts";
@@ -33,12 +40,14 @@ export type StartOptions = {
   /**
    * A config folder of its own instead of the person's, so nothing of them shows: what the site
    * media are made on. Claude (`CLAUDE_CONFIG_DIR`) gets an API key the model stub answers to, no
-   * account, settings, hooks, status line or debug banner; it needs `turns`. pi loads only `plugins`.
+   * account, settings, hooks, status line or debug banner; it needs `turns`, and runs plain `claude`
+   * with every mod of this checkout. pi loads only `plugins`.
    */
   hermetic?: boolean;
   /**
-   * pi only, with `hermetic`: the plugins (`plugins/<name>`) pi loads, and nothing else (no
-   * extensions, skills or context files of the person's, and a settings folder of its own).
+   * With `hermetic`: the plugins (`plugins/<name>`) the agent loads, and nothing else. pi gets no
+   * extensions, skills or context files of the person's, and a settings folder of its own; Claude
+   * loads every mod of the checkout when this is left out.
    */
   plugins?: string[];
   /**
@@ -93,6 +102,14 @@ function devWrapper(bin: "claude-dev" | "pi-dev", runDir: string): string | unde
   } catch {
     return undefined;
   }
+}
+
+/** The plugins of this checkout with a Claude half (`plugins/<name>/.claude-plugin/plugin.json`): `only`, or all. */
+function checkoutMods(only?: string[]): string[] {
+  const root = join(checkoutRoot, "plugins");
+  return (only ?? readdirSync(root).sort())
+    .map((name) => join(root, name))
+    .filter((dir) => existsSync(join(dir, ".claude-plugin", "plugin.json")));
 }
 
 /** The keys the plugins' README asks for, as a person would have bound them. */
@@ -173,6 +190,9 @@ const UNSET = [
 // AGENT_HUB_HIDDEN: a test session stays off the agent hub's bar.
 // WT_NO_AUTOCLOSE: ending it leaves a worktree it ran in open for the caller.
 const COMMON_ENV = { AGENT_HUB_HIDDEN: "1", WT_NO_AUTOCLOSE: "1" };
+// A hermetic session draws the same colours whatever terminal started the run: without it, a
+// shell with no COLORTERM (CI) gets the 256-colour palette.
+const HERMETIC_ENV = { COLORTERM: "truecolor" };
 
 export const claude: Harness = {
   name: "claude",
@@ -193,10 +213,15 @@ export const claude: Harness = {
       mcp = ["--mcp-config", file];
     }
     return {
-      program:
-        devWrapper("claude-dev", run.runDir) ?? (onPath("claude-dev") ? "claude-dev" : "claude"),
+      // Hermetic: plain `claude` with this checkout's mods, as `claude-dev` would load them, so a
+      // machine without the wrapper (the Pages workflow) records the same screens.
+      program: hermetic
+        ? "claude"
+        : (devWrapper("claude-dev", run.runDir) ??
+          (onPath("claude-dev") ? "claude-dev" : "claude")),
       // The session is the person's account: no connectors (--strict-mcp-config).
       args: [
+        ...(hermetic ? checkoutMods(start.plugins).flatMap((dir) => ["--plugin-dir", dir]) : []),
         "--strict-mcp-config",
         ...mcp,
         ...(hermetic
@@ -209,7 +234,13 @@ export const claude: Harness = {
       // a start that ended early (a session closed before its screen was up) as a strike in
       // ~/.claude.json (`fullscreenAutoDisabled`) and, after two, starts every session in the
       // classic renderer; this overrides that.
-      env: { ...COMMON_ENV, CLAUDE_CODE_NO_FLICKER: "1", ...hermetic, ...path, ...start.env },
+      env: {
+        ...COMMON_ENV,
+        CLAUDE_CODE_NO_FLICKER: "1",
+        ...(hermetic ? { ...hermetic, ...HERMETIC_ENV, CLAUDE_CODE_PLUGIN_DIRS: "" } : {}),
+        ...path,
+        ...start.env,
+      },
       unset: UNSET,
       ...size,
     };
@@ -244,6 +275,7 @@ export const pi: Harness = {
       mkdirSync(agentDir, { recursive: true });
       writeFileSync(join(agentDir, "settings.json"), JSON.stringify({ quietStartup: true }));
       env.PI_CODING_AGENT_DIR = agentDir;
+      Object.assign(env, HERMETIC_ENV);
       args.push(
         "--no-extensions",
         "--no-skills",
@@ -267,7 +299,8 @@ export const pi: Harness = {
       ...size,
     };
   },
-  ready: (text) => /escape interrupt|commands ·/.test(text),
+  // The startup hints, or with `quietStartup` (hermetic) the footer's context meter.
+  ready: (text) => /escape interrupt|commands ·|\d%\/\d+k \(/.test(text),
   dialog: () => undefined,
 };
 

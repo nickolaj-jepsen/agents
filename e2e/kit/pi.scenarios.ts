@@ -38,7 +38,8 @@ export default scenarios({
       {
         about: s.about,
         region: regionOf(s),
-        start: { args: ["--extension", catalog] },
+        // Hermetic, on the replay provider: the same screen signed out (the Pages workflow) as here.
+        start: { hermetic: true, turns: [], args: ["--extension", catalog] },
         steps: [
           { type: `/kit ${s.component} ${s.state}` },
           { press: "Enter" },

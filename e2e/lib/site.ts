@@ -2,8 +2,8 @@
  * Site scenarios: the media of the project site, played from `e2e/<plugin>/site.scenarios.ts`
  * (never the regression files, which no site run reads and the regression run never sees these).
  *
- * A plugin has at most one `demo`, a tour that is recorded as a video with its last screen as the
- * poster, and any number of `stills`, named screens captioned and shot as PNGs. The agent is the
+ * A plugin has a `demo` per harness at most, a tour that is recorded as a video with its last
+ * screen as the poster, and any number of `stills`, named screens captioned and shot as PNGs. The agent is the
  * same real Claude Code or pi the regression scenarios drive, on the model stub or pi's replayed
  * turns, so a run needs no model call and comes out the same each time.
  */
@@ -44,8 +44,11 @@ export type SiteDemo = SiteScenario & {
 
 export type SiteSet = {
   plugin: string;
-  /** The tour, recorded: its `steps` are the video, its last screen the poster. */
-  demo?: SiteDemo;
+  /**
+   * The tour, recorded: its `steps` are the video, its last screen the poster. A plugin with both
+   * halves gives one per harness, the first shown first; at most one per harness.
+   */
+  demo?: SiteDemo | SiteDemo[];
   /** Named screens in display order. */
   stills: Record<string, SiteScenario>;
 };
@@ -70,11 +73,23 @@ const listPlugins = () =>
     .map((d) => d.name)
     .sort();
 
+/** A set's demos with their harness and file name: `demo` for the first, `demo-<harness>` after. */
+export function demosOf(set: SiteSet): { demo: SiteDemo; harness: HarnessName; base: string }[] {
+  const list = set.demo === undefined ? [] : Array.isArray(set.demo) ? set.demo : [set.demo];
+  const out = list.map((demo, i) => {
+    const harness = demo.harness ?? "claude";
+    return { demo, harness, base: i === 0 ? "demo" : `demo-${harness}` };
+  });
+  if (new Set(out.map((d) => d.harness)).size !== out.length)
+    throw new Error(`${set.plugin}: one demo per harness`);
+  return out;
+}
+
 /** The scenarios of one harness as a regular scenario set, so `resolveScenario` can read them. */
 export function asSet(set: SiteSet, harness: HarnessName): ScenarioSet {
   const scenarios: ScenarioSet["scenarios"] = {};
-  if (set.demo && (set.demo.harness ?? "claude") === harness)
-    scenarios.demo = { size: SITE_SIZE, ...set.demo };
+  const demo = demosOf(set).find((d) => d.harness === harness)?.demo;
+  if (demo) scenarios.demo = { size: SITE_SIZE, ...demo };
   for (const [name, s] of Object.entries(set.stills))
     if ((s.harness ?? "claude") === harness) scenarios[name] = { size: SITE_SIZE, ...s };
   return { plugin: set.plugin, harness, scenarios };
