@@ -2,8 +2,9 @@
 
 Plugins for Claude Code and pi, and agent skills, as a flake. Each `plugins/<name>/` is a Claude Code
 plugin (a "mod"), a pi package, or both; `skills/<name>/` are agent skills; `kit/` is the shared UI kit.
-`README.md` is the reference for every plugin: layout, traps and demo recordings. Read its Development
-section before touching a plugin. A system config (home-manager) consumes this flake as an input and
+Each plugin's page is its own `plugins/<name>/README.md`; `docs/` holds the layout, traps and the rest of
+the developer notes (read `docs/layout.md` before touching a plugin). The root `README.md` is generated
+(`just readme`) from those, the skills' frontmatter and `scripts/content.ts`: never edit it by hand. A system config (home-manager) consumes this flake as an input and
 wires the plugins and skills into the agents; that wiring does not live here.
 
 ## Commands
@@ -15,6 +16,7 @@ just dev-setup           # npm ci, link nixpkgs' pi into node_modules, lay the m
 just test                # vitest over the harness-free cores
 just typecheck           # tsc -b over cores, pi halves, kit and e2e
 just kit-sync            # after editing kit/claude/ui.tsx or kit/catalog/samples.ts
+just readme              # regenerate README.md; run after editing a plugin README, a SKILL.md or docs/
 just fmt                 # ALWAYS run before finishing
 just check               # nix flake check: tests, type-check, each Claude half validated and tested (slow)
 just build               # nix build: the checked plugin sources
@@ -35,8 +37,8 @@ New files must be `git add`ed or the flake ignores them.
 
 ## Skills
 
-- Own skills are `skills/<name>/SKILL.md`. They are publicly installable and listed in `README.md`'s
-  Skills section; a new one gets a line there. The flake's `lib.skills` lists every folder.
+- Own skills are `skills/<name>/SKILL.md`. They are publicly installable; a new one gets `metadata.summary` (one line) and
+  `metadata.category` in its frontmatter, then `just readme`. The flake's `lib.skills` lists every folder.
 - No build check reads skill content. To check frontmatter, copy (don't symlink) `skills/` into
   `<dir>/skills/` and run `claude plugin validate --strict --json <dir>`; an empty `contents` is clean.
 - Third-party and private skills are not here; the system config registers them.
@@ -54,7 +56,7 @@ New files must be `git add`ed or the flake ignores them.
 - Never add an npm package pi itself ships to `package.json`: a copy drifts from the pi that loads the
   half. The links `nix build .#agent-tools` and `just dev-setup` make are what keep the two in step.
 - A new mod also gets an entry in `.claude-plugin/marketplace.json`, which `nix flake check` compares to
-  the folders, and a section in `README.md`.
+  the folders, and its own `README.md` (frontmatter and prose; see `docs/development.md`), then `just readme`.
 - A change to what a mod draws or to its keys is seen before it is handed back: load the
   `agent-plugin-dev` skill, which parks a real session on the screen. A green check says nothing about
   layout or focus.
@@ -94,5 +96,5 @@ plugin that targets another version.
 
 ## Maintaining these files
 
-New agent-relevant traps go here, or in `README.md` when they are about one plugin. CLAUDE.md just
+New agent-relevant traps go here, or in `docs/`, or in the plugin's `README.md` when they are about one plugin. CLAUDE.md just
 `@`-includes this file.

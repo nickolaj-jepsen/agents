@@ -9,11 +9,13 @@
     "typecheck": "tsc -b",
     "e2e": "node e2e/run.ts",
     "e2e:cli": "node e2e/cli.ts",
-    "catalog": "node kit/catalog/build.ts"
+    "catalog": "node kit/catalog/build.ts",
+    "readme": "node scripts/readme.ts"
   },
   "devDependencies": {
     "@microsoft/tui-test": "^0.1.1",
     "typescript": "^5.9.0",
-    "vitest": "^3.2.0"
+    "vitest": "^3.2.0",
+    "yaml": "^2.9.1"
   }
 }

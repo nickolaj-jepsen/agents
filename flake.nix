@@ -97,6 +97,7 @@
         checks =
           {
             inherit agent-tools;
+            readme = pkgs.callPackage ./pkgs/readme-check.nix {};
             marketplace = assert lib.assertMsg marketplaceMatches ".claude-plugin/marketplace.json lists ${toString published}; plugins/ has ${toString expected}";
               pkgs.emptyFile;
           }

@@ -21,7 +21,8 @@
       ../../tsconfig.core.json
       ../../tsconfig.pi.json
       ../../vitest.config.ts
-      ../../plugins
+      # A plugin's README.md is content, read by the readme check, not by this one.
+      (lib.fileset.difference ../../plugins (lib.fileset.fileFilter (file: file.name == "README.md") ../../plugins))
       ../../kit
       # The e2e harness's sources, so `tsc -b` checks them; the tests need a real agent and never run here.
       (lib.fileset.fileFilter (file: file.hasExt "ts") ../../e2e)

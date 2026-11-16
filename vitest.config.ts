@@ -5,5 +5,5 @@ import { defineConfig } from "vitest/config";
 // tsconfig.json, which for a core is the plugin's, over types only `just dev-setup` lays.
 export default defineConfig({
   esbuild: { tsconfigRaw: "{}" },
-  test: { include: ["plugins/*/core/**/*.spec.ts", "kit/**/*.spec.ts"] },
+  test: { include: ["plugins/*/core/**/*.spec.ts", "kit/**/*.spec.ts", "scripts/**/*.spec.ts"] },
 });

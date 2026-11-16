@@ -62,6 +62,11 @@ catalog:
 e2e *ARGS:
     npm run e2e -- {{ ARGS }}
 
+[doc("Regenerate README.md from the plugins', skills' and docs' sources")]
+[group('dev')]
+readme:
+    npm run readme
+
 # Re-records a demo GIF in a live Claude Code session (README.md, Demos).
 [group('dev')]
 demo name:
