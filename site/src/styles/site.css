@@ -549,7 +549,7 @@ pre {
   flex: none;
 }
 .gl.claude {
-  height: calc(var(--gl) * 1.15);
+  height: calc(var(--gl) * 1.2);
   aspect-ratio: 24 / 15;
 }
 .hm.claude .k {
@@ -1117,9 +1117,9 @@ pre {
   margin-bottom: calc(2 * var(--u));
 }
 .g-cap .k {
-  display: inline-block;
+  display: inline-flex;
   margin-right: 0.4em;
-  vertical-align: -0.2em;
+  vertical-align: middle;
 }
 .g-stage > .g-item + .g-item {
   margin-top: calc(4 * var(--u));
@@ -1271,6 +1271,8 @@ pre {
 }
 .seg button,
 .seg-btn {
+  display: inline-flex;
+  align-items: center;
   font-family: var(--mono);
   font-size: 0.875rem;
   line-height: calc(3 * var(--u));
@@ -1317,8 +1319,7 @@ pre {
     inset 0 -2px 0 var(--accent);
 }
 .seg .k {
-  display: inline-block;
-  vertical-align: -0.25em;
+  display: inline-flex;
   margin-right: 0.45em;
 }
 .seg .gl {

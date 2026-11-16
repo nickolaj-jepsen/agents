@@ -9,6 +9,9 @@ interface Props {
   h: Harness;
 }
 const { h } = Astro.props;
+// The svg's own viewBox is the logo's shape (the symbol is drawn to fill it), so no whitespace
+// is left around a wide one.
+const box = { claude: '0 0 24 15', pi: '0 0 24 24' }[h];
 ---
 
-<svg class={`gl ${h}`} viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href={`#h-${h}`} /></svg>
+<svg class={`gl ${h}`} viewBox={box} aria-hidden="true" focusable="false"><use href={`#h-${h}`} /></svg>

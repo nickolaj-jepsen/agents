@@ -160,7 +160,7 @@
   flex: none;
 }
 .mk.claude {
-  height: calc(1.15rem * 1.15);
+  height: calc(1.15rem * 1.2);
 }
 .mk .gl {
   height: 100%;
@@ -633,7 +633,7 @@ kbd {
   padding: calc(2 * var(--u));
 }
 .why .mk {
-  vertical-align: -0.2em;
+  vertical-align: middle;
   margin-right: 0.4em;
 }
 
