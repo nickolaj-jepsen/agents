@@ -83,10 +83,14 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
 
 ## The catalogue
 
-- The developer pages keep the page's width. The sidebar (the components, the current one's stories
-  under it as anchors, the docs, the repo's other guides) hangs in the margin to the left of the column
+- The developer pages keep the page's width. The sidebar hangs in the margin to the left of the column
   as far as the screen has margin, and the content takes the rest: on a wide screen it is exactly the
   masthead's width, on a narrow one it is indented by what did not fit; below 64rem the sidebar follows.
+- The sidebar is two plain lists, the components and the docs, nothing else: the current component
+  opens into its stories, and the one in view is marked as the page scrolls. A harness's logo shows
+  there only for what it lacks (struck when it cannot, greyed when not yet), so the usual row, which
+  has both, is just a name. The full picture is the overview's table; the repo's other guides are
+  listed there too.
 - `/dev/` is the overview. A component's page is its name and purpose, one line of summary (the kit in
   each harness, the counts, a way to the props), then one sticky bar (the harness switch, terminal size) that applies to everything under it: the stories, then the props. On a phone the bar
   scrolls away.

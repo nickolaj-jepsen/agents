@@ -27,6 +27,12 @@ const total = Object.fromEntries(
 ) as Record<Harness, { yes: number; partial: number; no: number; r: number }>;
 const stories = components.reduce((n, c) => n + c.stories.length, 0);
 const diffs = components.reduce((n, c) => n + c.features.filter(differs).length, 0);
+const elsewhere = [
+  ['AGENTS.md', 'What an agent working here reads first'],
+  ['e2e/README.md', 'The end-to-end screens and site media'],
+  ['kit/README.md', 'The UI kit, and how this catalogue is built'],
+  ['skills/agent-plugin-dev/references/style.md', 'The house style of plugin screens'],
+] as const;
 const chips = [
   ['yes', '✓', 'yes'],
   ['partial', '~', 'partial'],
@@ -145,4 +151,16 @@ const chips = [
       Each component's manifest is in <a href={github('kit/catalog/components/')}><code>kit/catalog/components/</code></a>; the renders come from the kit's end-to-end scenarios, cropped to the component, and the props from the kits' doc comments. <code>just catalog</code> rebuilds all of it (the Pages workflow does, before every build), and <a href={github('kit/README.md')}><code>kit/README.md</code></a> says how to add a component. Agents read the same model as <a href={github('kit/catalog/COMPONENTS.md')}><code>COMPONENTS.md</code></a>.
     </p>
   </div>
+  <section class="cat-about" aria-labelledby="repo-h">
+    <h2 class="side-h sc" id="repo-h">In the repo</h2>
+    <ul class="repo-list">
+      {
+        elsewhere.map(([path, what]) => (
+          <li>
+            <a href={github(path)}><code>{path}</code></a> <span class="sub">{what}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
 </Shell>

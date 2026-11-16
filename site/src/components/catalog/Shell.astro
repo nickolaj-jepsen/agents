@@ -1,14 +1,14 @@
 ---
 /**
  * The developer pages' shell: the site's Base and a sidebar of the kit's components (the current
- * one's stories under it), the docs and the repo's other guides. The page is as wide as every
+ * one's stories under it) and the docs. The page is as wide as every
  * other, masthead included; the sidebar hangs in the margin to its left as far as the screen
  * allows, and the content takes what is left. The pages' controls are Toolbar.astro, in the slot.
  */
 import Base from '../../layouts/Base.astro';
 import Mark from './Mark.astro';
 import { catalogHref, components, HARNESSES, implMark, storyMark, type Component } from '../../lib/catalog.ts';
-import { content, docHref, github, href } from '../../lib/content.ts';
+import { content, docHref, href } from '../../lib/content.ts';
 import '../../styles/catalog.css';
 
 interface Props {
@@ -25,12 +25,6 @@ interface Props {
 }
 const { title, description, current, doc, overview = false, crumbs = [] } = Astro.props;
 const docs = content().docs;
-const elsewhere = [
-  ['AGENTS.md', 'What an agent working here reads first'],
-  ['e2e/README.md', 'The end-to-end screens and site media'],
-  ['kit/README.md', 'The UI kit, and how this catalogue is built'],
-  ['skills/agent-plugin-dev/references/style.md', 'The house style of plugin screens'],
-] as const;
 ---
 
 <Base title={title} description={description} nav="dev" mainClass="catalog">
@@ -59,44 +53,50 @@ const elsewhere = [
     </div>
 
     <nav class="cat-side" aria-label="Developer pages">
-      <div class="cat-filter" data-js hidden>
-        <input id="cat-q" type="search" placeholder="Filter components" autocomplete="off" spellcheck="false" aria-label="Filter components and stories" />
-      </div>
       <h2 class="side-h sc">UI kit</h2>
       <ul class="cat-list">
         <li>
           <a href={catalogHref()} class="comp" aria-current={overview ? 'page' : undefined}><span class="name">Overview</span></a>
         </li>
         {
-          components.map((c) => (
-            <li data-text={`${c.name} ${c.id}`.toLowerCase()} class:list={{ here: c === current }}>
-              <a href={catalogHref(c)} class="comp" aria-current={c === current ? 'page' : undefined}>
-                <span class="name">{c.name}</span>
-                <span class="marks-sm">
-                  {HARNESSES.map((h) => (
-                    <Mark h={h} state={implMark(c, h)} what={{ on: 'implemented', plan: 'planned', none: 'not possible' }[implMark(c, h)]} />
-                  ))}
-                </span>
-              </a>
-              <ul class="stories">
-                {c.stories.map((s) => (
-                  <li data-text={s.state.toLowerCase()}>
-                    <a href={catalogHref(c, s)}>
-                      <span class="name">{s.state}</span>
-                      <span class="marks-sm">
-                        {HARNESSES.map((h) => (
-                          <Mark h={h} state={storyMark(c, s, h)} what={{ on: 'has a render', plan: 'no render yet', none: 'not possible' }[storyMark(c, s, h)]} />
-                        ))}
-                      </span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))
+          components.map((c) => {
+            const gaps = HARNESSES.filter((h) => implMark(c, h) !== 'on');
+            return (
+              <li class:list={{ here: c === current }}>
+                <a href={catalogHref(c)} class="comp" aria-current={c === current ? 'page' : undefined}>
+                  <span class="name">{c.name}</span>
+                  {gaps.length > 0 && (
+                    <span class="marks-sm">
+                      {gaps.map((h) => (
+                        <Mark h={h} state={implMark(c, h)} what={{ on: 'implemented', plan: 'planned', none: 'not possible' }[implMark(c, h)]} />
+                      ))}
+                    </span>
+                  )}
+                </a>
+                <ul class="stories">
+                  {c.stories.map((s) => {
+                    const missing = HARNESSES.filter((h) => storyMark(c, s, h) !== 'on');
+                    return (
+                      <li>
+                        <a href={catalogHref(c, s)}>
+                          <span class="name">{s.state}</span>
+                          {missing.length > 0 && (
+                            <span class="marks-sm">
+                              {missing.map((h) => (
+                                <Mark h={h} state={storyMark(c, s, h)} what={{ on: 'has a render', plan: 'no render yet', none: 'not possible' }[storyMark(c, s, h)]} />
+                              ))}
+                            </span>
+                          )}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </li>
+            );
+          })
         }
       </ul>
-      <p class="nomatch" hidden>No match.</p>
       <h2 class="side-h sc">Docs</h2>
       <ul class="cat-list">
         {
@@ -104,19 +104,6 @@ const elsewhere = [
             <li>
               <a href={docHref(d.slug)} class="comp" aria-current={d.slug === doc ? 'page' : undefined}>
                 <span class="name">{d.title}</span>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-      <h2 class="side-h sc">In the repo</h2>
-      <ul class="cat-list ext-list">
-        {
-          elsewhere.map(([path, what]) => (
-            <li>
-              <a href={github(path)} title={what}>
-                <span class="name">{path.split('/').slice(-2).join('/')}</span>
-                <span aria-hidden="true">↗</span>
               </a>
             </li>
           ))

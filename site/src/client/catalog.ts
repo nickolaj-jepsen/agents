@@ -151,38 +151,35 @@ document.addEventListener("keydown", (e) => {
   apply();
 });
 
-// ---- sidebar filter ----------------------------------------------------------------------
+// ---- sidebar: the story in view ----------------------------------------------------------
 
-const filter = document.querySelector<HTMLInputElement>("#cat-q");
-const side = document.querySelector<HTMLElement>(".cat-side");
-let firstHit: string | null = null;
-
-function applyFilter(): void {
-  if (!filter || !side) return;
-  const term = filter.value.trim().toLowerCase();
-  side.classList.toggle("filtering", term !== "");
-  firstHit = null;
-  let any = false;
-  for (const li of $$(":scope > li[data-text]", side.querySelector(".cat-list")!)) {
-    const nameHit = !term || li.dataset.text!.includes(term);
-    let n = 0;
-    for (const s of $$(":scope .stories > li", li)) {
-      const hit = !term || nameHit || s.dataset.text!.includes(term);
-      s.hidden = !hit;
-      if (hit) {
-        n++;
-        if (term && !nameHit && !firstHit) firstHit = s.querySelector("a")!.href;
-      }
-    }
-    li.hidden = !(nameHit || n > 0);
-    if (!li.hidden) any = true;
-    if (term && nameHit && !firstHit) firstHit = li.querySelector("a")!.href;
-  }
-  side.querySelector<HTMLElement>(".nomatch")!.hidden = any;
+// The current component's stories are its sidebar links; the last one whose heading has passed
+// the masthead and bar is marked, so the list says where on the page you are.
+const spyLinks = new Map(
+  $$<HTMLAnchorElement>(".cat-list > li.here .stories a").map((a) => [a.hash.slice(1), a] as const),
+);
+const spyTargets = [...spyLinks.keys()]
+  .map((id) => document.getElementById(id))
+  .filter((el): el is HTMLElement => el !== null);
+if (spyTargets.length) {
+  let queued = false;
+  const update = (): void => {
+    queued = false;
+    const line = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) + 8;
+    let here: string | null = null;
+    for (const t of spyTargets) if (t.getBoundingClientRect().top <= line) here = t.id;
+    for (const [id, a] of spyLinks)
+      if (id === here) a.setAttribute("aria-current", "location");
+      else a.removeAttribute("aria-current");
+  };
+  const queue = (): void => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(update);
+  };
+  addEventListener("scroll", queue, { passive: true });
+  addEventListener("resize", queue);
+  update();
 }
-filter?.addEventListener("input", applyFilter);
-filter?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && firstHit) location.href = firstHit;
-});
 
 apply();

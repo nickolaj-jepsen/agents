@@ -24,6 +24,8 @@
   .cat-side {
     grid-column: 1;
     grid-row: 1;
+    /* As tall as its content, not stretched to the row: a sticky box needs room to move. */
+    align-self: start;
     position: sticky;
     top: calc(var(--mast) + 3 * var(--u));
     max-height: calc(100vh - var(--mast) - 6 * var(--u));
@@ -225,40 +227,6 @@
   font-size: 0.9375rem;
   line-height: calc(3 * var(--u));
 }
-.cat-filter {
-  display: flex;
-  align-items: center;
-  gap: var(--u);
-  margin-bottom: calc(2 * var(--u));
-  background: linear-gradient(var(--control, #676764), var(--control, #676764)) bottom / 100% 1px
-    no-repeat;
-}
-.cat-filter[hidden] {
-  display: none;
-}
-.cat-filter input {
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  background: none;
-  padding: var(--u) 0;
-  line-height: calc(3 * var(--u));
-  font-size: 1rem;
-}
-.cat-filter input:focus {
-  outline: none;
-}
-.cat-filter:focus-within {
-  background-image: linear-gradient(var(--accent), var(--accent));
-}
-kbd {
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  color: var(--text-2);
-  border: 1px solid var(--ui-alt);
-  padding: 0 0.35em;
-  margin-right: 0.15em;
-}
 .cat-list a {
   display: flex;
   align-items: baseline;
@@ -269,6 +237,13 @@ kbd {
 .cat-list a:hover,
 .cat-list a[aria-current] {
   color: var(--text);
+}
+/* The story in view: white, with the accent over the rule that runs beside the list. */
+.stories a[aria-current="location"] {
+  color: var(--white);
+  margin-left: calc(-1.5 * var(--u));
+  padding-left: calc(1.5 * var(--u));
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 .cat-list a[aria-current="page"] .name {
   text-decoration: underline;
@@ -299,29 +274,16 @@ kbd {
   font-family: var(--mono);
   font-size: 0.8125rem;
 }
-.cat-list > li.here > .stories,
-.cat-side.filtering .stories {
+.cat-list > li.here > .stories {
   display: block;
-}
-.nomatch {
-  margin-top: var(--u);
-  color: var(--text-3);
-  font-size: 0.875rem;
 }
 .side-h {
   display: block;
   color: var(--text-3);
   margin: calc(3 * var(--u)) 0 calc(0.5 * var(--u));
 }
-.cat-filter + .side-h {
+.cat-side > .side-h:first-child {
   margin-top: 0;
-}
-.ext-list a {
-  font-family: var(--mono);
-  font-size: 0.8125rem;
-}
-.ext-list a span:last-child {
-  color: var(--text-3);
 }
 
 /* ---- the harness switch hides the other harness's columns and renders ---------------------- */
@@ -442,6 +404,16 @@ kbd {
 .compat .flag {
   display: block;
   margin-top: calc(0.5 * var(--u));
+}
+.repo-list li {
+  padding: calc(0.5 * var(--u)) 0;
+}
+.repo-list code {
+  font-size: var(--mono-em);
+  color: var(--white);
+}
+.repo-list .sub {
+  margin-left: var(--u);
 }
 .cat-about {
   margin-top: calc(5 * var(--u));
