@@ -129,9 +129,6 @@
 .toolbar .ctl {
   gap: var(--u) calc(1.5 * var(--u));
 }
-.toolbar .flip-btn .to {
-  color: var(--text-2);
-}
 .ctl {
   display: inline-flex;
   align-items: center;
@@ -647,12 +644,8 @@ kbd {
 }
 :root[data-kit-h="pi"] .api-cols,
 :root[data-kit-h="claude"] .api-cols,
-.api-cols[data-lay="stack"],
-.api-cols[data-lay="flip"] {
+.api-cols[data-lay="stack"] {
   grid-template-columns: minmax(0, 1fr);
-}
-.api-cols .api.flip-off {
-  display: none;
 }
 .api h3 {
   font-weight: 650;
@@ -713,16 +706,6 @@ kbd {
 
 .story-stage[data-lay="stack"] .pair {
   grid-template-columns: minmax(0, 1fr);
-}
-.story-stage[data-lay="flip"] .pair {
-  grid-template-columns: minmax(0, 1fr);
-  user-select: none;
-}
-.story-stage[data-lay="flip"] .view {
-  cursor: pointer;
-}
-.story-stage .cell.flip-off {
-  display: none;
 }
 .story-stage.actual .pair {
   grid-template-columns: minmax(0, 1fr);

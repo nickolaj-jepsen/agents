@@ -91,9 +91,8 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
   each harness, the counts, a way to the props), then one sticky bar (harness, terminal size, layout,
   actual size) that applies to everything under it: the stories, then the props. On a phone the bar
   scrolls away.
-- Layout is side by side, stacked or flipped. Flip shows one harness everywhere at once, the stories and
-  the props, with one button (and the key `f`) to show the other; a story the harness has no render of
-  shows why. A click on a render flips it too.
+- Layout is side by side or stacked, for the stories and the props alike. To see one harness alone,
+  choose it in the harness switch; the key `f` moves between the two.
 - A story's compatibility is one line under its renders (the features it shows), which opens into what
   each harness does and the caveat. There is no separate compatibility table.
 - A render is a terminal window: a bright frame and a title bar a step off the page, with the harness's
@@ -104,7 +103,7 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
   has the thing, muted when not yet, struck when it cannot.
 - Switches are a hairline row of buttons; the pressed one is in white with a 2px accent rule under it. A
   toggle is the same box alone.
-- The pages are for the mouse. The one key is `f`, which flips in flip layout.
+- The pages are for the mouse. The one key is `f`, which switches the harness.
 
 ## Motion
 
@@ -115,4 +114,4 @@ reduced motion; a pause or seek by the visitor ends that. Nothing else moves.
 
 Light mode, cards, pill badges (tags are square), gradient text, icon sets, a hero with a call to
 action, install commands on the home page, a footer, tinted surfaces for hover or state, keyboard
-shortcuts beyond the flip, and an autoplaying video that ignores `prefers-reduced-motion`.
+shortcuts beyond `f`, and an autoplaying video that ignores `prefers-reduced-motion`.
