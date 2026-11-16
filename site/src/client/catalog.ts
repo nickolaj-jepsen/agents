@@ -1,9 +1,10 @@
 /**
  * The developer pages' controls. Every page is complete without them (both harnesses, the
  * narrowest size, side by side); this adds the harness switch, the size and layout switches, the
- * flip, "only differences" and the sidebar filter. A choice lives in the URL's query (`h`, `size`,
- * `lay`, `diff`), so a link shows what it says; the harness is remembered across the site, the
- * size and layout for the next page. The one key is `f`, which flips the stories in flip layout.
+ * flip and the sidebar filter. A choice lives in the URL's query (`h`, `size`, `lay`, `flip`), so a
+ * link shows what it says; the harness is remembered across the site, the size and layout for the
+ * next page. Layout and flip arrange everything on the page that has two harnesses: each story's
+ * renders and the props columns. The one key is `f`, which flips them all in flip layout.
  */
 import { readHarness, writeHarness } from "./prefs.ts";
 
@@ -30,7 +31,8 @@ const state = {
   h: oneOf(q.get("h"), ["both", "pi", "claude"] as const) ?? readHarness() ?? "both",
   size: /^\d+x\d+$/.test(q.get("size") ?? "") ? q.get("size")! : store.get("size"),
   lay: oneOf(q.get("lay") ?? store.get("lay"), ["side", "stack", "flip"] as const) ?? "side",
-  diff: q.get("diff") === "1",
+  /** The harness a flipped page shows, all of it at once. */
+  flip: (oneOf(q.get("flip"), ["claude", "pi"] as const) ?? "claude") as "claude" | "pi",
   actual: false,
 };
 
@@ -45,15 +47,17 @@ function press(sel: string, attr: string, value: string): void {
 }
 
 const stages = $$(".story-stage");
+const propCols = $$(".api-cols");
 
 function syncUrl(): void {
   const u = new URL(location.href);
   const set = (k: string, v: string | null) =>
     v ? u.searchParams.set(k, v) : u.searchParams.delete(k);
+  const arranged = stages.length > 0 || propCols.length > 0;
   set("h", state.h === "both" ? null : state.h);
   set("size", $$("[data-sizes]").length && state.size ? state.size : null);
-  set("lay", stages.length && state.lay !== "side" ? state.lay : null);
-  set("diff", state.diff ? "1" : null);
+  set("lay", arranged && state.lay !== "side" ? state.lay : null);
+  set("flip", arranged && state.lay === "flip" && state.flip !== "claude" ? state.flip : null);
   history.replaceState(null, "", u);
 }
 
@@ -104,58 +108,45 @@ function applySize(): void {
 
 // ---- layout, flip, actual size ------------------------------------------------------------
 
-const flipShown = new WeakMap<HTMLElement, string>();
-const rendered = (stage: HTMLElement) => $$(".cell", stage).filter((c) => $$(".view", c).length);
-
-/** A story's layout: one picture is always alone. */
-const layoutOf = (stage: HTMLElement) =>
-  state.h === "both" && rendered(stage).length > 1 ? state.lay : "side";
-
-function setFlip(stage: HTMLElement, h: string | null): void {
-  if (h) flipShown.set(stage, h);
-  for (const c of $$(".cell", stage))
-    c.classList.toggle("flip-off", layoutOf(stage) === "flip" && c.dataset.h !== h);
-}
-
-function flipOther(stage: HTMLElement): void {
-  const cells = rendered(stage);
-  if (layoutOf(stage) !== "flip" || cells.length < 2) return;
-  const other = cells.find((c) => c.dataset.h !== flipShown.get(stage));
-  if (other) setFlip(stage, other.dataset.h!);
-}
+const TITLE = { claude: "Claude Code", pi: "pi" } as const;
+const other = (h: "claude" | "pi") => (h === "claude" ? "pi" : "claude");
 
 function applyLayout(): void {
   press("[data-set-lay]", "data-set-lay", state.lay);
   document.querySelector("[data-actual]")?.setAttribute("aria-pressed", String(state.actual));
+  const flipping = state.h === "both" && state.lay === "flip";
+  for (const b of $$("[data-flip]")) b.hidden = !flipping;
+  for (const to of $$("[data-flip-to]")) to.textContent = `to ${TITLE[other(state.flip)]}`;
+  // With one harness chosen there is nothing to arrange; with both, flip shows the same one in
+  // every story, and a story the harness has no render of shows why.
+  const lay = state.h === "both" ? state.lay : "side";
   for (const stage of stages) {
-    const lay = layoutOf(stage);
     stage.dataset.lay = lay;
     stage.classList.toggle("actual", state.actual);
-    const btn = stage.querySelector<HTMLElement>("[data-flip]");
-    if (btn) btn.hidden = lay !== "flip";
-    setFlip(
-      stage,
-      lay === "flip" ? (flipShown.get(stage) ?? rendered(stage)[0]?.dataset.h ?? null) : null,
-    );
+    for (const c of $$(".cell", stage))
+      c.classList.toggle("flip-off", lay === "flip" && c.dataset.h !== state.flip);
+  }
+  // The props columns follow too: a harness with no props has its "planned" or "not possible" note.
+  for (const cols of propCols) {
+    cols.dataset.lay = lay;
+    for (const a of $$(".api", cols))
+      a.classList.toggle("flip-off", lay === "flip" && a.dataset.h !== state.flip);
   }
   store.set("lay", state.lay === "side" ? null : state.lay);
 }
 
-for (const stage of stages) {
-  stage.querySelector("[data-flip]")?.addEventListener("click", () => flipOther(stage));
-  // A click on the picture shows the other harness in the same place.
+/** Show the other harness, in every story and in the props. */
+function flipAll(): void {
+  if (state.h !== "both" || state.lay !== "flip") return;
+  state.flip = other(state.flip);
+  apply();
+}
+
+// A click on a picture flips too.
+for (const stage of stages)
   stage.addEventListener("click", (e) => {
-    if ((e.target as Element).closest(".view")) flipOther(stage);
+    if ((e.target as Element).closest(".view")) flipAll();
   });
-}
-
-// ---- only differences --------------------------------------------------------------------
-
-const diffBox = document.querySelector<HTMLInputElement>("[data-diff]");
-function applyDiff(): void {
-  if (diffBox) diffBox.checked = state.diff;
-  document.querySelector("table.compat")?.classList.toggle("only-diff", state.diff);
-}
 
 // ---- controls ---------------------------------------------------------------------------
 
@@ -163,7 +154,6 @@ function apply(): void {
   applyHarness();
   applySize();
   applyLayout();
-  applyDiff();
   syncUrl();
 }
 
@@ -178,18 +168,15 @@ document.addEventListener("click", (e) => {
     store.set("size", state.size);
   } else if (b.dataset.setLay) state.lay = b.dataset.setLay as typeof state.lay;
   else if (b.hasAttribute("data-actual")) state.actual = !state.actual;
+  else if (b.hasAttribute("data-flip")) state.flip = other(state.flip);
   else return;
-  apply();
-});
-diffBox?.addEventListener("change", () => {
-  state.diff = diffBox.checked;
   apply();
 });
 
 document.addEventListener("keydown", (e) => {
   if (e.key !== "f" || e.ctrlKey || e.metaKey || e.altKey) return;
   if ((e.target as HTMLElement).matches("input, textarea, select, [contenteditable]")) return;
-  for (const stage of stages) flipOther(stage);
+  flipAll();
 });
 
 // ---- sidebar filter ----------------------------------------------------------------------

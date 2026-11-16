@@ -1,8 +1,9 @@
 ---
 /**
  * The developer pages' shell: the site's Base and a sidebar of the kit's components (the current
- * one's stories under it), the docs and the repo's other guides. The catalogue's harness switch
- * sits at the top right of its pages.
+ * one's stories under it), the docs and the repo's other guides. The page is as wide as every
+ * other, masthead included; the sidebar hangs in the margin to its left as far as the screen
+ * allows, and the content takes what is left. The pages' controls are Toolbar.astro, in the slot.
  */
 import Base from '../../layouts/Base.astro';
 import Mark from './Mark.astro';
@@ -21,10 +22,8 @@ interface Props {
   overview?: boolean;
   /** Breadcrumb trail after "Developers", each a link but the last. */
   crumbs?: { name: string; href?: string }[];
-  /** The harness switch (the catalogue's pages). */
-  harness?: boolean;
 }
-const { title, description, current, doc, overview = false, crumbs = [], harness = true } = Astro.props;
+const { title, description, current, doc, overview = false, crumbs = [] } = Astro.props;
 const docs = content().docs;
 const elsewhere = [
   ['AGENTS.md', 'What an agent working here reads first'],
@@ -55,17 +54,6 @@ const elsewhere = [
             ))
           }
         </nav>
-        {
-          harness && (
-            <div class="cat-tools" data-js hidden>
-              <div class="seg box" role="group" aria-label="Harness">
-                <button type="button" data-set-h="both" aria-pressed="true">Both</button>
-                <button type="button" data-set-h="pi" aria-pressed="false"><span class="k pi" aria-hidden="true">π</span>pi</button>
-                <button type="button" data-set-h="claude" aria-pressed="false"><span class="k claude" aria-hidden="true">C</span>Claude Code</button>
-              </div>
-            </div>
-          )
-        }
       </div>
       <slot />
     </div>

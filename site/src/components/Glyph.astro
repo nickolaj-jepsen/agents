@@ -1,0 +1,14 @@
+---
+/**
+ * A harness's logo, drawn from the sprite in Base.astro and set in `currentColor`, so the
+ * colour is the caller's (`.k.claude`, `.k.pi`). Decorative: the name goes beside it.
+ */
+import type { Harness } from '../lib/content.ts';
+
+interface Props {
+  h: Harness;
+}
+const { h } = Astro.props;
+---
+
+<svg class={`gl ${h}`} viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href={`#h-${h}`} /></svg>

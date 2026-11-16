@@ -4,6 +4,8 @@
  * under it, and, when both harnesses have media, a switch between them. Without script every
  * item is shown, one under another. gallery.ts does the switching and the full-size view.
  */
+import Glyph from './Glyph.astro';
+import HarnessSwitch from './HarnessSwitch.astro';
 import Plate from './Plate.astro';
 import { HARNESS, mediaUrl, type Harness, type Plugin } from '../lib/content.ts';
 
@@ -44,24 +46,14 @@ const items: Item[] = [
   })),
 ];
 const harnesses = (['claude', 'pi'] as const).filter((h) => items.some((i) => i.harness === h));
-const letter = { claude: 'C', pi: 'π' } as const;
 ---
 
 {
   items.length > 0 && (
     <section class="gallery" aria-label={`${plugin.name} in use`} data-gallery data-default={harnesses[0]}>
       {harnesses.length > 1 && (
-        <div class="g-bar" data-js hidden>
-          <div class="seg box" role="group" aria-label="Harness">
-            {harnesses.map((h, i) => (
-              <button type="button" data-set-h={h} aria-pressed={i === 0 ? 'true' : 'false'}>
-                <span class={`k ${h}`} aria-hidden="true">
-                  {letter[h]}
-                </span>
-                {HARNESS[h]}
-              </button>
-            ))}
-          </div>
+        <div class="g-bar">
+          <HarnessSwitch options={harnesses} />
         </div>
       )}
       <div class="g-stage">
@@ -76,7 +68,7 @@ const letter = { claude: 'C', pi: 'π' } as const;
               <p>
                 {harnesses.length > 1 || plugin.harness.claude !== plugin.harness.pi ? (
                   <span class={`k ${it.harness}`} title={HARNESS[it.harness]}>
-                    {letter[it.harness]}
+                    <Glyph h={it.harness} />
                   </span>
                 ) : null}
                 {it.caption}

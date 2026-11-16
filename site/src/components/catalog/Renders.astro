@@ -3,6 +3,7 @@
  * A story's renders, one figure per harness: every size it was drawn at, the one nearest the
  * chosen size shown (catalog.ts switches them), or why the harness has none.
  */
+import Glyph from '../Glyph.astro';
 import Mark from './Mark.astro';
 import { HARNESSES, sizeKey, TITLES, whyNot, type Component, type Story } from '../../lib/catalog.ts';
 
@@ -30,6 +31,7 @@ const pick = (shots: NonNullable<Story['shots']['pi']>) =>
       return (
         <figure class:list={['cell', { gone: !shots.length }]} data-h={h}>
           <figcaption>
+            <span class={`k ${h}`}><Glyph h={h} /></span>
             <strong>{TITLES[h]}</strong>
             {s.by[h]?.settings && <code>{s.by[h]!.settings}</code>}
           </figcaption>

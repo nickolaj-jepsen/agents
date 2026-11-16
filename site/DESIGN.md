@@ -20,16 +20,16 @@ stays inside the system. It adapts walldye's (`walldye/docs/site.md`) to a refer
 Fireproof, from `~/nixos/modules/base/theme.nix`. Text is `fg`, `fg-alt` or `muted`, all 4.5:1 or better on
 `bg` (12.0, 8.4 and 4.7). `muted` is for the least of it (counts, crumbs), never on a tinted ground.
 
-| Role                      | Colour                                                |
-| ------------------------- | ----------------------------------------------------- |
-| Page ground, plates, code | `bg` #1C1B1A, which is the captures' own canvas       |
-| Headings, names           | `whiteAlt` #F2F0E5                                    |
-| Rules                     | `uiAlt`; masthead and section heads `ui-hi` #575653   |
-| Plate and listing frame   | `uiAlt` #403E3C                                       |
-| Link underline            | #676764, `ui-hi` nudged to 3:1                        |
-| Accent #CF6A4C            | focus ring, the current nav entry, the brand bar, `C` |
-| Harness marks             | Claude Code `accent`, pi `purple`                     |
-| In progress               | `yellow`: a framed tag, and a 2px rule on its notice  |
+| Role                      | Colour                                               |
+| ------------------------- | ---------------------------------------------------- |
+| Page ground, plates, code | `bg` #1C1B1A, which is the captures' own canvas      |
+| Headings, names           | `whiteAlt` #F2F0E5                                   |
+| Rules                     | `uiAlt`; masthead and section heads `ui-hi` #575653  |
+| Plate and listing frame   | `uiAlt` #403E3C                                      |
+| Link underline            | #676764, `ui-hi` nudged to 3:1                       |
+| Accent #CF6A4C            | focus ring, the current nav entry, the brand bar     |
+| Harness logos             | Claude Code `accent`, pi `purple`                    |
+| In progress               | `yellow`: a framed tag, and a 2px rule on its notice |
 
 Code blocks sit on the page ground in a hairline frame, like the plates, and use a Shiki theme from the
 same colours (`src/lib/fireproof.ts`): keywords green, strings cyan, numbers purple, functions and the
@@ -57,9 +57,15 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
 
 ## Layout
 
-- One column of 76rem at most, a 16px gutter on phones; prose holds a 42rem measure.
+- One column of 76rem at most, a 16px gutter on phones; prose holds a 42rem measure. Every page,
+  the developer pages too, has the masthead at that width.
+- A harness is its logo (`Glyph.astro`, drawn from one sprite in `Base.astro`) in its colour, never a
+  letter: a spark of rays for Claude Code, the letter π for pi. The harness switch (`HarnessSwitch.astro`)
+  is one control wherever there is one: the home page's plugins, a plugin's gallery, the catalogue's
+  sticky bar. The choice is remembered across them.
 - The home page is one plain sentence, then the plugins as a two-column grid of posters (name, harness
-  letters, install, tagline), then the skills as rows under a head per category. An in-progress plugin or
+  logos, install, tagline) under a harness switch that narrows them to one harness, with its picture and
+  install command, then the skills as rows under a head per category. An in-progress plugin or
   skill keeps its place in its group, listed last, with its tag.
 - Install is a small framed button (`install ▾`) that opens a panel of commands, one per harness, each
   with its copy button; other ways sit behind "More ways". The same control on the home page and in a
@@ -77,18 +83,28 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
 
 ## The catalogue
 
-- The developer pages take a wider page (100rem) and a sidebar: the components (the current one's
-  stories under it, as anchors), the docs, and the repo's other guides. `/dev/` is the overview; a
-  component's page holds its stories inline, under a sticky toolbar of terminal size, layout and actual
-  size that applies to all of them.
-- Two renders sit side by side while each keeps 33rem, a 70-column render at three quarters of its
-  size; below that they stack, so the text in a render stays readable. A render is never enlarged.
-- Status reads glyph then word: ✓ green, ~ yellow, ✗ red, ○ muted. A harness is its letter, π in
-  purple and C in accent: lit when it has the thing, muted when not yet, struck when it cannot.
+- The developer pages keep the page's width. The sidebar (the components, the current one's stories
+  under it as anchors, the docs, the repo's other guides) hangs in the margin to the left of the column
+  as far as the screen has margin, and the content takes the rest: on a wide screen it is exactly the
+  masthead's width, on a narrow one it is indented by what did not fit; below 64rem the sidebar follows.
+- `/dev/` is the overview. A component's page is its name and purpose, one line of summary (the kit in
+  each harness, the counts, a way to the props), then one sticky bar (harness, terminal size, layout,
+  actual size) that applies to everything under it: the stories, then the props. On a phone the bar
+  scrolls away.
+- Layout is side by side, stacked or flipped. Flip shows one harness everywhere at once, the stories and
+  the props, with one button (and the key `f`) to show the other; a story the harness has no render of
+  shows why. A click on a render flips it too.
+- A story's compatibility is one line under its renders (the features it shows), which opens into what
+  each harness does and the caveat. There is no separate compatibility table.
+- A render is a terminal window: a bright frame and a title bar a step off the page, with the harness's
+  logo and what was drawn, so it reads as an object among the page's hairlines.
+- Two renders sit side by side while each keeps 32rem, a 70-column render at about three quarters of
+  its size; below that they stack, so the text in a render stays readable. A render is never enlarged.
+- Status reads glyph then word: ✓ green, ~ yellow, ✗ red, ○ muted. A harness is its logo: lit when it
+  has the thing, muted when not yet, struck when it cannot.
 - Switches are a hairline row of buttons; the pressed one is in white with a 2px accent rule under it. A
   toggle is the same box alone.
-- The pages are for the mouse. The one key is `f`, which flips the stories in flip layout; a click on a
-  render flips it too.
+- The pages are for the mouse. The one key is `f`, which flips in flip layout.
 
 ## Motion
 

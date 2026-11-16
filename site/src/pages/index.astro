@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import HarnessSwitch from '../components/HarnessSwitch.astro';
 import Install from '../components/Install.astro';
 import Marks from '../components/Marks.astro';
 import Wip from '../components/Wip.astro';
@@ -9,7 +10,7 @@ import {
   harnesses,
   pluginHref,
   pluginInstall,
-  posterOf,
+  postersOf,
   skillHref,
   skillInstall,
 } from '../lib/content.ts';
@@ -30,17 +31,30 @@ const summaries = new Map(await Promise.all(c.skills.map(async (s) => [s.name, a
   <section class="section" id="plugins" aria-labelledby="plugins-h">
     <div class="section-head">
       <h2 id="plugins-h">Plugins</h2>
-      <span class="count">{c.plugins.length}</span>
+      <span class="count" data-count>{c.plugins.length}</span>
+      <div class="aside">
+        <HarnessSwitch both />
+      </div>
     </div>
-    <ul class="tiles">
+    <ul class="tiles" data-tiles>
       {
         c.plugins.map((p, i) => {
-          const look = posterOf(p);
+          const looks = postersOf(p);
           return (
-            <li class="tile" aria-labelledby={`p-${p.name}`}>
+            <li class="tile" aria-labelledby={`p-${p.name}`} data-harnesses={harnesses(p).join(' ')}>
               <a class="tile-pic" href={pluginHref(p.name)} tabindex="-1" aria-hidden="true">
-                {look ? (
-                  <img src={look.src} width={look.width} height={look.height} alt="" loading={i < 2 ? 'eager' : 'lazy'} decoding="async" />
+                {looks.length > 0 ? (
+                  looks.map((look, n) => (
+                    <img
+                      src={look.src}
+                      width={look.width}
+                      height={look.height}
+                      alt=""
+                      data-h={look.h}
+                      loading={i < 2 && n === 0 ? 'eager' : 'lazy'}
+                      decoding="async"
+                    />
+                  ))
                 ) : (
                   <span class="no-pic">{p.name}</span>
                 )}
@@ -100,4 +114,7 @@ const summaries = new Map(await Promise.all(c.skills.map(async (s) => [s.name, a
       ))
     }
   </section>
+  <script>
+    import '../client/home.ts';
+  </script>
 </Base>

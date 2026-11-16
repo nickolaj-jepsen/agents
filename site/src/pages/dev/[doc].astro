@@ -20,7 +20,7 @@ const { doc, prev, next } = Astro.props;
 const body = await renderMarkdown(doc.body, doc.path);
 ---
 
-<Shell title={doc.title} description={`${doc.title}: developer notes for the agents repo.`} doc={doc.slug} crumbs={[{ name: doc.title }]} harness={false}>
+<Shell title={doc.title} description={`${doc.title}: developer notes for the agents repo.`} doc={doc.slug} crumbs={[{ name: doc.title }]}>
   <header class="lede">
     <h1>{doc.title}</h1>
     <p class="sub doc-src"><a class="lnk" href={github(doc.path)}><code>{doc.path}</code></a></p>

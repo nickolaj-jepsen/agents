@@ -523,14 +523,20 @@ pre {
 }
 .hm {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.4em;
   white-space: nowrap;
 }
 .hm .k {
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: var(--mono-em);
+  display: inline-flex;
+  align-self: center;
+}
+/* A harness logo: sized by the text it sits in, coloured by its .k. */
+.gl {
+  width: 1.15em;
+  height: 1.15em;
+  display: block;
+  flex: none;
 }
 .hm.claude .k {
   color: var(--claude);
@@ -610,6 +616,7 @@ pre {
   color: var(--text-3);
 }
 .section-head .aside {
+  align-self: center;
   margin-left: auto;
   font-size: var(--fs-ui);
   color: var(--text-2);
@@ -894,8 +901,32 @@ pre {
 /* Plugins: a two-column grid of posters, each with its name, marks, install and tagline. */
 .tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: calc(5 * var(--u)) calc(4 * var(--u));
+}
+@media (min-width: 44rem) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.tile[hidden] {
+  display: none;
+}
+/* A plugin with a picture per harness shows the first until the switch picks one (home.ts). */
+.tiles:not(.js) .tile-pic img ~ img {
+  display: none;
+}
+.tile-pic img[hidden] {
+  display: none;
+}
+/* With one harness chosen, an install panel lists only its command, unlabelled. */
+.tiles[data-h="claude"] .inst-cmd[data-h="pi"],
+.tiles[data-h="pi"] .inst-cmd[data-h="claude"] {
+  display: none;
+}
+.tiles[data-h="claude"] .cmd-label,
+.tiles[data-h="pi"] .cmd-label {
+  display: none;
 }
 .tile-pic {
   display: block;
@@ -1065,13 +1096,16 @@ pre {
   margin-bottom: calc(6 * var(--u));
 }
 .g-bar {
+  display: none;
+}
+.gallery.js .g-bar {
   display: flex;
   margin-bottom: calc(2 * var(--u));
 }
 .g-cap .k {
-  font-family: var(--mono);
-  font-weight: 700;
+  display: inline-block;
   margin-right: 0.4em;
+  vertical-align: -0.2em;
 }
 .g-stage > .g-item + .g-item {
   margin-top: calc(4 * var(--u));
@@ -1349,8 +1383,16 @@ pre {
     inset 0 -2px 0 var(--accent);
 }
 .seg .k {
-  font-weight: 700;
+  display: inline-block;
+  vertical-align: -0.25em;
   margin-right: 0.45em;
+}
+.seg .gl {
+  width: 1.2em;
+  height: 1.2em;
+}
+.seg[hidden] {
+  display: none;
 }
 .k.pi {
   color: var(--pi);

@@ -1,21 +1,21 @@
 ---
-/** The harnesses a plugin runs in: the catalogue's letter in the harness's colour, then its name. */
+/** The harnesses a plugin runs in: the logo in the harness's colour, then its name. */
+import Glyph from './Glyph.astro';
 import { HARNESS, type Harness } from '../lib/content.ts';
 
 interface Props {
   harnesses: Harness[];
-  /** Letters only, each named for a screen reader. */
+  /** Logos only, each named for a screen reader. */
   short?: boolean;
 }
 const { harnesses, short = false } = Astro.props;
-const letter = { claude: 'C', pi: 'π' } as const;
 ---
 
 <span class="marks">
   {
     harnesses.map((h) => (
       <span class={`hm ${h}`} title={short ? HARNESS[h] : undefined}>
-        <span class="k" aria-hidden="true">{letter[h]}</span>
+        <span class="k"><Glyph h={h} /></span>
         {short ? <span class="vh">{HARNESS[h]}</span> : HARNESS[h]}
       </span>
     ))

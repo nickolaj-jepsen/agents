@@ -63,11 +63,26 @@ export function posterOf(p: Plugin): { src: string; width: number; height: numbe
   return s && { src: mediaUrl(s.png), width: s.width, height: s.height };
 }
 
+/**
+ * A plugin's pictures for the home page, one per harness that has media: the one it is known by
+ * first (`posterOf`), so a visitor who has chosen a harness there sees that harness's.
+ */
+export function postersOf(p: Plugin): { h: Harness; src: string; width: number; height: number }[] {
+  const out = harnesses(p).flatMap((h) => {
+    const v = p.media?.videos.find((m) => m.harness === h);
+    const s = p.media?.stills.find((m) => m.harness === h);
+    const m = v ? { src: v.poster, ...v } : s && { src: s.png, ...s };
+    return m ? [{ h, src: mediaUrl(m.src), width: m.width, height: m.height }] : [];
+  });
+  const first = p.media?.videos[0]?.harness ?? p.media?.stills[0]?.harness;
+  return out.sort((a, b) => Number(b.h === first) - Number(a.h === first));
+}
+
 /** A plugin's install commands, one per harness, for the install control. */
 export const pluginInstall = (p: Plugin) =>
   harnesses(p)
     .filter((h) => p.install[h])
-    .map((h) => ({ label: HARNESS[h], command: p.install[h]! }));
+    .map((h) => ({ h, label: HARNESS[h], command: p.install[h]! }));
 
 /** Said under a Claude install: what the flake checks and a marketplace install doesn't. */
 export const CLAUDE_NOTE =

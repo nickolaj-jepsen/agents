@@ -9,9 +9,9 @@ import cropList from "../../media/kit/crops.json";
 import { href, mediaUrl } from "./content.ts";
 
 export type { Harness };
-export const HARNESSES: Harness[] = ["pi", "claude"];
+/** Claude Code first, as everywhere on the site; the columns and the switch follow it. */
+export const HARNESSES: Harness[] = ["claude", "pi"];
 export const TITLES: Record<Harness, string> = { pi: "pi", claude: "Claude Code" };
-export const MARK: Record<Harness, string> = { pi: "π", claude: "C" };
 
 /** One render of a story: the terminal size it was drawn at, and the crop's URL and pixels. */
 export type Shot = { w: number; h: number; src: string; width: number; height: number };
@@ -105,6 +105,15 @@ export const STATUS_LABEL = {
   planned: "planned",
   exists: "exists",
   none: "not possible",
+} as const;
+/** What a status means, for its tooltip. */
+export const STATUS_HELP = {
+  yes: "works",
+  partial: "works with a caveat",
+  no: "the engine cannot",
+  planned: "can, not built yet",
+  exists: "the kit has it",
+  none: "not possible in this harness",
 } as const;
 export type StatusKey = keyof typeof STATUS_LABEL;
 /** The colour class of a status. */

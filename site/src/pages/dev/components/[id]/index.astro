@@ -4,6 +4,8 @@ import Shell from '../../../../components/catalog/Shell.astro';
 import Mark from '../../../../components/catalog/Mark.astro';
 import Status from '../../../../components/catalog/Status.astro';
 import Renders from '../../../../components/catalog/Renders.astro';
+import Features from '../../../../components/catalog/Features.astro';
+import Toolbar from '../../../../components/catalog/Toolbar.astro';
 import Api from '../../../../components/catalog/Api.astro';
 import {
   catalogHref,
@@ -11,7 +13,6 @@ import {
   differs,
   HARNESSES,
   implMark,
-  sizeKey,
   sizesOf,
   storyAnchor,
   TITLES,
@@ -28,24 +29,19 @@ const { c } = Astro.props;
 const sizes = sizesOf(c.stories);
 const size = sizes[0];
 const nd = c.features.filter(differs).length;
-const storyOf = (id?: string) => (id ? c.stories.find((s) => s.id === id) : undefined);
+// A feature no story shows has no story to sit under: it closes the list.
+const unshown = c.features.filter((f) => !c.stories.some((s) => HARNESSES.some((h) => f.story[h] === s.id)));
 ---
 
 <Shell title={`${c.name} · Components`} description={c.purpose} current={c} crumbs={[{ name: 'UI kit', href: catalogHref() }, { name: c.name }]}>
   <header class="lede">
     <h1>{c.name}</h1>
     <p class="lead">{c.purpose}</p>
-  </header>
-
-  <dl class="facts impl">
-    {
-      HARNESSES.map((h) => (
-        <>
-          <dt data-h={h}>
-            <Mark h={h} state={implMark(c, h)} /> {TITLES[h]}
-          </dt>
-          <dd data-h={h}>
-            <Status status={c.impl[h].state} />{' '}
+    <ul class="summary">
+      {
+        HARNESSES.map((h) => (
+          <li data-h={h}>
+            <Mark h={h} state={implMark(c, h)} /> {TITLES[h]} <Status status={c.impl[h].state} />{' '}
             {c.impl[h].state === 'none' ? (
               <span class="sub">{c.impl[h].reason}</span>
             ) : (
@@ -56,17 +52,18 @@ const storyOf = (id?: string) => (id ? c.stories.find((s) => s.id === id) : unde
                 </>
               ))
             )}
-          </dd>
-        </>
-      ))
-    }
-  </dl>
+          </li>
+        ))
+      }
+      <li>
+        {c.stories.length} {c.stories.length === 1 ? 'story' : 'stories'}, {c.features.length} {c.features.length === 1 ? 'feature' : 'features'}
+        {nd > 0 && <> ({nd} differ)</>}
+      </li>
+      <li><a href="#props">Props ↓</a></li>
+    </ul>
+  </header>
 
-  <nav class="tabs" aria-label={`${c.name} sections`}>
-    <a href="#stories">Stories <span class="n">{c.stories.length}</span></a>
-    <a href="#compat">Compatibility <span class="n">{c.features.length}</span></a>
-    <a href="#props">Props</a>
-  </nav>
+  <Toolbar sizes={sizes} layout renders={c.stories.length > 0} />
 
   <section id="stories" class="cat-section" aria-labelledby="stories-h">
     <div class="section-head">
@@ -74,40 +71,12 @@ const storyOf = (id?: string) => (id ? c.stories.find((s) => s.id === id) : unde
       <span class="count">{c.stories.length}</span>
     </div>
     {
-      c.stories.length > 0 && (
-        <div class="toolbar" data-js hidden>
-          {sizes.length > 1 && (
-            <div class="ctl">
-              <span class="label">Terminal</span>
-              <div class="seg box" role="group" aria-label="Terminal size" data-sizes>
-                {sizes.map((x, i) => (
-                  <button type="button" data-set-size={sizeKey(x)} aria-pressed={i === 0 ? 'true' : 'false'}>
-                    {sizeKey(x)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          <div class="ctl" data-both>
-            <span class="label">Layout</span>
-            <div class="seg box" role="group" aria-label="Layout">
-              <button type="button" data-set-lay="side" aria-pressed="true">Side by side</button>
-              <button type="button" data-set-lay="stack" aria-pressed="false">Stacked</button>
-              <button type="button" data-set-lay="flip" aria-pressed="false" title="One at a time; f or a click switches">Flip</button>
-            </div>
-          </div>
-          <button type="button" class="toggle" data-actual aria-pressed="false">Actual size</button>
-        </div>
-      )
-    }
-    {
       c.stories.length === 0 ? (
         <p class="sub">No stories yet.</p>
       ) : (
         <ul class="story-rows">
           {c.stories.map((s) => {
             const about = HARNESSES.map((h) => s.by[h]?.about).find(Boolean);
-            const shows = c.features.filter((f) => HARNESSES.some((h) => f.story[h] === s.id));
             return (
               <li id={storyAnchor(s)} class="story-stage" data-lay="side">
                 <div class="rhead">
@@ -115,90 +84,46 @@ const storyOf = (id?: string) => (id ? c.stories.find((s) => s.id === id) : unde
                     {s.state}
                   </a>
                   {about && <span class="about">{about}</span>}
-                  <button type="button" class="toggle flip-btn" data-flip hidden>
-                    flip
-                  </button>
                 </div>
-                {shows.length > 0 && (
-                  <p class="shows">
-                    Shows{' '}
-                    {shows.map((f, i) => (
-                      <>
-                        {i > 0 && ' · '}
-                        <a href={`#f-${f.id}`}>{f.label}</a>
-                      </>
-                    ))}
-                  </p>
-                )}
                 <Renders c={c} s={s} size={size} />
+                <Features c={c} s={s} />
               </li>
             );
           })}
         </ul>
       )
     }
-  </section>
-
-  <section id="compat" class="cat-section" aria-labelledby="compat-h">
-    <div class="section-head">
-      <h2 id="compat-h">Compatibility</h2>
-      <span class="count">{c.features.length}</span>
-    </div>
-    <div class="cbar">
-      <span class="sub">{nd} of {c.features.length} features differ between pi and Claude Code</span>
-      {
-        nd > 0 && (
-          <label class="check" data-js hidden>
-            <input type="checkbox" data-diff /> Only differences
-          </label>
-        )
-      }
-    </div>
-    <p class="sub legend">
-      <span><Status status="yes" /> works</span>
-      <span><Status status="partial" /> with a caveat</span>
-      <span><Status status="no" /> the engine cannot</span>
-      <span><Status status="planned" /> can, not built yet</span>
-    </p>
-    <div class="table scroll" role="region" aria-label="Features by harness" tabindex="0">
-      <table class="compat">
-        <thead>
-          <tr>
-            <th scope="col">Feature</th>
-            {HARNESSES.map((h) => <th scope="col" data-h={h}>{TITLES[h]}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {
-            c.features.map((f) => (
-              <tr id={`f-${f.id}`} class:list={{ differs: differs(f) }}>
-                <th scope="row">
-                  {f.label}
-                  {differs(f) && <span class="flag">differs</span>}
-                </th>
-                {HARNESSES.map((h) => {
-                  const st = f.support[h];
-                  const story = storyOf(f.story[h]);
-                  return (
-                    <td data-h={h} data-label={TITLES[h]}>
-                      <Status status={st.status} />
-                      {st.note && <div class="note">{st.note}</div>}
-                      {story && (st.status === 'yes' || st.status === 'partial') && (
-                        <div class="note">
-                          <a class="lnk" href={`#${storyAnchor(story)}`}>
-                            See {story.state} →
-                          </a>
-                        </div>
-                      )}
-                    </td>
-                  );
-                })}
+    {
+      unshown.length > 0 && (
+        <details class="feats loose">
+          <summary>
+            <span class="lbl">{unshown.length} {unshown.length === 1 ? 'feature' : 'features'}</span>
+            <span class="what">not shown by a story</span>
+          </summary>
+          <table class="compat">
+            <thead>
+              <tr>
+                <th scope="col">Feature</th>
+                {HARNESSES.map((h) => <th scope="col" data-h={h}>{TITLES[h]}</th>)}
               </tr>
-            ))
-          }
-        </tbody>
-      </table>
-    </div>
+            </thead>
+            <tbody>
+              {unshown.map((f) => (
+                <tr class:list={{ differs: differs(f) }}>
+                  <th scope="row">{f.label}</th>
+                  {HARNESSES.map((h) => (
+                    <td data-h={h}>
+                      <Status status={f.support[h].status} />
+                      {f.support[h].note && <div class="note">{f.support[h].note}</div>}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
+      )
+    }
   </section>
 
   <section id="props" class="cat-section" aria-labelledby="props-h">
@@ -206,7 +131,7 @@ const storyOf = (id?: string) => (id ? c.stories.find((s) => s.id === id) : unde
       <h2 id="props-h">Props</h2>
       <span class="aside">Read from the kits' source and doc comments</span>
     </div>
-    <div class="api-cols">
+    <div class="api-cols" data-lay="side">
       {HARNESSES.map((h) => <Api c={c} h={h} />)}
     </div>
   </section>

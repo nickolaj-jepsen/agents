@@ -1,6 +1,7 @@
 ---
 /** Page shell: masthead, main, the client script. */
 import { Font } from 'astro:assets';
+import Sprite from '../components/Sprite.astro';
 import { href, REPO_URL } from '../lib/content.ts';
 import '../styles/site.css';
 
@@ -41,6 +42,7 @@ const here = (k: Props['nav']) => (k === nav ? 'page' : undefined);
     <slot name="head" />
   </head>
   <body>
+    <Sprite />
     <a class="skip" href="#main">Skip to content</a>
     <div class="page">
       <header class="masthead">

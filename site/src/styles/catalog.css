@@ -1,17 +1,25 @@
 /* The developer pages (/dev/): site.css's system, plus a sidebar, controls, renders and tables. */
 
-/* The catalogue compares pictures side by side, so its pages take more of a wide screen. */
-.page:has(> main.catalog) {
-  max-width: calc(100rem + 2 * var(--gutter));
-}
+/* The page is as wide as every other, masthead included. To give the renders their room, the
+   sidebar hangs in the margin to the left of the column, as far as the screen has margin (a
+   rem is kept at its edge), and the content takes the rest: on a wide screen it is exactly the
+   masthead's width, on a narrow one it is indented by what did not fit. */
 .kc {
+  --side: 12rem;
+  --gap: calc(3 * var(--u));
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: calc(4 * var(--u));
 }
 @media (min-width: 64rem) {
   .kc {
-    grid-template-columns: 13rem minmax(0, 1fr);
+    --hang: min(
+      calc(var(--side) + var(--gap)),
+      calc(max(0px, (100vw - var(--wide) - 2 * var(--gutter)) / 2) + var(--gutter) - 1rem)
+    );
+    grid-template-columns: var(--side) minmax(0, 1fr);
+    column-gap: var(--gap);
+    margin-left: calc(-1 * var(--hang));
   }
   .cat-side {
     grid-column: 1;
@@ -36,21 +44,57 @@
 }
 
 .cat-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--u) calc(3 * var(--u));
   margin-bottom: calc(3 * var(--u));
 }
 .cat-top .crumb {
   margin: 0;
 }
 .kc .lede {
-  margin-bottom: calc(4 * var(--u));
+  margin-bottom: calc(3 * var(--u));
+  max-width: none;
+}
+.kc .lede .lead {
+  max-width: var(--measure);
 }
 
-/* The stories' controls stay in view while the stories scroll under them. */
+/* What the page is, in a line: the kit in each harness, the counts, a way to the props. */
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--u) calc(4 * var(--u));
+  margin-top: calc(2 * var(--u));
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+}
+.summary > li {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.5em;
+}
+.summary > li[hidden] {
+  display: none;
+}
+.summary .mk {
+  align-self: center;
+}
+.summary code {
+  font-size: var(--mono-em);
+  color: var(--white);
+}
+.summary a {
+  color: var(--text-2);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: var(--link-line);
+}
+.summary a:hover {
+  color: var(--text);
+}
+
+/* The page's controls stay in view while it scrolls under them: the stories, then the props. */
 .toolbar {
   position: sticky;
   top: 0;
@@ -58,10 +102,12 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--u) calc(4 * var(--u));
+  gap: var(--u) calc(3 * var(--u));
   padding: calc(1.5 * var(--u)) 0;
-  margin-bottom: calc(2 * var(--u));
-  background: var(--bg) linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+  background:
+    linear-gradient(var(--rule-strong), var(--rule-strong)) top / 100% 1px no-repeat,
+    linear-gradient(var(--rule-strong), var(--rule-strong)) bottom / 100% 1px no-repeat,
+    var(--bg);
   font-size: var(--fs-ui);
   line-height: calc(3 * var(--u));
 }
@@ -69,17 +115,22 @@
 .ctl[hidden] {
   display: none;
 }
-.cbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--u) calc(4 * var(--u));
-  font-size: var(--fs-ui);
-  line-height: calc(3 * var(--u));
-  margin-bottom: calc(2 * var(--u));
+/* On a phone it wraps to several rows: too much of the screen to keep. */
+@media (max-width: 40rem) {
+  .toolbar {
+    position: static;
+  }
 }
-.cbar .grow {
-  flex: 1;
+/* One row at the content's width: the buttons a little tighter than elsewhere. */
+.toolbar .seg.box button,
+.toolbar .toggle {
+  padding: 0 var(--u);
+}
+.toolbar .ctl {
+  gap: var(--u) calc(1.5 * var(--u));
+}
+.toolbar .flip-btn .to {
+  color: var(--text-2);
 }
 .ctl {
   display: inline-flex;
@@ -89,17 +140,6 @@
 }
 .ctl .label {
   color: var(--text-3);
-}
-.check {
-  display: inline-flex;
-  gap: var(--u);
-  align-items: center;
-  color: var(--text-2);
-  cursor: pointer;
-}
-.check input {
-  accent-color: var(--accent);
-  margin: 0;
 }
 .legend {
   display: flex;
@@ -118,12 +158,15 @@
 
 /* Harness marks: the letter lit, dim, or struck. */
 .mk {
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 0.8125rem;
+  position: relative;
   display: inline-block;
-  min-width: 1ch;
-  text-align: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: none;
+}
+.mk .gl {
+  width: 100%;
+  height: 100%;
 }
 .mk.pi.on {
   color: var(--pi);
@@ -133,12 +176,22 @@
 }
 .mk.plan {
   color: var(--text-3);
-  font-weight: 400;
+  opacity: 0.6;
 }
+/* Not possible: the logo dimmed and struck through. */
 .mk.none {
   color: var(--ui-hi);
-  text-decoration: line-through;
-  font-weight: 400;
+}
+.mk.none::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top right,
+    transparent calc(50% - 1px),
+    var(--text-3),
+    transparent calc(50% + 1px)
+  );
 }
 
 /* Statuses: the glyph in its colour, the word in text. */
@@ -387,9 +440,6 @@ kbd {
   display: block;
   margin-top: calc(0.5 * var(--u));
 }
-.compat.only-diff tbody tr:not(.differs) {
-  display: none;
-}
 .cat-about {
   margin-top: calc(5 * var(--u));
   font-size: var(--fs-ui);
@@ -399,40 +449,6 @@ kbd {
 
 /* ---- a component page -------------------------------------------------------------------- */
 
-.facts.impl {
-  margin-bottom: calc(3 * var(--u));
-  grid-template-columns: 10rem minmax(0, 1fr);
-}
-.facts.impl > dt {
-  font-variant-caps: normal;
-  letter-spacing: 0;
-  color: var(--text);
-}
-@media (max-width: 40rem) {
-  .facts.impl {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-.tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 calc(3 * var(--u));
-  font-family: var(--mono);
-  font-size: 0.9375rem;
-  line-height: calc(3 * var(--u));
-  margin-bottom: calc(2 * var(--u));
-}
-.tabs a {
-  padding: var(--u) 0;
-  color: var(--text-2);
-}
-.tabs a:hover {
-  color: var(--text);
-}
-.tabs .n {
-  color: var(--text-3);
-  margin-left: 0.4em;
-}
 .cat-section {
   margin-top: calc(6 * var(--u));
 }
@@ -469,34 +485,81 @@ kbd {
   text-decoration-thickness: 1px;
   text-underline-offset: 0.25em;
 }
-.flip-btn {
-  line-height: calc(3 * var(--u) - 2px);
-  font-size: 0.8125rem;
-}
-.shows {
-  font-size: 0.9375rem;
-  line-height: calc(3 * var(--u));
-  color: var(--text-3);
-  margin: calc(-1 * var(--u)) 0 calc(2 * var(--u));
-}
-.shows a {
-  color: var(--text-2);
-  text-decoration: underline;
-  text-decoration-color: var(--link-line);
-  text-underline-offset: 0.2em;
-}
-.shows a:hover {
-  color: var(--text);
-}
 .story-rows > li {
   scroll-margin-top: calc(9 * var(--u));
 }
 
-/* Two renders side by side while each keeps 33rem (a 70-column render at three quarters of its
+/* The features a story shows: a line that opens into their compatibility. */
+.feats {
+  margin-top: calc(2 * var(--u));
+  font-size: 0.9375rem;
+  line-height: calc(3 * var(--u));
+}
+.feats > summary {
+  display: flex;
+  align-items: baseline;
+  gap: 0 calc(1.5 * var(--u));
+  min-width: 0;
+  cursor: pointer;
+  list-style: none;
+  color: var(--text-2);
+}
+.feats > summary::-webkit-details-marker {
+  display: none;
+}
+.feats > summary::before {
+  content: "▸";
+  font-family: var(--mono);
+  color: var(--text-3);
+  width: 1ch;
+  flex: none;
+}
+.feats[open] > summary::before {
+  content: "▾";
+}
+.feats > summary:hover {
+  color: var(--text);
+}
+.feats .lbl {
+  flex: none;
+  color: var(--text);
+  font-variant-caps: all-small-caps;
+  font-synthesis-small-caps: none;
+  letter-spacing: 0.08em;
+}
+.feats .what {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.feats[open] .what {
+  white-space: normal;
+}
+.feats > summary .flag {
+  flex: none;
+}
+.feats .compat {
+  margin-top: var(--u);
+  font-size: 0.9375rem;
+}
+.feats .compat th,
+.feats .compat td {
+  min-width: 0;
+}
+.feats .compat tbody th {
+  width: 30%;
+}
+.feats.loose {
+  margin-top: calc(3 * var(--u));
+}
+
+/* Two renders side by side while each keeps 32rem (a 70-column render at about three quarters of its
    size), else one above the other. */
 .pair {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 33rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 32rem), 1fr));
   gap: calc(3 * var(--u)) calc(3 * var(--u));
   align-items: start;
 }
@@ -504,17 +567,42 @@ kbd {
 :root[data-kit-h="claude"] .pair {
   grid-template-columns: minmax(0, 1fr);
 }
+/* A render is a terminal window, so it reads as an object among the page's hairlines: a bright
+   frame, and a title bar filled a step off the page, with the harness and what was drawn. */
+.cell {
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid var(--ui-hi);
+  background: var(--bg);
+}
+.cell.gone {
+  width: 100%;
+}
 .cell figcaption {
   display: flex;
   flex-wrap: wrap;
   gap: 0 calc(1.5 * var(--u));
-  align-items: baseline;
+  align-items: center;
+  padding: 0 calc(1.5 * var(--u));
+  min-height: calc(4 * var(--u));
+  background: var(--bg-alt);
+  box-shadow: inset 0 -1px 0 var(--ui-hi);
   font-size: 0.9375rem;
-  line-height: calc(3 * var(--u));
-  margin-bottom: var(--u);
+  line-height: calc(4 * var(--u) - 1px);
+}
+.cell figcaption .gl {
+  width: 1.1em;
+  height: 1.1em;
+}
+.cell figcaption .k.claude {
+  color: var(--claude);
+}
+.cell figcaption .k.pi {
+  color: var(--pi);
 }
 .cell figcaption strong {
   font-weight: 600;
+  color: var(--white);
 }
 .cell figcaption code {
   font-size: 0.8125rem;
@@ -524,24 +612,30 @@ kbd {
   position: relative;
 }
 .view img {
+  display: block;
   width: 100%;
   height: auto;
-  outline: 1px solid var(--plate-edge);
-  outline-offset: -1px;
   background: #000;
+}
+.view .near {
+  padding: 0 calc(1.5 * var(--u));
+  margin: 0;
+  border-top: 1px solid var(--ui-alt);
 }
 .near {
   font-size: 0.875rem;
   line-height: calc(3 * var(--u));
   color: var(--yellow);
-  margin-top: calc(0.5 * var(--u));
 }
 .why {
   font-size: var(--fs-ui);
   line-height: calc(3 * var(--u));
   color: var(--text-2);
   padding: calc(2 * var(--u));
-  border: 1px dashed var(--ui-alt);
+}
+.why .mk {
+  vertical-align: -0.2em;
+  margin-right: 0.4em;
 }
 
 /* Props: the two kits side by side. */
@@ -552,8 +646,13 @@ kbd {
   align-items: start;
 }
 :root[data-kit-h="pi"] .api-cols,
-:root[data-kit-h="claude"] .api-cols {
+:root[data-kit-h="claude"] .api-cols,
+.api-cols[data-lay="stack"],
+.api-cols[data-lay="flip"] {
   grid-template-columns: minmax(0, 1fr);
+}
+.api-cols .api.flip-off {
+  display: none;
 }
 .api h3 {
   font-weight: 650;

@@ -1,0 +1,51 @@
+---
+/**
+ * The catalogue's controls, one sticky bar for the whole page: the harness, the terminal size, how
+ * the two harnesses are laid out (side by side, stacked, or flipped, with one button that flips
+ * every story and props column at once) and actual size. It starts hidden; catalog.ts shows it.
+ */
+import HarnessSwitch from '../HarnessSwitch.astro';
+import { sizeKey } from '../../lib/catalog.ts';
+
+interface Props {
+  /** The terminal sizes the stories were drawn at; none, or one, hides the size switch. */
+  sizes?: { w: number; h: number }[];
+  /** The page has two harnesses' columns to arrange (a component's stories and props). */
+  layout?: boolean;
+  /** The page has renders, which can be shown at their own size. */
+  renders?: boolean;
+}
+const { sizes = [], layout = false, renders = false } = Astro.props;
+---
+
+<div class="toolbar" data-js hidden>
+  <HarnessSwitch options={['claude', 'pi']} both />
+  {
+    sizes.length > 1 && (
+      <div class="ctl">
+        <div class="seg box" role="group" aria-label="Terminal size, columns by rows" title="Terminal size, columns by rows" data-sizes>
+          {sizes.map((x, i) => (
+            <button type="button" data-set-size={sizeKey(x)} aria-pressed={i === 0 ? 'true' : 'false'}>
+              {sizeKey(x)}
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  {
+    layout && (
+      <div class="ctl" data-both>
+        <div class="seg box" role="group" aria-label="Layout">
+          <button type="button" data-set-lay="side" aria-pressed="true">Side by side</button>
+          <button type="button" data-set-lay="stack" aria-pressed="false">Stacked</button>
+          <button type="button" data-set-lay="flip" aria-pressed="false" title="One harness at a time">Flip</button>
+        </div>
+        <button type="button" class="toggle flip-btn" data-flip hidden title="Show the other harness, everywhere (key f)">
+          Flip <span class="to" data-flip-to />
+        </button>
+      </div>
+    )
+  }
+  {renders && <button type="button" class="toggle" data-actual aria-pressed="false">Actual size</button>}
+</div>

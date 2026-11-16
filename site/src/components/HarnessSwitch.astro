@@ -1,0 +1,32 @@
+---
+/**
+ * The harness switch, the same control on every page that has one: the home page's plugins, a
+ * plugin's gallery, the catalogue's sticky bar. The page's script (home.ts, gallery.ts,
+ * catalog.ts) makes it work and remembers the choice (`prefs.ts`), so it starts hidden
+ * (`data-js`): without script every harness is shown.
+ */
+import Glyph from './Glyph.astro';
+import { HARNESS, type Harness } from '../lib/content.ts';
+
+interface Props {
+  /** The harnesses to choose between, in order. */
+  options?: Harness[];
+  /** A first "Both" choice, which is also the pressed one. Else the first harness is. */
+  both?: boolean;
+}
+const { options = ['claude', 'pi'], both = false } = Astro.props;
+---
+
+<div class="seg box harness" role="group" aria-label="Harness" data-js hidden>
+  {both && <button type="button" data-set-h="both" aria-pressed="true">Both</button>}
+  {
+    options.map((h, i) => (
+      <button type="button" data-set-h={h} aria-pressed={!both && i === 0 ? 'true' : 'false'}>
+        <span class={`k ${h}`}>
+          <Glyph h={h} />
+        </span>
+        {HARNESS[h]}
+      </button>
+    ))
+  }
+</div>

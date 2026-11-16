@@ -1,6 +1,7 @@
 ---
 import Shell from '../../components/catalog/Shell.astro';
 import Mark from '../../components/catalog/Mark.astro';
+import Toolbar from '../../components/catalog/Toolbar.astro';
 import Status from '../../components/catalog/Status.astro';
 import { catalogHref, components, differs, HARNESSES, TITLES, type Component, type Harness } from '../../lib/catalog.ts';
 import { github } from '../../lib/content.ts';
@@ -41,11 +42,13 @@ const chips = [
       the repo are in the sidebar.
     </p>
     <p class="sub legend">
-      <span><Mark h="pi" state="on" /> pi</span>
       <span><Mark h="claude" state="on" /> Claude Code</span>
+      <span><Mark h="pi" state="on" /> pi</span>
       <span>lit has it, dim not yet, struck not possible</span>
     </p>
   </header>
+
+  <Toolbar />
 
   <div class="table scroll" role="region" aria-label="Components by harness" tabindex="0">
     <table class="matrix">
@@ -102,7 +105,7 @@ const chips = [
                     </td>
                   );
                 })}
-                <td>{nd ? <a href={`${catalogHref(c)}?diff=1#compat`}>{nd} of {c.features.length}</a> : <span class="dim">none</span>}</td>
+                <td>{nd ? <a href={catalogHref(c)}>{nd} of {c.features.length}</a> : <span class="dim">none</span>}</td>
               </tr>
             );
           })

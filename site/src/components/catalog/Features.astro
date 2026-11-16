@@ -1,0 +1,52 @@
+---
+/**
+ * The features a story shows, as one line that opens into their compatibility: for each, what
+ * each harness does and the caveat. A `<details>`, so it needs no script.
+ */
+import Status from './Status.astro';
+import { differs, HARNESSES, TITLES, type Component, type Story } from '../../lib/catalog.ts';
+
+interface Props {
+  c: Component;
+  s: Story;
+}
+const { c, s } = Astro.props;
+const shown = c.features.filter((f) => HARNESSES.some((h) => f.story[h] === s.id));
+const nd = shown.filter(differs).length;
+---
+
+{
+  shown.length > 0 && (
+    <details class="feats">
+      <summary>
+        <span class="lbl">{shown.length === 1 ? 'Feature' : `${shown.length} features`}</span>
+        <span class="what">{shown.map((f) => f.label).join(' · ')}</span>
+        {nd > 0 && <span class="flag">{nd === 1 ? '1 differs' : `${nd} differ`}</span>}
+      </summary>
+      <table class="compat">
+        <thead>
+          <tr>
+            <th scope="col">Feature</th>
+            {HARNESSES.map((h) => <th scope="col" data-h={h}>{TITLES[h]}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {shown.map((f) => (
+            <tr class:list={{ differs: differs(f) }}>
+              <th scope="row">
+                {f.label}
+                {differs(f) && <span class="flag">differs</span>}
+              </th>
+              {HARNESSES.map((h) => (
+                <td data-h={h}>
+                  <Status status={f.support[h].status} />
+                  {f.support[h].note && <div class="note">{f.support[h].note}</div>}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
+  )
+}
