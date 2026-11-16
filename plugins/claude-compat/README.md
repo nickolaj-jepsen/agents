@@ -1,5 +1,5 @@
 ---
-tagline: "pi only. Claude Code habits in pi."
+tagline: "Claude Code habits in pi."
 featured: false
 requires: []
 order: 7

@@ -1,5 +1,5 @@
 ---
-tagline: "pi only. Appends language-server errors to `edit` and `write` results."
+tagline: "Appends language-server errors to `edit` and `write` results."
 featured: false
 requires:
   - "A JSON file of language servers, named by `PI_LSP_SERVERS`"

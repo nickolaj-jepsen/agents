@@ -1,5 +1,5 @@
 ---
-tagline: "pi only. Two changes to how the transcript reads."
+tagline: "Two changes to how the transcript reads."
 featured: false
 requires: []
 order: 6

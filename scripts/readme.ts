@@ -22,7 +22,7 @@ export function render(c: Content): string {
   out.push("## Install", "", c.install, "");
   out.push("## Plugins", "");
   for (const p of c.plugins.filter((p) => p.featured)) {
-    out.push(`### ${p.name}`, "", p.tagline, "");
+    out.push(`### [${p.name}](${SITE_URL}/plugins/${p.name}/)`, "", p.tagline, "");
     const v = p.media?.video;
     if (v) out.push(`[![${v.caption}](${v.poster})](${SITE_URL}/plugins/${p.name}/)`, "");
   }

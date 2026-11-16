@@ -35,32 +35,32 @@ Claude Code update can break one.
 
 ## Plugins
 
-### linear-issue
+### [linear-issue](https://nickolaj-jepsen.github.io/agents/plugins/linear-issue/)
 
 Turns a thought, or something Claude Code flagged, into a Linear issue you approve before it's filed.
 
-### git-menu
+### [git-menu](https://nickolaj-jepsen.github.io/agents/plugins/git-menu/)
 
 Open the checkout's repository, branch, commit or pull request, hand it to an editor or file manager, and review the diff in tuicr.
 
-### spellfix
+### [spellfix](https://nickolaj-jepsen.github.io/agents/plugins/spellfix/)
 
 Picks fixes for misspelled words in the prompt draft with hunspell and Haiku.
 
-### answer
+### [answer](https://nickolaj-jepsen.github.io/agents/plugins/answer/)
 
 A form for the round of questions or numbered pick list a turn ended on, which writes your reply into the prompt.
 
-### docfix
+### [docfix](https://nickolaj-jepsen.github.io/agents/plugins/docfix/)
 
 Agents file doc suggestions instead of editing docs outside their change; you review them and hand the ones you want back to the agent.
 
 More:
 
-- [transcript-tweaks](https://nickolaj-jepsen.github.io/agents/plugins/transcript-tweaks/): pi only. Two changes to how the transcript reads. (pi)
-- [claude-compat](https://nickolaj-jepsen.github.io/agents/plugins/claude-compat/): pi only. Claude Code habits in pi. (pi)
-- [exa](https://nickolaj-jepsen.github.io/agents/plugins/exa/): pi only. `exa_search` and `exa_fetch` tools over Exa. (pi)
-- [lsp](https://nickolaj-jepsen.github.io/agents/plugins/lsp/): pi only. Appends language-server errors to `edit` and `write` results. (pi)
+- [transcript-tweaks](https://nickolaj-jepsen.github.io/agents/plugins/transcript-tweaks/): Two changes to how the transcript reads. (pi)
+- [claude-compat](https://nickolaj-jepsen.github.io/agents/plugins/claude-compat/): Claude Code habits in pi. (pi)
+- [exa](https://nickolaj-jepsen.github.io/agents/plugins/exa/): `exa_search` and `exa_fetch` tools over Exa. (pi)
+- [lsp](https://nickolaj-jepsen.github.io/agents/plugins/lsp/): Appends language-server errors to `edit` and `write` results. (pi)
 
 ## Skills
 

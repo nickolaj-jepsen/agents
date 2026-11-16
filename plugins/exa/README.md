@@ -1,5 +1,5 @@
 ---
-tagline: "pi only. `exa_search` and `exa_fetch` tools over Exa."
+tagline: "`exa_search` and `exa_fetch` tools over Exa."
 featured: false
 requires:
   - "An Exa key in the file `PI_EXA_KEY_FILE` names"
