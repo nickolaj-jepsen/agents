@@ -39,21 +39,31 @@ Claude Code update can break one.
 
 Turns a thought, or something Claude Code flagged, into a Linear issue you approve before it's filed.
 
+[![/linear drafts an issue from a note: team, priority, status, labels and a description you can edit. Esc hides the draft to a chip, 8 brings it back.](site/media/linear-issue/demo.png)](https://nickolaj-jepsen.github.io/agents/plugins/linear-issue/)
+
 ### [git-menu](https://nickolaj-jepsen.github.io/agents/plugins/git-menu/)
 
 Open the checkout's repository, branch, commit or pull request, hand it to an editor or file manager, and review the diff in tuicr.
+
+[![/git opens the repository, branch or a pull request on the forge; /open hands the checkout, or one of its notes, to an editor.](site/media/git-menu/demo.png)](https://nickolaj-jepsen.github.io/agents/plugins/git-menu/)
 
 ### [spellfix](https://nickolaj-jepsen.github.io/agents/plugins/spellfix/)
 
 Picks fixes for misspelled words in the prompt draft with hunspell and Haiku.
 
+[![Typos in the draft are counted above the prompt. The picker offers hunspell's fix or Haiku's, one word at a time or all at once.](site/media/spellfix/demo.png)](https://nickolaj-jepsen.github.io/agents/plugins/spellfix/)
+
 ### [answer](https://nickolaj-jepsen.github.io/agents/plugins/answer/)
 
 A form for the round of questions or numbered pick list a turn ended on, which writes your reply into the prompt.
 
+[![A turn ends on three questions. The form takes one at a time, with a number, a click or the recommendation, and writes your reply into the prompt.](site/media/answer/demo.png)](https://nickolaj-jepsen.github.io/agents/plugins/answer/)
+
 ### [docfix](https://nickolaj-jepsen.github.io/agents/plugins/docfix/)
 
 Agents file doc suggestions instead of editing docs outside their change; you review them and hand the ones you want back to the agent.
+
+[![The agent files a doc suggestion instead of editing a doc outside its change; /docfix lists them, and Apply hands the marked ones back.](site/media/docfix/demo.png)](https://nickolaj-jepsen.github.io/agents/plugins/docfix/)
 
 More:
 
