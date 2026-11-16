@@ -26,6 +26,8 @@ export type Plugin = {
   featured: boolean;
   requires: string[];
   order: number;
+  /** Unfinished: listed after every other plugin, flagged on its page. */
+  status?: "in-progress";
   harness: { claude: boolean; pi: boolean };
   install: { claude?: string; pi?: string };
   body: string;
@@ -136,10 +138,11 @@ function loadPlugins(root: string): Plugin[] {
       if (
         !Array.isArray(data.requires ?? []) ||
         typeof data.featured !== "boolean" ||
-        !Number.isInteger(data.order)
+        !Number.isInteger(data.order) ||
+        (data.status !== undefined && data.status !== "in-progress")
       )
         throw new Error(
-          `${file}: frontmatter needs \`featured\` (boolean), \`requires\` (list) and \`order\` (integer)`,
+          `${file}: frontmatter needs \`featured\` (boolean), \`requires\` (list) and \`order\` (integer); \`status\` may only be \`in-progress\``,
         );
       const install: Plugin["install"] = {};
       if (harness.claude && listed.has(name))
@@ -151,6 +154,7 @@ function loadPlugins(root: string): Plugin[] {
         featured: data.featured,
         requires: (data.requires ?? []).map(String),
         order: data.order,
+        ...(data.status === "in-progress" ? { status: "in-progress" as const } : {}),
         harness,
         install,
         body: body.trimEnd(),
@@ -158,7 +162,12 @@ function loadPlugins(root: string): Plugin[] {
         media: readMedia(root, name),
       };
     })
-    .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
+    .sort(
+      (a, b) =>
+        Number(!!a.status) - Number(!!b.status) ||
+        a.order - b.order ||
+        a.name.localeCompare(b.name),
+    );
 }
 
 function listFiles(dir: string, base = dir): string[] {

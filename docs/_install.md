@@ -2,9 +2,7 @@
 claude plugin marketplace add nickolaj-jepsen/agents
 claude plugin install linear-issue@nickolaj-jepsen
 claude plugin install answer@nickolaj-jepsen
-claude plugin install git-menu@nickolaj-jepsen
 claude plugin install spellfix@nickolaj-jepsen
-claude plugin install docfix@nickolaj-jepsen
 ```
 
 The skills, all of them or one by its subpath, with [`npx skills`](https://github.com/vercel-labs/skills)

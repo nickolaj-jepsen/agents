@@ -8,8 +8,9 @@ import { renderInline, renderMarkdown } from '../lib/markdown.ts';
 const c = content();
 const intro = await renderInline(c.intro, 'docs/_intro.md');
 const install = await renderMarkdown(c.install, 'docs/_install.md');
-const featured = c.plugins.filter((p) => p.featured);
-const others = c.plugins.filter((p) => !p.featured);
+const featured = c.plugins.filter((p) => p.featured && !p.status);
+const others = c.plugins.filter((p) => !p.featured && !p.status);
+const unfinished = c.plugins.filter((p) => p.status === 'in-progress');
 const tagline = (md: string) => renderInline(md, 'README.md');
 const taglines = new Map(await Promise.all(c.plugins.map(async (p) => [p.name, await tagline(p.tagline)] as const)));
 const summaries = new Map(await Promise.all(c.skills.map(async (s) => [s.name, await tagline(s.summary)] as const)));
@@ -77,21 +78,28 @@ const lookOf = (p: (typeof featured)[number]) => {
       }
     </div>
     {
-      others.length > 0 && (
-        <>
-          <h3 class="sc more-head">More plugins</h3>
-          <ul class="rows">
-            {others.map((p) => (
-              <li>
-                <a href={pluginHref(p.name)}>
-                  <span class="name">{p.name}</span>
-                  <span class="what" set:html={taglines.get(p.name)} />
-                  <Marks harnesses={harnesses(p)} short />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </>
+      [
+        { title: 'More plugins', list: others },
+        { title: 'In progress', blurb: 'Unfinished, and not ready for anyone else to use.', list: unfinished },
+      ].map(
+        (group) =>
+          group.list.length > 0 && (
+            <>
+              <h3 class="sc more-head">{group.title}</h3>
+              {group.blurb && <p class="sub">{group.blurb}</p>}
+              <ul class="rows">
+                {group.list.map((p) => (
+                  <li>
+                    <a href={pluginHref(p.name)}>
+                      <span class="name">{p.name}</span>
+                      <span class="what" set:html={taglines.get(p.name)} />
+                      <Marks harnesses={harnesses(p)} short />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ),
       )
     }
   </section>

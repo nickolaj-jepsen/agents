@@ -44,7 +44,8 @@ README.md is generated (`just readme`; `nix flake check` fails while it is stale
 `scripts/content.ts` loads:
 
 - `plugins/<name>/README.md`: the plugin's page. Frontmatter `tagline` (one sentence), `featured`,
-  `requires` (a list of markdown strings) and `order`; the harnesses and install lines come from the
+  `requires` (a list of markdown strings) and `order`, and optionally `status: in-progress`, which lists
+  it after every other plugin and flags its page; the harnesses and install lines come from the
   folder, as in Layout.
 - `skills/<name>/SKILL.md`: `metadata.summary` (one line), `metadata.category` (`plan-build-ship`,
   `understand-decide`, `clean-up`, `harnesses`, `utilities`, `modified-public`) and, optionally,

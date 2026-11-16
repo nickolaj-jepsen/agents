@@ -1,6 +1,7 @@
 ---
 tagline: "Agents file doc suggestions instead of editing docs outside their change; you review them and hand the ones you want back to the agent."
 featured: true
+status: in-progress
 requires:
   - "A git repository with a note store (`.agents/store`, `agent-notes root --ensure`)"
 order: 5

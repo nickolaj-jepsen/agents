@@ -15,9 +15,7 @@ Documentation, with a page per plugin and skill: **https://nickolaj-jepsen.githu
 claude plugin marketplace add nickolaj-jepsen/agents
 claude plugin install linear-issue@nickolaj-jepsen
 claude plugin install answer@nickolaj-jepsen
-claude plugin install git-menu@nickolaj-jepsen
 claude plugin install spellfix@nickolaj-jepsen
-claude plugin install docfix@nickolaj-jepsen
 ```
 
 The skills, all of them or one by its subpath, with [`npx skills`](https://github.com/vercel-labs/skills)
@@ -41,12 +39,6 @@ Turns a thought, or something Claude Code flagged, into a Linear issue you appro
 
 [![/linear drafts an issue from a note: team, priority, status, labels and a description you can edit. Esc hides the draft to a chip, 8 brings it back.](site/media/linear-issue/demo.png)](https://nickolaj-jepsen.github.io/agents/plugins/linear-issue/)
 
-### [git-menu](https://nickolaj-jepsen.github.io/agents/plugins/git-menu/)
-
-Open the checkout's repository, branch, commit or pull request, hand it to an editor or file manager, and review the diff in tuicr.
-
-[![/git opens the repository, branch or a pull request on the forge; /open hands the checkout, or one of its notes, to an editor.](site/media/git-menu/demo.png)](https://nickolaj-jepsen.github.io/agents/plugins/git-menu/)
-
 ### [spellfix](https://nickolaj-jepsen.github.io/agents/plugins/spellfix/)
 
 Picks fixes for misspelled words in the prompt draft with hunspell and Haiku.
@@ -59,18 +51,17 @@ A form for the round of questions or numbered pick list a turn ended on, which w
 
 [![A turn ends on three questions. The form takes one at a time, with a number, a click or the recommendation, and writes your reply into the prompt.](site/media/answer/demo.png)](https://nickolaj-jepsen.github.io/agents/plugins/answer/)
 
-### [docfix](https://nickolaj-jepsen.github.io/agents/plugins/docfix/)
-
-Agents file doc suggestions instead of editing docs outside their change; you review them and hand the ones you want back to the agent.
-
-[![The agent files a doc suggestion instead of editing a doc outside its change; /docfix lists them, and Apply hands the marked ones back.](site/media/docfix/demo.png)](https://nickolaj-jepsen.github.io/agents/plugins/docfix/)
-
 More:
 
 - [transcript-tweaks](https://nickolaj-jepsen.github.io/agents/plugins/transcript-tweaks/): Two changes to how the transcript reads. (pi)
 - [claude-compat](https://nickolaj-jepsen.github.io/agents/plugins/claude-compat/): Claude Code habits in pi. (pi)
 - [exa](https://nickolaj-jepsen.github.io/agents/plugins/exa/): `exa_search` and `exa_fetch` tools over Exa. (pi)
 - [lsp](https://nickolaj-jepsen.github.io/agents/plugins/lsp/): Appends language-server errors to `edit` and `write` results. (pi)
+
+In progress, and not ready for anyone else to use:
+
+- [git-menu](https://nickolaj-jepsen.github.io/agents/plugins/git-menu/): Open the checkout's repository, branch, commit or pull request, hand it to an editor or file manager, and review the diff in tuicr. (Claude Code)
+- [docfix](https://nickolaj-jepsen.github.io/agents/plugins/docfix/): Agents file doc suggestions instead of editing docs outside their change; you review them and hand the ones you want back to the agent. (Claude Code / pi)
 
 ## Skills
 

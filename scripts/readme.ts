@@ -21,18 +21,19 @@ export function render(c: Content): string {
   out.push(`Documentation, with a page per plugin and skill: **${SITE_URL}/**`, "");
   out.push("## Install", "", c.install, "");
   out.push("## Plugins", "");
-  for (const p of c.plugins.filter((p) => p.featured)) {
+  const ready = c.plugins.filter((p) => !p.status);
+  for (const p of ready.filter((p) => p.featured)) {
     out.push(`### [${p.name}](${SITE_URL}/plugins/${p.name}/)`, "", p.tagline, "");
     const v = p.media?.video;
     if (v) out.push(`[![${v.caption}](${v.poster})](${SITE_URL}/plugins/${p.name}/)`, "");
   }
-  const others = c.plugins.filter((p) => !p.featured);
-  if (others.length) {
-    out.push("More:", "");
-    for (const p of others)
-      out.push(`- [${p.name}](${SITE_URL}/plugins/${p.name}/): ${p.tagline} (${harnesses(p)})`);
-    out.push("");
-  }
+  const line = (p: Plugin) =>
+    `- [${p.name}](${SITE_URL}/plugins/${p.name}/): ${p.tagline} (${harnesses(p)})`;
+  const others = ready.filter((p) => !p.featured);
+  if (others.length) out.push("More:", "", ...others.map(line), "");
+  const unfinished = c.plugins.filter((p) => p.status === "in-progress");
+  if (unfinished.length)
+    out.push("In progress, and not ready for anyone else to use:", "", ...unfinished.map(line), "");
   out.push("## Skills", "");
   for (const cat of c.categories) {
     out.push(`### ${cat.title}`, "");

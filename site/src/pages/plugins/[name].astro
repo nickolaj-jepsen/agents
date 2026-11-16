@@ -33,8 +33,9 @@ const hasMedia = !!(p.media?.video || p.media?.stills.length);
   <div class:list={["spread", { "with-media": hasMedia }]}>
   <header class="lede">
     <p class="crumb"><a href={href('#plugins')}>Plugins</a></p>
-    <h1 class="mono">{p.name}</h1>
+    <h1 class="mono">{p.name}{p.status === 'in-progress' && <span class="flag title-flag">in progress</span>}</h1>
     <p class="lead" set:html={tagline} />
+    {p.status === 'in-progress' && <p class="sub">Unfinished, and not ready for anyone else to use.</p>}
   </header>
 
   <dl class="facts rail">

@@ -1,6 +1,7 @@
 ---
 tagline: "Open the checkout's repository, branch, commit or pull request, hand it to an editor or file manager, and review the diff in tuicr."
 featured: true
+status: in-progress
 requires:
   - "`git`"
   - "`gh`, for the pull request"
