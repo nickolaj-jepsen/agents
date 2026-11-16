@@ -1,0 +1,74 @@
+import type { Turn } from "../lib/harness.ts";
+import type { Step } from "../lib/scenario.ts";
+import { poster, site, slow } from "../lib/site.ts";
+
+const DRAFT = "Can you teh quick brwon fox jump form the fence and fix the recieve handler";
+
+/**
+ * Haiku's one answer for the draft, whichever request it comes with: hunspell flags `teh`, `brwon`
+ * and `recieve`; `form` for `from` is a real word only the model can catch.
+ */
+const turns: Turn[] = [
+  // An earlier exchange, so the screen is a conversation and not an empty page.
+  {
+    text: "The retry logic is in `src/sync.ts`, in `backoff()`: it doubles the delay after each `429` and gives up after five tries.",
+  },
+  {
+    match: "You check spelling",
+    text: [
+      '<word text="teh" verdict="fix">the</word>',
+      '<word text="brwon" verdict="fix">brown</word>',
+      '<word text="recieve" verdict="fix">receive</word>',
+      '<extra word="form" nth="1">from</extra>',
+    ].join("\n"),
+  },
+];
+
+const start = { hermetic: true, turns };
+const EXCHANGE: Step[] = [
+  { type: "Where does the sync worker retry?" },
+  { press: "Enter" },
+  { wait: "gives up after five tries", timeout: 20_000 },
+];
+/** The picker's keys, drawn once the batch has landed. */
+const PICKER = { wait: /a: fix all/ } as const;
+
+export default site({
+  plugin: "spellfix",
+  demo: {
+    caption:
+      "Typos in the draft are counted above the prompt. The picker offers hunspell's fix or Haiku's, one word at a time or all at once.",
+    project: "app",
+    start,
+    prepare: EXCHANGE,
+    steps: [
+      { sleep: 400 },
+      slow(DRAFT, 25),
+      { sleep: 1800 },
+      { press: "Ctrl+q" },
+      PICKER,
+      { sleep: 3200 },
+      poster,
+      { press: "1" },
+      { sleep: 2600 },
+      { press: "a" },
+      { sleep: 5000 },
+    ],
+  },
+  stills: {
+    counted: {
+      caption:
+        "A count of the misspelled words sits above the prompt as you type; hunspell finds them.",
+      project: "app",
+      start,
+      steps: [...EXCHANGE, slow(DRAFT, 5), { wait: /\d misspelled/ }],
+    },
+    picker: {
+      caption:
+        "The picker shows the word in place with hunspell's suggestions, and Haiku's fix when it has one.",
+      project: "app",
+      start,
+      steps: [...EXCHANGE, slow(DRAFT, 5), { wait: /\d misspelled/ }, { press: "Ctrl+q" }, PICKER],
+    },
+  },
+});
