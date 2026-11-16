@@ -3,6 +3,9 @@ name: run-handoff
 description: Build a plan written by /handoff in one long-running session — keep PROGRESS.md, dispatch every unblocked item to a background subagent in its own worktree, re-run its acceptance yourself before fast-forwarding an integration branch, review at gates and over the whole branch. Checks in with the user at every gate by default; --auto runs unattended until done or blocked. Use when the user asks to run, build, execute or resume a handoff.
 disable-model-invocation: true
 argument-hint: "[handoff-dir] [--auto]"
+metadata:
+  summary: "builds a handoff with one subagent and worktree per item, re-verifying each."
+  category: plan-build-ship
 ---
 
 # run-handoff

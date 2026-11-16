@@ -4,6 +4,8 @@ description: Answer a question or complaint about how your agents have been work
 disable-model-invocation: true
 argument-hint: "<question, complaint or target>"
 metadata:
+  summary: "answers a question about how your agents have been working from past sessions, and improves what's behind it."
+  category: utilities
   status: in-progress
 ---
 

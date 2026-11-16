@@ -3,6 +3,9 @@ name: compare
 description: Research a choice between tools, libraries, services or products and say which to pick, whether the user's current one still holds, or whether to build. Takes a named field, an open category or a question like "has this space moved". --quick answers inline from a few searches.
 disable-model-invocation: true
 argument-hint: "<candidates, category or question> [--quick]"
+metadata:
+  summary: "researches a choice or a whole category and says whether to pick, keep or build, with sourced evidence."
+  category: understand-decide
 ---
 
 The user is choosing between things, or wondering whether a better one exists, and wants an answer they can act on, backed by evidence they can check. The job is to find out what the options really are, weigh them against what the user needs, and say which to take. This skill changes no code and writes nothing outside `/tmp`.

@@ -4,6 +4,9 @@ description: Turn a finished brainstorm or research thread into a handoff for a 
 disable-model-invocation: true
 argument-hint: "[scope] [--quick]"
 arguments: scope
+metadata:
+  summary: "writes a finished plan up as a self-contained handoff for another agent."
+  category: plan-build-ship
 ---
 
 # handoff

@@ -4,6 +4,8 @@ description: Find an approach for a goal that has none yet; stops once you pick 
 disable-model-invocation: true
 argument-hint: "[goal]"
 metadata:
+  summary: "finds an approach for a goal that has none yet."
+  category: understand-decide
   status: in-progress
 ---
 

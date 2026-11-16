@@ -4,6 +4,8 @@ description: Improve a skill, tool, doc, prompt or harness setting, using one Cl
 disable-model-invocation: true
 argument-hint: "[session-id] [what bothered you]"
 metadata:
+  summary: "improves a skill, tool or doc from what bothered you in one agent session."
+  category: utilities
   status: in-progress
 ---
 

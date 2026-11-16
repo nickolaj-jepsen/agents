@@ -4,6 +4,9 @@ description: Find and remove change-amplifying tests, docs and structure — any
 disable-model-invocation: true
 argument-hint: "[diff|touched|branch|repo|<path>]"
 arguments: scope
+metadata:
+  summary: "removes tests, docs and structure that must change whenever something else does."
+  category: clean-up
 ---
 
 One question decides every finding: **when something else in the repo changes, does this have to change too, without catching a bug or telling a reader anything they couldn't get from the source of truth?** If yes, it is churn.

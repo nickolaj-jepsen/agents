@@ -3,6 +3,9 @@ name: land
 description: Take finished work to landed commits — shape the dirty tree into a few commits, run the repo's checks, stop at a gate for review, then land with `wt land`, locally or as a PR (draft, ready for review, or merged on green). An ending named in the request (`local`, `pr`, `pr on green`, …) is used without asking. Works from a worktree, from a branch checked out in the primary checkout, and from the primary checkout's default branch, where landing means committing onto it. Use when the user asks to land, ship, finish, merge, or open a PR.
 disable-model-invocation: true
 argument-hint: "[local|pr|draft|pr on green] [worktree-or-branch]"
+metadata:
+  summary: "takes finished work to landed commits or a PR, after checks and a review gate."
+  category: plan-build-ship
 ---
 
 # land

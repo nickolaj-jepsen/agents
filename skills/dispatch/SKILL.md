@@ -4,6 +4,9 @@ description: Write a lightweight requirements handoff for a small, settled task 
 disable-model-invocation: true
 argument-hint: "[scope]"
 arguments: scope
+metadata:
+  summary: "writes a small task's requirements, direction and references with minimal recon, not an implementation plan."
+  category: plan-build-ship
 ---
 
 # dispatch

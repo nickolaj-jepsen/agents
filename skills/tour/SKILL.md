@@ -4,6 +4,8 @@ description: Guide a human reviewer through a pull request or a stack of them, o
 disable-model-invocation: true
 argument-hint: "[<pr>…] [--all]"
 metadata:
+  summary: "walks you through a PR or a stack of them, one PR at a time."
+  category: plan-build-ship
   status: in-progress
 ---
 

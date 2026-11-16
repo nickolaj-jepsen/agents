@@ -1,6 +1,10 @@
 ---
 name: grilling
 description: Interview the user relentlessly about a plan, design or decision until reaching shared understanding, asking the decision tree in rounds. Use when the user wants a plan stress-tested or asks to be grilled, or when another skill says to grill.
+metadata:
+  summary: "interviews you about a plan in rounds; other skills call it."
+  category: modified-public
+  credit: "Reworked from the latest version of [Matt Pocock's `grill-me`](https://github.com/mattpocock/skills)."
 ---
 
 Interview the user relentlessly until you reach a shared understanding.

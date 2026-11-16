@@ -4,6 +4,9 @@ description: Prune redundant, over-long or coupled comments, docstrings, and pro
 disable-model-invocation: true
 argument-hint: "[diff|touched|branch|repo|<path>]"
 arguments: scope
+metadata:
+  summary: "cuts comments and docstrings down to the load-bearing why."
+  category: clean-up
 ---
 
 Cut comments, docstrings and docs down to what a reader can't cheaply recover from the code.

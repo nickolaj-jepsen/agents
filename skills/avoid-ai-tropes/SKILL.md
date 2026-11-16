@@ -1,9 +1,14 @@
 ---
 name: avoid-ai-tropes
-description: Review human-facing prose (docs, READMEs, PR and commit descriptions, comments, release notes, a draft reply) against a catalog of recognizable AI writing tells, such as "delve", "it's not X -- it's Y", em-dash addiction, bold-first bullets and signposted conclusions, and rewrite it so it reads like a human wrote it. Optional target arg: diff (default), branch, or a path.
+description: >-
+  Review human-facing prose (docs, READMEs, PR and commit descriptions, comments, release notes, a draft reply) against a catalog of recognizable AI writing tells, such as "delve", "it's not X -- it's Y", em-dash addiction, bold-first bullets and signposted conclusions, and rewrite it so it reads like a human wrote it. Optional target arg: diff (default), branch, or a path.
 disable-model-invocation: true
 argument-hint: "[diff|branch|<path>]"
 arguments: target
+metadata:
+  summary: "finds AI writing tells in prose and rewrites them."
+  category: modified-public
+  credit: "Its catalog comes from [tropes.fyi](https://tropes.fyi) by [ossama.is](https://ossama.is)."
 ---
 
 # Avoid AI tropes

@@ -3,6 +3,9 @@ name: onboard
 description: Learn how an unfamiliar project works, how to run it, what its users do with it, its architecture and why it's built that way. Runs it in a throwaway clone, traces real actions, and saves a checked overview, then offers dives into subsystems. --quick answers from static analysis in chat.
 disable-model-invocation: true
 argument-hint: "[subsystem] [--quick]"
+metadata:
+  summary: "teaches you an unfamiliar project by running it and tracing one real action."
+  category: understand-decide
 ---
 
 This skill teaches the user a project they'll keep working in. It explains; it doesn't review or improve. The arguments are an optional subsystem (a path or a name) and `--quick`, which work independently.

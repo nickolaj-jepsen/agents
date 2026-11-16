@@ -3,6 +3,9 @@ name: pricerunner
 description: Search and compare Danish prices on PriceRunner.dk — product search with facet filters (brand, price range, specs), category browsing and sorting, shop offers incl. shipping, price history ("is this a good price?"), reviews, spec comparison, similar products and current price drops. Use when the user asks what something costs in Denmark, where to buy it cheapest, whether a price is good, to find/compare products by specs, or mentions PriceRunner.
 disable-model-invocation: true
 argument-hint: "<product, category or question>"
+metadata:
+  summary: "searches and compares Danish prices on PriceRunner.dk."
+  category: utilities
 ---
 
 # PriceRunner.dk

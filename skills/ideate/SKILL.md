@@ -4,6 +4,8 @@ description: Find what is worth doing with a repo, one area of it or a tool, and
 disable-model-invocation: true
 argument-hint: "<area, question or problem> [--big|--quick] [--no-web]"
 metadata:
+  summary: "finds what is worth doing with a repo or one area of it, as ranked ideas with evidence, approaches or a sourced answer."
+  category: understand-decide
   status: in-progress
 ---
 
