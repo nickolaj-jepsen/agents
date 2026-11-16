@@ -1,0 +1,14 @@
+---
+/** A shell command to copy: a prompt, the command scrolling inside its frame, a copy button. */
+interface Props {
+  command: string;
+  /** What it installs, for the button's name. */
+  what?: string;
+}
+const { command, what } = Astro.props;
+---
+
+<div class="cmd">
+  <pre tabindex="0" aria-label="command"><code>{command}</code></pre>
+  <button type="button" class="copy" data-copy={command} aria-label={what ? `Copy: ${what}` : 'Copy the command'} hidden>copy</button>
+</div>

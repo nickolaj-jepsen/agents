@@ -7,3 +7,6 @@ kit/catalog/crops/
 result
 result-*
 .direnv/
+# The site's build output and the types Astro writes.
+site/dist/
+site/.astro/

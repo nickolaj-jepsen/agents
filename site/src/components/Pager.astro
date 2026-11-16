@@ -1,0 +1,37 @@
+---
+/** Previous and next in a list of pages. */
+interface Link {
+  href: string;
+  name: string;
+}
+interface Props {
+  /** What the list is, for the nav's name. */
+  label: string;
+  prev?: Link;
+  next?: Link;
+}
+const { label, prev, next } = Astro.props;
+---
+
+{
+  (prev || next) && (
+    <nav class="pager" aria-label={`${label}, previous and next`}>
+      {prev && (
+        <div class="prev">
+          <span class="dir">Previous</span>
+          <a href={prev.href} rel="prev">
+            {prev.name}
+          </a>
+        </div>
+      )}
+      {next && (
+        <div class="next">
+          <span class="dir">Next</span>
+          <a href={next.href} rel="next">
+            {next.name}
+          </a>
+        </div>
+      )}
+    </nav>
+  )
+}

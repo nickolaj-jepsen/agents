@@ -67,6 +67,24 @@ e2e *ARGS:
 readme:
     npm run readme
 
+[doc('Serve the site (site/) with live reload at http://localhost:4321/agents/')]
+[group('site')]
+[script]
+site:
+    [ -d node_modules ] || npm ci
+    cd site
+    [ -d node_modules ] || npm ci
+    npm run dev
+
+[doc('Build the site into site/dist, as the Pages workflow does')]
+[group('site')]
+[script]
+site-build:
+    [ -d node_modules ] || npm ci
+    cd site
+    [ -d node_modules ] || npm ci
+    npm run build
+
 # Re-records a demo GIF in a live Claude Code session (README.md, Demos).
 [group('dev')]
 demo name:

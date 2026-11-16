@@ -1,0 +1,63 @@
+---
+/** Page shell: masthead, main, the client script. */
+import { Font } from 'astro:assets';
+import { href, REPO_URL } from '../lib/content.ts';
+import '../styles/site.css';
+
+interface Props {
+  /** The document title is "<title> · agents", or "agents" when omitted. */
+  title?: string;
+  description: string;
+  /** Nav entry marked current. */
+  nav?: 'plugins' | 'skills' | 'dev';
+  noindex?: boolean;
+  /** Class on <main>. */
+  mainClass?: string;
+}
+const { title, description, nav, noindex = false, mainClass } = Astro.props;
+const docTitle = title ? `${title} · agents` : 'agents: plugins and skills for Claude Code and pi';
+const canonical = noindex ? undefined : new URL(Astro.url.pathname, Astro.site).href;
+const here = (k: Props['nav']) => (k === nav ? 'page' : undefined);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1c1b1a" />
+    <link rel="icon" type="image/svg+xml" href={href('favicon.svg')} />
+    <title>{docTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:site_name" content="agents" />
+    <meta property="og:title" content={title ?? 'agents'} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <Font cssVariable="--serif" preload={[{ style: 'normal' }]} />
+    <Font cssVariable="--mono" preload={[{ weight: '700' }]} />
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="page">
+      <header class="masthead">
+        <a class="brand" href={href()} aria-label="agents, home"><span class="bar" aria-hidden="true"></span>agents</a>
+        <nav class="nav" aria-label="Site">
+          <a href={href('#plugins')} aria-current={here('plugins')}>plugins</a>
+          <a href={href('#skills')} aria-current={here('skills')}>skills</a>
+          <a href={href('dev/')} aria-current={here('dev')}>dev</a>
+          <a href={REPO_URL}>github</a>
+        </nav>
+      </header>
+      <main id="main" class={mainClass} tabindex="-1">
+        <slot />
+      </main>
+    </div>
+    <script>
+      import '../client/site.ts';
+    </script>
+  </body>
+</html>

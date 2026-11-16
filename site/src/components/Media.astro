@@ -1,0 +1,36 @@
+---
+/** A plugin's demo video and stills, each with its caption. Nothing when the plugin has none. */
+import Plate from './Plate.astro';
+import Marks from './Marks.astro';
+import { mediaUrl, type Plugin } from '../lib/content.ts';
+
+interface Props {
+  plugin: Plugin;
+}
+const { plugin } = Astro.props;
+const media = plugin.media;
+const video = media?.video;
+const stills = media?.stills ?? [];
+---
+
+{
+  media && (video || stills.length > 0) && (
+    <section class="media" aria-label={`${plugin.name} in use`}>
+      {video && (
+        <Plate src={mediaUrl(video.mp4)} poster={mediaUrl(video.poster)} width={video.width} height={video.height} alt={video.caption}>
+          {video.caption}
+        </Plate>
+      )}
+      {stills.length > 0 && (
+        <div class="stills">
+          {stills.map((s, i) => (
+            <Plate src={mediaUrl(s.png)} width={s.width} height={s.height} alt={s.caption} eager={!video && i === 0}>
+              <Marks harnesses={[s.harness]} short />
+              {s.caption}
+            </Plate>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}

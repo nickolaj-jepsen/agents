@@ -1,0 +1,35 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import Pager from '../../components/Pager.astro';
+import { content, docHref, github, href, type Doc } from '../../lib/content.ts';
+import { renderMarkdown } from '../../lib/markdown.ts';
+
+export const getStaticPaths = (() =>
+  content().docs.map((doc, i, all) => ({
+    params: { doc: doc.slug },
+    props: { doc, prev: all[i - 1], next: all[i + 1] },
+  }))) satisfies GetStaticPaths;
+
+interface Props {
+  doc: Doc;
+  prev?: Doc;
+  next?: Doc;
+}
+const { doc, prev, next } = Astro.props;
+const body = await renderMarkdown(doc.body, doc.path);
+---
+
+<Base title={doc.title} description={`${doc.title}: developer notes for the agents repo.`} nav="dev">
+  <header class="lede">
+    <p class="crumb"><a href={href('dev/')}>Developers</a></p>
+    <h1>{doc.title}</h1>
+    <p class="sub doc-src"><a class="lnk" href={github(doc.path)}><code>{doc.path}</code></a></p>
+  </header>
+  <div class="prose" set:html={body} />
+  <Pager
+    label="Developer docs"
+    prev={prev && { href: docHref(prev.slug), name: prev.title }}
+    next={next && { href: docHref(next.slug), name: next.title }}
+  />
+</Base>

@@ -1,0 +1,109 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import Command from '../../components/Command.astro';
+import Pager from '../../components/Pager.astro';
+import { content, github, href, skillHref, type Skill } from '../../lib/content.ts';
+import { renderInline, renderMarkdown } from '../../lib/markdown.ts';
+
+export const getStaticPaths = (() => {
+  const c = content();
+  // The order of the home page: by category, in-progress last.
+  const order = c.categories.flatMap((cat) => cat.skills.map((skill) => ({ skill, cat })));
+  return order.map(({ skill, cat }, i) => ({
+    params: { name: skill.name },
+    props: {
+      skill,
+      category: c.categories.find((x) => x.slug === skill.category) ?? cat,
+      prev: order[i - 1]?.skill,
+      next: order[i + 1]?.skill,
+    },
+  }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  skill: Skill;
+  category: { slug: string; title: string };
+  prev?: Skill;
+  next?: Skill;
+}
+const { skill: s, category, prev, next } = Astro.props;
+const file = `${s.path}/SKILL.md`;
+const summary = s.summary.charAt(0).toUpperCase() + s.summary.slice(1);
+const lead = await renderInline(summary, file);
+const credit = s.credit && (await renderInline(s.credit, file));
+const description = await renderInline(s.description, file);
+// The page's own title stands for the body's first heading when that only names the skill.
+const body = await renderMarkdown(s.body.replace(new RegExp(`^# ${s.name}\\s*\\n+`), ''), file);
+const usage = `/${s.name}${s.argumentHint ? ` ${s.argumentHint}` : ''}`;
+---
+
+<Base title={s.name} description={summary.replace(/`/g, '')} nav="skills">
+  <div class="spread">
+  <header class="lede">
+    <p class="crumb">
+      <a href={href('#skills')}>Skills</a> / <a href={href(`#${category.slug}`)}>{category.title}</a>
+    </p>
+    <h1 class="mono">{s.name}{s.status === 'in-progress' && <span class="flag title-flag">in progress</span>}</h1>
+    <p class="lead" set:html={lead} />
+    {
+      s.status === 'in-progress' && (
+        <p class="sub">Unfinished, and not ready for anyone else to use.</p>
+      )
+    }
+  </header>
+
+  <dl class="facts rail">
+    <dt>Use</dt>
+    <dd><code>{usage}</code></dd>
+    <dt>Install</dt>
+    <dd>
+      {s.install.map((cmd) => <Command command={cmd} what={s.name} />)}
+      <p class="sub">Or every skill at once: <code>npx skills add nickolaj-jepsen/agents</code></p>
+    </dd>
+    {
+      credit && (
+        <>
+          <dt>Credit</dt>
+          <dd set:html={credit} />
+        </>
+      )
+    }
+    <dt>Files</dt>
+    <dd>
+      <ul class="plain files">
+        {
+          ['SKILL.md', ...s.files].map((f) => (
+            <li>
+              <a href={github(`${s.path}/${f}`, false)}>
+                <code>{f}</code>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="sub"><a href={github(`${s.path}/`)}><code>{s.path}/</code></a> on GitHub</p>
+    </dd>
+  </dl>
+
+  <section class="agent-reads" aria-labelledby="reads-h">
+    <header>
+      <h2 id="reads-h">What the agent reads</h2>
+      <p>The skill as the agent loads it: the description decides when, the rest is the instructions.</p>
+    </header>
+    <div class="sheet">
+      <p class="description">
+        <span class="sc">Description</span>
+        <Fragment set:html={description} />
+      </p>
+      <div class="prose" set:html={body} />
+    </div>
+  </section>
+  </div>
+
+  <Pager
+    label="Skills"
+    prev={prev && { href: skillHref(prev.name), name: prev.name }}
+    next={next && { href: skillHref(next.name), name: next.name }}
+  />
+</Base>

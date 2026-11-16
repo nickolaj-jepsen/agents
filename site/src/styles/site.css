@@ -1,0 +1,984 @@
+/* The site's one theme: fireproof (DESIGN.md). Text is fg, fg-alt or muted, each 4.5:1 or better on bg. */
+:root {
+  color-scheme: dark;
+  --bg: #1c1b1a;
+  --bg-alt: #282726;
+  --ui: #343331;
+  --ui-alt: #403e3c;
+  --ui-hi: #575653;
+  --fg: #dad8ce;
+  --fg-alt: #b7b5ac;
+  --muted: #878580;
+  --white: #f2f0e5;
+  --accent: #cf6a4c;
+  --accent-hi: #e08a6e;
+  --green: #879a39;
+  --yellow: #d0a215;
+  --red: #db5f53;
+  --purple: #8b7ec8;
+
+  --text: var(--fg);
+  --text-2: var(--fg-alt);
+  --text-3: var(--muted);
+  --link-line: #676764; /* ui-hi nudged to 3:1 on bg */
+  --focus: var(--accent);
+  --rule: var(--ui-alt);
+  --rule-strong: var(--ui-hi);
+  --plate-edge: var(--ui-alt);
+  --claude: var(--accent);
+  --pi: var(--purple);
+
+  /* Rhythm: every line box and vertical space is a multiple of --u. */
+  --u: 0.5rem;
+  --l: calc(4 * var(--u));
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --measure: 42rem;
+  --wide: 76rem;
+
+  --fs-ui: 1rem; /* 16 on 3u: nav, captions, labels, lists */
+  --fs-prose: 1.1875rem; /* 19 on 4u */
+  --fs-lead: 1.5rem; /* 24 on 4u */
+  --fs-h2: 1.5rem;
+  --fs-h1: 2.5rem; /* 40 on 6u */
+  --fs-code: 0.9375rem; /* 15 on 3u */
+  /* Hack's x-height is 0.545em and Source Serif 4's 0.475em: inline mono at 0.87em shares it. */
+  --mono-em: 0.87em;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: calc(2 * var(--l));
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: var(--fs-prose);
+  line-height: var(--l);
+  font-optical-sizing: auto;
+  font-kerning: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-wrap: break-word;
+}
+[hidden] {
+  display: none !important;
+}
+h1,
+h2,
+h3,
+h4,
+p,
+ul,
+ol,
+dl,
+dd,
+figure,
+pre,
+blockquote {
+  margin: 0;
+}
+h1,
+h2,
+h3,
+h4 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+img,
+video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+code,
+kbd,
+samp,
+pre,
+.mono {
+  font-family: var(--mono);
+  font-variant-ligatures: none;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.skip {
+  position: absolute;
+  left: var(--gutter);
+  top: -10rem;
+  background: var(--bg);
+  padding: 0 var(--u);
+}
+.skip:focus {
+  top: var(--u);
+}
+
+/* Links in running text: a quiet underline that lights on hover. */
+.prose a,
+.facts a,
+.lnk,
+.pager a,
+.cards a.more {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: var(--link-line);
+}
+.prose a:hover,
+.facts a:hover,
+.lnk:hover,
+.pager a:hover {
+  text-decoration-color: currentColor;
+  color: var(--white);
+}
+
+/* Small caps from the font only: section heads, labels. */
+.sc {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  font-variant-caps: all-small-caps;
+  font-synthesis-small-caps: none;
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+/* ---- page shell ----------------------------------------------------------------------- */
+
+.page {
+  max-width: calc(var(--wide) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding: 0 var(--gutter) calc(12 * var(--u));
+}
+.masthead {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--u)) calc(4 * var(--u));
+  flex-wrap: wrap;
+  min-height: calc(10 * var(--u));
+  background: linear-gradient(var(--rule-strong), var(--rule-strong)) bottom / 100% 1px no-repeat;
+  margin-bottom: calc(6 * var(--u));
+}
+.brand {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: var(--l);
+  color: var(--white);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+/* transcript-tweaks' ▌ reply rule, drawn: the glyph sits high in Hack at this line height. */
+.brand .bar {
+  display: inline-block;
+  width: 0.3em;
+  height: 1.15em;
+  background: var(--accent);
+  margin-right: 0.15em;
+}
+.nav {
+  display: flex;
+  gap: calc(3 * var(--u));
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 0.9375rem;
+}
+.nav a {
+  color: var(--text-2);
+  padding: var(--u) 0;
+}
+.nav a:hover,
+.nav a[aria-current] {
+  color: var(--text);
+}
+.nav a[aria-current] {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.45em;
+  text-decoration-color: var(--accent);
+}
+
+/* ---- type ----------------------------------------------------------------------------- */
+
+.lede {
+  max-width: var(--measure);
+  margin-bottom: calc(5 * var(--u));
+}
+.crumb {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-3);
+  margin-bottom: var(--u);
+}
+.crumb a {
+  color: var(--text-2);
+}
+.crumb a:hover {
+  color: var(--text);
+}
+h1 {
+  font-size: var(--fs-h1);
+  line-height: calc(6 * var(--u));
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--white);
+  text-wrap: balance;
+}
+h1.mono {
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.lead {
+  font-size: var(--fs-lead);
+  line-height: var(--l);
+  color: var(--text);
+  margin-top: calc(2 * var(--u));
+  text-wrap: pretty;
+}
+.lead code {
+  font-size: var(--mono-em);
+}
+.sub {
+  color: var(--text-2);
+}
+
+/* Markdown bodies. */
+.prose {
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+.prose > * + * {
+  margin-top: calc(2 * var(--u));
+}
+.prose h2 {
+  font-size: var(--fs-h2);
+  line-height: var(--l);
+  font-weight: 600;
+  color: var(--white);
+  margin-top: calc(6 * var(--u));
+  padding-top: calc(3 * var(--u));
+  background: linear-gradient(var(--rule), var(--rule)) top / 100% 1px no-repeat;
+}
+.prose h3,
+.prose h4 {
+  font-weight: 650;
+  color: var(--white);
+  margin-top: calc(4 * var(--u));
+}
+.prose h2 + *,
+.prose h3 + *,
+.prose h4 + * {
+  margin-top: var(--u);
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.25em;
+}
+.prose ul {
+  list-style: none;
+}
+.prose ul > li {
+  position: relative;
+}
+.prose ul > li::before {
+  content: "–";
+  position: absolute;
+  left: -1.1em;
+  color: var(--text-3);
+}
+.prose ol {
+  list-style: decimal;
+}
+.prose ol > li::marker {
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.prose li + li {
+  margin-top: var(--u);
+}
+.prose li > ul,
+.prose li > ol {
+  margin-top: var(--u);
+}
+.prose strong {
+  font-weight: 650;
+  color: var(--white);
+}
+.prose :not(pre) > code,
+.facts code,
+.lead code,
+.rows code,
+.inline-code {
+  font-size: var(--mono-em);
+  color: var(--white);
+  white-space: break-spaces;
+}
+.prose blockquote {
+  padding-left: calc(2 * var(--u));
+  background: linear-gradient(var(--rule-strong), var(--rule-strong)) left / 1px 100% no-repeat;
+  color: var(--text-2);
+}
+.prose hr {
+  border: 0;
+  height: 1px;
+  background: var(--rule);
+  margin: calc(4 * var(--u)) 0;
+}
+.prose details > summary {
+  cursor: pointer;
+  color: var(--text-2);
+}
+.prose img {
+  border: 1px solid var(--plate-edge);
+}
+
+/* Listings: the page ground in a hairline frame, scrolling inside themselves. */
+pre {
+  font-size: var(--fs-code);
+  line-height: calc(3 * var(--u));
+  padding: calc(2 * var(--u)) calc(2 * var(--u)) calc(2 * var(--u) - 2px);
+  border: 1px solid var(--plate-edge);
+  background: var(--bg) !important;
+  overflow-x: auto;
+  tab-size: 2;
+  scrollbar-color: var(--ui-hi) transparent;
+  scrollbar-width: thin;
+}
+.prose pre {
+  max-width: none;
+}
+.listing-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  line-height: calc(3 * var(--u));
+  color: var(--text-3);
+}
+.listing-head .copy {
+  padding: 0;
+}
+.copy {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  line-height: calc(3 * var(--u));
+  padding: calc(0.5 * var(--u)) var(--u);
+  background: var(--bg);
+  border: 0;
+  color: var(--text-2);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--link-line);
+  text-underline-offset: 0.25em;
+}
+.copy:hover {
+  color: var(--text);
+  text-decoration-color: currentColor;
+}
+.copy[data-done] {
+  color: var(--green);
+  text-decoration: none;
+}
+
+/* Tables in prose scroll inside themselves. */
+/* Positioned, so a visually hidden label inside stays clipped with the rest and never widens the page. */
+.table,
+pre {
+  position: relative;
+  overflow-x: auto;
+}
+.prose table {
+  border-collapse: collapse;
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  min-width: 100%;
+}
+.prose th,
+.prose td {
+  text-align: left;
+  vertical-align: top;
+  padding: var(--u) calc(2 * var(--u)) calc(var(--u) - 1px) 0;
+  border-bottom: 1px solid var(--rule);
+}
+.prose th {
+  font-weight: 600;
+  color: var(--text-2);
+  border-bottom-color: var(--rule-strong);
+}
+
+/* ---- facts: label and value rows under hairlines ---------------------------------------- */
+
+.facts {
+  max-width: var(--wide);
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  margin-bottom: calc(6 * var(--u));
+  background: linear-gradient(var(--rule), var(--rule)) top / 100% 1px no-repeat;
+}
+.facts > dt,
+.facts > dd {
+  padding: calc(1.5 * var(--u)) 0 calc(1.5 * var(--u));
+  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+}
+.facts > dt {
+  color: var(--text-2);
+  font-variant-caps: all-small-caps;
+  font-synthesis-small-caps: none;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+}
+.facts > dd > * + * {
+  margin-top: var(--u);
+}
+.facts ul.plain li + li {
+  margin-top: 0;
+}
+@media (max-width: 40rem) {
+  .facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .facts > dt {
+    padding-bottom: 0;
+    background: none;
+  }
+  .facts > dd {
+    padding-top: 0;
+  }
+}
+
+/* An install command: a prompt, the command, a copy button; scrolls inside itself. */
+.cmd {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--plate-edge);
+  max-width: 100%;
+}
+.cmd + .cmd {
+  margin-top: var(--u);
+}
+.cmd pre {
+  flex: 1;
+  border: 0;
+  padding: var(--u) calc(1.5 * var(--u)) calc(var(--u) - 2px);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.cmd pre::before {
+  content: "$ ";
+  color: var(--text-3);
+}
+.cmd .copy {
+  flex: none;
+  align-self: center;
+  padding: var(--u) calc(1.5 * var(--u));
+  background: linear-gradient(var(--plate-edge), var(--plate-edge)) left / 1px 100% no-repeat;
+  height: 100%;
+}
+.cmd-label {
+  color: var(--text-2);
+  margin-bottom: calc(0.5 * var(--u));
+  display: block;
+}
+
+/* Harness marks: the catalogue's letters, in the harness's colour. */
+.marks {
+  display: inline-flex;
+  gap: calc(2 * var(--u));
+  flex-wrap: wrap;
+}
+.hm {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  white-space: nowrap;
+}
+.hm .k {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: var(--mono-em);
+}
+.hm.claude .k {
+  color: var(--claude);
+}
+.hm.pi .k {
+  color: var(--pi);
+}
+.flag {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  color: var(--yellow);
+  white-space: nowrap;
+}
+
+/* ---- plates: the terminal captures -------------------------------------------------- */
+
+.plate {
+  container-type: inline-size;
+}
+.plate .well {
+  max-width: calc(var(--pw) * 1px);
+}
+/* The picture keeps its shape at the top; the box rounds up to the unit, so what follows stays on the grid. */
+@supports (height: round(up, 1px, 8px)) {
+  .plate .well {
+    height: round(up, calc(min(100cqi, var(--pw) * 1px) * var(--ph) / var(--pw)), var(--u));
+  }
+}
+.plate .frame {
+  position: relative;
+  background: var(--bg);
+}
+.plate .frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 1px var(--plate-edge);
+  pointer-events: none;
+}
+.plate img,
+.plate video {
+  width: 100%;
+}
+.plate figcaption {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+  margin-top: var(--u);
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+.plate figcaption .hm {
+  margin-right: 0.5em;
+}
+.media {
+  margin-bottom: calc(6 * var(--u));
+}
+.media > * + * {
+  margin-top: calc(4 * var(--u));
+}
+.stills {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
+  gap: calc(4 * var(--u)) calc(3 * var(--u));
+  align-items: start;
+}
+
+/* ---- sections and rows --------------------------------------------------------------- */
+
+.section {
+  margin-top: calc(10 * var(--u));
+}
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: calc(2 * var(--u));
+  padding-bottom: var(--u);
+  margin-bottom: calc(3 * var(--u));
+  background: linear-gradient(var(--rule-strong), var(--rule-strong)) bottom / 100% 1px no-repeat;
+}
+.section-head h2 {
+  font-size: 1.75rem;
+  line-height: calc(5 * var(--u));
+  font-weight: 600;
+  color: var(--white);
+}
+.section-head .count {
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  color: var(--text-3);
+}
+.section-head .aside {
+  margin-left: auto;
+  font-size: var(--fs-ui);
+  color: var(--text-2);
+}
+
+/* Compact rows: a name, a line, marks; hairline between. */
+.rows {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+}
+.rows > li {
+  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+}
+.rows > li > a {
+  display: grid;
+  grid-template-columns: 12rem minmax(0, 1fr) auto;
+  gap: 0 calc(3 * var(--u));
+  padding: calc(1.5 * var(--u)) 0;
+}
+.rows .name {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--white);
+}
+.rows .what {
+  color: var(--text-2);
+}
+.rows > li > a:hover .name {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+.rows > li > a:hover .what {
+  color: var(--text);
+}
+@media (max-width: 48rem) {
+  .rows > li > a {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .rows .what {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+/* ---- home ----------------------------------------------------------------------------- */
+
+.intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: calc(4 * var(--u)) calc(6 * var(--u));
+  align-items: start;
+}
+.intro .lead {
+  margin-top: 0;
+  font-size: 1.625rem;
+  line-height: calc(5 * var(--u));
+}
+.intro .install {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+  max-width: none;
+}
+.intro .install > * + * {
+  margin-top: calc(2 * var(--u));
+}
+.intro .install pre {
+  color: var(--text);
+}
+@media (max-width: 60rem) {
+  .intro {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A featured plugin: what it is beside how it looks. */
+.feature {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 8fr);
+  gap: calc(3 * var(--u)) calc(5 * var(--u));
+  padding: calc(4 * var(--u)) 0;
+  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+}
+.feature:first-child {
+  padding-top: var(--u);
+}
+.feature.no-media {
+  grid-template-columns: minmax(0, 1fr);
+}
+.feature h3 {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 1.375rem;
+  line-height: var(--l);
+  color: var(--white);
+}
+.feature h3 a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+.feature .tagline {
+  margin-top: var(--u);
+  text-wrap: pretty;
+}
+.feature .meta {
+  margin-top: calc(2 * var(--u));
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+}
+.feature .meta > * + * {
+  margin-top: var(--u);
+}
+@media (max-width: 60rem) {
+  .feature {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.cats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: calc(5 * var(--u)) calc(6 * var(--u));
+}
+.cat h3 {
+  padding-bottom: var(--u);
+  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+}
+.cat .blurb {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-3);
+  margin-top: var(--u);
+}
+.cat ul {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+}
+.cat li a {
+  display: block;
+  padding: var(--u) 0;
+  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+}
+.cat .name {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--white);
+}
+.cat .what {
+  display: block;
+  color: var(--text-2);
+}
+.cat li a:hover .name {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+.cat li a:hover .what {
+  color: var(--text);
+}
+
+/* ---- skill page: what the agent reads ------------------------------------------------ */
+
+.agent-reads {
+  margin-top: 0;
+  max-width: calc(var(--measure) + 4 * var(--u) + 1px);
+}
+.agent-reads > header {
+  margin-bottom: calc(3 * var(--u));
+}
+.agent-reads h2 {
+  font-size: var(--fs-h2);
+  line-height: var(--l);
+  font-weight: 600;
+  color: var(--white);
+}
+.agent-reads header p {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+  margin-top: var(--u);
+}
+.agent-reads .sheet {
+  padding-left: calc(3 * var(--u));
+  background: linear-gradient(var(--rule-strong), var(--rule-strong)) left / 1px 100% no-repeat;
+}
+.agent-reads .sheet .prose {
+  font-size: 1.0625rem;
+}
+.agent-reads .description {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+  padding-bottom: calc(3 * var(--u));
+  margin-bottom: calc(3 * var(--u));
+  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+}
+.agent-reads .description .sc {
+  display: block;
+}
+
+/* ---- pager --------------------------------------------------------------------------- */
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  gap: calc(2 * var(--u));
+  margin-top: calc(8 * var(--u));
+  padding-top: calc(2 * var(--u));
+  background: linear-gradient(var(--rule-strong), var(--rule-strong)) top / 100% 1px no-repeat;
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+}
+.pager .dir {
+  display: block;
+  color: var(--text-3);
+}
+.pager a {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.9375rem;
+}
+.pager .next {
+  text-align: right;
+  margin-left: auto;
+}
+
+/* ---- dev index ------------------------------------------------------------------------- */
+
+.docs-list {
+  max-width: var(--measure);
+}
+
+/* ---- phones -------------------------------------------------------------------------- */
+
+@media (max-width: 40rem) {
+  body {
+    font-size: 1.125rem;
+  }
+  :root {
+    --fs-h1: 2rem;
+    --fs-lead: 1.25rem;
+  }
+  h1 {
+    line-height: calc(5 * var(--u));
+  }
+  h1.mono {
+    font-size: 1.75rem;
+  }
+  .intro .lead {
+    font-size: 1.3125rem;
+    line-height: var(--l);
+  }
+  .masthead {
+    margin-bottom: calc(4 * var(--u));
+  }
+  .nav {
+    gap: calc(2 * var(--u));
+  }
+}
+@media (max-width: 26rem) {
+  .nav {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .masthead {
+    padding-top: var(--u);
+    gap: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  .masthead,
+  .section-head,
+  .facts,
+  .facts > dt,
+  .facts > dd,
+  .rows > li,
+  .feature,
+  .cat li a,
+  .pager {
+    border-bottom: 1px solid CanvasText;
+  }
+}
+.more-head {
+  margin-top: calc(6 * var(--u));
+  margin-bottom: var(--u);
+}
+
+/* ---- plugin and skill pages: the reading column beside a rail of facts ------------------ */
+
+.spread {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.spread > .lede {
+  margin-bottom: calc(5 * var(--u));
+}
+@media (min-width: 72rem) {
+  .spread {
+    grid-template-columns: minmax(0, 46rem) minmax(0, 1fr);
+    column-gap: calc(8 * var(--u));
+    align-items: start;
+  }
+  .spread > * {
+    grid-column: 1;
+  }
+  .spread > .rail {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    position: sticky;
+    top: calc(3 * var(--u));
+  }
+  .spread > .span {
+    grid-column: 1 / -1;
+  }
+  .rail {
+    grid-template-columns: 7rem minmax(0, 1fr);
+  }
+}
+.title-flag {
+  margin-left: calc(2 * var(--u));
+  vertical-align: 0.6em;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.ext {
+  color: var(--text-3);
+}
+.intro .install h2 {
+  margin: 0;
+  padding: 0;
+  background: none;
+  font-size: var(--fs-ui);
+  font-weight: 500;
+  color: var(--text-2);
+}
+.agent-reads .sheet .prose > h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  background: none;
+}
+.agent-reads .sheet .prose h2 {
+  font-size: 1.25rem;
+}
+.feature .meta .sc {
+  margin-right: 0.25em;
+}
+@media (min-width: 72rem) {
+  .spread.with-media > .rail {
+    grid-row: 1;
+    position: static;
+  }
+}

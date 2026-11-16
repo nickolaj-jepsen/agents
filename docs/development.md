@@ -9,6 +9,7 @@ just typecheck   # tsc -b
 just check       # nix flake check: the above in a sandbox, each Claude half validated, formatting
 just fmt
 just readme      # regenerate README.md from the plugins', skills' and docs' sources
+just site        # the site (site/) at localhost:4321/agents/, from the same sources
 ```
 
 ## As a flake input

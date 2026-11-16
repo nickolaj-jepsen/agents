@@ -1,0 +1,11 @@
+---
+import Base from '../layouts/Base.astro';
+import { href } from '../lib/content.ts';
+---
+
+<Base title="Not found" description="No page at this address." noindex>
+  <header class="lede">
+    <h1>Not found</h1>
+    <p class="lead">Nothing lives at this address. <a class="lnk" href={href()}>The plugins and skills</a> are on the front page.</p>
+  </header>
+</Base>

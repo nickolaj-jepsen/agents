@@ -1,0 +1,60 @@
+---
+import Base from '../../layouts/Base.astro';
+import { content, docHref, github } from '../../lib/content.ts';
+
+const c = content();
+/** The first sentence of a doc, as its line in the list. */
+const first = (md: string) =>
+  (md.split(/\n\s*\n/).find((p) => !/^(#|```|\||- )/.test(p.trim())) ?? '')
+    .replace(/\s+/g, ' ')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/`/g, '')
+    .split(/(?<=\.)\s/)[0];
+const elsewhere = [
+  ['AGENTS.md', 'What an agent working here reads first: the recipes, where things go, the traps.'],
+  ['e2e/README.md', 'The end-to-end screens: scenarios, snapshots and parking a live session on one.'],
+  ['kit/README.md', 'The shared UI kit for pi and Claude Code, and how its catalogue is built.'],
+  ['skills/agent-plugin-dev/references/style.md', 'The house style every plugin screen follows.'],
+] as const;
+---
+
+<Base title="Developers" description="How the agents repo is built: its layout, recipes, tests and UI kit." nav="dev">
+  <header class="lede">
+    <h1>Developers</h1>
+    <p class="lead">How this repo is put together, for working on its plugins and skills.</p>
+  </header>
+
+  <section aria-labelledby="docs-h">
+    <div class="section-head"><h2 id="docs-h">Docs</h2></div>
+    <ul class="rows">
+      {
+        c.docs.map((d) => (
+          <li>
+            <a href={docHref(d.slug)}>
+              <span class="name">{d.title}</span>
+              <span class="what">{first(d.body)}</span>
+              <span />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="section" aria-labelledby="more-h">
+    <div class="section-head"><h2 id="more-h">In the repo</h2></div>
+    <ul class="rows">
+      {
+        elsewhere.map(([path, what]) => (
+          <li>
+            <a href={github(path)}>
+              <span class="name">{path}</span>
+              <span class="what">{what}</span>
+              <span class="ext" aria-hidden="true">↗</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Base>

@@ -1,0 +1,147 @@
+---
+import Base from '../layouts/Base.astro';
+import Marks from '../components/Marks.astro';
+import Plate from '../components/Plate.astro';
+import { content, docHref, harnesses, href, mediaUrl, pluginHref, skillHref } from '../lib/content.ts';
+import { renderInline, renderMarkdown } from '../lib/markdown.ts';
+
+const c = content();
+const intro = await renderInline(c.intro, 'docs/_intro.md');
+const install = await renderMarkdown(c.install, 'docs/_install.md');
+const featured = c.plugins.filter((p) => p.featured);
+const others = c.plugins.filter((p) => !p.featured);
+const tagline = (md: string) => renderInline(md, 'README.md');
+const taglines = new Map(await Promise.all(c.plugins.map(async (p) => [p.name, await tagline(p.tagline)] as const)));
+const summaries = new Map(await Promise.all(c.skills.map(async (s) => [s.name, await tagline(s.summary)] as const)));
+const requires = new Map(
+  await Promise.all(
+    featured.map(async (p) => [p.name, await Promise.all(p.requires.map((r) => renderInline(r, `${p.path}/README.md`)))] as const),
+  ),
+);
+/** The picture a featured plugin shows here: its video's poster links to its page, else its first still. */
+const lookOf = (p: (typeof featured)[number]) => {
+  const v = p.media?.video;
+  if (v) return { src: mediaUrl(v.poster), width: v.width, height: v.height, alt: v.caption };
+  const s = p.media?.stills[0];
+  return s && { src: mediaUrl(s.png), width: s.width, height: s.height, alt: s.caption };
+};
+---
+
+<Base description="Plugins for Claude Code and the pi coding agent, and agent skills for any agent that reads them.">
+  <section class="intro" aria-label="About">
+    <p class="lead" set:html={intro} />
+    <div class="install prose">
+      <h2 class="sc">Install</h2>
+      <Fragment set:html={install} />
+    </div>
+  </section>
+
+  <section class="section" id="plugins" aria-labelledby="plugins-h">
+    <div class="section-head">
+      <h2 id="plugins-h">Plugins</h2>
+      <span class="count">{c.plugins.length}</span>
+    </div>
+    <div class="features">
+      {
+        featured.map((p, i) => {
+          const look = lookOf(p);
+          return (
+            <article class:list={['feature', { 'no-media': !look }]} aria-labelledby={`p-${p.name}`}>
+              <div>
+                <h3 id={`p-${p.name}`}>
+                  <a href={pluginHref(p.name)}>{p.name}</a>
+                </h3>
+                <p class="tagline" set:html={taglines.get(p.name)} />
+                <div class="meta">
+                  <Marks harnesses={harnesses(p)} />
+                  {requires.get(p.name)!.length > 0 && (
+                    <p>
+                      <span class="sc">Needs</span> <Fragment set:html={requires.get(p.name)!.join('; ')} />
+                    </p>
+                  )}
+                  <p>
+                    <a class="lnk" href={pluginHref(p.name)}>
+                      Read more<span class="vh"> about {p.name}</span>
+                    </a>
+                  </p>
+                </div>
+              </div>
+              {look && (
+                <a href={pluginHref(p.name)} tabindex="-1" aria-hidden="true">
+                  <Plate {...look} eager={i === 0} />
+                </a>
+              )}
+            </article>
+          );
+        })
+      }
+    </div>
+    {
+      others.length > 0 && (
+        <>
+          <h3 class="sc more-head">More plugins</h3>
+          <ul class="rows">
+            {others.map((p) => (
+              <li>
+                <a href={pluginHref(p.name)}>
+                  <span class="name">{p.name}</span>
+                  <span class="what" set:html={taglines.get(p.name)} />
+                  <Marks harnesses={harnesses(p)} short />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      )
+    }
+  </section>
+
+  <section class="section" id="skills" aria-labelledby="skills-h">
+    <div class="section-head">
+      <h2 id="skills-h">Skills</h2>
+      <span class="count">{c.skills.length}</span>
+      <span class="aside">For any agent that reads skills</span>
+    </div>
+    <div class="cats">
+      {
+        c.categories.map((cat) => (
+          <section class="cat" id={cat.slug} aria-labelledby={`c-${cat.slug}`}>
+            <h3 class="sc" id={`c-${cat.slug}`}>
+              {cat.title}
+            </h3>
+            {cat.blurb && <p class="blurb">{cat.blurb}</p>}
+            <ul>
+              {cat.skills.map((s) => (
+                <li>
+                  <a href={skillHref(s.name)}>
+                    <span class="name">{s.name}</span>
+                    <span class="what" set:html={summaries.get(s.name)} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="section" id="dev" aria-labelledby="dev-h">
+    <div class="section-head">
+      <h2 id="dev-h">Developers</h2>
+    </div>
+    <ul class="rows">
+      {
+        c.docs.map((d) => (
+          <li>
+            <a href={docHref(d.slug)}>
+              <span class="name">{d.title}</span>
+              <span class="what">{`docs/${d.slug}.md`}</span>
+              <span />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Base>

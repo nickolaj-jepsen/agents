@@ -1,0 +1,46 @@
+---
+/**
+ * A terminal capture: a picture or a video at no more than its own size, in a hairline frame,
+ * its box rounded up to the unit, with a caption under it.
+ */
+interface Props {
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  /** A video: `src` is the MP4 and this is its poster. */
+  poster?: string;
+  /** Load the picture at once (the first plate on a page). */
+  eager?: boolean;
+  class?: string;
+}
+const { src, width, height, alt, poster, eager = false, class: cls } = Astro.props;
+---
+
+<figure class:list={['plate', cls]} style={`--pw: ${width}; --ph: ${height}`}>
+  <div class="well">
+    <div class="frame">
+      {
+        poster ? (
+          <video
+            controls
+            muted
+            loop
+            playsinline
+            preload="none"
+            poster={poster}
+            width={width}
+            height={height}
+            aria-label={alt}
+            data-autoplay
+          >
+            <source src={src} type="video/mp4" />
+          </video>
+        ) : (
+          <img src={src} width={width} height={height} alt={alt} loading={eager ? 'eager' : 'lazy'} decoding="async" />
+        )
+      }
+    </div>
+  </div>
+  {Astro.slots.has('default') && <figcaption><slot /></figcaption>}
+</figure>
