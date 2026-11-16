@@ -25,8 +25,8 @@
     grid-column: 1;
     grid-row: 1;
     position: sticky;
-    top: calc(3 * var(--u));
-    max-height: calc(100vh - 6 * var(--u));
+    top: calc(var(--mast) + 3 * var(--u));
+    max-height: calc(100vh - var(--mast) - 6 * var(--u));
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--ui-hi) transparent;
@@ -97,7 +97,7 @@
 /* The page's controls stay in view while it scrolls under them: the stories, then the props. */
 .toolbar {
   position: sticky;
-  top: 0;
+  top: var(--mast);
   z-index: 10;
   display: flex;
   flex-wrap: wrap;
@@ -105,7 +105,6 @@
   gap: var(--u) calc(3 * var(--u));
   padding: calc(1.5 * var(--u)) 0;
   background:
-    linear-gradient(var(--rule-strong), var(--rule-strong)) top / 100% 1px no-repeat,
     linear-gradient(var(--rule-strong), var(--rule-strong)) bottom / 100% 1px no-repeat,
     var(--bg);
   font-size: var(--fs-ui);
@@ -157,7 +156,7 @@
 .mk {
   position: relative;
   display: inline-block;
-  height: 1.05rem;
+  height: 1.2rem;
   flex: none;
 }
 .mk .gl {
@@ -485,9 +484,6 @@ kbd {
   text-decoration-thickness: 1px;
   text-underline-offset: 0.25em;
 }
-.story-rows > li {
-  scroll-margin-top: calc(9 * var(--u));
-}
 
 /* The features a story shows: a line that opens into their compatibility. */
 .feats {
@@ -591,7 +587,7 @@ kbd {
   line-height: calc(4 * var(--u) - 1px);
 }
 .cell figcaption .gl {
-  height: 1.1em;
+  height: 1.3em;
 }
 .cell figcaption .k.claude {
   color: var(--claude);
@@ -708,14 +704,4 @@ kbd {
 
 .story-stage[data-lay="stack"] .pair {
   grid-template-columns: minmax(0, 1fr);
-}
-.story-stage.actual .pair {
-  grid-template-columns: minmax(0, 1fr);
-}
-.story-stage.actual .cell {
-  overflow-x: auto;
-}
-.story-stage.actual .view img {
-  max-width: none !important;
-  width: auto;
 }

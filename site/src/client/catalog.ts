@@ -31,7 +31,6 @@ const state = {
   h: oneOf(q.get("h"), ["both", "pi", "claude"] as const) ?? readHarness() ?? "both",
   size: /^\d+x\d+$/.test(q.get("size") ?? "") ? q.get("size")! : store.get("size"),
   lay: oneOf(q.get("lay") ?? store.get("lay"), ["side", "stack"] as const) ?? "side",
-  actual: false,
 };
 
 const $$ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) =>
@@ -101,18 +100,16 @@ function applySize(): void {
   }
 }
 
-// ---- layout, actual size ------------------------------------------------------------
+// ---- layout ------------------------------------------------------------
 
 function applyLayout(): void {
   // The layout buttons are the switch's "both": pressed only while both harnesses are shown.
   for (const b of $$<HTMLButtonElement>("[data-set-lay]"))
     b.setAttribute("aria-pressed", String(state.h === "both" && b.dataset.setLay === state.lay));
-  document.querySelector("[data-actual]")?.setAttribute("aria-pressed", String(state.actual));
   // With one harness chosen there is nothing to arrange.
   const lay = state.h === "both" ? state.lay : "side";
   for (const stage of stages) {
     stage.dataset.lay = lay;
-    stage.classList.toggle("actual", state.actual);
   }
   // The props columns follow too: a harness with no props has its "planned" or "not possible" note.
   for (const cols of propCols) cols.dataset.lay = lay;
@@ -141,8 +138,7 @@ document.addEventListener("click", (e) => {
     state.lay = b.dataset.setLay as typeof state.lay;
     state.h = "both";
     writeHarness(null);
-  } else if (b.hasAttribute("data-actual")) state.actual = !state.actual;
-  else return;
+  } else return;
   apply();
 });
 

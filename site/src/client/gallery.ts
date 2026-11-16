@@ -1,6 +1,6 @@
 /**
  * A plugin's gallery: one item on the stage, the thumbnails choosing it, the harness switch
- * narrowing both to one harness, and a picture at its actual size in a dialog. The harness is
+ * narrowing both to one harness. The harness is
  * remembered (`agents-h`, shared with the catalogue's switch).
  */
 import { readHarness, writeHarness } from "./prefs.ts";
@@ -65,48 +65,4 @@ function gallery(root: HTMLElement): void {
     const next = list[(at + d + list.length) % list.length];
     if (next) show(items.indexOf(next));
   }
-
-  // ---- actual size ------------------------------------------------------------------------
-  const dialog = root.querySelector<HTMLDialogElement>("dialog.lightbox")!;
-  const big = dialog.querySelector("img")!;
-  const pictures = () => shown().filter((i) => i.querySelector(".plate.zoom img"));
-  function open(item: HTMLElement): void {
-    const img = item.querySelector<HTMLImageElement>(".plate img")!;
-    big.src = img.currentSrc || img.src;
-    // The picture's own pixels: the point of this view.
-    big.width = Number(img.getAttribute("width"));
-    big.height = Number(img.getAttribute("height"));
-    big.alt = img.alt;
-    dialog.querySelector(".lb-cap")!.textContent = img.alt;
-    const list = pictures();
-    dialog.querySelector(".lb-pos")!.textContent =
-      list.length > 1 ? `${list.indexOf(item) + 1} of ${list.length}` : "";
-    for (const b of dialog.querySelectorAll<HTMLButtonElement>("[data-lb=prev], [data-lb=next]"))
-      b.hidden = list.length < 2;
-    show(items.indexOf(item));
-    if (!dialog.open) dialog.showModal();
-  }
-  function lbStep(d: number): void {
-    const list = pictures();
-    const at = list.indexOf(items[current]!);
-    const next = list[(at + d + list.length) % list.length];
-    if (next) open(next);
-  }
-  for (const it of items) {
-    const img = it.querySelector<HTMLImageElement>(".plate.zoom img");
-    img?.addEventListener("click", () => open(it));
-  }
-  for (const b of root.querySelectorAll<HTMLButtonElement>("[data-zoom]"))
-    b.addEventListener("click", () => open(items[Number(b.dataset.zoom)]!));
-  dialog.addEventListener("click", (e) => {
-    const b = (e.target as Element).closest<HTMLButtonElement>("[data-lb]");
-    if (b?.dataset.lb === "close") dialog.close();
-    else if (b?.dataset.lb === "prev") lbStep(-1);
-    else if (b?.dataset.lb === "next") lbStep(1);
-    else if (e.target === dialog) dialog.close();
-  });
-  dialog.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowLeft") lbStep(-1);
-    else if (e.key === "ArrowRight") lbStep(1);
-  });
 }

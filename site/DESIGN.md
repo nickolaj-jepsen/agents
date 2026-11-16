@@ -58,7 +58,8 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
 ## Layout
 
 - One column of 76rem at most, a 16px gutter on phones; prose holds a 42rem measure. Every page,
-  the developer pages too, has the masthead at that width.
+  the developer pages too, has the masthead at that width, and it stays at the top (`--mast`); the
+  catalogue's bar and sidebar hang from it.
 - A harness is its logo (`Glyph.astro`, drawn from one sprite in `Base.astro`) in its colour, never a
   letter: Claude Code's pixel mascot (thesvg.org, in `accent`) and pi's press-kit mark (pi.dev/press-kit, in its own colours). The harness switch (`HarnessSwitch.astro`)
   is one control wherever there is one: the home page's plugins, a plugin's gallery, the catalogue's
@@ -74,8 +75,7 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
   in-progress notice), then a plugin's gallery across the column, then the body with a rail of facts
   (needs, files, source) beside it from 64rem; below that the rail follows the body.
 - A plugin's gallery is one stage and a strip of thumbnails: the demo first, then the stills, the caption
-  under the stage, and a harness switch when both have media. A still opens at its actual size in a
-  dialog. Without script every item shows, one under another.
+  under the stage, and a harness switch when both have media. Without script every item shows, one under another.
 - Commands wrap inside their frame rather than scroll, so the copy button and the whole command stay in
   view; listings scroll sideways inside themselves. Nothing scrolls the page sideways at 320px.
 - A skill's `SKILL.md` is "What the agent reads", framed as a file: a title bar with its path and a link
@@ -88,8 +88,7 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
   as far as the screen has margin, and the content takes the rest: on a wide screen it is exactly the
   masthead's width, on a narrow one it is indented by what did not fit; below 64rem the sidebar follows.
 - `/dev/` is the overview. A component's page is its name and purpose, one line of summary (the kit in
-  each harness, the counts, a way to the props), then one sticky bar (the harness switch, terminal size,
-  actual size) that applies to everything under it: the stories, then the props. On a phone the bar
+  each harness, the counts, a way to the props), then one sticky bar (the harness switch, terminal size) that applies to everything under it: the stories, then the props. On a phone the bar
   scrolls away.
 - The harness switch is also the layout: Side by side and Stacked show both harnesses (for the stories
   and the props alike), Claude Code and pi show one alone. The key `f` moves between the two.

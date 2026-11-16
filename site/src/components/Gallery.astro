@@ -62,7 +62,7 @@ const harnesses = (['claude', 'pi'] as const).filter((h) => items.some((i) => i.
             {it.kind === 'video' ? (
               <Plate src={it.src} poster={it.poster} width={it.width} height={it.height} alt={it.caption} />
             ) : (
-              <Plate src={it.src} width={it.width} height={it.height} alt={it.caption} eager={i === 0} zoom />
+              <Plate src={it.src} width={it.width} height={it.height} alt={it.caption} eager={i === 0} />
             )}
             <div class="g-cap">
               <p>
@@ -73,11 +73,6 @@ const harnesses = (['claude', 'pi'] as const).filter((h) => items.some((i) => i.
                 ) : null}
                 {it.caption}
               </p>
-              {it.kind === 'image' && (
-                <button type="button" class="g-zoom" data-zoom={i} data-js hidden>
-                  actual size
-                </button>
-              )}
             </div>
           </div>
         ))}
@@ -98,24 +93,6 @@ const harnesses = (['claude', 'pi'] as const).filter((h) => items.some((i) => i.
           ))}
         </ol>
       )}
-      <dialog class="lightbox" aria-label="Actual size">
-        <div class="lb-bar">
-          <span class="lb-cap" />
-          <span class="lb-pos" />
-          <button type="button" data-lb="prev" aria-label="Previous picture">
-            ←
-          </button>
-          <button type="button" data-lb="next" aria-label="Next picture">
-            →
-          </button>
-          <button type="button" data-lb="close" aria-label="Close">
-            close
-          </button>
-        </div>
-        <div class="lb-body">
-          <img alt="" />
-        </div>
-      </dialog>
     </section>
   )
 }

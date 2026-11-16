@@ -32,6 +32,7 @@
   --u: 0.5rem;
   --l: calc(4 * var(--u));
   --gutter: clamp(1rem, 4vw, 3rem);
+  --mast: calc(10 * var(--u)); /* the masthead's height, which stays at the top */
   --measure: 42rem;
   --wide: 76rem;
 
@@ -53,7 +54,7 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  scroll-padding-top: calc(2 * var(--l));
+  scroll-padding-top: calc(var(--mast) + 2 * var(--l));
 }
 body {
   margin: 0;
@@ -185,8 +186,14 @@ a {
   align-items: center;
   gap: calc(2 * var(--u)) calc(4 * var(--u));
   flex-wrap: wrap;
-  min-height: calc(10 * var(--u));
-  background: linear-gradient(var(--rule-strong), var(--rule-strong)) bottom / 100% 1px no-repeat;
+  min-height: var(--mast);
+  /* Stays in view, the page's rule under it; the catalogue's bar and sidebar hang from it. */
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background:
+    linear-gradient(var(--rule-strong), var(--rule-strong)) bottom / 100% 1px no-repeat,
+    var(--bg);
   margin-bottom: calc(6 * var(--u));
 }
 .brand {
@@ -533,13 +540,13 @@ pre {
 }
 /* A harness logo: sized by the text it sits in, coloured by its .k. */
 .gl {
-  height: 1.15em;
+  height: 1.3em;
   aspect-ratio: 1;
   display: block;
   flex: none;
 }
 .gl.claude {
-  aspect-ratio: 24 / 17;
+  aspect-ratio: 24 / 15;
 }
 .hm.claude .k {
   color: var(--claude);
@@ -1129,26 +1136,6 @@ pre {
   max-width: 52rem;
   text-wrap: pretty;
 }
-.g-zoom {
-  flex: none;
-  margin-left: auto;
-  background: none;
-  border: 0;
-  padding: 0;
-  font-family: var(--mono);
-  font-size: 0.8125rem;
-  color: var(--text-2);
-  cursor: pointer;
-  text-decoration: underline;
-  text-decoration-color: var(--link-line);
-  text-underline-offset: 0.25em;
-}
-.g-zoom:hover {
-  color: var(--text);
-}
-.plate.zoom img {
-  cursor: zoom-in;
-}
 .g-thumbs {
   display: flex;
   gap: calc(1.5 * var(--u));
@@ -1195,66 +1182,6 @@ pre {
   background: var(--bg);
   color: var(--white);
   border: 1px solid var(--ui-hi);
-}
-
-/* A picture at its actual size, scrolling inside the dialog when it is wider than the screen. */
-.lightbox {
-  padding: 0;
-  border: 1px solid var(--ui-hi);
-  background: var(--bg);
-  color: var(--text);
-  max-width: calc(100vw - 2 * var(--u));
-  max-height: calc(100vh - 2 * var(--u));
-  overflow: hidden;
-}
-.lightbox[open] {
-  display: flex;
-  flex-direction: column;
-}
-.lightbox::backdrop {
-  background: rgb(0 0 0 / 0.8);
-}
-.lb-bar {
-  display: flex;
-  align-items: baseline;
-  gap: calc(2 * var(--u));
-  padding: var(--u) calc(2 * var(--u));
-  font-size: var(--fs-ui);
-  line-height: calc(3 * var(--u));
-  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
-}
-.lb-cap {
-  flex: 1;
-  color: var(--text-2);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.lb-pos {
-  color: var(--text-3);
-  font-family: var(--mono);
-  font-size: 0.8125rem;
-}
-.lb-bar button {
-  background: none;
-  border: 1px solid var(--ui-hi);
-  padding: 0 var(--u);
-  font-family: var(--mono);
-  font-size: 0.8125rem;
-  color: var(--text-2);
-  cursor: pointer;
-}
-.lb-bar button:hover {
-  color: var(--white);
-  border-color: var(--text-2);
-}
-.lb-body {
-  overflow: auto;
-}
-.lb-body img {
-  max-width: none;
-  width: auto;
-  height: auto;
 }
 
 /* ---- skill page: the SKILL.md as a file ------------------------------------------------- */
@@ -1391,7 +1318,7 @@ pre {
   margin-right: 0.45em;
 }
 .seg .gl {
-  height: 1.2em;
+  height: 1.35em;
 }
 .seg[hidden] {
   display: none;

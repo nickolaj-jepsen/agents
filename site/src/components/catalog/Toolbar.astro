@@ -1,7 +1,7 @@
 ---
 /**
  * The catalogue's controls, one sticky bar for the whole page: the harness, the terminal size, how
- * actual size. The harness switch is also the layout: side by side or stacked show both harnesses,
+ * The harness switch is also the layout: side by side or stacked show both harnesses,
  * for every story and props column, and a harness shows it alone. It starts hidden; catalog.ts shows it.
  */
 import HarnessSwitch from '../HarnessSwitch.astro';
@@ -33,5 +33,4 @@ const { sizes = [], layout = false, renders = false } = Astro.props;
       </div>
     )
   }
-  {renders && <button type="button" class="toggle" data-actual aria-pressed="false">Actual size</button>}
 </div>
