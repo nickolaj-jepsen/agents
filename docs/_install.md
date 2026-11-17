@@ -1,3 +1,5 @@
+Install the mods from the marketplace:
+
 ```bash
 claude plugin marketplace add nickolaj-jepsen/agents
 claude plugin install linear-issue@nickolaj-jepsen
@@ -5,7 +7,7 @@ claude plugin install answer@nickolaj-jepsen
 claude plugin install spellfix@nickolaj-jepsen
 ```
 
-The skills, all of them or one by name, with [`npx skills`](https://github.com/vercel-labs/skills)
+Install the skills, all of them or one by name, with [`npx skills`](https://github.com/vercel-labs/skills)
 or as one Claude Code plugin:
 
 ```bash
@@ -14,6 +16,6 @@ npx skills add nickolaj-jepsen/agents --skill land
 claude plugin install skills@nickolaj-jepsen
 ```
 
-The flake (`nix flake check`) tests each plugin against Claude Code from nixpkgs master, and my
-machines against the version they ship. A marketplace install gets no such check, so a
-Claude Code update can break one.
+The checks (`nix flake check`) validate and test each plugin against Claude Code from nixpkgs master,
+or against whichever version a consumer passes to `lib.mkClaudePlugin`. A marketplace install gets no
+such check, so a Claude Code update can break one.

@@ -5,8 +5,7 @@ requires: []
 order: 8
 ---
 
-pi only. Two changes to how the transcript reads; the session you started has them,
-subagents don't.
+pi only. The session you started has them; subagents don't.
 
 - A `▌` rule in front of each assistant reply that has text.
 - A collapsed tool result is one line: status, duration, size and, for a shell

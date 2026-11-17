@@ -17,10 +17,11 @@ The flake exposes what a system config needs to consume this repo:
   and tested against the given claude-code.
 
 The checks run against `claude-code` and `pi-coding-agent` from nixpkgs master, which gets their
-releases days before unstable; a consumer's `agents.inputs.nixpkgs.follows` replaces it. Dependabot (`.github/dependabot.yml`)
-opens at most one PR a day that updates every flake input together; `CI gate` checks it and
-`.github/workflows/dependabot-auto-merge.yml` merges it. The repo needs "Allow auto-merge" and a ruleset
-on `main` requiring `CI gate`.
+releases days before unstable. A consumer's `agents.inputs.nixpkgs.follows` replaces it.
+
+Dependabot (`.github/dependabot.yml`) opens at most one PR a day that updates every flake input
+together. `CI gate` checks it, and `.github/workflows/dependabot-auto-merge.yml` merges it. The repo
+needs "Allow auto-merge" and a ruleset on `main` requiring `CI gate`.
 
 ## End-to-end tests
 
@@ -32,14 +33,15 @@ the nix build nor `just check` starts an agent. See `e2e/README.md`.
 README.md is generated (`just readme`; `nix flake check` fails while it is stale) from the sources
 `scripts/content.ts` loads:
 
-- `plugins/<name>/README.md`: the plugin's page. Frontmatter `tagline` (one sentence), `featured`
-  (its poster in the README), `requires` (a list of markdown strings) and `order`, and optionally
-  `status: in-progress`, which lists it after every other plugin and flags its page; the harnesses and
-  install lines come from the folder, as in Layout. The body is what it does; key bindings go under
-  `## Keys` and settings under `## Options`.
+- `plugins/<name>/README.md`: the plugin's page.
+  - Frontmatter: `tagline` (one sentence), `featured` (its poster in the README), `requires` (a list of
+    markdown strings) and `order`. `status: in-progress` is optional; it lists the plugin after every
+    other plugin and flags its page. The harnesses and install lines come from the folder, as
+    `docs/layout.md` says.
+  - The body is what it does. Key bindings go under `## Keys` and settings under `## Options`.
 - `skills/<name>/SKILL.md`: `metadata.summary` (one line) and `metadata.category` (one of
-  `scripts/content.ts`'s `CATEGORIES`), plus optionally `metadata.credit` and
-  `metadata.status: in-progress`, which flags it and lists it last in its category.
+  `scripts/content.ts`'s `CATEGORIES`). `metadata.credit` and `metadata.status: in-progress` are
+  optional; the latter flags the skill and lists it last in its category.
 - `docs/*.md`: the developer pages, each starting with a `# Title`. `docs/_intro.md` is the top of the
   README and the home page; `docs/_install.md` is the README's install section.
 - `e2e/<plugin>/site.scenarios.ts`: the plugin's demos and stills. They are recorded, not committed:

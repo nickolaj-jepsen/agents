@@ -6,9 +6,9 @@ requires:
 order: 3
 ---
 
-One Haiku call answers every flagged word, adds the ones
-it calls correct to the personal word list, and finds real-word typos
-hunspell can't (`form` for `from`).
+One Haiku call answers every flagged word, and adds the ones it calls correct to
+the personal word list. It also finds real-word typos hunspell can't (`form` for
+`from`).
 
 In Claude Code its picker is the band button above the prompt.
 
@@ -16,12 +16,14 @@ In Claude Code its picker is the band button above the prompt.
 
 In Claude Code, to open the picker from the keyboard, bind
 `app:toggleDiffNoiseFilter` in the `Global` context of
-`~/.claude/keybindings.json` (I use `ctrl+q`); it works on any draft.
+`~/.claude/keybindings.json` (I use `ctrl+q`). It works on any draft, even one
+with nothing flagged yet.
 
 ## Options
 
-`claude plugin configure spellfix` shows each option, its default and which are
-unset; they come from the plugin's `userConfig`.
+`claude plugin list` prints the plugin's id, such as `spellfix@nickolaj-jepsen`.
+Give that id to `claude plugin configure`, which shows each option, its default
+and which are unset. The options come from the plugin's `userConfig`.
 
 ## pi
 
