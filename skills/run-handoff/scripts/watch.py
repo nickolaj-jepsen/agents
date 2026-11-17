@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """One worker watchdog, or a foreground command with a finite activity lease.
 
 The lead runs `watch` as a notifying background job. This process never calls a
@@ -12,12 +11,12 @@ import hashlib
 import json
 import math
 import os
-from pathlib import Path
 import signal
 import subprocess
 import sys
 import time
 import uuid
+from pathlib import Path
 
 STATUSES = {"DONE", "DONE_WITH_CONCERNS", "NEEDS_CONTEXT", "BLOCKED"}
 
@@ -47,7 +46,9 @@ def git(cwd, *args):
 
 def snapshot(worktree):
     head = git(worktree, "rev-parse", "HEAD")
-    paths = git(worktree, "ls-files", "--modified", "--others", "--exclude-standard", "-z")
+    paths = git(
+        worktree, "ls-files", "--modified", "--others", "--exclude-standard", "-z"
+    )
     changed = []
     for raw in sorted(set(paths.split(b"\0")) - {b""}):
         path = worktree / os.fsdecode(raw)
@@ -60,12 +61,23 @@ def snapshot(worktree):
     return head, changed
 
 
-def alive(pid):
-    try:
-        os.kill(pid, 0)
-        return True
-    except ProcessLookupError:
-        return False
+def process_identity(pid):
+    """PID plus birth time, so a recycled PID cannot inherit a command lease."""
+    if sys.platform.startswith("linux"):
+        try:
+            fields = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()
+            return None if fields[0] == "Z" else f"linux:{fields[19]}"
+        except (OSError, IndexError):
+            return None
+    result = subprocess.run(
+        ["ps", "-p", str(pid), "-o", "lstart="],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=2,
+    )
+    stamp = result.stdout.strip()
+    return f"ps:{stamp}" if result.returncode == 0 and stamp else None
 
 
 def activity(state, now):
@@ -74,7 +86,12 @@ def activity(state, now):
     for path in (state / "commands").glob("*.json"):
         record = json.loads(path.read_text())
         latest = max(latest, record["updated"])
-        if record["status"] == "running" and now < record["expires"] and alive(record["pid"]):
+        if (
+            record["status"] == "running"
+            and now < record["expires"]
+            and record.get("identity") is not None
+            and process_identity(record["pid"]) == record["identity"]
+        ):
             leased = True
     return latest, leased
 
@@ -85,6 +102,8 @@ def emit(reason, **details):
 
 def watch(args):
     state = args.state_dir.resolve()
+    if state.is_relative_to(args.worktree.resolve()):
+        raise ValueError("state must be outside the monitored worktree")
     state.mkdir(parents=True, exist_ok=True)
     # A resumed lead can re-arm the same attempt, but never reset its clock or
     # leave two watchers racing. The OS releases this lock if the lead kills us.
@@ -104,7 +123,18 @@ def watch_locked(args, state):
     else:
         started = args.started_at if args.started_at is not None else time.time()
         expires, idle = started + args.deadline, args.idle
-        save(attempt, {"worktree": str(worktree), "started": started, "expires": expires, "idle": idle})
+        save(
+            attempt,
+            {
+                "worktree": str(worktree),
+                "started": started,
+                "expires": expires,
+                "idle": idle,
+            },
+        )
+    if args.prepare_only:
+        emit("prepared", started=started, expires=expires, state_dir=str(state))
+        return 0
     progress = state / "progress.json"
     saved_progress = json.loads(progress.read_text()) if progress.exists() else {}
     last_progress = saved_progress.get("at", started)
@@ -116,7 +146,7 @@ def watch_locked(args, state):
             emit("missing_worktree", worktree=str(worktree))
             return 2
         report = worktree / ".handoff-report.md"
-        if report.exists():
+        if report.exists() and report.stat().st_mtime >= started:
             stamp = (report.stat().st_mtime_ns, report.stat().st_size)
             # A stable report avoids waking on its first, partly written line.
             if stamp == previous_report:
@@ -173,18 +203,29 @@ def command(args):
     if not argv:
         raise ValueError("command requires an argv after --")
     state = args.state_dir.resolve()
+    attempt = state / "attempt.json"
+    if not attempt.exists():
+        raise ValueError(
+            "attempt is not prepared; lead must run watch --prepare-only first"
+        )
     commands = state / "commands"
     commands.mkdir(parents=True, exist_ok=True)
     now = time.time()
-    expires = now + args.timeout
-    attempt = state / "attempt.json"
-    if attempt.exists():
-        expires = min(expires, json.loads(attempt.read_text())["expires"])
+    expires = min(now + args.timeout, json.loads(attempt.read_text())["expires"])
     if expires <= now:
         emit("deadline", message="item deadline already expired")
         return 124
     path = commands / f"{uuid.uuid4().hex}.json"
-    record = {"pid": os.getpid(), "status": "running", "updated": now, "expires": expires}
+    identity = process_identity(os.getpid())
+    if identity is None:
+        raise ValueError("cannot identify command wrapper process")
+    record = {
+        "pid": os.getpid(),
+        "identity": identity,
+        "status": "running",
+        "updated": now,
+        "expires": expires,
+    }
     child = None
     old_handler = signal.getsignal(signal.SIGTERM)
 
@@ -215,14 +256,25 @@ def command(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="action", required=True)
-    monitor = commands.add_parser("watch", help="wait for report, no-progress threshold or deadline")
+    monitor = commands.add_parser(
+        "watch", help="wait for report, no-progress threshold or deadline"
+    )
     monitor.add_argument("--state-dir", type=Path, required=True)
     monitor.add_argument("--worktree", type=Path, required=True)
     monitor.add_argument("--idle", type=positive, default=600)
     monitor.add_argument("--deadline", type=positive, default=3600)
-    monitor.add_argument("--started-at", type=positive, help="dispatch Unix timestamp, not watcher start")
+    monitor.add_argument(
+        "--started-at", type=positive, help="dispatch Unix timestamp, not watcher start"
+    )
     monitor.add_argument("--interval", type=positive, default=5)
-    run = commands.add_parser("command", help="foreground command with timeout and activity lease")
+    monitor.add_argument(
+        "--prepare-only",
+        action="store_true",
+        help="record attempt before dispatch; do not wait",
+    )
+    run = commands.add_parser(
+        "command", help="foreground command with timeout and activity lease"
+    )
     run.add_argument("--state-dir", type=Path, required=True)
     run.add_argument("--cwd", type=Path, required=True)
     run.add_argument("--timeout", type=positive, required=True)
@@ -231,7 +283,10 @@ def main():
     try:
         return watch(args) if args.action == "watch" else command(args)
     except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
-        emit("watch_error" if args.action == "watch" else "command_error", error=str(error))
+        emit(
+            "watch_error" if args.action == "watch" else "command_error",
+            error=str(error),
+        )
         return 2
 
 

@@ -2,7 +2,7 @@
 name: run-handoff
 description: Build a plan written by /handoff in one long-running session — keep PROGRESS.md, dispatch every unblocked item to a background subagent in its own worktree, re-run its acceptance yourself before fast-forwarding an integration branch, review at gates and over the whole branch. Checks in with the user at every gate by default; --auto runs unattended until done or blocked. Use when the user asks to run, build, execute or resume a handoff.
 disable-model-invocation: true
-argument-hint: "[handoff-dir] [--auto]"
+argument-hint: "[handoff-dir] [--auto] [--review-model MODEL]"
 metadata:
   summary: "builds a handoff with one subagent and worktree per item, re-verifying each."
   category: plan-build-ship
@@ -20,6 +20,15 @@ metadata:
 - With `--auto`, gates are self-checked and only the stop conditions halt you.
 - The mode is per invocation and never stored, so a gated start can resume with `--auto`.
 
+## Models
+
+- Item workers and ordinary gate/area reviewers use explicit cheap models: Claude Code `sonnet`; pi `general-purpose` or `reviewer` (`opencode-go/deepseek-v4.1-flash`). Never inherit the lead's model by accident.
+- The final whole-branch reviewer uses Claude Code `opus`; pi `handoff-review` (`openai-codex/gpt-6.2-sol`). `--review-model MODEL` or an explicit choice in this invocation overrides HANDOFF's review-model override, then the harness default. In pi use a role that allows the override, not the ordinary reviewer's locked model.
+- pi resolves a role's own unavailable model by silently using the lead's model. After spawning any reviewer, compare the harness's reported model with the intended one; if it differs, treat that role's default as unavailable and use the fallback. An explicitly requested unavailable model errors instead and then uses the fallback.
+- The fallback is the cheap read-only reviewer, used once. Prominently record the actual model and downgrade in `PROGRESS.md` and the final report. Ordinary tool errors or review findings are not reasons to downgrade.
+- Keep `opencode-go/deepseek-v4.1-flash` for cheap workers and reviews. Its fallback when unavailable is Sonnet in Claude Code or `kimi-coding/k3.1-pro` in pi; report the substitution rather than silently using the lead's model.
+- One full review per checkpoint, followed by focused verification of confirmed repairs. Repeat the full review only when repairs substantially change the design or scope.
+
 ## Decisions
 
 - HANDOFF's **Yours** decisions lock. One that proves wrong and blocks the critical path is a stop condition.
@@ -30,16 +39,18 @@ metadata:
 ## Start or resume
 
 1. **Resolve the directory.** If none is given, take the most recently modified `plans/<slug>/` holding a `HANDOFF.md` in the project's store, skipping `plans/history/`, and confirm it before starting. `agent-notes root --ensure` gives the store's path, and the checkout sees it as `.agents/store`.
-2. **Read `HANDOFF.md` in full.** Amendments override everything above them. Read `notes/` files only when an item needs them.
+2. **Read `HANDOFF.md` in full** and `references/runtime.md`. Amendments override everything above them. Resolve this skill's bundled `scripts/watch.py` to an absolute path. Read `notes/` files only when an item needs them.
 3. **Resume** if `PROGRESS.md` exists.
    - Check it against git: the integration branch, item worktrees and their commits. Where they disagree, git wins; fix `PROGRESS.md`.
-   - Run the standard checks on the integration branch before dispatching anything. If a crashed session left it broken, fixing that comes first.
+   - Reconcile worker IDs, watchdog jobs, dispatch times and recovery counts as well. Re-arm the same attempt's watcher if it died; never renew the deadline merely because the lead resumed.
+   - Reuse recorded verification only when the tree and test inputs are unchanged; otherwise run the standard checks before dispatch. If a crash left the integration branch broken, fixing that comes first.
    - Add any of HANDOFF's Open questions missing from "Blocked on you".
    - Continue from "Now".
 4. **First run.**
    - Create the integration worktree, branch `<slug>`, off the base branch in Context. Use the user's worktree tooling, otherwise `git worktree add`.
    - Create `PROGRESS.md` from the template below, with HANDOFF's Open questions in "Blocked on you".
-   - Run Context's build and test commands once, and record their durations.
+   - Require Python 3 and notifying background jobs; if supervision cannot be armed, report that blocker rather than running unattended without it.
+   - Run Context's build and test commands once, and record their durations and known-red baseline.
    - Then do the bootstrap items and `G0`, if there are any, yourself.
 
 ## Loop
@@ -47,16 +58,17 @@ metadata:
 1. **Frontier.** Every item whose blockers are done, or integrated with only device or person acceptance open, and whose `Owns` doesn't overlap an item in flight.
 2. **Dispatch** frontier items up to HANDOFF's concurrency cap (default 3). For each one:
    - create a worktree `<slug>-<id>` off the integration branch's current head;
-   - start a background subagent with the item brief below.
+   - start a cheap background subagent with the item brief below;
+   - record its ID, dispatch Unix timestamp, attempt directory, budget and persistent recovery count; arm the bundled watcher as a notifying background command in the lead, as in `references/runtime.md`.
 
    Spawn item subagents without a `name`. A named one runs as a teammate when agent teams are on, and wakes you with an idle notice every time it pauses. Message a running subagent by its agent ID.
 
-   Do contracts and gates yourself. Claude Code: the Agent tool runs subagents in the background and notifies you. pi: `subagent` with `run_in_background: true`, joined with `get_subagent_result`.
+   Do contracts and gates yourself. Claude Code: the Agent tool runs subagents in the background and notifies you. pi: `subagent` with `run_in_background: true`; bound each `get_subagent_result` wait to at most 60 seconds and the remaining attempt time.
 
 3. **While items run,** do gate work or end your turn and wait for completion notices. Every turn re-reads your whole context, so don't schedule recurring check-ins, crons or polls.
-   - Look at an in-flight item only when it has run past its HANDOFF budget (or twice the measured test duration if it has none) with no report. Check it once for commits, changed files and running processes, and continue it if it shows none.
-   - If every item in flight is quiet, set one wake-up for the longest remaining budget, never a recurring one.
-   - An idle notice or status ping isn't a report: end the turn without acting.
+   - The watcher wakes you on report, no progress (default 10 minutes) or attempt deadline (default 60 minutes). Use HANDOFF's explicit overrides; a live foreground command within its finite lease is not a stall. Test duration alone is not an implementation budget.
+   - On a stall or expired deadline, inspect commits, changed files and processes once. Stop an over-deadline attempt and its launched processes before recovery. Recover at most once per item, continuing the same worker or replacing a dead one without losing its work. If it stalls again, block that item, notify the user and continue independent work.
+   - An idle notice or status ping isn't a report: end the turn without acting. A timed-out short join likewise means wait for completion or the watcher, not start another polling loop.
    - A subagent reads messages only between its own tool calls. To stop a run now, stop its processes yourself.
    - Stopping a subagent doesn't stop what it launched. Find its parent scripts as well as their children, and select them by `/proc/<pid>/cwd` under its worktree or by exact argv. `pgrep -f <text>` also matches your own shell.
 4. **Route** each report by its status line:
@@ -71,7 +83,9 @@ metadata:
    - Confirm the branch sits on the integration branch's current tip. If the tip moved since, have the subagent rebase again, or rebase it yourself if trivial.
    - Never pipe a rebase into a gate (`git rebase … | tail` hides a conflict stop). Check `git status` for a rebase in progress, and print the HEAD sha before and after the gate.
    - On that tree, re-run the item's acceptance command yourself, plus the repo's standard checks and the walking skeleton if HANDOFF has one. Never take the subagent's "it passes" as the result.
-   - If it passes: fast-forward the integration branch, record the command, its result and the commit, then read and delete the worktree's `.handoff-report.md` and remove the worktree.
+   - Shape reviewable history before integrating: preserve logical changes, fold repairs into the commits they repair with fixups/autosquash, and avoid arbitrary one-commit-per-item squashing. Do not leave history reconstruction for the user after the build.
+   - A pure history rewrite with the same final `git rev-parse HEAD^{tree}` and unchanged test inputs retains the verified result. Do not run full suites at every rewritten commit. Content-changing rebases or changed test inputs still need fresh verification.
+   - If it passes: fast-forward the integration branch, record the command, its result, commit and verified tree ID, then read and delete the worktree's `.handoff-report.md`, stop its watcher and remove the worktree.
    - If it fails: send the failing output back to the same subagent, continuing it if the harness allows. After two send-backs, mark the item blocked with the last failing output.
    - If the desktop part passes and only a device or a person is left: integrate it now and record that acceptance as open in `PROGRESS.md`, so its dependents can run. Run the open step when it can run, and put any fix it needs on top.
 6. **Re-check the frontier** after every integration and dispatch what opened up.
@@ -79,7 +93,7 @@ metadata:
 
 Long operations:
 
-- Run long commands in the background with a deadline, and send their output to files.
+- The lead runs long commands as notifying background jobs with a deadline and output files. Workers run them in the foreground through the bundled command helper, with a finite timeout and activity lease. See `references/runtime.md`.
 - Run one full test suite at a time across all worktrees; parallel full runs overload the machine and fail with timeouts. Items run focused suites, and you run the full one at integration.
 - Grep those files for failures instead of reading whole logs.
 - You can't feel time passing, so follow HANDOFF's budgets.
@@ -93,7 +107,7 @@ Long operations:
 
 ### Reviewer
 
-- A fresh, read-only subagent (a reviewer agent type if one exists).
+- A fresh, read-only subagent, using the cheap reviewer for ordinary gates and the stronger reviewer for the final whole-branch gate (Models above).
 - It gets the gate's diff since the previous gate (the final gate: since the base), the `HANDOFF.md` path, and the gate's item IDs. It does not get the subagents' reports.
 - Ask it for:
   - defects;
@@ -102,7 +116,7 @@ Long operations:
   - uncovered review-focus risks;
   - acceptance checks that pass without proving the outcome;
   - decisions or user actions in HANDOFF that have no reachable path yet.
-- Above about 3k changed lines, split the review by area (e.g. backend, UI, deployment), one reviewer each.
+- Above about 3k changed lines, cheap area readers can cover backend, UI or deployment separately. Keep one stronger final reviewer responsible for the whole branch and cross-area contracts; it reads the actual diff, not only summaries.
 - If HANDOFF has Trust boundaries, the first gate after an item that touches one and the final gate add a security reviewer. It gets only the boundaries and the diff, and is asked for a path by which untrusted input reaches a secret or crosses a boundary.
 
 ### After a gate
@@ -126,7 +140,7 @@ Never edit `HANDOFF.md` to get unstuck. Propose the change in `PROGRESS.md`; it 
 Each item subagent's prompt contains:
 
 - **Role:** builds one item. The lead owns `PROGRESS.md`, integration, contracts and gate reviews.
-- **Where:** its worktree path. Work and commit only there, in small commits matching the repo's style.
+- **Where:** its worktree path. Work and commit only there, in logical reviewable commits matching the repo's style; repairs are fixups to the change they repair.
 - **What:** its item ID. Have it read `HANDOFF.md` itself (Context including its Skills line, Locked decisions, Contracts, Rules, Gotchas, its item and that item's notes files) rather than paraphrasing them.
 - **Boundaries:**
   - change only its item's `Owns`; name the paths owned by items now in flight as not its own;
@@ -136,7 +150,8 @@ Each item subagent's prompt contains:
 
   If a contract or a Yours decision blocks it, it finishes what it can and reports the proposed change rather than working around it.
 
-- **Commands:** long ones run in the foreground with a timeout, since a background command doesn't wake it.
+- **Budget:** no-progress threshold, attempt deadline and command timeouts from HANDOFF (defaults 10m/60m). The lead owns the one permitted stall recovery; a worker cannot renew its own attempt.
+- **Commands:** give the absolute watcher-script and attempt-directory paths. Long commands run in the foreground through `watch.py command --state-dir <attempt> --cwd <worktree> --timeout <seconds> -- <argv>`, not as detached jobs that cannot wake the worker. Its finite lease prevents a healthy command being mistaken for a stall.
 - **Messages:** no progress updates or FYIs to the lead while it works. A question it can't answer from HANDOFF ends its run as a `NEEDS_CONTEXT` report. Its only message is the final one.
 - **Done:** rebased onto the integration branch's current tip, then its acceptance command passes there, run by it, with the output reported.
 - **Report:** written to an untracked `.handoff-report.md` in its worktree.
@@ -157,7 +172,7 @@ Each item subagent's prompt contains:
 
 ## Items
 
-| ID | Status | Worktree | Send-backs | Acceptance result | Commit |
+| ID | Status | Worker / worktree | Attempt / watcher | Dispatched / idle / deadline | Stall recoveries | Send-backs | Acceptance / verified tree | Commit |
 
 ## Gates
 
@@ -175,6 +190,8 @@ Each item subagent's prompt contains:
 
 ## Measurements
 
+<Actual worker/review models and any downgrade; command timings, retries and available usage. Separate cached input from fresh input and output; do not invent dollar estimates.>
+
 ## Handoff retro
 
 <Written when the run ends: what HANDOFF got wrong, left out or over-specified, and which decisions or gotchas the build had to discover.>
@@ -182,12 +199,12 @@ Each item subagent's prompt contains:
 
 ## Final report
 
-1. Stop every subagent still running, idle ones included, and write the handoff retro.
+1. Stop every subagent and watchdog still running, idle ones included. Confirm the branch has logical reviewable commits, not an unfinished history-cleanup job. Write the handoff retro.
 2. Report in chat:
    - what is done and verified, with acceptance results;
    - what is blocked and on what;
    - failures and skips, stated plainly;
-   - measured timings;
+   - measured timings, actual worker/final-review models and any review downgrade;
    - the retro;
    - the integration branch and any worktrees left.
 3. Ask, in one round, every unanswered entry in "Blocked on you" that the user can answer now, with what was done meanwhile as the recommended answer. This applies with `--auto` too, since the run is over and a question interrupts nothing. Use the harness's question tool when they fit, otherwise a numbered list with your pick on each. Record each answer, and build what it calls for on the integration branch.

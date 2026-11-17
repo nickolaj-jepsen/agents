@@ -97,9 +97,11 @@
         checks =
           {
             inherit agent-tools;
-            handoff-runtime = pkgs.runCommand "handoff-runtime-tests" {nativeBuildInputs = [pkgs.python3 pkgs.git pkgs.procps];} ''
+            handoff-runtime = pkgs.runCommand "handoff-runtime-tests" {nativeBuildInputs = [pkgs.python3 pkgs.git pkgs.procps pkgs.ruff];} ''
               export HOME=$(mktemp -d)
               export PYTHONDONTWRITEBYTECODE=1
+              ruff check --isolated --select E4,E7,E9,F,I,PLW1510,EXE ${./skills/run-handoff/scripts}
+              ruff format --isolated --check ${./skills/run-handoff/scripts}
               python3 -m unittest discover -s ${./skills/run-handoff/scripts} -p 'test_*.py'
               touch $out
             '';

@@ -1,8 +1,8 @@
 ---
 name: handoff
-description: Turn a finished brainstorm or research thread into a handoff for a separate builder agent — pin the scope, verify assumptions with read-only subagents, grill the user only on what is still undecided, agree the item graph, then write a self-contained HANDOFF.md whose work items carry owned paths and acceptance commands so /run-handoff can build them in parallel. --quick writes a short one inline with no subagents, asking only what's still open. Use when the user asks for a handoff, or for a plan another agent will implement in a long-running session.
+description: Turn a finished brainstorm or research thread into a handoff for a separate builder agent — pin the scope, verify assumptions with read-only subagents, grill the user only on what is still undecided, agree the item graph, then write a self-contained HANDOFF.md whose work items carry owned paths and acceptance commands so /run-handoff can build them in parallel. --quick drafts from existing evidence, with at most two minutes of essential research and no cold read; it does not limit the size of the build. Use when the user asks for a handoff, or for a plan another agent will implement in a long-running session.
 disable-model-invocation: true
-argument-hint: "[scope] [--quick]"
+argument-hint: "[scope] [--quick] [--review-model MODEL]"
 arguments: scope
 metadata:
   summary: "writes a finished plan up as a self-contained handoff for another agent."
@@ -13,7 +13,15 @@ metadata:
 
 - The reader is a builder agent that never saw this conversation.
 - It runs `/run-handoff <dir>`, which owns the operating loop: progress tracking, subagent briefs, worktrees, merging, gates and stopping. Don't restate that loop in the handoff; write only what is specific to the project.
-- `scope` is free text naming what to hand off (`1-4`, `options 2 and 3`, `all but the migration`). Empty means what the conversation just settled on. `--quick` isn't part of it and replaces the spine with the section of that name.
+- `scope` is free text naming what to hand off (`1-4`, `options 2 and 3`, `all but the migration`). Empty means what the conversation just settled on. Flags aren't part of scope; `--quick` replaces the spine with the section of that name.
+
+## Models
+
+- Research uses explicit cheap models: Claude Code `sonnet`; pi `Explore` (`opencode-go/deepseek-v4.1-flash`). Never inherit the lead's model by accident.
+- The cold read uses Claude Code `opus`; pi `handoff-review` (`openai-codex/gpt-6.2-sol`). `--review-model MODEL` or the user's explicit choice overrides this invocation; in pi the role must allow that override.
+- pi resolves a role's own unavailable model by silently using the lead's model. Compare the harness's reported model with the intended one; if they differ, treat the role default as unavailable and use the fallback. An explicitly requested unavailable model errors instead.
+- The fallback is the cheap read-only reviewer, used once. Report the model actually used and the downgrade. Do not downgrade for an ordinary tool error or because the reviewer found defects.
+- One full cold read, then focused verification of its fixes. Repeat the full read only if repairs substantially change the design or scope.
 
 ## Spine
 
@@ -32,12 +40,12 @@ metadata:
    - **Defaults:** a bare "yes" to your recommendation, or an implementation call. The builder may change one when evidence shows it's wrong, and says so in its report.
    - When the tag is unclear, it's a default.
 
-3. **Research.** Fan out read-only subagents, one per area rather than per item.
-   - Each gets an objective, an output format and explicit boundaries ("X is another subagent's").
+3. **Research.** Reuse the conversation and existing notes first, checking their commit/version and whether relevant paths changed. Fan out cheap read-only subagents only for missing evidence, one per independent area rather than per item.
+   - Each gets an objective, an output format and explicit boundaries ("X is another subagent's"). Launch in the background and join once; progress pings are not findings.
    - They verify what the plan leans on:
      - the files, modules and APIs each item will touch;
      - real interfaces and versions, from installed source or type definitions rather than READMEs;
-     - the exact build, test and run commands, that they work today, and how long they take;
+     - the exact build, test and run commands, their measured durations and any known-red baseline; reuse measurements on unchanged inputs;
      - repo conventions, the constraints in its agent instructions, and the skills it expects agents to use.
    - Findings too long to restate inline go to `notes/<area>.md`, written by the subagent, which returns only the path.
 
@@ -52,7 +60,7 @@ metadata:
    - Ask whether the granularity is right, whether each edge really blocks, and what to merge or split.
    - Iterate until the user approves.
 7. **Write `HANDOFF.md`** from the template below.
-8. **Cold read.** Spawn a fresh subagent given only the directory path, with no conversation context. Ask it to:
+8. **Cold read.** Use the stronger model above for a fresh read-only subagent given only the directory path, with no conversation context. Ask it to:
    - list everything it couldn't act on without asking: undefined terms, references to the discussion, items without runnable acceptance, missing run commands;
    - map every in-scope line, decision (both tiers) and contract to the items that deliver it end to end, and every review-focus risk and trust boundary to the item whose acceptance covers it, and report what maps to nothing;
    - list the user actions the decisions imply (a decision that discards work implies a control to discard) and the item that builds each one;
@@ -66,7 +74,7 @@ metadata:
    - A fact goes in Gotchas, and something the user has to do goes in the item or gate that needs it.
    - If nothing is open, skip this step.
 
-10. **Report** in chat, ending with what the user acts on: the `HANDOFF.md` path, what stayed open, and the kickoff line `/run-handoff <dir>`, plus `--auto` to run it unattended.
+10. **Report** the checks performed or skipped and the cold-read model, including any downgrade. End with the `HANDOFF.md` path, what stayed open, and the kickoff line `/run-handoff <dir>`, plus `--auto` to run it unattended.
 
 ## Decomposition
 
@@ -93,6 +101,7 @@ metadata:
   - Where the mechanism is uncertain, lock the outcome and list pre-approved fallback mechanisms the builder may switch between without stopping.
 - **No implementation steps.** A "how" that matters is a decision; an unknown "how" is a spike.
 - **Size:** one subagent can finish and verify an item in one fresh context.
+- **Budgets:** each item has a no-progress threshold (default 10 minutes), an attempt deadline (default 60 minutes) and finite command timeouts. Override them explicitly for known long work; test duration alone is not an implementation budget.
 - **Acceptance is observable.**
   - A command, its working directory and the expected result.
   - For a behaviour change, a test that fails before and passes after.
@@ -121,8 +130,9 @@ In: … Out: …
 
 ## Context
 
-<Repo, base branch, how to build/test/run (exact commands, cwd, measured duration), conventions, terms.>
+<Repo, base branch and evidence commit, how to build/test/run (exact commands, cwd, measured duration or unverified), known-red baseline, conventions, terms.>
 Skills: <skills the builder and its subagents should invoke, e.g. tdd, and when.>
+Review model override: <only if the user chose one; otherwise use the invoking harness's default>.
 
 ## Locked decisions
 
@@ -162,6 +172,7 @@ The builder may switch to the fallback without stopping, and says so in its repo
 - Owns: <paths only this item changes>
 - Outcome: <1–3 sentences of behaviour>
 - Acceptance: `cd <dir> && <cmd>` → <expected>
+- Budget: no progress 10m; attempt 60m; commands <finite timeouts, within the attempt deadline>
 - Constraints: U1, D1, C1
 - Notes: notes/<area>.md (if needed)
 
@@ -204,16 +215,15 @@ Max items in flight: <n> (default 3; lower if tests contend for a cluster, ports
 
 ## --quick
 
-For small, settled work where the full spine would cost more than the build. No subagents, no graph review, no cold read. It still writes `HANDOFF.md`, because the builder has nothing else to go on.
+Finish the current planner's work quickly, even when implementation is large. Draft from what is already settled. No graph-approval round or cold read unless explicitly requested. It still writes a complete `HANDOFF.md`.
 
-1. **State the scope, don't wait.** Open with one line giving the scope, what's out of it and the directory, so the user can object. Ask before overwriting a `HANDOFF.md`, as in the spine.
-2. **Harvest decisions** as in step 2 of the spine.
-3. **Check inline** what the plan leans on: read the files and interfaces each item touches, and find the build, test and run commands. Run the ones that are quick, and mark the rest unverified in Context.
-4. **Ask nothing yet,** unless one undecided choice could change what gets built; then ask that single question. Other gaps go in Open questions, with how to proceed meanwhile.
-5. **Decompose into at most 3 items in a straight line,** each blocked by the one before, so there are no contracts, gates or spikes. If the work needs more items, parallel ones or a spike, say so in one line and ask whether to run the full `/handoff` instead.
-6. **Write `HANDOFF.md`** under the rules above, with only Mission, Scope, Context, Locked decisions, Work items, Gotchas and Open questions, leaving out any that are empty. Acceptance stays observable.
-7. **Reread it as someone who never saw this chat,** and fix undefined terms, references to the discussion and items without runnable acceptance.
-8. **Ask what's still open,** as in step 9 of the spine.
-9. **Report** the path and what stayed open, then the kickoff: in a fresh session, `Read <path> and build it`, or `/run-handoff <dir>` for worktrees and a review gate. End with `Deeper: /handoff <scope>`.
+1. **State the scope, don't wait.** Give the scope, exclusions and directory in one line. Ask before overwriting an existing `HANDOFF.md`.
+2. **Harvest decisions** as in step 2 of the spine; reuse existing evidence and references.
+3. **Research only a critical gap:** a missing fact that could invalidate scope, a contract or acceptance. Budget roughly two minutes total, including waiting, with at most one batch of two cheap read-only subagents if needed. Give them the remaining deadline. No test/build runs, broad discovery or repeated joins. When the budget expires, stop those subagents and do not wait for their answers; capture the remaining uncertainty instead.
+4. **Ask only blocking product decisions.** Otherwise mark unverified assumptions in Context. Technical unknowns become bounded spikes or explicit builder validation before dependent work.
+5. **Decompose by the normal rules.** Keep the items, parallelism, contracts, gates, skeleton, trust boundaries and budgets the build needs. There is no item-count cap; a hard implementation is not a reason to upgrade the planner to full mode.
+6. **Write `HANDOFF.md`** using the template, omitting empty sections, not necessary safeguards. Acceptance stays observable; identify checks whose command or outcome has not been verified.
+7. **Reread it yourself** for missing requirements, undefined terms, references to the discussion and unusable acceptance. Ask answerable open questions as in step 9 of the spine. If a cold read was explicitly requested, use Models above.
+8. **Report** the path, unverified evidence, checks skipped and anything still open. End with `/run-handoff <dir>` and optional `--auto`.
 
-A full run that follows in the same session starts from this file's scope and decisions.
+A later full run starts from this file's scope, decisions and evidence rather than repeating them.
