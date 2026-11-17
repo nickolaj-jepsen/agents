@@ -7,6 +7,10 @@ import Pager from '../../components/Pager.astro';
 import Wip from '../../components/Wip.astro';
 import { content, github, href, skillHref, skillInstall, type Skill } from '../../lib/content.ts';
 import { renderInline, renderMarkdown } from '../../lib/markdown.ts';
+import { headings, linkReferences, requirements, whenToUse } from '../../lib/skill.ts';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import '../../styles/skill.css';
 
 export const getStaticPaths = (() => {
   const c = content();
@@ -31,7 +35,12 @@ const lead = await renderInline(summary, file);
 const credit = s.credit && (await renderInline(s.credit, file));
 const description = await renderInline(s.description, file);
 // The page's own title stands for the body's first heading when that only names the skill.
-const body = await renderMarkdown(s.body.replace(new RegExp(`^# ${s.name}\\s*\\n+`), ''), file);
+const rendered = await renderMarkdown(s.body.replace(new RegExp(`^# ${s.name}\\s*\\n+`), ''), file);
+const toc = headings(rendered);
+const body = linkReferences(rendered, toc);
+const lines = readFileSync(join(__REPO_ROOT__, file), 'utf8').trimEnd().split('\n').length;
+const when = await renderInline(whenToUse(s.description), file);
+const needs = await Promise.all(requirements(s.body).map((r) => renderInline(r, file)));
 const usage = `/${s.name}${s.argumentHint ? ` ${s.argumentHint}` : ''}`;
 const inst = skillInstall(s);
 ---
@@ -47,11 +56,31 @@ const inst = skillInstall(s);
     </div>
     <p class="lead" set:html={lead} />
     <div class="head-meta">
-      <code class="usage">{usage}</code>
       <Install what={s.name} commands={inst.commands} more={inst.more} />
     </div>
     {s.status === 'in-progress' && <Notice />}
   </header>
+
+  <dl class="facts glance">
+    <dt>Invoke</dt>
+    <dd><code>{usage}</code></dd>
+    <dt>Used when</dt>
+    <dd set:html={when} />
+    {
+      needs.length > 0 && (
+        <>
+          <dt>Needs</dt>
+          <dd>
+            <ul class="plain">
+              {needs.map((n) => (
+                <li set:html={n} />
+              ))}
+            </ul>
+          </dd>
+        </>
+      )
+    }
+  </dl>
 
   <div class="spread">
     <section class="agent-reads" aria-labelledby="reads-h">
@@ -66,11 +95,24 @@ const inst = skillInstall(s);
           <span class="sc">description</span>
           <p set:html={description} />
         </div>
-        <div class="prose file-body" set:html={body} />
+        <div class="file-clip" id="skill-body">
+          <div class="prose file-body" set:html={body} />
+        </div>
+        <button type="button" class="file-toggle" hidden aria-expanded="false" aria-controls="skill-body" data-lines={lines}>
+          Read all of SKILL.md ({lines} lines)
+        </button>
+        <script is:inline>
+          (() => {
+            const f = document.currentScript.parentElement;
+            f.classList.add('js', 'collapsed');
+            f.querySelector('.file-toggle').hidden = false;
+          })();
+        </script>
       </div>
     </section>
 
-    <dl class="facts rail">
+    <aside class="rail side" aria-label="About this skill">
+    <dl class="facts">
       {
         credit && (
           <>
@@ -96,6 +138,21 @@ const inst = skillInstall(s);
       <dt>Source</dt>
       <dd><a href={github(`${s.path}/`)}><code>{s.path}/</code></a> on GitHub</dd>
     </dl>
+    {
+      toc.length > 0 && (
+        <nav class="toc" aria-label="Contents of SKILL.md">
+          <p class="sc">Contents</p>
+          <ul class="plain">
+            {toc.map((h) => (
+              <li class={h.level === 3 ? 'sub' : undefined}>
+                <a href={`#${h.id}`} set:html={h.html} />
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )
+    }
+    </aside>
   </div>
 
   <Pager
@@ -104,3 +161,7 @@ const inst = skillInstall(s);
     next={next && { href: skillHref(next.name), name: next.name }}
   />
 </Base>
+
+<script>
+  import '../../client/skill.ts';
+</script>

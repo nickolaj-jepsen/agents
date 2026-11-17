@@ -1,0 +1,129 @@
+/* ---- skill page: at a glance, the folded file, the contents ----------------------------- */
+
+/* The facts for people, under the header; the rows are short, so the label column is narrow. */
+.facts.glance {
+  margin-top: calc(4 * var(--u));
+  margin-bottom: calc(6 * var(--u));
+  grid-template-columns: 7rem minmax(0, 1fr);
+  max-width: 46rem;
+}
+@media (max-width: 40rem) {
+  .facts.glance {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.facts.glance ul.plain li::before {
+  content: "· ";
+  color: var(--text-3);
+}
+
+/* The SKILL.md shows its first screen, faded into the ground, until it is opened. */
+.file {
+  overflow-anchor: none;
+}
+.file.js.collapsed .file-clip {
+  max-height: calc(60 * var(--u));
+  overflow: hidden;
+  position: relative;
+}
+.file.js.collapsed .file-clip::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: calc(14 * var(--u));
+  background: linear-gradient(to bottom, transparent, var(--bg));
+  pointer-events: none;
+}
+.file-toggle {
+  display: block;
+  width: 100%;
+  padding: var(--u) calc(2 * var(--u));
+  background: linear-gradient(var(--ui-hi), var(--ui-hi)) top / 100% 1px no-repeat;
+  border: 0;
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  line-height: calc(3 * var(--u));
+  text-align: left;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.file-toggle:hover {
+  color: var(--white);
+}
+.file-toggle::before {
+  content: "▾ ";
+}
+.file-toggle[aria-expanded="true"]::before {
+  content: "▴ ";
+}
+.file.js.collapsed .file-toggle {
+  color: var(--white);
+}
+
+/* A "see X" in the file is a link to that heading. */
+.file-body a.xref {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--link-line);
+  text-underline-offset: 0.25em;
+}
+.file-body a.xref:hover {
+  text-decoration-color: currentColor;
+  color: var(--white);
+}
+
+/* The rail: facts, then the contents; from 64rem it stays under the masthead. */
+.rail.side .facts {
+  grid-template-columns: 7rem minmax(0, 1fr);
+  margin-bottom: calc(4 * var(--u));
+}
+.toc .sc {
+  display: block;
+  padding-bottom: var(--u);
+}
+.toc ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.toc a {
+  display: block;
+  font-size: 0.875rem;
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.toc a:hover {
+  color: var(--white);
+}
+.toc li.sub a {
+  padding-left: calc(2 * var(--u));
+}
+.toc a[aria-current="location"] {
+  color: var(--white);
+  box-shadow: inset 2px 0 0 var(--accent);
+  margin-left: calc(-1.5 * var(--u));
+  padding-left: calc(1.5 * var(--u));
+}
+.toc li.sub a[aria-current="location"] {
+  padding-left: calc(3.5 * var(--u));
+}
+.toc code {
+  font-size: 0.9em;
+}
+@media (max-width: 63.99rem) {
+  /* Below the rail's width the contents is no use beside a page that is not folded away. */
+  .toc {
+    display: none;
+  }
+}
+@media (min-width: 64rem) {
+  .rail.side {
+    position: sticky;
+    top: calc(var(--mast) + 3 * var(--u));
+    max-height: calc(100vh - var(--mast) - 6 * var(--u));
+    overflow-y: auto;
+    padding-left: calc(1.5 * var(--u));
+  }
+}
