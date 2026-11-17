@@ -40,17 +40,19 @@ const unshown = c.features.filter((f) => !c.stories.some((s) => HARNESSES.some((
     <ul class="summary">
       {
         HARNESSES.map((h) => (
-          <li data-h={h}>
+          <li>
             <Mark h={h} state={implMark(c, h)} /> {TITLES[h]} <Status status={c.impl[h].state} />{' '}
             {c.impl[h].state === 'none' ? (
               <span class="sub">{c.impl[h].reason}</span>
             ) : (
-              c.impl[h].exports.map((e, i) => (
-                <>
-                  {i > 0 && ', '}
-                  <code>{e}</code>
-                </>
-              ))
+              <span>
+                {c.impl[h].exports.map((e, i) => (
+                  <>
+                    {i > 0 && ', '}
+                    <code>{e}</code>
+                  </>
+                ))}
+              </span>
             )}
           </li>
         ))
@@ -63,7 +65,7 @@ const unshown = c.features.filter((f) => !c.stories.some((s) => HARNESSES.some((
     </ul>
   </header>
 
-  <Toolbar sizes={sizes} layout renders={c.stories.length > 0} />
+  <Toolbar sizes={sizes} layout />
 
   <section id="stories" class="cat-section" aria-labelledby="stories-h">
     <div class="section-head">
@@ -86,7 +88,7 @@ const unshown = c.features.filter((f) => !c.stories.some((s) => HARNESSES.some((
                   {about && <span class="about">{about}</span>}
                 </div>
                 <Renders c={c} s={s} size={size} />
-                <Features c={c} s={s} />
+                <Features c={c} s={s} about={about} />
               </li>
             );
           })}
@@ -131,7 +133,7 @@ const unshown = c.features.filter((f) => !c.stories.some((s) => HARNESSES.some((
       <h2 id="props-h">Props</h2>
       <span class="aside">Read from the kits' source and doc comments</span>
     </div>
-    <div class="api-cols" data-lay="side">
+    <div class="api-cols">
       {HARNESSES.map((h) => <Api c={c} h={h} />)}
     </div>
   </section>

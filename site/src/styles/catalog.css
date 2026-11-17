@@ -1,25 +1,21 @@
 /* The developer pages (/dev/): site.css's system, plus a sidebar, controls, renders and tables. */
 
-/* The page is as wide as every other, masthead included. To give the renders their room, the
-   sidebar hangs in the margin to the left of the column, as far as the screen has margin (a
-   rem is kept at its edge), and the content takes the rest: on a wide screen it is exactly the
-   masthead's width, on a narrow one it is indented by what did not fit. */
+/* The page is as wide as every other, masthead included. The sidebar sits in the column, under the
+   masthead's brand, and the content takes the rest; where the margin can hold the whole sidebar
+   (and the gutter beside it) it hangs there instead, and the content is the masthead's width. */
 .kc {
-  --side: 12rem;
+  --side: 10.5rem;
   --gap: calc(3 * var(--u));
+  /* What stays at the top of the screen above the sidebar: the masthead, where it stays. */
+  --stuck: var(--mast);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: calc(4 * var(--u));
 }
 @media (min-width: 64rem) {
   .kc {
-    --hang: min(
-      calc(var(--side) + var(--gap)),
-      calc(max(0px, (100vw - var(--wide) - 2 * var(--gutter)) / 2) + var(--gutter) - 1rem)
-    );
     grid-template-columns: var(--side) minmax(0, 1fr);
     column-gap: var(--gap);
-    margin-left: calc(-1 * var(--hang));
   }
   .cat-side {
     grid-column: 1;
@@ -27,8 +23,8 @@
     /* As tall as its content, not stretched to the row: a sticky box needs room to move. */
     align-self: start;
     position: sticky;
-    top: calc(var(--mast) + 3 * var(--u));
-    max-height: calc(100vh - var(--mast) - 6 * var(--u));
+    top: calc(var(--stuck) + 3 * var(--u));
+    max-height: calc(100vh - var(--stuck) - 6 * var(--u));
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--ui-hi) transparent;
@@ -36,6 +32,26 @@
   .cat-main {
     grid-column: 2;
   }
+  .cat-jump {
+    display: none;
+  }
+}
+/* 76rem of column, a 3rem gutter and the sidebar on each side. */
+@media (min-width: 106rem) {
+  .kc {
+    margin-left: calc(-1 * (var(--side) + var(--gap)));
+  }
+}
+/* A page with the sticky bar gives it the top of the screen: the masthead scrolls away, and the bar
+   takes its place, so the stories keep the height. */
+:root:has(.kc .toolbar) {
+  scroll-padding-top: calc(7 * var(--u) + 2 * var(--l));
+}
+:root:has(.kc .toolbar) .masthead {
+  position: static;
+}
+:root:has(.kc .toolbar) .kc {
+  --stuck: 0px;
 }
 /* On phones the component list follows the page, after a rule. */
 @media (max-width: 63.99rem) {
@@ -50,6 +66,56 @@
 }
 .cat-top .crumb {
   margin: 0;
+}
+/* Below 64rem the sidebar follows the page; this menu at the top stands in for it. */
+.cat-jump {
+  margin-top: calc(2 * var(--u));
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+}
+.cat-jump > summary {
+  display: inline-flex;
+  gap: var(--u);
+  padding: 0 calc(1.5 * var(--u));
+  line-height: calc(4 * var(--u) - 2px);
+  border: 1px solid var(--ui-hi);
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+}
+.cat-jump > summary::-webkit-details-marker {
+  display: none;
+}
+.cat-jump > summary::after {
+  content: "▾";
+  color: var(--text-3);
+}
+.cat-jump[open] > summary::after {
+  content: "▴";
+}
+.jump-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: calc(2 * var(--u)) calc(3 * var(--u));
+  padding: var(--u) 0 calc(2 * var(--u));
+  background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+}
+.jump-cols a {
+  display: block;
+  padding: calc(0.5 * var(--u)) 0;
+  color: var(--text-2);
+}
+.jump-cols a:hover {
+  color: var(--text);
+}
+.jump-cols a[aria-current="page"] {
+  color: var(--white);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+  text-decoration-color: var(--accent);
 }
 .kc .lede {
   margin-bottom: calc(3 * var(--u));
@@ -99,7 +165,7 @@
 /* The page's controls stay in view while it scrolls under them: the stories, then the props. */
 .toolbar {
   position: sticky;
-  top: var(--mast);
+  top: 0;
   z-index: 10;
   display: flex;
   flex-wrap: wrap;
@@ -120,6 +186,10 @@
 @media (max-width: 40rem) {
   .toolbar {
     position: static;
+  }
+  /* Two renders never fit side by side here, so Stacked is the way to see both. */
+  .toolbar [data-set-lay="side"] {
+    display: none;
   }
 }
 /* One row at the content's width: the buttons a little tighter than elsewhere. */
@@ -272,6 +342,11 @@
 .cat-list > li.here > .stories {
   display: block;
 }
+/* The last entry under the stories is the props: a section, not a story, so not set as data. */
+.stories .to-props {
+  font-family: var(--serif);
+  font-size: 0.9375rem;
+}
 .side-h {
   display: block;
   color: var(--text-3);
@@ -370,12 +445,6 @@
 }
 .count > span:first-child {
   margin-right: 0.3em;
-}
-.count.zero {
-  color: var(--text-3);
-}
-.count.zero > span:first-child {
-  color: var(--text-3);
 }
 .note {
   color: var(--text-2);
@@ -522,28 +591,35 @@
   margin-top: calc(3 * var(--u));
 }
 
-/* Two renders side by side while each keeps 32rem (a 70-column render at about three quarters of its
-   size), else one above the other. */
+/* A story's renders. Each is drawn at its own size (`--nat`, the picture's width). Without script they
+   wrap: one above the other when two do not fit. catalog.ts sets `data-fit` on each pair: `side`
+   when two fit in a row with each at 70% of its size or more, `stack` when they do not
+   (or the layout says so). Stacked, a render keeps its size and scrolls sideways in its frame where
+   it is wider than the column. A render is never enlarged. */
 .pair {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 32rem), 1fr));
-  gap: calc(3 * var(--u)) calc(3 * var(--u));
-  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(3 * var(--u));
+  align-items: flex-start;
 }
-:root[data-kit-h="pi"] .pair,
-:root[data-kit-h="claude"] .pair {
-  grid-template-columns: minmax(0, 1fr);
+.pair[data-fit="side"] {
+  flex-wrap: nowrap;
+}
+.pair[data-fit="stack"] {
+  flex-direction: column;
 }
 /* A render is a terminal window, so it reads as an object among the page's hairlines: a bright
-   frame, and a title bar filled a step off the page, with the harness and what was drawn. */
+   frame, a title bar filled a step off the page (the harness, what was drawn, at what size), and
+   the capture with a margin of its own canvas. */
 .cell {
-  width: fit-content;
+  flex: 0 1 auto;
+  min-width: 0;
   max-width: 100%;
   border: 1px solid var(--ui-hi);
   background: var(--bg);
 }
-.cell.gone {
-  width: 100%;
+.pair[data-fit="side"] .cell {
+  flex: 0 1 calc(var(--nat) + 2 * var(--u) + 2px);
 }
 .cell figcaption {
   display: flex;
@@ -574,47 +650,108 @@
   font-size: 0.8125rem;
   color: var(--text-2);
 }
+/* The size drawn, at the bar's end; yellow when it is the nearest to the size chosen. */
+.cell figcaption .sz {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  color: var(--text-2);
+}
+.cell figcaption .sz.off {
+  color: var(--yellow);
+}
 .view {
-  position: relative;
+  padding: var(--u);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ui-hi) transparent;
 }
 .view img {
   display: block;
-  width: 100%;
+  max-width: none;
   height: auto;
-  background: #000;
 }
-.view .near {
-  padding: 0 calc(1.5 * var(--u));
-  margin: 0;
-  border-top: 1px solid var(--ui-alt);
+.pair[data-fit="side"] .view img {
+  width: 100%;
 }
-.near {
+.size-note {
   font-size: 0.875rem;
-  line-height: calc(3 * var(--u));
   color: var(--yellow);
 }
-.why {
+.size-note[hidden] {
+  display: none;
+}
+.toolbar .seg.box button:disabled {
+  color: var(--text-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--text-3);
+  cursor: default;
+}
+
+/* A harness with no render of the story: one line, after the renders, saying why. */
+.absent {
+  margin-top: calc(2 * var(--u));
   font-size: var(--fs-ui);
   line-height: calc(3 * var(--u));
   color: var(--text-2);
-  padding: calc(2 * var(--u));
 }
-.why .mk {
-  vertical-align: middle;
-  margin-right: 0.4em;
+.rhead + .absent {
+  margin-top: 0;
+}
+.absent li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--u);
+}
+.absent .mk {
+  align-self: center;
+}
+.absent strong {
+  font-weight: 600;
+  color: var(--text);
 }
 
-/* Props: the two kits side by side. */
+/* One render alone, with room beside it: the story's line and its features take that room. */
+.story-stage[data-beside] {
+  display: grid;
+  grid-template-columns: max-content minmax(16rem, 1fr);
+  grid-template-rows: auto auto 1fr;
+  column-gap: calc(4 * var(--u));
+}
+.story-stage[data-beside] > .pair {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+}
+.story-stage[data-beside] > .rhead {
+  grid-column: 2;
+  grid-row: 1;
+}
+.story-stage[data-beside] > .absent {
+  grid-column: 2;
+  grid-row: 2;
+  margin-top: 0;
+  margin-bottom: calc(2 * var(--u));
+}
+.story-stage[data-beside] > .feats {
+  grid-column: 2;
+  grid-row: 3;
+  margin-top: 0;
+  align-self: start;
+}
+.story-stage[data-beside] > .rhead {
+  flex-direction: column;
+  gap: var(--u);
+}
+.story-stage[data-beside] .feats .what {
+  white-space: normal;
+}
+
+/* Props: one harness after the other, each across the column. */
 .api-cols {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
-  gap: calc(4 * var(--u)) calc(5 * var(--u));
-  align-items: start;
-}
-:root[data-kit-h="pi"] .api-cols,
-:root[data-kit-h="claude"] .api-cols,
-.api-cols[data-lay="stack"] {
   grid-template-columns: minmax(0, 1fr);
+  gap: calc(6 * var(--u));
 }
 .api h3 {
   font-weight: 650;
@@ -636,31 +773,48 @@
   line-height: calc(3 * var(--u));
   color: var(--text-2);
   margin-top: var(--u);
+  max-width: var(--measure);
 }
 .api h4 {
   margin-top: calc(2 * var(--u));
 }
-.props {
+.props,
+.props-line {
   font-size: var(--fs-ui);
   line-height: calc(3 * var(--u));
 }
-.props dt {
-  padding-top: var(--u);
+/* A row: the name and type, then what it is; side by side where the column is wide. */
+.prow {
+  padding: var(--u) 0;
   background: linear-gradient(var(--rule), var(--rule)) top / 100% 1px no-repeat;
-  margin-top: var(--u);
 }
-.props dt code {
+@media (min-width: 64rem) {
+  .prow {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 0 calc(3 * var(--u));
+  }
+}
+.props code,
+.props-line code {
   font-size: 0.8125rem;
   overflow-wrap: anywhere;
 }
-.props .pname {
+.props-line {
+  padding-top: var(--u);
+  background: linear-gradient(var(--rule), var(--rule)) top / 100% 1px no-repeat;
+}
+.props-line .sep {
+  color: var(--text-3);
+}
+.pname {
   color: var(--white);
   font-weight: 700;
 }
-.props .ptype {
+.ptype {
   color: var(--yellow);
 }
-.props .pdef {
+.pdef {
   color: var(--purple);
 }
 .props dd {
@@ -669,10 +823,4 @@
 .props dd code {
   font-size: var(--mono-em);
   color: var(--text);
-}
-
-/* ---- a story's layouts ------------------------------------------------------------------ */
-
-.story-stage[data-lay="stack"] .pair {
-  grid-template-columns: minmax(0, 1fr);
 }

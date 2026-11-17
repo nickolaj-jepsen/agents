@@ -1,9 +1,10 @@
 ---
 /**
  * The developer pages' shell: the site's Base and a sidebar of the kit's components (the current
- * one's stories under it) and the docs. The page is as wide as every
- * other, masthead included; the sidebar hangs in the margin to its left as far as the screen
- * allows, and the content takes what is left. The pages' controls are Toolbar.astro, in the slot.
+ * one's stories and props under it) and the docs. The page is as wide as every other, masthead
+ * included; the sidebar hangs in the margin to its left when the margin holds it, else it takes
+ * its place in the column. Below 64rem it follows the page, and a menu at the top (`.cat-jump`)
+ * stands in for it. The pages' controls are Toolbar.astro, in the slot.
  */
 import Base from '../../layouts/Base.astro';
 import { catalogHref, components, type Component } from '../../lib/catalog.ts';
@@ -47,6 +48,22 @@ const docs = content().docs;
             ))
           }
         </nav>
+        <details class="cat-jump">
+          <summary>{current ? current.name : overview ? 'Overview' : (docs.find((d) => d.slug === doc)?.title ?? 'Pages')}</summary>
+          <div class="jump-cols">
+            <ul>
+              <li><a href={catalogHref()} aria-current={overview ? 'page' : undefined}>Overview</a></li>
+              {components.map((c) => (
+                <li><a href={catalogHref(c)} aria-current={c === current ? 'page' : undefined}>{c.name}</a></li>
+              ))}
+            </ul>
+            <ul>
+              {docs.map((d) => (
+                <li><a href={docHref(d.slug)} aria-current={d.slug === doc ? 'page' : undefined}>{d.title}</a></li>
+              ))}
+            </ul>
+          </div>
+        </details>
       </div>
       <slot />
     </div>
@@ -71,6 +88,11 @@ const docs = content().docs;
                     </a>
                   </li>
                 ))}
+                <li class="to-props">
+                  <a href={`${catalogHref(c)}#props`}>
+                    <span class="name">Props</span>
+                  </a>
+                </li>
               </ul>
             </li>
           ))

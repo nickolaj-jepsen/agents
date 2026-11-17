@@ -53,10 +53,11 @@ const blocks = api
             .map(([title, list]) => (
               <>
                 <h4 class="sc">{title}</h4>
-                <dl class="props">
-                  {list.map((r) => (
-                    <>
-                      <dt>
+                {list.every((r) => !r.html) ? (
+                  <p class="props-line">
+                    {list.map((r, i) => (
+                      <>
+                        {i > 0 && <span class="sep">, </span>}
                         <code>
                           <span class="pname">{r.name}</span>
                           {r.optional && '?'}
@@ -72,11 +73,35 @@ const blocks = api
                             </>
                           )}
                         </code>
-                      </dt>
-                      <dd set:html={r.html || '&nbsp;'} />
-                    </>
-                  ))}
-                </dl>
+                      </>
+                    ))}
+                  </p>
+                ) : (
+                  <dl class="props">
+                    {list.map((r) => (
+                      <div class="prow">
+                        <dt>
+                          <code>
+                            <span class="pname">{r.name}</span>
+                            {r.optional && '?'}
+                            {r.type && (
+                              <>
+                                : <span class="ptype">{r.type}</span>
+                              </>
+                            )}
+                            {r.default !== undefined && (
+                              <>
+                                {' = '}
+                                <span class="pdef">{r.default}</span>
+                              </>
+                            )}
+                          </code>
+                        </dt>
+                        {r.html && <dd set:html={r.html} />}
+                      </div>
+                    ))}
+                  </dl>
+                )}
               </>
             ))}
         </div>

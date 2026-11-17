@@ -58,8 +58,8 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
 ## Layout
 
 - One column of 76rem at most, a 16px gutter on phones; prose holds a 42rem measure. Every page,
-  the developer pages too, has the masthead at that width, and it stays at the top (`--mast`); the
-  catalogue's bar and sidebar hang from it.
+  the developer pages too, has the masthead at that width, and it stays at the top (`--mast`), except
+  on a page with the catalogue's sticky bar: there the masthead scrolls away and the bar takes the top.
 - A harness is its logo (`Glyph.astro`, drawn from one sprite in `Base.astro`) in its colour, never a
   letter: Claude Code's pixel mascot (thesvg.org, in `accent`) and pi's press-kit mark (pi.dev/press-kit, in its own colours). The harness switch (`HarnessSwitch.astro`)
   is one control wherever there is one: the home page's plugins, a plugin's gallery, the catalogue's
@@ -83,23 +83,38 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
 
 ## The catalogue
 
-- The developer pages keep the page's width. The sidebar hangs in the margin to the left of the column
-  as far as the screen has margin, and the content takes the rest: on a wide screen it is exactly the
-  masthead's width, on a narrow one it is indented by what did not fit; below 64rem the sidebar follows.
+- The developer pages keep the page's width. The sidebar sits in the column, its left edge under the
+  masthead's brand, and the content takes the rest; where the margin holds the whole sidebar and the
+  gutter, it hangs there and the content is exactly the masthead's width. It never half-hangs. Below
+  64rem the sidebar follows the page, and a framed menu at the top (the page's name, `▾`) lists the
+  same pages.
 - The sidebar is two plain lists, the components and the docs, nothing else, and no logos: the current
-  component opens into its stories, and the one in view is marked as the page scrolls. Which harness
-  has what is the overview's table; the repo's other guides are listed there too.
-- `/dev/` is the overview. A component's page is its name and purpose, one line of summary (the kit in
-  each harness, the counts, a way to the props), then one sticky bar (the harness switch, terminal size) that applies to everything under it: the stories, then the props. On a phone the bar
-  scrolls away.
-- The harness switch is also the layout: Side by side and Stacked show both harnesses (for the stories
-  and the props alike), Claude Code and pi show one alone. The key `f` moves between the two.
+  component opens into its stories and, last, its props; the one filling the screen (whose heading is
+  above a third of the way down) is marked as the page scrolls. Which harness has what is the
+  overview's table; the repo's other guides are listed there too.
+- `/dev/` is the overview: a table of components, each harness's cell its feature counts (no zeros,
+  and no "exists" beside them) or why it has none. A component's page is its name and purpose, one
+  line of summary (the kit in both harnesses whichever is shown, the counts, a way to the props), then
+  one sticky bar (the harness switch, terminal size) that applies to everything under it. On a phone
+  the bar scrolls away.
+- The harness switch is also the layout: Side by side and Stacked show both harnesses' renders, Claude
+  Code and pi show one alone. The key `f` moves between the two. On a phone there is no Side by side.
+- The size switch greys out (and strikes) a size no harness on screen was drawn at. A render shows its
+  size at the end of its title bar, yellow when it is the nearest to the size chosen, and one note in
+  the bar says which harnesses fell back; never a warning per render.
 - A story's compatibility is one line under its renders (the features it shows), which opens into what
-  each harness does and the caveat. There is no separate compatibility table.
-- A render is a terminal window: a bright frame and a title bar a step off the page, with the harness's
-  logo and what was drawn, so it reads as an object among the page's hairlines.
-- Two renders sit side by side while each keeps 32rem, a 70-column render at about three quarters of
-  its size; below that they stack, so the text in a render stays readable. A render is never enlarged.
+  each harness does and the caveat. A feature named as the story's own line is not repeated there.
+  There is no separate compatibility table.
+- A render is a terminal window: a bright frame, a title bar a step off the page (the harness's logo,
+  what was drawn, its size), and the capture inside a 1u margin of its own canvas, so it reads as an
+  object among the page's hairlines.
+- Two renders sit side by side while each keeps 70% of its size or more (a 70-column pair fits from
+  about 1366px); otherwise they stack, each at its own size, scrolling sideways inside its frame where
+  it is wider than the column. A render is never enlarged, and alone it is never shrunk.
+- A harness with no render of a story is one line after the renders (its logo, name and why), not an
+  empty frame. A render alone, with 16rem to spare, has the story's line and features beside it.
+- Props are one harness after the other, across the column; a row puts the name and type beside what
+  it is from 64rem. A list whose rows have no descriptions is one line.
 - Status reads glyph then word: ✓ green, ~ yellow, ✗ red, ○ muted. A harness is its logo: lit when it
   has the thing, muted when not yet, struck when it cannot.
 - Switches are a hairline row of buttons; the pressed one is in white with a 2px accent rule under it. A

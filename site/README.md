@@ -35,8 +35,9 @@ the root's `yaml`.
   media in it.
 - The UI kit's catalogue is `/dev/` (the overview) and a page per component: its stories inline (side
   by side or stacked), each with its compatibility on a line that opens, and the props. Its data is generated (`kit/README.md`, The
-  catalogue); the sticky bar's switches, the `f` key and the sidebar's marker for the story in view are `src/client/catalog.ts`, and every page reads whole
-  without them. The developer docs share its sidebar.
+  catalogue); the sticky bar's switches, the `f` key, the sidebar's marker for the story in view and
+  whether two renders fit side by side are `src/client/catalog.ts`, and every page reads whole without
+  them. The developer docs share its sidebar.
 - A plugin page's media is one gallery (`src/components/Gallery.astro`, `src/client/gallery.ts`); the
   harness a visitor picks there, on the home page (`src/client/home.ts`) or in the catalogue is
   remembered for all of them (`src/client/prefs.ts`). They share `HarnessSwitch.astro`, and a harness's

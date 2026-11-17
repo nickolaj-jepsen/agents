@@ -51,6 +51,7 @@ const chips = [
       <span><Mark h="claude" state="on" /> Claude Code</span>
       <span><Mark h="pi" state="on" /> pi</span>
       <span>lit has it, dim not yet, struck not possible</span>
+      <span>counts are features: ✓ yes, ~ partial, ✗ no</span>
     </p>
   </header>
 
@@ -80,16 +81,18 @@ const chips = [
                   return (
                     <td class={`h-${h}`}>
                       <div class="cellrow">
-                        <Status status={c.impl[h].state} />
+                        {c.impl[h].state !== 'exists' && <Status status={c.impl[h].state} />}
                         {c.impl[h].state !== 'none' && (
                           <span class="counts">
-                            {chips.map(([k, g, t]) => (
-                              <span class:list={['count', k, { zero: n[k] === 0 }]} title={`${n[k]} ${t}`}>
-                                <span aria-hidden="true">{g}</span>
-                                {n[k]}
-                                <span class="vh"> {t}</span>
-                              </span>
-                            ))}
+                            {chips
+                              .filter(([k]) => n[k] > 0)
+                              .map(([k, g, t]) => (
+                                <span class={`count ${k}`} title={`${n[k]} ${t}`}>
+                                  <span aria-hidden="true">{g}</span>
+                                  {n[k]}
+                                  <span class="vh"> {t}</span>
+                                </span>
+                              ))}
                           </span>
                         )}
                       </div>
@@ -125,13 +128,15 @@ const chips = [
               <td class={`h-${h}`}>
                 <div class="cellrow">
                   <span class="counts">
-                    {chips.map(([k, g, t]) => (
-                      <span class={`count ${k}`} title={`${total[h][k]} ${t}`}>
-                        <span aria-hidden="true">{g}</span>
-                        {total[h][k]}
-                        <span class="vh"> {t}</span>
-                      </span>
-                    ))}
+                    {chips
+                      .filter(([k]) => total[h][k] > 0)
+                      .map(([k, g, t]) => (
+                        <span class={`count ${k}`} title={`${total[h][k]} ${t}`}>
+                          <span aria-hidden="true">{g}</span>
+                          {total[h][k]}
+                          <span class="vh"> {t}</span>
+                        </span>
+                      ))}
                   </span>
                 </div>
                 <div class="note">

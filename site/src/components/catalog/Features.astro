@@ -9,10 +9,14 @@ import { differs, HARNESSES, TITLES, type Component, type Story } from '../../li
 interface Props {
   c: Component;
   s: Story;
+  /** The story's own line, above it: a feature named the same is not said twice. */
+  about?: string;
 }
-const { c, s } = Astro.props;
+const { c, s, about } = Astro.props;
 const shown = c.features.filter((f) => HARNESSES.some((h) => f.story[h] === s.id));
 const nd = shown.filter(differs).length;
+const same = (a: string, b?: string) => !!b && a.trim().replace(/\.$/, '').toLowerCase() === b.trim().replace(/\.$/, '').toLowerCase();
+const what = shown.filter((f) => !same(f.label, about)).map((f) => f.label);
 ---
 
 {
@@ -20,7 +24,7 @@ const nd = shown.filter(differs).length;
     <details class="feats">
       <summary>
         <span class="lbl">{shown.length === 1 ? 'Feature' : `${shown.length} features`}</span>
-        <span class="what">{shown.map((f) => f.label).join(' · ')}</span>
+        {what.length > 0 && <span class="what">{what.join(' · ')}</span>}
         {nd > 0 && <span class="flag">{nd === 1 ? '1 differs' : `${nd} differ`}</span>}
       </summary>
       <table class="compat">

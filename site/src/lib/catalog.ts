@@ -55,13 +55,20 @@ export const catalogHref = (c?: Component, s?: Story) =>
 export const storyAnchor = (s: Story) => `s-${s.state}`;
 
 export const sizeKey = (s: { w: number; h: number }) => `${s.w}x${s.h}`;
+/** A size as it is read: columns × rows. */
+export const sizeLabel = (s: { w: number; h: number }) => `${s.w}×${s.h}`;
 
-/** Every terminal size the stories were drawn at, narrowest first. */
-export function sizesOf(stories: Story[]): { w: number; h: number }[] {
-  const seen = new Map<string, { w: number; h: number }>();
+/** Every terminal size the stories were drawn at, narrowest first, with the harnesses drawn at it. */
+export function sizesOf(stories: Story[]): { w: number; h: number; by: Harness[] }[] {
+  const seen = new Map<string, { w: number; h: number; by: Harness[] }>();
   for (const s of stories)
     for (const h of HARNESSES)
-      for (const x of s.shots[h] ?? []) seen.set(sizeKey(x), { w: x.w, h: x.h });
+      for (const x of s.shots[h] ?? []) {
+        const k = sizeKey(x);
+        const e = seen.get(k) ?? { w: x.w, h: x.h, by: [] };
+        if (!e.by.includes(h)) e.by.push(h);
+        seen.set(k, e);
+      }
   return [...seen.values()].sort((a, b) => a.w - b.w || a.h - b.h);
 }
 
@@ -87,7 +94,7 @@ export const differs = (f: Component["features"][number]) =>
 export function whyNot(c: Component, s: Story, h: Harness): string {
   if (c.impl[h].state === "none") return `not possible: ${s.missing[h] ?? c.impl[h].reason ?? ""}`;
   if (!s.by[h]) return "no story yet";
-  return "no render yet; run `just catalog`";
+  return "no render yet (just catalog)";
 }
 
 export const STATUS_GLYPH = {

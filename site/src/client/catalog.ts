@@ -1,10 +1,10 @@
 /**
  * The developer pages' controls. Every page is complete without them (both harnesses, the
- * narrowest size, side by side); this adds the harness switch, the size and layout switches, the
- * sidebar filter. A choice lives in the URL's query (`h`, `size`, `lay`), so a link shows what it
- * says; the harness is remembered across the site, the size and layout for the next page. The
- * layout arranges everything on the page that has two harnesses: each story's renders and the
- * props columns. The one key is `f`, which switches between the harnesses: Claude Code and pi.
+ * narrowest size, renders side by side where they fit); this adds the harness switch, the size and
+ * layout switches, and fits each story's renders to the column. A choice lives in the URL's query
+ * (`h`, `size`, `lay`), so a link shows what it says; the harness is remembered across the site,
+ * the size and layout for the next page. The one key is `f`, which switches between the harnesses:
+ * Claude Code and pi.
  */
 import { readHarness, writeHarness } from "./prefs.ts";
 
@@ -44,18 +44,22 @@ function press(sel: string, attr: string, value: string): void {
 }
 
 const stages = $$(".story-stage");
-const propCols = $$(".api-cols");
 
 function syncUrl(): void {
   const u = new URL(location.href);
   const set = (k: string, v: string | null) =>
     v ? u.searchParams.set(k, v) : u.searchParams.delete(k);
-  const arranged = stages.length > 0 || propCols.length > 0;
   set("h", state.h === "both" ? null : state.h);
   set("size", $$("[data-sizes]").length && state.size ? state.size : null);
-  set("lay", arranged && state.lay !== "side" ? state.lay : null);
+  set("lay", stages.length > 0 && state.lay !== "side" ? state.lay : null);
   history.replaceState(null, "", u);
 }
+
+/** The harnesses on screen. */
+const shownHarnesses = (): string[] => (state.h === "both" ? ["claude", "pi"] : [state.h]);
+const TITLE: Record<string, string> = { claude: "Claude Code", pi: "pi" };
+const label = (key: string) => key.replace("x", "×");
+const width = (key: string) => Number(key.split("x")[0]);
 
 // ---- harness ---------------------------------------------------------------------------
 
@@ -66,54 +70,94 @@ function applyHarness(): void {
 
 // ---- size -------------------------------------------------------------------------------
 
-const sizeKeys = [
-  ...new Set($$<HTMLButtonElement>("[data-set-size]").map((b) => b.dataset.setSize!)),
-];
+const sizeButtons = $$<HTMLButtonElement>("[data-set-size]");
 
 function applySize(): void {
-  const all = $$(".cell");
-  if (!all.length) return;
-  const w = state.size ? Number(state.size.split("x")[0]) : 0;
-  // The wanted size if the page has it, else the one nearest by width.
+  if (!sizeButtons.length) return;
+  // A size none of the harnesses on screen was drawn at can't be chosen.
+  const on = shownHarnesses();
+  for (const b of sizeButtons) {
+    b.disabled = !(b.dataset.has ?? "").split(" ").some((h) => on.includes(h));
+    b.title = b.disabled
+      ? `No render at ${label(b.dataset.setSize!)} for ${on.map((h) => TITLE[h]).join(" or ")}`
+      : "";
+  }
+  const keys = sizeButtons.filter((b) => !b.disabled).map((b) => b.dataset.setSize!);
+  if (!keys.length) return;
+  const w = state.size ? width(state.size) : 0;
+  // The wanted size if it can be chosen, else the one nearest by width.
   const size =
-    (state.size && sizeKeys.includes(state.size) ? state.size : null) ??
-    (sizeKeys.length
-      ? sizeKeys.reduce((a, b) =>
-          Math.abs(+b.split("x")[0]! - w) < Math.abs(+a.split("x")[0]! - w) ? b : a,
-        )
-      : null);
-  if (!size) return;
+    state.size && keys.includes(state.size)
+      ? state.size
+      : keys.reduce((a, b) => (Math.abs(width(b) - w) < Math.abs(width(a) - w) ? b : a));
   press("[data-set-size]", "data-set-size", size);
-  const sw = Number(size.split("x")[0]);
-  for (const cell of all) {
+  const sw = width(size);
+  const near = new Set<string>();
+  for (const cell of $$(".cell")) {
     const views = $$(".view", cell);
     if (!views.length) continue;
-    const exact = views.find((v) => v.dataset.size === size);
     const shown =
-      exact ??
+      views.find((v) => v.dataset.size === size) ??
       views.reduce((a, b) => (Math.abs(+b.dataset.w! - sw) < Math.abs(+a.dataset.w! - sw) ? b : a));
-    for (const v of views) {
-      v.hidden = v !== shown;
-      const tag = v.querySelector<HTMLElement>("[data-near]");
-      if (tag) tag.hidden = v.dataset.size === size;
+    for (const v of views) v.hidden = v !== shown;
+    cell.style.setProperty("--nat", `${shown.dataset.px}px`);
+    const exact = shown.dataset.size === size;
+    const tag = cell.querySelector<HTMLElement>("[data-sz]");
+    if (tag) {
+      tag.textContent = label(shown.dataset.size!);
+      tag.classList.toggle("off", !exact);
+      tag.title = exact ? "" : `No render at ${label(size)}; this is the nearest`;
     }
+    if (!exact && on.includes(cell.dataset.h!)) near.add(cell.dataset.h!);
+  }
+  // One note for the page, not one per render.
+  const note = document.querySelector<HTMLElement>("[data-size-note]");
+  if (note) {
+    note.hidden = near.size === 0;
+    note.textContent = near.size
+      ? `No ${label(size)} for ${[...near].map((h) => TITLE[h]).join(", ")}: the nearest is shown`
+      : "";
   }
 }
 
 // ---- layout ------------------------------------------------------------
 
+// On a phone two renders never fit side by side, and the switch has no Side by side: Stacked is
+// what "both" looks like there.
+const phone = matchMedia("(max-width: 40rem)");
+
 function applyLayout(): void {
   // The layout buttons are the switch's "both": pressed only while both harnesses are shown.
+  const lay = phone.matches ? "stack" : state.lay;
   for (const b of $$<HTMLButtonElement>("[data-set-lay]"))
-    b.setAttribute("aria-pressed", String(state.h === "both" && b.dataset.setLay === state.lay));
-  // With one harness chosen there is nothing to arrange.
-  const lay = state.h === "both" ? state.lay : "side";
-  for (const stage of stages) {
-    stage.dataset.lay = lay;
-  }
-  // The props columns follow too: a harness with no props has its "planned" or "not possible" note.
-  for (const cols of propCols) cols.dataset.lay = lay;
+    b.setAttribute("aria-pressed", String(state.h === "both" && b.dataset.setLay === lay));
   store.set("lay", state.lay === "side" ? null : state.lay);
+  fit();
+}
+
+// Whether a story's two renders sit side by side, each shrunk to 70% of its size at most, and
+// whether a render alone, at its size, leaves room for the story's text beside it.
+const MIN_SCALE = 0.7;
+const FRAME = 2 * 8 + 2; // a render's padding and border
+const TEXT_ROOM = 16 * 16 + 4 * 8; // the text's 16rem column and the gap before it
+function fit(): void {
+  const on = shownHarnesses();
+  for (const stage of stages) {
+    const pair = stage.querySelector<HTMLElement>(".pair");
+    const cells = pair ? $$(".cell", pair).filter((c) => on.includes(c.dataset.h!)) : [];
+    const outer = (c: HTMLElement) => parseFloat(c.style.getPropertyValue("--nat")) + FRAME;
+    const room = stage.clientWidth;
+    let side = false;
+    if (pair && cells.length === 2 && state.h === "both" && state.lay === "side") {
+      const gap = parseFloat(getComputedStyle(pair).columnGap) || 0;
+      side = cells.reduce((n, c) => n + outer(c) * MIN_SCALE, 0) + gap <= room;
+    }
+    if (pair) pair.dataset.fit = side ? "side" : "stack";
+    stage.toggleAttribute(
+      "data-beside",
+      cells.length === 1 && outer(cells[0]!) + TEXT_ROOM <= room,
+    );
+  }
 }
 
 // ---- controls ---------------------------------------------------------------------------
@@ -153,8 +197,9 @@ document.addEventListener("keydown", (e) => {
 
 // ---- sidebar: the story in view ----------------------------------------------------------
 
-// The current component's stories are its sidebar links; the last one whose heading has passed
-// the masthead and bar is marked, so the list says where on the page you are.
+// The current component's stories (and its props) are its sidebar links. The one marked is the last
+// whose heading is above a line a third of the way down the screen under the bar, so the mark
+// follows what fills the screen, not what has just left it; at the page's end, the last.
 const spyLinks = new Map(
   $$<HTMLAnchorElement>(".cat-list > li.here .stories a").map((a) => [a.hash.slice(1), a] as const),
 );
@@ -165,9 +210,12 @@ if (spyTargets.length) {
   let queued = false;
   const update = (): void => {
     queued = false;
-    const line = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) + 8;
+    const top = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop);
+    const line = top + (innerHeight - top) / 3;
     let here: string | null = null;
     for (const t of spyTargets) if (t.getBoundingClientRect().top <= line) here = t.id;
+    if (innerHeight + scrollY >= document.documentElement.scrollHeight - 2)
+      here = spyTargets[spyTargets.length - 1]!.id;
     for (const [id, a] of spyLinks)
       if (id === here) a.setAttribute("aria-current", "location");
       else a.removeAttribute("aria-current");
@@ -180,6 +228,21 @@ if (spyTargets.length) {
   addEventListener("scroll", queue, { passive: true });
   addEventListener("resize", queue);
   update();
+}
+
+phone.addEventListener("change", applyLayout);
+
+// The column's width decides what fits.
+if (stages.length) {
+  let queued = false;
+  new ResizeObserver(() => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      fit();
+    });
+  }).observe(stages[0]!.parentElement!);
 }
 
 apply();
