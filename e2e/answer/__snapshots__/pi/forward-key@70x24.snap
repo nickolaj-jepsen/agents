@@ -1,5 +1,5 @@
 # answer/pi/forward-key 70x24 @0,12 (70x11)
-╭─ Q2 2 of 2 ────────────────────────────────────────────────────────╮
+╭─ 2 of 2  ○ Q1  ○ Q2 ───────────────────────────────────────────────╮
 │ Add caching?                                                       │
 │                                                                    │
 │ ›1 ○ A. Yes                                                        │
@@ -11,7 +11,7 @@
 │ b back  f forward  s skip  r review  n note  m several             │
 ╰───── 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
 --- styles
-1x2 . 2x2 . 3x6 . 1x57
+1x2 . 2x6 .x2 3 . 3x2 .x2 3 . 2x2 . 1x48
 1 . 4x12 .x55 1
 1 .x68 1
 1 . 2x2 . 2x8 .x56 1

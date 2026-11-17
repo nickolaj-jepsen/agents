@@ -111,6 +111,11 @@ export default scenarios({
       about: "a click on the `f forward` chip",
       steps: [{ click: "f forward" }, asserts("Add caching?")],
     },
+    "stop-click": {
+      from: "open",
+      about: "a click on a question's stop in the top border goes to that question",
+      steps: [{ click: "○ Q2" }, asserts("Add caching?"), asserts("2 of 2")],
+    },
     "forward-tab": {
       from: "open",
       about: "tab goes forward",

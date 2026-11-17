@@ -1,5 +1,5 @@
 # answer/pi/several 70x24 @0,9 (70x14)
-╭─ Q1 1 of 1 ────────────────────────────────────────────────────────╮
+╭─ 1 of 1  ○ Q1 ─────────────────────────────────────────────────────╮
 │ Which checks should run?                                           │
 │                                                                    │
 │ ›1 □ A. lint (recommended)                                         │
@@ -14,7 +14,7 @@
 │ b back  f forward  y take A, B, C  s skip  r review  n note  m se… │
 ╰──────────────── 1-9 toggles, f goes on · esc closes, answers kept ─╯
 --- styles
-1x2 . 2x2 . 3x6 . 1x57
+1x2 . 2x6 .x2 3 . 2x2 . 1x54
 1 . 4x24 .x43 1
 1 .x68 1
 1 . 2x2 . 2x9 3x14 .x41 1

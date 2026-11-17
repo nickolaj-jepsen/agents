@@ -3,8 +3,9 @@
  * review, every row and key chip clickable. A key pick records the answer and goes on
  * to the next item unanswered; a click takes it and opens its note, and a click on the
  * taken answer goes on. A note is also `n` or a click on `add a note` under the answer,
- * and `m` lets several options be one answer. `y` takes the recommendation.
- * The draft and every step through it are the
+ * and `m` lets several options be one answer. `y` takes the recommendation. The
+ * frame is the kit's `bandShell`; its top border holds the question stops, a click on one
+ * goes to that question. The draft and every step through it are the
  * core's (`../core/forms.ts`), which Claude Code's mod shares; this file only
  * draws its view and maps keys and clicks onto those steps.
  */
@@ -23,6 +24,15 @@ import {
   visibleWidth,
   wrapTextWithAnsi,
 } from "@earendil-works/pi-tui";
+import {
+  bandAct,
+  bandShell,
+  chipRow,
+  tokens,
+  type Band,
+  type BandRow,
+  type Chip,
+} from "../../../kit/pi/ui.ts";
 import type { Action, View } from "../core/forms.ts";
 
 /** `fill` writes the reply into the editor; `send` sends it as the person's message instead. */
@@ -50,13 +60,9 @@ type Act =
   | { kind: "goto"; index: number };
 
 /** A drawn row: a whole-row target, or chips hit by column. */
-type Row = { text: string; act?: Act; cells?: { start: number; end: number; act: Act }[] };
+type Row = BandRow<Act>;
 
 const MIN_WIDTH = 30;
-/** Body rows the form keeps even where the terminal is tiny. */
-const MIN_ROOM = 4;
-/** Rows kept for the transcript and footer around the frame. */
-const RESERVED_ROWS = 8;
 
 export class AnswerForm implements Component, Focusable {
   /** The highlighted entry on an item's screen. */
@@ -67,10 +73,13 @@ export class AnswerForm implements Component, Focusable {
   private readonly input = new Input({ prompt: "› ", placeholder: "" });
   /** First body row shown when the item is taller than the frame. */
   private offset = 0;
-  private maxOffset = 0;
-  /** Frame row → what a click there does, from the last render. */
-  private hits = new Map<number, Row>();
-  private renderedRows = 0;
+  /** What the last render drew, for the mouse. */
+  private band: Pick<Band<Act>, "hits" | "maxOffset" | "lines" | "offset"> = {
+    hits: new Map(),
+    maxOffset: 0,
+    offset: 0,
+    lines: [],
+  };
   private isFocused = false;
   /** Keys that came while a step ran, so a quick typist's note isn't lost to it. */
   private queued: string[] = [];
@@ -203,7 +212,7 @@ export class AnswerForm implements Component, Focusable {
   }
 
   private scroll(step: number): void {
-    this.offset = Math.max(0, Math.min(this.maxOffset, this.offset + step));
+    this.offset = Math.max(0, Math.min(this.band.maxOffset, this.offset + step));
     this.tui.requestRender();
   }
 
@@ -271,17 +280,13 @@ export class AnswerForm implements Component, Focusable {
 
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
     // Zero-based from the top border, so a body row is the frame row itself.
-    const inside = event.y >= 0 && event.y < this.renderedRows;
+    const inside = event.y >= 0 && event.y < this.band.lines.length;
     if (event.type === "wheel" && event.wheelDelta) {
       if (!inside) return undefined;
       this.scroll(event.wheelDelta < 0 ? -1 : 1);
       return { handled: true };
     }
-    const row = this.hits.get(event.y);
-    const x = event.x - 1;
-    const act =
-      row?.cells?.find((c) => x >= c.start && x < c.end)?.act ??
-      (row?.act && x < visibleWidth(row.text.trimEnd()) ? row.act : undefined);
+    const act = bandAct(this.band, event.x, event.y);
     if (!act) return inside ? { handled: true } : undefined;
     if (event.type === "move" && act.kind === "entry" && act.index !== this.cursor) {
       this.cursor = act.index;
@@ -311,16 +316,24 @@ export class AnswerForm implements Component, Focusable {
     this.step({ do: "pick", entry: act.index }, () => this.startEditing("note"));
   }
 
-  /** `k label` chips on one row, each its own click target. */
-  private chips(list: [string, string, Act][]): Row {
+  /**
+   * The divider's question stops: a mark and the label of each question, the one on show in
+   * the accent, each a click on that question. Too wide a row for the border is left out.
+   */
+  private stops(): Row {
+    const t = this.theme;
     let text = "";
-    const cells: Row["cells"] = [];
-    for (const [key, label, act] of list) {
+    const cells: NonNullable<Row["cells"]> = [];
+    this.view.review.forEach((row, i) => {
       if (text) text += "  ";
       const start = visibleWidth(text);
-      text += `${this.theme.fg("accent", key)} ${label}`;
-      cells.push({ start, end: visibleWidth(text), act });
-    }
+      const mark = row.isAnswered
+        ? t.fg("success", tokens.glyph.done)
+        : t.fg("dim", tokens.glyph.single.off);
+      const isHere = !this.view.isReview && i === this.view.step;
+      text += `${mark} ${isHere ? t.fg("accent", row.label) : t.fg("dim", row.label)}`;
+      cells.push({ start, end: visibleWidth(text), act: { kind: "goto", index: i } });
+    });
     return { text, cells };
   }
 
@@ -336,11 +349,8 @@ export class AnswerForm implements Component, Focusable {
     };
   }
 
-  /**
-   * The body rows the form gets: its tallest question's, so going from one to the next moves
-   * nothing, and never more than the terminal leaves.
-   */
-  private roomAt(width: number): number {
+  /** The body rows of the form's tallest question at `width`, measured once; undefined with none. */
+  private tallest(width: number): number | undefined {
     if (this.measured?.width !== width) {
       const rows = this.steps.reduce((n, step) => {
         const measured = step.item ? this.itemRows(step.item, width).length : 0;
@@ -348,9 +358,7 @@ export class AnswerForm implements Component, Focusable {
       }, 0);
       this.measured = { width, rows };
     }
-    const fits = Math.max(MIN_ROOM, this.tui.terminal.rows - RESERVED_ROWS - 4);
-    // With no other question to measure, what fits is what it stands at.
-    return Math.min(fits, Math.max(MIN_ROOM, this.measured.rows || fits));
+    return this.measured.rows || undefined;
   }
 
   private itemRows(item: Item, width: number): Row[] {
@@ -442,45 +450,28 @@ export class AnswerForm implements Component, Focusable {
   render(width: number): string[] {
     const t = this.theme;
     const w = Math.max(MIN_WIDTH, width);
-    const inner = w - 2;
-    const textWidth = inner - 2;
+    const textWidth = w - 4;
     const { item, isReview: review, step, count } = this.view;
-    const body = item ? this.itemRows(item, textWidth) : this.reviewRows(textWidth);
-    while (body.length && !body[body.length - 1]?.text) body.pop();
-    const actions = review
-      ? this.chips([
-          ["enter", "fill the prompt", { kind: "fill" }],
-          ["s", "send", { kind: "send" }],
-          ["n", "note", { kind: "note" }],
-          ["b", "back", { kind: "back" }],
-        ])
-      : this.chips([
-          ["b", "back", { kind: "back" }],
-          ["f", "forward", { kind: "forward" }],
-          ...(item?.canAccept
-            ? [["y", `take ${item.accepts}`, { kind: "accept" }] as [string, string, Act]]
-            : []),
-          ["s", "skip", { kind: "skip" }],
-          ["r", "review", { kind: "review" }],
-          ["n", "note", { kind: "note" }],
-          ...(item?.canSeveral
-            ? [["m", "several", { kind: "several" }] as [string, string, Act]]
-            : []),
-        ]);
-
-    // The actions stay put; a tall item scrolls above them.
-    const room = this.roomAt(textWidth);
-    this.maxOffset = Math.max(0, body.length - room);
-    this.offset = Math.min(this.offset, this.maxOffset);
-    const shown = body.slice(this.offset, this.offset + room);
-    // Padded to that height, so a short question doesn't shrink the frame under the prompt.
-    while (shown.length < room) shown.push({ text: "" });
-    const rows = [...shown, { text: "" }, actions];
-
-    const border = (s: string) => t.fg("borderMuted", s);
-    const title = item
-      ? ` ${t.fg("accent", item.label)} ${t.fg("dim", `${step + 1} of ${count}`)} `
-      : ` ${t.fg("accent", "Review")} `;
+    const chip = (key: string, label: string, act: Act): Chip<Act> => ({ key, label, act });
+    const footer = chipRow(
+      t,
+      review
+        ? [
+            chip("enter", "fill the prompt", { kind: "fill" }),
+            chip("s", "send", { kind: "send" }),
+            chip("n", "note", { kind: "note" }),
+            chip("b", "back", { kind: "back" }),
+          ]
+        : [
+            chip("b", "back", { kind: "back" }),
+            chip("f", "forward", { kind: "forward" }),
+            ...(item?.canAccept ? [chip("y", `take ${item.accepts}`, { kind: "accept" })] : []),
+            chip("s", "skip", { kind: "skip" }),
+            chip("r", "review", { kind: "review" }),
+            chip("n", "note", { kind: "note" }),
+            ...(item?.canSeveral ? [chip("m", "several", { kind: "several" })] : []),
+          ],
+    );
     const keys = this.editing
       ? "enter goes on · esc leaves the field"
       : review
@@ -488,27 +479,20 @@ export class AnswerForm implements Component, Focusable {
         : this.isSeveral
           ? "1-9 toggles, f goes on · esc closes, answers kept"
           : "1-9 or enter answers · hjkl moves · esc closes, answers kept";
-    const hint = ` ${this.maxOffset ? "shift+↑↓ scrolls · " : ""}${keys} `;
-    const topFill = Math.max(0, inner - 1 - visibleWidth(title));
-    const bottomFill = Math.max(0, inner - 1 - visibleWidth(hint));
-    const cell = (s: string) =>
-      border("│") + " " + truncateToWidth(s, textWidth, "…", true) + " " + border("│");
-    const lines = [
-      border("╭─") + title + border("─".repeat(topFill)) + border("╮"),
-      ...rows.map((row) => cell(row.text)),
-      border(`╰${"─".repeat(bottomFill)}`) + t.fg("dim", hint) + border("─╯"),
-    ];
-    // Targets are measured from the text's own start, one padding column in.
-    this.hits = new Map();
-    rows.forEach((row, i) => {
-      if (row.act || row.cells)
-        this.hits.set(i + 1, {
-          ...row,
-          cells: row.cells?.map((c) => ({ ...c, start: c.start + 1, end: c.end + 1 })),
-          text: ` ${row.text}`,
-        });
+    this.band = bandShell(t, {
+      width: w,
+      title: item ? `${step + 1} of ${count}` : "Review",
+      // Every question's stops; narrower, just the one on show.
+      right: [this.stops(), ...(item ? [{ text: t.fg("dim", item.label) }] : [])],
+      maxRows: this.tui.terminal.rows,
+      // The tallest question's, so going from one to the next moves nothing.
+      height: this.tallest(textWidth),
+      body: item ? this.itemRows(item, textWidth) : this.reviewRows(textWidth),
+      offset: this.offset,
+      footer,
+      keys,
     });
-    this.renderedRows = lines.length;
-    return lines;
+    this.offset = this.band.offset;
+    return this.band.lines;
   }
 }
