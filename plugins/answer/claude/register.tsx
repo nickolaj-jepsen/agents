@@ -252,8 +252,9 @@ async function recover($: EngineInterface) {
 
 /** `/answer`: opens the form, or folds it when it is already up; a round set aside comes back. */
 async function toggle($: EngineInterface) {
-  await recover($).catch((error) => complain($, error));
   let c = await read($, current);
+  // The aside comes first: `recover` would find the round on the other side of the send that set
+  // it aside, in the transcript, and offer that round empty.
   if (!c) {
     const was = await read($, aside);
     if (was) {
@@ -261,6 +262,8 @@ async function toggle($: EngineInterface) {
       c = await update($, current, () => over(null, was));
     }
   }
+  if (!c) await recover($).catch((error) => complain($, error));
+  c ??= await read($, current);
   if (!c) {
     $.ui.toast("Nothing to answer: the last turn asked no questions.");
     return;
@@ -293,13 +296,14 @@ async function send($: EngineInterface, text: string): Promise<boolean> {
   const c = await read($, current);
   if (!c) return false;
   const box = await $.prompt.read();
-  const draft =
-    c.stash !== null ? ownDraft(c.stash, c.filled) : ownDraft(box.text, c.filled);
+  const draft = c.stash !== null ? ownDraft(c.stash, c.filled) : ownDraft(box.text, c.filled);
   typed = null;
   await update($, current, () => null);
   await $.prompt.fill({ text: "", mode: "replace" }).catch(() => undefined);
+  // A refused submit resolves with `{ drop }`; a promise the engine rejects is one it could not
+  // take at all. Either way the round the hook dropped is put back.
   const sent = await $.prompt.submit({ text }).then(
-    () => true,
+    (result) => !("drop" in result),
     (error) => {
       complain($, error);
       return false;

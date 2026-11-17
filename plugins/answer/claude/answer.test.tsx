@@ -75,7 +75,7 @@ type World = {
   box: string;
   submitted: string[];
   toasts: string[];
-  /** Whether the engine refuses a submit, as one does when the prompt cannot enter. */
+  /** Whether the engine refuses a submit, as it does when the prompt does not enter. */
   refuses: boolean;
   clock: ReturnType<typeof mock.clock>;
 };
@@ -95,7 +95,7 @@ function world(on: On, draft = ""): World {
     return { isFilled: true };
   });
   on("prompt.submit", (_, e) => {
-    if (w.refuses) throw new Error("the engine refused the submit");
+    if (w.refuses) return { drop: "the engine refused the submit" };
     w.submitted.push(e.text);
     return { text: e.text };
   });
@@ -518,7 +518,11 @@ test("a send sets an answered round aside, and /answer brings it back with its a
   const drawn = await form($);
   await pick(w, drawn, "e1");
   await drawn.unmount();
-  await $.prompt.submit({ text: "wait, one more thing", wait: false, origin: { kind: "composer" } });
+  await $.prompt.submit({
+    text: "wait, one more thing",
+    wait: false,
+    origin: { kind: "composer" },
+  });
   expect(await hint($)).toBeUndefined();
   expect(w.toasts).toEqual(["1 answer set aside: /answer brings them back."]);
   // The round comes back as it was left: its answer marked, its first question showing.
@@ -555,6 +559,25 @@ test("sending the reply the form filled answers the round", async ($, on) => {
   expect(await hint($)).toBeUndefined();
 });
 
+test("a command's send sets the round aside too, and the aside wins over the transcript", async ($, on) => {
+  const w = world(on);
+  let said: { role: "user" | "assistant"; text: string; toolUses: [] }[] = [
+    { role: "user", text: "grill me", toolUses: [] },
+    { role: "assistant", text: GRILLING, toolUses: [] },
+  ];
+  on("session.messages", () => ({ value: said }));
+  await start($);
+  const drawn = await form($);
+  await pick(w, drawn, "e1");
+  await drawn.unmount();
+  await $.prompt.submit({ text: "/help", wait: false, origin: { kind: "composer" } });
+  // The transcript keeps the round behind the command, which `recover` reads as a fresh one.
+  said = [...said, { role: "user", text: "<command-name>/help</command-name>", toolUses: [] }];
+  const back = await form($);
+  expect((await back.find({ key: "q0" }))?.text).toContain("✓");
+  await back.unmount();
+});
+
 test("a send the engine refuses keeps the round and its answers", async ($, on) => {
   const w = world(on, "and keep it short");
   await start($);
@@ -562,6 +585,7 @@ test("a send the engine refuses keeps the round and its answers", async ($, on) 
   const drawn = await form($);
   await pick(w, drawn, "e1");
   await drawn.press({ key: "review" });
+  // A refused submit resolves `{ drop }`, as a hook's or core's refusal does; it does not throw.
   w.refuses = true;
   await drawn.press({ key: "send" });
   expect(w.submitted).toEqual([]);

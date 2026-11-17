@@ -209,7 +209,8 @@ export default function (pi: ExtensionAPI) {
     }
     const answers = held;
     try {
-      // Its input hooks run inside the send, and they drop the round: a throw puts it back.
+      // The input hooks run inside the send and drop the round. pi 1.5.2's `sendUserMessage`
+      // answers nothing and reports a refusal to its runner, so a throw is all this can see.
       await pi.sendUserMessage(now.reply);
     } catch (error) {
       if (answers) {
