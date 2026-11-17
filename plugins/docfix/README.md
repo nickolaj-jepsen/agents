@@ -7,9 +7,6 @@ requires:
 order: 7
 ---
 
-Agents file doc suggestions instead of editing docs outside their change; you
-review them and hand the ones you want back to the agent.
-
 - A `docfix` tool the model always sees. It files a suggestion when a doc it
   happens on doesn't match reality: it contradicts the code, misses a trap the
   agent just hit, or describes something gone or finished. A doc covering the
@@ -36,5 +33,4 @@ review them and hand the ones you want back to the agent.
 - pi has the same tool, panel and footer count from the same core
   (`core/docfix.ts`), subagents included.
 
-Needs a git repository with a note store (`.agents/store`, `agent-notes root
---ensure`). Claude Code ships `/docs`, so the command is `/docfix` in both.
+Claude Code ships `/docs`, so the command is `/docfix` in both.

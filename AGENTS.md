@@ -9,21 +9,11 @@ wires the plugins and skills into the agents; that wiring does not live here.
 
 ## Commands
 
-All operations use `just`; run `just` for the full list.
+All operations use `just`; `just` lists the recipes.
 
-```bash
-just dev-setup           # npm ci, link nixpkgs' pi into node_modules, lay the mods' Claude Code types
-just test                # vitest over the harness-free cores
-just typecheck           # tsc -b over cores, pi halves, kit and e2e
-just kit-sync            # after editing kit/claude/ui.tsx or kit/catalog/samples.ts
-just catalog             # replay the kit's stories; rewrites its crops, catalog.json, COMPONENTS.md
-just media               # record the site's media and the kit's crops, signed out, as the Pages workflow does
-just readme              # regenerate README.md; run after editing a plugin README, a SKILL.md or docs/
-just site                # the site (site/) on a dev server; `just site-build` builds it
-just fmt                 # ALWAYS run before finishing
-just check               # nix flake check: tests, type-check, each Claude half validated and tested (slow)
-just build               # nix build: the checked plugin sources
-```
+- `just fmt` before finishing. `just check` is the whole thing, and slow; `just test` is the quick loop.
+- `just kit-sync` after editing `kit/claude/ui.tsx` or `kit/catalog/samples.ts`.
+- `just readme` after editing a plugin README, a SKILL.md or `docs/`.
 
 New files must be `git add`ed or the flake ignores them.
 
@@ -49,16 +39,11 @@ New files must be `git add`ed or the flake ignores them.
 
 ## Plugins
 
-- A plugin's pi half (`plugins/<name>/pi/`) is a package of its own: the plugin's `package.json` names it
-  under `pi` (`"agentTools": {"subagents": true}` loads it in subagents too, else only the session you
-  started), and it imports the plugin's `core/` directly. A plugin can be pi-only, with no Claude half.
 - The pi halves type-check against the `pi-coding-agent` of the `pkgs` that builds `agent-tools`
   (nixpkgs master's in this flake's checks, the system's own when consumed through the overlay).
   That resolves `@earendil-works/pi-ai` to its
   published types, which carry no TypeBox re-exports, so code imports `Type` from `typebox`, the copy pi
-  aliases to the one it loads.
-- Never add an npm package pi itself ships to `package.json`: a copy drifts from the pi that loads the
-  half. The links `nix build .#agent-tools` and `just dev-setup` make are what keep the two in step.
+  aliases to the one it loads. Never add a package pi itself ships to `package.json`.
 - A new mod also gets an entry in `.claude-plugin/marketplace.json`, which `nix flake check` compares to
   the folders, and its own `README.md` (frontmatter and prose; see `docs/development.md`), then `just readme`.
 - A change to what a mod draws or to its keys is seen before it is handed back: load the

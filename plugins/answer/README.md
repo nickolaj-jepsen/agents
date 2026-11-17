@@ -5,9 +5,6 @@ requires: []
 order: 4
 ---
 
-A form for the round of questions or numbered pick list a turn ended on, which
-writes your reply into the prompt.
-
 - A row above the prompt offers the form when a turn ends on questions; `/answer`
   or a click opens it.
 - One question per screen: each option is keyed by the letter the message gave it (`a`, `b`, `c`), plus a last entry to write your own (`w`). A pick list's rows are numbered; the back key is `h`, so an option H is reached by the ring or a click.

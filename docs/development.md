@@ -1,16 +1,7 @@
 # Development
 
-`nix develop` (or direnv) gives node, just and the formatters; `just` lists the recipes.
-
-```bash
-just dev-setup   # npm ci, plus the pi and Claude Code types an editor and tsc read
-just test        # the cores' tests
-just typecheck   # tsc -b
-just check       # nix flake check: the above in a sandbox, each Claude half validated, formatting
-just fmt
-just readme      # regenerate README.md from the plugins', skills' and docs' sources
-just site        # the site (site/) at localhost:4321/agents/, from the same sources
-```
+`nix develop` (or direnv) gives node, just and the formatters; `just` lists the recipes. `just test` is
+the quick loop; `just check` is the whole thing in a sandbox, and slow.
 
 ## As a flake input
 
@@ -33,10 +24,8 @@ on `main` requiring `CI gate`.
 
 ## End-to-end tests
 
-`e2e/` plays each plugin's screens in a real Claude Code and a real pi, compares them
-with stored snapshots (`npm run e2e`), and parks a live session on one for driving by
-hand (`npm run e2e:cli -- goto <plugin> <scenario>`). Local only: nothing in `npm test`,
-the nix build or `just check` starts an agent. See `e2e/README.md`.
+`e2e/` plays each plugin's screens in a real Claude Code and a real pi, local only: neither `npm test`,
+the nix build nor `just check` starts an agent. See `e2e/README.md`.
 
 ## Content
 
@@ -48,9 +37,9 @@ README.md is generated (`just readme`; `nix flake check` fails while it is stale
   `status: in-progress`, which lists it after every other plugin and flags its page; the harnesses and
   install lines come from the folder, as in Layout. The body is what it does; key bindings go under
   `## Keys` and settings under `## Options`.
-- `skills/<name>/SKILL.md`: `metadata.summary` (one line), `metadata.category` (`plan-build-ship`,
-  `understand-decide`, `clean-up`, `harnesses`, `utilities`, `modified-public`) and, optionally,
-  `metadata.credit` and `metadata.status: in-progress`, which flags it and lists it last in its category.
+- `skills/<name>/SKILL.md`: `metadata.summary` (one line) and `metadata.category` (one of
+  `scripts/content.ts`'s `CATEGORIES`), plus optionally `metadata.credit` and
+  `metadata.status: in-progress`, which flags it and lists it last in its category.
 - `docs/*.md`: the developer pages, each starting with a `# Title`. `docs/_intro.md` is the top of the
   README and the home page; `docs/_install.md` is the README's install section.
 - `e2e/<plugin>/site.scenarios.ts`: the plugin's demos and stills. They are recorded, not committed:

@@ -10,25 +10,13 @@ The house style they follow is `skills/agent-plugin-dev/references/style.md`.
 alias cannot point out of the plugin folder. `tokens.ts` holds every number, glyph and
 colour role; change one there and every plugin follows.
 
-| File         | Holds                                                         |
-| ------------ | ------------------------------------------------------------- |
-| `tokens.ts`  | widths, glyphs, colour roles, `paint`, `widthCap`             |
-| `text.ts`    | `clamp`, `fit`, `alignRight`                                  |
-| `blocks.ts`  | `section`, `prose`, `note`, `notice`, `emptyState`            |
-| `entries.ts` | `entries`: dated entries, a date column or a date line        |
-| `frame.ts`   | `modalFrame`, `splitLayout`, `splitFrame`, `Hint`             |
-| `band.ts`    | `bandShell`, `bandRows`, `bandAct`, `chipRow`: a form's shell |
-| `list.ts`    | `List`: groups, marks, metadata columns, scrolling, the mouse |
-| `overlay.ts` | `overlayOptions(widthClass)`, `modalRows`                     |
-
 Tests are `kit/**/*.spec.ts`, run by `npm test`.
 
 ## Claude Code
 
-`kit/claude/ui.tsx` is one file: the tokens (the pi kit's numbers, glyphs and roles), `cellWidth`
-and `clamp` (the pi kit's semantics, in cells), `section`, `paneTitle`, `note`, `notice`,
-`emptyState`, `entries`, `list`/`listRow`, `bandShell`/`bandRows`/`onlyOwnRows` and `buttonRow`.
-Each drawing function takes a `Kit` first, `kitOf(els, e.surface)` from `$.ui.resolve(e)`.
+`kit/claude/ui.tsx` is one file: the tokens (the pi kit's numbers, glyphs and roles) and the pi kit's
+semantics and drawings, in cells. Each drawing function takes a `Kit` first,
+`kitOf(els, e.surface)` from `$.ui.resolve(e)`.
 
 The engine cannot import outside a mod's folder and an install copies only the plugin's own, so
 the source is **copied** verbatim to each user as `claude/ui.tsx` and imported as `./ui`:
@@ -60,18 +48,13 @@ only the component. Name and settings live in the story's caption data; keep sho
 inside the story only where it compares variants (`width 22`). Esc closes a story, undrawn.
 
 A story is one entry of `stories` in `kit/catalog/pi/stories.ts`, named
-`<component>/<state>` (`list/grouped`, `frame/hints-drop`). Its scenario in
-`e2e/kit/pi.scenarios.ts` has the same name, so snapshots live at
-`e2e/kit/__snapshots__/pi/<component>/<state>@<cols>x<rows>.snap` (the `.png` beside it is
-generated and git-ignored).
+`<component>/<state>` (`list/grouped`, `frame/hints-drop`); its scenario in
+`e2e/kit/pi.scenarios.ts` has the same name, and its snapshots keep it.
 
 **Adding a component to the kit means adding its stories in the same change.**
 
-1. Add `Story` objects to `stories`: `component`, `state`, `about` (one line), `settings`
-   (what was passed in, shown as the caption), `width` (the overlay's class), and `make()`
-   returning `{ render(theme, width, env) }`. `frame: true` if the story is a frame itself;
-   otherwise the catalogue draws a frame round the body. Add `input` and `mouse` to make it
-   react. Mark the state with the most text `extreme: true` (four sizes, not two).
+1. Add `Story` objects to `stories`; what a story takes and what `make()` returns is on the
+   `Story` and `Live` types there, next to the stories.
 2. `npm run e2e kit` (`E2E_UPDATE=1` to accept). Only the `.snap` files are committed; for
    the pictures run `E2E_PNG=1 npm run e2e kit` and look at the PNGs.
 3. `npm run catalog` plays the kit scenarios itself in PNG mode (`E2E_PNG=1`), so the PNGs it
@@ -95,8 +78,7 @@ the harness does not force:
   stories import it; the Claude mod carries a copy (`claude/claude/samples.ts`) that
   `just kit-sync` writes and a test compares. Never type sample content into a story.
 - **The same arrangement.** If pi shows three widths side by side, so does Claude.
-- **The same sizes.** `e2e/kit/sizes.ts` holds them. The narrow one is 70x60, tall enough for
-  Claude's inline pane to show a whole component.
+- **The same sizes.** `e2e/kit/sizes.ts` holds them.
 - **A story one harness can't draw** is left out there, and the component's entry in
   `components/` says why. A story that is merely not written yet is a gap: write it.
 

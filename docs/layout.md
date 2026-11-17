@@ -35,7 +35,7 @@ Only one with a Claude half goes in the marketplace, and
   reaches a Claude Code install.
 - No plugin imports the agent-hub client. One that needs the hub isn't a plugin.
 
-`tsconfig.json` is a solution file over two projects, so no plugin needs a tsconfig
+`tsconfig.json` is a solution file over one project per area, so no plugin needs a tsconfig
 for its `core/` or `pi/`: `tsconfig.core.json` holds the cores to no types at all (a
 Node import there fails), and `tsconfig.pi.json` checks the pi halves and the cores'
 specs with Node's types. `npm run typecheck` is `tsc -b`. A pi half type-checks

@@ -6,10 +6,9 @@ requires:
 order: 3
 ---
 
-Picks fixes for misspelled words in the prompt draft with
-hunspell and Haiku. One Haiku call answers every flagged word, adds the ones
+One Haiku call answers every flagged word, adds the ones
 it calls correct to the personal word list, and finds real-word typos
-hunspell can't (`form` for `from`). Needs `hunspell` and its dictionaries installed.
+hunspell can't (`form` for `from`).
 
 In Claude Code its picker is the band button above the prompt.
 
@@ -21,11 +20,8 @@ In Claude Code, to open the picker from the keyboard, bind
 
 ## Options
 
-`claude plugin configure spellfix`:
-
-- `hunspell` (`hunspell`): the executable.
-- `dictionaries` (`en_US`): hunspell's `-d`, comma-separated.
-- `personalDictionary` (none): the personal word list Haiku's answers are added to.
+`claude plugin configure spellfix` shows each option, its default and which are
+unset; they come from the plugin's `userConfig`.
 
 ## pi
 

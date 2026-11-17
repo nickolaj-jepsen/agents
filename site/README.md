@@ -46,7 +46,5 @@ the root's `yaml`.
 
 ## Deploy
 
-`.github/workflows/pages.yml` records the media in `nix develop .#media` (cached by a hash of what they
-are made from), builds, and deploys to the `github-pages` environment, on every push to `main` that
-touches the site or its sources. A recording that fails fails the deploy, and the live site stays as it
-was. The repo's Pages source must be "GitHub Actions".
+`.github/workflows/pages.yml` records the media, builds and deploys on a push to `main` that touches the
+site or its sources, one deploy at a time. The repo's Pages source must be "GitHub Actions".

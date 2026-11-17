@@ -6,9 +6,6 @@ requires:
 order: 1
 ---
 
-Turns a thought, or something Claude Code flagged, into a Linear issue you approve
-before it's filed.
-
 - `/linear [what to file]` drafts from your note, or from the recent conversation
   when the note is empty.
 - The You should know card gets a **Linear issue** button (usually `3`) once you
