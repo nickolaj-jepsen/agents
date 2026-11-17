@@ -730,6 +730,15 @@ export function offer(held: Held | null, text: string): Held | null {
   return { form, draft: newDraft(form) };
 }
 
+/**
+ * Whether a held round has something to lose: an answer, a per-item note or the round's own.
+ * A round with none of them is one a send can drop without setting anything aside.
+ */
+export function hasWork(held: Held): boolean {
+  const { draft } = held;
+  return draft.answers.some(Boolean) || draft.notes.some(Boolean) || Boolean(draft.note);
+}
+
 /** One action on what is held, when `id` (if given) still names the form showing. */
 export function step(held: Held, action: Action, id?: string): Held {
   if (id !== undefined && id !== formId(held.form)) return held;
