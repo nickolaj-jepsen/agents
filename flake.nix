@@ -102,9 +102,9 @@
               touch $out
             '';
             readme = pkgs.callPackage ./pkgs/readme-check.nix {};
-            # The site reads its content as data (`site/data/content.json`, which `just site` writes
-            # first), so its pages reach into `scripts/` and `kit/` for types only, and `site/` alone
-            # builds. A value import would need this checkout at build time again.
+            # The site reads its content as data (`site/data/`, which `just site` and `just catalog`
+            # write first), so its pages reach into `scripts/` and `kit/` for types only, and `site/`
+            # alone builds. A value import would need this checkout at build time again.
             site-seam = pkgs.runCommand "site-seam" {} ''
               cd ${./site}
               if grep -rnE 'from "(\.\./)+(scripts|kit)/' src --include='*.ts' --include='*.astro' \

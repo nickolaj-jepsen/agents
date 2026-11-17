@@ -1,0 +1,58 @@
+---
+/**
+ * Features, open on the page: each one's name, then a line per harness (its logo, whether it does
+ * it, and how or why not). A feature named as the story's own line goes without its name, which
+ * is already above it.
+ */
+import Glyph from '../Glyph.astro';
+import { HARNESSES, TITLES, type Component } from '../../lib/catalog.ts';
+import { renderInline } from '../../lib/markdown.ts';
+
+type Feature = Component['features'][number];
+interface Props {
+  features: Feature[];
+  /** The story's own line, above it: a feature named the same is not named again. */
+  about?: string;
+}
+const { features, about } = Astro.props;
+const plain = (t: string) => t.trim().replace(/\.$/, '').toLowerCase();
+const WORD = { yes: 'Yes', partial: 'Partly', no: 'No', planned: 'Not yet' } as const;
+const GLYPH = { yes: '✓', partial: '~', no: '✗', planned: '○' } as const;
+const items = await Promise.all(
+  features.map(async (f) => ({
+    label: about && plain(f.label) === plain(about) ? null : f.label,
+    by: await Promise.all(
+      HARNESSES.map(async (h) => ({
+        h,
+        status: f.support[h].status,
+        note: f.support[h].note ? await renderInline(f.support[h].note!, 'kit/catalog/components/') : '',
+      })),
+    ),
+  })),
+);
+---
+
+{
+  items.length > 0 && (
+    <ul class="feats">
+      {items.map((f) => (
+        <li>
+          {f.label && <p class="flabel">{f.label}</p>}
+          {f.by.map((x) => (
+            <p class="fh" data-h={x.h}>
+              <span class={`k ${x.h}`} title={TITLES[x.h]}>
+                <Glyph h={x.h} />
+                <span class="vh">{TITLES[x.h]}:</span>
+              </span>
+              <span class={`st ${x.status}`}>
+                <span class="g" aria-hidden="true">{GLYPH[x.status]}</span>
+                {WORD[x.status]}
+              </span>
+              {x.note && <span class="fnote" set:html={x.note} />}
+            </p>
+          ))}
+        </li>
+      ))}
+    </ul>
+  )
+}

@@ -58,8 +58,14 @@ Adding a component to the kit means adding its stories in the same change.
    `Story` and `Live` types there, next to the stories.
 2. `npm run e2e kit` (`E2E_UPDATE=1` to accept). Only the `.snap` files are committed; for
    the pictures run `E2E_PNG=1 npm run e2e kit` and look at the PNGs.
-3. `npm run components` rewrites `COMPONENTS.md` from the manifests. Commit it; `npm test` fails
-   while it is stale (`npm run components -- --check` runs the same check and writes nothing).
+3. `npm run catalog` plays the kit scenarios itself in PNG mode (`E2E_PNG=1`), crops each shot to
+   the component into `site/media/kit/`, and writes `site/data/kit.json` and `COMPONENTS.md`.
+   - Commit only `COMPONENTS.md`. The crops and `site/data/kit.json` are what the site's catalogue
+     (`/dev/`, `just site`) is built from, and the Pages workflow records them itself (`just
+     media`, signed out: the kit scenarios are hermetic).
+   - A crop whose pixels did not change is left alone. Each one is optimised with pngquant and
+     oxipng, from the dev shell or from nixpkgs.
+   - `npm run catalog -- --no-shots` skips the run and crops the PNGs already there.
 
 The Claude half is the mod `kit/catalog/claude/` (its own `ui.tsx` copy, `stories.ts` as data and
 `claude/render.tsx` for what each story draws), loaded by the scenarios with `--plugin-dir`.
@@ -81,13 +87,16 @@ A further harness adds `kit/catalog/<harness>/stories.ts` exporting `stories` wi
 `component`/`state`/`about`/`settings` fields, and `e2e/kit/<harness>.scenarios.ts` naming
 scenarios `<component>/<state>`. `build.ts` picks up the captions by itself.
 
-### The doc comments
+### Compatibility and props
 
-The kit's doc comments are the reference for its exported options: one line per option,
-`@default` where there is one, `@param` for parameters.
+The site's catalogue also compares the harnesses. Props tables are read from `kit/pi/ui.ts`
+and `kit/claude/ui.tsx` with the TypeScript compiler API, so the doc comments in the kit are
+the reference: one line per exported option, `@default` where there is one, `@param` for
+parameters.
 
-`COMPONENTS.md` (the manifests, for agents) is generated; never edit it. The site's `/dev/`
-links it rather than rendering it, and the catalogue's commands draw a component on demand.
+`site/data/kit.json` (the model the site reads: manifests, stories, props) and `COMPONENTS.md` (the
+manifests, for agents) are generated; never edit them. The site's pages are `site/src/pages/dev/`
+(the overview) and `site/src/pages/dev/components/` (a page per component, its stories inline).
 
 To add a component:
 
@@ -98,6 +107,8 @@ To add a component:
    features. Each feature has a status per harness (`yes`, `partial(note)`, `no(reason)`,
    `planned()`) and the story that shows it.
 3. Add the stories in each harness's `stories.ts` and scenarios in `e2e/kit/`.
-4. `npm run components` fails when a `yes`/`partial` feature names a story the harness lacks,
+4. `npm run catalog` fails when a `yes`/`partial` feature names a story the harness lacks,
    or a manifest names an export the kit lacks. It lists components not yet in both kits.
-   Commit the regenerated `COMPONENTS.md`; `npm test` fails while it is stale.
+   Commit the regenerated `COMPONENTS.md`; `npm test` fails while it is stale
+   (`npm run catalog -- --check` runs the same check, and `--no-shots` rewrites it without
+   playing the scenarios).

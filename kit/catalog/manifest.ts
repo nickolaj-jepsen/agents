@@ -1,10 +1,8 @@
 /**
  * The shape of a component manifest (`components/<id>.ts`): what the catalogue knows that the
  * source cannot say — what it is for, which export implements it in each harness, and which
- * features each harness supports. `exportsIn` reads the source for the export names.
+ * features each harness supports. Props come from the source (`extract.ts`), never from here.
  */
-import { readFileSync } from "node:fs";
-
 export type Harness = "pi" | "claude";
 export const harnesses: Harness[] = ["pi", "claude"];
 
@@ -49,27 +47,3 @@ export const exportsOf = (impl: Impl): string[] =>
 
 export const storyOf = (f: Feature, h: Harness): string | undefined =>
   typeof f.story === "string" ? f.story : f.story?.[h];
-
-/**
- * The names a kit file exports: its own `export const|function|type|interface|class|enum`
- * statements and the `export { ... } from "./x.ts"` re-exports a kit barrel is made of. Enough to
- * fail a manifest that names an export the kit no longer has, without compiling it.
- */
-export function exportsIn(file: string): Set<string> {
-  const text = readFileSync(file, "utf8");
-  const names = new Set<string>();
-  for (const m of text.matchAll(/^export\s+(?:type\s+)?\{([^}]*)\}/gm))
-    for (const part of (m[1] ?? "").split(",")) {
-      const name = part
-        .trim()
-        .split(/\s+as\s+/)
-        .pop()
-        ?.trim();
-      if (name) names.add(name);
-    }
-  for (const m of text.matchAll(
-    /^export\s+(?:declare\s+)?(?:const|let|function|class|type|interface|enum)\s+([A-Za-z_$][\w$]*)/gm,
-  ))
-    names.add(m[1] as string);
-  return names;
-}

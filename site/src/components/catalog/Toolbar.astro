@@ -1,0 +1,33 @@
+---
+/**
+ * The catalogue's controls, one sticky bar for the whole page: the harness (both, one above the
+ * other, or one alone) and the terminal size. A size no shown harness was drawn at is greyed out;
+ * when a harness shows its nearest size instead, one note here says so. It starts hidden.
+ */
+import HarnessSwitch from '../HarnessSwitch.astro';
+import { sizeKey, sizeLabel, type Harness } from '../../lib/catalog.ts';
+
+interface Props {
+  /** The terminal sizes the stories were drawn at, with the harnesses drawn at each; none, or one, hides the size switch. */
+  sizes?: { w: number; h: number; by: Harness[] }[];
+}
+const { sizes = [] } = Astro.props;
+---
+
+<div class="toolbar" data-js hidden>
+  <HarnessSwitch options={['claude', 'pi']} both />
+  {
+    sizes.length > 1 && (
+      <div class="ctl">
+        <div class="seg box" role="group" aria-label="Terminal size, columns by rows" title="Terminal size, columns by rows" data-sizes>
+          {sizes.map((x, i) => (
+            <button type="button" data-set-size={sizeKey(x)} data-has={x.by.join(' ')} aria-pressed={i === 0 ? 'true' : 'false'}>
+              {sizeLabel(x)}
+            </button>
+          ))}
+        </div>
+        <span class="size-note" data-size-note hidden />
+      </div>
+    )
+  }
+</div>

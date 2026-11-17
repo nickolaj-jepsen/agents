@@ -56,7 +56,7 @@ draws none unless one of these asks for it:
 - a state that differs: `*.actual.snap` and `*.actual.png` beside it;
 - a scenario whose steps fail: `<scenario>@failed.actual.png`.
 
-`sweep`, `shot` and `npm run site-shots` draw PNGs too. Git ignores every `.png` and `*.actual.*`.
+`sweep`, `shot` and `npm run catalog` draw PNGs too. Git ignores every `.png` and `*.actual.*`.
 
 Files live in `e2e/<plugin>/__snapshots__/<harness>/<scenario>@<cols>x<rows>.snap`.
 
@@ -218,5 +218,6 @@ chrome are in `e2e/tui-test.toml`, below.
 theme: background, foreground, cursor and palette) and draws pictures with no title bar, shadow or
 border and 16 px of padding. The site runner plays on the daemon backend, which reads that file, so
 its media are the bare terminal. The in-process engine takes colours as an option instead (`lib/term.ts`
-reads them from the same file) and has no config for the window, so the kit's screenshots keep
-tui-test's window in the right colours.
+reads them from the same file) and has no config for the window, so the kit catalogue's screenshots
+keep tui-test's window in the right colours. `kit/catalog/crops.ts` crops inside it, so its geometry
+is unchanged.

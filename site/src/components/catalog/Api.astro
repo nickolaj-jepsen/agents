@@ -1,0 +1,111 @@
+---
+/** One harness's props for a component: each export's signature and rows, then its types'. */
+import { TITLES, type Component, type Harness } from '../../lib/catalog.ts';
+import { renderMarkdown, renderInline } from '../../lib/markdown.ts';
+
+interface Props {
+  c: Component;
+  h: Harness;
+}
+const { c, h } = Astro.props;
+const api = c.api[h];
+const impl = c.impl[h];
+const kitFile = h === 'pi' ? 'kit/pi/ui.ts' : 'kit/claude/ui.tsx';
+type Row = { name: string; type: string; optional: boolean; default?: string; doc: string };
+const sig = (code: string) => renderMarkdown('```ts\n' + code + '\n```', kitFile);
+const doc = (md: string) => (md ? renderInline(md, kitFile) : Promise.resolve(''));
+const rows = async (list: Row[]) => Promise.all(list.map(async (r) => ({ ...r, html: await doc(r.doc) })));
+const blocks = api
+  ? [
+      ...(await Promise.all(
+        api.exports.map(async (e) => ({
+          sig: await sig(e.signature),
+          doc: await doc(e.doc),
+          groups: [
+            ['Parameters', await rows(e.params)],
+            ['Members', await rows(e.members)],
+          ] as const,
+        })),
+      )),
+      ...(await Promise.all(
+        api.types.map(async (t) => ({
+          sig: await sig(t.signature),
+          doc: await doc(t.doc),
+          groups: [['Properties', await rows(t.rows)]] as const,
+        })),
+      )),
+    ]
+  : [];
+---
+
+<section class="api" data-h={h} aria-label={`${TITLES[h]} props`}>
+  <h3>{TITLES[h]}</h3>
+  {
+    !api ? (
+      <p class="sub">{impl.state === 'none' ? `Not possible: ${impl.reason}` : 'Planned: the kit does not have it yet.'}</p>
+    ) : (
+      blocks.map((b) => (
+        <div class="block">
+          <div class="sig" set:html={b.sig} />
+          {b.doc && <p class="doc" set:html={b.doc} />}
+          {b.groups
+            .filter(([, list]) => list.length > 0)
+            .map(([title, list]) => (
+              <>
+                <h4 class="sc">{title}</h4>
+                {list.every((r) => !r.html) ? (
+                  <p class="props-line">
+                    {list.map((r, i) => (
+                      <>
+                        {i > 0 && <span class="sep">, </span>}
+                        <code>
+                          <span class="pname">{r.name}</span>
+                          {r.optional && '?'}
+                          {r.type && (
+                            <>
+                              : <span class="ptype">{r.type}</span>
+                            </>
+                          )}
+                          {r.default !== undefined && (
+                            <>
+                              {' = '}
+                              <span class="pdef">{r.default}</span>
+                            </>
+                          )}
+                        </code>
+                      </>
+                    ))}
+                  </p>
+                ) : (
+                  <dl class="props">
+                    {list.map((r) => (
+                      <div class="prow">
+                        <dt>
+                          <code>
+                            <span class="pname">{r.name}</span>
+                            {r.optional && '?'}
+                            {r.type && (
+                              <>
+                                : <span class="ptype">{r.type}</span>
+                              </>
+                            )}
+                            {r.default !== undefined && (
+                              <>
+                                {' = '}
+                                <span class="pdef">{r.default}</span>
+                              </>
+                            )}
+                          </code>
+                        </dt>
+                        {r.html && <dd set:html={r.html} />}
+                      </div>
+                    ))}
+                  </dl>
+                )}
+              </>
+            ))}
+        </div>
+      ))
+    )
+  }
+</section>

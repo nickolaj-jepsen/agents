@@ -1,0 +1,80 @@
+---
+/**
+ * A story's renders, one figure per harness that has any: every size it was drawn at, the one
+ * nearest the chosen size shown (catalog.ts switches them and decides whether two fit side by
+ * side). A harness with none is one line after them, saying why, not an empty frame.
+ */
+import Glyph from '../Glyph.astro';
+import Mark from './Mark.astro';
+import { HARNESSES, sizeKey, sizeLabel, TITLES, whyNot, type Component, type Story } from '../../lib/catalog.ts';
+
+interface Props {
+  c: Component;
+  s: Story;
+  size?: { w: number; h: number };
+  /** Load the pictures at once. */
+  eager?: boolean;
+}
+const { c, s, size, eager = false } = Astro.props;
+/** The shot at the size, else the nearest by width. */
+const pick = (shots: NonNullable<Story['shots']['pi']>) =>
+  size && shots.length
+    ? (shots.find((x) => x.w === size.w && x.h === size.h) ??
+      shots.reduce((a, b) => (Math.abs(b.w - size.w) < Math.abs(a.w - size.w) ? b : a)))
+    : shots[0];
+const drawn = HARNESSES.filter((h) => (s.shots[h] ?? []).length > 0);
+const absent = HARNESSES.filter((h) => !drawn.includes(h));
+---
+
+{
+  drawn.length > 0 && (
+    <div class="pair">
+      {drawn.map((h) => {
+        const shots = s.shots[h]!;
+        const shown = pick(shots)!;
+        return (
+          <figure class="cell" data-h={h} style={`--nat: ${shown.width}px`}>
+            <figcaption>
+              <span class={`k ${h}`}>
+                <Glyph h={h} />
+              </span>
+              <strong>{TITLES[h]}</strong>
+              {s.by[h]?.settings && <code>{s.by[h]!.settings}</code>}
+              <span class="sz" data-sz>
+                {sizeLabel(shown)}
+              </span>
+            </figcaption>
+            {shots.map((x) => (
+              <div class="view" data-size={sizeKey(x)} data-w={x.w} data-px={x.width} hidden={x !== shown}>
+                <img
+                  src={x.src}
+                  width={x.width}
+                  height={x.height}
+                  alt={`${TITLES[h]}: ${s.id} at ${sizeLabel(x)}`}
+                  loading={eager ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+              </div>
+            ))}
+          </figure>
+        );
+      })}
+    </div>
+  )
+}
+{
+  absent.length > 0 && (
+    <ul class="absent">
+      {absent.map((h) => (
+        <li data-h={h}>
+          <span class="kb">
+            <Mark h={h} state={c.impl[h].state === 'none' ? 'none' : 'plan'} />
+          </span>
+          <span>
+            <strong>{TITLES[h]}</strong> {whyNot(c, s, h)}
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}

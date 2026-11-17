@@ -3,12 +3,13 @@ import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { here, loadModel, markdown, type Model } from "./model.ts";
 
-// As `npm run components -- --check`: no picture, no network.
+// As `npm run catalog -- --check`: no PNG, no network. The compiler reading the kits is slow on a
+// cold build, hence the timeout.
 describe("component manifests", () => {
   let model: Model;
   beforeAll(async () => {
     model = await loadModel();
-  });
+  }, 120_000);
 
   it("agree with the kits and the stories", () => {
     expect(model.problems).toEqual([]);
@@ -16,6 +17,6 @@ describe("component manifests", () => {
 
   it("match the committed COMPONENTS.md", () => {
     const committed = readFileSync(join(here, "COMPONENTS.md"), "utf8");
-    expect(markdown(model), "run `npm run components`").toBe(committed);
+    expect(markdown(model), "run `npm run catalog -- --no-shots`").toBe(committed);
   });
 });
