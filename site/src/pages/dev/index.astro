@@ -1,7 +1,5 @@
 ---
-import Shell from '../../components/catalog/Shell.astro';
-import Glyph from '../../components/Glyph.astro';
-import { catalogHref, components, HARNESSES, TITLES, type Component, type Harness } from '../../lib/catalog.ts';
+import Shell from '../../components/dev/Shell.astro';
 import { content, docHref, github } from '../../lib/content.ts';
 import { renderInline } from '../../lib/markdown.ts';
 
@@ -14,48 +12,22 @@ const docs = await Promise.all(
 );
 const guides = [
   ['AGENTS.md', 'What an agent working here reads first'],
-  ['kit/README.md', 'The UI kit, and how this catalogue is built'],
+  ['kit/README.md', 'The UI kit, and the components it holds in each harness'],
+  ['kit/catalog/COMPONENTS.md', 'What each harness has of each component, and which features work'],
   ['e2e/README.md', 'The end-to-end screens and the site’s media'],
   ['skills/agent-plugin-dev/references/style.md', 'The house style of plugin screens'],
 ] as const;
-
-const counts = (c: Component, h: Harness) => {
-  const n = { yes: 0, partial: 0, no: 0 };
-  for (const f of c.features) n[f.support[h].status === 'planned' ? 'no' : f.support[h].status]++;
-  return n;
-};
-const rendered = (c: Component, h: Harness) => c.stories.filter((s) => (s.shots[h]?.length ?? 0) > 0).length;
-const total = Object.fromEntries(
-  HARNESSES.map((h) => {
-    const n = { yes: 0, partial: 0, no: 0, r: 0, of: 0 };
-    for (const c of components) {
-      if (c.impl[h].state === 'none') continue;
-      const k = counts(c, h);
-      n.yes += k.yes;
-      n.partial += k.partial;
-      n.no += k.no;
-      n.r += rendered(c, h);
-      n.of += c.stories.length;
-    }
-    return [h, n];
-  }),
-) as Record<Harness, { yes: number; partial: number; no: number; r: number; of: number }>;
-const stories = components.reduce((n, c) => n + c.stories.length, 0);
-const features = components.reduce((n, c) => n + c.features.length, 0);
-const chips = [
-  ['yes', '✓', 'yes'],
-  ['partial', '~', 'partly'],
-  ['no', '✗', 'no'],
-] as const;
-const storyCount = (r: number, of: number) => (r === of ? `${of} ${of === 1 ? 'story' : 'stories'}` : `${r} of ${of} stories`);
 ---
 
-<Shell title="Developers" overview description="How the agents repo is built: the shared UI kit's components in pi and in Claude Code, and the developer notes.">
+<Shell
+  title="Developers"
+  overview
+  description="How the agents repo is built, and the notes for working on it."
+>
   <header class="lede">
     <h1>Developers</h1>
     <p class="lead">
-      How this repo is built: the UI kit its plugins draw with, in Claude Code and in pi, and the notes
-      for working on it.
+      How this repo is built: the notes for working on it, and the repo's own guides.
     </p>
   </header>
 
@@ -94,142 +66,6 @@ const storyCount = (r: number, of: number) => (r === of ? `${of} ${of === 1 ? 's
           }
         </ul>
       </div>
-    </div>
-  </section>
-
-  <section class="cat-section" aria-labelledby="kit-h">
-    <div class="section-head">
-      <h2 id="kit-h">UI kit</h2>
-      <span class="count">{components.length}</span>
-      <span class="aside">{stories} stories, {features} features</span>
-    </div>
-    <p class="kit-how">
-      Each component as each harness draws it: what the kit exports there and how many of its features
-      work (<span class="count yes"><span aria-hidden="true">✓</span> yes</span>, <span class="count partial"><span aria-hidden="true">~</span> partly</span>, <span class="count no"><span aria-hidden="true">✗</span> no</span>), or why it can't. Its manifest is <a href={github('kit/catalog/components/')}><code>kit/catalog/components/</code></a>, and <code>just catalog</code> rebuilds the renders, this model and <a href={github('kit/catalog/COMPONENTS.md')}><code>COMPONENTS.md</code></a>.
-    </p>
-
-    <div class="table scroll" role="region" aria-label="Components by harness" tabindex="0">
-      <table class="matrix">
-        <thead>
-          <tr>
-            <th scope="col">Component</th>
-            {
-              HARNESSES.map((h) => (
-                <th scope="col">
-                  <span class="hh">
-                    <span class={`k ${h}`}>
-                      <Glyph h={h} />
-                    </span>
-                    {TITLES[h]}
-                  </span>
-                </th>
-              ))
-            }
-          </tr>
-        </thead>
-        <tbody>
-          {
-            components.map((c) => (
-              <tr>
-                <th scope="row">
-                  <a href={catalogHref(c)}>{c.name}</a>
-                  <span class="purpose">{c.purpose}</span>
-                </th>
-                {HARNESSES.map((h) => {
-                  const impl = c.impl[h];
-                  const n = counts(c, h);
-                  return (
-                    <td>
-                      <span class="hh cell-h" aria-hidden="true">
-                        <span class={`k ${h}`}>
-                          <Glyph h={h} />
-                        </span>
-                        {TITLES[h]}
-                      </span>
-                      {impl.state === 'none' ? (
-                        <>
-                          <p class="state no">
-                            <span class="g" aria-hidden="true">
-                              ✗
-                            </span>
-                            Not possible
-                          </p>
-                          <p class="note">{impl.reason}</p>
-                        </>
-                      ) : (
-                        <>
-                          <p class="exports">
-                            {impl.state === 'planned' ? (
-                              <span class="state planned">
-                                <span class="g" aria-hidden="true">
-                                  ○
-                                </span>
-                                Not yet
-                              </span>
-                            ) : (
-                              impl.exports.map((e, i) => (
-                                <>
-                                  {i > 0 && ', '}
-                                  <code>{e}</code>
-                                </>
-                              ))
-                            )}
-                          </p>
-                          <p class="note">
-                            <span class="counts">
-                              {chips
-                                .filter(([k]) => n[k] > 0)
-                                .map(([k, g, t]) => (
-                                  <span class={`count ${k}`} title={`${n[k]} ${n[k] === 1 ? 'feature' : 'features'}: ${t}`}>
-                                    <span aria-hidden="true">{g}</span>
-                                    {n[k]}
-                                    <span class="vh"> {t}</span>
-                                  </span>
-                                ))}
-                            </span>
-                            <span class="nstories">{storyCount(rendered(c, h), c.stories.length)}</span>
-                          </p>
-                        </>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))
-          }
-        </tbody>
-        <tfoot>
-          <tr>
-            <th scope="row">All</th>
-            {
-              HARNESSES.map((h) => (
-                <td>
-                  <span class="hh cell-h" aria-hidden="true">
-                    <span class={`k ${h}`}>
-                      <Glyph h={h} />
-                    </span>
-                    {TITLES[h]}
-                  </span>
-                  <p class="note">
-                    <span class="counts">
-                      {chips
-                        .filter(([k]) => total[h][k] > 0)
-                        .map(([k, g, t]) => (
-                          <span class={`count ${k}`} title={`${total[h][k]} features: ${t}`}>
-                            <span aria-hidden="true">{g}</span>
-                            {total[h][k]}
-                            <span class="vh"> {t}</span>
-                          </span>
-                        ))}
-                    </span>
-                    <span class="nstories">{storyCount(total[h].r, total[h].of)}</span>
-                  </p>
-                </td>
-              ))
-            }
-          </tr>
-        </tfoot>
-      </table>
     </div>
   </section>
 </Shell>

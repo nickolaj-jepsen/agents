@@ -10,6 +10,5 @@ site/dist/
 site/.astro/
 # Recorded, not committed: `just media` writes them, as the Pages workflow does before it builds.
 site/media/
-kit/catalog/catalog.json
 # The site's content model, written by `npm run site-data` from the markdown this repo holds.
 site/data/

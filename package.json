@@ -10,7 +10,7 @@
     "e2e": "node e2e/run.ts",
     "e2e:cli": "node e2e/cli.ts",
     "site-shots": "node e2e/site.ts",
-    "catalog": "node kit/catalog/build.ts",
+    "components": "node kit/catalog/build.ts",
     "readme": "node scripts/readme.ts",
     "site-data": "node scripts/site-data.ts"
   },

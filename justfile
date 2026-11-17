@@ -58,10 +58,10 @@ typecheck:
 kit-sync *PLUGINS:
     node kit/claude/sync.ts {{ PLUGINS }}
 
-[doc("Replay the UI kit's stories and rewrite the catalogue: its crops (site/media/kit), catalog.json, COMPONENTS.md")]
+[doc("Rewrite kit/catalog/COMPONENTS.md from the component manifests; fails on a manifest that disagrees with a kit")]
 [group('dev')]
-catalog:
-    npm run catalog
+components:
+    npm run components
 
 [doc("Play every plugin screen in a real Claude Code and pi and compare with the snapshots; needs sign-in")]
 [group('dev')]
@@ -78,10 +78,8 @@ readme:
 [script]
 site:
     [ -d node_modules ] || npm ci
-    # The content model and the catalogue's, before Astro reads either: re-run to see a new README
-    # or a freshly recorded demo.
+    # The content model first, before Astro reads it: re-run to see a new README.
     npm run site-data
-    [ -f kit/catalog/catalog.json ] || npm run catalog -- --no-shots
     cd site
     [ -d node_modules ] || npm ci
     npm run dev
@@ -92,7 +90,6 @@ site:
 site-build:
     [ -d node_modules ] || npm ci
     npm run site-data
-    [ -f kit/catalog/catalog.json ] || npm run catalog -- --no-shots
     cd site
     [ -d node_modules ] || npm ci
     npm run build
@@ -110,7 +107,6 @@ media:
 # Inside the media shell: the kit's pi stories import pi's packages, which _dev-setup-pi links.
 [private]
 _media: _dev-setup-pi
-    npm run catalog
     npm run site-shots
 
 [doc('Build the checked plugin sources')]

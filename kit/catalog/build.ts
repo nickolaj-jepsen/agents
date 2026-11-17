@@ -1,64 +1,35 @@
 /**
- * Builds the catalogue's data from the component manifests and each kit's source:
- * `COMPONENTS.md` (what agents read, committed), `catalog.json` (what the site reads) and the
- * stories' crops. The last two are not committed: the Pages workflow writes them (`just media`).
+ * Rewrites `COMPONENTS.md`: which component each harness has and which features each supports, from
+ * the manifests in `components/`. The stories it names are played in a real agent by `npm run e2e
+ * kit`, and drawn on demand by `/kit` (kit/README.md).
  *
- *   npm run catalog                play the kit scenarios in PNG mode, then write all three; fail
- *                                  on a manifest problem or a scenario that no longer matches
- *   npm run catalog -- --no-shots  write all three from the PNGs already there, if any
- *   npm run catalog -- --check     no PNGs needed: fail on a problem or a stale COMPONENTS.md
+ *   npm run components            fail on a manifest problem, then write COMPONENTS.md
+ *   npm run components -- --check fail on a problem or a stale COMPONENTS.md, write nothing
  */
-import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { cropShots } from "./crops.ts";
-import { here, loadModel, markdown, siteData } from "./model.ts";
+import { join, relative } from "node:path";
+import { here, loadModel, markdown } from "./model.ts";
 
-const outputs = {
-  components: join(here, "COMPONENTS.md"),
-  catalog: join(here, "catalog.json"),
-};
-const check = process.argv.includes("--check");
-
-if (!check && !process.argv.includes("--no-shots")) {
-  // The PNGs are not committed: this is where the e2e run draws them.
-  const done = spawnSync(process.execPath, ["e2e/run.ts", "kit"], {
-    cwd: join(here, "..", ".."),
-    stdio: "inherit",
-    env: { ...process.env, E2E_PNG: "1" },
-  });
-  if (done.status !== 0) {
-    console.error(
-      "catalog: the kit scenarios failed; fix them, or use --no-shots for the PNGs there are",
-    );
-    process.exit(1);
-  }
-}
-
+const file = join(here, "COMPONENTS.md");
 const model = await loadModel();
 if (model.problems.length > 0) {
-  console.error(`catalog: ${model.problems.length} problem(s):\n- ${model.problems.join("\n- ")}`);
+  console.error(
+    `components: ${model.problems.length} problem(s):\n- ${model.problems.join("\n- ")}`,
+  );
   process.exit(1);
 }
 if (model.notMirrored.length > 0)
-  console.log(`catalog: not yet mirrored:\n- ${model.notMirrored.join("\n- ")}`);
+  console.log(`components: not yet mirrored:\n- ${model.notMirrored.join("\n- ")}`);
 
-const wanted = { components: markdown(model), catalog: siteData(model) };
-if (check) {
-  let stale = false;
-  for (const k of ["components"] as const) {
-    const current = existsSync(outputs[k]) ? readFileSync(outputs[k], "utf8") : "";
-    if (current !== wanted[k]) {
-      console.error(`catalog: ${outputs[k]} is out of date; run \`npm run catalog -- --no-shots\``);
-      stale = true;
-    }
+const wanted = markdown(model);
+if (process.argv.includes("--check")) {
+  const current = existsSync(file) ? readFileSync(file, "utf8") : "";
+  if (current !== wanted) {
+    console.error(`components: ${relative(here, file)} is out of date; run \`npm run components\``);
+    process.exit(1);
   }
-  if (stale) process.exit(1);
-  console.log("catalog: ok");
-  process.exit(0);
+  console.log("components: ok");
+} else {
+  writeFileSync(file, wanted);
+  console.log(`components: ${relative(here, file)} written`);
 }
-for (const k of ["components", "catalog"] as const) writeFileSync(outputs[k], wanted[k]);
-const crops = cropShots();
-console.log(
-  `catalog: ${crops.written} crop(s) written, ${crops.kept} unchanged, ${crops.removed} removed; COMPONENTS.md and catalog.json written`,
-);

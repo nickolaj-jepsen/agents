@@ -102,6 +102,18 @@
               touch $out
             '';
             readme = pkgs.callPackage ./pkgs/readme-check.nix {};
+            # The site reads its content as data (`site/data/content.json`, which `just site` writes
+            # first), so its pages reach into `scripts/` and `kit/` for types only, and `site/` alone
+            # builds. A value import would need this checkout at build time again.
+            site-seam = pkgs.runCommand "site-seam" {} ''
+              cd ${./site}
+              if grep -rnE 'from "(\.\./)+(scripts|kit)/' src --include='*.ts' --include='*.astro' \
+                  | grep -vE ':[0-9]+:import type '; then
+                echo "site/src imports a value from outside site/; see docs/layout.md" >&2
+                exit 1
+              fi
+              touch $out
+            '';
             marketplace = assert lib.assertMsg marketplaceMatches ".claude-plugin/marketplace.json lists ${toString published}; plugins/ has ${toString expected}";
               pkgs.emptyFile;
           }

@@ -52,13 +52,11 @@ listings and commands. Each sits on a line of `--u`, and phones get their own st
 
 - One column at most (`--wide`) with a gutter on phones (`--gutter`); prose holds `--measure`.
 - Every page, the developer pages too, has the masthead at that width, and it stays at the top
-  (`--mast`). On a page with the catalogue's sticky bar the masthead scrolls away, and the bar takes
-  the top.
+  (`--mast`).
 - A harness is its logo, never a letter: Claude Code's pixel mascot (thesvg.org, in `accent`) and pi's
   press-kit mark (pi.dev/press-kit, in its own colours). `Glyph.astro` draws both from one sprite in
   `Sprite.astro`. The harness switch (`HarnessSwitch.astro`) is one control wherever there is one: the
-  home page's plugins, a plugin's gallery, the catalogue's sticky bar. The choice is remembered across
-  them.
+  home page's plugins and a plugin's gallery. The choice is remembered across them.
 - The home page opens with a short plain lead, then the plugins as a grid of posters (name, harness
   logos, install, tagline), two across from 44rem. A harness switch narrows them to one harness, with
   its picture and install command, and then the skills follow as rows under a head per category. An
@@ -105,56 +103,18 @@ listings and commands. Each sits on a line of `--u`, and phones get their own st
   view, and a contents link or a link to a heading opens it first. "see X", where X is exactly one of
   its headings, is a link to it.
 
-## The catalogue
+## The developer pages
 
 - The developer pages keep the page's width. The sidebar sits in the column, its left edge under the
   masthead's brand, and the content takes the rest. Where the margin holds the whole sidebar and the
   gutter, it hangs there and the content is exactly the masthead's width; it never half-hangs. Below
   64rem the sidebar follows the page, and a framed menu at the top (the page's name, `▾`) lists the
   same pages.
-- The sidebar is two plain lists, the components and the docs, nothing else, and no logos. The current
-  component opens into its stories and, last, its props. The one filling the screen (whose heading is
-  above a third of the way down) is marked as the page scrolls. Which harness has what is the
-  overview's table; the repo's other guides are listed there too.
-- `/dev/` is the overview, with no switch: the lead, then "Read first", two lists side by side (the
-  docs on this site, each with its opening paragraph held to two lines; the repo's guides), then the
-  UI kit: a line saying how to read it and where it comes from, and a table of components. A row is
-  the component (name, purpose) and a cell per harness, headed by its logo: the exports, then the
-  feature counts (no zeros) and the stories drawn; or ✗ Not possible and why. On a phone each row is
-  a block, each cell naming its harness.
-- A component's page is its name and purpose, one line of summary (the kit in both harnesses whichever
-  is shown, the counts, a way to the props), then one sticky bar (the harness switch, terminal size)
-  that applies to everything under it. On a phone the bar scrolls away.
-- The harness switch is Both, Claude Code, pi. Both shows the two renders one above the other; there
-  is no side by side, so a render is never shrunk to fit a pair. The key `f` moves between the two.
-  A switch never moves the page under the reader. The render at the reading line (a third of the way
-  down) keeps its place, and when it is switched away the other harness's render of that story takes
-  it, so `f` flips one render for the other to compare them.
-- The size switch greys out (and strikes) a size no harness on screen was drawn at. A render shows its
-  size at the end of its title bar, yellow when it is the nearest to the size chosen, and one note in
-  the bar says which harnesses fell back; never a warning per render.
-- A story's features are open on the page, never folded. Each one's name comes first, left out when it
-  is the story's own line, then a line per harness: its logo, the answer in a word (✓ Yes, ~ Partly,
-  ✗ No, ○ Not yet) and, under it, how or why not. Each logo sits centred in one box as tall as the
-  line, so the logos, glyphs and words line up, a missing harness's line too. No "differs" flag: a ✗
-  beside a ✓ says it. Features no story shows close the stories, the same way. There is no
-  compatibility table.
-- A render is a terminal window: a bright frame, a title bar a step off the page (the harness's logo,
-  what was drawn, its size), and the capture inside a 1u margin of its own canvas, so it reads as an
-  object among the page's hairlines.
-- A render is at its own size, scrolling sideways inside its frame where it is wider than the column.
-  It is never enlarged or shrunk.
-- A harness with no render of a story is one line (its logo, name and why), not an empty frame. The
-  story's name and line always head it, across the column; where the widest render leaves 18rem, that
-  line and the features stand beside the renders, else they follow them. A frame is as wide as its
-  render: a long title bar wraps inside it.
-- Props are one harness after the other, across the column; a row puts the name and type beside what
-  it is from 64rem. A list whose rows have no descriptions is one line.
-- Status reads glyph then word: ✓ green, ~ yellow, ✗ red, ○ muted. A harness is its logo: lit when it
-  has the thing, muted when not yet, struck when it cannot.
-- Switches are a hairline row of buttons; the pressed one is in white with a 2px accent rule under it. A
-  toggle is the same box alone.
-- The pages are for the mouse. The one key is `f`, which switches the harness.
+- The sidebar is one plain list of the docs, nothing else, and no logos.
+- `/dev/` is the overview: the lead, then "Read first", two lists side by side, the docs on this site
+  (each with its opening paragraph held to two lines) and the repo's guides.
+- The UI kit is not rendered as pages. Its components, and what each harness has of them, are
+  `kit/catalog/COMPONENTS.md`; `/kit <component>` draws one in a session (`kit/README.md`).
 
 ## Motion
 

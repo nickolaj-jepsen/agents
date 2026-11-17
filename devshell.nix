@@ -12,8 +12,7 @@
         pkgs.nodejs # `npm ci`, then `just test` and `just typecheck`; it strips types, so e2e runs .ts as is
         pkgs.just
         config.packages.tui-test # The e2e `goto` daemon
-        pkgs.pngquant # optimises the kit's crops, with oxipng
-        pkgs.oxipng
+        pkgs.oxipng # shrinks the site's stills
       ];
     };
 
@@ -31,12 +30,11 @@
         pkgs.claude-code
         pkgs.pi-coding-agent
         pkgs.ffmpeg-headless
-        pkgs.pngquant
         pkgs.oxipng
         (pkgs.hunspellWithDicts [pkgs.hunspellDicts.en_US]) # spellfix
         pkgs.typescript-language-server # lsp; it finds tsserver in the project's own typescript, else its bundled one
       ];
-      # What `just _dev-setup-pi` links into node_modules for the kit's pi stories.
+      # What `just _dev-setup-pi` links into node_modules for the pi halves.
       PI_MONOREPO = "${pkgs.pi-coding-agent}/lib/node_modules/pi-monorepo";
       FONTCONFIG_FILE = pkgs.makeFontsConf {
         fontDirectories = [
