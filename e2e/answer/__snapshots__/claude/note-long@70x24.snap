@@ -1,8 +1,8 @@
 # answer/claude/note-long 70x24 @0,12 (70x6)
-1: ● A. SQLite                                                    [-]
+a: ● SQLite                                                       [-]
    because the team already runs it and the dump tooling … ⏎ next
-2: ○ B. Postgres
-3: ○ ✎ Write your own answer
+b: ○ Postgres
+w: ○ ✎ Write your own answer
 h: back   l: next   s: skip   n: note   m: several   q: quit
 ↑ 2 more
 --- styles

@@ -1,12 +1,12 @@
 # answer/claude/review-row-key 70x24 @0,12 (70x6)
-1: ● A. SQLite                                                    [-]
+a: ● SQLite                                                       [-]
    ╰▸ add a note
-2: ○ B. Postgres
-3: ○ ✎ Write your own answer
+b: ○ Postgres
+w: ○ ✎ Write your own answer
 h: back   l: next   s: skip   n: note   m: several   q: quit
 ↑ 2 more
 --- styles
-1 2x13 .x52 3x3
+1 2x10 .x55 3x3
 .x3 3x13
 4
 4 3x27

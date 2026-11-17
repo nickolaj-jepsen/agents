@@ -1,8 +1,8 @@
 # answer/claude/note-focus 70x24 @0,12 (70x6)
-1: ● A. SQLite                                                    [-]
+a: ● SQLite                                                       [-]
    ╰▸ typed at once  ⏎ next
-2: ○ B. Postgres
-3: ○ ✎ Write your own answer
+b: ○ Postgres
+w: ○ ✎ Write your own answer
 h: back   l: next   s: skip   n: note   m: several   q: quit
 ↑ 2 more
 --- styles

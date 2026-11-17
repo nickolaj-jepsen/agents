@@ -49,6 +49,8 @@ export type EntryKind = "option" | "accept" | "write";
 
 export type Entry = {
   kind: EntryKind;
+  /** The option's letter as the message printed it ("B"); "" for any other entry, and in a pick list. */
+  key: string;
   text: string;
   /** The lines that continued it, drawn under it. */
   detail: string;
@@ -673,6 +675,10 @@ function itemView(form: Form, draft: Draft): ItemView | null {
     body: item.body,
     entries: entries(item).map((entry) => ({
       kind: entry.kind,
+      key:
+        entry.kind === "option" && form.kind === "round"
+          ? (item.options[entry.index]?.key ?? "")
+          : "",
       text: entryText(form, item, entry),
       detail: entry.kind === "option" ? (item.options[entry.index]?.detail ?? "") : "",
       isRecommended: entry.kind === "option" && recommended.includes(entry.index),

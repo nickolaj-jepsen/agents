@@ -3,10 +3,10 @@
 
 Add caching?
 
-1: ○ A. Yes
-2: ● B. No
+a: ○ Yes
+b: ● No
    ╰▸ add a note
-3: ○ ✎ Write your own answer
+w: ○ ✎ Write your own answer
 h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
 1x2 .x3 2x6 .x3 3x2 1x2 .x3 3x2 4x2 .x3 5 1x8 .x3 1x114 .x2 1x3
@@ -14,7 +14,7 @@ h: back   l: next   s: skip   n: note   m: several   q: quit
 2x12
 -
 5
-6 7x9
+6 7x6
 .x3 1x13
 5 1x27
 5 1x6 .x3 5 .x9 5 1x6 .x3 5 1x6 .x3 5 1x9 .x3 5 1x6

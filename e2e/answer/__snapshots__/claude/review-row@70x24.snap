@@ -1,13 +1,13 @@
 # answer/claude/review-row 70x24 @0,12 (70x6)
-1: ○ A. Yes                                                       [-]
-2: ● B. No
+a: ○ Yes                                                          [-]
+b: ● No
    ╰▸ add a note
-3: ○ ✎ Write your own answer
+w: ○ ✎ Write your own answer
 h: back   l: next   s: skip   n: note   m: several   q: quit
 ↑ 2 more
 --- styles
 1 .x65 2x3
-3 4x9
+3 4x6
 .x3 2x13
 1 2x27
 1 2x6 .x3 1 .x9 1 2x6 .x3 1 2x6 .x3 1 2x9 .x3 1 2x6

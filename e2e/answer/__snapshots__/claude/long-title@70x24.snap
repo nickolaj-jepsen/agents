@@ -1,14 +1,14 @@
 # answer/claude/long-title 70x24 @0,12 (70x6)
 quick brown fox jumps over the lazy dog the quick brown fox jumps [-]
 over the lazy dog the quick brown fox jumps over the lazy dog?
-1: ○ A. Yes
-2: ○ B. No
-3: ○ ✎ Write your own answer
+a: ○ Yes
+b: ○ No
+w: ○ ✎ Write your own answer
 ↑ 27 more · ↓ 1 more
 --- styles
 1x65 . 2x3
 1x62
-3 4x10
+3 4x7
 5
 5 2x27
 2x20

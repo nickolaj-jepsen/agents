@@ -3,10 +3,10 @@
 
 Use SQLite?
 
-1: ● A. SQLite
+a: ● SQLite
    ╰▸ A note on this answer, or Enter to go on ⏎ next
-2: ○ B. Postgres
-3: ○ ✎ Write your own answer
+b: ○ Postgres
+w: ○ ✎ Write your own answer
 h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
 1x2 .x3 2x6 .x3 3x2 4x2 .x3 1x4 .x3 5 1x8 .x3 1x114 .x2 1x3

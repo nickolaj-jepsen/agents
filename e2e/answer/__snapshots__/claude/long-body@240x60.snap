@@ -17,9 +17,9 @@ Line 13 of what it hangs on.
 Line 14 of what it hangs on.
 Line 15 of what it hangs on.
 … more above
-1: ○ A. Keep it.
-2: ○ B. Drop it.
-3: ○ ✎ Write your own answer
+a: ○ Keep it.
+b: ○ Drop it.
+w: ○ ✎ Write your own answer
 
 h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
@@ -41,7 +41,7 @@ h: back   l: next   s: skip   n: note   m: several   q: quit
 -
 -
 1x12
-5 6x15
+5 6x12
 4
 4 1x27
 -

@@ -3,9 +3,9 @@
 
 Question number 9: pick a strategy?
 
-1: ○ A. Option A for 9
-2: ○ B. Option B for 9
-3: ○ ✎ Write your own answer
+a: ○ Option A for 9
+b: ○ Option B for 9
+w: ○ ✎ Write your own answer
 
 h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
@@ -13,7 +13,7 @@ h: back   l: next   s: skip   n: note   m: several   q: quit
 -
 2x35
 -
-6 7x21
+6 7x18
 5
 5 1x27
 -

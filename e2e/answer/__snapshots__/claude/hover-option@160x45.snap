@@ -3,9 +3,9 @@
 
 Use SQLite?
 
-1: ○ A. SQLite
-2: ○ B. Postgres
-3: ○ ✎ Write your own answer
+a: ○ SQLite
+b: ○ Postgres
+w: ○ ✎ Write your own answer
 
 h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
@@ -13,8 +13,8 @@ h: back   l: next   s: skip   n: note   m: several   q: quit
 -
 2x11
 -
-5 6x13
-5 6x15
+5 6x10
+5 6x12
 4 1x27
 -
 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x9 .x3 4 1x6

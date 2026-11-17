@@ -1,8 +1,8 @@
 # answer/claude/write-typed 70x24 @0,12 (70x6)
 ──   1 of 2   ○ Q1   ○ Q2   r: review   ────────────────────────  [-]
 Use SQLite?
-1: ○ A. SQLite
-2: ○ B. Postgres
+a: ○ SQLite
+b: ○ Postgres
 ✎ DuckDB, it is embedded  ⏎ save
 h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles

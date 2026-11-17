@@ -10,8 +10,8 @@ writes your reply into the prompt.
 
 - A row above the prompt offers the form when a turn ends on questions; `/answer`
   or a click opens it.
-- One question per screen: numbered options, plus a last entry to write your own.
-- An answer (a number, `Enter` or a click) is taken and the form goes on to the next
+- One question per screen: each option is keyed by the letter the message gave it (`a`, `b`, `c`), plus a last entry to write your own (`w`). A pick list's rows are numbered; the back key is `h`, so an option H is reached by the ring or a click.
+- An answer (its letter, `Enter` or a click) is taken and the form goes on to the next
   question; the last one lands on the review. A note is `n`, or a click on `add a note`
   under the answer.
 - `y` takes the recommendation (`y: take B`), `m` picks several options (`Q3: A, C`).

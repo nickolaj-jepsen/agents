@@ -3,8 +3,8 @@
 
 Use SQLite?
 
-1: ○ A. SQLite
-2: ○ B. Postgres
+a: ○ SQLite
+b: ○ Postgres
 ✎ Write your own answer ⏎ save
 
 h: back   l: next   s: skip   n: note   m: several   q: quit

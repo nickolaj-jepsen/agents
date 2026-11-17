@@ -3,9 +3,9 @@
 
 Add caching?
 
-1: ○ A. Yes
-2: ○ B. No
-3: ○ ✎ Write your own answer
+a: ○ Yes
+b: ○ No
+w: ○ ✎ Write your own answer
 
 h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
@@ -13,7 +13,7 @@ h: back   l: next   s: skip   n: note   m: several   q: quit
 -
 2x12
 -
-5 6x10
+5 6x7
 4
 4 1x27
 -

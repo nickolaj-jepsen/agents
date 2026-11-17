@@ -3,10 +3,10 @@
 
 数据库を使いますか？ 🚀 Use émoji?
 
-1: ○ A. 是的，使用 SQLite 🗃️
-2: ○ B. いいえ、Postgres 🐘
-3: ○ C. 👨‍👩‍👧‍👦 family
-4: ○ ✎ Write your own answer
+a: ○ 是的，使用 SQLite 🗃️
+b: ○ いいえ、Postgres 🐘
+c: ○ 👨‍👩‍👧‍👦 family
+w: ○ ✎ Write your own answer
 
 h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
@@ -14,7 +14,7 @@ h: back   l: next   s: skip   n: note   m: several   q: quit
 -
 2x34
 -
-5 6x27
+5 6x24
 4
 4
 4 1x27

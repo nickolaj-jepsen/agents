@@ -1,8 +1,8 @@
 # answer/claude/pick-click 70x24 @0,12 (70x6)
-1: ○ A. SQLite                                                    [-]
-2: ● B. Postgres
+a: ○ SQLite                                                       [-]
+b: ● Postgres
    ╰▸ A note on this answer, or Enter to go on ⏎ next
-3: ○ ✎ Write your own answer
+w: ○ ✎ Write your own answer
 h: back   l: next   s: skip   n: note   m: several   q: quit
 ↑ 2 more
 --- styles

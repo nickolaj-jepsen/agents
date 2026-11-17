@@ -9,6 +9,8 @@ export type Action =
 
 export type Entry = {
   kind: "option" | "accept" | "write";
+  /** The option's letter as the message printed it ("B"); "" for any other entry, and in a pick list. */
+  key: string;
   text: string;
   /** The lines that continued it, drawn under it. */
   detail: string;

@@ -1,12 +1,12 @@
 # answer/claude/wide-chars 70x24 @0,12 (70x6)
-1: ○ A. 是的，使用 SQLite 🗃️                                       [-]
-2: ○ B. いいえ、Postgres 🐘
-3: ○ C. 👨‍👩‍👧‍👦 family ＡＢＣ
-4: ○ ✎ Write your own answer
-h: back   l: nextf  s: skip Ｃn: note   m: several   q: quit
+a: ○ 是的，使用 SQLite 🗃️                                          [-]
+b: ○ いいえ、Postgres 🐘
+c: ○ 👨‍👩‍👧‍👦 family ＡＢＣ
+w: ○ ✎ Write your own answer
+h: back   l: next   s: skip   n: note   m: several   q: quit
 ↑ 2 more
 --- styles
-1 2x27 .x38 3x3
+1 2x24 .x41 3x3
 4
 4
 4 3x27

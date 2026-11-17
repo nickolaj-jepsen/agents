@@ -3,10 +3,10 @@
 
 Should every focus default to the same bar?
 
-1: ○ A. Yes, one default for every kind. (recommended)
-2: ○ B. Default by kind.
-3: ○ C. Add the bar as a second pick.
-4: ○ ✎ Write your own answer
+a: ○ Yes, one default for every kind. (recommended)
+b: ○ Default by kind.
+c: ○ Add the bar as a second pick.
+w: ○ ✎ Write your own answer
 
 Recommended: A. A per-kind table is one more thing to keep in sync.
 
@@ -16,7 +16,7 @@ h: back   l: next   y: take A   s: skip   n: note   m: several   q: quit
 -
 2x43
 -
-5 6x39 7x14
+5 6x36 7x14
 4
 4
 4 1x27

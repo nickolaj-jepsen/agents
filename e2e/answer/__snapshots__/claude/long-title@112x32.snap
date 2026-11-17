@@ -4,9 +4,9 @@ lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps o
 brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps
 over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog
 the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog?
-1: ○ A. Yes
-2: ○ B. No
-3: ○ ✎ Write your own answer
+a: ○ Yes
+b: ○ No
+w: ○ ✎ Write your own answer
 h: back   l: next   s: skip   n: note   m: several   q: quit
 ↑ 13 more
 --- styles
@@ -15,7 +15,7 @@ h: back   l: next   s: skip   n: note   m: several   q: quit
 1x104
 1x106
 1x88
-3 4x10
+3 4x7
 5
 5 2x27
 5 2x6 .x3 5 2x6 .x3 5 2x6 .x3 5 2x6 .x3 5 2x9 .x3 5 2x6

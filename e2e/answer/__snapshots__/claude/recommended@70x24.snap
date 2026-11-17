@@ -1,12 +1,12 @@
 # answer/claude/recommended 70x24 @0,12 (70x6)
-1: ○ A. Yes, one default for every kind. (recommended)            [-]
-2: ○ B. Default by kind.
-3: ○ C. Add the bar as a second pick.
-4: ○ ✎ Write your own answer
+a: ○ Yes, one default for every kind. (recommended)               [-]
+b: ○ Default by kind.
+c: ○ Add the bar as a second pick.
+w: ○ ✎ Write your own answer
 Recommended: A. A per-kind table is one more thing to keep in
 ↑ 2 more · ↓ 3 more
 --- styles
-1 2x39 3x14 .x12 4x3
+1 2x36 3x14 .x15 4x3
 5
 5
 5 4x27

@@ -456,6 +456,16 @@ describe("view", () => {
     expect(row?.shown).not.toMatch(/[`*]/);
   });
 
+  test("an option's entry carries its printed letter; a write-in, a yes and a pick list's rows carry none", () => {
+    const form = formOf(GRILLING_ROUND);
+    const keys = itemOf(form, newDraft(form)).entries.map((entry) => entry.key);
+    expect(keys[0]).toBe("A");
+    expect(keys.at(-1)).toBe("");
+    expect(itemOf(form, steps(form, [FORWARD])).entries[0]?.key).toBe("");
+    const picks = formOf(IDEATE_SUMMARY);
+    expect(itemOf(picks, newDraft(picks)).entries.every((entry) => entry.key === "")).toBe(true);
+  });
+
   test("says what a yes takes, in the reply's words", () => {
     const form = formOf(GRILLING_ROUND);
     expect(itemOf(form, newDraft(form)).accepts).toMatch(/^[A-H](, [A-H])*$/);

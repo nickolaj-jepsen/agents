@@ -1,13 +1,13 @@
 # answer/claude/table-code 70x24 @0,12 (70x6)
 … more above                                                      [-]
-1: ○ A. SQLite
-2: ○ B. Postgres
-3: ○ ✎ Write your own answer
+a: ○ SQLite
+b: ○ Postgres
+w: ○ ✎ Write your own answer
 h: back   l: next   s: skip   n: note   m: several   q: quit
 ↑ 2 more
 --- styles
 1x12 .x54 1x3
-2 3x13
+2 3x10
 4
 4 1x27
 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x9 .x3 4 1x6

@@ -279,6 +279,23 @@ async function send($: EngineInterface, text: string): Promise<boolean> {
   return true;
 }
 
+/**
+ * The key that answers an entry: the option's own letter, `w` for the write-in, a digit for
+ * anything else (a pick list's rows, a yes). The letter `h` is the back key, so option H goes
+ * by the ring and the pointer.
+ */
+function hotkeyOf(row: Entry, index: number): string | undefined {
+  if (row.kind === "write") return "w";
+  if (row.key) return /^[A-Ga-g]$/.test(row.key) ? row.key.toLowerCase() : undefined;
+  return index < 9 ? String(index + 1) : undefined;
+}
+
+/** An entry's words: its letter is drawn as its key, so the printed `B.` is left off. */
+const labelOf = (row: Entry, index: number) =>
+  hotkeyOf(row, index) === row.key.toLowerCase() && row.key
+    ? row.text.replace(/^[A-Ga-g][.)]\s*/, "")
+    : row.text;
+
 /** What a key row offers: its key, label and how it is pressed, so its width is known before it is drawn. */
 type KeySpec = { hotkey: string; label: string; kind: string; isLit?: boolean };
 
@@ -699,12 +716,12 @@ export const register: Register = (on) => {
         plain
         // The write-in waits dim until it holds an answer.
         dimColor={row.kind === "write" && !item.written}
-        hotkey={k < 9 ? String(k + 1) : undefined}
+        hotkey={hotkeyOf(row, k)}
         autoFocus={!editing && k === item.start ? true : undefined}
         onPress={() => choose($, row, k)}
       >
         {`${markOf(row)} `}
-        {row.kind === "write" ? `✎ ${item.written || row.text}` : row.text}
+        {row.kind === "write" ? `✎ ${item.written || row.text}` : labelOf(row, k)}
         {row.isRecommended ? <Text dimColor> (recommended)</Text> : null}
         {/* Inside the button, so a click on any of the option's lines picks it. */}
         {row.detail && !isNative ? (

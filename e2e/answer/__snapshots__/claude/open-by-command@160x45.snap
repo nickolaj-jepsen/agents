@@ -3,9 +3,9 @@
 
 Use SQLite?
 
-1: ○ A. SQLite
-2: ○ B. Postgres
-3: ○ ✎ Write your own answer
+a: ○ SQLite
+b: ○ Postgres
+w: ○ ✎ Write your own answer
 
 h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
