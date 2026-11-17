@@ -50,6 +50,18 @@ A form for the round of questions or numbered pick list a turn ended on, which w
 
 [![answer](https://nickolaj-jepsen.github.io/agents/media/answer/demo.png)](https://nickolaj-jepsen.github.io/agents/plugins/answer/)
 
+### [questions](https://nickolaj-jepsen.github.io/agents/plugins/questions/)
+
+An `ask_user_question` tool: one to four multiple-choice questions in a dialog, which come back to the model as answers.
+
+[![questions](https://nickolaj-jepsen.github.io/agents/media/questions/demo.png)](https://nickolaj-jepsen.github.io/agents/plugins/questions/)
+
+### [worktree](https://nickolaj-jepsen.github.io/agents/plugins/worktree/)
+
+Move a pi session into a git worktree and back to the primary checkout, keeping the conversation.
+
+[![worktree](https://nickolaj-jepsen.github.io/agents/media/worktree/demo.png)](https://nickolaj-jepsen.github.io/agents/plugins/worktree/)
+
 More:
 
 - [transcript-tweaks](https://nickolaj-jepsen.github.io/agents/plugins/transcript-tweaks/): Two changes to how the transcript reads. (pi)

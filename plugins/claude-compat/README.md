@@ -2,7 +2,7 @@
 tagline: "Claude Code habits in pi."
 featured: false
 requires: []
-order: 7
+order: 9
 ---
 
 pi only, session you started only. Claude Code habits in pi.

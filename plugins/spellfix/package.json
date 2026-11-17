@@ -1,0 +1,19 @@
+{
+  "name": "@nickolaj-jepsen/spellfix",
+  "version": "0.1.0",
+  "description": "Review the prompt draft's spelling in pi: hunspell plus one model call, with the misspellings underlined as you type",
+  "keywords": [
+    "pi-package"
+  ],
+  "type": "module",
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./pi/index.ts"
+    ]
+  }
+}

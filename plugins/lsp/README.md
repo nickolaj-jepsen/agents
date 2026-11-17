@@ -3,7 +3,7 @@ tagline: "Appends language-server errors to `edit` and `write` results."
 featured: false
 requires:
   - "A JSON file of language servers, named by `PI_LSP_SERVERS`"
-order: 9
+order: 11
 ---
 
 pi only; subagents have it too. Appends language-server errors to `edit` and `write`

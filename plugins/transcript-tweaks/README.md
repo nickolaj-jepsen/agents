@@ -2,7 +2,7 @@
 tagline: "Two changes to how the transcript reads."
 featured: false
 requires: []
-order: 6
+order: 8
 ---
 
 pi only. Two changes to how the transcript reads; the session you started has them,

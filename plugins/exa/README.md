@@ -3,7 +3,7 @@ tagline: "`exa_search` and `exa_fetch` tools over Exa."
 featured: false
 requires:
   - "An Exa key in the file `PI_EXA_KEY_FILE` names"
-order: 8
+order: 10
 ---
 
 pi only; subagents have it too. `exa_search` and `exa_fetch` tools over Exa, each call

@@ -4,7 +4,7 @@ featured: true
 status: in-progress
 requires:
   - "A git repository with a note store (`.agents/store`, `agent-notes root --ensure`)"
-order: 5
+order: 7
 ---
 
 Agents file doc suggestions instead of editing docs outside their change; you
