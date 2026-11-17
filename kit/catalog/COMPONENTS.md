@@ -8,15 +8,15 @@ Which component each harness has, and which features each supports. Status: `yes
 
 The wrapper of a form that takes the strip above the prompt: a divider with a title and a slot, the body, a footer pinned below, and the room to itself while open.
 
-- pi: not possible: pi has no band; a form there replaces the editor, framed by modalFrame (see frame)
+- pi: exists: `bandShell`, `bandRows`, `bandAct`, `chipRow`
 - claude: exists: `bandShell`, `bandRows`, `onlyOwnRows`
 
 Features:
 
-- Top divider with a title on the left and a slot after it: pi no (the editor-replacing component has a border with a title and hints, not a band); claude yes (the rule fills what the title and the slot leave)
-- A title and no slot: pi no (no band); claude yes
-- Stands as tall as its tallest state: pi no (a pi form is sized by its own component); claude yes (`bandRows` keeps `reserved` rows for another mod; a native surface has no heights in rows)
-- Hides every other mod's row while open: pi no (no band); claude yes (`onlyOwnRows` in the `AbovePromptList` hook; the catalogue draws its stories through it)
+- Top divider with a title on the left and a slot after it: pi yes (in the rounded border: the slot's forms are given widest first, the first that fits is drawn, its cells clickable); claude yes (the rule fills what the title and the slot leave)
+- A title and no slot: pi yes; claude yes
+- Stands as tall as its tallest state: pi yes (`bandRows` counts body rows within the terminal's rows less the transcript's, the frame's own and a minimum of four; a taller body scrolls above the footer); claude yes (`bandRows` keeps `reserved` rows for another mod; a native surface has no heights in rows)
+- Hides every other mod's row while open: pi no (the form replaces the editor, so nothing else shares its place); claude yes (`onlyOwnRows` in the `AbovePromptList` hook; the catalogue draws its stories through it)
 
 ## Button row
 

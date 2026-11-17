@@ -5,6 +5,8 @@
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import type { TuiMouseEvent, TuiMouseEventResult } from "@earendil-works/pi-tui";
 import {
+  bandShell,
+  chipRow,
   clamp,
   emptyState,
   entries,
@@ -19,6 +21,7 @@ import {
   splitFrame,
   splitLayout,
   tokens,
+  type BandRow,
   type Column,
   type Hint,
   type WidthClass,
@@ -166,6 +169,52 @@ function sideBySide(
     out.push(used.map((c) => fit(c.lines[i] ?? "", c.width)).join("  "));
   return out;
 }
+
+const bandStory = (
+  state: string,
+  about: string,
+  settings: string,
+  o: { title: string; stops: boolean; lines: number; height?: number },
+  more: Partial<Story> = {},
+): Story => ({
+  component: "band",
+  state,
+  about,
+  settings,
+  width: "wide",
+  frame: true,
+  ...more,
+  make: () =>
+    pure((theme, width, env) => {
+      const stops = (): BandRow<never> => {
+        const labels = ["Q1", "Q2", "Q3"];
+        const text = labels
+          .map(
+            (label, i) =>
+              `${i === 0 ? paint(theme, "success", tokens.glyph.done) : paint(theme, "dim", tokens.glyph.single.off)} ${paint(theme, i === 1 ? "accent" : "dim", label)}`,
+          )
+          .join("  ");
+        return { text };
+      };
+      return bandShell(theme, {
+        width,
+        title: o.title,
+        right: o.stops ? [stops()] : undefined,
+        maxRows: env.rows,
+        height: o.height,
+        body: [
+          { text: theme.bold("Which of these does the page get wrong?") },
+          ...Array.from({ length: o.lines }, (_, i) => ({ text: `${i + 1}: option ${i + 1}` })),
+        ],
+        footer: chipRow(theme, [
+          { key: "b", label: "back", act: undefined as never },
+          { key: "f", label: "forward", act: undefined as never },
+          { key: "s", label: "skip", act: undefined as never },
+        ]),
+        keys: "esc closes",
+      }).lines;
+    }),
+});
 
 const clampStory = (
   state: string,
@@ -691,6 +740,26 @@ export const stories: Story[] = [
     "Dismiss failed: EACCES: permission denied, open '/home/user/.agents/store/docfix/x.md'",
   ),
   noticeStory("long", "dim", `${SENTENCE} ${SENTENCE}`),
+
+  bandStory(
+    "default",
+    "The shell: a title and the question stops in the border, the body, and a footer of keys pinned to the bottom",
+    "bandShell(theme, {title, right, body, footer, keys})",
+    { title: "2 of 3", stops: true, lines: 3, height: 6 },
+  ),
+  bandStory(
+    "title-only",
+    "A title and no slot: the rule runs on",
+    "bandShell(theme, {title, body, footer, keys})",
+    { title: "Review", stops: false, lines: 3, height: 6 },
+  ),
+  bandStory(
+    "height",
+    "Standing as tall as its tallest state: a short body, the footer still at the bottom",
+    "bandShell(theme, {height: 9, ...})",
+    { title: "2 of 3", stops: true, lines: 2, height: 9 },
+    { extreme: true },
+  ),
 
   {
     component: "empty",
