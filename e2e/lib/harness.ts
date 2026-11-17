@@ -244,6 +244,7 @@ export const pi: Harness = {
     mkdirSync(join(run.runDir, "sessions"), { recursive: true });
     const args = ["--session-dir", join(run.runDir, "sessions")];
     const env: Record<string, string> = { ...COMMON_ENV, PI_OFFLINE: "1", ...start.env };
+    if (start.bin) env.PATH = withBin(run, start.bin);
     if (start.turns) {
       const file = join(run.runDir, "turns.json");
       writeFileSync(file, JSON.stringify(start.turns));
