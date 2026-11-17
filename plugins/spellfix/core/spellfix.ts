@@ -275,7 +275,7 @@ export function wordDiff(before: string, after: string): DiffRun[] {
   const right = after.trim().split(/\s+/).filter(Boolean);
   // lengths[i][j]: how many words left[i:] and right[j:] still share in order.
   const lengths: number[][] = Array.from({ length: left.length + 1 }, () =>
-    new Array<number>(right.length + 1).fill(0),
+    Array.from<number>({ length: right.length + 1 }).fill(0),
   );
   for (let i = left.length - 1; i >= 0; i--) {
     for (let j = right.length - 1; j >= 0; j--) {

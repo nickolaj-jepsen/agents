@@ -19,7 +19,6 @@ import {
   widthCap,
   type Cell,
   type ClampOptions,
-  type Entry,
   type Kit,
   type ListGroup,
   type ListItem,

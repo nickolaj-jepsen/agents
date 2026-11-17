@@ -164,7 +164,7 @@ async function play1(
 
 /** Pool of `n` workers over `jobs`. */
 async function pool<T>(jobs: (() => Promise<T>)[], n: number): Promise<PromiseSettledResult<T>[]> {
-  const results: PromiseSettledResult<T>[] = new Array(jobs.length);
+  const results: PromiseSettledResult<T>[] = Array.from({ length: jobs.length });
   let next = 0;
   await Promise.all(
     Array.from({ length: Math.min(n, jobs.length) }, async () => {

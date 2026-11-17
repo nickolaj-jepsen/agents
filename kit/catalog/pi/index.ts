@@ -16,7 +16,7 @@ import {
 } from "@earendil-works/pi-tui";
 import { overlayOptions } from "../../pi/ui.ts";
 import { stageLines, stageOptions, stageRows } from "./stage.ts";
-import { storyId, stories, type Live, type Story } from "./stories.ts";
+import { stories, type Live, type Story } from "./stories.ts";
 
 class StoryView implements Component {
   private readonly live: Live;

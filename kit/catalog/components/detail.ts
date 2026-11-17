@@ -1,4 +1,4 @@
-import { defineComponent, planned, yes, partial } from "../manifest.ts";
+import { defineComponent, yes, partial } from "../manifest.ts";
 
 export default defineComponent({
   id: "detail",

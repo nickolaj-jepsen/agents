@@ -1,0 +1,5 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "ignorePatterns": ["**/.claude-plugin/types/**", "site/**", "skills/**", ".agents/**", "node_modules/**"],
+  "categories": { "correctness": "error" }
+}

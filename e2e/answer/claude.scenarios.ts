@@ -15,7 +15,7 @@ const band: Region = (grid) => {
       .trimEnd(),
   );
   // The first row carries the fold button; short terminals scroll the divider out of view.
-  const top = lines.findIndex((l) => /\[-\]$/.test(l));
+  const top = lines.findIndex((l) => l.endsWith("[-]"));
   if (top < 0) return undefined;
   let bottom = lines.findIndex((l, i) => i > top && /^─+$/.test(l)) - 1;
   if (bottom < top) bottom = lines.length - 1;
