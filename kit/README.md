@@ -17,6 +17,7 @@ colour role; change one there and every plugin follows.
 | `blocks.ts`  | `section`, `prose`, `note`, `notice`, `emptyState`            |
 | `entries.ts` | `entries`: dated entries, a date column or a date line        |
 | `frame.ts`   | `modalFrame`, `splitLayout`, `splitFrame`, `Hint`             |
+| `band.ts`    | `bandShell`, `bandRows`, `bandAct`, `chipRow`: a form's shell |
 | `list.ts`    | `List`: groups, marks, metadata columns, scrolling, the mouse |
 | `overlay.ts` | `overlayOptions(widthClass)`, `modalRows`                     |
 

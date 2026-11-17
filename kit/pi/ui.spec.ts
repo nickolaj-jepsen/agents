@@ -2,6 +2,10 @@ import type { Theme } from "@earendil-works/pi-coding-agent";
 import { stripTerminalSequences, visibleWidth } from "@earendil-works/pi-tui";
 import { describe, expect, it } from "vitest";
 import {
+  bandAct,
+  bandRows,
+  bandShell,
+  chipRow,
   clamp,
   entries,
   List,
@@ -449,5 +453,110 @@ describe("entries", () => {
     });
     expect(out).toHaveLength(2);
     expect(widths(out).every((n) => n <= 50)).toBe(true);
+  });
+});
+
+describe("bandShell", () => {
+  const rowsOf = (n: number) => Array.from({ length: n }, (_, i) => ({ text: `row ${i}` }));
+  const base = { width: 60, title: "2 of 3", maxRows: 40, keys: "esc closes" };
+
+  it("is `width` cells wide on every line, title in the top and keys in the bottom", () => {
+    const { lines } = bandShell(plain, { ...base, body: rowsOf(2) });
+    expect(widths(lines).every((n) => n === 60)).toBe(true);
+    expect(strip(lines[0]!)).toMatch(/^╭─ 2 of 3 ─+╮$/);
+    expect(strip(lines.at(-1)!)).toMatch(/^╰─+ esc closes ─╯$/);
+  });
+  it("pads a short body to the height of the tallest state, with the footer last", () => {
+    const short = bandShell(plain, {
+      ...base,
+      height: 9,
+      body: rowsOf(2),
+      footer: { text: "b back" },
+    });
+    const tall = bandShell(plain, {
+      ...base,
+      height: 9,
+      body: rowsOf(9),
+      footer: { text: "b back" },
+    });
+    expect(short.lines).toHaveLength(tall.lines.length);
+    expect(strip(short.lines.at(-2)!)).toContain("b back");
+  });
+  it("stands within the terminal, never below four body rows", () => {
+    expect(bandRows(30, 40)).toBe(28);
+    expect(bandRows(2, 40)).toBe(4);
+    expect(bandRows(undefined, 40)).toBe(28);
+    expect(bandRows(30, 10)).toBe(4);
+  });
+  it("scrolls a body taller than its room above the footer, and says so", () => {
+    const o = { ...base, maxRows: 20, body: rowsOf(30), footer: { text: "b back" } };
+    const top = bandShell(plain, o);
+    expect(top.maxOffset).toBe(30 - 8);
+    expect(strip(top.lines[1]!)).toContain("row 0");
+    expect(strip(top.lines.at(-1)!)).toContain("shift+↑↓ scrolls");
+    const end = bandShell(plain, { ...o, offset: 99 });
+    expect(end.offset).toBe(top.maxOffset);
+    expect(strip(end.lines[1]!)).toContain("row 22");
+    expect(strip(end.lines.at(-2)!)).toContain("b back");
+  });
+  it("draws the widest slot that fits, and none when none does", () => {
+    const wide = { text: "✓ Q1  ○ Q2  ○ Q3" };
+    const narrow = { text: "Q2" };
+    const at = (width: number, right: { text: string }[]) =>
+      strip(bandShell(plain, { ...base, width, right, body: [] }).lines[0]!);
+    expect(at(60, [wide, narrow])).toContain("✓ Q1  ○ Q2  ○ Q3");
+    expect(at(24, [wide, narrow])).toContain("  Q2 ");
+    expect(at(12, [wide, narrow])).not.toContain("Q2");
+    expect(widths([at(12, [wide])])[0]).toBe(12);
+  });
+  it("can leave a blank row under the top border", () => {
+    const plainBand = bandShell(plain, { ...base, body: rowsOf(1) }).lines;
+    const roomy = bandShell(plain, { ...base, isRoomy: true, body: rowsOf(1) }).lines;
+    expect(roomy).toHaveLength(plainBand.length + 1);
+    expect(strip(roomy[1]!).replace(/[│ ]/g, "")).toBe("");
+  });
+
+  describe("bandAct", () => {
+    const chips = chipRow(plain, [
+      { key: "b", label: "back", act: "back" },
+      { key: "f", label: "forward", act: "forward" },
+    ]);
+    const band = bandShell<string>(plain, {
+      ...base,
+      right: [
+        {
+          text: "Q1  Q2",
+          cells: [
+            { start: 0, end: 2, act: "q1" },
+            { start: 4, end: 6, act: "q2" },
+          ],
+        },
+      ],
+      body: [{ text: "an answer", act: "pick" }, { text: "" }],
+      footer: chips,
+    });
+    const at = (needle: string, line = band.lines) => {
+      const y = line.findIndex((l) => strip(l).includes(needle));
+      return { x: strip(line[y]!).indexOf(needle), y };
+    };
+    it("finds a chip by its columns, and a row where its text reaches", () => {
+      const back = at("b back");
+      expect(bandAct(band, back.x, back.y)).toBe("back");
+      expect(bandAct(band, at("f forward").x + 2, back.y)).toBe("forward");
+      const row = at("an answer");
+      expect(bandAct(band, row.x, row.y)).toBe("pick");
+      expect(bandAct(band, row.x + 30, row.y)).toBeUndefined();
+    });
+    it("finds the stops in the top border", () => {
+      const q2 = at("Q2");
+      expect(q2.y).toBe(0);
+      expect(bandAct(band, q2.x, 0)).toBe("q2");
+      expect(bandAct(band, at("Q1").x, 0)).toBe("q1");
+      expect(bandAct(band, 1, 0)).toBeUndefined();
+    });
+    it("hits nothing on a border or a blank row", () => {
+      expect(bandAct(band, 5, band.lines.length - 1)).toBeUndefined();
+      expect(bandAct(band, 5, 2)).toBeUndefined();
+    });
   });
 });
