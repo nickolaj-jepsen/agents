@@ -1,5 +1,6 @@
-# kit/pi/list/extreme-titles 160x45 @2,2 (96x8)
-docs/a-very-long-directory-name/with/several/nested/levels/and-an-equally-long-file-name-for-th…
+# kit/pi/list/extreme-titles 160x45 @2,2 (96x9)
+docs/a-very-long-directory-name/with/several/nested/levels/and-an-equally-long-file-name-for-the
+-guide.md ──────────────────────────────────────────────────────────────────────────────────────
 ❯ □ The section says the build verifies a pi change, but the build only           !   12×    1mo
     type-checks the cores and the pi halves and never starts an agent. The sect…
 
@@ -8,18 +9,19 @@ AGENTS.md ───────────────────────�
     okenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbroke…
   □ Short.                                                                        ↻    1×     1d
 --- styles
-1x95
-2 . 3 . 2x67 .x11 4 .x2 5x4 .x2 3x5
-.x4 2x75
+1x96
+1x9 . 2x86
+3 . 2 . 3x67 .x11 4 .x2 5x4 .x2 2x5
+.x4 3x75
 -
-1x9 . 3x86
-.x2 3 . 6x76 .x2 6 .x2 5x4 .x2 3x5
+1x9 . 2x86
+.x2 2 . 6x76 .x2 6 .x2 5x4 .x2 2x5
 .x4 6x75
-.x2 3 . 6x6 .x72 6 .x2 3x4 .x2 3x5
+.x2 2 . 6x6 .x72 6 .x2 2x4 .x2 2x5
 --- legend
 1 fg=#dee0e1 bold
-2 fg=#a798d7
-3 fg=#7e888e
+2 fg=#7e888e
+3 fg=#a798d7
 4 fg=#ea7f81
 5 fg=#cd9a22
 6 fg=#dee0e1

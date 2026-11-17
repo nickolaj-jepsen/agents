@@ -119,7 +119,7 @@ Features:
 - Titles wrap and clamp: pi yes (through `clamp`; every row keeps one height); claude yes (through `clamp`)
 - Scroll window follows the cursor: pi yes (blank rows between groups drop first); claude no (a pane scrolls as a whole; there is no scroll element)
 - Whole rows only; hidden rows counted: pi yes (a dim `↑ n more` / `↓ n more` line stands in for the hidden rows); claude no (a pane scrolls as a whole, so no rows are hidden to count)
-- Groups under a header rule: pi yes; claude yes (the rule is drawn text)
+- Groups under a header rule: pi yes (a name longer than the list wraps, its rule on the last line); claude yes (the rule is drawn text; a name longer than the list is cut with `…`)
 - Marks, several-of-many and one-of-many: pi yes (□ ■ and ○ ●); claude yes (□ ■, and ○ ● with `marks: "single"`)
 - Right-aligned metadata columns: pi yes (fixed width each; the lowest priority drops first); claude yes (a docked pane is narrow, so metadata takes its own dim line there; columns show inline and wide)
 - Colour on a field by predicate: pi yes (a threshold or state, dim otherwise); claude yes (a Cell's `role`)

@@ -1,5 +1,6 @@
-# kit/pi/list/extreme-titles 70x60 @2,2 (66x8)
-docs/a-very-long-directory-name/with/several/nested/levels/and-an…
+# kit/pi/list/extreme-titles 70x60 @2,2 (66x9)
+docs/a-very-long-directory-name/with/several/nested/levels/and-an-
+equally-long-file-name-for-the-guide.md ──────────────────────────
 ❯ □ The section says the build verifies a pi        !   12×    1mo
     change, but the build only type-checks the co…
 
@@ -8,18 +9,19 @@ AGENTS.md ───────────────────────�
     enUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnb…
   □ Short.                                          ↻    1×     1d
 --- styles
-1x65
-2 . 3 . 2x40 .x8 4 .x2 5x4 .x2 3x5
-.x4 2x45
+1x66
+1x39 . 2x26
+3 . 2 . 3x40 .x8 4 .x2 5x4 .x2 2x5
+.x4 3x45
 -
-1x9 . 3x56
-.x2 3 . 6x46 .x2 6 .x2 5x4 .x2 3x5
+1x9 . 2x56
+.x2 2 . 6x46 .x2 6 .x2 5x4 .x2 2x5
 .x4 6x45
-.x2 3 . 6x6 .x42 6 .x2 3x4 .x2 3x5
+.x2 2 . 6x6 .x42 6 .x2 2x4 .x2 2x5
 --- legend
 1 fg=#dee0e1 bold
-2 fg=#a798d7
-3 fg=#7e888e
+2 fg=#7e888e
+3 fg=#a798d7
 4 fg=#ea7f81
 5 fg=#cd9a22
 6 fg=#dee0e1

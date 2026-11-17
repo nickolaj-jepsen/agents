@@ -216,6 +216,23 @@ describe("List", () => {
     expect(new Set(metaAt).size).toBe(1);
     expect(widths(out).every((n) => n <= 60)).toBe(true);
   });
+  it("wraps a group name that is longer than the list instead of cutting it", () => {
+    const name =
+      "docs/a-very-long-directory-name/with/several/nested/levels/and-a-long-file-name.md";
+    const l = list();
+    l.setItems(rows.map((r) => ({ ...r, group: name })));
+    const out = l.render(plain, 30, 20).map(strip);
+    const header = out.slice(
+      0,
+      out.findIndex((x) => x.startsWith("❯")),
+    );
+    expect(header.length).toBeGreaterThan(1);
+    expect(header.join("").replace(/[ ─]+$/, "")).toBe(name);
+    expect(header.join("")).not.toContain("…");
+    // The rule closes the last line of the name, as on a short one.
+    expect(header.at(-1)).toMatch(/─$|[a-z.]$/);
+    expect(widths(out).every((n) => n <= 30)).toBe(true);
+  });
   it("gives every row the same height whatever the cursor", () => {
     const l = list();
     const a = l.render(plain, 60, 20).length;

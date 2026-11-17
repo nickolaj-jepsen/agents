@@ -123,7 +123,17 @@ export class List<T> {
       const name = o.group?.(item);
       if (name !== undefined && name !== group) {
         if (group !== undefined && blanks) out.push({ lines: [""] });
-        out.push({ lines: [section(theme, width, name)], header: true });
+        // A long name wraps, its rule on the last line, rather than being cut: it is the one
+        // thing that says what the rows below belong to.
+        const head = clamp(name, Math.max(1, width));
+        out.push({
+          lines: head.map((line, i) =>
+            i < head.length - 1
+              ? theme.bold(paint(theme, "text", line))
+              : section(theme, width, line),
+          ),
+          header: true,
+        });
         group = name;
       }
       const selected = index === this.cursor;

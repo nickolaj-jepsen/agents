@@ -63,8 +63,8 @@ export default defineComponent({
       id: "groups",
       label: "Groups under a header rule",
       story: "list/grouped",
-      pi: yes(),
-      claude: yes("the rule is drawn text"),
+      pi: yes("a name longer than the list wraps, its rule on the last line"),
+      claude: yes("the rule is drawn text; a name longer than the list is cut with `…`"),
     },
     {
       id: "marks",
