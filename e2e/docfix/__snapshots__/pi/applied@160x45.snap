@@ -6,14 +6,6 @@
 
  Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.
 
-[Skill warnings]
-  ~/.agents/skills/avoid-ai-tropes/SKILL.md
-    Nested mappings are not allowed in compact mappings at line 2, column 14:
-
-description: Review human-facing prose (docs, READMEs, PR and commit descriptio…
-             ^
-
-
 
  The apply prompt is in the editor: read it, then Enter to send
 
@@ -27,19 +19,27 @@ description: Review human-facing prose (docs, READMEs, PR and commit descriptio�
 
 
 
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-Apply these docfix suggestions. Each id is a file, .agents/store/docfix/<id>.md, holding its claim and evidence: read it first.
 
-AGENTS.md
-- agents-md-says-just-build-verifies (wrong, seen 3×): `just build` is not enough to verify a pi change; the docs say it is.
+
+
+
+
+
+
+─────────────────────────────────────────────────────────────────────────── ↑ 3 more ───────────────────────────────────────────────────────────────────────────
+- wrong: `just build` is not enough to verify a pi change; the docs say it is. (seen 3×)
+  .agents/store/docfix/agents-md-says-just-build-verifies.md
 
 docs/hosts.md
-- hosts-md-describes-removed-card (stale, seen 2×): The `legacy` card was removed; the section still describes it.
+- stale: The `legacy` card was removed; the section still describes it. (seen 2×)
+  .agents/store/docfix/hosts-md-describes-removed-card.md
 
-Check each claim against this repo's code first; one that no longer holds needs no edit.
-Draft each edit against the file as it stands now, in its existing structure and voice. For a stale plan, delete or trim what is finished or gone.
+For each one:
+1. Check the claim against this repo's code. One that no longer holds needs no edit.
+2. Edit the doc as it stands now, in its existing structure and voice. For a stale plan, delete or trim what is finished or gone.
+3. Call docfix with action "resolve" and the id (the file's name without .md), whether you applied it or found it no longer true.
+
 Don't commit.
-Then call docfix with action "resolve" for each id, applied or found no longer true.
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ~/.local/state/agents<tmp>                               (main)
 0.0%/1.0M (auto)                                                                                                        (opencode-go) deepseek-v4.1-flash • high
@@ -51,14 +51,6 @@ docs 3
 . 3x39
 -
 . 3x85
--
-7x16
-7x43
-7x160
-7x160
-7x160
-7x160
--
 -
 -
 . 3x62
@@ -73,7 +65,14 @@ docs 3
 -
 -
 -
-8x160
+-
+-
+-
+-
+-
+-
+-
+7x160
 -
 -
 -
@@ -86,7 +85,8 @@ docs 3
 -
 -
 -
-8x160
+-
+7x160
 3x63
 3x160
 -
@@ -97,5 +97,4 @@ docs 3
 4 fg=#4f8eb3
 5 fg=#eab65d
 6 fg=#b7b5ac
-7 fg=#d0a215
-8 fg=#cf6a4c
+7 fg=#cf6a4c

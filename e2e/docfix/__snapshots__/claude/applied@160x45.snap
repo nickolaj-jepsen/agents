@@ -1,7 +1,7 @@
 # docfix/claude/applied 160x45 @0,0 (160x45)
                                                                                                                      ╭─────────────────────────────────────────╮
  ▐▛███▛█   Claude Code <ver>                                                                                         │ docfix                                  │
-▝▜██████▀  Opus 5.5 with high effort · Claude Ultra                                                                  │ The apply prompt is in the prompt box:  │
+▝▜██████▀  Sonnet 5.5 with medium effort · Claude Ultra                                                              │ The apply prompt is in the prompt box:  │
  ▝▝   ▝▝   ~/.local/state/agents<tmp>                                                                                │ read it, then Enter to send             │
                                                                                                                      ╰─────────────────────────────────────────╯
 ▎ Debug mode enabled · logging to <tmp>
@@ -22,32 +22,32 @@
 
 
 
-
-
-
-5 misspelled ctrl+q                                                                                                                                         [-]
                                                                                                                                         ctrl+g to edit in Nvim
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-❯ Apply these docfix suggestions. Each id is a file, .agents/store/docfix/<id>.md, holding its claim and evidence: read it first.
+❯ Apply these docfix suggestions. The file under each claim holds its evidence: read it first.
 
   AGENTS.md
-  - agents-md-says-just-build-verifies (wrong, seen 3×): `just build` is not enough to verify a pi change; the docs say it is.
+  - wrong: `just build` is not enough to verify a pi change; the docs say it is. (seen 3×)
+    .agents/store/docfix/agents-md-says-just-build-verifies.md
 
   docs/hosts.md
-  - hosts-md-describes-removed-card (stale, seen 2×): The `legacy` card was removed; the section still describes it.
+  - stale: The `legacy` card was removed; the section still describes it. (seen 2×)
+    .agents/store/docfix/hosts-md-describes-removed-card.md
 
-  Check each claim against this repo's code first; one that no longer holds needs no edit.
-  Draft each edit against the file as it stands now, in its existing structure and voice. For a stale plan, delete or trim what is finished or gone.
+  For each one:
+  1. Check the claim against this repo's code. One that no longer holds needs no edit.
+  2. Edit the doc as it stands now, in its existing structure and voice. For a stale plan, delete or trim what is finished or gone.
+  3. Call docfix with action "resolve" and the id (the file's name without .md), whether you applied it or found it no longer true.
+
   Don't commit.
-  Then call docfix with action "resolve" for each id, applied or found no longer true.
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   ⚠ docfix: docs 3
-  Opus 5.5 · high · 0% · •• 97%                                                                ~/.local/state/agents<tmp>                                main
+  Sonnet 5.5 · medium · 0% · •• 97%                                                            ~/.local/state/agents<tmp>                                main
   ⏵⏵ auto mode on (shift+tab to cycle)
 --- styles
 .x117 1x43
 2x2 3x6 .x3 4x11 . 5x8 .x86 1 . 5x6 .x34 1
-2x2 3x5 2x2 .x2 5x40 .x66 1 .x41 1
+2x2 3x5 2x2 .x2 5x44 .x62 1 .x41 1
 2x9 .x2 5x56 .x50 1 .x41 1
 .x117 1x43
 1 . 5x107
@@ -68,27 +68,27 @@
 -
 -
 -
--
--
--
-.x12 5x7 .x137 5x3
 .x136 5x22
 9x160
 .x14 ax6
 -
 -
-.x11 ax2
 -
 -
-.x10 ax2
--
-.x32 ax6
 -
 -
-.x12 ax6
+-
+-
+-
+-
+.x34 ax6
+-
+.x10 ax6
+-
+-
 9x160
 .x2 bx16
-.x2 5x8 cx3 5x4 cx8 dx6 5x64 cx53 5x4 e 5 cx4
+.x2 5x10 cx3 5x6 cx8 dx6 5x60 cx53 5x4 e 5 cx4
 .x2 bx15 5x21
 --- legend
 1 dim

@@ -73,7 +73,7 @@ export default scenarios({
         { press: "Down" },
         { press: "Space" },
         { press: "a" },
-        { wait: "Apply these docfix" },
+        { wait: "For each one" },
       ],
     },
     evidence: {

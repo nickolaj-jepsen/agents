@@ -156,8 +156,8 @@ describe("review", () => {
       evidence: [{ at: NOW, session: "claude:one", text: "SECRET EVIDENCE TEXT" }],
     };
     const prompt = applyPrompt([a, z]);
-    expect(prompt).toContain(".agents/store/docfix/<id>.md");
-    expect(prompt).toContain(`- ${a.id} (missing, seen 1×): ${a.claim}`);
+    expect(prompt).toContain(`- missing: ${a.claim}\n  .agents/store/docfix/${a.id}.md`);
+    expect(prompt).not.toContain("seen 1×");
     expect(prompt).not.toContain("SECRET EVIDENCE TEXT");
     // One prompt for every doc, each doc's suggestions under its path.
     expect(prompt.indexOf("\nAGENTS.md\n")).toBeLessThan(prompt.indexOf("\ndocs/z.md\n"));

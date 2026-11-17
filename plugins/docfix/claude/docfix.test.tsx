@@ -147,10 +147,9 @@ test("apply drafts one prompt of references in the prompt box and sends nothing"
   const [fill] = world.fills;
   expect(fill?.mode).toBe("replace");
   expect(fill?.text).toContain("Apply these docfix suggestions");
-  expect(fill?.text).toContain(".agents/store/docfix/<id>.md");
-  // The one marked suggestion is named by id; its evidence stays in its file.
+  // The one marked suggestion is named by its file; its evidence stays there.
   expect(fill?.text).toContain(
-    "- agents--run-pnpm-install-force-after-a-sjusk-bump (missing, seen 1×)",
+    ".agents/store/docfix/agents--run-pnpm-install-force-after-a-sjusk-bump.md",
   );
   expect(fill?.text).not.toContain("the shim stayed stale");
   expect(fill?.text).not.toContain("A second gap");

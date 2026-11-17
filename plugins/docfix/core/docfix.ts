@@ -438,23 +438,29 @@ export function byTarget(picked: readonly Suggestion[]): [string, Suggestion[]][
 export const STORE_REF = `.agents/store/${STORE_DIR}`;
 
 /**
- * The prompt an apply drafts for the agent: every picked suggestion by id, grouped by doc.
- * Evidence stays in the suggestion's own file, which the agent reads; only the one-line
- * claim is repeated, so the person can see what they are about to send.
+ * The prompt an apply drafts for the agent, read by the person before it is sent: each doc
+ * under its path, each suggestion as its claim first and the file that holds its evidence on
+ * the next line. The evidence stays in that file, which the agent reads; the id is not
+ * repeated because it is the file's name.
  */
 export function applyPrompt(picked: readonly Suggestion[]): string {
   const docs = byTarget(picked).flatMap(([target, list]) => [
     "",
     target,
-    ...list.map((s) => `- ${s.id} (${s.kind}, seen ${seen(s)}×): ${s.claim}`),
+    ...list.flatMap((s) => [
+      `- ${s.kind}: ${s.claim}${seen(s) > 1 ? ` (seen ${seen(s)}×)` : ""}`,
+      `  ${STORE_REF}/${fileName(s.id)}`,
+    ]),
   ]);
   return [
-    `Apply these docfix suggestions. Each id is a file, ${STORE_REF}/<id>.md, holding its claim and evidence: read it first.`,
+    `Apply these docfix suggestions. The file under each claim holds its evidence: read it first.`,
     ...docs,
     "",
-    "Check each claim against this repo's code first; one that no longer holds needs no edit.",
-    "Draft each edit against the file as it stands now, in its existing structure and voice. For a stale plan, delete or trim what is finished or gone.",
+    "For each one:",
+    "1. Check the claim against this repo's code. One that no longer holds needs no edit.",
+    "2. Edit the doc as it stands now, in its existing structure and voice. For a stale plan, delete or trim what is finished or gone.",
+    `3. Call ${TOOL_NAME} with action "resolve" and the id (the file's name without .md), whether you applied it or found it no longer true.`,
+    "",
     "Don't commit.",
-    `Then call ${TOOL_NAME} with action "resolve" for each id, applied or found no longer true.`,
   ].join("\n");
 }

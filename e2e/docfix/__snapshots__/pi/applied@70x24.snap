@@ -1,54 +1,58 @@
 # docfix/pi/applied 70x24 @0,0 (70x24)
-  ~/.agents/skills/avoid-ai-tropes/SKILL.md
-    Nested mappings are not allowed in compact mappings at line 2,
-column 14:
 
-description: Review human-facing prose (docs, READMEs, PR and commit
-descriptio…
-             ^
+ ▀▀█  <ver>
+ █▀ █ escape interrupt · ctrl+c/ctrl+d clear/exit · / commands · !
+ bash · ctrl+o more
+ Press ctrl+o to show full startup help.
 
+ Pi can explain its own features and look up its docs. Ask it how to
+ use or extend Pi.
 
 
  The apply prompt is in the editor: read it, then Enter to send
 
-───────────────────────────── ↑ 13 more ──────────────────────────────
+───────────────────────────── ↑ 15 more ──────────────────────────────
 holds needs no edit.
-Draft each edit against the file as it stands now, in its existing
-structure and voice. For a stale plan, delete or trim what is
-finished or gone.
+2. Edit the doc as it stands now, in its existing structure and
+voice. For a stale plan, delete or trim what is finished or gone.
+3. Call docfix with action "resolve" and the id (the file's name
+without .md), whether you applied it or found it no longer true.
+
 Don't commit.
-Then call docfix with action "resolve" for each id, applied or found
-no longer true.
 ──────────────────────────────────────────────────────────────────────
 ~/.local/state/agents<tmp>                               (main)
 0.0%/1.0M (auto)              (opencode-go) deepseek-v4.1-flash • high
 docs 3
 --- styles
-1x43
-1x70
-1x70
-1x70
-1x70
-1x70
-1x70
+-
+. 1 2x2 .x2 3x6
+. 4x2 . 5 . 3x6 6x13 3x13 6x14 3 6x12 3 6x4
+. 6x7 3x6 6x5
+. 3x39
+-
+. 3x69
+. 3x17
+-
+-
+. 3x62
+-
+7x70
 -
 -
 -
-. 2x62
 -
+-
+-
+-
+7x70
+3x63
 3x70
--
--
--
--
--
--
--
-3x70
-2x63
-2x70
 -
 --- legend
-1 fg=#d0a215
-2 fg=#878580
-3 fg=#cf6a4c
+1 fg=#e48a7a bg=#4f8eb3
+2 fg=#e48a7a
+3 fg=#878580
+4 fg=#4f8eb3
+5 fg=#eab65d
+6 fg=#b7b5ac
+7 fg=#cf6a4c
