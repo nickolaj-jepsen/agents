@@ -7,7 +7,7 @@
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import { visibleWidth } from "@earendil-works/pi-tui";
 import { clamp, fit, paint, tokens } from "../../../kit/pi/ui.ts";
-import { readEvidence, type Evidence, type EvidencePart } from "../core/docfix.ts";
+import { evidenceLabel, readEvidence, type Evidence, type EvidencePart } from "../core/docfix.ts";
 
 /** Cells an entry's text is set in from its rule. */
 const INDENT = 2;
@@ -17,7 +17,10 @@ const GAP = 2;
 function lines(t: Theme, width: number, p: EvidencePart): string[] {
   if (p.kind === "text") return clamp(p.text, width).map((l) => paint(t, "text", l));
   if (p.kind === "labelled")
-    return [paint(t, "dim", p.label), ...clamp(p.text, width).map((l) => paint(t, "text", l))];
+    return [
+      t.bold(paint(t, "text", p.label)),
+      ...clamp(p.text, width).map((l) => paint(t, "text", l)),
+    ];
   // The kinds sit in one dim column and what they point at hangs beside it.
   const kinds = Math.min(
     Math.max(...p.items.map((c) => visibleWidth(c.kind))),
@@ -35,15 +38,27 @@ function lines(t: Theme, width: number, p: EvidencePart): string[] {
 }
 
 /**
- * The evidence, newest first, one blank row between pieces.
+ * The section's title. One piece of evidence has no rule of its own, so its date and author go
+ * here instead of under a second rule right below the first.
+ */
+export function evidenceTitle(items: readonly Evidence[]): string {
+  const only = items.length === 1 ? items[0] : undefined;
+  return only ? `Evidence  ${evidenceLabel(readEvidence(only))}` : "Evidence";
+}
+
+/**
+ * The evidence, newest first, one blank row between pieces. A single piece is set at the full
+ * width under the section's title; several each get a dated rule and are indented under it.
  * @param width The room in cells.
  */
 export function evidence(t: Theme, width: number, items: readonly Evidence[]): string[] {
+  if (items.length === 1) {
+    const view = readEvidence(items[0] as Evidence);
+    return view.parts.flatMap((p, n) => [...(n > 0 ? [""] : []), ...lines(t, width, p)]);
+  }
   return [...items].reverse().flatMap((e, i) => {
     const view = readEvidence(e);
-    const label = [view.when, view.by, view.isMigrated ? "migrated" : ""]
-      .filter(Boolean)
-      .join("  ");
+    const label = evidenceLabel(view);
     const rule = tokens.glyph.rule.repeat(Math.max(0, width - visibleWidth(label) - 1));
     const head = paint(t, "dim", rule ? `${label} ${rule}` : label);
     const body = view.parts.flatMap((p, n) => [

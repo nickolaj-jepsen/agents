@@ -5,7 +5,7 @@
 │ AGENTS.md ──────────────────────────────────────────────────────── │
 │ □ `just build` is not enough to verify a pi change; the docs say   │
 │   it is.                                                           │
-│   ! wrong  3×  ••  ▾ evidence 1                                    │
+│   ! wrong  3×  ••  ▾ evidence                                      │
 ╰────────────────────────────────────────────────────────────────────╯
 --- styles
 1x67 2 1x2
@@ -14,7 +14,7 @@
 1 . 3x9 . 2x56 . 1
 1 .x68 1
 1 .x68 1
-1 . 2x2 5x7 2x2 6x2 2x18 .x36 1
+1 . 2x2 5x7 2x2 6x2 2x16 .x38 1
 1x70
 --- legend
 1 dim

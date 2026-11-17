@@ -1,4 +1,4 @@
-# docfix/pi/dismissed 70x24 @1,2 (68x19)
+# docfix/pi/dismissed 70x24 @1,3 (68x18)
 ╭─ Doc suggestions  2 ─────────────────────────────────────────────╮
 │                                                                  │
 │ docs/hosts.md ────────────────────────────────────────────────── │
@@ -6,16 +6,15 @@
 │     still describes it.                                          │
 │                                                                  │
 │ docs/modules.md ──────────────────────────────────────────────── │
-│   □ A leaf that imports a third-party module      +    1×     •• │
+│   □ A leaf that imports a third-party module      +           •• │
 │     imports it on every host; the page should                    │
 │     say that module must be inert when the                       │
 │     feature is off.                                              │
 │                                                                  │
 │ ↻ stale   seen 2×   <age>                                        │
 │                                                                  │
-│ Evidence ─────────────────────────────────────────────────────── │
-│ <date>     ───────────────────────────────────────────────────── │
-│   docs/hosts.md: the line contradicts what the code does now.    │
+│ Evidence  <date>     ─────────────────────────────────────────── │
+│ docs/hosts.md: the line contradicts what the code does now.      │
 │ Dismissed 1: it is not filed again                               │
 ╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
 --- styles
@@ -33,9 +32,8 @@
 1 .x66 1
 1 . 6 . 3x5 .x3 3x7 .x3 3x11 .x34 1
 1 .x66 1
-1 . 4x8 . 3x55 . 1
-1 . 3x64 . 1
-1 .x3 6x59 .x4 1
+1 . 4x20 . 3x43 . 1
+1 . 6x59 .x6 1
 1 . 7x34 .x31 1
 1x3 6x2 . 3x4 . 1x2 . 6x5 . 3x4 . 1x2 . 6 . 3x5 . 1x2 . 6 . 3x7 . 1x2 . 6x3 . 3x5 . 1x6
 --- legend

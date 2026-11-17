@@ -43,7 +43,7 @@
 │   nUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrok
 │   enUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbro
 │   kenUnbrokenUnbrokenUnbroken
-│   + missing  3×  ••  ▾ evidence 1
+│   + missing  3×  ••  ▾ evidence
 │
 │   <date>     ────────────────────────────────────────────────────────────
 │     AGENTS.md: the line contradicts what the code does now.
@@ -51,7 +51,7 @@
 │ docs/a-very-long-directory-name/with/several/nested/levels/and-an-equally
 │ -long-file-name-for-the-guide.md
 │ □ A claim under a very long target path, so the group header must be cut.
-│   ↻ stale  1×  age   ▾ evidence 1
+│   ↻ stale  age   ▾ evidence
 │
 --- styles
 1 .x73 2
@@ -98,7 +98,7 @@
 1
 1
 1
-1 . 2x13 6x2 2x18
+1 . 2x13 6x2 2x16
 1
 1 .x3 2x71
 1
@@ -106,7 +106,7 @@
 1 . 3x73
 1 . 3x32
 1
-1 . 2x33
+1 . 2x27
 1
 --- legend
 1 dim

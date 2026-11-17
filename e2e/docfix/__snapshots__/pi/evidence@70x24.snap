@@ -6,7 +6,7 @@
 │     TMPDIR and markdown-it-py on PYTHONPATH; run                 │
 │     it with uv, not bare python.                                 │
 │ docs/agents.md ───────────────────────────────────────────────── │
-│   □ pi's permission gate cannot resolve shell     !    1×    ••• │
+│   □ pi's permission gate cannot resolve shell     !          ••• │
 │     variables, so `cat $S/id_ed25519_ao` reads                   │
 │     what `cat ~/.ssh/id_ed25519_ao` denies.                      │
 │                                                                  │

@@ -36,7 +36,7 @@
 │ docs/agents.md ──────────────────────────────────────────────────────────
 │ □ pi's permission gate cannot resolve shell variables, so `cat
 │   $S/id_ed25519_ao` reads what `cat ~/.ssh/id_ed25519_ao` denies.
-│   ! wrong  1×  age  ▾ evidence 1
+│   ! wrong  age  ▾ evidence
 │
 │   <date>      pi ────────────────────────────────────────────────────────
 │     Measured: the path projection resolves only HOME and PWD and declines
@@ -76,7 +76,7 @@
 1
 1
 1
-1 .x5 2x26
+1 .x5 3x26
 1
 1
 1
@@ -91,7 +91,7 @@
 1 . 3x14 . 2x58
 1
 1
-1 . 2x2 5x7 2x23
+1 . 2x2 5x7 2x17
 1
 1 .x3 2x71
 1

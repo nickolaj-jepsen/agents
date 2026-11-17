@@ -15,8 +15,6 @@ description: Review human-facing prose (docs, READMEs, PR and commit descriptio�
 
 
 
- Warning: codemode_only: not registered, declarations stay visible: subagent, get_subagent_result, steer_subagent
-
  The apply prompt is in the editor: read it, then Enter to send
 
 
@@ -29,7 +27,7 @@ description: Review human-facing prose (docs, READMEs, PR and commit descriptio�
 
 
 
-── ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  ──  ── 0% / 1M ── ••••• ──
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 Apply these docfix suggestions. Each id is a file, .agents/store/docfix/<id>.md, holding its claim and evidence: read it first.
 
 AGENTS.md
@@ -43,7 +41,9 @@ Draft each edit against the file as it stands now, in its existing structure and
 Don't commit.
 Then call docfix with action "resolve" for each id, applied or found no longer true.
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  OpenCode Go  DeepSeek V4.1 Flash 1017   high  docs 3                                        ~/.local/state/agents<tmp>                                main
+~/.local/state/agents<tmp>                               (main)
+0.0%/1.0M (auto)                                                                                                        (opencode-go) deepseek-v4.1-flash • high
+docs 3
 --- styles
 -
 . 1 2x2 .x2 3x6
@@ -61,8 +61,6 @@ Then call docfix with action "resolve" for each id, applied or found no longer t
 -
 -
 -
-. 7x112
--
 . 3x62
 -
 -
@@ -75,21 +73,23 @@ Then call docfix with action "resolve" for each id, applied or found no longer t
 -
 -
 -
-8x130 . 3 8x4 9 8x4 3x7 8x4 3x5 8x3
-.x12 ax6 .x47 ax6 .x6 ax2
--
-.x7 ax2
-.x9 ax2
--
-.x11 ax2
-.x8 ax2
--
-.x30 ax6
--
--
-.x10 ax6
 8x160
-.x2 3x11 .x2 bx24 .x2 8x6 .x2 3x6 .x40 3x53 cx3 . d . 6x4
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+8x160
+3x63
+3x160
+-
 --- legend
 1 fg=#e48a7a bg=#4f8eb3
 2 fg=#e48a7a
@@ -99,8 +99,3 @@ Then call docfix with action "resolve" for each id, applied or found no longer t
 6 fg=#b7b5ac
 7 fg=#d0a215
 8 fg=#cf6a4c
-9 fg=#cf6a4c bold
-a fg=#d14d41 underline=single
-b fg=#878580 bold
-c fg=#dad8ce
-d fg=#879a39

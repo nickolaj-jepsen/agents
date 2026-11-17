@@ -7,7 +7,7 @@
 │ AGENTS.md ───────────────────────────────────────────────────────────
 │ □ `just build` is not enough to verify a pi change; the docs say it
 │   is.
-│   ! wrong  3×  ••  ▾ evidence 1
+│   ! wrong  3×  ••  ▾ evidence
 │
 │   <date>     ────────────────────────────────────────────────────────
 │     AGENTS.md: the line contradicts what the code does now.
@@ -47,7 +47,7 @@
 1 . 3x9 . 2x59
 1
 1
-1 . 2x2 5x7 2x2 6x2 2x18
+1 . 2x2 5x7 2x2 6x2 2x16
 1
 1 .x3 2x67
 1

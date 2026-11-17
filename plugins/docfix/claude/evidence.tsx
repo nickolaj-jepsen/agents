@@ -5,7 +5,7 @@
  * What is in the text is the core's (`readEvidence`); this only draws it.
  */
 import { cellWidth, clamp, fit, tokens, type Kit } from "./ui";
-import { readEvidence, type Evidence, type EvidencePart } from "../core/docfix";
+import { evidenceLabel, readEvidence, type Evidence, type EvidencePart } from "../core/docfix";
 
 /** Cells an entry's text is set in from its rule. */
 const INDENT = 2;
@@ -18,7 +18,7 @@ function part(k: Kit, width: number, p: EvidencePart, key: string): JSX.Element 
   if (p.kind === "labelled")
     return (
       <Box key={key} flexDirection="column">
-        <Text dimColor>{p.label}</Text>
+        <Text weight="semibold">{p.label}</Text>
         <Text>{clamp(p.text, width).join("\n")}</Text>
       </Box>
     );
@@ -57,9 +57,7 @@ export function evidence(k: Kit, width: number, items: readonly Evidence[]): JSX
     <Box flexDirection="column" rowGap={1}>
       {[...items].reverse().map((e, i) => {
         const view = readEvidence(e);
-        const label = [view.when, view.by, view.isMigrated ? "migrated" : ""]
-          .filter(Boolean)
-          .join("  ");
+        const label = evidenceLabel(view);
         const rule = tokens.glyph.rule.repeat(Math.max(0, width - cellWidth(label) - 1));
         return (
           <Box key={`ev${i}`} flexDirection="column">

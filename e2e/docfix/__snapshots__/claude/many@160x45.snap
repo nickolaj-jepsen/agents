@@ -7,36 +7,36 @@
 │ AGENTS.md ───────────────────────────────────────────────────────────
 │ □ Claim number 4 about AGENTS.md: the page no longer matches what the
 │   code does.
-│   ! wrong  4×  age  ▸ evidence 1
+│   ! wrong  4×  age  ▸ evidence
 │
 │ □ Claim number 3 about AGENTS.md: the page no longer matches what the
 │   code does.
-│   ↻ stale  3×  age  ▸ evidence 1
+│   ↻ stale  3×  age  ▸ evidence
 │
 │ □ Claim number 2 about AGENTS.md: the page no longer matches what the
 │   code does.
-│   + missing  2×  ••  ▸ evidence 1
+│   + missing  2×  ••  ▸ evidence
 │
 │ □ Claim number 1 about AGENTS.md: the page no longer matches what the
 │   code does.
-│   ! wrong  1×  ••  ▸ evidence 1
+│   ! wrong  ••  ▸ evidence
 │
 │ docs/agents.md ──────────────────────────────────────────────────────
 │ □ Claim number 8 about docs/agents.md: the page no longer matches
 │   what the code does.
-│   + missing  4×  ••  ▸ evidence 1
+│   + missing  4×  ••  ▸ evidence
 │
 │ □ Claim number 7 about docs/agents.md: the page no longer matches
 │   what the code does.
-│   ! wrong  3×  age  ▸ evidence 1
+│   ! wrong  3×  age  ▸ evidence
 │
 │ □ Claim number 6 about docs/agents.md: the page no longer matches
 │   what the code does.
-│   ↻ stale  2×  age  ▸ evidence 1
+│   ↻ stale  2×  age  ▸ evidence
 │
 │ □ Claim number 5 about docs/agents.md: the page no longer matches
 │   what the code does.
-│   + missing  1×  age  ▸ evidence 1
+│   + missing  age  ▸ evidence
 │
 --- styles
 1 .x69 2
@@ -47,36 +47,36 @@
 1 . 3x9 . 2x59
 1
 1
-1 . 2x2 5x7 2x2 6x2 2x19
+1 . 2x2 5x7 2x2 6x2 2x17
 1
 1
 1
-1 . 2x11 6x2 2x19
+1 . 2x11 6x2 2x17
 1
 1
 1
-1 . 2x33
+1 . 2x31
 1
 1
 1
-1 . 2x2 5x7 2x22
+1 . 2x2 5x7 2x16
 1
 1 . 3x14 . 2x54
 1
 1
-1 . 2x13 6x2 2x18
+1 . 2x13 6x2 2x16
 1
 1
 1
-1 . 2x2 5x7 2x2 6x2 2x19
+1 . 2x2 5x7 2x2 6x2 2x17
 1
 1
 1
-1 . 2x32
+1 . 2x30
 1
 1
 1
-1 . 2x34
+1 . 2x28
 1
 --- legend
 1 dim

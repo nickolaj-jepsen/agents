@@ -4,18 +4,18 @@
 │     ↑ 11 more                                                    │ Claim number 17 about docs/modules.md: the page no    │
 │   □ Claim number 12 about docs/hosts.md: the      ↻    4×    ••• │ longer matches what the code does.                    │
 │     page no longer matches what the code does.                   │                                                       │
-│   □ Claim number 15 about docs/hosts.md: the      ↻    3×     •• │ + missing   seen 1×   <age>                           │
+│   □ Claim number 15 about docs/hosts.md: the      ↻    3×     •• │ + missing   <age>                                     │
 │     page no longer matches what the code does.                   │                                                       │
-│   □ Claim number 14 about docs/hosts.md: the      +    2×     •• │ Evidence ──────────────────────────────────────────── │
-│     page no longer matches what the code does.                   │ <date>     ────────────────────────────────────────── │
-│   □ Claim number 13 about docs/hosts.md: the      !    1×    ••• │   docs/modules.md: the line contradicts what the code │
-│     page no longer matches what the code does.                   │   does now.                                           │
+│   □ Claim number 14 about docs/hosts.md: the      +    2×     •• │ Evidence  <date>     ──────────────────────────────── │
+│     page no longer matches what the code does.                   │ docs/modules.md: the line contradicts what the code   │
+│   □ Claim number 13 about docs/hosts.md: the      !          ••• │ does now.                                             │
+│     page no longer matches what the code does.                   │                                                       │
 │ docs/modules.md ──────────────────────────────────────────────── │                                                       │
 │   □ Claim number 16 about docs/modules.md: the    !    4×    ••• │                                                       │
 │     page no longer matches what the code does.                   │                                                       │
 │   □ Claim number 18 about docs/modules.md: the    ↻    2×    ••• │                                                       │
 │     page no longer matches what the code does.                   │                                                       │
-│ ❯ □ Claim number 17 about docs/modules.md: the    +    1×    ••• │                                                       │
+│ ❯ □ Claim number 17 about docs/modules.md: the    +          ••• │                                                       │
 │     page no longer matches what the code does.                   │                                                       │
 │ docs/notes.md ────────────────────────────────────────────────── │                                                       │
 │   □ Claim number 20 about docs/notes.md: the      +    4×    ••• │                                                       │
@@ -24,7 +24,7 @@
 │     page no longer matches what the code does.                   │                                                       │
 │   □ Claim number 22 about docs/notes.md: the      !    2×    ••• │                                                       │
 │     page no longer matches what the code does.                   │                                                       │
-│   □ Claim number 21 about docs/notes.md: the      ↻    1×     •• │                                                       │
+│   □ Claim number 21 about docs/notes.md: the      ↻           •• │                                                       │
 │     page no longer matches what the code does.                   │                                                       │
 │ docs/secrets.md ──────────────────────────────────────────────── │                                                       │
 │   □ Claim number 24 about docs/secrets.md: the    ↻    4×    ••• │                                                       │
@@ -33,7 +33,7 @@
 │     page no longer matches what the code does.                   │                                                       │
 │   □ Claim number 26 about docs/secrets.md: the    +    2×    ••• │                                                       │
 │     page no longer matches what the code does.                   │                                                       │
-│   □ Claim number 25 about docs/secrets.md: the    !    1×    ••• │                                                       │
+│   □ Claim number 25 about docs/secrets.md: the    !          ••• │                                                       │
 │     page no longer matches what the code does.                   │                                                       │
 │ docs/updates.md ──────────────────────────────────────────────── │                                                       │
 │   □ Claim number 28 about docs/updates.md: the    !    4×    ••• │                                                       │
@@ -48,12 +48,12 @@
 1 .x5 3x9 .x52 1 . 4x50 .x4 1
 1 .x3 3 . 4x40 .x6 4 .x2 5x4 .x2 3x5 . 1 . 4x34 .x20 1
 1 .x5 4x42 .x19 1 .x55 1
-1 .x3 3 . 4x40 .x6 4 .x2 5x4 .x2 3x5 . 1 . 4 . 3x7 .x3 3x7 .x3 3x11 .x21 1
+1 .x3 3 . 4x40 .x6 4 .x2 5x4 .x2 3x5 . 1 . 4 . 3x7 .x3 3x11 .x31 1
 1 .x5 4x42 .x19 1 .x55 1
-1 .x3 3 . 4x40 .x6 4 .x2 3x4 .x2 3x5 . 1 . 6x8 . 3x44 . 1
-1 .x5 4x42 .x19 1 . 3x53 . 1
-1 .x3 3 . 4x40 .x6 7 .x2 3x4 .x2 3x5 . 1 .x3 4x51 . 1
-1 .x5 4x42 .x19 1 .x3 4x9 .x43 1
+1 .x3 3 . 4x40 .x6 4 .x2 3x4 .x2 3x5 . 1 . 6x20 . 3x32 . 1
+1 .x5 4x42 .x19 1 . 4x51 .x3 1
+1 .x3 3 . 4x40 .x6 7 .x2 3x4 .x2 3x5 . 1 . 4x9 .x45 1
+1 .x5 4x42 .x19 1 .x55 1
 1 . 6x15 . 3x48 . 1 .x55 1
 1 .x3 3 . 4x42 .x4 7 .x2 5x4 .x2 3x5 . 1 .x55 1
 1 .x5 4x42 .x19 1 .x55 1

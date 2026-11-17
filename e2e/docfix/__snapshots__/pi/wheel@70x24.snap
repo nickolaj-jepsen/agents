@@ -1,29 +1,32 @@
-# docfix/pi/wheel 70x24 @1,1 (68x21)
+# docfix/pi/wheel 70x24 @1,1 (68x22)
 ╭─ Doc suggestions  28 ────────────────────────────────────────────╮
 │                                                                  │
-│     ↑ 14 more                                                    │
-│   □ Claim number 13 about docs/hosts.md: the      !    1×    ••• │
+│     ↑ 13 more                                                    │
+│   □ Claim number 14 about docs/hosts.md: the      +    2×     •• │
+│     page no longer matches what the code does.                   │
+│   □ Claim number 13 about docs/hosts.md: the      !          ••• │
 │     page no longer matches what the code does.                   │
 │ docs/modules.md ──────────────────────────────────────────────── │
 │   □ Claim number 16 about docs/modules.md: the    !    4×    ••• │
 │     page no longer matches what the code does.                   │
 │   □ Claim number 18 about docs/modules.md: the    ↻    2×    ••• │
 │     page no longer matches what the code does.                   │
-│ ❯ □ Claim number 17 about docs/modules.md: the    +    1×    ••• │
+│ ❯ □ Claim number 17 about docs/modules.md: the    +          ••• │
 │     page no longer matches what the code does.                   │
 │     ↓ 10 more                                                    │
 │                                                                  │
-│ + missing   seen 1×   <age>                                      │
+│ + missing   <age>                                                │
 │                                                                  │
-│ Evidence ─────────────────────────────────────────────────────── │
-│ <date>     ───────────────────────────────────────────────────── │
-│   docs/modules.md: the line contradicts what the code does now.  │
+│ Evidence  <date>     ─────────────────────────────────────────── │
+│ docs/modules.md: the line contradicts what the code does now.    │
 │                                                                  │
 ╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
 --- styles
 1x3 2x15 .x2 3x2 . 1x45
 1 .x66 1
 1 .x5 3x9 .x52 1
+1 .x3 3 . 4x40 .x6 4 .x2 3x4 .x2 3x5 . 1
+1 .x5 4x42 .x19 1
 1 .x3 3 . 4x40 .x6 5 .x2 3x4 .x2 3x5 . 1
 1 .x5 4x42 .x19 1
 1 . 6x15 . 3x48 . 1
@@ -35,11 +38,10 @@
 1 .x5 8x42 .x19 1
 1 .x5 3x9 .x52 1
 1 .x66 1
-1 . 4 . 3x7 .x3 3x7 .x3 3x11 .x32 1
+1 . 4 . 3x7 .x3 3x11 .x42 1
 1 .x66 1
-1 . 6x8 . 3x55 . 1
-1 . 3x64 . 1
-1 .x3 4x61 .x2 1
+1 . 6x20 . 3x43 . 1
+1 . 4x61 .x4 1
 1 .x66 1
 1x3 4x2 . 3x4 . 1x2 . 4x5 . 3x4 . 1x2 . 4 . 3x5 . 1x2 . 4 . 3x7 . 1x2 . 4x3 . 3x5 . 1x6
 --- legend

@@ -5,7 +5,7 @@
 │ AGENTS.md ──────────────────────────────────────────────────────── │
 │ □ Claim number 4 about AGENTS.md: the page no longer matches what  │
 │   the code does.                                                   │
-│   ! wrong  4×  age  ▸ evidence 1                                   │
+│   ! wrong  4×  age  ▸ evidence                                     │
 ╰────────────────────────────────────────────────────────────────────╯
 --- styles
 1x67 2 1x2
@@ -14,7 +14,7 @@
 1 . 3x9 . 2x56 . 1
 1 .x68 1
 1 .x68 1
-1 . 2x2 5x7 2x2 6x2 2x19 .x35 1
+1 . 2x2 5x7 2x2 6x2 2x17 .x37 1
 1x70
 --- legend
 1 dim

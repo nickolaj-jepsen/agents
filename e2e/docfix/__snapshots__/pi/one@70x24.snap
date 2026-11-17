@@ -1,4 +1,4 @@
-# docfix/pi/one 70x24 @1,5 (68x13)
+# docfix/pi/one 70x24 @1,6 (68x12)
 ╭─ Doc suggestions  1 ─────────────────────────────────────────────╮
 │                                                                  │
 │ AGENTS.md ────────────────────────────────────────────────────── │
@@ -7,9 +7,8 @@
 │                                                                  │
 │ ! wrong   seen 3×   <age>                                        │
 │                                                                  │
-│ Evidence ─────────────────────────────────────────────────────── │
-│ <date>     ───────────────────────────────────────────────────── │
-│   AGENTS.md: the line contradicts what the code does now.        │
+│ Evidence  <date>     ─────────────────────────────────────────── │
+│ AGENTS.md: the line contradicts what the code does now.          │
 │                                                                  │
 ╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
 --- styles
@@ -21,9 +20,8 @@
 1 .x66 1
 1 . 6 . 3x5 .x3 7x7 .x3 3x10 .x35 1
 1 .x66 1
-1 . 4x8 . 3x55 . 1
-1 . 3x64 . 1
-1 .x3 8x55 .x8 1
+1 . 4x20 . 3x43 . 1
+1 . 8x55 .x10 1
 1 .x66 1
 1x3 8x2 . 3x4 . 1x2 . 8x5 . 3x4 . 1x2 . 8 . 3x5 . 1x2 . 8 . 3x7 . 1x2 . 8x3 . 3x5 . 1x6
 --- legend

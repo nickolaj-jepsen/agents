@@ -301,6 +301,13 @@ export type Outcome =
 
 export const seen = (s: Suggestion) => Math.max(1, s.sessions.length);
 
+/** `3×` once a second session has hit the gap; nothing for the first, which every row has. */
+export const repeats = (s: Suggestion) => (seen(s) > 1 ? `${seen(s)}×` : "");
+
+/** One piece of evidence's line, `2026-11-05  pi  migrated`: when, by which harness, how filed. */
+export const evidenceLabel = (view: EvidenceView) =>
+  [view.when, view.by, view.isMigrated ? "migrated" : ""].filter(Boolean).join("  ");
+
 const describe = (s: Suggestion) =>
   s.status === "dismissed"
     ? `- ${s.id} (dismissed ${s.dismissed.slice(0, 10)}): ${s.claim}`

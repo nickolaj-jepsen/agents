@@ -28,11 +28,11 @@
 │                                                                  │   failed while evaluating the attribute and its       │
 │ docs/a-very-long-directory-name/with/several/nested/levels/and-a │   dependencies, error: derivation failed while        │
 │ n-equally-long-file-name-for-the-guide.md ────────────────────── │   evaluating the attribute and its dependencies,      │
-│   □ A claim under a very long target path, so     ↻    1×   •••• │   error: derivation failed while evaluating the       │
+│   □ A claim under a very long target path, so     ↻         •••• │   error: derivation failed while evaluating the       │
 │     the group header must be cut.                                │   attribute and its dependencies, error: derivation   │
 │                                                                  │   failed while evaluating the attribute and its       │
 │ docs/hosts.md ────────────────────────────────────────────────── │   dependencies,                                       │
-│   □ Short.                                        ↻    1×     •• │                                                       │
+│   □ Short.                                        ↻           •• │                                                       │
 │                                                                  │ <date>      pi ────────────────────────────────────── │
 │ docs/日本語のドキュメント.md ─────────────────────────────────── │   The section says the build verifies a pi change,    │
 │   □ この節は古くなっています。ビルドが検証するの  +  100×     •• │   but the build only type-checks the cores and the pi │

@@ -7,14 +7,14 @@
 │ AGENTS.md ───────────────────────────────────────────────────────────
 │ □ `just build` is not enough to verify a pi change; the docs say it
 │   is.
-│   ! wrong  3×  ••  ▾ evidence 1
+│   ! wrong  3×  ••  ▾ evidence
 │
 │   <date>     ────────────────────────────────────────────────────────
 │     AGENTS.md: the line contradicts what the code does now.
 │
 │ docs/hosts.md ──────────────────────────────────────────── 1/1 marked
 │ ■ The `legacy` card was removed; the section still describes it.
-│   ↻ stale  2×  age  ▾ evidence 1
+│   ↻ stale  2×  age  ▾ evidence
 │
 │   <date>     ────────────────────────────────────────────────────────
 │     docs/hosts.md: the line contradicts what the code does now.
@@ -23,7 +23,7 @@
 │ □ A leaf that imports a third-party module imports it on every host;
 │   the page should say that module must be inert when the feature is
 │   off.
-│   + missing  1×  ••  ▾ evidence 1
+│   + missing  ••  ▾ evidence
 │
 │   <date>     ────────────────────────────────────────────────────────
 │     docs/modules.md: the line contradicts what the code does now.
@@ -47,14 +47,14 @@
 1 . 3x9 . 2x59
 1
 1
-1 . 2x2 5x7 2x2 6x2 2x18
+1 . 2x2 5x7 2x2 6x2 2x16
 1
 1 .x3 2x67
 1
 1
 1 . 3x13 . 2x44 . 7x10
 1 . 7x2
-1 . 2x32
+1 . 2x30
 1
 1 .x3 2x67
 1
@@ -63,7 +63,7 @@
 1
 1
 1
-1 . 2x33
+1 . 2x27
 1
 1 .x3 2x67
 1

@@ -5,7 +5,7 @@
 │ Dismissed 1: it is not filed again                                 │
 │ docs/hosts.md ──────────────────────────────────────────────────── │
 │ □ The `legacy` card was removed; the section still describes it.   │
-│   ↻ stale  2×  age  ▾ evidence 1                                   │
+│   ↻ stale  2×  age  ▾ evidence                                     │
 ╰────────────────────────────────────────────────────────────────────╯
 --- styles
 1x67 2 1x2
@@ -14,7 +14,7 @@
 1 . 5x34 .x33 1
 1 . 3x13 . 2x52 . 1
 1 .x68 1
-1 . 2x32 .x35 1
+1 . 2x30 .x37 1
 1x70
 --- legend
 1 dim

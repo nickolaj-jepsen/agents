@@ -28,11 +28,11 @@
 │                                                                  │   dependencies,                                       │
 │ docs/a-very-long-directory-name/with/several/nested/levels/and-a │                                                       │
 │ n-equally-long-file-name-for-the-guide.md ────────────────────── │ <date>      pi ────────────────────────────────────── │
-│   □ A claim under a very long target path, so     ↻    1×   •••• │   The section says the build verifies a pi change,    │
+│   □ A claim under a very long target path, so     ↻         •••• │   The section says the build verifies a pi change,    │
 │     the group header must be cut.                                │   but the build only type-checks the cores and the pi │
 │                                                                  │   halves and never starts an agent, so a panel that   │
 │ docs/hosts.md ────────────────────────────────────────────────── │   renders wrong still passes it; The section says the │
-│   □ Short.                                        ↻    1×     •• │   build verifies a pi change, but the build only      │
+│   □ Short.                                        ↻           •• │   build verifies a pi change, but the build only      │
 │                                                                  │   type-checks the cores and the pi halves and never   │
 │ docs/日本語のドキュメント.md ─────────────────────────────────── │   starts an agent, so a panel that renders wrong      │
 │   □ この節は古くなっています。ビルドが検証するの  +  100×     •• │   still passes it; The section says the build         │

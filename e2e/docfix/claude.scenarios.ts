@@ -52,7 +52,7 @@ export default scenarios({
     folded: {
       about: "a click on a row's evidence line folds that row's evidence",
       from: "queue",
-      steps: [{ click: "evidence 1" }],
+      steps: [{ click: "▾ evidence" }],
     },
     collapsed: {
       about: "e hides every row's evidence, and the key now offers to show it",

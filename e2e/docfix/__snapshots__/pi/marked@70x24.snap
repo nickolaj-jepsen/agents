@@ -1,23 +1,24 @@
-# docfix/pi/marked 70x24 @1,1 (68x21)
+# docfix/pi/marked 70x24 @1,1 (68x22)
 ╭─ Doc suggestions  3 ─────────────────────────────────────────────╮
 │                                                                  │
 │ AGENTS.md ────────────────────────────────────────────────────── │
 │   ■ `just build` is not enough to verify a pi     !    3×     •• │
 │     change; the docs say it is.                                  │
+│                                                                  │
 │ docs/hosts.md ────────────────────────────────────────────────── │
 │ ❯ ■ The `legacy` card was removed; the section    ↻    2×    ••• │
 │     still describes it.                                          │
+│                                                                  │
 │ docs/modules.md ──────────────────────────────────────────────── │
-│   □ A leaf that imports a third-party module      +    1×     •• │
+│   □ A leaf that imports a third-party module      +           •• │
 │     imports it on every host; the page should                    │
 │     say that module must be inert when the                       │
 │     feature is off.                                              │
 │                                                                  │
 │ ↻ stale   seen 2×   <age>                                        │
 │                                                                  │
-│ Evidence ─────────────────────────────────────────────────────── │
-│ <date>     ───────────────────────────────────────────────────── │
-│   docs/hosts.md: the line contradicts what the code does now.    │
+│ Evidence  <date>     ─────────────────────────────────────────── │
+│ docs/hosts.md: the line contradicts what the code does now.      │
 │                                                                  │
 ╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
 --- styles
@@ -26,9 +27,11 @@
 1 . 4x9 . 3x54 . 1
 1 .x3 5 . 6x41 .x5 7 .x2 8x4 .x2 3x5 . 1
 1 .x5 6x27 .x34 1
+1 .x66 1
 1 . 4x13 . 3x50 . 1
 1 . 5 . 5 . 5x42 .x4 6 .x2 3x4 .x2 3x5 . 1
 1 .x5 5x19 .x42 1
+1 .x66 1
 1 . 4x15 . 3x48 . 1
 1 .x3 3 . 6x40 .x6 6 .x2 3x4 .x2 3x5 . 1
 1 .x5 6x41 .x20 1
@@ -37,9 +40,8 @@
 1 .x66 1
 1 . 6 . 3x5 .x3 3x7 .x3 3x11 .x34 1
 1 .x66 1
-1 . 4x8 . 3x55 . 1
-1 . 3x64 . 1
-1 .x3 6x59 .x4 1
+1 . 4x20 . 3x43 . 1
+1 . 6x59 .x6 1
 1 .x66 1
 1x3 6x2 . 3x4 . 1x2 . 6x5 . 3x4 . 1x2 . 6 . 3x5 . 1x2 . 6 . 3x7 . 1x2 . 6x3 . 3x5 . 1x6
 --- legend

@@ -1,4 +1,5 @@
 # docfix/pi/applied 70x24 @0,0 (70x24)
+  ~/.agents/skills/avoid-ai-tropes/SKILL.md
     Nested mappings are not allowed in compact mappings at line 2,
 column 14:
 
@@ -8,12 +9,9 @@ descriptio…
 
 
 
- Warning: codemode_only: not registered, declarations stay visible:
- subagent, get_subagent_result, steer_subagent
-
  The apply prompt is in the editor: read it, then Enter to send
 
-──  ↑13─────────────────────────────────  ──  ── 0% / 1M ── ••••• ──
+───────────────────────────── ↑ 13 more ──────────────────────────────
 holds needs no edit.
 Draft each edit against the file as it stands now, in its existing
 structure and voice. For a stale plan, delete or trim what is
@@ -22,8 +20,11 @@ Don't commit.
 Then call docfix with action "resolve" for each id, applied or found
 no longer true.
 ──────────────────────────────────────────────────────────────────────
-  Go  DeepSeek V4.1 Flash 1017   high                         main
+~/.local/state/agents<tmp>                               (main)
+0.0%/1.0M (auto)              (opencode-go) deepseek-v4.1-flash • high
+docs 3
 --- styles
+1x43
 1x70
 1x70
 1x70
@@ -32,28 +33,22 @@ no longer true.
 1x70
 -
 -
--
-. 1x69
-. 1x45
 -
 . 2x62
 -
-3x3 2x4 3x33 . 2 3x4 4 3x4 2x7 3x4 2x5 3x3
+3x70
 -
 -
 -
 -
 -
-.x10 5x6
+-
 -
 3x70
-.x2 2x2 .x2 6x24 .x2 3x6 .x24 7 . 8x4
+2x63
+2x70
+-
 --- legend
 1 fg=#d0a215
 2 fg=#878580
 3 fg=#cf6a4c
-4 fg=#cf6a4c bold
-5 fg=#d14d41 underline=single
-6 fg=#878580 bold
-7 fg=#879a39
-8 fg=#b7b5ac

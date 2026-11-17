@@ -1,7 +1,7 @@
 # docfix/claude/applied 160x45 @0,0 (160x45)
                                                                                                                      ╭─────────────────────────────────────────╮
  ▐▛███▛█   Claude Code <ver>                                                                                         │ docfix                                  │
-▝▜██████▀  Sonnet 5.5 with high effort · Claude Ultra                                                                │ The apply prompt is in the prompt box:  │
+▝▜██████▀  Opus 5.5 with high effort · Claude Ultra                                                                  │ The apply prompt is in the prompt box:  │
  ▝▝   ▝▝   ~/.local/state/agents<tmp>                                                                                │ read it, then Enter to send             │
                                                                                                                      ╰─────────────────────────────────────────╯
 ▎ Debug mode enabled · logging to <tmp>
@@ -42,12 +42,12 @@
   Then call docfix with action "resolve" for each id, applied or found no longer true.
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   ⚠ docfix: docs 3
-  Sonnet 5.5 · high · 0% · •• 97%                              main
+  Opus 5.5 · high · 0% · •• 97%                                                                ~/.local/state/agents<tmp>                                main
   ⏵⏵ auto mode on (shift+tab to cycle)
 --- styles
 .x117 1x43
 2x2 3x6 .x3 4x11 . 5x8 .x86 1 . 5x6 .x34 1
-2x2 3x5 2x2 .x2 5x42 .x64 1 .x41 1
+2x2 3x5 2x2 .x2 5x40 .x66 1 .x41 1
 2x9 .x2 5x56 .x50 1 .x41 1
 .x117 1x43
 1 . 5x107
@@ -88,7 +88,7 @@
 .x12 ax6
 9x160
 .x2 bx16
-.x2 5x10 cx3 5x4 cx8 dx6 5x29 e 5 cx4
+.x2 5x8 cx3 5x4 cx8 dx6 5x64 cx53 5x4 e 5 cx4
 .x2 bx15 5x21
 --- legend
 1 dim

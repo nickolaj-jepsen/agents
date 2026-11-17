@@ -30,8 +30,8 @@ import {
   tokens,
   type Hint,
 } from "../../../kit/pi/ui.ts";
-import { openQueue, seen, type Kind, type Suggestion } from "../core/docfix.ts";
-import { evidence } from "./evidence.ts";
+import { openQueue, repeats, seen, type Kind, type Suggestion } from "../core/docfix.ts";
+import { evidence, evidenceTitle } from "./evidence.ts";
 
 export type PanelDeps = {
   load(): Promise<Suggestion[]>;
@@ -90,7 +90,7 @@ export class DocsPanel implements Component {
       {
         width: 4,
         priority: 2,
-        text: (s) => `${seen(s)}${tokens.glyph.times}`,
+        text: (s) => repeats(s),
         role: (s) => (seen(s) >= SEEN_WARN ? "warning" : undefined),
       },
       { width: 5, priority: 1, text: (s) => ageShort(s.updated, Date.now()) },
@@ -232,14 +232,16 @@ export class DocsPanel implements Component {
       paint(t, s.kind === "wrong" ? "error" : "text", KIND_ICON[s.kind]) +
         " " +
         paint(t, "dim", s.kind),
-      paint(t, count >= SEEN_WARN ? "warning" : "dim", `seen ${count}${tokens.glyph.times}`),
+      ...(count > 1
+        ? [paint(t, count >= SEEN_WARN ? "warning" : "dim", `seen ${count}${tokens.glyph.times}`)]
+        : []),
       paint(t, "dim", ageLong(s.updated, now)),
     ].join("   ");
     const lines = [
       ...(withClaim ? [...prose(t, width, s.claim), ""] : []),
       meta,
       "",
-      section(t, width, "Evidence"),
+      section(t, width, evidenceTitle(s.evidence)),
       ...(s.evidence.length > 0 ? evidence(t, width, s.evidence) : [paint(t, "dim", "none filed")]),
     ];
     this.detailCache.set(key, lines);

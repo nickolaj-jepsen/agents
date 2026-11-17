@@ -20,6 +20,7 @@ import {
   parse,
   plan,
   reopen,
+  repeats,
   seen,
   serialize,
   statusText,
@@ -323,11 +324,9 @@ function row(r: Rows, s: Suggestion): JSX.Element {
         <Text {...roleProps(s.kind === "wrong" ? "error" : "dim")}>
           {`${tokens.glyph.kind[s.kind]} ${s.kind}`}
         </Text>
-        {"  "}
-        <Text
-          {...roleProps(count >= 3 ? "warning" : "dim")}
-        >{`${count}${tokens.glyph.times}`}</Text>
-        {`  ${age(s.updated, r.now)}  ${isOpen ? FOLD.open : FOLD.closed} evidence ${s.evidence.length}`}
+        {count > 1 ? "  " : ""}
+        <Text {...roleProps(count >= 3 ? "warning" : "dim")}>{repeats(s)}</Text>
+        {`  ${age(s.updated, r.now)}  ${isOpen ? FOLD.open : FOLD.closed} evidence${s.evidence.length > 1 ? ` ${s.evidence.length}` : ""}`}
       </Button>
       {isOpen ? (
         <Box key={`e:${s.id}`} flexDirection="column" paddingTop={1} paddingLeft={HANG}>

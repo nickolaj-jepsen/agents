@@ -8,7 +8,7 @@
 │     python.                                               │ + missing   seen 2×   <age>                    │
 │                                                           │                                                │
 │ docs/agents.md ────────────────────────────────────────── │ Evidence ───────────────────────────────────── │
-│   □ pi's permission gate cannot resolve    !    1×    ••• │ <date>      claude ─────────────────────────── │
+│   □ pi's permission gate cannot resolve    !          ••• │ <date>      claude ─────────────────────────── │
 │     shell variables, so `cat                              │   Hit it again from a worktree: `python -m     │
 │     $S/id_ed25519_ao` reads what `cat                     │   unittest` failed 20 socket tests with        │
 │     ~/.ssh/id_ed25519_ao` denies.                         │   AF_UNIX path too long.                       │
@@ -55,7 +55,7 @@
 1 .x59 1 .x3 5x43 .x2 1
 1 .x59 1 .x3 5x17 .x28 1
 1 .x59 1 .x48 1
-1 .x59 1 .x3 3x26 .x19 1
+1 .x59 1 .x3 4x26 .x19 1
 1 .x59 1 .x3 5x40 .x5 1
 1 .x59 1 . 3x9 .x38 1
 1 .x59 1 .x48 1

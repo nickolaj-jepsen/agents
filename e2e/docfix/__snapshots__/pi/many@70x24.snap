@@ -1,8 +1,10 @@
-# docfix/pi/many 70x24 @1,1 (68x21)
+# docfix/pi/many 70x24 @1,1 (68x22)
 ╭─ Doc suggestions  28 ────────────────────────────────────────────╮
 │                                                                  │
-│     ↑ 17 more                                                    │
-│   □ Claim number 17 about docs/modules.md: the    +    1×    ••• │
+│     ↑ 16 more                                                    │
+│   □ Claim number 18 about docs/modules.md: the    ↻    2×    ••• │
+│     page no longer matches what the code does.                   │
+│   □ Claim number 17 about docs/modules.md: the    +          ••• │
 │     page no longer matches what the code does.                   │
 │ docs/notes.md ────────────────────────────────────────────────── │
 │   □ Claim number 20 about docs/notes.md: the      +    4×    ••• │
@@ -15,15 +17,16 @@
 │                                                                  │
 │ ! wrong   seen 2×   <age>                                        │
 │                                                                  │
-│ Evidence ─────────────────────────────────────────────────────── │
-│ <date>     ───────────────────────────────────────────────────── │
-│   docs/notes.md: the line contradicts what the code does now.    │
+│ Evidence  <date>     ─────────────────────────────────────────── │
+│ docs/notes.md: the line contradicts what the code does now.      │
 │                                                                  │
 ╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
 --- styles
 1x3 2x15 .x2 3x2 . 1x45
 1 .x66 1
 1 .x5 3x9 .x52 1
+1 .x3 3 . 4x42 .x4 4 .x2 3x4 .x2 3x5 . 1
+1 .x5 4x42 .x19 1
 1 .x3 3 . 4x42 .x4 4 .x2 3x4 .x2 3x5 . 1
 1 .x5 4x42 .x19 1
 1 . 5x13 . 3x50 . 1
@@ -37,9 +40,8 @@
 1 .x66 1
 1 . 7 . 3x5 .x3 3x7 .x3 3x11 .x34 1
 1 .x66 1
-1 . 5x8 . 3x55 . 1
-1 . 3x64 . 1
-1 .x3 4x59 .x4 1
+1 . 5x20 . 3x43 . 1
+1 . 4x59 .x6 1
 1 .x66 1
 1x3 4x2 . 3x4 . 1x2 . 4x5 . 3x4 . 1x2 . 4 . 3x5 . 1x2 . 4 . 3x7 . 1x2 . 4x3 . 3x5 . 1x6
 --- legend

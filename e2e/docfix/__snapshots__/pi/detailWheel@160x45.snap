@@ -28,11 +28,11 @@
 │                                                                  │   failed while evaluating the attribute and its       │
 │ docs/a-very-long-directory-name/with/several/nested/levels/and-a │   dependencies,                                       │
 │ n-equally-long-file-name-for-the-guide.md ────────────────────── │                                                       │
-│   □ A claim under a very long target path, so     ↻    1×   •••• │ <date>      pi ────────────────────────────────────── │
+│   □ A claim under a very long target path, so     ↻         •••• │ <date>      pi ────────────────────────────────────── │
 │     the group header must be cut.                                │   The section says the build verifies a pi change,    │
 │                                                                  │   but the build only type-checks the cores and the pi │
 │ docs/hosts.md ────────────────────────────────────────────────── │   halves and never starts an agent, so a panel that   │
-│   □ Short.                                        ↻    1×     •• │   renders wrong still passes it; The section says the │
+│   □ Short.                                        ↻           •• │   renders wrong still passes it; The section says the │
 │                                                                  │   build verifies a pi change, but the build only      │
 │ docs/日本語のドキュメント.md ─────────────────────────────────── │   type-checks the cores and the pi halves and never   │
 │   □ この節は古くなっています。ビルドが検証するの  +  100×     •• │   starts an agent, so a panel that renders wrong      │

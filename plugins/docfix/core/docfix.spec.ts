@@ -4,12 +4,14 @@ import {
   applyPrompt,
   byTarget,
   dismiss,
+  evidenceLabel,
   normalizeTarget,
   openQueue,
   parse,
   plan,
   readEvidence,
   reopen,
+  repeats,
   serialize,
   type Call,
   type Suggestion,
@@ -220,5 +222,22 @@ describe("readEvidence", () => {
       },
       { kind: "text", text: "after" },
     ]);
+  });
+});
+
+describe("what a row says of its count and evidence", () => {
+  const base = filed(suggest()).suggestion;
+  test("a first sighting has no count: every row has one", () => {
+    expect(repeats(base)).toBe("");
+    expect(repeats({ ...base, sessions: ["a", "b", "c"] })).toBe("3×");
+  });
+
+  test("an evidence label is its date, harness and how it was filed", () => {
+    const view = readEvidence({
+      at: "2026-11-05T22:54:41.616Z",
+      session: "pi:01a1",
+      text: "Migrated from pi memory `x`.\n\nSomething.",
+    });
+    expect(evidenceLabel(view)).toBe("2026-11-05  pi  migrated");
   });
 });
