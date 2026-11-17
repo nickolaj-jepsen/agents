@@ -44,7 +44,6 @@ export default site({
       steps: [
         { sleep: 400 },
         slow(ask),
-        { sleep: 400 },
         { press: "Enter" },
         { wait: /Answer 3 questions/, timeout: 20_000 },
         { sleep: 1800 },
@@ -78,7 +77,6 @@ export default site({
       steps: [
         { sleep: 400 },
         slow(ask),
-        { sleep: 400 },
         { press: "Enter" },
         { wait: /Answer 3 questions/, timeout: 20_000 },
         { sleep: 1800 },

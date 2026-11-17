@@ -43,7 +43,7 @@ export default site({
     prepare: EXCHANGE,
     steps: [
       { sleep: 400 },
-      slow(DRAFT, 25),
+      slow(DRAFT),
       { sleep: 1800 },
       { press: "Ctrl+q" },
       PICKER,
@@ -61,14 +61,20 @@ export default site({
         "A count of the misspelled words sits above the prompt as you type; hunspell finds them.",
       project: "app",
       start,
-      steps: [...EXCHANGE, slow(DRAFT, 5), { wait: /\d misspelled/ }],
+      steps: [...EXCHANGE, slow(DRAFT, 5, 0), { wait: /\d misspelled/ }],
     },
     picker: {
       caption:
         "The picker shows the word in place with hunspell's suggestions, and Haiku's fix when it has one.",
       project: "app",
       start,
-      steps: [...EXCHANGE, slow(DRAFT, 5), { wait: /\d misspelled/ }, { press: "Ctrl+q" }, PICKER],
+      steps: [
+        ...EXCHANGE,
+        slow(DRAFT, 5, 0),
+        { wait: /\d misspelled/ },
+        { press: "Ctrl+q" },
+        PICKER,
+      ],
     },
   },
 });

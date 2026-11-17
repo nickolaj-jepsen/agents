@@ -73,8 +73,7 @@ export default site({
     start: start(NONE),
     steps: [
       { sleep: 500 },
-      slow(`/linear ${NOTE}`, 25),
-      { sleep: 500 },
+      slow(`/linear ${NOTE}`),
       { press: "Enter" },
       { wait: "Create & open", timeout: 60_000 },
       { sleep: 2800 },
@@ -82,7 +81,7 @@ export default site({
       // The title field has the focus: cut its ending and write another.
       slowPress("Backspace", "backs off after a 429".length),
       { sleep: 600 },
-      slow("retries after a 429", 70),
+      slow("retries after a 429"),
       { sleep: 1200 },
       // The first Esc leaves the field, the second hides the draft.
       { press: "Escape" },

@@ -65,7 +65,6 @@ export default site({
       steps: [
         { sleep: 800 },
         slow(ask),
-        { sleep: 400 },
         { press: "Enter" },
         { wait: "Filed. The install steps", timeout: 20_000 },
         { sleep: 1500 },
@@ -91,7 +90,6 @@ export default site({
       steps: [
         { sleep: 800 },
         slow(ask),
-        { sleep: 400 },
         { press: "Enter" },
         { wait: "Filed. The install steps", timeout: 20_000 },
         { sleep: 1500 },

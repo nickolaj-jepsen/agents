@@ -72,8 +72,7 @@ export default site({
     start,
     steps: [
       { sleep: 600 },
-      slow(ask, 30),
-      { sleep: 400 },
+      slow(ask),
       { press: "Enter" },
       { wait: "All four tests pass", timeout: 30_000 },
       { sleep: 3500 },

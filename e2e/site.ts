@@ -28,6 +28,7 @@ import {
   demosOf,
   FPS,
   IDLE,
+  pace,
   siteFiles,
   VIDEO_ZOOM,
   ZOOM,
@@ -136,7 +137,7 @@ async function play1(
         idleTimeLimit: IDLE,
       });
       try {
-        await play(session, r.steps);
+        await play(session, pace(r.steps, `${set.plugin}/${record}`));
         await session.settle();
       } finally {
         await session.stopRecording();

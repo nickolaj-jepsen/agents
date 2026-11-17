@@ -204,7 +204,7 @@ export default site({
 - A plugin with both halves gives a demo per harness: `demo: [claudeDemo, { harness: "pi", … }]`,
   the first shown first.
 - The demo is a tour of 15 to 40 seconds. Its poster is the last screen unless a `poster` step
-  takes it earlier. `slow(text)` types a key at a time, `slowPress(key, n)` repeats a key at a pace a
+  takes it earlier. `slow(text)` types a key at a time at a human, seeded rhythm (it ends on a short beat before Enter). The recorder also cuts each `sleep` to about 70% and varies it (`pace` in `lib/site.ts`), so write a sleep as the dwell you mean and expect a little less. `slowPress(key, n)` repeats a key at a pace a
   field that redraws on every key keeps up with.
 - A still is the screen after its steps. Give a plugin with both halves at least one pi still.
 - The default size is 120x34 (`SITE_SIZE`), which suits a column of 1000 to 1100 px.
@@ -251,7 +251,7 @@ like `mcp__linear__save_issue`. A write is answered with a made-up key and recor
 
 Each `.mp4` is at most 1 MB and each `.png` at most 300 KB (the site's check enforces them). A
 recording is drawn at twice an image's scale for the same zoom, so `VIDEO_ZOOM` is 0.5 and a 120x34
-video is 1232x746 like its poster; `FPS` and `IDLE` (the longest quiet stretch kept, in seconds) are
+video is 1232x746 like its poster; `FPS` (30: at 12 a typist's keys merge into one frame) and `IDLE` (the longest quiet stretch kept, in seconds) are
 in `lib/site.ts` too. A PNG over budget goes through oxipng; a video over budget fails the run with
 its size: shorten the tour, or lower `FPS`. Colours, padding and window chrome (none) are in `e2e/tui-test.toml`: the terminal
 background and palette of the person's theme.

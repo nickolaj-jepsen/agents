@@ -20,8 +20,8 @@ export const SITE_SIZE: Size = [120, 34];
 export const ZOOM = 1;
 /** A recording renders at twice an image's size for the same zoom; this makes it the poster's. */
 export const VIDEO_ZOOM = 0.5;
-/** Frames per second of a recording, capped: a terminal changes in bursts. */
-export const FPS = 12;
+/** Frames per second of a recording, capped: a terminal changes in bursts. Under ~25 a fast typist's keys merge into one frame. */
+export const FPS = 30;
 /** Seconds a quiet stretch of a recording is cut to at most. */
 export const IDLE = 6;
 
@@ -95,15 +95,63 @@ export function asSet(set: SiteSet, harness: HarnessName): ScenarioSet {
   return { plugin: set.plugin, harness, scenarios };
 }
 
-/** Types `text` a key at a time, as a person does, for a video: `ms` between keys. */
-export const slow = (text: string, ms = 35): Step => ({
+/** A small seeded generator (mulberry32), so a recording's rhythm is the same on every run. */
+function rng(seed: string) {
+  let a = 0x9e3779b9;
+  for (const ch of seed) a = Math.imul(a ^ ch.charCodeAt(0), 0x85ebca6b) >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Types `text` a key at a time, as a person does, for a video: `ms` is the average gap between
+ * keys. The gaps vary, run longer after a space or punctuation and now and then hesitate, and
+ * each key is scheduled against the start, so the time a key takes to send does not stretch the
+ * next gap. A short beat at the end is the glance before Enter.
+ */
+export const slow = (text: string, ms = 70, beat = 350): Step => ({
   run: async (s) => {
+    const rand = rng(text);
+    const t0 = Date.now();
+    let due = 0;
     for (const ch of text) {
+      const wait = t0 + due - Date.now();
+      if (wait > 0) await new Promise((r) => setTimeout(r, wait));
       await s.term.type(ch);
-      await new Promise((r) => setTimeout(r, ms));
+      let gap = ms * (0.55 + rand() * 0.9);
+      if (ch === " ") gap *= 1.25;
+      else if (/[.,/`:;?!]/.test(ch)) gap *= 1.6;
+      if (rand() < 0.04) gap += 150 + rand() * 250;
+      due += gap;
     }
+    await new Promise((r) => setTimeout(r, beat * (0.8 + rand() * 0.4)));
   },
 });
+
+/** The most a pause is cut to, ms. */
+const PAUSE_MAX = 2600;
+
+/**
+ * A demo's steps as a person would pace them. A `sleep` is the author's rough dwell, and every
+ * key or click already waits for the screen to settle on top of it, so it is cut to 70% and
+ * varied by a fifth either way, so a run of equal sleeps does not tick like a metronome; none
+ * runs past `PAUSE_MAX`, the last one (the hold on the result) a little longer. Other steps pass.
+ */
+export function pace(steps: Step[], seed: string): Step[] {
+  const rand = rng(seed);
+  const last = steps.map((s) => "sleep" in s).lastIndexOf(true);
+  return steps.map((step, i) => {
+    if (!("sleep" in step)) return step;
+    const cap = i === last ? PAUSE_MAX * 1.2 : PAUSE_MAX;
+    const ms = Math.min(cap, step.sleep * 0.7 * (0.8 + rand() * 0.4));
+    return { sleep: Math.round(Math.max(150, ms)) };
+  });
+}
 
 /** In a demo: the poster is the screen at this step, not the last one. */
 export const poster: Step = {
