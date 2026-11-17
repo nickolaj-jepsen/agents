@@ -99,6 +99,9 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
   the bar scrolls away.
 - The harness switch is Both, Claude Code, pi. Both shows the two renders one above the other; there
   is no side by side, so a render is never shrunk to fit a pair. The key `f` moves between the two.
+  A switch never moves the page under the reader: the render at the reading line (a third of the way
+  down) keeps its place, and when it is switched away the other harness's render of that story takes
+  it, so `f` flips one render for the other to compare them.
 - The size switch greys out (and strikes) a size no harness on screen was drawn at. A render shows its
   size at the end of its title bar, yellow when it is the nearest to the size chosen, and one note in
   the bar says which harnesses fell back; never a warning per render.

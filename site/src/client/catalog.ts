@@ -148,6 +148,32 @@ function apply(): void {
   syncUrl();
 }
 
+// A switch changes what is drawn above the story being read, so the page would jump. What is at the
+// reading line (a third of the way down under the bar) keeps its place: the render there, or, if it
+// is switched away, the other harness's render of the same story, so switching harness flips one
+// render for the other; else the story's heading, or the props'.
+const visible = (el: Element) => el.getClientRects().length > 0;
+function keepPlace(change: () => void): void {
+  const top = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+  const line = top + (innerHeight - top) / 3;
+  const atLine = (el: Element) => {
+    const r = el.getBoundingClientRect();
+    return r.top <= line && r.bottom > line;
+  };
+  const props = document.getElementById("props");
+  const blocks = [...stages, ...(props ? [props] : [])];
+  const here = blocks.find(atLine) ?? blocks.find((el) => el.getBoundingClientRect().bottom > top);
+  if (!here) return change();
+  const head = here.querySelector<HTMLElement>(".rhead, .section-head") ?? here;
+  const cells = [...here.querySelectorAll<HTMLElement>(".cell")];
+  const anchor = cells.find((c) => visible(c) && atLine(c)) ?? head;
+  const before = anchor.getBoundingClientRect().top;
+  change();
+  const after = visible(anchor) ? anchor : (cells.find(visible) ?? head);
+  const dy = after.getBoundingClientRect().top - before;
+  if (Math.abs(dy) >= 1) scrollTo({ top: scrollY + dy, behavior: "instant" });
+}
+
 document.addEventListener("click", (e) => {
   const b = (e.target as Element).closest<HTMLButtonElement>("button");
   if (!b) return;
@@ -158,7 +184,7 @@ document.addEventListener("click", (e) => {
     state.size = b.dataset.setSize;
     store.set("size", state.size);
   } else return;
-  apply();
+  keepPlace(apply);
 });
 
 document.addEventListener("keydown", (e) => {
@@ -167,7 +193,7 @@ document.addEventListener("keydown", (e) => {
   // Claude Code, then pi, then back; from both, Claude Code.
   state.h = state.h === "claude" ? "pi" : "claude";
   writeHarness(state.h);
-  apply();
+  keepPlace(apply);
 });
 
 // ---- sidebar: the story in view ----------------------------------------------------------
