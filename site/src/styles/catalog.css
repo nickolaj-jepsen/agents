@@ -205,17 +205,6 @@
 .ctl .label {
   color: var(--text-3);
 }
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--u) calc(3 * var(--u));
-  font-size: var(--fs-ui);
-  line-height: calc(3 * var(--u));
-  margin: calc(2 * var(--u)) 0;
-}
-.dim {
-  color: var(--text-3);
-}
 .mono {
   font-size: 0.875rem;
 }
@@ -359,8 +348,74 @@
   display: none !important;
 }
 
-/* ---- overview matrix ------------------------------------------------------------------- */
+/* ---- the overview ----------------------------------------------------------------------- */
 
+/* What to read first: the site's docs and the repo's guides, two lists side by side. */
+.cat-section.first {
+  margin-top: calc(5 * var(--u));
+}
+.reading {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: calc(2 * var(--u)) calc(5 * var(--u));
+}
+.reading .side-h {
+  margin-top: 0;
+}
+.read-list li {
+  padding: var(--u) 0;
+  background: linear-gradient(var(--rule), var(--rule)) top / 100% 1px no-repeat;
+}
+.rname {
+  font-weight: 650;
+  color: var(--white);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: var(--link-line);
+}
+.rname:hover {
+  text-decoration-color: currentColor;
+}
+.rname code {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+/* A doc's opening paragraph, held to two lines. */
+.rwhat {
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.rwhat code {
+  font-size: var(--mono-em);
+  color: var(--text);
+}
+
+.kit-how {
+  max-width: var(--measure);
+  margin-bottom: calc(3 * var(--u));
+  font-size: var(--fs-ui);
+  line-height: calc(3 * var(--u));
+  color: var(--text-2);
+}
+.kit-how code {
+  font-size: var(--mono-em);
+  color: var(--text);
+}
+.kit-how a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: var(--link-line);
+}
+
+/* The components, a row each: the component, then each harness's exports and counts, or why not. */
 .scroll {
   position: relative;
   overflow-x: auto;
@@ -368,6 +423,7 @@
 .matrix {
   border-collapse: collapse;
   width: 100%;
+  table-layout: fixed;
   font-size: var(--fs-ui);
   line-height: calc(3 * var(--u));
 }
@@ -379,13 +435,30 @@
   border-bottom: 1px solid var(--rule);
 }
 .matrix thead th {
+  font-weight: 600;
+  color: var(--text);
+  border-bottom-color: var(--rule-strong);
+  padding-top: 0;
+}
+.matrix thead th:first-child {
+  width: 40%;
   font-variant-caps: all-small-caps;
   font-synthesis-small-caps: none;
   letter-spacing: 0.08em;
   font-weight: 500;
   color: var(--text-2);
-  border-bottom-color: var(--rule-strong);
-  padding-top: 0;
+}
+.hh {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--u);
+}
+.hh .gl {
+  --gl: 1.15em;
+}
+/* Each cell says its harness only where the table is stacked (a phone). */
+.cell-h {
+  display: none;
 }
 .matrix tbody th a {
   font-weight: 650;
@@ -402,29 +475,56 @@
   display: block;
   font-weight: 400;
   color: var(--text-2);
-  max-width: 22rem;
-}
-.matrix tbody th {
-  min-width: 14rem;
-}
-.matrix td {
-  min-width: 13rem;
+  max-width: 30rem;
 }
 .matrix tfoot th,
 .matrix tfoot td {
   border-bottom: 0;
   color: var(--text-2);
 }
-.cellrow {
+.matrix tfoot th {
+  font-weight: 600;
+  color: var(--text);
+}
+.matrix code {
+  font-size: var(--mono-em);
+  color: var(--white);
+}
+.exports {
+  overflow-wrap: anywhere;
+}
+.state {
+  color: var(--text);
+}
+.state .g {
+  font-family: var(--mono);
+  font-weight: 700;
+  margin-right: 0.4em;
+}
+.state.no .g {
+  color: var(--red);
+}
+.state.planned .g {
+  color: var(--text-3);
+}
+.note {
+  color: var(--text-2);
+}
+.matrix .note {
   display: flex;
   flex-wrap: wrap;
   gap: 0 calc(2 * var(--u));
+  margin-top: calc(0.5 * var(--u));
 }
 .counts {
   display: inline-flex;
   gap: calc(1.5 * var(--u));
   font-family: var(--mono);
   font-size: 0.875rem;
+  color: var(--text);
+}
+.count > span:first-child {
+  margin-right: 0.3em;
 }
 .count.yes > span:first-child {
   color: var(--green);
@@ -435,34 +535,45 @@
 .count.no > span:first-child {
   color: var(--red);
 }
-.count > span:first-child {
-  margin-right: 0.3em;
+.kit-how .count {
+  white-space: nowrap;
 }
-.note {
-  color: var(--text-2);
-  margin-top: calc(0.5 * var(--u));
+.kit-how .count > span:first-child {
+  font-family: var(--mono);
+  font-weight: 700;
 }
-.note code,
-.matrix code,
-.impl code {
-  font-size: var(--mono-em);
-  color: var(--white);
-}
-.repo-list li {
-  padding: calc(0.5 * var(--u)) 0;
-}
-.repo-list code {
-  font-size: var(--mono-em);
-  color: var(--white);
-}
-.repo-list .sub {
-  margin-left: var(--u);
-}
-.cat-about {
-  margin-top: calc(5 * var(--u));
-  font-size: var(--fs-ui);
-  line-height: calc(3 * var(--u));
-  color: var(--text-2);
+
+/* A phone: each component a block, its harnesses one under the other, each naming itself. */
+@media (max-width: 40rem) {
+  .matrix,
+  .matrix tbody,
+  .matrix tfoot,
+  .matrix tr,
+  .matrix th,
+  .matrix td {
+    display: block;
+    width: auto !important;
+  }
+  .matrix thead {
+    display: none;
+  }
+  .matrix tr {
+    padding: calc(1.5 * var(--u)) 0;
+    background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
+  }
+  .matrix th,
+  .matrix td {
+    border: 0;
+    padding: 0;
+  }
+  .matrix td {
+    margin-top: var(--u);
+  }
+  .cell-h {
+    display: inline-flex;
+    font-weight: 600;
+    color: var(--text);
+  }
 }
 
 /* ---- a component page -------------------------------------------------------------------- */

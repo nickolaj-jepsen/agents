@@ -92,8 +92,12 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
   component opens into its stories and, last, its props; the one filling the screen (whose heading is
   above a third of the way down) is marked as the page scrolls. Which harness has what is the
   overview's table; the repo's other guides are listed there too.
-- `/dev/` is the overview: a table of components, each harness's cell its feature counts (no zeros,
-  and no "exists" beside them) or why it has none. A component's page is its name and purpose, one
+- `/dev/` is the overview, with no switch: the lead, then "Read first", two lists side by side (the
+  docs on this site, each with its opening paragraph held to two lines; the repo's guides), then the
+  UI kit: a line saying how to read it and where it comes from, and a table of components. A row is
+  the component (name, purpose) and a cell per harness, headed by its logo: the exports, then the
+  feature counts (no zeros) and the stories drawn; or ✗ Not possible and why. On a phone each row is
+  a block, each cell naming its harness. A component's page is its name and purpose, one
   line of summary (the kit in both harnesses whichever is shown, the counts, a way to the props), then
   one sticky bar (the harness switch, terminal size) that applies to everything under it. On a phone
   the bar scrolls away.
