@@ -24,8 +24,7 @@
         skillsDir = ./skills;
         dirs = dir: lib.filterAttrs (_: type: type == "directory") (builtins.readDir dir);
       in {
-        # `pkgs.agent-tools` (the plugins' sources, with the pi halves type-checked against the
-        # consumer's `pkgs.pi-coding-agent`) and `pkgs.tui-test`.
+        # The plugin sources (pi halves checked against the consumer's `pi-coding-agent`) and tui-test.
         overlays.default = final: _prev: {
           agent-tools = final.callPackage ./pkgs/agent-tools/package.nix {};
           tui-test = final.callPackage ./pkgs/tui-test/package.nix {};
@@ -33,10 +32,7 @@
         overlays.tools = self.overlays.default;
 
         lib = {
-          # The plugins as their folders describe them (README.md, Layout): a Claude half has
-          # `.claude-plugin/plugin.json`, a pi half a `pi` key in `package.json`, where
-          # `agentTools.subagents` loads it in subagents too.
-          # `{ <name> = { claude = bool; pi = bool; subagents = bool; path = <source dir>; }; }`
+          # A plugin's folder decides its halves; `agentTools.subagents` loads the pi half in subagents too.
           plugins = lib.mapAttrs (name: _: let
             dir = pluginsDir + "/${name}";
             pkg = lib.optionalAttrs (builtins.pathExists (dir + "/package.json")) (lib.importJSON (dir + "/package.json"));
@@ -47,11 +43,11 @@
             path = dir;
           }) (dirs pluginsDir);
 
-          # The agent skills: `{ <name> = <source dir>; }`, one folder with a SKILL.md each.
+          # One folder per skill, each with a SKILL.md.
           skills = lib.mapAttrs (name: _: skillsDir + "/${name}") (dirs skillsDir);
 
-          # One plugin's Claude half, validated and tested against the claude-code that runs
-          # it. `agentTools` is the checked sources (`pkgs.agent-tools`): its tests ran first.
+          # One plugin's Claude half, checked against the claude-code that runs it; `agentTools`'s
+          # own tests have run first.
           mkClaudePlugin = {
             pkgs,
             claude-code,
@@ -123,7 +119,7 @@
     };
 
   inputs = {
-    # master, for the newest claude-code and pi-coding-agent the checks run the plugins against.
+    # master: the newest claude-code and pi-coding-agent to check the plugins against.
     nixpkgs.url = "github:nixos/nixpkgs/master";
 
     flake-parts.url = "github:hercules-ci/flake-parts";

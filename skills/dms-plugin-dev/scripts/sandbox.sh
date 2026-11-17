@@ -3,11 +3,8 @@
 #
 # Its own HOME, runtime dir and no session bus, so nothing reaches the live desktop, and anything
 # started with `run` or `bg` finds a daemon in here rather than the live one. One sandbox per
-# working directory.
-#
-# Usage: sandbox.sh up|down|status|run|bg|key|move|click|wheel|shot|ipc|log [args]
-# Output: shot prints the PNG path, log prints log lines, run prints what the command does.
-# Everything else is silent on success. Errors go to stderr, exit 1.
+# working directory. Silent on success apart from `shot` (the PNG path) and `log` (log lines);
+# errors go to stderr, exit 1.
 
 set -euo pipefail
 

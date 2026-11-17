@@ -4,10 +4,6 @@
 Replays the system messages to reconstruct the prompt sections and the tool
 declarations the model was actually offered, pairs tool calls with their
 results, and totals usage. Read-only: nothing here talks to pi.
-
-Usage: digest.py SESSION.jsonl [--json] [--width N]
-Prints sections on stdout. --json prints one aggregate object instead.
-Text is collapsed and truncated to --width (default 96) columns.
 """
 
 import argparse
@@ -58,11 +54,7 @@ def read_entries(path):
 
 
 def loadout(entries):
-    """Replay system messages into the current prompt sections and tools.
-
-    Sections patch by name, a null value removes one, and tool declarations
-    arrive as toolsAdded / toolsRemoved.
-    """
+    """Replay system messages into the current prompt sections and tools."""
     sections, tools = {}, {}
     for entry in entries:
         if entry.get("type") == "compaction":

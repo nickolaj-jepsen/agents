@@ -1,6 +1,6 @@
 /**
- * A skill page: the SKILL.md folds to its first screen (whole without script), the contents and the
- * "see X" links open it before they go, and the contents mark the heading in view.
+ * A skill page: the SKILL.md folds to its first screen (whole without script), and the contents mark
+ * the heading in view.
  */
 
 const file = document.querySelector<HTMLElement>(".file.js");
@@ -13,7 +13,6 @@ function set(open: boolean): void {
   toggle.textContent = open ? "Show less" : `Read all of SKILL.md (${toggle.dataset.lines} lines)`;
 }
 
-// A file that fits its first screen needs no fold.
 const clip = file?.querySelector<HTMLElement>(".file-clip");
 if (file && toggle && clip && clip.scrollHeight <= clip.clientHeight + 12 * 8) {
   file.classList.remove("collapsed");

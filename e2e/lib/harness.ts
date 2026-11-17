@@ -1,7 +1,4 @@
-/**
- * How each agent is started and when it is ready: the checkout's plugins
- * (`claude-dev` / `pi-dev`), no MCP servers for Claude, a folder of its own.
- */
+/** How each agent is started and when it is ready. */
 import { execFileSync } from "node:child_process";
 import {
   chmodSync,
@@ -17,12 +14,11 @@ import type { LaunchSpec } from "./term.ts";
 
 export type HarnessName = "claude" | "pi";
 
-/** One canned pi assistant turn for the replay provider (`e2e/assets/fixture-provider.ts`). */
+/** One canned assistant turn for the replay provider and the model stub (`lib/stub.ts`). */
 export type Turn = {
   /**
    * Claude's stub only: serve this turn to the request whose system prompt or messages contain the
-   * text (a side call: spellfix's Haiku check, the Linear drafter, the You should know agent),
-   * instead of the main loop's next turn. Matched turns are served in order, each once.
+   * text (a side call, not the main loop's next turn), each once, in order.
    */
   match?: string;
   text?: string;
@@ -32,33 +28,27 @@ export type Turn = {
 };
 
 export type StartOptions = {
-  /**
-   * Programs the agent finds first on its PATH, by name: the script text of each (a `#!/bin/sh`
-   * stand-in for `gh` that answers without a network).
-   */
+  /** Programs the agent finds first on its PATH, by name: the script text of each. */
   bin?: Record<string, string>;
   /**
    * A config folder of its own instead of the person's, so nothing of them shows: what the site
-   * media are made on. Claude (`CLAUDE_CONFIG_DIR`) gets an API key the model stub answers to, no
-   * account, settings, hooks, status line or debug banner; it needs `turns`, and runs plain `claude`
-   * with every mod of this checkout. pi loads only `plugins`.
+   * media are made on. Needs `turns`; Claude runs plain `claude` with every mod of this checkout,
+   * pi loads only `plugins`.
    */
   hermetic?: boolean;
   /**
-   * With `hermetic`: the plugins (`plugins/<name>`) the agent loads, and nothing else. pi gets no
-   * extensions, skills or context files of the person's, and a settings folder of its own; Claude
-   * loads every mod of the checkout when this is left out.
+   * With `hermetic`: the plugins (`plugins/<name>`) to load and nothing else; Claude loads every mod
+   * of the checkout when this is left out.
    */
   plugins?: string[];
   /**
-   * MCP servers for Claude, by name (`--mcp-config`; no others load, `--strict-mcp-config`). The
-   * name is what plugins see in tool names: `linear` is what linear-issue looks for.
+   * MCP servers for Claude, by name, and no others. The name is what plugins see in tool names:
+   * `linear` is what linear-issue looks for.
    */
   mcp?: Record<string, { command: string; args?: string[]; env?: Record<string, string> }>;
-  /** Extra arguments for the agent. */
   args?: string[];
   env?: Record<string, string>;
-  /** Assistant turns to replay, in order, instead of a real model (pi's replay provider; Claude's `lib/stub.ts`). */
+  /** Assistant turns to replay, in order, instead of a real model. */
   turns?: Turn[];
 };
 
@@ -84,7 +74,6 @@ export const checkoutRoot = resolve(here, "..", "..");
 /**
  * The system's `claude-dev` / `pi-dev` with its checkout swapped for this one, so a session loads
  * the plugins of the tree the harness runs from (a worktree's own), not the wrappers' fixed path.
- * The wrappers name it in one `checkout=` / `plugins=` assignment.
  */
 function devWrapper(bin: "claude-dev" | "pi-dev", runDir: string): string | undefined {
   try {
@@ -104,7 +93,7 @@ function devWrapper(bin: "claude-dev" | "pi-dev", runDir: string): string | unde
   }
 }
 
-/** The plugins of this checkout with a Claude half (`plugins/<name>/.claude-plugin/plugin.json`): `only`, or all. */
+/** The plugins of this checkout with a Claude half: `only`, or all. */
 function checkoutMods(only?: string[]): string[] {
   const root = join(checkoutRoot, "plugins");
   return (only ?? readdirSync(root).sort())
@@ -112,10 +101,10 @@ function checkoutMods(only?: string[]): string[] {
     .filter((dir) => existsSync(join(dir, ".claude-plugin", "plugin.json")));
 }
 
-/** The keys the plugins' README asks for, as a person would have bound them. */
+/** The keys the plugins need, as a person would have bound them. */
 const KEYBINDINGS = {
   bindings: [
-    // spellfix's picker, which the plugin's README binds to ctrl+q.
+    // spellfix's picker.
     { context: "Global", bindings: { "ctrl+q": "app:toggleDiffNoiseFilter" } },
     { context: "Chat", bindings: { "alt+a": "abovePrompt:focus" } },
     { context: "AbovePrompt", bindings: { j: "abovePrompt:next", k: "abovePrompt:previous" } },
@@ -126,9 +115,8 @@ const KEYBINDINGS = {
 const STUB_KEY = "sk-ant-api03-stub-key-for-the-e2e-model-stub-0000000000000000";
 
 /**
- * A config folder for one session and the environment that points Claude at it: onboarding done,
- * the stub's API key approved, fullscreen, and the keys the plugins ask for. The prompts that stay
- * (a folder's trust) are the driver's, as in any session.
+ * A config folder for one session and the environment that points Claude at it. The one prompt that
+ * stays, a folder's trust, is the driver's, as in any session.
  */
 function hermeticClaude(run: Run): Record<string, string> {
   const dir = join(run.runDir, "claude-config");
@@ -231,9 +219,8 @@ export const claude: Harness = {
       ],
       cwd: run.cwd,
       // CLAUDE_CODE_NO_FLICKER: the fullscreen renderer, which the snapshots are of. Claude records
-      // a start that ended early (a session closed before its screen was up) as a strike in
-      // ~/.claude.json (`fullscreenAutoDisabled`) and, after two, starts every session in the
-      // classic renderer; this overrides that.
+      // a start that ended early as a strike in ~/.claude.json (`fullscreenAutoDisabled`) and, after
+      // two, starts every session in the classic renderer; this overrides that.
       env: {
         ...COMMON_ENV,
         CLAUDE_CODE_NO_FLICKER: "1",
@@ -247,7 +234,7 @@ export const claude: Harness = {
   },
   ready: (text) => /^❯|shift\+tab to cycle|\? for shortcuts/m.test(text),
   // Only ever a folder the driver made, so trusting it is safe: the first entry is "Yes",
-  // and tui.sh sends Down Enter, which this follows.
+  // and Down Enter reaches it.
   dialog: (text) => (text.includes("Yes, I trust this folder") ? ["Down", "Enter"] : undefined),
 };
 

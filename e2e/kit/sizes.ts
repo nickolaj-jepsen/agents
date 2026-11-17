@@ -1,7 +1,6 @@
 /**
- * The catalogue's snapshot sizes, the same in both harnesses so a story's renders pair up.
- * The narrow one is tall: Claude Code gives an inline pane about a third of the terminal's
- * rows, and at 24 rows that shows six lines of any component.
+ * The catalogue's snapshot sizes, the same in both harnesses so a story's renders pair up. The
+ * narrow one is tall: Claude Code gives an inline pane about a third of the rows.
  */
 import type { Size } from "../lib/session.ts";
 

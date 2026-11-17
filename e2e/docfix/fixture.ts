@@ -1,7 +1,6 @@
 /**
  * A checkout with a note store of its own, so no scenario reads or writes the real
- * `.agents/store`. A real store is a link into `~/.local/share/agents/store`; here it is
- * a plain folder, which docfix uses as it is.
+ * `.agents/store`, which is a link into `~/.local/share/agents/store`.
  */
 import {
   fileName,
@@ -260,7 +259,6 @@ export function checkout(ctx: SetupContext) {
   );
 }
 
-/** Files the suggestions into the checkout's store. */
 export function fileSuggestions(ctx: SetupContext, list: Suggestion[] = SUGGESTIONS) {
   for (const s of list) ctx.write(`.agents/store/${STORE_DIR}/${fileName(s.id)}`, serialize(s));
 }

@@ -74,8 +74,7 @@ export default scenarios({
       about:
         "d on a clicked (marked) row: the queue one shorter, the ring on the row that took its place, undo offered",
       from: "queue",
-      // A session that has been resized no longer gives the pane the keyboard on a click
-      // (Claude Code, 2.1.325), so this one starts its own.
+      // A resized session loses the pane's keyboard on a click (Claude Code 2.1.325), so start fresh.
       fresh: true,
       steps: [{ click: "is not enough" }, { press: "d" }, { wait: "Dismissed 1" }],
     },

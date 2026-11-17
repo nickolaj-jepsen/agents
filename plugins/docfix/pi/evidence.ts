@@ -66,7 +66,6 @@ export function evidenceTitle(items: readonly Evidence[]): string {
 /**
  * The evidence, newest first, one blank row between pieces. A single piece is set at the full
  * width under the section's title; several each get a dated rule and are indented under it.
- * @param width The room in cells.
  */
 export function evidence(t: Theme, width: number, items: readonly Evidence[]): string[] {
   if (items.length === 1) {

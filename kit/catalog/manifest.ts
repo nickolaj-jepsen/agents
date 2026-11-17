@@ -1,8 +1,7 @@
 /**
- * The shape of a component manifest (`components/<id>.ts`): what the catalogue knows about a
- * component that its source cannot say, namely what it is for, which export implements it in
- * each harness and which features each harness supports. Props come from the source itself
- * (`extract.ts`), never from here.
+ * The shape of a component manifest (`components/<id>.ts`): what the catalogue knows that the
+ * source cannot say — what it is for, which export implements it in each harness, and which
+ * features each harness supports. Props come from the source (`extract.ts`), never from here.
  */
 export type Harness = "pi" | "claude";
 export const harnesses: Harness[] = ["pi", "claude"];

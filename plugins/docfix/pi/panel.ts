@@ -1,9 +1,8 @@
 /**
- * The /docfix panel: the open queue grouped by doc, the selected suggestion in full beside
- * it, and the answers a person gives one. Nothing is cut: a claim wraps to as many lines as it
- * needs, and a detail taller than its pane scrolls (PgUp/PgDn, or the wheel over it). Dismiss
- * happens in place and can be undone; apply closes the panel and the caller drafts the prompt.
- * Built on the pi kit (`../../../kit/pi`).
+ * The /docfix panel: the open queue grouped by doc, the selected suggestion in full beside it.
+ * Nothing is cut: a claim wraps to as many lines as it needs, and a detail taller than its pane
+ * scrolls (PgUp/PgDn, or the wheel over it). Dismiss happens in place and can be undone; apply
+ * closes the panel and the caller drafts the prompt.
  */
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import {
@@ -104,7 +103,6 @@ export class DocsPanel implements Component {
   private listAt = { x: 0, y: 0 };
   /** Where the detail starts in the panel's cells, as of the last render. */
   private detailAt = { x: 0, y: 0 };
-  /** The detail's first visible line; it is whole above this many lines. */
   private scroll = 0;
   /** How far the detail can scroll and how many rows a page is, as of the last render. */
   private reach = { max: 0, page: 1 };
@@ -126,7 +124,7 @@ export class DocsPanel implements Component {
     this.tui.requestRender();
   }
 
-  /** Nothing is cached across themes: the cache of a detail is dropped with the theme's. */
+  /** Nothing is cached across themes. */
   invalidate() {
     this.detailCache.clear();
   }
@@ -219,8 +217,8 @@ export class DocsPanel implements Component {
   }
 
   /**
-   * The suggestion in full: the claim when the list does not already show it whole, what it
-   * is, and every piece of evidence, newest first, under a header rule.
+   * The suggestion in full: the claim when the list does not show it whole, what it is, and every
+   * piece of evidence, newest first, under a header rule.
    */
   private detail(s: Suggestion, width: number, now: number, withClaim: boolean): string[] {
     const key = `${width}:${withClaim}:${s.id}:${s.updated}`;
@@ -314,7 +312,6 @@ export class DocsPanel implements Component {
 
     const layout = splitLayout(width, this.tui.terminal.columns);
     const current = list.current;
-    // A new row starts at the top of its detail.
     if (current?.id !== this.lastId) {
       this.scroll = 0;
       this.lastId = current?.id;

@@ -3,10 +3,9 @@
  * shell command, the line it ended on. Pi's own collapsed form previews five to
  * twenty lines per result, which is where most of the transcript's height goes.
  *
- * Every other case delegates through `next()`: expansion (ctrl+o, or the chip on
- * the editor's top border), streaming output and failures keep pi's rendering.
- * So do the tools whose result body is the payload rather than a report about
- * work done.
+ * Everything else delegates through `next()`: expansion, streaming output,
+ * failures and the tools whose result body is the payload rather than a report
+ * about work done.
  */
 import { contentText } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, Theme, ToolRenderers } from "@earendil-works/pi-coding-agent";
@@ -26,12 +25,11 @@ const KEEP_BODY = new Set([
   "docfix",
 ]);
 
-// Only a command ends on a line worth quoting; in a file or a result list the
-// last line is the middle of the thing, not a verdict.
+// Only a command ends on a line worth quoting: elsewhere the last line is the middle of the thing.
 const QUOTE_LAST_LINE = new Set(["bash"]);
 
-// Nerd Font range again: U+2713 is not in Hack Nerd Font, so fontconfig would
-// pick the glyph's width instead of the font's.
+// U+2713 is not in Hack Nerd Font, so fontconfig would pick the glyph's width
+// instead of the font's.
 const CHECK = "\uf00c";
 
 const showsImage = (result: Result) =>

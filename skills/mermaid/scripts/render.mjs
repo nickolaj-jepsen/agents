@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Usage: render.mjs <report.md>. Renders each fenced mermaid block to assets/<report>-<n>.svg
 // beside the report and links it above the block. Reruns replace links and SVGs in place.
-// Pele 1.13.0 is vendored from npm (dist/pele.js, MIT, see vendor/LICENSE).
+// Pele is vendored from npm (dist/pele.js, MIT, see vendor/LICENSE).
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { render } from "./vendor/pele.js";

@@ -21,7 +21,6 @@ const FILED = {
   same_as: "none",
 };
 
-/** What the agent does: files the suggestion instead of editing a doc outside its change. */
 const turns: Turn[] = [
   {
     text: "README.md now points at `just dev-setup`. AGENTS.md still says `just build` verifies a pi change, which it doesn't; that file is outside this change, so I'll file it for review.",
@@ -46,7 +45,6 @@ const PI_TURNS: Turn[] = [
 ];
 
 const ask = "Point the install steps in README.md at `just dev-setup`";
-// The pane docks beside the transcript from 110 columns.
 const ROWS = [{ click: "is not enough" }, { click: "legacy" }];
 
 export default site({
@@ -106,7 +104,6 @@ export default site({
         { sleep: 2400 },
         poster,
         { press: "a" },
-        // The draft is taller than the prompt box, so its first line has scrolled away.
         { wait: "For each one:" },
         { sleep: 3200 },
         { press: "Enter" },

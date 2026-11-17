@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Query PriceRunner.dk through its unofficial frontend JSON API.
 
-Stdlib only. Every command prints compact JSON to stdout; errors go to stderr
-with exit code 1. See ../SKILL.md for the workflow and filter syntax.
+Stdlib only. Every command prints compact JSON to stdout, errors go to stderr with
+exit code 1. See ../SKILL.md for the workflow and filter syntax.
 """
 
 import argparse
@@ -153,8 +153,8 @@ def menu():
 def flat_categories():
     """Flatten the mega menu into {id, name, kind, parents[, cl]} rows.
 
-    kind: "tree" (t<id>, grouping only), "cl" (category for list/filters/facets
-    and `search -c`), "sub" (narrows parent `cl`: `list <cl> --sub` or `search -c`).
+    kind: "tree" (t<id>, grouping only), "cl" (a category for list/filters/facets and
+    `search -c`), "sub" (narrows its parent `cl`).
     """
     rows = []
 

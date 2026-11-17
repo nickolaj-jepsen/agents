@@ -1,9 +1,8 @@
 /**
- * The Claude kit's catalogue, a dev-only mod: `/kit <component> [state]` draws one kit
- * component alone with sample data, in a Pane whose body is exactly the component (or in the
- * band, for what only a band has); `/kit` alone lists them and clears the stage. Not a
- * plugin: it lives under `kit/catalog/`, so home-manager never loads or publishes it. A
- * scenario loads it with `--plugin-dir`.
+ * The Claude kit's catalogue, a dev-only mod: `/kit <component> [state]` draws one kit component
+ * alone with sample data, in a Pane whose body is exactly the component (or in the band, for
+ * what only a band has); `/kit` alone lists them and clears the stage. Not a plugin, so
+ * home-manager never loads it; a scenario loads it with `--plugin-dir`.
  */
 import { atom, read, update } from "claude-code";
 import type { Register } from "claude-code";

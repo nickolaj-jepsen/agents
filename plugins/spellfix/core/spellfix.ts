@@ -1,8 +1,7 @@
 /**
- * Spellfix's logic that needs no engine: which words to check, the model's
- * prompt and reply, where its extras land, and the personal dictionary format.
- * Plain ES with no Node or engine API, so pi's spellfix can run the same rules
- * on the files both agents write.
+ * Spellfix's logic that needs no engine: which words to check, the model's prompt and reply,
+ * where its extras land, and the personal dictionary format. Plain ES with no Node or engine
+ * API.
  */
 export type Miss = { word: string; start: number; end: number };
 
@@ -93,10 +92,9 @@ export function caseVariants(word: string): string[] {
 }
 
 /**
- * Turns a `correct` verdict on an all-lowercase word into a fix when one of its
- * `caseVariants` is in `accepted` (the variants hunspell passes): `claude` or
- * `i'm` is a casing slip, not a word for the personal dictionary. A model fix
- * that differs only in case already stays a fix.
+ * Turns a `correct` verdict on an all-lowercase word into a fix when one of its `caseVariants`
+ * is in `accepted` (the variants hunspell passes): `claude` or `i'm` is a casing slip, not a
+ * word for the personal dictionary. A model fix that differs only in case already stays a fix.
  */
 export function recase(verdicts: Map<string, Verdict>, accepted: ReadonlySet<string>) {
   for (const [word, v] of verdicts) {
@@ -134,8 +132,8 @@ export function replyBudget(distinct: number): number {
 }
 
 /**
- * A reply to CHECK for `text`: a verdict per flagged word in `distinct` and the
- * typos it found outside them, still by word and occurrence.
+ * A reply to CHECK for `text`: a verdict per flagged word in `distinct`, and the typos it found
+ * outside them, still by word and occurrence.
  */
 export function parseReply(
   reply: string,
@@ -172,9 +170,9 @@ export function parseReply(
 }
 
 /**
- * `word`'s nth whole-word occurrence in `text`, counting code too, as the model
- * does; undefined when that lands in code, a URL, a command, a mention or a
- * flag. Unlike `candidates`, a word in a slashed token (`dense/consice`) counts.
+ * `word`'s nth whole-word occurrence in `text`, counting code too, as the model does; undefined
+ * when that lands in code, a URL, a command, a mention or a flag. Unlike `candidates`, a word in
+ * a slashed token (`dense/consice`) counts.
  */
 export function locate(text: string, word: string, nth: number): Miss | undefined {
   if (!WORD.test(word) || nth < 1) return undefined;
@@ -189,8 +187,8 @@ export function locate(text: string, word: string, nth: number): Miss | undefine
 }
 
 /**
- * `found` placed in `text`, the draft the model saw: one extra per offset, none
- * on a flagged word, and none that would leave the word as it is.
+ * `found` placed in `text`, the draft the model saw: one extra per offset, none on a flagged
+ * word, and none that would leave the word as it is.
  */
 export function placeExtras(
   text: string,
@@ -243,10 +241,9 @@ export function nearest<T extends Miss>(found: readonly T[], cursor: number): T 
 export type Splice = { start: number; end: number; text: string };
 
 /**
- * `text` with every splice applied, the offsets all taken from `text`. Where
- * two overlap the one that starts first wins and the other is dropped, and the
- * surviving ones are then applied from the last offset to the first so each
- * still points where it did.
+ * `text` with every splice applied, the offsets all taken from `text`. Where two overlap the
+ * one that starts first wins and the other is dropped, and the surviving ones are then applied
+ * from the last offset to the first so each still points where it did.
  */
 export function applyEdits(text: string, splices: readonly Splice[]): string {
   const kept: Splice[] = [];
@@ -265,10 +262,9 @@ export function applyEdits(text: string, splices: readonly Splice[]): string {
 export type DiffRun = { text: string; kind: "same" | "removed" | "added" };
 
 /**
- * `before` and `after` compared by words, as runs in reading order: the
- * review's inline diff, where a `removed` run is struck and an `added` one
- * follows it. Words reordered rather than changed show as a removal and an
- * addition, and spacing is normalised to one space between words.
+ * `before` and `after` compared by words, as runs in reading order: words reordered rather than
+ * changed show as a removal and an addition, and spacing is normalised to one space between
+ * words.
  */
 export function wordDiff(before: string, after: string): DiffRun[] {
   const left = before.trim().split(/\s+/).filter(Boolean);

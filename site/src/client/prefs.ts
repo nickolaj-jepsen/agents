@@ -1,7 +1,4 @@
-/**
- * The visitor's harness, remembered across the site: the gallery's switch and the catalogue's
- * share it. `null` is both (the catalogue's default) or never chosen.
- */
+/** The visitor's harness, remembered across the site; `null` is both, or never chosen. */
 const KEY = "agents-h";
 
 export function readHarness(): "claude" | "pi" | null {

@@ -1,7 +1,6 @@
 /**
- * The little the pages do in the browser: copy buttons on commands and shell listings, install
- * panels that close like menus, and a demo video that plays while it is on screen, only for a
- * visitor who has not asked for less motion.
+ * What the pages do in the browser: copy buttons, install panels that close like menus, and a demo
+ * video that plays while it is on screen.
  */
 
 async function copy(button: HTMLButtonElement, text: string): Promise<void> {

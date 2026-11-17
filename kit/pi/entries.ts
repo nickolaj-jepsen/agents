@@ -25,9 +25,6 @@ export type EntriesOptions = {
  * Dated entries, one blank row between them and no bullets or gutter. From
  * `tokens.entriesFrom` columns the date is a fixed dim column at the left and the text
  * hangs beside it; narrower, a dim date line with the text under it at full width.
- *
- * @param width the pane's width in cells
- * @param items the entries, in the order to show them
  */
 export function entries(
   theme: Theme,

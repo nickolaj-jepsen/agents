@@ -119,7 +119,7 @@ async function findMisses($: EngineInterface, text: string): Promise<Miss[]> {
   return words.filter((w) => bad.has(w.word));
 }
 
-/** The words of `words` hunspell accepts; none when it fails. */
+/** The words hunspell accepts; none when it fails. */
 async function knownWords($: EngineInterface, words: readonly string[]): Promise<Set<string>> {
   if (words.length === 0) return new Set();
   const stdout = await runHunspell($, "-l", `${words.join("\n")}\n`);
@@ -272,8 +272,8 @@ async function refreshCount($: EngineInterface, box: PromptBox) {
 }
 
 /**
- * Opens the picker on the misspelled word at or nearest the cursor, starting
- * the batch; with none flagged, opens once the batch finds one. Closes it when open.
+ * Opens the picker on the misspelled word at or nearest the cursor, starting the batch; with
+ * none flagged, opens once the batch finds one. Closes it when open.
  */
 async function togglePicker($: EngineInterface) {
   if (await read($, picker)) {
@@ -382,8 +382,8 @@ async function applyAllLate($: EngineInterface) {
 }
 
 /**
- * Answers one picker key against the draft in `box`: the box afterwards, or
- * undefined when `key` is not a picker key (the caller closes the picker).
+ * Answers one picker key against the draft in `box`: the box afterwards, or undefined when `key`
+ * is not a picker key (the caller closes the picker).
  */
 async function pick(
   $: EngineInterface,
@@ -440,9 +440,9 @@ async function pickFromBand($: EngineInterface, key: string) {
 }
 
 /**
- * Answers a key while the fix-all report or auto-added notice shows, like a picker key:
- * `8` takes back the fix-all (while the draft is still exactly what it produced) and the
- * auto-added words, `9` dismisses. The box afterwards, or undefined for any other key.
+ * Answers a key while the fix-all report or auto-added notice shows, like a picker key: `8`
+ * takes back the fix-all (while the draft is still exactly what it produced) and the auto-added
+ * words, `9` dismisses. The box afterwards, or undefined for any other key.
  */
 async function answerReport(
   $: EngineInterface,
@@ -518,7 +518,7 @@ export const register: Register = (on, options) => {
 
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
     if (e.props.hasSurvey) return next(e);
-    // Another plugin's row (the answer mod's hint) stays drawn above this one.
+    // Another plugin's row stays drawn above this one.
     const below = await next(e);
     const p = await read($, picker);
     const done = await read($, report);

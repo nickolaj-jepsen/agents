@@ -555,7 +555,7 @@ def repo_versions(repo, names):
     if not repo:
         return versions
     for name in names:
-        # The skills folder may sit below the repo root (agent-tools/skills/ here).
+        # The skills folder may sit below the repo root.
         found = subprocess.run(
             ["git", "-C", repo, "ls-files", "--", f"skills/{bare(name)}/SKILL.md", f"*/skills/{bare(name)}/SKILL.md"],
             capture_output=True,

@@ -54,7 +54,7 @@ const isDiscardArmed = atom({ plugin: "linear-issue", key: "isDiscardArmed" } as
 // Set by a Learn more press, cleared once the expanded card has been checked.
 let isExpanding = false;
 let linearSeen: { at: number; isSeen: boolean } | undefined;
-// Per team key: its statuses, labels and projects, fetched once a session.
+// Per team key; fetched once a session.
 const teamOptions = new Map<string, Promise<TeamOptions>>();
 
 type TeamOptions = { statuses: Option[]; labels: Option[]; projects: Option[]; todo: string };
@@ -187,10 +187,7 @@ function cardText(node: RenderNode): string {
 const hasButtons = (node: RenderNode) =>
   pathTo(node, (n) => isElement(n) && n.type === "Button") !== undefined;
 
-/**
- * True when any MCP server named like Linear has a tool here, its auth stub included.
- * Remembered for a while, as the band asks on every render.
- */
+/** True when an MCP server named like Linear has a tool here, its auth stub included. */
 async function hasLinear($: EngineInterface): Promise<boolean> {
   const now = await $.clock.now();
   const ttl = linearSeen?.isSeen ? LINEAR_SEEN_MS : LINEAR_MISSING_MS;
@@ -200,7 +197,6 @@ async function hasLinear($: EngineInterface): Promise<boolean> {
   return linearSeen.isSeen;
 }
 
-/** Hotkeys the buttons in `node` already take. */
 function hotkeysIn(node: RenderNode): Set<string> {
   const taken = new Set<string>();
   const walk = (n: RenderNode) => {
@@ -236,10 +232,7 @@ async function gitBranch($: EngineInterface, cwd: string): Promise<string> {
 /** `owner/repo` from a git remote URL, or undefined when it names none. */
 const repoName = (remote: string) => /[:/]([^/:]+\/[^/]+?)(?:\.git)?\/?$/.exec(remote)?.[1];
 
-/**
- * The drafter's brief: `seed` (a card's `insight` or a /linear `note`) with where it came
- * from, and the source line the filed description ends with.
- */
+/** The drafter's brief: `seed` with where it came from, and the trailing source line. */
 async function brief(
   $: EngineInterface,
   kind: "insight" | "note",
@@ -275,9 +268,8 @@ const oneLine = (text: string) => text.replace(/\s*\n\s*/g, " ");
 type Block = { kind: "markdown" | "table" | "code"; lines: string[] };
 
 /**
- * The description cut into the blocks the preview draws itself, tables and fenced code,
- * and the markdown between them. Fence markers are dropped; a fence's language is its
- * first line.
+ * The description cut into the blocks the preview draws itself, tables and fenced code;
+ * fence markers are dropped, a fence's language being its first line.
  */
 function blocks(text: string): Block[] {
   const out: Block[] = [];
@@ -658,7 +650,6 @@ async function submit($: EngineInterface, { asComment = false, open = false } = 
   }
 }
 
-/** Drops the draft and closes its pane. */
 async function discard($: EngineInterface) {
   await update($, isDiscardArmed, () => false);
   await update($, form, () => null);
@@ -861,7 +852,7 @@ export const register: Register = (on) => {
       (f.error ? 1 : 0) +
       (compact ? 0 : 1) + // footer rule
       buttonRows(buttons);
-    // Lines the description wraps to in its box, to say when the box clips it.
+    // Lines the description wraps to in its box.
     const descriptionLines = f.description
       .split("\n")
       .reduce((n, line) => n + Math.max(1, Math.ceil(line.length / width)), 0);

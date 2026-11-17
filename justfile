@@ -19,8 +19,8 @@ dev-setup: _dev-setup-direnv _dev-setup-pi _dev-setup-claude
 _dev-setup-direnv:
     if command -v direnv >/dev/null 2>&1; then direnv allow .; fi
 
-# Links nixpkgs' pi (master) into node_modules, so `npm run typecheck` reads the plugins' pi
-# halves against it, as `nix build .#agent-tools` does. `npm ci` prunes the links; re-run this.
+# Links nixpkgs' pi into node_modules, so `typecheck` reads the pi halves against it as the
+# nix build does; `npm ci` prunes the links, so re-run this.
 [private]
 [script]
 _dev-setup-pi:
@@ -99,7 +99,7 @@ site-build:
 site-shots *PLUGINS:
     npm run site-shots -- {{ PLUGINS }}
 
-[doc("Record all of the site's media, signed out, in the shell the Pages workflow uses: the kit catalogue's crops, then every plugin's demos and stills")]
+[doc("Record all of the site's media, signed out, in the shell the Pages workflow uses")]
 [group('site')]
 media:
     {{ nixcmd }} develop .#media -c just _media

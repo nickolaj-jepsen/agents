@@ -1,7 +1,7 @@
 /**
- * The menus as data, ported from pi's footer (pi/extensions/parent/chrome):
- * every git row is a link or a copy, so nothing here pushes, rebases or creates
- * anything; a row that cannot run keeps its place and says why in a few words.
+ * The menus as data: every git row is a link or a copy, so nothing here pushes,
+ * rebases or creates anything; a row that cannot run keeps its place and says
+ * why in a few words.
  */
 import type { EditorApp, FolderApp, Menu, Row } from "./types.d.ts";
 
@@ -33,14 +33,11 @@ export type PrAnswer = Pr | null | "unknown" | "no-gh";
 
 export const FOLDER_APPS: readonly FolderApp[] = ["code", "zed", "smerge", "files", "ghostty"];
 
-/**
- * The editor the desktop opens folders in, from the flake's `fireproof.desktop.editor`
- * through the session's environment. The other editor keeps its row, just not the keys.
- */
+/** The desktop's editor, `fireproof.desktop.editor`; the other keeps its row, not the keys. */
 export const preferredEditor = (value: string | undefined): EditorApp =>
   value === "vscode" ? "code" : "zed";
 
-/** The CLI names each editor ships under: zed is `zed` from the cask, `zeditor` from nixpkgs. */
+/** `zed` ships as `zed` from the cask and `zeditor` from nixpkgs. */
 export const EDITOR_COMMANDS: Record<EditorApp, readonly string[]> = {
   code: ["code"],
   zed: ["zed", "zeditor"],
@@ -78,7 +75,7 @@ export const parseStatus = (output: string): Status => {
   return { branch, oid, upstream };
 };
 
-/** `gh pr view --json url,number,state,isDraft` as a Pr; undefined when it does not parse. */
+/** A `gh pr view --json` answer as a Pr; undefined when it does not parse. */
 export const parsePr = (stdout: string): Pr | undefined => {
   try {
     const data = JSON.parse(stdout) as {
@@ -100,7 +97,6 @@ export const parsePr = (stdout: string): Pr | undefined => {
   }
 };
 
-/** A remote URL as a forge link, or undefined for a host this does not know. */
 export const parseRemote = (name: string, raw: string): Remote | undefined => {
   const trimmed = raw
     .trim()
@@ -134,10 +130,7 @@ export const parseRemote = (name: string, raw: string): Remote | undefined => {
   return { name, forge, host, owner, repo, web: `https://${host}/${owner}/${repo}` };
 };
 
-/**
- * The remote links follow: the branch's upstream remote, then `origin`, then
- * the only supported one. `config` is `git config --get-regexp '^remote\..*\.url$'`.
- */
+/** `config` holds `remote.<name>.url <url>` lines, as `git config --get-regexp` prints them. */
 export const chooseRemote = (config: string, branchRemote: string): Remote | undefined => {
   const remotes = new Map<string, Remote>();
   for (const line of config.split("\n")) {
@@ -303,10 +296,7 @@ export const appLabel = (app: FolderApp, isMac: boolean): string => {
   }
 };
 
-/**
- * The checkout in the desktop's apps, each started by its argv in `launchers`;
- * one missing keeps its row, so the order never moves.
- */
+/** The checkout in the desktop's apps; one missing keeps its row, so the order never moves. */
 export const folderMenu = (
   cwd: string,
   launchers: Partial<Record<FolderApp, string[]>>,

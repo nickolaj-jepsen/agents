@@ -7,7 +7,7 @@ export type Option = { value: string; label: string };
 /** An open issue that already covers the seed, and the comment proposed for it. */
 export type Duplicate = { issue: string; title: string; comment: string };
 
-/** The draft pane's state; null while no draft is open. */
+/** The draft pane's state. */
 export type Form = {
   // Tells a late duplicate check whether its draft is still the one open.
   draftId: string;
@@ -21,7 +21,7 @@ export type Form = {
   projects: Option[];
   team: string;
   title: string;
-  // Bumped on Enter in the title field, which remounts it (see its render).
+  // Bumped on Enter in the title field, which remounts it.
   titleRevision: number;
   description: string;
   priority: number;

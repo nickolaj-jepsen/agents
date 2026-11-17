@@ -136,7 +136,6 @@ export const bodyOrigin = { x: 1 + tokens.padding, y: 2 };
 
 /**
  * A rounded border, the title and its count in the top, the hints in the bottom.
- * @param o The frame's width, title, body lines and hints.
  */
 export function modalFrame(theme: Theme, o: ModalOptions): string[] {
   return [

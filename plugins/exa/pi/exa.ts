@@ -1,9 +1,7 @@
 /**
- * Exa search and page fetch. Search returns highlights by default, which Exa
- * sizes for relevance; fetch returns page text. Both cap the whole call to a
- * share of the active model's context and split that share across results or
- * pages, so the tools stay usable on small windows. `maxChars` changes the
- * per-item cap, but the call total still wins.
+ * Exa search and page fetch. Both cap the whole call to a share of the active
+ * model's context, split across results or pages, so the tools stay usable on
+ * small windows; `maxChars` only moves the per-item cap.
  */
 import { Type } from "typebox";
 import type { ExtensionAPI, ExtensionToolContext } from "@earendil-works/pi-coding-agent";

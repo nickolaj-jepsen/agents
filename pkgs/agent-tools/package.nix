@@ -1,10 +1,6 @@
-# The plugins' sources, checked: the harness-free cores type-check and pass their own
-# tests here, and each pi half type-checks against the pi that runs it (so an API change
-# there fails this build). A consumer builds each agent's half from `$out/plugins/<name>`
-# against the agent that runs it.
-#
-# `pi-coding-agent` is the pi the pi halves are checked against; override it to check
-# against the one a system ships.
+# The plugins' sources, checked: the cores' tests and type-check, and each pi half against
+# `pi-coding-agent`, so a pi API change fails this build. Override it to check against the pi a
+# system ships.
 {
   lib,
   buildNpmPackage,
@@ -46,7 +42,7 @@ in
       for dep in ${pi-coding-agent}/lib/node_modules/pi-monorepo/node_modules/@earendil-works/*; do
         ln -s "$dep" node_modules/@earendil-works/
       done
-      # What a pi half imports beside pi: the typebox pi aliases, and Node's types.
+      # typebox as pi aliases it, and Node's types.
       mkdir -p node_modules/@types
       ln -s ${pi-coding-agent}/lib/node_modules/pi-monorepo/node_modules/typebox node_modules/
       ln -s ${pi-coding-agent}/lib/node_modules/pi-monorepo/node_modules/@types/node node_modules/@types/

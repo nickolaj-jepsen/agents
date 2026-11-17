@@ -3,12 +3,9 @@
  * LSP integration: no tools are declared, so it costs no context until an edit
  * actually breaks something.
  *
- * Servers come from the fireproof.agents.lspServers registry, written to the
- * JSON file `PI_LSP_SERVERS` names. One server per (name, repo root) starts on
- * the first edit to a matching file and lives until the session ends.
- *
- * Diagnostics published after an edit's deadline (rust-analyzer's cargo check
- * after didSave) are held and appended to the next tool result instead.
+ * One server per (name, repo root) lives until the session ends. Diagnostics
+ * published after an edit's deadline (rust-analyzer's cargo check after didSave)
+ * are held and appended to the next tool result instead.
  */
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -16,10 +13,8 @@ import { dirname, extname, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { ExtensionAPI, ToolResultEvent } from "@earendil-works/pi-coding-agent";
 
-/** Tools that write a file at their `path`. */
 const WRITE_TOOLS: ReadonlySet<string> = new Set(["edit", "write"]);
 
-/** The path a file-writing tool call targets, else undefined. */
 const writtenPath = (toolName: string, input: unknown): string | undefined => {
   if (!WRITE_TOOLS.has(toolName)) return undefined;
   const args = input as { path?: unknown; file_path?: unknown } | undefined;

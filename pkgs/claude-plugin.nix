@@ -1,9 +1,6 @@
-# One plugin's Claude half, validated and tested against a given claude-code, so a bump
-# that breaks its API (or drops a keybinding action spellfix borrows) fails the build.
-# The install leaves out tests and the editor's tsconfig: `.claude-plugin/`, `hooks/`,
-# `claude/` and, when pi shares it, the harness-free `core/`.
-#
-# Not callPackage'd per plugin: `lib.mkClaudePlugin` in the flake applies it.
+# One plugin's Claude half, validated and tested against a given claude-code, so a bump that
+# breaks its API (or drops a keybinding action a plugin borrows) fails the build. The flake's
+# `lib.mkClaudePlugin` applies it to each plugin.
 {
   stdenvNoCC,
   claude-code,

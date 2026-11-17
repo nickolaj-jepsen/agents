@@ -1,15 +1,9 @@
 /**
- * Runs scenarios side by side and along chains.
- *
- * A scenario that continues another (`from`) plays in the same session when it can: the parent's
- * screen is snapshotted, then the child's own steps go on from it. Where scenarios branch from one
- * parent, one child continues the session; the others start again and replay the parent's steps,
- * unless they declare a `reset` (the steps that put the session back on the parent's screen), when
- * they take turns in the one session. A scenario with its own `setup` or `start`, or marked
- * `fresh`, always has a session of its own.
- *
- * Sessions are isolated by folder and by the stub's port, so a pool of them runs at once; each
- * harness has its own size (`E2E_JOBS_CLAUDE`, `E2E_JOBS_PI`, or `E2E_JOBS` for both).
+ * Runs scenarios side by side and along chains: a joinable child (`from`, with no `setup` or `start`
+ * of its own and not `fresh`) plays in its parent's session, its siblings that can `reset` take
+ * turns before it, and the deepest one carries on. Sessions are isolated by folder and by the
+ * stub's port, so a pool of them runs at once; each harness has its own size (`E2E_JOBS_CLAUDE`,
+ * `E2E_JOBS_PI`, or `E2E_JOBS` for both).
  */
 import { cpus } from "node:os";
 import { capture, differs, type Capture } from "./check.ts";
@@ -144,7 +138,7 @@ async function snap(session: Session, r: Resolved): Promise<Outcome> {
   return { captures: await capture(session, r) };
 }
 
-/** A scenario alone, the way every one used to run. */
+/** A scenario alone, in a session of its own. */
 async function solo(set: ScenarioSet, name: string): Promise<Outcome> {
   const r = resolveScenario(set, name);
   let session: Session | undefined;

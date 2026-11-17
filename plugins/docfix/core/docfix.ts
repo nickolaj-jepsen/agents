@@ -1,6 +1,6 @@
 /**
- * docfix's harness-free half: the suggestion file, what a `docfix` call does to
- * the queue, and the text both harnesses show the model and the person.
+ * docfix's harness-free half, run by both harnesses: the queue rules and the text they
+ * show the model and the person.
  *
  * A suggestion says a doc no longer matches reality. The agent files it and
  * carries on; the person reviews the queue with /docfix, and an apply hands the
@@ -112,8 +112,8 @@ export function suggestionId(target: string, claim: string, taken: ReadonlySet<s
 export const fileName = (id: string) => `${id}.md`;
 
 /**
- * The repo-relative spelling of `file`, or why it can't be a target. Whether git
- * tracks it is the harness's check; this only rules on the spelling.
+ * `file`'s repo-relative spelling, or why it can't be a target: git tracking is the
+ * harness's check.
  */
 export type Target = { ok: true; target: string } | { ok: false; error: string };
 
@@ -136,7 +136,7 @@ const READERS = new Set(["cat", "head", "tail", "sed", "less", "more", "bat", "n
 
 /**
  * The Markdown files a shell command reads with a plain reader, as written in it:
- * `cd docs && sed -n 1,80p layout.md` gives `layout.md`. Anything else it runs is not reading.
+ * `cd docs && sed -n 1,80p layout.md` gives `layout.md`.
  */
 export function readsInCommand(command: string): string[] {
   const paths: string[] = [];
@@ -153,7 +153,7 @@ export function readsInCommand(command: string): string[] {
 
 /**
  * The repo-relative docs `paths` name, a relative one read against `cwd`; a path outside the
- * repo or not Markdown is left out. Whether git tracks one is the harness's check.
+ * repo or not Markdown is left out.
  */
 export function docTargets(paths: readonly string[], cwd: string, root: string): string[] {
   const targets = paths.flatMap((path) => {
@@ -165,8 +165,8 @@ export function docTargets(paths: readonly string[], cwd: string, root: string):
 }
 
 /**
- * What the model reads after it first reads a doc in a session: the tool, at the moment the
- * doc is in front of it. It files nothing by itself; the bar for proof stays the tool's.
+ * What the model reads the first time a session reads a doc: the tool, while the doc is in
+ * front of it. It files nothing by itself; the bar for proof stays the tool's.
  */
 export const readReminder = (targets: readonly string[]) =>
   `You read ${targets.join(", ")}. If this session shows ${targets.length > 1 ? "one of them" : "it"} is wrong, misses a trap you hit, or describes something gone, and that isn't part of your change, file it with the ${TOOL_NAME} tool, citing what you saw. Otherwise ignore this.`;
@@ -254,7 +254,6 @@ export type EvidencePart =
   | { kind: "labelled"; label: string; text: string }
   | { kind: "citations"; items: Citation[] };
 
-/** One piece of evidence as a person reads it: when, who, and the text in parts. */
 export type EvidenceView = {
   when: string;
   /** The harness that filed it, `pi` or `claude`: the session id is not for reading. */
@@ -268,7 +267,6 @@ export type EvidenceView = {
 const LABELS = ["Why the repo didn't say it"];
 const MIGRATED = /^Migrated from [\w-]+ memory `[^`]*`\.?$/;
 
-/** The citations a `Citations: [...]` line holds, or undefined when it isn't that. */
 function citationsOf(line: string): Citation[] | undefined {
   const match = /^Citations:\s*(\[.*\])\s*$/.exec(line.trim());
   if (!match) return undefined;
@@ -290,9 +288,8 @@ function citationsOf(line: string): Citation[] | undefined {
 }
 
 /**
- * Evidence text in parts: paragraphs, the labelled ones named, and a `Citations:` JSON line as a
- * list. The migration's own first line is dropped for a flag. Text this doesn't recognise stays
- * as it is, a paragraph.
+ * Evidence text in parts: paragraphs, the labelled ones named, a `Citations:` JSON line as a
+ * list, and a `Migrated from` line dropped for the flag.
  */
 export function readEvidence(e: Evidence): EvidenceView {
   const parts: EvidencePart[] = [];
@@ -332,9 +329,8 @@ export type EvidenceBlock = { heading: string; lines: string[]; items?: Citation
 const WALL = 140;
 
 /**
- * `text` in the lines a person reads it in: its own lines, and a long one cut after each
- * sentence. A full stop only ends a sentence before a capital letter, so `PYTHONPATH=. uv run`
- * and `a.md` stay whole.
+ * `text` in its own lines, a long one cut after each sentence. A full stop only ends a sentence
+ * before a capital letter, so `PYTHONPATH=. uv run` and `a.md` stay whole.
  */
 export function sentences(text: string): string[] {
   return text
@@ -343,9 +339,8 @@ export function sentences(text: string): string[] {
 }
 
 /**
- * One piece of evidence as blocks a person scans: the reason first, then the details, then what
- * it points at, each under a bold heading. Evidence that is one plain paragraph has no heading
- * to give: it is the details and nothing else.
+ * One piece of evidence as blocks a person scans: the reason, the details, then what it points
+ * at, each under a heading. A one-paragraph piece has no heading to give.
  */
 export function evidenceBlocks(view: EvidenceView): EvidenceBlock[] {
   const isStructured = view.parts.length > 1 || view.parts.some((p) => p.kind !== "text");
@@ -502,7 +497,6 @@ export const dismiss = (s: Suggestion, now: string): Suggestion => ({
   updated: now,
 });
 
-/** A dismissed suggestion open again: what an undo does. */
 export const reopen = (s: Suggestion, now: string): Suggestion => ({
   ...s,
   status: "open",
@@ -521,10 +515,9 @@ export function byTarget(picked: readonly Suggestion[]): [string, Suggestion[]][
 export const STORE_REF = `.agents/store/${STORE_DIR}`;
 
 /**
- * The prompt an apply drafts for the agent, read by the person before it is sent: each doc
- * under its path, each suggestion as its claim first and the file that holds its evidence on
- * the next line. The evidence stays in that file, which the agent reads; the id is not
- * repeated because it is the file's name.
+ * The prompt an apply drafts for the agent, which the person reads before sending: each doc
+ * under its path, each suggestion's claim then the file holding its evidence. The evidence stays
+ * in that file, which the agent reads; the id is not repeated because it is the file's name.
  */
 export function applyPrompt(picked: readonly Suggestion[]): string {
   const docs = byTarget(picked).flatMap(([target, list]) => [

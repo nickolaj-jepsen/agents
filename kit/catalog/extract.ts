@@ -1,11 +1,9 @@
 /**
- * Reads a kit's public exports with the TypeScript compiler API: each export's signature,
- * doc comment and parameters, each exported type's properties (name, type, optional,
- * `@default`, description) and a class's public members. Nothing is retyped by hand: the
- * doc comments in the kit are the reference.
+ * Reads a kit's exports with the TypeScript compiler API: nothing is retyped by hand, the doc
+ * comments in the kit are the reference.
  *
- * Types are shown as written in the source (the declaration's own text), so a type from a
- * package that is not installed still reads right.
+ * A type is shown as written in the source, so one from a package that is not installed still
+ * reads right.
  */
 import ts from "typescript";
 

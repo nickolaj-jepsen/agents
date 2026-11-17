@@ -1,11 +1,11 @@
 /**
- * The Claude Code half of docfix: the `docfix` tool, the /docfix pane, and the
- * open count on the status line, and the reminder after a session first reads a doc. What a call does to the queue is the core's
- * (`../core/docfix.ts`), the one pi's half runs.
+ * The Claude Code half of docfix: the tool, the /docfix pane, the status-line count and the read
+ * reminder. What a call does to the queue is the core's (`../core/docfix.ts`), the one pi's half
+ * runs.
  *
- * The pane shows every suggestion whole: its claim never cut, its evidence one press away
- * (open by default while the queue is short and the pane is not thin). An apply drafts the prompt in the person's
- * prompt box instead of sending it.
+ * The pane shows every suggestion whole: its claim never cut, its evidence one press away (open
+ * by default while the queue is short and the pane is not thin). An apply drafts the prompt in
+ * the person's prompt box instead of sending it.
  */
 import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register, RenderNode, ToolCallResult } from "claude-code";
@@ -102,8 +102,8 @@ async function place($: EngineInterface): Promise<Place | string> {
 const reminded = new Set<string>();
 
 /**
- * The reminder for the docs `paths` name that this session hasn't read before, or undefined.
- * Only in a checkout with a store: without one there is nowhere to file.
+ * The reminder for docs this session hasn't read yet, or undefined; only in a checkout with a
+ * store, since without one there is nowhere to file.
  */
 async function reminderFor($: EngineInterface, paths: readonly string[]) {
   if (paths.length === 0) return undefined;
@@ -167,8 +167,8 @@ const TIGHT_ROWS = 16;
 /** Below this many cells the keys say less, so they stay on one row. */
 const NARROW = 76;
 /**
- * Below this the five keys no longer fit one row (they need 56 cells), and a piece of evidence
- * is tens of rows: the keys take two rows and the evidence starts folded.
+ * Below this the keys no longer fit one row, and a piece of evidence is tens of rows: the keys
+ * take two rows and the evidence starts folded.
  */
 const THIN = 56;
 
@@ -327,7 +327,7 @@ const age = (iso: string, now: number) => {
   return `${Math.floor(ms / 60_000)}m`;
 };
 
-/** The fold marks of an evidence line, one cell each like the note's `╰▸`. */
+/** The fold marks of an evidence line, one cell each. */
 const FOLD = { closed: "▸", open: "▾" } as const;
 /** Cells a row's text hangs in: its mark and the space after it. */
 const HANG = 2;

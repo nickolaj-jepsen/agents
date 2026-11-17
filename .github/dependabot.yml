@@ -1,5 +1,5 @@
-# One PR a day at most, updating every flake input together; dependabot-auto-merge.yml merges it
-# once `CI gate` passes. Dependabot's default 3-day cooldown applies to new commits of an input.
+# One PR a day at most, all flake inputs together; the Dependabot auto-merge workflow merges it once
+# `CI gate` passes. Dependabot's 3-day cooldown on an input's new commits still applies.
 version: 2
 updates:
   - package-ecosystem: "nix"

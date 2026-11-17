@@ -1,7 +1,4 @@
-/**
- * `just kit-sync [plugin...]`: rewrites every copy of the Claude kit from `kit/claude/ui.tsx`
- * and the catalogue mod's copy of the samples, and makes a kit copy for each plugin named.
- */
+/** `just kit-sync [plugin...]`: rewrites every copy of the kit's sources; see `pairs`. */
 import { copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, relative } from "node:path";
 import { pairs, root } from "./copies.ts";

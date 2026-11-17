@@ -97,8 +97,7 @@ export default scenarios({
     wheel: {
       about: "three wheel-up events over the list move the cursor up three rows",
       from: "many",
-      // Where a list's window sits depends on the sizes it has been drawn at, so this one
-      // does not continue in the session `many` was resized in.
+      // A list's window depends on the sizes it was drawn at, so this starts its own session.
       fresh: true,
       steps: [
         {

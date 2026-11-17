@@ -1,6 +1,6 @@
 /**
- * The mod over the core, whose queue logic has its own tests (`core/docfix.spec.ts`):
- * here the tool's file IO, the status count, and the pane's apply.
+ * The mod over the core, whose queue logic has its own tests (`core/docfix.spec.ts`): here the
+ * tool's file IO, the status count, and the pane's apply.
  */
 import type { On } from "claude-code";
 import { expect, test } from "claude-code/testing";

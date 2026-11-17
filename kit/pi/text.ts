@@ -17,8 +17,7 @@ export type ClampOptions = {
 };
 
 /**
- * Wraps `text` to `width` cells and returns lines, within the bounds. Nothing is padded or cut
- * unless asked: `{min: 1, max: 1}` is a one-line truncation, no options wraps without limit.
+ * `{min: 1, max: 1}` truncates to one line; no options wraps without limit.
  * @param width Cells, not characters; wide characters count two.
  */
 export function clamp(text: string, width: number, options: ClampOptions = {}): string[] {
@@ -37,16 +36,10 @@ export function clamp(text: string, width: number, options: ClampOptions = {}): 
   return lines;
 }
 
-/**
- * `text` padded with spaces to `width` cells, cut with `…` when longer.
- * @param width Cells.
- */
+/** `text` padded with spaces to `width` cells, cut with `…` when longer. */
 export const fit = (text: string, width: number) =>
   truncateToWidth(text, Math.max(0, width), tokens.glyph.ellipsis, true);
 
-/**
- * `text` right-aligned in `width` cells.
- * @param width Cells.
- */
+/** `text` right-aligned in `width` cells. */
 export const alignRight = (text: string, width: number) =>
   " ".repeat(Math.max(0, width - visibleWidth(text))) + text;

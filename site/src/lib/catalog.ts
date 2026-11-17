@@ -55,7 +55,6 @@ export const catalogHref = (c?: Component, s?: Story) =>
 export const storyAnchor = (s: Story) => `s-${s.state}`;
 
 export const sizeKey = (s: { w: number; h: number }) => `${s.w}x${s.h}`;
-/** A size as it is read: columns × rows. */
 export const sizeLabel = (s: { w: number; h: number }) => `${s.w}×${s.h}`;
 
 /** Every terminal size the stories were drawn at, narrowest first, with the harnesses drawn at it. */

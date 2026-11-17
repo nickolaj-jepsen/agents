@@ -1,10 +1,7 @@
 /**
- * Claude Code's ctrl+s prompt stash: park the draft in the editor, send
- * something else, and get the draft back once that message is submitted.
- *
- * - ctrl+s with text: stash it and clear the editor (swaps with an existing stash).
- * - ctrl+s on an empty editor: restore the stash.
- * - submitting a prompt restores the stash into the emptied editor.
+ * Claude Code's ctrl+s prompt stash: ctrl+s parks the draft and clears the
+ * editor, ctrl+s on an empty editor restores it, and submitting a prompt
+ * restores it too.
  *
  * The stash is saved in one file per repository, keyed by its main checkout so a
  * worktree shares it, and so outlives /new, /clear, /resume, /fork, /reload and
@@ -20,7 +17,6 @@ import {
   type ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 
-/** The parked prompt, and when it was parked. */
 type Held = { text: string; at: string };
 
 const WIDGET_KEY = "stash";
@@ -127,7 +123,7 @@ export default function (pi: ExtensionAPI) {
     show(ctx);
   });
 
-  // Editor-only; the pickers' ctrl+s save actions are moved to alt+s in ../../default.nix.
+  // Editor-only; pi's pickers move their ctrl+s save actions to alt+s.
   pi.registerShortcut("ctrl+s", {
     description: "Stash the prompt until the next submit",
     handler: (ctx) => {

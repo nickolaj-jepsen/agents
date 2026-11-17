@@ -1,5 +1,4 @@
-// Writes README.md from the plugins', skills' and docs' sources (`just readme`).
-// `--check` fails when README.md is stale.
+// Writes README.md from its sources (`just readme`); `--check` fails when README.md is stale.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { type Content, type Plugin, REPO_URL, SITE_URL, loadContent, repoRoot } from "./content.ts";

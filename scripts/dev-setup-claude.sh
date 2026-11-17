@@ -1,7 +1,6 @@
 #!/usr/bin/env -S bash -euo pipefail
-# Lays the Claude Code mods' API types into their gitignored .claude-plugin/types/, for
-# editor types and `tsc -p <plugin>/claude`. Only an interactive session lays them, so
-# this runs one on a throwaway pty until it has.
+# Lays the mods' API types into their gitignored .claude-plugin/types/, for the editor and
+# `tsc -p <plugin>/claude`; only an interactive session lays them, so run one until it has.
 
 cd "$(dirname "$0")/.."
 
@@ -12,10 +11,9 @@ for m in "${mods[@]}"; do
     args+=(--plugin-dir "$(realpath "$m/..")")
 done
 
-# The store copies in CLAUDE_CODE_PLUGIN_DIRS would otherwise load beside the folders
-# under the same names. CLAUDE_CODE_NO_FLICKER: killed before its screen is healthy, a
-# session whose fullscreen comes from settings counts a strike in ~/.claude.json, and two
-# turn fullscreen off for every later session; one the env forces arms no such canary.
+# CLAUDE_CODE_PLUGIN_DIRS: else the store copies in it load beside the same-named folders.
+# CLAUDE_CODE_NO_FLICKER: one that settings-fullscreen kills counts a strike in ~/.claude.json,
+# and two turn fullscreen off for every later session; forced from the env, it arms no canary.
 # WT_NO_AUTOCLOSE: run from a worktree, the killed session would otherwise close it.
 export CLAUDE_CODE_PLUGIN_DIRS= CLAUDE_CODE_NO_FLICKER=1 WT_NO_AUTOCLOSE=1
 if [ "$(uname)" = Darwin ]; then

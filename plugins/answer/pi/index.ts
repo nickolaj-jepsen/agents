@@ -5,12 +5,10 @@
  * draft, to send.
  *
  * The form is a widget above the prompt, which stays shown: a click on the form or alt+a
- * gives the form the keys, a click on the prompt gives them back, and esc closes it. While
- * the form is closed the widget is the one row that offers it, which a click opens.
+ * gives the form the keys, a click on the prompt gives them back, and esc closes it.
  *
- * The form is the core's (`../core/forms.ts`), the one Claude Code's mod runs.
- * The draft is this session's own: in memory, and on the session branch so a
- * reload or a resumed session has its round and answers back.
+ * The form is the core's (`../core/forms.ts`). The draft is this session's own: in memory,
+ * and on the session branch so a reload or a resumed session has its round and answers back.
  *
  * The answers outlive closing the form: a turn a background task starts keeps them, your
  * own send sets the round aside (alt+a or /answer brings it back, answers and all), and
@@ -107,9 +105,8 @@ function restored(ctx: ExtensionContext): { held: Held | null; aside: Held | nul
 
 export default function (pi: ExtensionAPI) {
   let held: Held | null = null;
-  /** The round a send set aside, which alt+a or /answer brings back. */
   let aside: Held | null = null;
-  /** What the widget last drew. */
+  /** The signature the widget last drew. */
   let shown = "";
   let lastText = "";
   let form: AnswerForm | undefined;
@@ -133,10 +130,8 @@ export default function (pi: ExtensionAPI) {
     );
   };
 
-  /** What the branch keeps, as it stands now. */
   const save = (ctx: ExtensionContext) => pi.appendEntry<Saved>(ENTRY, { held, aside });
 
-  /** Holds `next`, on the branch too when it changed. */
   const hold = (ctx: ExtensionContext, next: Held | null) => {
     const isSame = next === held;
     held = next;
@@ -144,7 +139,6 @@ export default function (pi: ExtensionAPI) {
     draw(ctx);
   };
 
-  /** Brings the round a send set aside back into hand, and off the branch's aside. */
   const adopt = (ctx: ExtensionContext) => {
     if (held || !aside) return;
     held = aside;
@@ -225,7 +219,6 @@ export default function (pi: ExtensionAPI) {
 
   const open = async (ctx: ExtensionContext) => {
     if (!hasEditor(ctx)) return;
-    // Already open: the keys come back to it.
     if (form) return surface?.tui.setFocus(form);
     // A round a send set aside comes back when none is held, so alt+a works as /answer does.
     adopt(ctx);
@@ -257,7 +250,6 @@ export default function (pi: ExtensionAPI) {
       surface = { tui, back: focusedOf(tui) };
       return made;
     });
-    // The prompt stays shown; the form takes the keys.
     if (form) surface?.tui.setFocus(form);
   };
 

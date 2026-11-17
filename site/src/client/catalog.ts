@@ -1,9 +1,8 @@
 /**
- * The developer pages' controls. Every page is complete without them (both harnesses, the
- * narrowest size); this adds the harness and size switches, and puts a story's text beside its
+ * The developer pages' controls: the harness and size switches, and a story's text beside its
  * renders where they leave room. A choice lives in the URL's query (`h`, `size`), so a link shows
- * what it says; the harness is remembered across the site, the size for the next page. The one key
- * is `f`, which switches between the harnesses: Claude Code and pi.
+ * what it says; the harness is remembered across the site, the size for the next page. `f`
+ * switches between the harnesses: Claude Code and pi.
  */
 import { readHarness, writeHarness } from "./prefs.ts";
 
@@ -53,7 +52,6 @@ function syncUrl(): void {
   history.replaceState(null, "", u);
 }
 
-/** The harnesses on screen. */
 const shownHarnesses = (): string[] => (state.h === "both" ? ["claude", "pi"] : [state.h]);
 const TITLE: Record<string, string> = { claude: "Claude Code", pi: "pi" };
 const label = (key: string) => key.replace("x", "×");

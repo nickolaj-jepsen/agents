@@ -1,6 +1,5 @@
-# Not in nixpkgs. Microsoft's tui-test CLI and daemon: sessions that outlive one
-# invocation, which this repo's e2e `goto` drives. A static binary from the GitHub
-# release; the npm package has no daemon.
+# Microsoft's tui-test, not in nixpkgs: a daemon keeps sessions alive between invocations, which
+# the e2e `goto` drives. The npm package has none, so take the release's static binary.
 {
   lib,
   stdenvNoCC,

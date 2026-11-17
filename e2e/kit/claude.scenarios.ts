@@ -1,7 +1,6 @@
 /**
- * The Claude kit's catalogue: one scenario per story in kit/catalog/claude/stories.ts, named
- * `<component>/<state>`. A story is drawn by the dev-only catalogue mod, loaded with
- * `--plugin-dir`; its snapshot is cropped to the component alone.
+ * The Claude kit's catalogue: a scenario per story of the dev-only catalogue mod, named
+ * `<component>/<state>`, each snapshot cropped to the component alone.
  */
 import { fileURLToPath } from "node:url";
 import { stageWidth, storyId, stories, type Story } from "../../kit/catalog/claude/stories.ts";
@@ -53,8 +52,8 @@ const band: Region = (grid) => {
 };
 
 /**
- * The catalogue mod loads after the prompt shows, and a command typed before it is lost. Typing
- * `/kit` lists the command in the slash menu once it is registered, so that is what this waits for.
+ * The catalogue mod loads after the prompt shows, and a command typed before it is lost, so
+ * wait for `/kit` to appear in the slash menu.
  */
 const modLoaded: Step = {
   run: async (session) => {
@@ -90,7 +89,6 @@ export default scenarios({
           turns: [],
           args: ["--model", "haiku", "--plugin-dir", catalog],
         },
-        // The catalogue mod loads after the prompt shows: a command typed first is lost.
         steps: [
           modLoaded,
           { type: ` ${s.component} ${s.state}` },

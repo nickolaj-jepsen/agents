@@ -1,13 +1,6 @@
 /**
- * Parks a live agent session on a scenario's screen and drives it from separate
- * invocations, through the tui-test daemon:
- *
- *   node e2e/cli.ts goto docfix queue
- *   node e2e/cli.ts cap
- *   node e2e/cli.ts click "Apply"
- *   node e2e/cli.ts sweep
- *   node e2e/cli.ts stop
- *
+ * Parks a live agent session on a scenario's screen and drives it from separate invocations,
+ * through the tui-test daemon: `goto <plugin> <scenario>`, then `cap`, `keys`, `click` and so on.
  * Run `node e2e/cli.ts` for the verbs.
  */
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";

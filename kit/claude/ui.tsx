@@ -1,14 +1,11 @@
 /**
  * The Claude Code mod UI kit: the house style (skills/agent-plugin-dev/references/style.md) as
- * functions that return a mod's element trees. Its numbers, glyphs and colour roles are the pi
- * kit's (`kit/pi/tokens.ts`); the names follow it where the component exists in both.
+ * functions that return a mod's element trees. Its tokens are the pi kit's (`kit/pi/tokens.ts`),
+ * whose names it follows where the component exists in both.
  *
  * This file is the source of truth. The engine cannot import outside a plugin's folder, so
  * every mod that uses it carries a verbatim copy at `claude/ui.tsx`: edit this one and run
- * `just kit-sync`. `kit/claude/ui.spec.ts` fails while a copy differs.
- *
- * Every drawing function takes a `Kit` first: `kitOf(els, surface)` from what
- * `$.ui.resolve(e)` answers and `e.surface`.
+ * `just kit-sync`; `kit/claude/ui.spec.ts` fails while a copy differs.
  */
 import type { ElementTable, RenderNode } from "claude-code";
 
@@ -34,8 +31,8 @@ export const kitOf = (els: Els, surface: string): Kit => ({
 });
 
 /**
- * Every number, glyph and colour role of the house style. One edit here restyles every mod
- * that carries a fresh copy of this file.
+ * The house style's numbers, glyphs and colour roles; one edit here restyles every mod that
+ * carries a fresh copy of this file.
  */
 export const tokens = {
   /** Width classes: caps in columns, never targets. `wide` is the pane less `wideMargin`. */
@@ -112,7 +109,6 @@ export type WidthClass = "reading" | "split" | "dialog" | "wide" | "auto";
 /**
  * The class's cap in columns in a pane `columns` wide, or the content width for `auto`.
  * Box has no `maxWidth`, so a mod draws to this width instead of the pane's.
- * @param cls The width class (see style.md).
  * @param columns The pane's `bodyColumns`.
  * @param content The widest line in cells; only `auto` reads it.
  */
@@ -194,10 +190,7 @@ const cellsOf = (c: number): number => {
     : 1;
 };
 
-/**
- * How many terminal cells `text` takes: wide characters count two, combining marks and
- * joiners none. Never `.length`.
- */
+/** Cells `text` takes: wide characters two, marks and joiners none. Never `.length`. */
 export function cellWidth(text: string): number {
   let n = 0;
   for (const ch of text) n += cellsOf(ch.codePointAt(0) ?? 0);
@@ -271,8 +264,7 @@ export type ClampOptions = {
 };
 
 /**
- * Wraps `text` to `width` cells and returns lines, within the bounds. Nothing is padded or cut
- * unless asked: `{min: 1, max: 1}` is a one-line truncation, no options wraps without limit.
+ * `{min: 1, max: 1}` truncates to one line; no options wraps without limit.
  * @param width Cells, not characters; wide characters count two.
  */
 export function clamp(text: string, width: number, options: ClampOptions = {}): string[] {
@@ -291,19 +283,13 @@ export function clamp(text: string, width: number, options: ClampOptions = {}): 
   return lines;
 }
 
-/**
- * `text` padded with spaces to `width` cells, cut with `…` when longer.
- * @param width Cells.
- */
+/** `text` padded with spaces to `width` cells, cut with `…` when longer. */
 export const fit = (text: string, width: number) => {
   const cut = truncate(text, Math.max(0, width));
   return cut + " ".repeat(Math.max(0, width - cellWidth(cut)));
 };
 
-/**
- * `text` right-aligned in `width` cells.
- * @param width Cells.
- */
+/** `text` right-aligned in `width` cells. */
 export const alignRight = (text: string, width: number) =>
   " ".repeat(Math.max(0, width - cellWidth(text))) + text;
 
@@ -338,7 +324,6 @@ export function section(k: Kit, width: number, title: string): JSX.Element {
 
 /**
  * A pane's title line, `─ Title  count ─────`, so both harnesses share one.
- * @param width The room in cells.
  * @param count Dim, after the title; left out when none.
  */
 export function paneTitle(
@@ -461,8 +446,6 @@ export type EntriesOptions = {
  * Dated entries, one blank row between them and no bullets or gutter. From
  * `tokens.entriesFrom` columns the date is a fixed dim column at the left and the text hangs
  * beside it; narrower, a dim date line with the text under it at full width.
- * @param width The room in cells.
- * @param items The entries, in the order to show them.
  */
 export function entries(
   k: Kit,

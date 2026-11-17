@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # The required check: tests, type-check, each Claude half validated and tested, formatting.
+  # The required check; `just check` runs the same thing locally.
   check:
     name: CI gate
     runs-on: ubuntu-latest

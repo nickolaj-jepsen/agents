@@ -543,9 +543,8 @@ pre {
   width: 1.75em;
   height: 1.5em;
 }
-/* A harness logo: sized by the text it sits in, coloured by its .k. */
-/* A logo is sized by height (--gl). Claude Code's mark is wide, so it stands a little shorter than
-   pi's square to weigh the same. */
+/* A harness logo, sized by height (--gl) in the text's em and coloured by its .k. Claude Code's
+   mark is wide, so it stands a little shorter than pi's square to weigh the same. */
 .gl {
   --gl: 1.2em;
   height: var(--gl);

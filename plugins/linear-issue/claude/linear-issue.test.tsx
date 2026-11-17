@@ -142,7 +142,7 @@ const usage = {
   cache_creation_input_tokens: 0,
 };
 
-/** Stands in for the engine beneath both plugins: tools, Linear, the model, panes and toasts. */
+/** Stands in for the engine beneath both plugins. */
 function world(on: On, tools: ToolInfo[] = LINEAR_TOOLS, env: Record<string, string> = {}): World {
   const w: World = {
     clock: mock.clock(on),

@@ -19,7 +19,6 @@ export function section(theme: Theme, width: number, title: string): string {
 /**
  * Wrapped prose, at the measure when the pane is wider than it.
  * @param options Bounds for the wrap, as `clamp` takes them.
- * @param role The colour role of every line.
  */
 export function prose(
   theme: Theme,

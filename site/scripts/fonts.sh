@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Writes src/assets/fonts/hack-{regular,bold}.woff2: Hack, the face the terminal captures are drawn
-# in, from nixpkgs, cut to the characters the site prints (Latin, punctuation, arrows, box drawing
-# and the status glyphs). Run from anywhere; needs nix.
+# in, from nixpkgs, cut to the characters the site prints. Run from anywhere; needs nix.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 hack=$(nix build --no-link --print-out-paths nixpkgs#hack-font)/share/fonts/truetype

@@ -110,13 +110,13 @@ export const region = {
     (x: number, y: number, w: number, h: number): Region =>
     () => ({ x, y, w, h }),
 
-  /** The bordered box (`╭─╮ ╰─╯`); with `contains`, the first whose text has it. Pi's overlays, Claude's pane below 110 columns. */
+  /** The bordered box (`╭─╮ ╰─╯`); with `contains`, the first whose text has it. */
   box:
     (contains?: Pattern): Region =>
     (grid) =>
       boxes(grid).find((b) => contains === undefined || matches(within(grid, b), contains)),
 
-  /** Claude's pane from 110 columns: a column on the right, left-edged by a `│` that runs down from the top row. */
+  /** Claude's pane docked as a column on the right: left-edged by a `│` that runs down from the top row. */
   sidebar: ((grid) => {
     const cols = grid[0]?.length ?? 0;
     for (let x = 0; x < cols; x++) {
@@ -240,7 +240,6 @@ export function serialize(title: string, grid: Grid): string {
       return id;
     });
     while (ids[ids.length - 1] === ".") ids.pop();
-    // Runs: `2x58` is fifty-eight cells of style 2; `.` is the default style.
     const runs: string[] = [];
     for (let i = 0; i < ids.length;) {
       let j = i;

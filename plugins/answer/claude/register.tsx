@@ -20,7 +20,6 @@ import {
   type KeyChip,
 } from "./ui";
 
-// The two fields, each drawn while it is being typed in.
 const PLUGIN = "answer";
 const WRITE = "write";
 const NOTE = "note";
@@ -100,7 +99,6 @@ async function step($: EngineInterface, action: Action): Promise<View | null> {
   return now?.view ?? null;
 }
 
-/** Takes a step and puts the ring where the new screen starts. */
 async function move($: EngineInterface, action: Action) {
   const view = await step($, action);
   if (!view) return;
@@ -157,9 +155,8 @@ async function choose($: EngineInterface, entry: Entry, index: number) {
     return;
   }
   if (entry.isChosen) return move($, { do: "next" });
-  // Observed, not documented: with the ring on the pressed answer (or above it) when the note
-  // field is asked for, the field shows the ring but the prompt keeps the keys. With the ring on
-  // an entry below the field's place, the field takes them. So the ring goes below first.
+  // Observed, not documented: the note field takes the keys only from a ring below its place, so
+  // the ring goes below first.
   await focus($, `e${index + 1}`);
   if (await step($, { do: "pick", entry: index })) await ask($, NOTE);
 }
@@ -338,10 +335,10 @@ const labelOf = (row: Entry, index: number) =>
     ? row.text.replace(/^[A-Ga-g][.)]\s*/, "")
     : row.text;
 
-/** What a key row offers: its key, label and how it is pressed, so its width is known before it is drawn. */
+/** What a key row offers, so its width is known before it is drawn. */
 type KeySpec = { hotkey: string; label: string; kind: string; isLit?: boolean };
 
-/** The keys of the shown screen, in the order they are drawn. */
+/** The keys of the shown screen. */
 function keysOf(c: Current, isNative: boolean): KeySpec[] {
   const { view } = c;
   // A native surface has its own close control, drawn on the strip.
@@ -376,7 +373,7 @@ function keyRows(keys: KeySpec[], columns: number) {
   return Math.max(1, Math.ceil((cells + tokens.keyGap * (keys.length - 1)) / Math.max(1, columns)));
 }
 
-/** The rows one question takes besides its body: its title, entries, recommendation, a note and the keys. */
+/** The rows one question takes besides its body. */
 function chromeRows(c: Current, item: Item, columns: number, isNative: boolean, gaps: Gaps) {
   const entries = item.entries.reduce(
     (n, entry) =>
@@ -441,7 +438,6 @@ export const register: Register = (on) => {
       })
       .catch((error) => complain($, `/answer not registered: ${String(error)}`));
     const started = await next(e);
-    // A resumed session has the round's message last in its transcript.
     await recover($).catch((error) => complain($, error));
     return started;
   });
@@ -488,7 +484,7 @@ export const register: Register = (on) => {
 
   // Drawn in the band, not a pane: the surface docks every pane beside the transcript once
   // the terminal is wide, and a round of questions reads better over the prompt. This is the
-  // plugin's own row of the band; the hook below gives it the band to itself while open.
+  // plugin's own row of the band; `AbovePromptList` gives it the band to itself while open.
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
     if (e.props.hasSurvey) return next(e);
     const c = await read($, current);
@@ -523,7 +519,7 @@ export const register: Register = (on) => {
       ? 2
       : (GAPS.find((g) => heightOf(c, columns, false, g) <= e.props.maxRows - RESERVED_ROWS) ?? 0);
     const gap = isNative ? "md" : gaps >= 1 ? 1 : 0;
-    // A field with what it is led by: the mark that its text carries once it is kept.
+    /** A field and the mark that leads its text. */
     const field = (
       key: typeof WRITE | typeof NOTE,
       lead: JSX.Element,
@@ -732,7 +728,6 @@ export const register: Register = (on) => {
     const chosen = item.entries.findIndex((row) => row.isChosen);
     // A note sits under the answer it is about; with none yet, under the entries.
     const noteAt = chosen >= 0 && chosen < writeIn ? chosen : writeIn - 1;
-    // Yours, so it reads apart from the option's own dim lines above it, typed or kept.
     // An answered question with no note offers one as a row, for a click to open.
     const note =
       editing === NOTE ? (

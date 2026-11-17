@@ -1,7 +1,6 @@
 /**
  * A plugin's gallery: one item on the stage, the thumbnails choosing it, the harness switch
- * narrowing both to one harness. The harness is
- * remembered (`agents-h`, shared with the catalogue's switch).
+ * narrowing both to one harness.
  */
 import { readHarness, writeHarness } from "./prefs.ts";
 

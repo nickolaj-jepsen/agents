@@ -33,7 +33,6 @@ const drafting = (verdict: string): Turn[] => [
   { match: "You check whether an open Linear issue", text: verdict },
 ];
 
-/** No open issue covers it. */
 const NONE = '{"duplicate": null}';
 /** One does, in the fake server's fixtures. */
 const DUPLICATE = JSON.stringify({

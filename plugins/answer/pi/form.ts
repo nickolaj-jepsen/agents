@@ -1,13 +1,10 @@
 /**
  * The answer form, a widget above the prompt that keeps the prompt shown: one item per screen and a
- * review, every row and key chip clickable. A key pick records the answer and goes on
- * to the next item unanswered; a click takes it and opens its note, and a click on the
- * taken answer goes on. A note is also `n` or a click on `add a note` under the answer,
- * and `m` lets several options be one answer. `y` takes the recommendation. The
- * frame is the kit's `bandShell`; its top border holds the question stops, a click on one
- * goes to that question. The draft and every step through it are the
- * core's (`../core/forms.ts`), which Claude Code's mod shares; this file only
- * draws its view and maps keys and clicks onto those steps.
+ * review, every row and key chip clickable. A key answers and goes on; a click takes the answer and
+ * opens its note, and a click on the taken answer goes on. The frame is the kit's `bandShell`, its top
+ * border holding the question stops. The draft and every step through it are the core's
+ * (`../core/forms.ts`), which Claude Code's mod shares; this file draws its view and maps keys and
+ * clicks onto those steps.
  */
 import { getMarkdownTheme, type Theme } from "@earendil-works/pi-coding-agent";
 import {
@@ -67,7 +64,6 @@ const MIN_WIDTH = 30;
 const PROMPT_ROWS = 12;
 
 export class AnswerForm implements Component, Focusable {
-  /** The highlighted entry on an item's screen. */
   private cursor = 0;
   private editing: "text" | "note" | undefined;
   /** Whether picks toggle on the shown item; unset follows its answer. */
@@ -184,7 +180,6 @@ export class AnswerForm implements Component, Focusable {
         const entry = this.view.item?.entries[act.index];
         if (!entry) return;
         this.cursor = act.index;
-        // A pick is the answer and the form goes on; one of several stays; a write-in opens its field.
         if (entry.kind === "write") return this.startEditing("text");
         if (this.isSeveral) return this.step({ do: "toggle", entry: act.index });
         return this.step({ do: "pick", entry: act.index }, () => this.step({ do: "next" }));
@@ -320,7 +315,7 @@ export class AnswerForm implements Component, Focusable {
 
   /**
    * The divider's question stops: a mark and the label of each question, the one on show in
-   * the accent, each a click on that question. Too wide a row for the border is left out.
+   * the accent, each a click on that question.
    */
   private stops(): Row {
     const t = this.theme;

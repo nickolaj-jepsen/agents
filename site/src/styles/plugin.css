@@ -1,4 +1,4 @@
-/* A plugin's page: the stage's height cap, the video's own controls, the rail of facts. */
+/* A plugin page's own styles, on top of site.css. */
 
 /* The stage never passes 60vh and is never enlarged. It keeps the column's left edge, with its caption
    and the thumbnails, like the header and the body. */

@@ -1,15 +1,10 @@
 #!/usr/bin/env bash
 # Usage: noise.sh <base> <head>
 # Classifies each file changed between merge-base(base, head) and head, one
-# tab-separated line per file: class, status, +added, -deleted, path.
-# Classes, most mechanical first:
-#   lock       lockfile
-#   generated  linguist-generated, a generated-code marker, snapshots, minified
-#   binary     no text diff
-#   renamed    pure rename (R100)
-#   format     whitespace only, or no syntactic change per difft (when on PATH)
-#   moved      every changed line is a block moved within the diff
-#   edit       anything else: the part worth reading
+# tab-separated line per file: class, status, +added, -deleted, path. Classes run
+# most mechanical first, so a reader stops at the first `edit`. `moved` means every
+# changed line sits in a block moved within the diff; `format` means whitespace only,
+# or no syntactic change per difft when it is on PATH.
 # Needs both commits locally (fetch the PR head first).
 set -euo pipefail
 [ $# -eq 2 ] || {
@@ -22,8 +17,8 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 git() { command git --no-pager "$@"; }
 
-# Per-file moved/changed line counts, from one whole-diff pass so moves across
-# files count. Moved lines get fixed colours; everything else is plain.
+# Moved/changed counts per file, from one whole-diff pass so moves across files count.
+# Only moved lines get colour; the awk below counts them by escape code.
 git -c color.diff.oldMoved=magenta -c color.diff.newMoved=cyan \
   -c color.diff.oldMovedAlternative=magenta -c color.diff.newMovedAlternative=cyan \
   -c color.diff.old=red -c color.diff.new=green -c color.diff.meta=normal -c color.diff.frag=normal \

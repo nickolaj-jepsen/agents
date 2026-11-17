@@ -1,24 +1,16 @@
 // @ts-nocheck — jiti strips types and no tsconfig reaches this asset.
 /**
- * Replay provider: canned assistant turns, so an extension's tool and error
- * paths run deterministically without a model and without spending tokens.
+ * Replay provider: canned assistant turns, so an extension's tool and error paths run
+ * deterministically without a model and without spending tokens.
  *
  * Usage:
  *   FIXTURE=$PWD/turns.json pi \
  *     --extension e2e/assets/fixture-provider.ts \
  *     --provider fixture --model replay
  *
- * turns.json is a list consumed in order, one entry per assistant turn. A turn
- * carries any of text, thinking, toolCall or error:
- *
- *   [{"text": "Listing files."},
- *    {"toolCall": {"name": "todo", "arguments": {"op": "list"}}},
- *    {"toolCall": {"name": "todo", "arguments": {"wrong": "shape"}}},
- *    {"error": "provider exploded"}]
- *
- * Malformed arguments are the point: they exercise validation and tool error
- * paths. Running past the end of the list is an error that says so, rather
- * than a silent empty reply.
+ * turns.json holds one entry per assistant turn, consumed in order; each carries any of
+ * `text`, `thinking`, `toolCall` or `error`. Running past the end of the list is an error that
+ * says so, rather than a silent empty reply.
  */
 
 import {

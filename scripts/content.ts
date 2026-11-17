@@ -1,6 +1,5 @@
-// The repo's content, read from its sources: each plugin's README.md, each skill's SKILL.md and docs/*.md.
-// Shared by the README generator and the site. Run by node as it stands, so no enums or other
-// syntax Node's type stripping can't erase.
+// The repo's content, read from its sources; shared by the README generator and the site. Run by
+// node as it stands: no enums or other syntax Node's type stripping can't erase.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,9 +25,8 @@ export type Still = {
   height: number;
 };
 /**
- * A plugin's demos (one per harness, the first shown first) and stills: `site/media/<name>/media.json`,
- * which `just site-shots` writes from `e2e/<name>/site.scenarios.ts`. Not committed: the Pages
- * workflow records it before it builds.
+ * A plugin's demos (one per harness, the first shown first) and stills, from the `media.json`
+ * `just site-shots` writes. Not committed: the Pages workflow records it before it builds.
  */
 export type Media = { videos: Video[]; stills: Still[] };
 

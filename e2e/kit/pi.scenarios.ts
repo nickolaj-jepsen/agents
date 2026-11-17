@@ -1,6 +1,6 @@
 /**
- * The pi kit's catalogue: one scenario per story in kit/catalog/pi/stories.ts, named
- * `<component>/<state>`. Snapshots and PNGs feed `npm run catalog`.
+ * The pi kit's catalogue: a scenario per story of the dev-only catalogue; its snapshots and PNGs
+ * feed `npm run catalog`.
  */
 import { fileURLToPath } from "node:url";
 import { STAGE_AT, stageRows, stageWidth } from "../../kit/catalog/pi/stage.ts";

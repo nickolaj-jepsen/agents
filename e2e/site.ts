@@ -1,7 +1,6 @@
 /**
  * `node e2e/site.ts [plugin...]` (`just site-shots`): plays the site scenarios of each plugin and
- * writes its media under `site/media/<plugin>/`: `demo.mp4` with its poster `demo.png` (and
- * `demo-<harness>.*` for a second harness's demo), a PNG per still, and `media.json` listing them. See "Site media" in e2e/README.md.
+ * writes its media under `site/media/<plugin>/`. See "Site media" in e2e/README.md.
  *
  * A plugin whose run fails keeps its old files: the media are staged in a folder of their own and
  * moved in only when every scenario of the plugin came out and fits its budget.

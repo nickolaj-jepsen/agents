@@ -2,9 +2,8 @@ import type { OverlayOptions } from "@earendil-works/pi-tui";
 import { tokens, type WidthClass } from "./tokens.ts";
 
 /**
- * The `ctx.ui.custom` overlay options for a width class: centred, as wide as the terminal
- * allows up to the class's cap.
- * @param cls The width class (see style.md).
+ * The `ctx.ui.custom` overlay options: centred, as wide as the terminal allows up to the
+ * class's cap.
  * @param content The widest line in cells; only `auto` reads it.
  */
 export function overlayOptions(cls: WidthClass, content = 0): OverlayOptions {
@@ -21,8 +20,5 @@ export function overlayOptions(cls: WidthClass, content = 0): OverlayOptions {
   return { anchor: "center", width: Math.max(1, cap), margin: edge };
 }
 
-/**
- * Rows a modal may use: the terminal less its top and bottom margin.
- * @param terminalRows The terminal's height.
- */
+/** Rows a modal may use: the terminal less its top and bottom margin. */
 export const modalRows = (terminalRows: number) => Math.max(1, terminalRows - 2 * tokens.margin);

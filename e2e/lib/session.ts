@@ -86,7 +86,7 @@ const HICCUP = /fullscreen[^\n]*(did not|didn.t)[^\n]*finish|classic renderer/i;
 
 class StartHiccup extends Error {}
 
-/** How many sessions were started and how many of those hit the start failure; read by the runner. */
+/** How many sessions were started and how many of those hit the start failure. */
 export const startStats = { starts: 0, hiccups: 0 };
 
 export type StepOptions = {
@@ -114,7 +114,7 @@ export class Session {
   readonly cwd: string;
   readonly harness: HarnessName;
   private ownsRun: boolean;
-  /** Where a demo's `poster` step writes its picture; set by the site runner. */
+  /** Where a demo's `poster` step writes its picture. */
   poster?: { path: string; opts: ImageOptions };
 
   constructor(term: Term, harness: HarnessName, runDir: string, ownsRun: boolean, project = "cwd") {

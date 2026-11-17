@@ -3,9 +3,6 @@
  * `~/.local/share/fonts` and a few `/usr` paths, none of which exist on NixOS. So
  * this lays a folder of links to the fonts fontconfig knows and hands that out as
  * `HOME` for the one call that rasterizes (and for a daemon, which reads it at start).
- *
- * The families cover Nerd Font icons, box drawing, and the symbols Claude Code and pi
- * draw (`⎿ ⏵ ✳`); Unifont is the last resort for what nothing else has.
  */
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readdirSync, symlinkSync, existsSync } from "node:fs";

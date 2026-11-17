@@ -1,9 +1,8 @@
 /**
- * The catalogue's sample data, one set for both harnesses, so the same story shows the same
- * content in pi and in Claude Code and a difference between two renders is the harness's.
- * Data only, no imports: the pi stories import it, and the Claude catalogue mod, which cannot
- * import outside its folder, carries a copy (`claude/claude/samples.ts`) that `just kit-sync`
- * writes and a test compares.
+ * The catalogue's sample data, one set for both harnesses, so a difference between two renders
+ * is the harness's. Data only, no imports: the pi stories import it, and the Claude catalogue
+ * mod, which cannot import outside its folder, carries a copy (`claude/claude/samples.ts`) that
+ * `just kit-sync` writes and a test compares.
  */
 
 export const SENTENCE =

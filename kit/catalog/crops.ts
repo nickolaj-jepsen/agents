@@ -1,14 +1,12 @@
 /**
- * Crops each kit scenario's screenshot (`e2e/kit/__snapshots__/<harness>/<story>@<w>x<h>.png`,
- * git-ignored) to the scenario's region (the `@x,y (wxh)` of its `.snap` header), so the site
- * shows the component and not the terminal round it. The crops are committed under
- * `site/media/kit/<harness>/<story>@<w>x<h>.png`, optimised, and listed in
- * `site/media/kit/crops.json` with their pixel size and a hash of their pixels: a crop whose
- * pixels have not changed is not rewritten, so a run leaves no churn.
+ * Crops each kit scenario's screenshot (`e2e/kit/__snapshots__/`, git-ignored) to the scenario's
+ * region (the `@x,y (wxh)` of its `.snap` header), so the site shows the component and not the
+ * terminal round it, and commits them under `site/media/kit/`, listed in `crops.json` with a
+ * pixel size and a hash: an unchanged crop is not rewritten, so a run leaves no churn.
  *
  * tui-test's screenshot is a window: purple padding, a title bar, then the cell grid, at a
- * fixed cell size. The geometry below was read off those images; a screenshot whose size does
- * not match it for its grid is skipped rather than cropped wrong.
+ * fixed cell size. The geometry below was read off those images, so a screenshot whose size
+ * does not match it for its grid is skipped rather than cropped wrong.
  */
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -34,7 +32,7 @@ const repo = join(here, "..", "..");
 const snapshots = join(repo, "e2e/kit/__snapshots__");
 export const cropsDir = join(repo, "site/media/kit");
 export const cropsFile = join(cropsDir, "crops.json");
-/** What the site's media budget allows one picture (scripts/readme.ts checks it). */
+/** The most bytes one picture may take before the run warns. */
 const BUDGET = 300_000;
 
 /** Keyed `<harness>/<story>@<w>x<h>`; `png` is repo-relative. */

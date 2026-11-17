@@ -14,7 +14,7 @@ const turns: Turn[] = [
   },
 ];
 
-/** The plugin takes ctrl+s, so pi's pickers move their save actions to alt+s, as the plugin's page asks. */
+/** The plugin takes ctrl+s, so pi's pickers move their save actions to alt+s. */
 const setup: SiteScenario["setup"] = (ctx) => {
   const dir = join(ctx.runDir, "pi-agent");
   mkdirSync(dir, { recursive: true });

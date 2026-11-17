@@ -1,9 +1,8 @@
 /**
  * A fake Linear MCP server for the site scenarios: stdio, newline-delimited JSON-RPC, written by
- * hand, no dependencies. `node linear-mcp.ts` serves fixture data for the tools linear-issue
- * calls (teams, statuses, labels, projects, issue search) and answers a write (`save_issue`,
- * `save_comment`) with a made-up key and URL, recording it to `$E2E_RUN_DIR/linear-writes.jsonl` (one JSON line
- * each) without doing anything else. Nothing touches the network.
+ * hand, no dependencies. `node linear-mcp.ts` serves fixture data for the tools linear-issue calls
+ * and answers a write (`save_issue`, `save_comment`) with a made-up key and URL, recording it to
+ * `$E2E_RUN_DIR/linear-writes.jsonl` and doing nothing else. Nothing touches the network.
  *
  * Name it `linear` in a scenario's `start.mcp`: linear-issue finds its server by a tool name
  * like `mcp__linear__save_issue`.
@@ -81,7 +80,7 @@ const TOOLS = [
   inputSchema: { type: "object", additionalProperties: true },
 }));
 
-/** The file a run's writes go to, which `writesOf` reads back. */
+/** The file a run's writes go to. */
 export const WRITES = "linear-writes.jsonl";
 
 const record = (tool: string, args: unknown) => {

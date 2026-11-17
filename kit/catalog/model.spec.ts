@@ -3,8 +3,8 @@ import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { here, loadModel, markdown, type Model } from "./model.ts";
 
-// The same checks as `npm run catalog -- --check`; none of them needs a PNG or the network.
-// Reading the kits' source with the compiler is slow on a cold build, hence the timeout.
+// As `npm run catalog -- --check`: no PNG, no network. The compiler reading the kits is slow on a
+// cold build, hence the timeout.
 describe("component manifests", () => {
   let model: Model;
   beforeAll(async () => {

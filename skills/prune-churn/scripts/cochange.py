@@ -3,14 +3,11 @@
 
 A commit counts as a tag-along for file F when F changed but no other file in the
 commit shares F's directory or name stem; i.e. F was edited to keep up with a change
-somewhere else. Tests and docs with high tag-along counts are churn magnets, as are
-hub files (registries, barrels, inventory READMEs).
+somewhere else. Tests, docs and hub files (registries, barrels, inventory READMEs)
+with high tag-along counts are churn magnets.
 
 History is always scanned whole; PATHSPEC and --branch only filter which files are
 ranked, so co-changes outside the filter still count.
-
-Usage: cochange.py [-n COMMITS] [--branch BASE] [--max-files N] [--top N] [PATHSPEC...]
-Prints a TSV: tag_along, commits, spread (distinct other dirs it co-changed with), kind, path.
 """
 
 import argparse
@@ -30,7 +27,7 @@ TEST = re.compile(r"(^|/)(tests?|__tests__|spec|e2e)/|[._-](test|spec)\.|(^|/)te
 SNAPSHOT = re.compile(r"__snapshots__/|\.snap$|(^|/)(golden|testdata|fixtures)/")
 AGENT = re.compile(r"(^|/)(AGENTS|CLAUDE|GEMINI)\.md$|(^|/)\.cursor(rules$|/)|copilot-instructions\.md$")
 DOC = re.compile(r"\.(md|mdx|rst|adoc)$")
-# Stems shared by unrelated files in different dirs (default.nix, index.ts, SKILL.md, ...).
+# Stems that unrelated files in different directories share.
 GENERIC = {"index", "default", "__init__", "mod", "main", "lib", "readme", "skill", "types", "utils", "config", "package"}
 
 

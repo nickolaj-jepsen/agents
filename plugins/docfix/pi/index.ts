@@ -1,7 +1,6 @@
 /**
- * The pi half of docfix: the `docfix` tool, the /docfix panel, the open
- * count in the footer, and the reminder after a session first reads a doc. What a call does to the queue is the core's
- * (`../core/docfix.ts`), the one Claude Code's mod runs.
+ * The pi half of docfix: the tool, the /docfix panel, the footer count and the read reminder.
+ * What a call does to the queue is the core's (`../core/docfix.ts`), the one Claude Code's mod runs.
  */
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
@@ -29,8 +28,8 @@ import { hasStore, isTracked, loadAll, remove, repoRoot, save, storeDir } from "
 const STATUS_KEY = "docfix";
 
 // `{ type: "string", enum }`, the shape pi-ai's StringEnum emits for providers without anyOf/const,
-// built with TypeBox so `Type.Object` infers the union. StringEnum returns a pi-schema `Schema`,
-// which TypeBox reads as `unknown` once pi ships pi-schema (1.5.2).
+// built with TypeBox so `Type.Object` infers the union; StringEnum's pi-schema return (1.5.2) is
+// `unknown` to TypeBox.
 const stringEnum = <const T extends readonly string[]>(values: T) =>
   Type.Unsafe<T[number]>({ type: "string", enum: [...values] });
 

@@ -1,9 +1,7 @@
 /**
- * Builds the catalogue's data from the component manifests in `components/`, each kit's source
- * (props tables) and each harness's stories: `COMPONENTS.md` (what agents read, committed),
- * `catalog.json` (what the site's catalogue pages, `site/src/pages/dev/`, read) and the stories'
- * crops, `site/media/kit/` (from the kit scenarios' PNGs). The last two are not committed: the
- * Pages workflow writes them (`just media`) before it builds.
+ * Builds the catalogue's data from the component manifests and each kit's source:
+ * `COMPONENTS.md` (what agents read, committed), `catalog.json` (what the site reads) and the
+ * stories' crops. The last two are not committed: the Pages workflow writes them (`just media`).
  *
  *   npm run catalog                play the kit scenarios in PNG mode, then write all three; fail
  *                                  on a manifest problem or a scenario that no longer matches
@@ -23,7 +21,7 @@ const outputs = {
 const check = process.argv.includes("--check");
 
 if (!check && !process.argv.includes("--no-shots")) {
-  // The PNGs are not committed: drawing them is what the e2e run does when asked to (E2E_PNG).
+  // The PNGs are not committed: this is where the e2e run draws them.
   const done = spawnSync(process.execPath, ["e2e/run.ts", "kit"], {
     cwd: join(here, "..", ".."),
     stdio: "inherit",

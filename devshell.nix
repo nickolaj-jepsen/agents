@@ -12,14 +12,13 @@
         pkgs.nodejs # `npm ci`, then `just test` and `just typecheck`; it strips types, so e2e runs .ts as is
         pkgs.just
         config.packages.tui-test # The e2e `goto` daemon
-        pkgs.pngquant # `npm run catalog` optimises the kit's crops with these two
+        pkgs.pngquant # optimises the kit's crops, with oxipng
         pkgs.oxipng
       ];
     };
 
-    # What recording the site's media needs and nothing of the machine's: the agents from this
-    # flake's nixpkgs, the fonts the captures are drawn in, and the tools the scenarios call. The
-    # Pages workflow records in it (`nix develop .#media -c just media`); so can anyone, signed out.
+    # What `just media` needs and nothing of the machine's: the agents, the fonts, the tools the
+    # scenarios call. The Pages workflow records in it; so can anyone, signed out.
     devShells.media = pkgs.mkShell {
       name = "agents-media";
       packages = [
@@ -27,7 +26,7 @@
         pkgs.just
         pkgs.git
         pkgs.which
-        pkgs.fontconfig # fc-list, which e2e/lib/fonts.ts asks for the fonts' files
+        pkgs.fontconfig # fc-list, which the captures read the fonts from
         config.packages.tui-test
         pkgs.claude-code
         pkgs.pi-coding-agent

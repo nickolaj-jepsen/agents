@@ -148,7 +148,7 @@ async function buildFolder($: EngineInterface, cwd: string): Promise<Menu> {
     ]);
     const found = new Set((probe?.stdout ?? "").split("\n").filter(Boolean));
     if (found.has("code")) launchers.code = ["code", cwd];
-    // zed's own name first, then nixpkgs', which installs `zeditor`.
+    // zed's own name first, in EDITOR_COMMANDS' order.
     const zed = ["zed", "zeditor"].find((name) => found.has(name));
     if (zed) launchers.zed = [zed, cwd];
     if (found.has("smerge")) launchers.smerge = ["smerge", cwd];
@@ -259,9 +259,9 @@ async function close($: EngineInterface) {
 }
 
 /**
- * Opens a menu, or closes it when it is already up, as a second click on pi's
- * footer did. The pane opens before git answers: one opened after the command
- * hook returned counts as unasked and stays hidden on narrower terminals.
+ * Opens a menu, or closes it when it is already up. The pane opens before git
+ * answers: one opened after the command hook returned counts as unasked and
+ * stays hidden on narrower terminals.
  */
 async function show($: EngineInterface, kind: MenuKind) {
   if ((await read($, menu))?.kind === kind && (await isOpen($))) return close($);

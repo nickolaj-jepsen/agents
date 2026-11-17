@@ -1,6 +1,5 @@
-# README.md is generated from the plugins', skills' and docs' sources: fails while it is stale
-# (scripts/readme.ts --check). Reads only those sources, so a
-# change to a plugin's code never reruns it, and agent-tools never reruns for a README or skill edit.
+# Fails while README.md is stale (`readme.ts --check`). Reads only what it is generated from, so
+# neither this nor agent-tools reruns for a README or skill edit.
 {
   lib,
   buildNpmPackage,

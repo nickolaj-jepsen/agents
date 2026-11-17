@@ -23,7 +23,6 @@ const MIN_BODY = 4;
  * terminal leaves it, so going from one state to the next moves nothing.
  * @param height The rows the tallest state takes; leave out to take all that fit.
  * @param maxRows The terminal's rows.
- * @param reserved Rows kept for what is around the band.
  */
 export const bandRows = (height: number | undefined, maxRows: number, reserved = BAND_RESERVED) =>
   Math.min(Math.max(MIN_BODY, maxRows - reserved - CHROME), Math.max(MIN_BODY, height ?? Infinity));
@@ -85,7 +84,6 @@ export type Band<A> = {
  * The band's shell: a rounded border with the title and its slot in the top, the body under
  * it standing as tall as the tallest state (`bandRows`), the footer below it and the keys in
  * the bottom border. A body taller than the room scrolls above the footer.
- * @param o The width, title, body, footer and keys.
  */
 export function bandShell<A>(theme: Theme, o: BandOptions<A>): Band<A> {
   const b = tokens.border;
@@ -172,7 +170,6 @@ export type Chip<A> = { key: string; label: string; act: A };
 /**
  * The footer's keys in one row, `tokens.gutter` apart: each `key label`, the key in the accent
  * and the label plain, with its own click target.
- * @param chips The keys, in order.
  */
 export function chipRow<A>(theme: Theme, chips: Chip<A>[]): BandRow<A> {
   let text = "";

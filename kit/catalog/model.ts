@@ -1,8 +1,6 @@
 /**
- * Everything the catalogue knows, as data: the component manifests, each kit's API read from
- * its source and each harness's stories. `build.ts` turns it into `COMPONENTS.md` and
- * `catalog.json` (what the site's catalogue pages read); `problems` is what makes the build fail.
- * The screenshots are not in it: `crops.ts` keeps them, under `site/media/kit/`.
+ * Everything the catalogue knows, as data; `build.ts` turns it into `COMPONENTS.md` and
+ * `catalog.json` for the site, and `problems` is what fails the build. Screenshots: `crops.ts`.
  */
 import { existsSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";

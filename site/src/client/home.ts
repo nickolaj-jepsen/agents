@@ -1,7 +1,6 @@
 /**
- * The home page's harness switch: Both, or one harness, narrowing the plugins to those that run in
- * it, each showing that harness's picture and install command. The choice is remembered
- * (`prefs.ts`) and shared with the gallery's and the catalogue's switches.
+ * The home page's switch: Both, or one harness, narrowing the plugins to those that run in it and
+ * to that harness's picture and install command.
  */
 import { readHarness, writeHarness } from "./prefs.ts";
 

@@ -1,12 +1,7 @@
-/**
- * The checkout's notes as menu rows: the Markdown under its store
- * (`.agents/store`), newest first. The shared opener (`agent-note-open`) hands
- * each one to the editor.
- */
+/** The checkout's notes as menu rows, newest first. */
 import type { Menu, Row } from "./types.d.ts";
 
 export const OPENER = "agent-note-open";
-/** The checkout's link into the note store. */
 export const STORE = ".agents/store";
 
 /** `name` is the path below the store. */
@@ -24,10 +19,7 @@ export const age = (ms: number): string => {
   return hours < 24 ? `${hours}h` : `${Math.floor(hours / 24)}d`;
 };
 
-/**
- * The notes as rows, newest first, each started by `opener` (the argv before
- * the path), or naming the path when nothing can open it.
- */
+/** The notes as rows, newest first; a note nothing can open names its path. */
 export const notesMenu = ({
   notes,
   opener,

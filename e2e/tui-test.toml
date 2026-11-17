@@ -1,11 +1,10 @@
 # How tui-test draws the e2e screenshots and recordings (TUI_TEST_CONFIG, set in lib/term.ts).
 #
 # The colours are the person's terminal: the fireproof theme in ~/nixos/modules/base/theme.nix, as
-# ghostty gets them in ~/nixos/modules/programs/ghostty.nix (bg, fg, the cursor in fg, and the
-# palette as the *Alt shades for 0-7 and the plain ones for 8-15). This is the one place they are
-# written down; the site's media and the kit catalogue's crops (kit/catalog/crops.ts) read the
-# geometry below, so change a padding or the font size and re-run `just site-shots` and
-# `npm run catalog`.
+# ghostty gets it (bg, fg, the cursor in fg, and the palette as the *Alt shades for 0-7 and the
+# plain ones for 8-15). This is the one place they are written down; the site's media and the kit
+# catalogue's crops (kit/catalog/crops.ts) read the geometry below, so change a padding or the font
+# size and re-run `just site-shots` and `npm run catalog`.
 
 [profiles.default.colors]
 background = "#1C1B1A"

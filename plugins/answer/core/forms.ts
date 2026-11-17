@@ -38,7 +38,6 @@ export type Draft = {
   step: number;
 };
 
-/** One thing a person did at the form (`apply`). */
 export type Action =
   | { do: "pick" | "toggle"; entry: number }
   | { do: "write" | "note"; text: string }
@@ -194,7 +193,6 @@ function lastRun(starts: Start[]): Start[] {
   return run;
 }
 
-/** The lines after a start that belong to it: up to the next start, a rule or a heading. */
 function blockOf(lines: string[], start: Start, following: Start | undefined): string[] {
   const block: string[] = [];
   let inFence = false;
@@ -339,10 +337,7 @@ export function parse(text: string): Form | null {
   return asks ? { kind: "round", items } : null;
 }
 
-/**
- * The line each item of the form `parse` finds in `text` starts on, so a harness can cut
- * the message into its questions.
- */
+/** The line each item `parse` finds starts on, so a harness can cut the message up. */
 export function startLines(text: string): number[] {
   const lines = text.replace(/\r\n?/g, "\n").split("\n");
   return lastRun(findStarts(lines)).map((start) => start.line);
@@ -401,7 +396,6 @@ const canAccept = (item: FormItem) =>
   item.recommendedOption !== undefined ||
   item.recommendedOptions !== undefined;
 
-/** The answer that takes an item's recommendation: its options when it names any, else a yes. */
 function accepted(item: FormItem): Answer {
   if (item.recommendedOptions) return { kind: "options", indices: item.recommendedOptions };
   if (item.recommendedOption !== undefined)
@@ -431,7 +425,7 @@ function isChosen(item: FormItem, answer: Answer | null, entry: Row): boolean {
   return answer.kind === "accept" && item.recommendedOption === entry.index;
 }
 
-/** The entry the cursor starts on: the item's answer, else its recommendation, else the first. */
+/** The answer's entry, else the recommendation's, else the first. */
 function startEntry(item: FormItem, answer: Answer | null): number {
   const rows = entries(item);
   const chosen = rows.findIndex((entry) => isChosen(item, answer, entry));
@@ -575,11 +569,9 @@ const under = (text: string, indent: number) => text.split("\n").join(`\n${" ".r
 
 const NOTE_LEAD = "    Note: ";
 
-/** A reply line and, under it, the note it carries. */
 const noted = (line: string, note: string) =>
   note ? [line, `${NOTE_LEAD}${under(note, NOTE_LEAD.length)}`] : [line];
 
-/** What a question's answer says in the reply, a write-in's lines kept under its first. */
 const saying = (label: string, said: string) => `${label}: ${under(said, label.length + 2)}`;
 
 const rowsOf = (form: Form, draft: Draft) =>
@@ -688,7 +680,6 @@ function itemView(form: Form, draft: Draft): ItemView | null {
     // What it recommends among its options and why; with no options that is the accept entry.
     recommended: item.options.length ? (item.recommended ?? "") : "",
     canSeveral: canTakeSeveral(form, item),
-    // Its answer is several, or with none yet its recommendation is.
     isSeveral: answer ? answer.kind === "options" : item.recommendedOptions !== undefined,
     canAccept: canAccept(item),
     accepts: canAccept(item) ? said(item, accepted(item)) : "",

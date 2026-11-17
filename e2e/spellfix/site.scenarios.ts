@@ -5,8 +5,8 @@ import { poster, site, slow } from "../lib/site.ts";
 const DRAFT = "Can you teh quick brwon fox jump form the fence and fix the recieve handler";
 
 /**
- * Haiku's one answer for the draft, whichever request it comes with: hunspell flags `teh`, `brwon`
- * and `recieve`; `form` for `from` is a real word only the model can catch.
+ * Haiku's one answer for the draft whatever request it comes with: hunspell flags `teh`, `brwon`
+ * and `recieve`; `form` for `from` only the model catches.
  */
 const turns: Turn[] = [
   // An earlier exchange, so the screen is a conversation and not an empty page.

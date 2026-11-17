@@ -1,7 +1,4 @@
-/**
- * Every number, glyph and colour role of the house style
- * (skills/agent-plugin-dev/references/style.md). One edit here restyles every plugin.
- */
+/** The house style's numbers, glyphs and colour roles; one edit here restyles every plugin. */
 import type { Theme } from "@earendil-works/pi-coding-agent";
 
 type ThemeColor = Parameters<Theme["fg"]>[0];
@@ -56,7 +53,7 @@ export const tokens = {
 export type Role = keyof typeof tokens.role;
 
 /**
- * Colours `text` in a role of the theme. Call at render time so a theme change shows.
+ * `text` coloured in a role of the theme. Call at render time so a theme change shows.
  * @param role One of the style's colour roles, never a raw theme colour.
  */
 export const paint = (theme: Theme, role: Role, text: string) => theme.fg(tokens.role[role], text);
@@ -66,7 +63,6 @@ export type WidthClass = "reading" | "split" | "dialog" | "wide" | "auto";
 
 /**
  * The class's cap in columns on a terminal `columns` wide, or the content width for `auto`.
- * @param cls The width class (see style.md).
  * @param columns The terminal's width.
  * @param content The widest line in cells; only `auto` reads it.
  */

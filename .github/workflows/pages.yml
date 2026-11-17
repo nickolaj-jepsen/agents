@@ -36,8 +36,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # The media are played from the scenarios in real Claude Code and pi on a stubbed model; the
-      # same inputs give the same pictures, so a run whose inputs did not change reuses the last one's.
+      # The media replay from the e2e scenarios on a stubbed model, so the same inputs give the same
+      # pictures: cache on them.
       - id: media
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -47,8 +47,8 @@ jobs:
           key: media-${{ hashFiles('e2e/**', 'plugins/**', 'kit/**', 'flake.lock', 'devshell.nix', 'package-lock.json') }}
       - if: steps.media.outputs.cache-hit != 'true'
         uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
-      # E2E_UPDATE: the kit's snapshots are a local regression check, not a gate on the site; a
-      # newer Claude Code that draws a story differently still gets its picture.
+      # E2E_UPDATE: the kit's snapshots gate local runs, not the site; a newer Claude Code that draws
+      # a story differently still gets its picture.
       - if: steps.media.outputs.cache-hit != 'true'
         name: Record the media
         run: nix develop .#media --command just _media

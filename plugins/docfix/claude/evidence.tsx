@@ -57,9 +57,8 @@ function block(k: Kit, width: number, b: EvidenceBlock, key: string): JSX.Elemen
 }
 
 /**
- * The evidence, newest first, one blank row between pieces. One piece has no rule of its own:
- * the row's age says when. Several each get a dated rule.
- * @param width The room in cells.
+ * The evidence, newest first, one blank row between pieces: one piece has no rule of its own, its
+ * age saying when; several each get a dated rule.
  */
 export function evidence(k: Kit, width: number, items: readonly Evidence[]): JSX.Element {
   const { Box, Text } = k;
