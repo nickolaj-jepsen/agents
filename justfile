@@ -43,6 +43,11 @@ _dev-setup-claude:
 test:
     npm test
 
+[doc('Test the handoff watchdog and finite command leases without a harness')]
+[group('dev')]
+handoff-test:
+    PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skills/run-handoff/scripts -p 'test_*.py'
+
 [doc('Type-check the plugins, the kit and the e2e harness (tsc -b)')]
 [group('dev')]
 typecheck:

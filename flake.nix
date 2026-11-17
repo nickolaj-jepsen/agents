@@ -97,6 +97,12 @@
         checks =
           {
             inherit agent-tools;
+            handoff-runtime = pkgs.runCommand "handoff-runtime-tests" {nativeBuildInputs = [pkgs.python3 pkgs.git pkgs.procps];} ''
+              export HOME=$(mktemp -d)
+              export PYTHONDONTWRITEBYTECODE=1
+              python3 -m unittest discover -s ${./skills/run-handoff/scripts} -p 'test_*.py'
+              touch $out
+            '';
             readme = pkgs.callPackage ./pkgs/readme-check.nix {};
             marketplace = assert lib.assertMsg marketplaceMatches ".claude-plugin/marketplace.json lists ${toString published}; plugins/ has ${toString expected}";
               pkgs.emptyFile;
