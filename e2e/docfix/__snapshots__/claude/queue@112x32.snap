@@ -10,20 +10,20 @@
 │   change; the docs say it is.
 │   ! wrong  3×  ••  ▾ evidence
 │
-│   <date>     ──────────────────────────────────
-│     AGENTS.md: the line contradicts what the
-│     code does now.
+│   AGENTS.md: the line contradicts what the code
+│   does now.
 │
 │ docs/hosts.md ─────────────────────────────────
 │ □ The `legacy` card was removed; the section
 │   still describes it.
 │   ↻ stale  2×  age  ▾ evidence
 │
-│   <date>     ──────────────────────────────────
-│     docs/hosts.md: the line contradicts what
-│     the code does now.
+│   docs/hosts.md: the line contradicts what the
+│   code does now.
 │
 │ docs/modules.md ───────────────────────────────
+│ □ A leaf that imports a third-party module
+│   imports it on every host; the page should say
 │
 --- styles
 1 .x47 2
@@ -33,24 +33,24 @@
 1 . 4 2x7
 1
 1 . 3x9 . 2x37
-1
-1
+1 .x3 3x41
+1 . 3x29
 1 . 2x2 5x7 2x2 6x2 2x16
 1
-1 .x3 2x45
 1
 1
 1
 1 . 3x13 . 2x33
-1
-1
+1 .x3 3x42
+1 . 3x21
 1 . 2x30
 1
-1 .x3 2x45
 1
 1
 1
 1 . 3x15 . 2x31
+1 .x3 3x40
+1 . 3x47
 1
 --- legend
 1 dim

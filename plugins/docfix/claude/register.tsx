@@ -308,7 +308,12 @@ function row(r: Rows, s: Suggestion): JSX.Element {
       `${tokens.glyph.multi.off} `
     ),
   );
-  lines.forEach((line, i) => title.push(i === 0 ? line : `\n${" ".repeat(HANG)}${line}`));
+  // The claim is the headline of its row, so it is the one thing in semibold.
+  title.push(
+    <Text key="claim" weight="semibold">
+      {lines.map((line, i) => (i === 0 ? line : `\n${" ".repeat(HANG)}${line}`)).join("")}
+    </Text>,
+  );
   return (
     <Box key={`s:${s.id}`} flexDirection="column">
       <Button

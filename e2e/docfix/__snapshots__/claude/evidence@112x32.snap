@@ -17,13 +17,13 @@
 │     AF_UNIX path too long.
 │
 │   <date>      pi  migrated ────────────────────
-│     From pkgs/agent-hub: TMPDIR=<tmp>
-│     PYTHONPATH=. uv run --quiet --with
-│     markdown-it-py python -m unittest discover
-│     -s tests -p 'test_*.py'. Without a short
-│     TMPDIR the socket tests fail with "OSError:
-│     AF_UNIX path too long" inside a long
-│     worktree path; without markdown-it-py the
+│     Why the repo didn't say it
+│     Both failures look like code errors, and
+│     nothing in the repo states the TMPDIR
+│     requirement or the markdown-it-py
+│     dependency that only the nix build
+│     supplies; an agent would report 20 fake
+│     failures.
 │
 --- styles
 1 .x47 2
@@ -33,9 +33,9 @@
 1 . 4 2x7
 1
 1 . 3x17 . 2x29
-1
-1
-1
+1 .x3 3x40
+1 . 3x46
+1 . 3x30
 1 . 2x33
 1
 1 .x3 2x45
@@ -44,7 +44,7 @@
 1
 1
 1 .x3 2x45
-1
+1 .x5 2x26
 1
 1
 1

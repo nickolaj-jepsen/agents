@@ -1,4 +1,4 @@
-# docfix/pi/evidence 240x60 @58,11 (124x37)
+# docfix/pi/evidence 240x60 @58,10 (124x40)
 ╭─ Doc suggestions  2 ─────────────────────────────────────────────┬───────────────────────────────────────────────────────╮
 │                                                                  │                                                       │
 │ docs/agent-hub.md ────────────────────────────────────────────── │ agent-hub's unittest suite needs a short TMPDIR and   │
@@ -13,20 +13,23 @@
 │                                                                  │   failed 20 socket tests with AF_UNIX path too long.  │
 │                                                                  │                                                       │
 │                                                                  │ <date>      pi  migrated ──────────────────────────── │
-│                                                                  │   From pkgs/agent-hub: TMPDIR=<tmp>   PYTHONPATH=. uv │
-│                                                                  │   run --quiet --with markdown-it-py python -m         │
-│                                                                  │   unittest discover -s tests -p 'test_*.py'. Without  │
-│                                                                  │   a short TMPDIR the socket tests fail with "OSError: │
-│                                                                  │   AF_UNIX path too long" inside a long worktree path; │
-│                                                                  │   without markdown-it-py the render/features imports  │
-│                                                                  │   fail. Baseline: 470 tests, 1 skipped.               │
-│                                                                  │                                                       │
 │                                                                  │   Why the repo didn't say it                          │
 │                                                                  │   Both failures look like code errors, and nothing in │
 │                                                                  │   the repo states the TMPDIR requirement or the       │
 │                                                                  │   markdown-it-py dependency that only the nix build   │
 │                                                                  │   supplies; an agent would report 20 fake failures.   │
 │                                                                  │                                                       │
+│                                                                  │   Details                                             │
+│                                                                  │   From pkgs/agent-hub: TMPDIR=<tmp>   PYTHONPATH=. uv │
+│                                                                  │   run --quiet --with markdown-it-py python -m         │
+│                                                                  │   unittest discover -s tests -p 'test_*.py'.          │
+│                                                                  │   Without a short TMPDIR the socket tests fail with   │
+│                                                                  │   "OSError: AF_UNIX path too long" inside a long      │
+│                                                                  │   worktree path; without markdown-it-py the           │
+│                                                                  │   render/features imports fail.                       │
+│                                                                  │   Baseline: 470 tests, 1 skipped.                     │
+│                                                                  │                                                       │
+│                                                                  │   Points at                                           │
 │                                                                  │   path     pkgs/agent-hub/package.nix                 │
 │                                                                  │   command  TMPDIR=<tmp>   PYTHONPATH=. uv run --quiet │
 │                                                                  │            --with markdown-it-py python -m unittest   │
@@ -51,20 +54,23 @@
 1 .x66 1 .x3 5x50 .x2 1
 1 .x66 1 .x55 1
 1 .x66 1 . 3x53 . 1
-1 .x66 1 .x3 5x51 . 1
-1 .x66 1 .x3 5x43 .x9 1
-1 .x66 1 .x3 5x50 .x2 1
-1 .x66 1 .x3 5x51 . 1
-1 .x66 1 .x3 5x51 . 1
-1 .x66 1 .x3 5x50 .x2 1
-1 .x66 1 .x3 5x37 .x15 1
-1 .x66 1 .x55 1
-1 .x66 1 .x3 4x26 .x26 1
+1 .x66 1 .x3 3x26 .x26 1
 1 .x66 1 .x3 5x51 . 1
 1 .x66 1 .x3 5x45 .x7 1
 1 .x66 1 .x3 5x49 .x3 1
 1 .x66 1 .x3 5x49 .x3 1
 1 .x66 1 .x55 1
+1 .x66 1 .x3 3x7 .x45 1
+1 .x66 1 .x3 5x51 . 1
+1 .x66 1 .x3 5x43 .x9 1
+1 .x66 1 .x3 5x42 .x10 1
+1 .x66 1 .x3 5x49 .x3 1
+1 .x66 1 .x3 5x46 .x6 1
+1 .x66 1 .x3 5x41 .x11 1
+1 .x66 1 .x3 5x29 .x23 1
+1 .x66 1 .x3 5x31 .x21 1
+1 .x66 1 .x55 1
+1 .x66 1 .x3 3x9 .x43 1
 1 .x66 1 .x3 3x7 .x2 5x26 .x17 1
 1 .x66 1 .x3 3x7 .x2 5x42 . 1
 1 .x66 1 .x12 5x40 .x3 1

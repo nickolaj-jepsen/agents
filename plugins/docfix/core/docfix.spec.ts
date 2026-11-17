@@ -4,6 +4,7 @@ import {
   applyPrompt,
   byTarget,
   dismiss,
+  evidenceBlocks,
   evidenceLabel,
   normalizeTarget,
   openQueue,
@@ -12,6 +13,7 @@ import {
   readEvidence,
   reopen,
   repeats,
+  sentences,
   serialize,
   type Call,
   type Suggestion,
@@ -239,5 +241,38 @@ describe("what a row says of its count and evidence", () => {
       text: "Migrated from pi memory `x`.\n\nSomething.",
     });
     expect(evidenceLabel(view)).toBe("2026-11-05  pi  migrated");
+  });
+});
+
+describe("evidence a person scans", () => {
+  const view = (text: string) => readEvidence({ at: NOW, session: "pi:1", text });
+
+  test("the reason comes first, then the details, then what it points at", () => {
+    const blocks = evidenceBlocks(
+      view(
+        'Measured it.\n\nWhy the repo didn\'t say it: No comment says why.\n\nCitations: [{"kind":"path","value":"a.nix"}]',
+      ),
+    );
+    expect(blocks.map((b) => b.heading)).toEqual([
+      "Why the repo didn't say it",
+      "Details",
+      "Points at",
+    ]);
+    expect(blocks[2]?.items).toEqual([{ kind: "path", value: "a.nix" }]);
+  });
+
+  test("one plain paragraph has no heading", () => {
+    expect(evidenceBlocks(view("The line is stale."))).toEqual([
+      { heading: "", lines: ["The line is stale."] },
+    ]);
+  });
+
+  test("a long text is cut after each sentence, not inside a command", () => {
+    const text = `From pkgs/x: PYTHONPATH=. uv run python -m unittest. ${"Filler words go here. ".repeat(6)}Last one.`;
+    const lines = sentences(text);
+    expect(lines[0]).toBe("From pkgs/x: PYTHONPATH=. uv run python -m unittest.");
+    expect(lines.at(-1)).toBe("Last one.");
+    expect(lines.length).toBeGreaterThan(5);
+    expect(sentences("Short. Text.")).toEqual(["Short. Text."]);
   });
 });

@@ -279,6 +279,43 @@ export function readEvidence(e: Evidence): EvidenceView {
   return { when: e.at.slice(0, 10), by, isMigrated, parts };
 }
 
+/** A heading and what is under it: lines of text, or what a suggestion points at. */
+export type EvidenceBlock = { heading: string; lines: string[]; items?: Citation[] };
+
+/** Text longer than this is set one sentence to a line, so it is not a wall. */
+const WALL = 140;
+
+/**
+ * `text` in the lines a person reads it in: its own lines, and a long one cut after each
+ * sentence. A full stop only ends a sentence before a capital letter, so `PYTHONPATH=. uv run`
+ * and `a.md` stay whole.
+ */
+export function sentences(text: string): string[] {
+  return text
+    .split("\n")
+    .flatMap((line) => (line.length > WALL ? line.split(/(?<=[.!?])\s+(?=[A-Z"`“])/) : [line]));
+}
+
+/**
+ * One piece of evidence as blocks a person scans: the reason first, then the details, then what
+ * it points at, each under a bold heading. Evidence that is one plain paragraph has no heading
+ * to give: it is the details and nothing else.
+ */
+export function evidenceBlocks(view: EvidenceView): EvidenceBlock[] {
+  const isStructured = view.parts.length > 1 || view.parts.some((p) => p.kind !== "text");
+  const heading = (label: string) => (isStructured ? label : "");
+  const why = view.parts.flatMap((p) =>
+    p.kind === "labelled" ? [{ heading: p.label, lines: sentences(p.text) }] : [],
+  );
+  const details = view.parts.flatMap((p) =>
+    p.kind === "text" ? [{ heading: heading("Details"), lines: sentences(p.text) }] : [],
+  );
+  const points = view.parts.flatMap((p) =>
+    p.kind === "citations" ? [{ heading: "Points at", lines: [], items: p.items }] : [],
+  );
+  return [...why, ...details, ...points];
+}
+
 // --- A call ----------------------------------------------------------------------
 
 export type Call = {
