@@ -10,8 +10,10 @@ just site         # dev server at http://localhost:4321/agents/
 just site-build   # site/dist, as the Pages workflow builds it
 ```
 
-Both also need the root's `node_modules`: the pages read the repo through `scripts/content.ts`, which
-imports the root's `yaml`.
+Both write `data/content.json` first: `npm run site-data` runs the repo's content loader
+(`scripts/content.ts`, which imports the root's `yaml`), and the pages read that file as data. So a
+site build needs the root only to make the model: `cd site && npm run build` reads nothing outside
+`site/`. Re-run `just site` to see a freshly recorded demo or a new README.
 
 ## Where the pages come from
 
@@ -24,8 +26,9 @@ imports the root's `yaml`.
 | `/dev/components/<id>/` | the same, a component with its stories inline                                                 |
 | `/dev/<doc>/`           | `docs/<doc>.md`                                                                               |
 
-- Edit those sources, never the pages. `src/lib/content.ts` reads them through `scripts/content.ts`,
-  the loader the root `README.md` is generated from.
+- Edit those sources, never the pages. `just site` loads them into `data/content.json` with
+  `scripts/content.ts`, the loader the root `README.md` is generated from, and `src/lib/content.ts`
+  reads that file and nothing else.
 - A relative link in a source resolves against its file: one to a plugin, skill or doc lands on its page,
   anything else in the repo on GitHub (`src/lib/markdown.ts`).
 - `site/media/` is recorded, not committed. `just media` (in `nix develop .#media`, signed out)

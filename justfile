@@ -78,7 +78,9 @@ readme:
 [script]
 site:
     [ -d node_modules ] || npm ci
-    # The catalogue's model, without its pictures: `just media` records those.
+    # The content model and the catalogue's, before Astro reads either: re-run to see a new README
+    # or a freshly recorded demo.
+    npm run site-data
     [ -f kit/catalog/catalog.json ] || npm run catalog -- --no-shots
     cd site
     [ -d node_modules ] || npm ci
@@ -89,6 +91,7 @@ site:
 [script]
 site-build:
     [ -d node_modules ] || npm ci
+    npm run site-data
     [ -f kit/catalog/catalog.json ] || npm run catalog -- --no-shots
     cd site
     [ -d node_modules ] || npm ci

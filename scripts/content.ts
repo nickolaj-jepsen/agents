@@ -57,11 +57,21 @@ export type Skill = {
   body: string;
   path: string;
   files: string[];
+  /** Lines in SKILL.md, frontmatter included: the page counts what it offers to open. */
+  lines: number;
 };
 
 export type Category = { slug: string; title: string; blurb?: string; skills: Skill[] };
 export type Doc = { slug: string; title: string; body: string; path: string };
+/** The constants both readers print, carried with the model so neither imports this module. */
+export type Meta = {
+  repoUrl: string;
+  siteUrl: string;
+  inProgress: string;
+  marketplaceAdd: string;
+};
 export type Content = {
+  meta: Meta;
   intro: string;
   install: string;
   plugins: Plugin[];
@@ -96,12 +106,16 @@ export const MARKETPLACE_ADD = "claude plugin marketplace add nickolaj-jepsen/ag
 
 export const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-function frontmatter(file: string): { data: Record<string, any>; body: string } {
+function frontmatter(file: string): { data: Record<string, any>; body: string; lines: number } {
   const text = readFileSync(file, "utf8");
   const m = text.match(/^---\n([\s\S]*?)\n---\n?/);
   if (!m) throw new Error(`${file}: no frontmatter`);
   const data = parse(m[1] as string) ?? {};
-  return { data, body: text.slice(m[0].length).replace(/^\n+/, "") };
+  return {
+    data,
+    body: text.slice(m[0].length).replace(/^\n+/, ""),
+    lines: text.trimEnd().split("\n").length,
+  };
 }
 
 function dirs(dir: string): string[] {
@@ -194,7 +208,7 @@ function loadSkills(root: string): Skill[] {
   return dirs(join(root, "skills")).map((name): Skill => {
     const dir = join(root, "skills", name);
     const file = join(dir, "SKILL.md");
-    const { data, body } = frontmatter(file);
+    const { data, body, lines } = frontmatter(file);
     const meta = (data.metadata ?? {}) as Record<string, unknown>;
     const category = meta.category;
     if (typeof category !== "string" || !known.has(category))
@@ -215,6 +229,7 @@ function loadSkills(root: string): Skill[] {
       body: body.trimEnd(),
       path: `skills/${name}`,
       files: listFiles(dir).filter((f) => f !== "SKILL.md"),
+      lines,
     };
   });
 }
@@ -253,6 +268,12 @@ export function loadContent(root: string = repoRoot): Content {
       .sort((a, b) => Number(!!a.status) - Number(!!b.status) || a.name.localeCompare(b.name)),
   })).filter((c) => c.skills.length > 0);
   return {
+    meta: {
+      repoUrl: REPO_URL,
+      siteUrl: SITE_URL,
+      inProgress: IN_PROGRESS,
+      marketplaceAdd: MARKETPLACE_ADD,
+    },
     intro: readPart(root, "_intro.md"),
     install: readPart(root, "_install.md"),
     plugins,

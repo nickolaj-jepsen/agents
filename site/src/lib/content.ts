@@ -1,28 +1,21 @@
 /**
- * The repo's content for the pages: `scripts/content.ts` read once per build, plus the URLs the
- * pages link with. The loader is given the repo root, since the bundle runs from elsewhere.
+ * The repo's content for the pages: `site/data/content.json`, which `npm run site-data` writes
+ * from `scripts/content.ts` (and `just site` runs first), plus the URLs the pages link with. The
+ * pages read no file outside this folder, so the site builds from its own tree.
  */
-import {
-  IN_PROGRESS,
-  loadContent,
-  MARKETPLACE_ADD,
-  REPO_URL,
-  type Content,
-  type Doc,
-  type Plugin,
-  type Skill,
-} from "../../../scripts/content.ts";
+import type { Content, Doc, Plugin, Skill } from "../../../scripts/content.ts";
+import model from "../../data/content.json";
 
 export type { Content, Doc, Plugin, Skill };
-export { IN_PROGRESS, MARKETPLACE_ADD, REPO_URL };
 
-let cached: Content | undefined;
-/** Read once per build; in dev on every page, so newly recorded media show without a restart. */
-export function content(): Content {
-  if (import.meta.env.DEV) return loadContent(__REPO_ROOT__);
-  cached ??= loadContent(__REPO_ROOT__);
-  return cached;
-}
+const data = model as Content;
+
+/** The model itself: already loaded, media and all, when `site-data` wrote it. */
+export const content = (): Content => data;
+
+export const REPO_URL = data.meta.repoUrl;
+export const IN_PROGRESS = data.meta.inProgress;
+export const MARKETPLACE_ADD = data.meta.marketplaceAdd;
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 

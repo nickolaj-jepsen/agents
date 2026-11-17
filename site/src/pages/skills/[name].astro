@@ -8,8 +8,6 @@ import Wip from '../../components/Wip.astro';
 import { content, github, href, skillHref, skillInstall, type Skill } from '../../lib/content.ts';
 import { renderInline, renderMarkdown } from '../../lib/markdown.ts';
 import { headings, linkReferences, requirements, whenToUse } from '../../lib/skill.ts';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import '../../styles/skill.css';
 
 export const getStaticPaths = (() => {
@@ -38,7 +36,7 @@ const description = await renderInline(s.description, file);
 const rendered = await renderMarkdown(s.body.replace(new RegExp(`^# ${s.name}\\s*\\n+`), ''), file);
 const toc = headings(rendered);
 const body = linkReferences(rendered, toc);
-const lines = readFileSync(join(__REPO_ROOT__, file), 'utf8').trimEnd().split('\n').length;
+const lines = s.lines;
 const when = await renderInline(whenToUse(s.description), file);
 const needs = await Promise.all(requirements(s.body).map((r) => renderInline(r, file)));
 const usage = `/${s.name}${s.argumentHint ? ` ${s.argumentHint}` : ''}`;
