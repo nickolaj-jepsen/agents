@@ -1,21 +1,20 @@
 # answer/claude/back-by-click 70x24 @0,12 (70x6)
 Use SQLite?                                                       [-]
-
-1: A. SQLite ✓
-2: B. Postgres
-3: ✎ Write your own answer
+1: ● A. SQLite
+   ╰▸ add a note
+2: ○ B. Postgres
+3: ○ ✎ Write your own answer
 ↑ 1 more · ↓ 1 more
 --- styles
 1x11 .x55 2x3
--
-3 4x11 5x2
-6
-6 2x25
+3 4x13
+.x3 2x13
+5
+5 2x27
 2x19
 --- legend
 1 bold
 2 fg=#999999
 3 fg=#b1b9f9 inverse
 4 inverse
-5 fg=#4eba65 inverse
-6 fg=#b1b9f9
+5 fg=#b1b9f9

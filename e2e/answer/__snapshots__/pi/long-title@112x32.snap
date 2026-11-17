@@ -18,8 +18,8 @@
 │ quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox      │
 │ jumps over the lazy dog the quick brown fox jumps over the lazy dog?                                         │
 │                                                                                                              │
-│ ›1 A. Yes                                                                                                    │
-│  2 B. No                                                                                                     │
+│ ›1 ○ A. Yes                                                                                                  │
+│  2 ○ B. No                                                                                                   │
 │                                                                                                              │
 │ b back  f forward  s skip  r review  n note  m several                                                       │
 ╰──────────────────────────── shift+↑↓ scrolls · 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
@@ -43,7 +43,7 @@
 1 . 4x103 .x6 1
 1 . 4x68 .x41 1
 1 .x110 1
-1 . 2x2 . 2x6 .x100 1
+1 . 2x2 . 2x8 .x98 1
 1 .x2 2 .x107 1
 1 .x110 1
 1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x7 2 .x63 1

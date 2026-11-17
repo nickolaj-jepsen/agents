@@ -1,34 +1,34 @@
 # answer/claude/recommended-yes-click 160x45 @0,27 (160x12)
-──   ✓ Q1   ○ Q2   ○ Q3   r: review   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
-Should every focus default to the same bar?
+──   2 of 3   ✓ Q1   ○ Q2   ○ Q3   r: review   ───────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
+Lower the per-generator target to 5-6?
 
-1: A. Yes, one default for every kind. (recommended) ✓
-   ╰▸ A note on this answer, or Enter to go on
-2: B. Default by kind.
-3: C. Add the bar as a second pick.
-4: ✎ Write your own answer
+1: ○ Yes: Yes. Four generators still give 20-24.
+2: ○ ✎ Write your own answer
 
-Recommended: A. A per-kind table is one more thing to keep in sync.
 
-h: back   l: next   y: yes   s: skip   n: note   m: multi   q: quit
+
+
+
+
+h: back   l: next   y: take yes   s: skip   n: note   q: quit
 --- styles
-1x2 .x3 2x2 .x5 1x4 .x3 1x4 .x3 3 1x8 .x3 1x116 .x2 1x3
-4x43
+1x2 .x3 2x6 .x3 3x2 1x2 .x3 1x2 4x2 .x3 1x4 .x3 5 1x8 .x3 1x107 .x2 1x3
+2x38
 -
-3 .x37 1x14 2x2
-.x3 5x3 1x40
-6 7x21
-3
-3 1x25
+6 7x47
+5 1x27
 -
-4x12
 -
-3 1x6 .x3 3 .x9 3 1x5 .x3 3 1x6 .x3 3 1x6 .x3 3 1x7 .x3 3 1x6
+-
+-
+-
+-
+5 1x6 .x3 5 1x6 .x3 5 .x13 5 1x6 .x3 5 1x6 .x3 5 1x6
 --- legend
 1 fg=#999999
-2 fg=#4eba65
-3 fg=#b1b9f9
-4 bold
-5 fg=#b1b9f9 italic
+2 bold
+3 fg=#4eba65
+4 fg=#d77757
+5 fg=#b1b9f9
 6 fg=#b1b9f9 inverse
 7 inverse

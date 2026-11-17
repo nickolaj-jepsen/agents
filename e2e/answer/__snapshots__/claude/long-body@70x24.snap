@@ -1,16 +1,16 @@
 # answer/claude/long-body 70x24 @0,12 (70x6)
-                                                                  [-]
-1: A. Keep it.
-2: B. Drop it.
-3: ✎ Write your own answer
-h: back   l: next   s: skip   n: note   m: multi   q: quit
-↑ 3 more
+… more above                                                      [-]
+1: ○ A. Keep it.
+2: ○ B. Drop it.
+3: ○ ✎ Write your own answer
+h: back   l: next   s: skip   n: note   m: several   q: quit
+↑ 2 more
 --- styles
-.x66 1x3
-2 3x13
+1x12 .x54 1x3
+2 3x15
 4
-4 1x25
-4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x7 .x3 4 1x6
+4 1x27
+4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x9 .x3 4 1x6
 1x8
 --- legend
 1 fg=#999999

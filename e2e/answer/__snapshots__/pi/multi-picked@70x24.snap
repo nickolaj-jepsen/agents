@@ -2,23 +2,23 @@
 ╭─ Q1 1 of 2 ────────────────────────────────────────────────────────╮
 │ Use SQLite?                                                        │
 │                                                                    │
-│  1 [x] A. SQLite                                                   │
-│ ›2 [x] B. Postgres                                                 │
+│  1 ■ A. SQLite                                                     │
+│    ╰▸ add a note                                                   │
+│ ›2 ■ B. Postgres                                                   │
 │                                                                    │
-│  3 Write your own answer                                           │
+│  3 ○ Write your own answer                                         │
 │                                                                    │
-│                                                                    │
-│ b back  f forward  s skip  r review  n note  m one                 │
+│ b back  f forward  s skip  r review  n note  m several             │
 ╰──────────────── 1-9 toggles, f goes on · esc closes, answers kept ─╯
 --- styles
 1x2 . 2x2 . 3x6 . 1x57
 1 . 4x11 .x56 1
 1 .x68 1
-1 .x2 2 . 5x13 .x51 1
-1 . 2x2 . 2x15 .x49 1
+1 .x2 2 . 5x11 .x53 1
+1 . 3x16 .x51 1
+1 . 2x2 . 2x13 .x51 1
 1 .x68 1
-1 .x2 2 . 3x21 .x43 1
-1 .x68 1
+1 .x2 2 . 3x23 .x41 1
 1 .x68 1
 1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x7 2 .x21 1
 1x17 3x51 1x2

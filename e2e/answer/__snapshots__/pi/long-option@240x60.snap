@@ -2,15 +2,15 @@
 ╭─ Q1 1 of 1 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ Which one?                                                                                                                                                                                                                                   │
 │                                                                                                                                                                                                                                              │
-│ ›1 A. a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text    │
+│ ›1 ○ A. a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text  │
 │    that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a  │
 │    very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going                                                                                    │
-│  2 B. Short                                                                                                                                                                                                                                  │
+│  2 ○ B. Short                                                                                                                                                                                                                                │
 │    a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that  │
 │    keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very  │
 │    long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going                                                                                         │
 │                                                                                                                                                                                                                                              │
-│  3 Write your own answer                                                                                                                                                                                                                     │
+│  3 ○ Write your own answer                                                                                                                                                                                                                   │
 │                                                                                                                                                                                                                                              │
 │                                                                                                                                                                                                                                              │
 │ b back  f forward  s skip  r review  n note  m several                                                                                                                                                                                       │
@@ -19,7 +19,7 @@
 1x2 . 2x2 . 3x6 . 1x227
 1 . 4x10 .x227 1
 1 .x238 1
-1 . 2x2 . 2x230 .x4 1
+1 . 2x2 . 2x232 .x2 1
 1 .x4 2x232 .x2 1
 1 .x4 2x150 .x84 1
 1 .x2 2 .x235 1
@@ -27,7 +27,7 @@
 1 .x4 3x232 .x2 1
 1 .x4 3x145 .x89 1
 1 .x238 1
-1 .x2 2 . 3x21 .x213 1
+1 .x2 2 . 3x23 .x211 1
 1 .x238 1
 1 .x238 1
 1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x7 2 .x191 1

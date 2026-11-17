@@ -4,15 +4,15 @@
 │                                                                    │
 │ 2/3 · S · build                                                    │
 │                                                                    │
-│ ›1 Build it (recommended)                                          │
+│ ›1 ○ Build it (recommended)                                        │
 │                                                                    │
-│  2 Something else                                                  │
+│  2 ○ Something else                                                │
 │                                                                    │
 │ Recommended: build it                                              │
 │                                                                    │
 │                                                                    │
 │                                                                    │
-│ b back  f forward  s skip  r review  n note                        │
+│ b back  f forward  y take build  s skip  r review  n note          │
 ╰───── 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
 --- styles
 1x2 . 2 . 3x6 . 1x58
@@ -20,15 +20,15 @@
 1 .x68 1
 1 .x68 1
 1 .x68 1
-1 . 2x2 . 2x8 3x14 .x42 1
+1 . 2x2 . 2x10 3x14 .x40 1
 1 .x68 1
-1 .x2 2 . 3x14 .x50 1
+1 .x2 2 . 3x16 .x48 1
 1 .x68 1
 1 . 3x12 .x55 1
 1 .x68 1
 1 .x68 1
 1 .x68 1
-1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x29 1
+1 . 2 .x7 2 .x10 2 .x13 2 .x7 2 .x9 2 .x15 1
 1x6 3x62 1x2
 --- legend
 1 fg=#343331

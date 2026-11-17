@@ -1,16 +1,16 @@
 # answer/claude/recommended 70x24 @0,12 (70x6)
 Should every focus default to the same bar?                       [-]
-
-1: A. Yes, one default for every kind. (recommended)
-2: B. Default by kind.
-3: C. Add the bar as a second pick.
-↑ 1 more · ↓ 6 more
+1: ○ A. Yes, one default for every kind. (recommended)
+2: ○ B. Default by kind.
+3: ○ C. Add the bar as a second pick.
+4: ○ ✎ Write your own answer
+↑ 1 more · ↓ 4 more
 --- styles
 1x43 .x23 2x3
--
-3 4x37 5x14
+3 4x39 5x14
 6
 6
+6 2x27
 2x19
 --- legend
 1 bold

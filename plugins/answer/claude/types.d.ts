@@ -32,6 +32,8 @@ export type Item = {
   isSeveral: boolean;
   /** Whether it recommends something a yes can take. */
   canAccept: boolean;
+  /** What a yes takes, as the reply says it: "B", "B, C" or "yes"; "" when it takes nothing. */
+  accepts: string;
   note: string;
   /** The write-in answer, "" for none. */
   written: string;
@@ -48,7 +50,7 @@ export type View = {
   step: number;
   isReview: boolean;
   item: Item | null;
-  review: { label: string; shown: string; isAnswered: boolean; note: string }[];
+  review: { label: string; title: string; shown: string; isAnswered: boolean; note: string }[];
   /** Said last, about the whole round. */
   note: string;
   reply: string;
@@ -97,26 +99,10 @@ export type Current = {
   filled: string | null;
 };
 
-/**
- * A round whose questions past the first each have a transcript row of their own, placed
- * under the message that asked, which then draws only its `head`.
- */
-export type Split = {
-  /** The form's id. */
-  form: string;
-  /** The message up to its second question. */
-  head: string;
-  /** One per question past the first: the id it was placed under, the row's own, and its text. */
-  rows: { id: string; requestId: string; text: string }[];
-  /** How long the turn took, when its closing line moved under the last row; else null. */
-  durationMs: number | null;
-};
-
 declare module "claude-code" {
   interface PluginState {
     answer: {
       current: Shaped<Current | null>;
-      splits: Shaped<Split[]>;
     };
   }
 }

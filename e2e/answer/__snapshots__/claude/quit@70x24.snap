@@ -1,6 +1,7 @@
 # answer/claude/quit 70x24 @0,17 (70x1)
-Answer 2 questions · 1 of 2 · alt+a then Enter, or /answer        [-]
+Answer 2 questions  1 of 2  alt+a then Enter, or /answer          [-]
 --- styles
-.x18 1x40 .x8 1x3
+1x18 2x38 .x10 2x3
 --- legend
-1 fg=#999999
+1 fg=#d77757
+2 fg=#999999

@@ -1,20 +1,22 @@
 # answer/claude/many-late 70x24 @0,12 (70x6)
-○ Q10   ○ Q11   ○ Q12   r: review                                 [-]
+✓ Q8   ○ Q9   ○ Q10   ○ Q11   ○ Q12   r: review                   [-]
 Question number 9: pick a strategy?
-
-1: A. Option A for 9
-2: B. Option B for 9
-↑ 1 more · ↓ 2 more
+1: ○ A. Option A for 9
+2: ○ B. Option B for 9
+3: ○ ✎ Write your own answer
+↑ 1 more · ↓ 1 more
 --- styles
-1x5 .x3 1x5 .x3 1x5 .x3 2 1x8 .x33 1x3
-3x35
--
-4 5x19
-2
-1x19
+1x2 2x2 .x3 2x2 3x2 .x3 2x5 .x3 2x5 .x3 2x5 .x3 4 2x8 .x19 2x3
+5x35
+6 7x21
+4
+4 2x27
+2x19
 --- legend
-1 fg=#999999
-2 fg=#b1b9f9
-3 bold
-4 fg=#b1b9f9 inverse
-5 inverse
+1 fg=#4eba65
+2 fg=#999999
+3 fg=#d77757
+4 fg=#b1b9f9
+5 bold
+6 fg=#b1b9f9 inverse
+7 inverse

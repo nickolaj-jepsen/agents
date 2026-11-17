@@ -1,20 +1,19 @@
 # answer/claude/review-row 70x24 @0,12 (70x6)
-                                                                  [-]
-1: A. Yes
-2: B. No ✓
-3: ✎ Write your own answer
-h: back   l: next   s: skip   n: note   m: multi   q: quit
+1: ○ A. Yes                                                       [-]
+2: ● B. No
+   ╰▸ add a note
+3: ○ ✎ Write your own answer
+h: back   l: next   s: skip   n: note   m: several   q: quit
 ↑ 2 more
 --- styles
-.x66 1x3
-2
-3 4x7 5x2
-2 1x25
-2 1x6 .x3 2 .x9 2 1x6 .x3 2 1x6 .x3 2 1x7 .x3 2 1x6
-1x8
+1 .x65 2x3
+3 4x9
+.x3 2x13
+1 2x27
+1 2x6 .x3 1 .x9 1 2x6 .x3 1 2x6 .x3 1 2x9 .x3 1 2x6
+2x8
 --- legend
-1 fg=#999999
-2 fg=#b1b9f9
+1 fg=#b1b9f9
+2 fg=#999999
 3 fg=#b1b9f9 inverse
 4 inverse
-5 fg=#4eba65 inverse

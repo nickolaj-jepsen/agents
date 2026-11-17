@@ -1,5 +1,6 @@
 # answer/claude/long-title 160x45 @0,23 (160x16)
-over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the   [-]
+quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps   [-]
+over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the
 quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps
 over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the
 quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps
@@ -9,12 +10,11 @@ over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fo
 quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps
 over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the
 quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog?
-
-1: A. Yes
-2: B. No
-3: ✎ Write your own answer
-h: back   l: next   s: skip   n: note   m: multi   q: quit
-↑ 3 more
+1: ○ A. Yes
+2: ○ B. No
+3: ○ ✎ Write your own answer
+h: back   l: next   s: skip   n: note   m: several   q: quit
+↑ 2 more
 --- styles
 1x154 .x2 2x3
 1x154
@@ -25,12 +25,12 @@ h: back   l: next   s: skip   n: note   m: multi   q: quit
 1x154
 1x154
 1x154
+1x154
 1x84
--
-3 4x8
+3 4x10
 5
-5 2x25
-5 2x6 .x3 5 2x6 .x3 5 2x6 .x3 5 2x6 .x3 5 2x7 .x3 5 2x6
+5 2x27
+5 2x6 .x3 5 2x6 .x3 5 2x6 .x3 5 2x6 .x3 5 2x9 .x3 5 2x6
 2x8
 --- legend
 1 bold

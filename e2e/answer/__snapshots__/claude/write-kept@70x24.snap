@@ -1,20 +1,22 @@
 # answer/claude/write-kept 70x24 @0,12 (70x6)
-Add caching?                                                      [-]
-
-1: A. Yes
-2: B. No
-3: ✎ Write your own answer
-↑ 1 more · ↓ 1 more
+──   2 of 2   ✓ Q1   ○ Q2   r: review   ────────────────────────  [-]
+Add caching?
+1: ○ A. Yes
+2: ○ B. No
+3: ○ ✎ Write your own answer
+h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
-1x12 .x54 2x3
--
-3 4x8
+1x2 .x3 2x6 .x3 3x2 1x2 .x3 1x2 4x2 .x3 5 1x8 .x3 1x24 .x2 1x3
+2x12
+6 7x10
 5
-5 2x25
-2x19
+5 1x27
+5 1x6 .x3 5 1x6 .x3 5 1x6 .x3 5 1x6 .x3 5 1x9 .x3 5 1x6
 --- legend
-1 bold
-2 fg=#999999
-3 fg=#b1b9f9 inverse
-4 inverse
+1 fg=#999999
+2 bold
+3 fg=#4eba65
+4 fg=#d77757
 5 fg=#b1b9f9
+6 fg=#b1b9f9 inverse
+7 inverse

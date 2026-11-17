@@ -2,11 +2,11 @@
 ╭─ Q1 1 of 2 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ Use SQLite?                                                                                                                                                                                                                                  │
 │                                                                                                                                                                                                                                              │
-│  1 A. SQLite ✓                                                                                                                                                                                                                               │
+│  1 ● A. SQLite                                                                                                                                                                                                                               │
 │    note › because the team already runs it and the dump tooling is there, and we would rather not retrain anyone on a new engine this quarter                                                                                                │
-│  2 B. Postgres                                                                                                                                                                                                                               │
+│  2 ○ B. Postgres                                                                                                                                                                                                                             │
 │                                                                                                                                                                                                                                              │
-│  3 Write your own answer                                                                                                                                                                                                                     │
+│  3 ○ Write your own answer                                                                                                                                                                                                                   │
 │                                                                                                                                                                                                                                              │
 │                                                                                                                                                                                                                                              │
 │ b back  f forward  s skip  r review  n note  m several                                                                                                                                                                                       │
@@ -19,7 +19,7 @@
 1 . 3x7 .x230 1
 1 .x2 2 .x235 1
 1 .x238 1
-1 .x2 2 . 3x21 .x213 1
+1 .x2 2 . 3x23 .x211 1
 1 .x238 1
 1 .x238 1
 1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x7 2 .x191 1

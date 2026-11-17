@@ -1,9 +1,9 @@
 /**
  * The answer form, drawn in the editor's place: one item per screen and a
- * review, every row and key chip clickable. A pick records the answer and asks
- * for a note under it; Enter there, empty or not, goes on to the next item
- * unanswered, and `m` lets several options be one answer. A double click on an
- * answer goes on the next one too. The draft and every step through it are the
+ * review, every row and key chip clickable. A pick records the answer and goes on
+ * to the next item unanswered; a note is `n` or a click on `add a note` under the
+ * answer, and `m` lets several options be one answer. `y` takes the recommendation.
+ * The draft and every step through it are the
  * core's (`../core/forms.ts`), which Claude Code's mod shares; this file only
  * draws its view and maps keys and clicks onto those steps.
  */
@@ -24,7 +24,8 @@ import {
 } from "@earendil-works/pi-tui";
 import type { Action, View } from "../core/forms.ts";
 
-export type FormResult = { fill: boolean };
+/** `fill` writes the reply into the editor; `send` sends it as the person's message instead. */
+export type FormResult = { fill: boolean; send?: boolean };
 
 /** One step of the draft (`apply` in the core). */
 export type FormAction = Action;
@@ -33,7 +34,18 @@ type Item = NonNullable<View["item"]>;
 
 type Act =
   | { kind: "entry"; index: number }
-  | { kind: "note" | "several" | "back" | "forward" | "skip" | "review" | "fill" }
+  | {
+      kind:
+        | "note"
+        | "several"
+        | "back"
+        | "forward"
+        | "skip"
+        | "review"
+        | "fill"
+        | "send"
+        | "accept";
+    }
   | { kind: "goto"; index: number };
 
 /** A drawn row: a whole-row target, or chips hit by column. */
@@ -160,11 +172,14 @@ export class AnswerForm implements Component, Focusable {
         const entry = this.view.item?.entries[act.index];
         if (!entry) return;
         this.cursor = act.index;
-        // A pick is the answer, then its note; one of several stays; a write-in opens its field.
+        // A pick is the answer and the form goes on; one of several stays; a write-in opens its field.
         if (entry.kind === "write") return this.startEditing("text");
         if (this.isSeveral) return this.step({ do: "toggle", entry: act.index });
-        return this.step({ do: "pick", entry: act.index }, () => this.startEditing("note"));
+        return this.step({ do: "pick", entry: act.index }, () => this.step({ do: "next" }));
       }
+      case "accept":
+        if (!this.view.item?.canAccept) return;
+        return this.step({ do: "accept" }, () => this.step({ do: "next" }));
       case "note":
         return this.startEditing("note");
       case "several":
@@ -180,8 +195,9 @@ export class AnswerForm implements Component, Focusable {
       case "goto":
         return this.step({ do: "go", step: act.index });
       case "fill":
+      case "send":
         if (!this.view.reply) return;
-        return this.done({ fill: true });
+        return this.done({ fill: true, send: act.kind === "send" });
     }
   }
 
@@ -230,8 +246,9 @@ export class AnswerForm implements Component, Focusable {
       return;
     }
     const keys: Record<string, Act["kind"]> = review
-      ? { n: "note", b: "back", h: "back" }
+      ? { n: "note", b: "back", h: "back", s: "send" }
       : {
+          y: "accept",
           b: "back",
           h: "back",
           f: "forward",
@@ -273,21 +290,8 @@ export class AnswerForm implements Component, Focusable {
     if (event.type === "press") return { handled: true, focus: true };
     if (event.type !== "click" || event.button !== "left") return { handled: true };
     if (this.isStepping) return { handled: true };
-    // A double click on an answer goes on to the next question, as Enter in its note does.
-    if (event.clickCount === 2) this.goOn(act);
-    else this.act(act);
+    this.act(act);
     return { handled: true };
-  }
-
-  /** A second click on an answer: the pick, then on, instead of stopping for its note. */
-  private goOn(act: Act): void {
-    if (act.kind !== "entry") return this.act(act);
-    const entry = this.view.item?.entries[act.index];
-    // Only an answer: a chip, a note or the review's row go where one click goes.
-    if (!entry || entry.kind === "write" || this.isSeveral) return this.act(act);
-    this.cursor = act.index;
-    this.stopEditing();
-    this.step({ do: "pick", entry: act.index }, () => this.step({ do: "next" }));
   }
 
   /** `k label` chips on one row, each its own click target. */
@@ -343,18 +347,21 @@ export class AnswerForm implements Component, Focusable {
     const chosen = item.entries.findIndex((entry) => entry.isChosen);
     const last = item.entries.length - 2;
     const noteAt = chosen >= 0 && chosen <= last ? chosen : last;
-    const note =
+    // An answered question with no note offers one as a row, for a click to open.
+    const note: Row[] =
       this.editing === "note"
         ? [this.field("   note", width)]
         : item.note
           ? this.wrapped(`${t.fg("dim", "Note:")} ${item.note}`, width, undefined, "   ")
-          : [];
+          : chosen >= 0
+            ? [{ text: t.fg("dim", "   ╰▸ add a note"), act: { kind: "note" } }]
+            : [];
     item.entries.forEach((entry, k) => {
       const isCursor = k === this.cursor && !this.editing;
       const isBox = this.isSeveral && entry.kind === "option";
-      const mark = entry.isChosen && !isBox ? t.fg("success", " ✓") : "";
       const rec = entry.isRecommended ? t.fg("dim", " (recommended)") : "";
-      const box = isBox ? (entry.isChosen ? "[x] " : "[ ] ") : "";
+      // ○ ● for one of many, □ ■ for several of many.
+      const box = `${isBox ? (entry.isChosen ? "■" : "□") : entry.isChosen ? "●" : "○"} `;
       // The write-in stands apart from what the question offered, dim until it holds an answer.
       const isWaiting = entry.kind === "write" && !item.written;
       if (entry.kind === "write" && k > 0) rows.push({ text: "" });
@@ -362,7 +369,7 @@ export class AnswerForm implements Component, Focusable {
       lines.forEach((line, i) => {
         const pointer = isCursor ? t.fg("accent", "›") : " ";
         const head = i === 0 ? `${pointer}${t.fg("accent", String(k + 1))} ` : "   ";
-        const tail = i === lines.length - 1 ? rec + mark : "";
+        const tail = i === lines.length - 1 ? rec : "";
         const body = isCursor
           ? t.fg("accent", line)
           : entry.isChosen
@@ -395,7 +402,11 @@ export class AnswerForm implements Component, Focusable {
       const note = row.note ? t.fg("dim", ` — ${row.note}`) : "";
       const key = i < 9 ? t.fg("accent", String(i + 1)) : " ";
       const shown = row.isAnswered ? row.shown : t.fg("dim", row.shown);
-      const text = `${key}  ${row.label}  ${shown}${note}`;
+      // The question first, then its answer: the title is cut before the answer is.
+      const answer = `→ ${shown}${note}`;
+      const head = `${key}  ${row.label}  `;
+      const room = Math.max(8, width - visibleWidth(head) - visibleWidth(answer) - 2);
+      const text = `${head}${truncateToWidth(row.title, room, "…")}  ${answer}`;
       rows.push({ text: truncateToWidth(text, width, "…"), act: { kind: "goto", index: i } });
     });
     rows.push({ text: "" });
@@ -422,23 +433,21 @@ export class AnswerForm implements Component, Focusable {
     const actions = review
       ? this.chips([
           ["enter", "fill the prompt", { kind: "fill" }],
+          ["s", "send", { kind: "send" }],
           ["n", "note", { kind: "note" }],
           ["b", "back", { kind: "back" }],
         ])
       : this.chips([
           ["b", "back", { kind: "back" }],
           ["f", "forward", { kind: "forward" }],
+          ...(item?.canAccept
+            ? [["y", `take ${item.accepts}`, { kind: "accept" }] as [string, string, Act]]
+            : []),
           ["s", "skip", { kind: "skip" }],
           ["r", "review", { kind: "review" }],
           ["n", "note", { kind: "note" }],
           ...(item?.canSeveral
-            ? [
-                ["m", this.isSeveral ? "one" : "several", { kind: "several" }] as [
-                  string,
-                  string,
-                  Act,
-                ],
-              ]
+            ? [["m", "several", { kind: "several" }] as [string, string, Act]]
             : []),
         ]);
 

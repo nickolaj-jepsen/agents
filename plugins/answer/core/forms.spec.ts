@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  plain,
   type Action,
   apply,
   type Draft,
@@ -445,6 +446,20 @@ describe("view", () => {
     expect(review.isReview).toBe(true);
     expect(review.review.map((row) => row.isAnswered)).toEqual([true, false, true]);
     expect(review.review[2]?.shown).toBe('"keep"');
+  });
+
+  test("the review names each question and shows its answer as plain words", () => {
+    const form = formOf(GRILLING_ROUND);
+    const row = view(form, steps(form, [pick(1), REVIEW])).review[0];
+    expect(row?.title).toBe(form.items[0]?.title.replaceAll("**", "").replace(/`/g, ""));
+    expect(plain("a `429` with **Retry-After**,\n  now")).toBe("a 429 with Retry-After, now");
+    expect(row?.shown).not.toMatch(/[`*]/);
+  });
+
+  test("says what a yes takes, in the reply's words", () => {
+    const form = formOf(GRILLING_ROUND);
+    expect(itemOf(form, newDraft(form)).accepts).toMatch(/^[A-H](, [A-H])*$/);
+    expect(itemOf(form, steps(form, [FORWARD])).accepts).toBe("yes");
   });
 
   test("shows why an option is recommended", () => {

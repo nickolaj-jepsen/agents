@@ -1,14 +1,14 @@
 # answer/pi/many-review 160x45 @0,33 (160x11)
 ╭─ Review ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ 1  Q1  A: Option A for 1                                                                                                                                     │
-│ 2  Q2  A: Option A for 2                                                                                                                                     │
-│ 3  Q3  A: Option A for 3                                                                                                                                     │
-│ 4  Q4  A: Option A for 4                                                                                                                                     │
-│ 5  Q5  A: Option A for 5                                                                                                                                     │
-│ 6  Q6  A: Option A for 6                                                                                                                                     │
-│ 7  Q7  A: Option A for 7                                                                                                                                     │
+│ 1  Q1  Question number 1: pick a strategy?  → A: Option A for 1                                                                                              │
+│ 2  Q2  Question number 2: pick a strategy?  → A: Option A for 2                                                                                              │
+│ 3  Q3  Question number 3: pick a strategy?  → A: Option A for 3                                                                                              │
+│ 4  Q4  Question number 4: pick a strategy?  → A: Option A for 4                                                                                              │
+│ 5  Q5  Question number 5: pick a strategy?  → A: Option A for 5                                                                                              │
+│ 6  Q6  Question number 6: pick a strategy?  → A: Option A for 6                                                                                              │
+│ 7  Q7  Question number 7: pick a strategy?  → A: Option A for 7                                                                                              │
 │                                                                                                                                                              │
-│ enter fill the prompt  n note  b back                                                                                                                        │
+│ enter fill the prompt  s send  n note  b back                                                                                                                │
 ╰───────────────────────────────────────────────────────────────────────────────────────────────── shift+↑↓ scrolls · 1-9 revisits · esc closes, answers kept ─╯
 --- styles
 1x2 . 2x6 . 1x150
@@ -20,7 +20,7 @@
 1 . 2 .x156 1
 1 . 2 .x156 1
 1 .x158 1
-1 . 2x5 .x18 2 .x7 2 .x125 1
+1 . 2x5 .x18 2 .x7 2 .x7 2 .x117 1
 1x98 3x60 1x2
 --- legend
 1 fg=#343331

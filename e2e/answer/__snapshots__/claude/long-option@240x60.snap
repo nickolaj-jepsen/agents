@@ -1,36 +1,37 @@
 # answer/claude/long-option 240x60 @0,40 (240x14)
-──   ○ Q1   r: review   ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
+──   1 of 1   ○ Q1   r: review   ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
 Which one?
 
-1: A. a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text
+1: ○ A. a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text
 that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a
 very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going
-2: B. Short
+2: ○ B. Short
    a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that
 keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very
 long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going
-3: ✎ Write your own answer
+3: ○ ✎ Write your own answer
 
 
-h: back   l: next   s: skip   n: note   m: multi   q: quit
+h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
-1x2 .x3 1x2 .x5 2 1x8 .x3 1x210 .x2 1x3
-3x10
+1x2 .x3 2x6 .x3 1x2 3x2 .x3 4 1x8 .x3 1x201 .x2 1x3
+2x10
 -
-4 5x233
-5x233
-5x150
-2
+5 6x234
+6x233
+6x150
+4
 1x235
 1x233
 1x145
-2 1x25
+4 1x27
 -
 -
-2 1x6 .x3 2 1x6 .x3 2 1x6 .x3 2 1x6 .x3 2 1x7 .x3 2 1x6
+4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x9 .x3 4 1x6
 --- legend
 1 fg=#999999
-2 fg=#b1b9f9
-3 bold
-4 fg=#b1b9f9 inverse
-5 inverse
+2 bold
+3 fg=#d77757
+4 fg=#b1b9f9
+5 fg=#b1b9f9 inverse
+6 inverse

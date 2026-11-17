@@ -1,34 +1,35 @@
 # answer/claude/review-note 160x45 @0,27 (160x12)
-──   ✓ Q1   ✓ Q2   r: review   ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
-1: Q1  A: SQLite
-2: Q2  B: No
-
-The reply:
-Q1: A
-Q2: B
+──   Review   ✓ Q1   ✓ Q2   r: review   ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
+1: Q1 Use SQLite?  → A: SQLite
+2: Q2 Add caching?  → B: No
 
 ╰▸ A note on the whole round, Enter to keep ⏎ keep
 
 [ fill the prompt ]
-h: back   n: note   q: quit
+
+The reply:
+Q1: A
+Q2: B
+h: back   n: note   s: send   q: quit
 --- styles
-1x2 .x3 2x2 1x2 .x3 2x2 1x2 .x3 3 .x11 1x123 .x2 1x3
-3
-3
+1x2 .x3 2x6 .x3 3x2 1x2 .x3 3x2 1x2 .x3 4 .x11 1x114 .x2 1x3
+4
+4
+-
+5x3 6 7x39 1x7
+-
+8x19
 -
 1x10
 -
 -
--
-4x3 5 6x39 1x7
--
-7x19
-3 1x6 .x3 3 1x6 .x3 3 1x6
+4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6
 --- legend
 1 fg=#999999
-2 fg=#4eba65
-3 fg=#b1b9f9
-4 fg=#b1b9f9 italic
-5 inverse
-6 dim
-7 fg=#b1b9f9 bold
+2 bold
+3 fg=#4eba65
+4 fg=#b1b9f9
+5 fg=#b1b9f9 italic
+6 inverse
+7 dim
+8 fg=#b1b9f9 bold

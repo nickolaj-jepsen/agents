@@ -1,26 +1,26 @@
 # answer/pi/keys-walk 70x24 @0,12 (70x11)
 ╭─ Review ───────────────────────────────────────────────────────────╮
-│ 1  Q1  skipped                                                     │
-│ 2  Q2  skipped                                                     │
+│ 1  Q1  Use SQLite?  → skipped                                      │
+│ 2  Q2  Add caching?  → skipped                                     │
 │                                                                    │
 │ The reply:                                                         │
 │   (nothing answered yet)                                           │
 │                                                                    │
 │                                                                    │
 │                                                                    │
-│ enter fill the prompt  n note  b back                              │
+│ enter fill the prompt  s send  n note  b back                      │
 ╰────────────────────────── 1-9 revisits · esc closes, answers kept ─╯
 --- styles
 1x2 . 2x6 . 1x60
-1 . 2 .x6 3x7 .x53 1
-1 . 2 .x6 3x7 .x53 1
+1 . 2 .x21 3x7 .x38 1
+1 . 2 .x22 3x7 .x37 1
 1 .x68 1
 1 . 3x10 .x57 1
 1 .x3 3x22 .x43 1
 1 .x68 1
 1 .x68 1
 1 .x68 1
-1 . 2x5 .x18 2 .x7 2 .x35 1
+1 . 2x5 .x18 2 .x7 2 .x7 2 .x27 1
 1x27 3x41 1x2
 --- legend
 1 fg=#343331

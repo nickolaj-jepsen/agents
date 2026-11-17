@@ -1,21 +1,22 @@
 # answer/claude/pick 70x24 @0,12 (70x6)
-                                                                  [-]
-1: A. SQLite ✓
-   ╰▸ A note on this answer, or Enter to go on ⏎ next
-2: B. Postgres
-3: ✎ Write your own answer
-↑ 2 more · ↓ 1 more
+──   2 of 2   ✓ Q1   ○ Q2   r: review   ────────────────────────  [-]
+Add caching?
+1: ○ A. Yes
+2: ○ B. No
+3: ○ ✎ Write your own answer
+h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
-.x66 1x3
-2 .x11 3x2
-.x3 4x3 5 6x39 1x7
-2
-2 1x25
-1x19
+1x2 .x3 2x6 .x3 3x2 1x2 .x3 1x2 4x2 .x3 5 1x8 .x3 1x24 .x2 1x3
+2x12
+6 7x10
+5
+5 1x27
+5 1x6 .x3 5 1x6 .x3 5 1x6 .x3 5 1x6 .x3 5 1x9 .x3 5 1x6
 --- legend
 1 fg=#999999
-2 fg=#b1b9f9
+2 bold
 3 fg=#4eba65
-4 fg=#b1b9f9 italic
-5 inverse
-6 dim
+4 fg=#d77757
+5 fg=#b1b9f9
+6 fg=#b1b9f9 inverse
+7 inverse

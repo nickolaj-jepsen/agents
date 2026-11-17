@@ -70,6 +70,8 @@ export type ItemView = {
   isSeveral: boolean;
   /** Whether it recommends something a yes can take. */
   canAccept: boolean;
+  /** What a yes takes, as the reply says it: "B", "B, C" or "yes"; "" when it takes nothing. */
+  accepts: string;
   note: string;
   /** The write-in answer, "" for none. */
   written: string;
@@ -85,7 +87,7 @@ export type View = {
   step: number;
   isReview: boolean;
   item: ItemView | null;
-  review: { label: string; shown: string; isAnswered: boolean; note: string }[];
+  review: { label: string; title: string; shown: string; isAnswered: boolean; note: string }[];
   note: string;
   reply: string;
 };
@@ -632,14 +634,24 @@ function entryText(form: Form, item: FormItem, entry: Row): string {
 
 const textAt = (item: FormItem, index: number) => item.options[index]?.text ?? "";
 
+/** Inline markdown as plain words: a surface that draws a line as text has no use for the marks. */
+export const plain = (text: string) =>
+  text
+    .replace(/`+([^`]*)`+/g, "$1")
+    .replaceAll("**", "")
+    .replace(/\s+/g, " ")
+    .trim();
+
 /** What an answer reads as on the review: the option's words, not just its key. */
 function shown(item: FormItem, answer: Answer | null): string {
   if (!answer) return "skipped";
   if (answer.kind === "text") return `"${answer.text}"`;
   if (answer.kind === "options")
-    return `${said(item, answer)}: ${answer.indices.map((index) => textAt(item, index)).join("; ")}`;
+    return plain(
+      `${said(item, answer)}: ${answer.indices.map((index) => textAt(item, index)).join("; ")}`,
+    );
   const index = answer.kind === "option" ? answer.index : item.recommendedOption;
-  return index === undefined ? "yes" : `${said(item, answer)}: ${textAt(item, index)}`;
+  return index === undefined ? "yes" : plain(`${said(item, answer)}: ${textAt(item, index)}`);
 }
 
 export function title(form: Form): string {
@@ -673,6 +685,7 @@ function itemView(form: Form, draft: Draft): ItemView | null {
     // Its answer is several, or with none yet its recommendation is.
     isSeveral: answer ? answer.kind === "options" : item.recommendedOptions !== undefined,
     canAccept: canAccept(item),
+    accepts: canAccept(item) ? said(item, accepted(item)) : "",
     note: draft.notes[draft.step] ?? "",
     written: answer?.kind === "text" ? answer.text : "",
   };
@@ -690,6 +703,7 @@ export function view(form: Form, draft: Draft): View {
     item: itemView(form, draft),
     review: rowsOf(form, draft).map(({ item, answer, note }) => ({
       label: item.label,
+      title: plain(item.title),
       shown: shown(item, answer),
       isAnswered: Boolean(answer),
       note,

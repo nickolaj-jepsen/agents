@@ -152,8 +152,12 @@ export default function (pi: ExtensionAPI) {
     // A turn that ended while the form was up has replaced what it answered.
     const now = viewOf(held);
     if (now?.id === opened.id && result.fill && now.reply) {
-      ctx.ui.setEditorText(placeReply(ctx.ui.getEditorText(), now.reply));
-      redraw?.();
+      // Sent, the reply is the person's own message and what they had typed stays in the editor.
+      if (result.send) pi.sendUserMessage(now.reply);
+      else {
+        ctx.ui.setEditorText(placeReply(ctx.ui.getEditorText(), now.reply));
+        redraw?.();
+      }
     }
   };
 

@@ -30,8 +30,8 @@
 │ Line 29 of what it hangs on.                                                                                                                                 │
 │ Line 30 of what it hangs on.                                                                                                                                 │
 │                                                                                                                                                              │
-│ ›1 A. Keep it.                                                                                                                                               │
-│  2 B. Drop it.                                                                                                                                               │
+│ ›1 ○ A. Keep it.                                                                                                                                             │
+│  2 ○ B. Drop it.                                                                                                                                             │
 │                                                                                                                                                              │
 │                                                                                                                                                              │
 │ b back  f forward  s skip  r review  n note  m several                                                                                                       │
@@ -68,7 +68,7 @@
 1 .x158 1
 1 .x158 1
 1 .x158 1
-1 . 2x2 . 2x11 .x143 1
+1 . 2x2 . 2x13 .x141 1
 1 .x2 2 .x155 1
 1 .x158 1
 1 .x158 1

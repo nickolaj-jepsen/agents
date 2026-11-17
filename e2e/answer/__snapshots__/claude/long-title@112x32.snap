@@ -1,24 +1,24 @@
 # answer/claude/long-title 112x32 @0,16 (112x10)
-lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick  [-]
+jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the      [-]
+lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick
 brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps
 over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog
 the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog?
-
-1: A. Yes
-2: B. No
-3: ✎ Write your own answer
-h: back   l: next   s: skip   n: note   m: multi   q: quit
-↑ 14 more
+1: ○ A. Yes
+2: ○ B. No
+3: ○ ✎ Write your own answer
+h: back   l: next   s: skip   n: note   m: several   q: quit
+↑ 13 more
 --- styles
-1x107 . 2x3
+1x103 .x5 2x3
+1x107
 1x104
 1x106
 1x88
--
-3 4x8
+3 4x10
 5
-5 2x25
-5 2x6 .x3 5 2x6 .x3 5 2x6 .x3 5 2x6 .x3 5 2x7 .x3 5 2x6
+5 2x27
+5 2x6 .x3 5 2x6 .x3 5 2x6 .x3 5 2x6 .x3 5 2x9 .x3 5 2x6
 2x9
 --- legend
 1 bold

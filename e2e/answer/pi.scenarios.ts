@@ -69,7 +69,7 @@ export default scenarios({
     "hover-option": {
       from: "open",
       about: "the pointer on an answer moves the cursor to it",
-      steps: [{ hover: "2 B. Postgres" }, asserts("›2")],
+      steps: [{ hover: "2 ○ B. Postgres" }, asserts("›2")],
     },
     "hover-chip": {
       from: "open",
@@ -78,23 +78,23 @@ export default scenarios({
     },
     pick: {
       from: "open",
-      about: "1 picks A and opens its note field",
-      steps: [{ press: "1" }, { wait: "note ›" }],
+      about: "1 picks A and goes on to the second question",
+      steps: [{ press: "1" }, asserts("Add caching?")],
     },
     "pick-click": {
       from: "open",
-      about: "a click picks B",
-      steps: [{ click: "2 B. Postgres" }, { wait: "note ›" }],
+      about: "a click picks B and goes on",
+      steps: [{ click: "2 ○ B. Postgres" }, asserts("Add caching?")],
     },
-    "pick-double": {
-      from: "open",
-      about: "a double click picks B and goes on to the next question",
-      steps: [{ doubleClick: "2 B. Postgres" }, asserts("Add caching?")],
-    },
-    "next-by-key": {
+    "note-open": {
       from: "pick",
-      about: "Enter in the empty note goes on",
-      steps: [{ press: "Enter" }, asserts("Add caching?")],
+      about: "back on the answered question, a click on `add a note` opens its field",
+      steps: [{ press: "b" }, { click: "add a note" }, { wait: "note ›" }],
+    },
+    "pick-back": {
+      from: "pick",
+      about: "back on the answered question: A is marked and a note can be added",
+      steps: [{ press: "b" }, asserts("● A. SQLite"), asserts("add a note")],
     },
     "forward-key": {
       from: "open",
@@ -138,24 +138,22 @@ export default scenarios({
     },
     close: {
       from: "pick",
-      about: "esc leaves the field, esc again closes the form; the answer stays counted",
-      steps: [{ press: "Escape" }, { press: "Escape" }, { wait: /1 answered/ }],
+      about: "esc closes the form; the answer stays counted",
+      steps: [{ press: "Escape" }, { wait: /1 answered/ }],
     },
     reopen: {
       from: "close",
       about: "reopened with the answer kept",
-      steps: [{ press: "Alt+a" }, asserts("A. SQLite ✓")],
+      steps: [{ press: "Alt+a" }, asserts("Add caching?")],
     },
     "keys-walk": {
       from: "open",
       about: "every key of the keys row, each checked on the screen, ending on the review",
       steps: [
         { press: "1" },
-        asserts("A. SQLite ✓"),
-        { press: "Enter" },
         asserts("Add caching?"),
         { press: "b" },
-        asserts("A. SQLite ✓"),
+        asserts("● A. SQLite"),
         { press: "s" },
         asserts("Add caching?"),
         { press: "h" },
@@ -188,17 +186,17 @@ export default scenarios({
     "multi-key": {
       from: "open",
       about: "m turns the question into several answers",
-      steps: [{ press: "m" }, asserts("[ ]")],
+      steps: [{ press: "m" }, asserts("□")],
     },
     "multi-click": {
       from: "open",
       about: "a click on `m several`",
-      steps: [{ click: "m several" }, asserts("[ ]")],
+      steps: [{ click: "m several" }, asserts("□")],
     },
     "multi-picked": {
       from: "multi-key",
       about: "two of the options ticked",
-      steps: [...keys("1", "2"), asserts("[x]")],
+      steps: [...keys("1", "2"), asserts("■")],
     },
     several: {
       about: "a question whose recommendation names several options",
@@ -209,6 +207,16 @@ export default scenarios({
       about: "three questions with recommendations",
       start: turn("recommended"),
       steps: SOME("recommended", 3),
+    },
+    "recommended-yes": {
+      from: "recommended",
+      about: "y takes the recommendation and goes on",
+      steps: [{ press: "y" }, asserts("2 of 3")],
+    },
+    "recommended-yes-click": {
+      from: "recommended",
+      about: "a click on the `y take` chip",
+      steps: [{ click: /y take/ }, asserts("2 of 3")],
     },
     "write-in": {
       from: "open",
@@ -228,18 +236,18 @@ export default scenarios({
     "write-click": {
       from: "open",
       about: "a click on the write-in row opens its field",
-      steps: [{ click: "3 Write your own answer" }, { wait: /esc/ }],
+      steps: [{ click: "3 ○ Write your own answer" }, { wait: /esc/ }],
     },
 
     // ---- notes
 
     "note-typed": {
-      from: "pick",
+      from: "note-open",
       about: "a note typed on one line",
       steps: [{ type: "keep the flag" }, asserts("keep the flag")],
     },
     "note-long": {
-      from: "pick",
+      from: "note-open",
       about: "a note longer than the width",
       steps: [
         {
@@ -275,7 +283,7 @@ export default scenarios({
       steps: [{ click: "n note" }, { wait: "note ›" }],
     },
     "note-paste": {
-      from: "pick",
+      from: "note-open",
       about: "a pasted two-line note; the field is a single line",
       steps: [{ paste: "a\nb" }, asserts("note ›")],
     },
@@ -285,7 +293,7 @@ export default scenarios({
     review: {
       from: "open",
       about: "both questions answered, on the review",
-      steps: [...keys("1", "Enter", "2", "Enter"), { wait: "enter fill the prompt" }],
+      steps: [...keys("1", "2"), { wait: "enter fill the prompt" }],
     },
     "review-key": {
       from: "open",
@@ -300,17 +308,17 @@ export default scenarios({
     "review-hover": {
       from: "review",
       about: "the pointer on the review's first row",
-      steps: [{ hover: "1  Q1  A: SQLite" }],
+      steps: [{ hover: "→ A: SQLite" }],
     },
     "review-row": {
       from: "review",
       about: "a click on a review row goes back to that question",
-      steps: [{ click: "2  Q2  B: No" }, asserts("2 B. No ✓")],
+      steps: [{ click: "→ B: No" }, asserts("● B. No")],
     },
     "review-row-key": {
       from: "review",
       about: "1 on the review goes back to the first question",
-      steps: [{ press: "1" }, asserts("1 A. SQLite ✓")],
+      steps: [{ press: "1" }, asserts("● A. SQLite")],
     },
     "review-note": {
       from: "review",
@@ -332,6 +340,12 @@ export default scenarios({
       about: "Enter writes the reply into the editor",
       region: region.full,
       steps: [{ press: "Enter" }, { wait: "Q2: B" }],
+    },
+    send: {
+      from: "review",
+      about: "s sends the reply as a message: the editor is left alone",
+      region: region.full,
+      steps: [{ press: "s" }, { wait: "Q2: B" }],
     },
     "fill-click": {
       from: "review",
@@ -356,12 +370,18 @@ export default scenarios({
     "many-late": {
       from: "many",
       about: "the ninth question",
-      steps: keys(...Array.from({ length: 8 }, () => ["1", "Enter"]).flat()),
+      steps: keys(...Array.from({ length: 8 }, () => "1")),
     },
     "many-review": {
       from: "many-late",
       about: "the review of twelve, eight answered",
       steps: [{ press: "r" }, { wait: "enter fill the prompt" }],
+    },
+    "long-title-review": {
+      from: "long-title",
+      about: "the review of a question whose title is far longer than the width",
+      steps: [{ press: "1" }, { wait: "enter fill the prompt" }],
+      extreme: true,
     },
     "long-title": {
       about: "a question title far longer than the width",

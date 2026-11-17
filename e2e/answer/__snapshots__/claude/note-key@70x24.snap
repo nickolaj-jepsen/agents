@@ -1,16 +1,16 @@
 # answer/claude/note-key 70x24 @0,12 (70x6)
-1: A. SQLite                                                      [-]
-2: B. Postgres
+1: ○ A. SQLite                                                    [-]
+2: ○ B. Postgres
    ╰▸ A note on this answer, or Enter to go on
-3: ✎ Write your own answer
-h: back   l: next   s: skip   n: note   m: multi   q: quit
-↑ 3 more
+3: ○ ✎ Write your own answer
+h: back   l: next   s: skip   n: note   m: several   q: quit
+↑ 2 more
 --- styles
 1 .x65 2x3
 1
 .x3 3x3 2x40
-4 5x25
-1 2x6 .x3 1 2x6 .x3 1 2x6 .x3 1 2x6 .x3 1 2x7 .x3 1 2x6
+4 5x27
+1 2x6 .x3 1 2x6 .x3 1 2x6 .x3 1 2x6 .x3 1 2x9 .x3 1 2x6
 2x8
 --- legend
 1 fg=#b1b9f9

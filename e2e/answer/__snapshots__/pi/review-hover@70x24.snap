@@ -1,14 +1,14 @@
 # answer/pi/review-hover 70x24 @0,12 (70x11)
 ╭─ Review ───────────────────────────────────────────────────────────╮
-│ 1  Q1  A: SQLite                                                   │
-│ 2  Q2  B: No                                                       │
+│ 1  Q1  Use SQLite?  → A: SQLite                                    │
+│ 2  Q2  Add caching?  → B: No                                       │
 │                                                                    │
 │ The reply:                                                         │
 │   Q1: A                                                            │
 │   Q2: B                                                            │
 │                                                                    │
 │                                                                    │
-│ enter fill the prompt  n note  b back                              │
+│ enter fill the prompt  s send  n note  b back                      │
 ╰────────────────────────── 1-9 revisits · esc closes, answers kept ─╯
 --- styles
 1x2 . 2x6 . 1x60
@@ -20,7 +20,7 @@
 1 .x68 1
 1 .x68 1
 1 .x68 1
-1 . 2x5 .x18 2 .x7 2 .x35 1
+1 . 2x5 .x18 2 .x7 2 .x7 2 .x27 1
 1x27 3x41 1x2
 --- legend
 1 fg=#343331

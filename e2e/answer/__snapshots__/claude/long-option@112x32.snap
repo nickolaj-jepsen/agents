@@ -1,20 +1,20 @@
 # answer/claude/long-option 112x32 @0,16 (112x10)
-1: A. a very long option text that keeps going and going a very long option text that keeps going and going [-]
+1: ○ A. a very long option text that keeps going and going a very long option text that keeps going and     [-]
+going a very long option text that keeps going and going a very long option text that keeps going and going
 a very long option text that keeps going and going a very long option text that keeps going and going a
 very long option text that keeps going and going a very long option text that keeps going and going a very
 long option text that keeps going and going a very long option text that keeps going and going a very long
-option text that keeps going and going a very long option text that keeps going and going a very long
 option text that keeps going and going a very long option text that keeps going and going
-2: B. Short
+2: ○ B. Short
    a very long option text that keeps going and going a very long option text that keeps going and going a
 very long option text that keeps going and going a very long option text that keeps going and going a very
-↑ 3 more · ↓ 6 more
+↑ 2 more · ↓ 6 more
 --- styles
-1 2x106 . 3x3
+1 2x103 .x4 3x3
+2x107
 2x104
 2x107
 2x107
-2x102
 2x89
 4
 3x107

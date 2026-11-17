@@ -1,19 +1,20 @@
 # answer/claude/review-empty 70x24 @0,12 (70x6)
-2: Q2  skipped                                                    [-]
+──   Review   ○ Q1   ○ Q2   r: review   ────────────────────────  [-]
+1: Q1 Use SQLite?  → skipped
+2: Q2 Add caching?  → skipped
 Not answered: Q1, Q2. Its row goes back to it.
-
 [ fill the prompt ]
-h: back   n: note   q: quit
-↑ 2 more
+h: back   n: note   s: send   q: quit
 --- styles
-1 .x6 2x7 .x52 2x3
-3x46
--
-4x19
-1 2x6 .x3 1 2x6 .x3 1 2x6
-2x8
+1x2 .x3 2x6 .x3 1x4 .x3 1x4 .x3 3 .x11 1x24 .x2 1x3
+3 .x16 1x11
+3 .x17 1x11
+4x46
+5x19
+3 1x6 .x3 3 1x6 .x3 3 1x6 .x3 3 1x6
 --- legend
-1 fg=#b1b9f9
-2 fg=#999999
-3 fg=#ffc107
-4 fg=#b1b9f9 bold inverse
+1 fg=#999999
+2 bold
+3 fg=#b1b9f9
+4 fg=#ffc107
+5 fg=#b1b9f9 bold inverse

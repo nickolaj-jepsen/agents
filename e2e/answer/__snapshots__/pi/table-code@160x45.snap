@@ -15,10 +15,10 @@
 │   await db.exec("select 1");                                                                                                                                 │
 │ ```                                                                                                                                                          │
 │                                                                                                                                                              │
-│ ›1 A. SQLite                                                                                                                                                 │
-│  2 B. Postgres                                                                                                                                               │
+│ ›1 ○ A. SQLite                                                                                                                                               │
+│  2 ○ B. Postgres                                                                                                                                             │
 │                                                                                                                                                              │
-│  3 Write your own answer                                                                                                                                     │
+│  3 ○ Write your own answer                                                                                                                                   │
 │                                                                                                                                                              │
 │                                                                                                                                                              │
 │ b back  f forward  s skip  r review  n note  m several                                                                                                       │
@@ -40,10 +40,10 @@
 1 .x3 5x5 .x9 6x10 .x131 1
 1 . 3x3 .x154 1
 1 .x158 1
-1 . 2x2 . 2x9 .x145 1
+1 . 2x2 . 2x11 .x143 1
 1 .x2 2 .x155 1
 1 .x158 1
-1 .x2 2 . 3x21 .x133 1
+1 .x2 2 . 3x23 .x131 1
 1 .x158 1
 1 .x158 1
 1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x7 2 .x111 1

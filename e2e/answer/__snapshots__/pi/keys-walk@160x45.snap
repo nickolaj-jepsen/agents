@@ -1,26 +1,26 @@
 # answer/pi/keys-walk 160x45 @0,33 (160x11)
 ╭─ Review ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ 1  Q1  skipped                                                                                                                                               │
-│ 2  Q2  skipped                                                                                                                                               │
+│ 1  Q1  Use SQLite?  → skipped                                                                                                                                │
+│ 2  Q2  Add caching?  → skipped                                                                                                                               │
 │                                                                                                                                                              │
 │ The reply:                                                                                                                                                   │
 │   (nothing answered yet)                                                                                                                                     │
 │                                                                                                                                                              │
 │                                                                                                                                                              │
 │                                                                                                                                                              │
-│ enter fill the prompt  n note  b back                                                                                                                        │
+│ enter fill the prompt  s send  n note  b back                                                                                                                │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 1-9 revisits · esc closes, answers kept ─╯
 --- styles
 1x2 . 2x6 . 1x150
-1 . 2 .x6 3x7 .x143 1
-1 . 2 .x6 3x7 .x143 1
+1 . 2 .x21 3x7 .x128 1
+1 . 2 .x22 3x7 .x127 1
 1 .x158 1
 1 . 3x10 .x147 1
 1 .x3 3x22 .x133 1
 1 .x158 1
 1 .x158 1
 1 .x158 1
-1 . 2x5 .x18 2 .x7 2 .x125 1
+1 . 2x5 .x18 2 .x7 2 .x7 2 .x117 1
 1x117 3x41 1x2
 --- legend
 1 fg=#343331
