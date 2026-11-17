@@ -105,6 +105,8 @@ declare module "claude-code" {
   interface PluginState {
     answer: {
       current: Shaped<Current | null>;
+      /** The round a send set aside, which `/answer` brings back. */
+      aside: Shaped<Held | null>;
     };
   }
 }

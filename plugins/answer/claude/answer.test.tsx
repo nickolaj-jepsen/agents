@@ -74,6 +74,9 @@ const RUN = {
 type World = {
   box: string;
   submitted: string[];
+  toasts: string[];
+  /** Whether the engine refuses a submit, as one does when the prompt cannot enter. */
+  refuses: boolean;
   clock: ReturnType<typeof mock.clock>;
 };
 
@@ -82,6 +85,8 @@ function world(on: On, draft = ""): World {
   const w: World = {
     box: draft,
     submitted: [],
+    toasts: [],
+    refuses: false,
     clock: mock.clock(on),
   };
   on("prompt.read", () => ({ value: { text: w.box, cursor: w.box.length } }));
@@ -90,6 +95,7 @@ function world(on: On, draft = ""): World {
     return { isFilled: true };
   });
   on("prompt.submit", (_, e) => {
+    if (w.refuses) throw new Error("the engine refused the submit");
     w.submitted.push(e.text);
     return { text: e.text };
   });
@@ -97,7 +103,10 @@ function world(on: On, draft = ""): World {
   on("command.register", () => ({ value: { command: "answer" } }));
   on("session.start", (_, e) => ({ cwd: e.cwd }));
   on("ui.focus", () => ({}));
-  on("ui.toast", () => ({ value: undefined }));
+  on("ui.toast", (_$, e) => {
+    w.toasts.push(e.text);
+    return { value: undefined };
+  });
   on("ui.log", () => ({ value: undefined }));
   on("ui.render", ($, e) => {
     const { Text } = $.ui.resolve(e);
@@ -500,6 +509,68 @@ test("a resumed session gets the round its last reply ended on, unless the perso
   said = [...said, { role: "user", text: "never mind", toolUses: [] }];
   await $.command.run(RUN);
   expect(await hint($)).toBeUndefined();
+});
+
+test("a send sets an answered round aside, and /answer brings it back with its answers", async ($, on) => {
+  const w = world(on);
+  await start($);
+  await ends($, GRILLING);
+  const drawn = await form($);
+  await pick(w, drawn, "e1");
+  await drawn.unmount();
+  await $.prompt.submit({ text: "wait, one more thing", wait: false, origin: { kind: "composer" } });
+  expect(await hint($)).toBeUndefined();
+  expect(w.toasts).toEqual(["1 answer set aside: /answer brings them back."]);
+  // The round comes back as it was left: its answer marked, its first question showing.
+  const back = await form($);
+  expect((await back.find({ key: "q0" }))?.text).toContain("✓");
+  expect(await back.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
+  await back.unmount();
+});
+
+test("a send with nothing in it leaves the round where it is", async ($, on) => {
+  world(on);
+  await start($);
+  await ends($, GRILLING);
+  await $.prompt.submit({ text: "   ", wait: false, origin: { kind: "composer" } });
+  expect(await hint($)).toContain("Answer 3 questions");
+});
+
+test("sending the reply the form filled answers the round", async ($, on) => {
+  const w = world(on, "and keep it short");
+  await start($);
+  await ends($, GRILLING);
+  const drawn = await band($);
+  await drawn.press({ key: "answer" });
+  await pick(w, drawn, "e1");
+  await drawn.press({ key: "review" });
+  await drawn.press({ key: "fill" });
+  expect(w.box).toBe("Q1: B\n\nand keep it short");
+  await drawn.unmount();
+  // The reply, with the person's own draft under it, answers the round: nothing is set aside.
+  await $.prompt.submit({ text: w.box, wait: false, origin: { kind: "composer" } });
+  expect(w.toasts).toEqual([]);
+  expect(await hint($)).toBeUndefined();
+  await $.command.run(RUN);
+  expect(await hint($)).toBeUndefined();
+});
+
+test("a send the engine refuses keeps the round and its answers", async ($, on) => {
+  const w = world(on, "and keep it short");
+  await start($);
+  await ends($, GRILLING);
+  const drawn = await form($);
+  await pick(w, drawn, "e1");
+  await drawn.press({ key: "review" });
+  w.refuses = true;
+  await drawn.press({ key: "send" });
+  expect(w.submitted).toEqual([]);
+  expect(w.box).toBe("and keep it short");
+  expect(w.toasts).toEqual(["The message didn't send: the answers are still here."]);
+  // The round the hook dropped before the refusal is back, its answer with it.
+  await drawn.press({ key: "quit" });
+  expect((await drawn.find({ key: "answer" }))?.text).toContain("1 of 3");
+  await drawn.unmount();
 });
 
 test("nothing runs or is read outside the session: the form needs no hub", async ($, on) => {

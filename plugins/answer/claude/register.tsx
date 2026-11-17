@@ -1,7 +1,7 @@
 import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register } from "claude-code";
 
-import { offer, step as stepForm, view as viewOf } from "../core/forms";
+import { offer, hasWork, step as stepForm, view as viewOf } from "../core/forms";
 import type { Action, Current, Entry, Held, Item, View } from "./types.d.ts";
 import {
   bandRows,
@@ -38,6 +38,8 @@ const KEY_CELLS = 3;
 
 // Change the tag when Current changes shape: a reload keeps what the old code stored.
 const current = atom({ plugin: "answer", key: "current" } as const, null, { shape: "current-10" });
+/** The round a send set aside, for `/answer` to bring back. */
+const aside = atom({ plugin: "answer", key: "aside" } as const, null, { shape: "aside-1" });
 
 /** Origins that are the person speaking; a task's notification or a peer's message isn't. */
 const PERSON = new Set<string>(["composer", "bridge", "sdk", "slack-ping"]);
@@ -191,6 +193,21 @@ const placeReply = (draft: string, text: string) => (draft.trim() ? `${text}\n\n
 const ownDraft = (text: string, filled: string | null) =>
   filled && text.startsWith(filled) ? text.slice(filled.length).replace(/^\n+/, "") : text;
 
+/**
+ * Whether a send carries the round's own reply: the text is what the reply says, or what the
+ * form filled with the person's draft left under it (a fill puts the reply above the draft).
+ */
+const isOwnReply = (c: Current, text: string) =>
+  [c.view.reply, c.filled ?? ""].some(
+    (reply) => reply !== "" && (text === reply || text.startsWith(`${reply}\n`)),
+  );
+
+/** What a send that sets the round aside says, counting the answers it keeps. */
+const asideNotice = (answered: number) =>
+  answered
+    ? `${answered} answer${answered === 1 ? "" : "s"} set aside: /answer brings them back.`
+    : "Answers set aside: /answer brings them back.";
+
 /** Folds the form back to its row, the answers kept, and hands the prompt its text back. */
 async function close($: EngineInterface) {
   typed = null;
@@ -233,10 +250,17 @@ async function recover($: EngineInterface) {
   }
 }
 
-/** `/answer`: opens the form, or folds it when it is already up. */
+/** `/answer`: opens the form, or folds it when it is already up; a round set aside comes back. */
 async function toggle($: EngineInterface) {
   await recover($).catch((error) => complain($, error));
-  const c = await read($, current);
+  let c = await read($, current);
+  if (!c) {
+    const was = await read($, aside);
+    if (was) {
+      await update($, aside, () => null);
+      c = await update($, current, () => over(null, was));
+    }
+  }
   if (!c) {
     $.ui.toast("Nothing to answer: the last turn asked no questions.");
     return;
@@ -262,19 +286,33 @@ async function fill($: EngineInterface, text: string): Promise<boolean> {
 
 /**
  * Sends the reply as the person's message, leaving what they had typed in the prompt. The
- * round is answered, so it is dropped as their own send would drop it.
+ * round is answered, so it is dropped as their own send would drop it; a submit the engine
+ * refuses puts the round and the box back as they were.
  */
 async function send($: EngineInterface, text: string): Promise<boolean> {
   const c = await read($, current);
   if (!c) return false;
+  const box = await $.prompt.read();
   const draft =
-    c.stash !== null
-      ? ownDraft(c.stash, c.filled)
-      : ownDraft((await $.prompt.read()).text, c.filled);
+    c.stash !== null ? ownDraft(c.stash, c.filled) : ownDraft(box.text, c.filled);
   typed = null;
   await update($, current, () => null);
   await $.prompt.fill({ text: "", mode: "replace" }).catch(() => undefined);
-  await $.prompt.submit({ text }).catch((error) => complain($, error));
+  const sent = await $.prompt.submit({ text }).then(
+    () => true,
+    (error) => {
+      complain($, error);
+      return false;
+    },
+  );
+  if (!sent) {
+    // The hook dropped the round before the engine refused the submit: put back what it had.
+    await update($, current, () => c);
+    await update($, aside, () => null);
+    await $.prompt.fill({ text: box.text, mode: "replace" }).catch(() => undefined);
+    $.ui.toast("The message didn't send: the answers are still here.");
+    return false;
+  }
   if (draft) await $.prompt.fill({ text: draft, mode: "replace" }).catch(() => undefined);
   return true;
 }
@@ -415,11 +453,23 @@ export const register: Register = (on) => {
     return next(e);
   });
 
-  // The person's own message answers the round, or moves past it.
+  // The person's own message: the round's own reply answers it, a blank one changes nothing,
+  // and any other sets an answered round aside for `/answer` rather than dropping it. `send`
+  // puts the round back if the engine refuses its submit.
   on("prompt.submit", async ($, e, next) => {
     const c = PERSON.has(e.origin.kind) ? await read($, current) : null;
     if (!c) return next(e);
-    await update($, current, () => null);
+    const text = e.text;
+    if (!text.trim()) return next(e);
+    if (isOwnReply(c, text)) {
+      await update($, current, () => null);
+    } else {
+      if (hasWork(c.held)) {
+        await update($, aside, () => c.held);
+        $.ui.toast(asideNotice(c.view.answered));
+      }
+      await update($, current, () => null);
+    }
     const sent = await next(e);
     // A draft set aside for the open form outlives the message sent past it.
     const draft = c.stash === null ? "" : ownDraft(c.stash, c.filled);

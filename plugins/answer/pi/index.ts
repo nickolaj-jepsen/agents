@@ -12,13 +12,23 @@
  * The draft is this session's own: in memory, and on the session branch so a
  * reload or a resumed session has its round and answers back.
  *
- * The answers outlive closing the form; any input sent drops them.
+ * The answers outlive closing the form: a turn a background task starts keeps them, your
+ * own send sets the round aside (alt+a or /answer brings it back, answers and all), and
+ * sending the reply the form filled just closes the round.
  */
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import { contentText } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { Component, TUI } from "@earendil-works/pi-tui";
-import { type Held, offer, step as stepForm, type View, view, viewOf } from "../core/forms.ts";
+import {
+  type Held,
+  hasWork,
+  offer,
+  step as stepForm,
+  type View,
+  view,
+  viewOf,
+} from "../core/forms.ts";
 import { AnswerForm, type FormAction, type FormResult } from "./form.ts";
 import { AnswerOffer } from "./offer.ts";
 
@@ -26,8 +36,8 @@ const WIDGET_KEY = "answer";
 const SHORTCUT = "alt+a";
 const ENTRY = "answer-form";
 
-/** What the branch keeps: the form as it stood, or null once the person spoke past it. */
-type Saved = { held: Held | null };
+/** What the branch keeps: the form as it stood, and the round a send set aside. */
+type Saved = { held: Held | null; aside?: Held | null };
 
 /** What has the keys now: the prompt, as the form opens. The TUI class has it; its interface doesn't. */
 const focusedOf = (tui: TUI): Component | null =>
@@ -50,15 +60,26 @@ function lastAssistantText(messages: AgentMessage[]): string {
 /** The reply above what the person had typed, never over it. */
 const placeReply = (draft: string, text: string) => (draft.trim() ? `${text}\n\n${draft}` : text);
 
+/**
+ * Whether an input carries the round's own reply: the text is what the reply says, or what the
+ * form filled with the person's draft left under it (a fill puts the reply above the draft).
+ */
+const isReplyOf = (text: string, reply: string) =>
+  reply !== "" && (text === reply || text.startsWith(`${reply}\n`));
+
+/** What a send that sets the round aside says, counting the answers it keeps. */
+const asideNotice = (answered: number) =>
+  answered
+    ? `${answered} answer${answered === 1 ? "" : "s"} set aside: /answer brings them back.`
+    : "Answers set aside: /answer brings them back.";
+
 /** Everything the widget draws of a view, so a step that changes none of it costs no redraw. */
 const signature = (view: View | null) => (view ? `${view.id}|${view.answered}` : "");
 
-/** A record another version wrote, or a corrupt one, is skipped rather than believed. */
-const isSaved = (data: unknown): data is Saved => {
-  if (typeof data !== "object" || data === null || !("held" in data)) return false;
-  const { held } = data as { held: unknown };
-  if (held === null) return true;
-  const { form, draft } = held as { form?: { items?: unknown }; draft?: { answers?: unknown } };
+/** A round as the branch stored it: its form and an answer for each of its items. */
+const isRound = (value: unknown) => {
+  if (value === null) return true;
+  const { form, draft } = value as { form?: { items?: unknown }; draft?: { answers?: unknown } };
   return (
     Array.isArray(form?.items) &&
     Array.isArray(draft?.answers) &&
@@ -66,19 +87,28 @@ const isSaved = (data: unknown): data is Saved => {
   );
 };
 
-/** The form the branch last held, so a fork or a resumed session starts from its own. */
-function restored(ctx: ExtensionContext): Held | null {
+/** A record another version wrote, or a corrupt one, is skipped rather than believed. */
+const isSaved = (data: unknown): data is Saved => {
+  if (typeof data !== "object" || data === null || !("held" in data)) return false;
+  const { held, aside } = data as { held: unknown; aside?: unknown };
+  return isRound(held) && (aside === undefined || isRound(aside));
+};
+
+/** What the branch last held and set aside, so a fork or a resumed session starts from its own. */
+function restored(ctx: ExtensionContext): { held: Held | null; aside: Held | null } {
   const branch = ctx.sessionManager.getBranch();
   for (let i = branch.length - 1; i >= 0; i--) {
     const entry = branch[i];
     if (entry?.type !== "custom" || entry.customType !== ENTRY) continue;
-    if (isSaved(entry.data)) return entry.data.held;
+    if (isSaved(entry.data)) return { held: entry.data.held, aside: entry.data.aside ?? null };
   }
-  return null;
+  return { held: null, aside: null };
 }
 
 export default function (pi: ExtensionAPI) {
   let held: Held | null = null;
+  /** The round a send set aside, which alt+a or /answer brings back. */
+  let aside: Held | null = null;
   /** What the widget last drew. */
   let shown = "";
   let lastText = "";
@@ -103,16 +133,31 @@ export default function (pi: ExtensionAPI) {
     );
   };
 
+  /** What the branch keeps, as it stands now. */
+  const save = (ctx: ExtensionContext) => pi.appendEntry<Saved>(ENTRY, { held, aside });
+
   /** Holds `next`, on the branch too when it changed. */
   const hold = (ctx: ExtensionContext, next: Held | null) => {
-    if (next !== held) pi.appendEntry<Saved>(ENTRY, { held: next });
+    const isSame = next === held;
     held = next;
+    if (!isSame) save(ctx);
+    draw(ctx);
+  };
+
+  /** Brings the round a send set aside back into hand, and off the branch's aside. */
+  const adopt = (ctx: ExtensionContext) => {
+    if (held || !aside) return;
+    held = aside;
+    aside = null;
+    save(ctx);
     draw(ctx);
   };
 
   pi.on("session_start", (_event, ctx) => {
     if (!hasEditor(ctx)) return;
-    held = restored(ctx);
+    const was = restored(ctx);
+    held = was.held;
+    aside = was.aside;
     shown = "";
     draw(ctx);
   });
@@ -127,13 +172,26 @@ export default function (pi: ExtensionAPI) {
     hold(ctx, offer(held, lastText));
   });
 
-  // Anything sent answers the round, or moves past it.
-  pi.on("input", (_event, ctx) => {
-    if (held) hold(ctx, null);
+  // The person's own input: a blank one is no input, the round's own reply answers it, and any
+  // other message sets an answered round aside for alt+a or /answer, rather than dropping it.
+  pi.on("input", (event, ctx) => {
+    if (!held) return;
+    const text = event.text;
+    if (!text.trim()) return;
+    const answering = held;
+    const answered = viewOf(answering)?.answered ?? 0;
+    if (!isReplyOf(text, viewOf(answering)?.reply ?? "")) {
+      if (hasWork(answering)) {
+        aside = answering;
+        // A message from another program is not the person's, so it gets no notice.
+        if (event.source === "interactive") ctx.ui.notify(asideNotice(answered), "info");
+      }
+    }
+    hold(ctx, null);
   });
 
   /** Closes the form: the keys go back where they were, the offer returns, a reply is placed. */
-  const finish = (ctx: ExtensionContext, opened: View, result: FormResult) => {
+  const finish = async (ctx: ExtensionContext, opened: View, result: FormResult) => {
     const closing = form;
     const { tui, back } = surface ?? {};
     form = undefined;
@@ -145,14 +203,31 @@ export default function (pi: ExtensionAPI) {
     // A turn that ended while the form was up has replaced what it answered.
     const now = viewOf(held);
     if (!result.fill || now?.id !== opened.id || !now.reply) return;
-    if (result.send) pi.sendUserMessage(now.reply);
-    else ctx.ui.setEditorText(placeReply(ctx.ui.getEditorText(), now.reply));
+    if (!result.send) {
+      ctx.ui.setEditorText(placeReply(ctx.ui.getEditorText(), now.reply));
+      return;
+    }
+    const answers = held;
+    try {
+      // Its input hooks run inside the send, and they drop the round: a throw puts it back.
+      await pi.sendUserMessage(now.reply);
+    } catch (error) {
+      if (answers) {
+        held = answers;
+        aside = null;
+        save(ctx);
+        draw(ctx);
+      }
+      ctx.ui.notify(`The message didn't send: ${String(error)}`, "warning");
+    }
   };
 
   const open = async (ctx: ExtensionContext) => {
     if (!hasEditor(ctx)) return;
     // Already open: the keys come back to it.
     if (form) return surface?.tui.setFocus(form);
+    // A round a send set aside comes back when none is held, so alt+a works as /answer does.
+    adopt(ctx);
     const answering = held;
     const opened = answering && view(answering.form, answering.draft);
     if (!answering || !opened) {
@@ -174,7 +249,7 @@ export default function (pi: ExtensionAPI) {
         theme,
         opened,
         step,
-        (result) => finish(ctx, opened, result),
+        (result) => void finish(ctx, opened, result),
         steps,
       );
       form = made;

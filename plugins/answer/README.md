@@ -1,5 +1,5 @@
 ---
-tagline: "A form for the round of questions or numbered pick list a turn ended on, which writes your reply into the prompt."
+tagline: "A form for the round of questions or numbered pick list a turn ended on, which writes your reply into the prompt and keeps your answers when a send sets it aside."
 featured: true
 requires: []
 order: 4
@@ -18,11 +18,13 @@ writes your reply into the prompt.
 - `h` / `l` / `s` / `r`: back, next, skip, review. `↑` / `↓` / `Tab` move between answers.
 - The review lists each question with its answer, and the reply below it. `fill the
   prompt` writes the reply into the prompt, above any draft, for you to send; `s`
-  sends it at once as your message and leaves your draft where it was.
+  sends it at once as your message and leaves your draft where it was. A send that
+  fails keeps the answers in the form.
 - Works with the mouse alone, and in the desktop app, VS Code and mobile with their
   own controls.
 - Answers last the session: a turn a background task starts keeps them, your own
-  send drops them.
+  send sets the round aside, and sending the reply itself just closes it. Anything
+  else is one `/answer` away, answers and all (pi: `alt+a` or `/answer`).
 - pi has the same form from the same parser (`core/forms.ts`), as its own pi package
   (`pi/`): the same keys, and the form stands as tall as its tallest question so
   stepping moves nothing. It is a widget above the prompt, which stays shown: `alt+a`

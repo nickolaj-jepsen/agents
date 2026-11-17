@@ -8,6 +8,7 @@ import {
   entries,
   type Form,
   go,
+  hasWork,
   type Held,
   isReview,
   newDraft,
@@ -531,5 +532,16 @@ describe("what a session holds", () => {
     expect(viewOf(held(GRILLING_ROUND))?.id).toBe(viewOf(held(GRILLING_ROUND))?.id);
     expect(viewOf(held(GRILLING_ROUND))?.id).not.toBe(viewOf(held(LEAN_TOWARD))?.id);
     expect(viewOf(held(GRILLING_ROUND))?.id).toMatch(/^[0-9a-f]{16}$/);
+  });
+
+  test("has work only once something is answered or noted", () => {
+    expect(hasWork(held(GRILLING_ROUND))).toBe(false);
+    expect(hasWork(step(held(GRILLING_ROUND), pick(1)))).toBe(true);
+    expect(hasWork(step(held(GRILLING_ROUND), note("depends on Q3")))).toBe(true);
+    expect(hasWork(step(step(held(GRILLING_ROUND), REVIEW), note("thanks")))).toBe(true);
+    // A skip and a whitespace-only write-in say nothing; a pick list's own pick says something.
+    expect(hasWork(step(held(GRILLING_ROUND), { do: "skip" }))).toBe(false);
+    expect(hasWork(step(held(GRILLING_ROUND), write("   ")))).toBe(false);
+    expect(hasWork(step(held(MINE_SUMMARY), pick(0)))).toBe(true);
   });
 });
