@@ -1,5 +1,6 @@
-# answer/claude/note-long 112x32 @0,17 (112x9)
+# answer/claude/note-long 112x32 @0,16 (112x10)
 ──   1 of 2   ✓ Q1   ○ Q2   r: review   ──────────────────────────────────────────────────────────────────  [-]
+
 Use SQLite?
 
 1: ● A. SQLite
@@ -10,6 +11,7 @@ Use SQLite?
 h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
 1x2 .x3 2x6 .x3 3x2 4x2 .x3 1x4 .x3 5 1x8 .x3 1x66 .x2 1x3
+-
 2x11
 -
 5

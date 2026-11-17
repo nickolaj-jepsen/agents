@@ -233,21 +233,19 @@ test("a draft the form has room beside stays in the prompt", async ($, on) => {
   await drawn.unmount();
 });
 
-test("a pick answers and goes on; a note is one click away; the review fills the prompt", async ($, on) => {
+test("a pick opens its note, a press on the taken answer goes on, and the review fills the prompt", async ($, on) => {
   const w = world(on, "and keep it short");
   await ends($, GRILLING);
   const drawn = await band($);
   await drawn.press({ key: "answer" });
-  // Q1: B, and the form is already on Q2.
+  // Q1: B, which stays for its note; Enter there goes on.
   await pick(w, drawn, "e1");
-  expect(await drawn.find({ type: "Text", text: /^Lower the per-generator/ })).toBeDefined();
-  // Back on Q1 the answer offers a note; a click on it opens the field, and Enter goes on.
-  await drawn.press({ key: "q0" });
-  await drawn.press({ key: "note-add" });
+  expect(await drawn.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
   await drawn.input({ key: "note-field", text: "but keep the flag" });
-  expect(await drawn.find({ type: "Text", text: /^Lower the per-generator/ })).toBeDefined();
-  // Q2 has a recommendation and no options: it is the first entry.
+  // Q2 has a recommendation and no options: it is the first entry. A second press goes on.
   expect((await drawn.find({ key: "e0" }))?.text).toContain("Yes:");
+  await pick(w, drawn, "e0");
+  expect(await drawn.find({ type: "Text", text: /^Lower the per-generator/ })).toBeDefined();
   await pick(w, drawn, "e0");
   // Q3's write-in is a row like its options until it is picked; then it is a field.
   expect((await drawn.find({ key: "e2" }))?.text).toContain("Write your own answer");
@@ -273,6 +271,7 @@ test("skip, back and forward move without answering; closing keeps the answers",
   expect(await drawn.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
   await drawn.press({ key: "next" });
   await pick(w, drawn, "e0");
+  await drawn.input({ key: "note-field", text: "" });
   expect(await drawn.find({ type: "Text", text: /^What should happen to/ })).toBeDefined();
   await drawn.press({ key: "quit" });
   expect((await drawn.find({ key: "answer" }))?.text).toContain("1 of 3");
@@ -383,17 +382,21 @@ test("a long body gives way to the entries when the band is short", async ($, on
   await tall.unmount();
 });
 
-test("a click on an answer goes on to the next question at once", async ($, on) => {
+test("a press on an answer opens its note; a press on it again goes on", async ($, on) => {
   const w = world(on);
   await start($);
   await ends($, GRILLING);
   const drawn = await form($);
   await pick(w, drawn, "e1");
+  expect(await drawn.find({ key: "note-field" })).toBeDefined();
+  expect(await drawn.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
+  await pick(w, drawn, "e1");
   expect(await drawn.find({ type: "Text", text: /^Lower the per-generator/ })).toBeDefined();
-  // Its tab says it is answered, and one click on it comes back with the answer kept.
+  // Its tab says it is answered, and back on it the answer offers a note.
   expect((await drawn.find({ key: "q0" }))?.text).toContain("✓");
   await drawn.press({ key: "q0" });
   expect((await drawn.find({ key: "e1" }))?.text).toContain("●");
+  expect(await drawn.find({ key: "note-add" })).toBeDefined();
   await drawn.unmount();
 });
 
@@ -457,7 +460,9 @@ test("a pick list routes each item to its own next step", async ($, on) => {
   await $.command.run(RUN);
   const drawn = await $.ui.mount({ ...BAND, surface: "desktop" });
   await pick(w, drawn, "e0");
+  await drawn.input({ key: "note-field", text: "" });
   await pick(w, drawn, "e1");
+  await drawn.input({ key: "note-field", text: "" });
   await drawn.press({ key: "fill" });
   await drawn.unmount();
   expect(w.box).toBe("do 1\n2 → /grill-me");

@@ -1,21 +1,21 @@
 # answer/claude/recommended 70x24 @0,12 (70x6)
-Should every focus default to the same bar?                       [-]
-1: ○ A. Yes, one default for every kind. (recommended)
+1: ○ A. Yes, one default for every kind. (recommended)            [-]
 2: ○ B. Default by kind.
 3: ○ C. Add the bar as a second pick.
 4: ○ ✎ Write your own answer
-↑ 1 more · ↓ 4 more
+Recommended: A. A per-kind table is one more thing to keep in
+↑ 2 more · ↓ 3 more
 --- styles
-1x43 .x23 2x3
-3 4x39 5x14
-6
-6
-6 2x27
-2x19
+1 2x39 3x14 .x12 4x3
+5
+5
+5 4x27
+6x12
+4x19
 --- legend
-1 bold
-2 fg=#999999
-3 fg=#b1b9f9 inverse
-4 inverse
-5 fg=#999999 inverse
-6 fg=#b1b9f9
+1 fg=#b1b9f9 inverse
+2 inverse
+3 fg=#999999 inverse
+4 fg=#999999
+5 fg=#b1b9f9
+6 bold

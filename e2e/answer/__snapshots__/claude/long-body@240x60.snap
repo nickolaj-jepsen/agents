@@ -15,11 +15,11 @@ Line 11 of what it hangs on.
 Line 12 of what it hangs on.
 Line 13 of what it hangs on.
 Line 14 of what it hangs on.
+Line 15 of what it hangs on.
 … more above
 1: ○ A. Keep it.
 2: ○ B. Drop it.
 3: ○ ✎ Write your own answer
-
 
 h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
@@ -39,11 +39,11 @@ h: back   l: next   s: skip   n: note   m: several   q: quit
 -
 -
 -
+-
 1x12
 5 6x15
 4
 4 1x27
--
 -
 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x9 .x3 4 1x6
 --- legend

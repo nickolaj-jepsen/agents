@@ -1,21 +1,21 @@
 # answer/claude/many-late 160x45 @0,30 (160x9)
 ──   9 of 12   ✓ Q1   ✓ Q2   ✓ Q3   ✓ Q4   ✓ Q5   ✓ Q6   ✓ Q7   ✓ Q8   ○ Q9   ○ Q10   ○ Q11   ○ Q12   r: review   ────────────────────────────────────────  [-]
+
 Question number 9: pick a strategy?
 
 1: ○ A. Option A for 9
 2: ○ B. Option B for 9
 3: ○ ✎ Write your own answer
 
-
 h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
 1x2 .x3 2x7 .x3 3x2 1x2 .x3 3x2 1x2 .x3 3x2 1x2 .x3 3x2 1x2 .x3 3x2 1x2 .x3 3x2 1x2 .x3 3x2 1x2 .x3 3x2 1x2 .x3 1x2 4x2 .x3 1x5 .x3 1x5 .x3 1x5 .x3 5 1x8 .x3 1x40 .x2 1x3
+-
 2x35
 -
 6 7x21
 5
 5 1x27
--
 -
 5 1x6 .x3 5 1x6 .x3 5 1x6 .x3 5 1x6 .x3 5 1x9 .x3 5 1x6
 --- legend

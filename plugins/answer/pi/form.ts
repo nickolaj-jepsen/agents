@@ -1,8 +1,9 @@
 /**
  * The answer form, drawn in the editor's place: one item per screen and a
- * review, every row and key chip clickable. A pick records the answer and goes on
- * to the next item unanswered; a note is `n` or a click on `add a note` under the
- * answer, and `m` lets several options be one answer. `y` takes the recommendation.
+ * review, every row and key chip clickable. A key pick records the answer and goes on
+ * to the next item unanswered; a click takes it and opens its note, and a click on the
+ * taken answer goes on. A note is also `n` or a click on `add a note` under the answer,
+ * and `m` lets several options be one answer. `y` takes the recommendation.
  * The draft and every step through it are the
  * core's (`../core/forms.ts`), which Claude Code's mod shares; this file only
  * draws its view and maps keys and clicks onto those steps.
@@ -290,8 +291,24 @@ export class AnswerForm implements Component, Focusable {
     if (event.type === "press") return { handled: true, focus: true };
     if (event.type !== "click" || event.button !== "left") return { handled: true };
     if (this.isStepping) return { handled: true };
-    this.act(act);
+    this.click(act);
     return { handled: true };
+  }
+
+  /**
+   * A click on an answer takes it and opens its note; a click on the one already taken goes
+   * on, so a second click is the way on. The keys go on at once (`act`).
+   */
+  private click(act: Act): void {
+    if (act.kind !== "entry") return this.act(act);
+    const entry = this.view.item?.entries[act.index];
+    if (!entry || entry.kind === "write" || this.isSeveral) return this.act(act);
+    this.cursor = act.index;
+    if (entry.isChosen) {
+      this.stopEditing();
+      return this.step({ do: "next" });
+    }
+    this.step({ do: "pick", entry: act.index }, () => this.startEditing("note"));
   }
 
   /** `k label` chips on one row, each its own click target. */

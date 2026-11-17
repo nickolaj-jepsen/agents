@@ -1,4 +1,4 @@
-# answer/claude/table-code 160x45 @0,24 (160x15)
+# answer/claude/table-code 160x45 @0,23 (160x16)
 ──   1 of 1   ○ Q1   r: review   ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
 Pick the storage layer?
 ┌──────────┬─────────┬────────────────┐
@@ -8,11 +8,12 @@ Pick the storage layer?
 ├──────────┼─────────┼────────────────┤
 │ Postgres │ •••     │ needs a server │
 └──────────┴─────────┴────────────────┘
+
+const db = open("app.db");
 … more above
 1: ○ A. SQLite
 2: ○ B. Postgres
 3: ○ ✎ Write your own answer
-
 h: back   l: next   s: skip   n: note   m: several   q: quit
 --- styles
 1x2 .x3 2x6 .x3 1x2 3x2 .x3 4 1x8 .x3 1x121 .x2 1x3
@@ -24,16 +25,20 @@ h: back   l: next   s: skip   n: note   m: several   q: quit
 -
 -
 -
+-
+5x5 .x6 6x4 . 7x8
 1x12
-5 6x13
+8 9x13
 4
 4 1x27
--
 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x9 .x3 4 1x6
 --- legend
 1 fg=#999999
 2 bold
 3 fg=#d77757
 4 fg=#b1b9f9
-5 fg=#b1b9f9 inverse
-6 inverse
+5 fg=p4
+6 fg=p3
+7 fg=p1
+8 fg=#b1b9f9 inverse
+9 inverse

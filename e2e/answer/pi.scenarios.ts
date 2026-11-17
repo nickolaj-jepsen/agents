@@ -83,8 +83,13 @@ export default scenarios({
     },
     "pick-click": {
       from: "open",
-      about: "a click picks B and goes on",
-      steps: [{ click: "2 ○ B. Postgres" }, asserts("Add caching?")],
+      about: "a click picks B and opens its note, as a key goes on at once",
+      steps: [{ click: "2 ○ B. Postgres" }, { wait: "note ›" }],
+    },
+    "pick-again": {
+      from: "pick-click",
+      about: "a click on the answer just taken goes on to the next question",
+      steps: [{ click: "2 ● B. Postgres" }, asserts("Add caching?")],
     },
     "note-open": {
       from: "pick",

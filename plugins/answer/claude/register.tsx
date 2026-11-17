@@ -28,8 +28,11 @@ const NOTE = "note";
 const keyOf = (field: typeof WRITE | typeof NOTE) => `${field}-field`;
 // What the row says focuses the band; the binding itself is in keybindings.json.
 const CHORD = "alt+a";
-// A row kept free for wraps guessed short.
-const SLACK_ROWS = 1;
+/** Lines wider than this share of the band are guessed to wrap early, and get a row to spare. */
+const WRAP_SHARE = 0.7;
+/** The blank rows a form can have: under the divider and under the title, both, one or none. */
+const GAPS = [2, 1, 0] as const;
+type Gaps = (typeof GAPS)[number];
 /** The room a review row's mark and its key take: `1: `. */
 const KEY_CELLS = 3;
 
@@ -46,6 +49,9 @@ const PERSON = new Set<string>(["composer", "bridge", "sdk", "slack-ping"]);
 let typed: { field: typeof WRITE | typeof NOTE; text: string } | null = null;
 /** The band's id for `$.ui.focus`, known once it has drawn. */
 let band: string | undefined;
+/** When a note was last asked for; the press that picked its answer moves the ring just after. */
+let askedAt = 0;
+const CLICK_MS = 500;
 /** The band's rows and columns when it last drew: what the prompt box leaves it. */
 let room: { rows: number; columns: number } | undefined;
 
@@ -116,6 +122,7 @@ async function leave($: EngineInterface, to: (shown: number) => Action) {
 async function ask($: EngineInterface, editing: typeof WRITE | typeof NOTE) {
   typed = null;
   await edit($, (c) => ({ ...c, editing }));
+  if (editing === NOTE) askedAt = await $.clock.now();
   // A click is what gives the band the keys, and it may not have them yet: ask again, briefly.
   for (let tries = 0; tries < 4; tries++) {
     const moved = await focus($, keyOf(editing));
@@ -133,8 +140,9 @@ async function keepNote($: EngineInterface, text: string) {
 }
 
 /**
- * A picked entry is the answer and the form goes on: a note is one `n` or one click away, on
- * this question or by going back to it. One of several stays, the write-in opens its field.
+ * A press on an answer. A new one is taken and opens its note; a press on the answer already
+ * taken goes on to the next question, so a second click is the way on and no timer is needed.
+ * One of several toggles, and the write-in opens its field.
  */
 async function choose($: EngineInterface, entry: Entry, index: number) {
   if (entry.kind === "write") return ask($, WRITE);
@@ -146,7 +154,12 @@ async function choose($: EngineInterface, entry: Entry, index: number) {
     if (await step($, { do: "toggle", entry: index })) await focus($, `e${index}`);
     return;
   }
-  if (await step($, { do: "pick", entry: index })) await move($, { do: "next" });
+  if (entry.isChosen) return move($, { do: "next" });
+  // Observed, not documented: with the ring on the pressed answer (or above it) when the note
+  // field is asked for, the field shows the ring but the prompt keeps the keys. With the ring on
+  // an entry below the field's place, the field takes them. So the ring goes below first.
+  await focus($, `e${index + 1}`);
+  if (await step($, { do: "pick", entry: index })) await ask($, NOTE);
 }
 
 /** Takes the question's recommendation, whatever it names, and goes on. */
@@ -164,7 +177,7 @@ async function open($: EngineInterface) {
   const box = await $.prompt.read();
   const isCramped =
     room !== undefined &&
-    room.rows - RESERVED_ROWS < heightOf(c, room.columns, false) &&
+    room.rows - RESERVED_ROWS < heightOf(c, room.columns, false, 1) &&
     rowsOf(box.text, room.columns) >= 2;
   const isTaken = isCramped && (await $.prompt.fill({ text: "", mode: "replace" })).isFilled;
   await edit($, (was) => ({ ...was, isOpen: true, stash: isTaken ? box.text : was.stash }));
@@ -305,7 +318,7 @@ function keyRows(keys: KeySpec[], columns: number) {
 }
 
 /** The rows one question takes besides its body: its title, entries, recommendation, a note and the keys. */
-function chromeRows(c: Current, item: Item, columns: number, isNative: boolean, isTight: boolean) {
+function chromeRows(c: Current, item: Item, columns: number, isNative: boolean, gaps: Gaps) {
   const entries = item.entries.reduce(
     (n, entry) =>
       n +
@@ -314,22 +327,26 @@ function chromeRows(c: Current, item: Item, columns: number, isNative: boolean, 
     0,
   );
   const said = item.recommended
-    ? rowsOf(`Recommended: ${item.recommended}`, columns) + (isTight ? 0 : 1)
+    ? rowsOf(`Recommended: ${item.recommended}`, columns) + (gaps ? 1 : 0)
     : 0;
-  // The divider, the gap under the title, a note, and the keys, wrapped when narrow.
-  const fixed = 1 + (isTight ? 0 : 1) + 1 + keyRows(keysOf(c, isNative), columns);
-  return fixed + rowsOf(item.title, columns) + entries + said + SLACK_ROWS;
+  // The divider and the gap under it, the gap under the title, a note, and the keys, wrapped
+  // when narrow.
+  const fixed = 1 + gaps + 1 + keyRows(keysOf(c, isNative), columns);
+  // A row to spare where a line may wrap earlier than its width says.
+  const texts = [item.title, item.recommended, ...item.entries.map((entry) => entry.text)];
+  const slack = texts.some((text) => cellWidth(text) > columns * WRAP_SHARE) ? 1 : 0;
+  return fixed + rowsOf(item.title, columns) + entries + said + slack;
 }
 
 /** How tall the form stands: as its tallest question, so going from one to the next moves nothing. */
-const heightOf = (c: Current, columns: number, isNative: boolean, isTight = false) =>
+const heightOf = (c: Current, columns: number, isNative: boolean, gaps: Gaps = 2) =>
   Math.max(
     ...c.held.form.items.map((_, step) => {
       const { item } = viewOf(c.held.form, { ...c.held.draft, step });
       if (!item) return 0;
       const shown = { ...c, view: viewOf(c.held.form, { ...c.held.draft, step }) };
       return (
-        chromeRows(shown, item, columns, isNative, isTight) +
+        chromeRows(shown, item, columns, isNative, gaps) +
         (item.body ? rowsOf(item.body, columns) : 0)
       );
     }),
@@ -339,9 +356,9 @@ const heightOf = (c: Current, columns: number, isNative: boolean, isTight = fals
  * As much of a question's body as the form's rows leave once the title, entries and keys
  * are drawn: a digit only answers an entry on screen, so the body is what gives way.
  */
-function fitBody(c: Current, item: Item, rows: number, columns: number, isTight: boolean) {
+function fitBody(c: Current, item: Item, rows: number, columns: number, gaps: Gaps) {
   const { body } = item;
-  const left = rows - chromeRows(c, item, columns, false, isTight);
+  const left = rows - chromeRows(c, item, columns, false, gaps);
   if (!body || rowsOf(body, columns) <= left) return { body, isCut: false };
   const kept: string[] = [];
   let used = 1;
@@ -429,9 +446,12 @@ export const register: Register = (on) => {
       );
 
     const columns = e.props.bodyColumns;
-    // A short band gives up its blank rows before it gives up the question's title.
-    const isTight = !isNative && heightOf(c, columns, false) > e.props.maxRows - RESERVED_ROWS;
-    const gap = isNative ? "md" : isTight ? 0 : 1;
+    // A short band gives up its blank rows, the one under the divider first, before it gives up
+    // the question's title.
+    const gaps: Gaps = isNative
+      ? 2
+      : (GAPS.find((g) => heightOf(c, columns, false, g) <= e.props.maxRows - RESERVED_ROWS) ?? 0);
+    const gap = isNative ? "md" : gaps >= 1 ? 1 : 0;
     // A field with what it is led by: the mark that its text carries once it is kept.
     const field = (
       key: typeof WRITE | typeof NOTE,
@@ -490,7 +510,7 @@ export const register: Register = (on) => {
       })),
     );
     const unanswered = view.review.filter((row) => !row.isAnswered).map((row) => row.label);
-    const height = heightOf(c, columns, isNative, isTight);
+    const height = heightOf(c, columns, isNative, gaps);
     const panelRows = bandRows(height, e.props.maxRows);
     // The rule that parts the form from the chat, and on it every question: which are
     // answered, which is shown, and a click to go to one.
@@ -521,8 +541,9 @@ export const register: Register = (on) => {
         onPress={() => leave($, () => ({ do: "review" }))}
       />,
     ];
-    const shell = (body: JSX.Element) =>
+    const shell = (body: JSX.Element, isRoomy = gaps === 2) =>
       bandShell(kit, {
+        isRoomy,
         columns,
         height,
         maxRows: e.props.maxRows,
@@ -561,9 +582,11 @@ export const register: Register = (on) => {
       // the band has room: whole under a blank row, one line, or not at all.
       const fixed =
         1 + listRows + 1 + (editing === NOTE ? 1 : 0) + keyRows(keysOf(c, isNative), columns);
-      const left = e.props.maxRows - RESERVED_ROWS - fixed - SLACK_ROWS;
+      const left = e.props.maxRows - RESERVED_ROWS - fixed;
       const replyAll = rowsOf(view.reply || "(nothing answered yet)", columns) + 1;
       const level = isNative || left >= replyAll + 2 ? "full" : left >= 1 ? "line" : "none";
+      // A blank row under the divider too, once the whole reply fits with it.
+      const isRoomy = isNative || (level === "full" && left >= replyAll + 3);
       const reply = view.reply || "(nothing answered yet)";
       return shell(
         <Box flexDirection="column" rowGap={level === "full" ? gap : 0}>
@@ -624,6 +647,7 @@ export const register: Register = (on) => {
             </Text>
           ) : null}
         </Box>,
+        isRoomy,
       );
     }
 
@@ -631,7 +655,7 @@ export const register: Register = (on) => {
     const several = isSeveral(c);
     const laid = isNative
       ? { body: item.body, isCut: false }
-      : fitBody(c, item, panelRows, columns, isTight);
+      : fitBody(c, item, panelRows, columns, gaps);
     // The write-in is always last.
     const writeIn = item.entries.length - 1;
     const chosen = item.entries.findIndex((row) => row.isChosen);
@@ -748,6 +772,13 @@ export const register: Register = (on) => {
     const c =
       e.component === "AbovePrompt" && e.origin.kind === "person" ? await read($, current) : null;
     if (!c?.isOpen || !c.view.item || !e.element) return next(e);
+    // The press that picked an answer puts the ring on it just after its note took the ring.
+    if (
+      c.editing === NOTE &&
+      /^e\d+$/.test(e.element) &&
+      (await $.clock.now()) - askedAt < CLICK_MS
+    )
+      return next({ ...e, element: keyOf(NOTE) });
     const moved = await next(e);
     if (moved.deny) return moved;
     // A write-in field left untouched is a row again; only a press opens it.

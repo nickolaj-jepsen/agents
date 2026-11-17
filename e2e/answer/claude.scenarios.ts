@@ -151,21 +151,31 @@ export default scenarios({
     },
     pick: {
       from: "open",
-      about: "1 picks A and goes on to the second question",
-      steps: [{ press: "1" }, { wait: "Add caching?" }],
+      about: "1 picks A and opens its note field",
+      steps: [{ press: "1" }, { wait: "A note on this answer" }],
     },
     "pick-click": {
       from: "open",
-      about: "a click picks B and goes on",
-      steps: [{ click: "2: ○ B. Postgres" }, { wait: "Add caching?" }],
+      about: "a click picks B and opens its note field",
+      steps: [{ click: "2: ○ B. Postgres" }, { wait: "A note on this answer" }],
+    },
+    "pick-again": {
+      from: "pick-click",
+      about: "a click on the answer just taken goes on to the next question",
+      steps: [{ click: "2: ● B. Postgres" }, { wait: "Add caching?" }],
+    },
+    picked: {
+      from: "pick",
+      about: "A picked, Enter in its empty note: on the second question",
+      steps: [{ press: "Enter" }, { wait: "Add caching?" }],
     },
     "note-open": {
-      from: "pick",
+      from: "picked",
       about: "back on the answered question, a click on `add a note` opens its field",
       steps: [{ click: "✓ Q1" }, { click: "add a note" }, { wait: "A note on this answer" }],
     },
     "next-by-click": {
-      from: "pick",
+      from: "picked",
       about: "back on the answered question, a click on `l: next`",
       steps: [
         { click: "✓ Q1" },
@@ -175,17 +185,17 @@ export default scenarios({
       ],
     },
     "tab-click": {
-      from: "pick",
+      from: "picked",
       about: "a click on the first question's tab: back on it, A kept, with a note to add",
       steps: [{ click: "✓ Q1" }, asserts("● A. SQLite"), asserts("add a note")],
     },
     "back-by-key": {
-      from: "pick",
+      from: "picked",
       about: "h goes back",
       steps: [{ press: "h" }, asserts("● A. SQLite")],
     },
     "back-by-click": {
-      from: "pick",
+      from: "picked",
       about: "a click on `h: back`",
       steps: [{ click: "h: back" }, asserts("● A. SQLite")],
     },
@@ -205,7 +215,7 @@ export default scenarios({
       steps: [{ press: "q" }, { wait: /1 of 2/ }],
     },
     "quit-click": {
-      from: "pick",
+      from: "picked",
       about: "a click on `q: quit`",
       steps: [{ click: "q: quit" }, { wait: /1 of 2/ }],
     },
@@ -231,6 +241,8 @@ export default scenarios({
       about: "every key of the keys row, each checked on the screen, ending on the review",
       steps: [
         { press: "1" },
+        asserts("● A. SQLite"),
+        { press: "Enter" },
         asserts("Add caching?"),
         { press: "h" },
         asserts("● A. SQLite"),
@@ -374,7 +386,7 @@ export default scenarios({
       steps: newlineNote(undefined, { paste: "a\nb" }),
     },
     "note-focus": {
-      from: "pick",
+      from: "picked",
       about: "after a click on `add a note`, typing reaches the field with no second alt+a",
       steps: [
         { click: "✓ Q1" },
@@ -390,13 +402,13 @@ export default scenarios({
     review: {
       from: "open",
       about: "both questions answered, on the review",
-      // The last answer goes on to the review by itself.
-      steps: [...keys("1", "2"), { wait: "fill the prompt" }],
+      // Enter in a pick's empty note goes on; the last answer goes on to the review.
+      steps: [...keys("1", "Enter", "2", "Enter"), { wait: "fill the prompt" }],
     },
     "review-click": {
       from: "open",
       about: "a click on the divider's `r: review`",
-      steps: [{ press: "1" }, { click: "r: review" }, { wait: "fill the prompt" }],
+      steps: [...keys("1", "Enter"), { click: "r: review" }, { wait: "fill the prompt" }],
     },
     "review-hover": {
       from: "review",
@@ -463,7 +475,7 @@ export default scenarios({
     "many-late": {
       from: "many",
       about: "the ninth question, its tab in view",
-      steps: [...keys("1", "1", "1", "1", "1", "1", "1", "1")],
+      steps: keys(...Array.from({ length: 8 }, () => ["1", "Enter"]).flat()),
     },
     "many-review": {
       from: "many-late",
@@ -479,7 +491,7 @@ export default scenarios({
     "long-title-review": {
       from: "long-title",
       about: "the review of a question whose title is far longer than the width",
-      steps: [{ press: "1" }, { wait: "fill the prompt" }],
+      steps: [...keys("1", "Enter"), { wait: "fill the prompt" }],
       extreme: true,
     },
     "long-option": {
@@ -538,6 +550,7 @@ function newlineNote(newline?: Step[], paste?: Step): Step[] {
     { press: "Enter" },
     asserts("Add caching?"),
     { press: "2" },
+    { press: "Enter" },
     { wait: "fill the prompt" },
     { run: async (s) => expectGutter(await s.text()) },
     { click: "→ A: SQLite" },
