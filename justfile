@@ -43,6 +43,17 @@ _dev-setup-claude:
 test:
     npm test
 
+[doc('Lint the sources with oxlint; warnings fail')]
+[group('dev')]
+lint:
+    oxlint --deny-warnings plugins kit e2e scripts
+
+[doc('The fast local gate: lint, tests, type-check, formatting and README freshness, without nix flake check')]
+[group('dev')]
+verify: lint test typecheck
+    node scripts/readme.ts --check
+    {{ nixcmd }} fmt -- --ci
+
 [doc('Type-check the plugins, the kit and the e2e harness (tsc -b)')]
 [group('dev')]
 typecheck:

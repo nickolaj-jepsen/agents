@@ -6,6 +6,8 @@
 just dev-setup   # npm ci, plus the pi and Claude Code types an editor and tsc read
 just test        # the cores' tests
 just typecheck   # tsc -b
+just lint        # oxlint; `nix flake check` runs it too
+just verify      # lint, test, typecheck, README and formatting: the fast gate before `just check`
 just check       # nix flake check: the above in a sandbox, each Claude half validated, formatting
 just fmt
 just readme      # regenerate README.md from the plugins', skills' and docs' sources

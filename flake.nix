@@ -98,6 +98,15 @@
           {
             inherit agent-tools;
             readme = pkgs.callPackage ./pkgs/readme-check.nix {};
+            # oxlint over the sources (`just lint`); no node_modules needed.
+            lint = pkgs.runCommand "lint" {nativeBuildInputs = [pkgs.oxlint];} ''
+              cd ${lib.fileset.toSource {
+                root = ./.;
+                fileset = lib.fileset.unions [./.oxlintrc.json ./plugins ./kit ./e2e ./scripts];
+              }}
+              oxlint --deny-warnings plugins kit e2e scripts
+              touch $out
+            '';
             marketplace = assert lib.assertMsg marketplaceMatches ".claude-plugin/marketplace.json lists ${toString published}; plugins/ has ${toString expected}";
               pkgs.emptyFile;
           }

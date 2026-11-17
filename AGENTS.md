@@ -15,6 +15,8 @@ All operations use `just`; run `just` for the full list.
 just dev-setup           # npm ci, link nixpkgs' pi into node_modules, lay the mods' Claude Code types
 just test                # vitest over the harness-free cores
 just typecheck           # tsc -b over cores, pi halves, kit and e2e
+just lint                # oxlint over plugins, kit, e2e and scripts; warnings fail
+just verify              # the fast gate: lint, test, typecheck, README and formatting checks (no nix flake check)
 just kit-sync            # after editing kit/claude/ui.tsx or kit/catalog/samples.ts
 just catalog             # replay the kit's stories; rewrites its crops, catalog.json, COMPONENTS.md
 just media               # record the site's media and the kit's crops, signed out, as the Pages workflow does
