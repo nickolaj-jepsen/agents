@@ -1,0 +1,34 @@
+# questions/pi/review 70x24 @0,11 (70x12)
+╭─ Ask questions  2/2 answered ──────────────────────────────────────╮
+│ 1 Storage ✓   2 Retention ✓   3 Review                             │
+│                                                                    │
+│ Review your answers                                                │
+│                                                                    │
+│  Storage  Postgres beside the app                                  │
+│  Retention  The last turn only                                     │
+│                                                                    │
+│▸ Send                                                              │
+│  Cancel                                                            │
+│                                                                    │
+╰─────────────────────────────── enter send · ↑/↓ move · esc cancel ─╯
+--- styles
+1x2 2x15 3x14 1x39
+1 4x13 . 4x15 . 5x10 .x28 1
+1 .x68 1
+1 2x20 .x48 1
+1 .x68 1
+1 .x2 4x7 .x2 3x23 .x34 1
+1 .x2 4x9 .x2 3x18 .x37 1
+1 .x68 1
+1 6x2 2x4 .x62 1
+1 .x2 4x6 .x60 1
+1 .x68 1
+1x32 7x36 1x2
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#b7b5ac
+4 fg=#dad8ce
+5 fg=#cf6a4c bg=#403e3c bold
+6 fg=#cf6a4c
+7 fg=#878580

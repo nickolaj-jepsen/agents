@@ -1,0 +1,43 @@
+# questions/pi/extreme 160x45 @0,28 (160x16)
+╭─ Where stored? ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│  Where should a session's full transcript, every tool result and each compaction summary be kept once a run ends?                                            │
+│                                                                                                                                                              │
+│▸ ○ 1  SQLite in the repository, beside the worktrees                              ┌──────────────────────────────────────────────────────────────────────┐   │
+│       One file the checkout can delete, and no service to keep running on any of  │   create table if not exists event (                                 │   │
+│       the machines.                                                               │     id integer primary key,                                          │   │
+│  ○ 2  Postgres beside the application, shared by every machine                    │     session text not null,                                           │   │
+│       One more service to run, back up and keep reachable from a laptop that is   │     at text not null,                                                │   │
+│       often offline.                                                              │     body json not null                                               │   │
+│  ○ 3  Type something.                                                             │   ) strict;                                                          │   │
+│                                                                                   │                                                                      │   │
+│  ✎ Add a note (n).                                                                │ A row per event, so the history is the table and a reader can replay │   │
+│                                                                                   │ it.                                                                  │   │
+│                                                                                   └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                                                                                                              │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────── ↑/↓ move · enter select · n note · esc cancel ─╯
+--- styles
+1x2 2x15 1x143
+1 .x2 3x112 .x44 1
+1 .x158 1
+1 2x2 4x51 .x30 5x72 .x3 1
+1 .x7 6x74 .x2 5 .x3 7x6 . 7x5 .x4 7x3 . 7x6 .x41 5 .x3 1
+1 .x7 6x13 .x63 5 .x8 5x7 . 7x7 .x47 5 .x3 1
+1 .x83 5 .x18 7x3 . 7x4 .x44 5 .x3 1
+1 .x7 6x73 .x3 5 .x5 7x2 .x6 7x3 . 7x4 .x49 5 .x3 1
+1 .x7 6x14 .x62 5 .x15 7x3 . 7x4 .x47 5 .x3 1
+1 .x7 8x15 .x61 5 .x70 5 .x3 1
+1 .x83 5 .x70 5 .x3 1
+1 .x2 6x17 .x64 5 .x70 5 .x3 1
+1 .x83 5 .x70 5 .x3 1
+1 .x83 5x72 .x3 1
+1 .x158 1
+1x111 8x47 1x2
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#dad8ce
+4 bold
+5 fg=#cf6a4c
+6 fg=#b7b5ac
+7 fg=#4385be
+8 fg=#878580

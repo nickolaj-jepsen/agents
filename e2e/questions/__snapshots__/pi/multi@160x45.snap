@@ -1,0 +1,35 @@
+# questions/pi/multi 160x45 @0,31 (160x13)
+╭─ Retention ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│  How much of each session should be kept?                                                                                                                    │
+│                                                                                                                                                              │
+│  ■ 1  The whole transcript                                                                                                                                   │
+│▸ ■ 2  The last turn only                                                                                                                                     │
+│  □ 3  A summary of each run                                                                                                                                  │
+│  □ 4  Type something.                                                                                                                                        │
+│                                                                                                                                                              │
+│  ✎ Add a note (n).                                                                                                                                           │
+│                                                                                                                                                              │
+│  Done                                                                                                                                                        │
+│                                                                                                                                                              │
+╰───────────────────────────────────────────────────────────────────────────────────────────────── ↑/↓ move · space toggle · enter done · n note · esc cancel ─╯
+--- styles
+1x2 2x11 1x147
+1 .x2 3x40 .x116 1
+1 .x158 1
+1 .x158 1
+1 2x2 4x23 .x133 1
+1 .x158 1
+1 .x7 5x15 .x136 1
+1 .x158 1
+1 .x2 6x17 .x139 1
+1 .x158 1
+1 .x2 3x4 .x152 1
+1 .x158 1
+1x98 5x60 1x2
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#dad8ce
+4 bold
+5 fg=#878580
+6 fg=#b7b5ac

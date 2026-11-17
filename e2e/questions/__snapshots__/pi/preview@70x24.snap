@@ -1,0 +1,33 @@
+# questions/pi/preview 70x24 @0,11 (70x12)
+╭─ Layout ───────────────────────────────────────────────────────────╮
+│  Which table layout?                                               │
+│                                                                    │
+│▸ ○ 1  One row per event                                            │
+│       Append-only, and the history is the table.                   │
+│  ○ 2  One row per session                                          │
+│       A document per session, rewritten on every turn.             │
+│  ○ 3  Type something.                                              │
+│                                                                    │
+│  ✎ Add a note (n).                                                 │
+│                                                                    │
+╰──────────────────── ↑/↓ move · enter select · n note · esc cancel ─╯
+--- styles
+1x2 2x8 1x60
+1 .x2 3x19 .x47 1
+1 .x68 1
+1 2x2 4x22 .x44 1
+1 .x7 5x42 .x19 1
+1 .x68 1
+1 .x7 5x48 .x13 1
+1 .x7 6x15 .x46 1
+1 .x68 1
+1 .x2 5x17 .x49 1
+1 .x68 1
+1x21 6x47 1x2
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#dad8ce
+4 bold
+5 fg=#b7b5ac
+6 fg=#878580

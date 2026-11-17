@@ -1,0 +1,45 @@
+# questions/pi/extreme 112x32 @0,14 (112x17)
+╭─ Where stored? ──────────────────────────────────────────────────────────────────────────────────────────────╮
+│  Where should a session's full transcript, every tool result and each compaction summary be kept once a run  │
+│  ends?                                                                                                       │
+│                                                                                                              │
+│▸ ○ 1  SQLite in the repository, beside the worktrees     ┌──────────────────────────────────────────────────┐│
+│       One file the checkout can delete, and no service   │   create table if not exists event (             ││
+│       to keep running on any of the machines.            │     id integer primary key,                      ││
+│  ○ 2  Postgres beside the application, shared by every   │     session text not null,                       ││
+│       machine                                            │     at text not null,                            ││
+│       One more service to run, back up and keep          │     body json not null                           ││
+│       reachable from a laptop that is often offline.     │   ) strict;                                      ││
+│  ○ 3  Type something.                                    │                                                  ││
+│                                                          │ A row per event, so the history is the table and ││
+│  ✎ Add a note (n).                                       │ a reader can replay it.                          ││
+│                                                          └──────────────────────────────────────────────────┘│
+│                                                                                                              │
+╰────────────────────────────────────────────────────────────── ↑/↓ move · enter select · n note · esc cancel ─╯
+--- styles
+1x2 2x15 1x95
+1 .x2 3x106 .x2 1
+1 .x2 3x5 .x103 1
+1 .x110 1
+1 2x2 4x51 .x5 5x52 1
+1 .x7 6x48 .x3 5 .x3 7x6 . 7x5 .x4 7x3 . 7x6 .x21 5 1
+1 .x7 6x39 .x12 5 .x8 5x7 . 7x7 .x27 5 1
+1 .x58 5 .x18 7x3 . 7x4 .x24 5 1
+1 .x7 3x7 .x44 5 .x5 7x2 .x6 7x3 . 7x4 .x29 5 1
+1 .x7 6x41 .x10 5 .x15 7x3 . 7x4 .x27 5 1
+1 .x7 6x46 .x5 5 .x50 5 1
+1 .x7 8x15 .x36 5 .x50 5 1
+1 .x58 5 .x50 5 1
+1 .x2 6x17 .x39 5 .x50 5 1
+1 .x58 5x52 1
+1 .x110 1
+1x63 8x47 1x2
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#dad8ce
+4 bold
+5 fg=#cf6a4c
+6 fg=#b7b5ac
+7 fg=#4385be
+8 fg=#878580

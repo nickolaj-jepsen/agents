@@ -1,0 +1,35 @@
+# questions/pi/preview 160x45 @0,32 (160x12)
+╭─ Layout ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│  Which table layout?                                                                                                                                         │
+│                                                                                                                                                              │
+│▸ ○ 1  One row per event                                                           ┌──────────────────────────────────────────┐                               │
+│       Append-only, and the history is the table.                                  │   create table event (                   │                               │
+│  ○ 2  One row per session                                                         │     id integer primary key,              │                               │
+│       A document per session, rewritten on every turn.                            │     session text not null,               │                               │
+│  ○ 3  Type something.                                                             │     at text not null                     │                               │
+│                                                                                   │   );                                     │                               │
+│  ✎ Add a note (n).                                                                └──────────────────────────────────────────┘                               │
+│                                                                                                                                                              │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────── ↑/↓ move · enter select · n note · esc cancel ─╯
+--- styles
+1x2 2x8 1x150
+1 .x2 3x19 .x137 1
+1 .x158 1
+1 2x2 4x22 .x59 5x44 .x31 1
+1 .x7 6x42 .x34 5 .x3 7x6 . 7x5 .x27 5 .x31 1
+1 .x83 5 .x8 5x7 . 7x7 .x19 5 .x31 1
+1 .x7 6x48 .x28 5 .x18 7x3 . 7x4 .x16 5 .x31 1
+1 .x7 8x15 .x61 5 .x5 7x2 .x6 7x3 . 7x4 .x21 5 .x31 1
+1 .x83 5 .x42 5 .x31 1
+1 .x2 6x17 .x64 5x44 .x31 1
+1 .x158 1
+1x111 8x47 1x2
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#dad8ce
+4 bold
+5 fg=#cf6a4c
+6 fg=#b7b5ac
+7 fg=#4385be
+8 fg=#878580
