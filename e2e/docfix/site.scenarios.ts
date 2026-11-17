@@ -28,13 +28,13 @@ const turns: Turn[] = [
     toolCall: { name: "mcp__docfix__docfix", arguments: FILED },
   },
   { text: "Filed. The install steps in README.md are updated; nothing else was touched." },
-  // Apply sends one prompt per doc; they reach the model together, which resolves both.
+  // Apply drafts one prompt for every marked doc and the demo sends it; the model resolves both.
   { toolCall: { name: "mcp__docfix__docfix", arguments: { action: "resolve", id: FILED_ID } } },
   { toolCall: { name: "mcp__docfix__docfix", arguments: { action: "resolve", id: LEGACY_ID } } },
   { text: "Both claims checked against the code and resolved; nothing is committed." },
 ];
 
-/** The same story in pi, where the tool is `docfix` and Apply sends one prompt per doc; marking one doc keeps it to one turn. */
+/** The same story in pi, where the tool is `docfix`; marking one doc keeps it to one resolve. */
 const PI_TURNS: Turn[] = [
   {
     text: turns[0]!.text,
@@ -54,7 +54,7 @@ export default site({
   demo: [
     {
       caption:
-        "The agent files a doc suggestion instead of editing a doc outside its change; /docfix lists them, and Apply hands the marked ones back.",
+        "The agent files a doc suggestion instead of editing a doc outside its change; /docfix lists them, and Apply drafts the marked ones as a prompt for you to send.",
       project: "shop-api",
       setup,
       start: {
@@ -76,6 +76,10 @@ export default site({
         { sleep: 2400 },
         poster,
         { press: "a" },
+        { wait: "Apply these docfix suggestions" },
+        // The draft sits in the prompt box for a moment, to be read; then it is sent.
+        { sleep: 3200 },
+        { press: "Enter" },
         { wait: "Both claims checked", timeout: 20_000 },
         { sleep: 4500 },
       ],
@@ -83,7 +87,7 @@ export default site({
     {
       harness: "pi",
       caption:
-        "pi has the same tool and panel: the agent files the suggestion, /docfix lists them, and Apply hands the marked one back.",
+        "pi has the same tool and panel: the agent files the suggestion, /docfix lists them, and Apply drafts the marked one as a prompt for you to send.",
       project: "shop-api",
       setup,
       start: { hermetic: true, plugins: ["docfix"], turns: PI_TURNS },
@@ -101,6 +105,9 @@ export default site({
         { sleep: 2400 },
         poster,
         { press: "a" },
+        { wait: "Apply these docfix suggestions" },
+        { sleep: 3200 },
+        { press: "Enter" },
         { wait: "claim checked against the code", timeout: 30_000 },
         { sleep: 4500 },
       ],

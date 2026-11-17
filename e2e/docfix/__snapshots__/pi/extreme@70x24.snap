@@ -1,51 +1,56 @@
-# docfix/pi/extreme 70x24 @1,2 (68x20)
+# docfix/pi/extreme 70x24 @1,1 (68x23)
 ╭─ Doc suggestions  5 ─────────────────────────────────────────────╮
 │                                                                  │
-│ AGENTS.md ────────────────────────────────────────────────────── │
 │ ❯ □ The section says the build verifies a pi      !   12×     •• │
-│     change, but the build only type-checks the …                 │
-│   □ UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbr  +    3×  <age> │
-│     okenUnbrokenUnbrokenUnbrokenUnbrokenUnbroke…                 │
-│     ↓ 3 more                                                     │
+│     change, but the build only type-checks the                   │
+│     cores and the pi halves and never starts an                  │
+│     agent, so a panel that renders wrong still                   │
+│     passes it. The section says the build                        │
+│     verifies a pi change, but the build only                     │
+│     type-checks the cores and the pi halves and                  │
+│     never starts an agent, so a panel that                       │
+│     ↓ 4 more                                                     │
 │                                                                  │
 │ The section says the build verifies a pi change, but the build   │
 │ only type-checks the cores and the pi halves and never starts an │
-│ agent, so a panel that renders wrong still passes it. The secti… │
-│                                                                  │
-│ ! wrong   seen 12×   <age>                                       │
-│                                                                  │
-│ Evidence ─────────────────────────────────────────────────────── │
-│ <date>      `just build` printed error: derivation failed while… │
-│ ↓ 1 more                                                         │
+│ agent, so a panel that renders wrong still passes it. The        │
+│ section says the build verifies a pi change, but the build only  │
+│ type-checks the cores and the pi halves and never starts an      │
+│ agent, so a panel that renders wrong still passes it. The        │
+│ section says the build verifies a pi change, but the build only  │
+│ type-checks the cores and the pi halves and never starts an      │
+│ ↓ 31 more                                                        │
 │                                                                  │
 ╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
 --- styles
 1x3 2x15 .x2 3 . 1x46
 1 .x66 1
-1 . 4x9 . 3x54 . 1
-1 . 5 . 3 . 5x40 .x6 6 .x2 7x4 .x2 3x5 . 1
-1 .x5 5x43 .x18 1
-1 .x3 3 . 8x44 .x2 8 .x2 7x4 .x2 3x5 . 1
-1 .x5 8x43 .x18 1
+1 . 4 . 3 . 4x40 .x6 5 .x2 6x4 .x2 3x5 . 1
+1 .x5 4x42 .x19 1
+1 .x5 4x43 .x18 1
+1 .x5 4x42 .x19 1
+1 .x5 4x37 .x24 1
+1 .x5 4x40 .x21 1
+1 .x5 4x43 .x18 1
+1 .x5 4x38 .x23 1
 1 .x5 3x8 .x53 1
 1 .x66 1
-1 . 8x62 .x3 1
-1 . 8x64 . 1
-1 . 8x63 .x2 1
+1 . 7x62 .x3 1
+1 . 7x64 . 1
+1 . 7x57 .x8 1
+1 . 7x63 .x2 1
+1 . 7x59 .x6 1
+1 . 7x57 .x8 1
+1 . 7x63 .x2 1
+1 . 7x59 .x6 1
+1 . 3x9 .x56 1
 1 .x66 1
-1 . 6 . 3x5 .x3 7x8 .x3 3x10 .x34 1
-1 .x66 1
-1 . 4x8 . 3x55 . 1
-1 . 3x10 .x2 8x51 .x2 1
-1 . 3x8 .x57 1
-1 .x66 1
-1x3 8x2 . 3x4 . 1x2 . 8x5 . 3x4 . 1x2 . 8 . 3x5 . 1x2 . 8 . 3x7 . 1x2 . 8x3 . 3x5 . 1x6
+1x3 7x2 . 3x4 . 1x2 . 7x5 . 3x4 . 1x2 . 7 . 3x5 . 1x2 . 7 . 3x7 . 1x2 . 7x3 . 3x5 . 1x6
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c bold
 3 fg=#878580
-4 fg=#dad8ce bold
-5 fg=#cf6a4c
-6 fg=#d14d41
-7 fg=#d0a215
-8 fg=#dad8ce
+4 fg=#cf6a4c
+5 fg=#d14d41
+6 fg=#d0a215
+7 fg=#dad8ce

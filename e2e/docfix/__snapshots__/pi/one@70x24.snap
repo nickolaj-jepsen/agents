@@ -1,12 +1,9 @@
-# docfix/pi/one 70x24 @1,4 (68x16)
+# docfix/pi/one 70x24 @1,5 (68x13)
 ╭─ Doc suggestions  1 ─────────────────────────────────────────────╮
 │                                                                  │
 │ AGENTS.md ────────────────────────────────────────────────────── │
 │ ❯ □ `just build` is not enough to verify a pi     !    3×     •• │
 │     change; the docs say it is.                                  │
-│                                                                  │
-│ `just build` is not enough to verify a pi change; the docs say   │
-│ it is.                                                           │
 │                                                                  │
 │ ! wrong   seen 3×   <age>                                        │
 │                                                                  │
@@ -21,9 +18,6 @@
 1 . 4x9 . 3x54 . 1
 1 . 5 . 3 . 5x41 .x5 6 .x2 7x4 .x2 3x5 . 1
 1 .x5 5x27 .x34 1
-1 .x66 1
-1 . 8x62 .x3 1
-1 . 8x6 .x59 1
 1 .x66 1
 1 . 6 . 3x5 .x3 7x7 .x3 3x10 .x35 1
 1 .x66 1

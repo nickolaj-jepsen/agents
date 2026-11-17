@@ -8,12 +8,12 @@ import { Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import {
   applyPrompt,
-  byTarget,
   dismiss,
   KINDS,
   normalizeTarget,
   openQueue,
   plan,
+  reopen,
   statusText,
   TOOL_DESCRIPTION,
   TOOL_NAME,
@@ -141,6 +141,11 @@ export default function (pi: ExtensionAPI) {
                 for (const s of list) await save(where.dir, dismiss(s, now));
                 await refresh(ctx);
               },
+              restore: async (list) => {
+                const now = new Date().toISOString();
+                for (const s of list) await save(where.dir, reopen(s, now));
+                await refresh(ctx);
+              },
             },
             initial,
             done,
@@ -155,11 +160,11 @@ export default function (pi: ExtensionAPI) {
       );
       await refresh(ctx);
       if (!picked?.length) return;
-      for (const [target, list] of byTarget(picked))
-        pi.sendUserMessage(
-          applyPrompt(target, list),
-          ctx.isIdle() ? undefined : { deliverAs: "followUp" },
-        );
+      // Drafted in the editor, after what the person already typed, not sent: they read it first.
+      const draft = ctx.ui.getEditorText();
+      const text = applyPrompt(picked);
+      ctx.ui.setEditorText(draft.trim() ? `${draft}\n\n${text}` : text);
+      ctx.ui.notify("The apply prompt is in the editor: read it, then Enter to send", "info");
     },
   });
 }

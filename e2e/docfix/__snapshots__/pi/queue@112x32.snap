@@ -1,4 +1,4 @@
-# docfix/pi/queue 112x32 @1,8 (110x15)
+# docfix/pi/queue 112x32 @1,7 (110x17)
 ╭─ Doc suggestions  3 ──────────────────────────────────────┬────────────────────────────────────────────────╮
 │                                                           │                                                │
 │ AGENTS.md ─────────────────────────────────────────────── │ `just build` is not enough to verify a pi      │
@@ -11,9 +11,11 @@
 │                                                           │ AGENTS.md: the line contradicts what the code  │
 │ docs/modules.md ───────────────────────────────────────── │ does now.                                      │
 │   □ A leaf that imports a third-party      +    1×     •• │                                                │
-│     module imports it on every host; the…                 │                                                │
+│     module imports it on every host; the                  │                                                │
+│     page should say that module must be                   │                                                │
+│     inert when the feature is off.                        │                                                │
 │                                                           │                                                │
-╰─ ↑↓ move ── space mark ── a apply ── d dismiss ───────────┴─ esc later ────────────────────────────────────╯
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ───────────┴─ m mark all ── esc later ──────────────────────╯
 --- styles
 1x3 2x15 .x2 3 . 1x88
 1 .x59 1 .x48 1
@@ -28,8 +30,10 @@
 1 . 4x15 . 3x41 . 1 . 5x9 .x38 1
 1 .x3 3 . 5x33 .x6 5 .x2 3x4 .x2 3x5 . 1 .x48 1
 1 .x5 5x36 .x18 1 .x48 1
+1 .x5 5x35 .x19 1 .x48 1
+1 .x5 5x30 .x24 1 .x48 1
 1 .x59 1 .x48 1
-1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x13 . 5x3 . 3x5 . 1x37
+1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x13 . 5 . 3x8 . 1x2 . 5x3 . 3x5 . 1x23
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c bold

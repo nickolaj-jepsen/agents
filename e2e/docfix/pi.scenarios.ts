@@ -44,9 +44,37 @@ export default scenarios({
       steps: [{ hover: "legacy" }],
     },
     dismissed: {
-      about: "the notice after a dismiss, the queue one shorter",
+      about: "the notice after a dismiss, the queue one shorter, undo offered in the hints",
       from: "queue",
       steps: [{ press: "d" }, { wait: "Dismissed 1" }],
+    },
+    undone: {
+      about: "u after a dismiss: the suggestion is back",
+      from: "dismissed",
+      steps: [{ press: "u" }, { wait: "Restored 1" }],
+    },
+    all: {
+      about: "m marks every row",
+      from: "queue",
+      steps: [{ press: "m" }],
+    },
+    doubleClick: {
+      about: "a double click on a row marks it, as space does",
+      from: "queue",
+      steps: [{ doubleClick: "legacy" }],
+    },
+    applied: {
+      about:
+        "a on two marked rows: the panel closes and the editor holds one drafted prompt, unsent",
+      from: "queue",
+      region: region.full,
+      steps: [
+        { press: "Space" },
+        { press: "Down" },
+        { press: "Space" },
+        { press: "a" },
+        { wait: "Apply these docfix" },
+      ],
     },
     many: {
       about: "28 suggestions, more than fit; the cursor well down the list",
@@ -83,6 +111,28 @@ export default scenarios({
       },
       steps: [...open, { wait: "AGENTS.md" }],
       extreme: true,
+    },
+    scrolled: {
+      about:
+        "the extreme detail one page down: what was cut off below is now in view, `↑ n more` above",
+      from: "extreme",
+      steps: [{ press: "PageDown" }],
+    },
+    detailWheel: {
+      about: "two wheel-down events over the detail scroll it, not the list's cursor",
+      from: "extreme",
+      fresh: true,
+      steps: [
+        {
+          run: async (s) => {
+            for (let i = 0; i < 2; i++) {
+              await s.term.write("\x1b[<65;120;15M");
+              await new Promise((r) => setTimeout(r, 200));
+            }
+          },
+        },
+        { sleep: 300 },
+      ],
     },
   },
 });

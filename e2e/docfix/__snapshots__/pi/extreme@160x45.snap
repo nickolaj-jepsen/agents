@@ -1,69 +1,91 @@
-# docfix/pi/extreme 160x45 @18,6 (124x32)
+# docfix/pi/extreme 160x45 @18,1 (124x43)
 ╭─ Doc suggestions  5 ─────────────────────────────────────────────┬───────────────────────────────────────────────────────╮
 │                                                                  │                                                       │
 │ AGENTS.md ────────────────────────────────────────────────────── │ The section says the build verifies a pi change, but  │
 │ ❯ □ The section says the build verifies a pi      !   12×     •• │ the build only type-checks the cores and the pi       │
-│     change, but the build only type-checks the …                 │ halves and never starts an agent, so a panel that     │
-│   □ UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbr  +    3×  <age> │ renders wrong still passes it. The section says the   │
-│     okenUnbrokenUnbrokenUnbrokenUnbrokenUnbroke…                 │ build verifies a pi change, but the build only        │
-│                                                                  │ type-checks the cores and the pi halves and never     │
-│ docs/a-very-long-directory-name/with/several/nested/levels/and-… │ starts an agent, so a panel that renders wrong still  │
-│   □ A claim under a very long target path, so     ↻    1×   •••• │ passes it. The section says the build verifies a pi   │
-│     the group header must be cut.                                │ change, but the build only type-checks the cores and  │
-│                                                                  │ the pi halves and never starts an agent, so a panel   │
-│ docs/hosts.md ────────────────────────────────────────────────── │ that renders wrong still passes it. The section says  │
-│   □ Short.                                        ↻    1×     •• │ the build verifies a pi change, but the build only    │
-│                                                                  │ type-checks the cores and the pi halves and never     │
-│ docs/日本語のドキュメント.md ─────────────────────────────────── │ starts an agent, so a panel that renders wrong still  │
-│   □ この節は古くなっています。ビルドが検証するの  +  100×     •• │ passes it.                                            │
-│     は型だけで、エージェントを起動しないことを…                  │                                                       │
-│                                                                  │ ! wrong   seen 12×   <age>                            │
-│                                                                  │                                                       │
-│                                                                  │ Evidence ──────────────────────────────────────────── │
-│                                                                  │ <date>      `just build` printed error: derivation    │
+│     change, but the build only type-checks the                   │ halves and never starts an agent, so a panel that     │
+│     cores and the pi halves and never starts an                  │ renders wrong still passes it. The section says the   │
+│     agent, so a panel that renders wrong still                   │ build verifies a pi change, but the build only        │
+│     passes it. The section says the build                        │ type-checks the cores and the pi halves and never     │
+│     verifies a pi change, but the build only                     │ starts an agent, so a panel that renders wrong still  │
+│     type-checks the cores and the pi halves and                  │ passes it. The section says the build verifies a pi   │
+│     never starts an agent, so a panel that                       │ change, but the build only type-checks the cores and  │
+│     renders wrong still passes it. The section                   │ the pi halves and never starts an agent, so a panel   │
+│     says the build verifies a pi change, but the                 │ that renders wrong still passes it. The section says  │
+│     build only type-checks the cores and the pi                  │ the build verifies a pi change, but the build only    │
+│     halves and never starts an agent, so a panel                 │ type-checks the cores and the pi halves and never     │
+│     that renders wrong still passes it. The                      │ starts an agent, so a panel that renders wrong still  │
+│     section says the build verifies a pi change,                 │ passes it.                                            │
+│     but the build only type-checks the cores and                 │                                                       │
+│     the pi halves and never starts an agent, so                  │ ! wrong   seen 12×   <age>                            │
+│     a panel that renders wrong still passes it.                  │                                                       │
+│   □ UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbr  +    3×  <age> │ Evidence ──────────────────────────────────────────── │
+│     okenUnbrokenUnbrokenUnbrokenUnbrokenUnbroken                 │ <date>      `just build` printed error: derivation    │
+│     UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbr                 │             failed while evaluating the attribute and │
+│     okenUnbrokenUnbrokenUnbrokenUnbrokenUnbroken                 │             its dependencies, error: derivation       │
+│     UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbr                 │             failed while evaluating the attribute and │
+│     okenUnbrokenUnbroken                                         │             its dependencies, error: derivation       │
 │                                                                  │             failed while evaluating the attribute and │
+│ docs/a-very-long-directory-name/with/several/nested/levels/and-a │             its dependencies, error: derivation       │
+│ n-equally-long-file-name-for-the-guide.md ────────────────────── │             failed while evaluating the attribute and │
+│   □ A claim under a very long target path, so     ↻    1×   •••• │             its dependencies, error: derivation       │
+│     the group header must be cut.                                │             failed while evaluating the attribute and │
 │                                                                  │             its dependencies, error: derivation       │
-│                                                                  │             failed while evaluating the attribute an… │
+│ docs/hosts.md ────────────────────────────────────────────────── │             failed while evaluating the attribute and │
+│   □ Short.                                        ↻    1×     •• │             its dependencies,                         │
 │                                                                  │                                                       │
-│                                                                  │ <date>      The section says the build verifies a pi  │
-│                                                                  │             change, but the build only type-checks    │
-│                                                                  │             the cores and the pi halves and never     │
-│                                                                  │             starts an agent, so a panel that renders… │
+│ docs/日本語のドキュメント.md ─────────────────────────────────── │ <date>      The section says the build verifies a pi  │
+│   □ この節は古くなっています。ビルドが検証するの  +  100×     •• │             change, but the build only type-checks    │
+│     は型だけで、エージェントを起動しないことを書                 │             the cores and the pi halves and never     │
+│     き足す必要があります。全角文字と半角文字が混                 │             starts an agent, so a panel that renders  │
+│     ざった長い説明文。                                           │             wrong still passes it; The section says   │
+│                                                                  │ ↓ 9 more                                              │
 │                                                                  │                                                       │
-╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────┴───────────────────────────────────────────────────────╯
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ──────────────────┴─ pgup/pgdn scroll ── m mark all ── esc later ─────────╯
 --- styles
 1x3 2x15 .x2 3 . 1x102
 1 .x66 1 .x55 1
 1 . 4x9 . 3x54 . 1 . 5x52 .x2 1
 1 . 6 . 3 . 6x40 .x6 7 .x2 8x4 .x2 3x5 . 1 . 5x47 .x7 1
-1 .x5 6x43 .x18 1 . 5x49 .x5 1
-1 .x3 3 . 5x44 .x2 5 .x2 8x4 .x2 3x5 . 1 . 5x51 .x3 1
-1 .x5 5x43 .x18 1 . 5x46 .x8 1
-1 .x66 1 . 5x49 .x5 1
-1 . 4x63 .x2 1 . 5x52 .x2 1
-1 .x3 3 . 5x41 .x5 5 .x2 3x4 .x2 3x5 . 1 . 5x51 .x3 1
-1 .x5 5x29 .x32 1 . 5x52 .x2 1
-1 .x66 1 . 5x51 .x3 1
-1 . 4x13 . 3x50 . 1 . 5x52 .x2 1
-1 .x3 3 . 5x6 .x40 5 .x2 3x4 .x2 3x5 . 1 . 5x50 .x4 1
-1 .x66 1 . 5x49 .x5 1
-1 . 4x28 . 3x35 . 1 . 5x52 .x2 1
-1 .x3 3 . 5x44 .x2 5 .x2 8x4 .x2 3x5 . 1 . 5x10 .x44 1
-1 .x5 5x42 .x19 1 .x55 1
-1 .x66 1 . 7 . 3x5 .x3 8x8 .x3 3x10 .x23 1
-1 .x66 1 .x55 1
-1 .x66 1 . 4x8 . 3x44 . 1
-1 .x66 1 . 3x10 .x2 5x38 .x4 1
+1 .x5 6x42 .x19 1 . 5x49 .x5 1
+1 .x5 6x43 .x18 1 . 5x51 .x3 1
+1 .x5 6x42 .x19 1 . 5x46 .x8 1
+1 .x5 6x37 .x24 1 . 5x49 .x5 1
+1 .x5 6x40 .x21 1 . 5x52 .x2 1
+1 .x5 6x43 .x18 1 . 5x51 .x3 1
+1 .x5 6x38 .x23 1 . 5x52 .x2 1
+1 .x5 6x42 .x19 1 . 5x51 .x3 1
+1 .x5 6x44 .x17 1 . 5x52 .x2 1
+1 .x5 6x43 .x18 1 . 5x50 .x4 1
+1 .x5 6x44 .x17 1 . 5x49 .x5 1
+1 .x5 6x39 .x22 1 . 5x52 .x2 1
+1 .x5 6x44 .x17 1 . 5x10 .x44 1
+1 .x5 6x44 .x17 1 .x55 1
+1 .x5 6x43 .x18 1 . 7 . 3x5 .x3 8x8 .x3 3x10 .x23 1
+1 .x5 6x43 .x18 1 .x55 1
+1 .x3 3 . 5x44 .x2 5 .x2 8x4 .x2 3x5 . 1 . 4x8 . 3x44 . 1
+1 .x5 5x44 .x17 1 . 3x10 .x2 5x38 .x4 1
+1 .x5 5x44 .x17 1 .x13 5x41 . 1
+1 .x5 5x44 .x17 1 .x13 5x35 .x7 1
+1 .x5 5x44 .x17 1 .x13 5x41 . 1
+1 .x5 5x20 .x41 1 .x13 5x35 .x7 1
 1 .x66 1 .x13 5x41 . 1
+1 . 4x64 . 1 .x13 5x35 .x7 1
+1 . 4x41 . 3x22 . 1 .x13 5x41 . 1
+1 .x3 3 . 5x41 .x5 5 .x2 3x4 .x2 3x5 . 1 .x13 5x35 .x7 1
+1 .x5 5x29 .x32 1 .x13 5x41 . 1
 1 .x66 1 .x13 5x35 .x7 1
-1 .x66 1 .x13 5x40 .x2 1
+1 . 4x13 . 3x50 . 1 .x13 5x41 . 1
+1 .x3 3 . 5x6 .x40 5 .x2 3x4 .x2 3x5 . 1 .x13 5x17 .x25 1
 1 .x66 1 .x55 1
-1 .x66 1 . 3x10 .x2 5x40 .x2 1
-1 .x66 1 .x13 5x38 .x4 1
-1 .x66 1 .x13 5x37 .x5 1
-1 .x66 1 .x13 5x40 .x2 1
+1 . 4x28 . 3x35 . 1 . 3x10 .x2 5x40 .x2 1
+1 .x3 3 . 5x44 .x2 5 .x2 8x4 .x2 3x5 . 1 .x13 5x38 .x4 1
+1 .x5 5x44 .x17 1 .x13 5x37 .x5 1
+1 .x5 5x44 .x17 1 .x13 5x40 .x2 1
+1 .x5 5x18 .x43 1 .x13 5x39 .x3 1
+1 .x66 1 . 3x8 .x46 1
 1 .x66 1 .x55 1
-1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x2 . 5x3 . 3x5 . 1x62
+1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x20 . 5x9 . 3x6 . 1x2 . 5 . 3x8 . 1x2 . 5x3 . 3x5 . 1x10
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c bold

@@ -1,0 +1,64 @@
+# docfix/claude/applied 70x24 @0,0 (70x24)
+                           ╭─────────────────────────────────────────╮
+ ▐▛███▛█   Claude Code v2.1│ docfix                                  │
+▝▜██████▀  Sonnet 5.5 with │ The apply prompt is in the prompt box:  │
+ ▝▝   ▝▝   ~/…/state/agents│ read it, then Enter to send             │
+                           ╰─────────────────────────────────────────╯
+▎ Debug mode enabled · logging to /home/nickolaj/.local/state/agents/t
+▎ mp/agents-d9c3580c/e2e-run   /debug.log
+
+❯ /docfix
+  ⎿  docfix: Opened the doc suggestions pane.
+
+
+                                              ctrl+g to edit in Nvim
+──────────────────────────────────────────────────────────────────────
+❯ Draft each edit against the file as it stands now, in its existing
+  structure and voice. For a stale plan, delete or trim what is
+  finished or gone.
+  Don't commit.
+  Then call docfix with action "resolve" for each id, applied or
+  found no longer true.
+──────────────────────────────────────────────────────────────────────
+  ⚠ docfix: docs 3
+  Sonnet 5.5 · high · 0% · •• 97%                                  …
+  ⏵⏵ auto mode on (shift+tab to cycle)
+--- styles
+.x27 1x43
+2x2 3x6 .x3 4x11 . 5x4 1 . 5x6 .x34 1
+2x2 3x5 2x2 .x2 5x16 1 .x41 1
+2x9 .x2 5x16 1 .x41 1
+.x27 1x43
+1 . 5x68
+1 . 5x39
+-
+6 7 8x7 7
+5x5
+-
+-
+.x46 5x22
+9x70
+-
+-
+-
+-
+.x12 ax6
+-
+9x70
+.x2 bx16
+.x2 5x10 cx3 5x4 cx8 dx6 5x35
+.x2 bx15 5x21
+--- legend
+1 dim
+2 fg=#d77757
+3 fg=#d77757 bg=#000000
+4 bold
+5 fg=#999999
+6 fg=#999999 bg=#373737
+7 bg=#373737
+8 fg=#ffffff bg=#373737
+9 fg=#888888
+a fg=#ff6b80 underline=single
+b fg=#ffc107
+c fg=#999999 dim
+d fg=p3

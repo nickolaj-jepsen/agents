@@ -1,0 +1,25 @@
+# docfix/claude/collapsed 70x24 @0,12 (70x8)
+╭──────────────────────────────────────────────────────────────────✕─╮
+│ ─ Doc suggestions  3 ───────────────────────────────────────────── │
+│ a: apply   d: dismiss   m: mark   e: evidence   q: later           │
+│ AGENTS.md ──────────────────────────────────────────────────────── │
+│ □ `just build` is not enough to verify a pi change; the docs say   │
+│   it is.                                                           │
+│   ! wrong  3×  ••  ▸ evidence 1                                    │
+╰────────────────────────────────────────────────────────────────────╯
+--- styles
+1x67 2 1x2
+1 . 2x2 3x15 2x49 . 1
+1 . 4 .x10 4 2x9 .x3 4 2x6 .x3 4 2x10 .x3 4 2x7 .x11 1
+1 . 3x9 . 2x56 . 1
+1 .x68 1
+1 .x68 1
+1 . 2x2 5x7 2x2 6x2 2x18 .x36 1
+1x70
+--- legend
+1 dim
+2 fg=#999999
+3 bold
+4 fg=#b1b9f9
+5 fg=#ff6b80
+6 fg=#ffc107

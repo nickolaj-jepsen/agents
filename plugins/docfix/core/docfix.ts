@@ -330,6 +330,14 @@ export const dismiss = (s: Suggestion, now: string): Suggestion => ({
   updated: now,
 });
 
+/** A dismissed suggestion open again: what an undo does. */
+export const reopen = (s: Suggestion, now: string): Suggestion => ({
+  ...s,
+  status: "open",
+  dismissed: "",
+  updated: now,
+});
+
 /** The picked suggestions, one group per doc, in queue order. */
 export function byTarget(picked: readonly Suggestion[]): [string, Suggestion[]][] {
   const groups = new Map<string, Suggestion[]>();
@@ -337,19 +345,26 @@ export function byTarget(picked: readonly Suggestion[]): [string, Suggestion[]][
   return [...groups];
 }
 
-/** The prompt an apply sends the session's agent for one doc. */
-export function applyPrompt(target: string, picked: readonly Suggestion[]): string {
-  const items = picked.flatMap((s) => [
-    `- ${s.id} (${s.kind}, seen ${seen(s)}×): ${s.claim}`,
-    ...s.evidence.map((e) => `  Evidence (${e.at.slice(0, 10)}): ${e.text.replace(/\n/g, "\n  ")}`),
+/** Where a checkout's suggestions are, as the agent reaches them from the repo root. */
+export const STORE_REF = `.agents/store/${STORE_DIR}`;
+
+/**
+ * The prompt an apply drafts for the agent: every picked suggestion by id, grouped by doc.
+ * Evidence stays in the suggestion's own file, which the agent reads; only the one-line
+ * claim is repeated, so the person can see what they are about to send.
+ */
+export function applyPrompt(picked: readonly Suggestion[]): string {
+  const docs = byTarget(picked).flatMap(([target, list]) => [
+    "",
+    target,
+    ...list.map((s) => `- ${s.id} (${s.kind}, seen ${seen(s)}×): ${s.claim}`),
   ]);
   return [
-    `Apply these docfix suggestions to ${target}.`,
-    "",
-    ...items,
+    `Apply these docfix suggestions. Each id is a file, ${STORE_REF}/<id>.md, holding its claim and evidence: read it first.`,
+    ...docs,
     "",
     "Check each claim against this repo's code first; one that no longer holds needs no edit.",
-    "Draft the edit against the file as it stands now, in its existing structure and voice. For a stale plan, delete or trim what is finished or gone.",
+    "Draft each edit against the file as it stands now, in its existing structure and voice. For a stale plan, delete or trim what is finished or gone.",
     "Don't commit.",
     `Then call ${TOOL_NAME} with action "resolve" for each id, applied or found no longer true.`,
   ].join("\n");

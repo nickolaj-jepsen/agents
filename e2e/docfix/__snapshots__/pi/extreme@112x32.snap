@@ -3,63 +3,63 @@
 │                                                           │                                                │
 │ AGENTS.md ─────────────────────────────────────────────── │ The section says the build verifies a pi       │
 │ ❯ □ The section says the build verifies a  !   12×     •• │ change, but the build only type-checks the     │
-│     pi change, but the build only type-c…                 │ cores and the pi halves and never starts an    │
-│   □ UnbrokenUnbrokenUnbrokenUnbrokenUnbro  +    3×  <age> │ agent, so a panel that renders wrong still     │
-│     kenUnbrokenUnbrokenUnbrokenUnbrokenU…                 │ passes it. The section says the build verifies │
-│                                                           │ a pi change, but the build only type-checks    │
-│ docs/a-very-long-directory-name/with/several/nested/leve… │ the cores and the pi halves and never starts   │
-│   □ A claim under a very long target       ↻    1×   •••• │ an agent, so a panel that renders wrong still  │
-│     path, so the group header must be cu…                 │ passes it. The section says the build verifies │
-│                                                           │ a pi change, but the build only type-checks    │
-│ docs/hosts.md ─────────────────────────────────────────── │ the cores and the pi halves and never starts   │
-│   □ Short.                                 ↻    1×     •• │ an agent, so a panel that renders wrong still  │
-│                                                           │ passes it. The section says the build verifies │
-│ docs/日本語のドキュメント.md ──────────────────────────── │ a pi change, but the build only type-checks    │
-│   □ この節は古くなっています。ビルドが検   +  100×     •• │ the cores and the pi halves and never starts   │
-│     証するのは型だけで、エージェントを起…                 │ an agent, so a panel that renders wrong still  │
-│                                                           │ passes it.                                     │
-│                                                           │                                                │
-│                                                           │ ! wrong   seen 12×   <age>                     │
-│                                                           │                                                │
-│                                                           │ Evidence ───────────────────────────────────── │
-│                                                           │ <date>                                         │
-│                                                           │ `just build` printed error: derivation failed  │
+│     pi change, but the build only                         │ cores and the pi halves and never starts an    │
+│     type-checks the cores and the pi                      │ agent, so a panel that renders wrong still     │
+│     halves and never starts an agent, so                  │ passes it. The section says the build verifies │
+│     a panel that renders wrong still                      │ a pi change, but the build only type-checks    │
+│     passes it. The section says the build                 │ the cores and the pi halves and never starts   │
+│     verifies a pi change, but the build                   │ an agent, so a panel that renders wrong still  │
+│     only type-checks the cores and the pi                 │ passes it. The section says the build verifies │
+│     halves and never starts an agent, so                  │ a pi change, but the build only type-checks    │
+│     a panel that renders wrong still                      │ the cores and the pi halves and never starts   │
+│     passes it. The section says the build                 │ an agent, so a panel that renders wrong still  │
+│     verifies a pi change, but the build                   │ passes it. The section says the build verifies │
+│     only type-checks the cores and the pi                 │ a pi change, but the build only type-checks    │
+│     halves and never starts an agent, so                  │ the cores and the pi halves and never starts   │
+│     a panel that renders wrong still                      │ an agent, so a panel that renders wrong still  │
+│     passes it. The section says the build                 │ passes it.                                     │
+│     verifies a pi change, but the build                   │                                                │
+│     only type-checks the cores and the pi                 │ ! wrong   seen 12×   <age>                     │
+│     halves and never starts an agent, so                  │                                                │
+│     a panel that renders wrong still                      │ Evidence ───────────────────────────────────── │
+│     passes it.                                            │ <date>                                         │
+│     ↓ 4 more                                              │ `just build` printed error: derivation failed  │
 │                                                           │ while evaluating the attribute and its         │
-│                                                           │ dependencies, error: derivation failed while … │
-│                                                           │ ↓ 1 more                                       │
+│                                                           │ dependencies, error: derivation failed while   │
+│                                                           │ ↓ 24 more                                      │
 │                                                           │                                                │
-╰─ ↑↓ move ── space mark ── a apply ── d dismiss ───────────┴─ esc later ────────────────────────────────────╯
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ───────────┴─ pgup/pgdn scroll ── m mark all ── esc later ──╯
 --- styles
 1x3 2x15 .x2 3 . 1x88
 1 .x59 1 .x48 1
 1 . 4x9 . 3x47 . 1 . 5x40 .x7 1
 1 . 6 . 3 . 6x37 .x2 7 .x2 8x4 .x2 3x5 . 1 . 5x42 .x5 1
+1 .x5 6x29 .x25 1 . 5x43 .x4 1
+1 .x5 6x32 .x22 1 . 5x42 .x5 1
+1 .x5 6x36 .x18 1 . 5x46 . 1
+1 .x5 6x32 .x22 1 . 5x43 .x4 1
+1 .x5 6x37 .x17 1 . 5x44 .x3 1
+1 .x5 6x35 .x19 1 . 5x45 .x2 1
+1 .x5 6x37 .x17 1 . 5x46 . 1
 1 .x5 6x36 .x18 1 . 5x43 .x4 1
-1 .x3 3 . 5x37 .x2 5 .x2 8x4 .x2 3x5 . 1 . 5x42 .x5 1
-1 .x5 5x36 .x18 1 . 5x46 . 1
-1 .x59 1 . 5x43 .x4 1
-1 . 4x56 .x2 1 . 5x44 .x3 1
-1 .x3 3 . 5x32 .x7 5 .x2 3x4 .x2 3x5 . 1 . 5x45 .x2 1
-1 .x5 5x36 .x18 1 . 5x46 . 1
-1 .x59 1 . 5x43 .x4 1
-1 . 4x13 . 3x43 . 1 . 5x44 .x3 1
-1 .x3 3 . 5x6 .x33 5 .x2 3x4 .x2 3x5 . 1 . 5x45 .x2 1
-1 .x59 1 . 5x46 . 1
-1 . 4x28 . 3x28 . 1 . 5x43 .x4 1
-1 .x3 3 . 5x36 .x3 5 .x2 8x4 .x2 3x5 . 1 . 5x44 .x3 1
-1 .x5 5x36 .x18 1 . 5x45 .x2 1
-1 .x59 1 . 5x10 .x37 1
-1 .x59 1 .x48 1
-1 .x59 1 . 7 . 3x5 .x3 8x8 .x3 3x10 .x16 1
-1 .x59 1 .x48 1
-1 .x59 1 . 4x8 . 3x37 . 1
-1 .x59 1 . 3x10 .x37 1
-1 .x59 1 . 5x45 .x2 1
+1 .x5 6x32 .x22 1 . 5x44 .x3 1
+1 .x5 6x37 .x17 1 . 5x45 .x2 1
+1 .x5 6x35 .x19 1 . 5x46 . 1
+1 .x5 6x37 .x17 1 . 5x43 .x4 1
+1 .x5 6x36 .x18 1 . 5x44 .x3 1
+1 .x5 6x32 .x22 1 . 5x45 .x2 1
+1 .x5 6x37 .x17 1 . 5x10 .x37 1
+1 .x5 6x35 .x19 1 .x48 1
+1 .x5 6x37 .x17 1 . 7 . 3x5 .x3 8x8 .x3 3x10 .x16 1
+1 .x5 6x36 .x18 1 .x48 1
+1 .x5 6x32 .x22 1 . 4x8 . 3x37 . 1
+1 .x5 6x10 .x44 1 . 3x10 .x37 1
+1 .x5 3x8 .x46 1 . 5x45 .x2 1
 1 .x59 1 . 5x38 .x9 1
-1 .x59 1 . 5x45 .x2 1
-1 .x59 1 . 3x8 .x39 1
+1 .x59 1 . 5x44 .x3 1
+1 .x59 1 . 3x9 .x38 1
 1 .x59 1 .x48 1
-1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x13 . 5x3 . 3x5 . 1x37
+1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x13 . 5x9 . 3x6 . 1x2 . 5 . 3x8 . 1x2 . 5x3 . 3x5 . 1x3
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c bold

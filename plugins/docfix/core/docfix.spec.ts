@@ -8,6 +8,7 @@ import {
   openQueue,
   parse,
   plan,
+  reopen,
   serialize,
   type Call,
   type Suggestion,
@@ -141,6 +142,30 @@ describe("review", () => {
       ["AGENTS.md", 2],
       ["docs/z.md", 1],
     ]);
-    expect(applyPrompt("AGENTS.md", [a])).toContain(`action "resolve"`);
+    expect(applyPrompt([a])).toContain(`action "resolve"`);
+  });
+
+  test("an apply prompt names the suggestions by id and leaves the evidence in their files", () => {
+    const a = filed(suggest()).suggestion;
+    const z = {
+      ...filed({ ...suggest({ file: "docs/z.md", claim: "c" }), target: ok("docs/z.md") })
+        .suggestion,
+      evidence: [{ at: NOW, session: "claude:one", text: "SECRET EVIDENCE TEXT" }],
+    };
+    const prompt = applyPrompt([a, z]);
+    expect(prompt).toContain(".agents/store/docfix/<id>.md");
+    expect(prompt).toContain(`- ${a.id} (missing, seen 1×): ${a.claim}`);
+    expect(prompt).not.toContain("SECRET EVIDENCE TEXT");
+    // One prompt for every doc, each doc's suggestions under its path.
+    expect(prompt.indexOf("\nAGENTS.md\n")).toBeLessThan(prompt.indexOf("\ndocs/z.md\n"));
+    expect(prompt.match(/Don't commit/g)).toHaveLength(1);
+  });
+
+  test("an undo opens a dismissed suggestion again", () => {
+    const a = filed(suggest()).suggestion;
+    const gone = dismiss(a, NOW);
+    const back = reopen(gone, "2026-11-16T10:00:00.000Z");
+    expect(back).toMatchObject({ status: "open", dismissed: "", id: a.id });
+    expect(openQueue([back])).toHaveLength(1);
   });
 });

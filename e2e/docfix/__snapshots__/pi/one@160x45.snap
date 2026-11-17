@@ -10,7 +10,7 @@
 │                                                                  │ <date>      AGENTS.md: the line contradicts what the  │
 │                                                                  │             code does now.                            │
 │                                                                  │                                                       │
-╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────┴───────────────────────────────────────────────────────╯
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── m mark all ────┴─ esc later ───────────────────────────────────────────╯
 --- styles
 1x3 2x15 .x2 3 . 1x102
 1 .x66 1 .x55 1
@@ -23,7 +23,7 @@
 1 .x66 1 . 3x10 .x2 5x40 .x2 1
 1 .x66 1 .x13 5x14 .x28 1
 1 .x66 1 .x55 1
-1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x2 . 5x3 . 3x5 . 1x62
+1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x2 . 5 . 3x8 . 1x6 . 5x3 . 3x5 . 1x44
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c bold

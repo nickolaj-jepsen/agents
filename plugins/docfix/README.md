@@ -20,10 +20,14 @@ review them and hand the ones you want back to the agent.
 - A repeat bumps the existing suggestion's seen count instead of adding one; the
   tool's result says `seen N×` in the transcript, and the status line shows
   `docs N` while any are open.
-- `/docfix` lists the open ones by doc. Mark several, then **Apply**: one prompt
-  per doc asks the agent to check each claim, edit the doc as it stands now, and
-  resolve the suggestion. Nothing is committed. **Dismiss** keeps the
-  suggestion, so the same claim isn't filed again.
+- `/docfix` lists the open ones by doc, each claim and its evidence shown whole:
+  nothing is cut, and in pi a long detail scrolls. Mark several (Enter or a click
+  on a row, a doc's header marks all of it, `m` marks everything), then **Apply**:
+  one prompt, drafted in your prompt box and not sent, names them by id and asks
+  the agent to check each claim, edit the doc as it stands now, and resolve the
+  suggestion. The evidence stays in the suggestion's file for the agent to read.
+  Nothing is committed. **Dismiss** keeps the suggestion, so the same claim isn't
+  filed again, and `u` opens the last dismissed ones again.
 - pi has the same tool, panel and footer count from the same core
   (`core/docfix.ts`), subagents included.
 

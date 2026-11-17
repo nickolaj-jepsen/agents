@@ -16,8 +16,11 @@ export type Suggestion = {
   evidence: Evidence[];
 };
 
-/** What the line under the list says after an action, and in which role. */
-export type Said = { text: string; status: "success" | "warning" | "error" };
+/**
+ * What the line under the keys says after an action, and in which role. `undo` holds the ids
+ * a dismiss just closed, so the notice can offer to open them again.
+ */
+export type Said = { text: string; status: "success" | "warning" | "error"; undo?: string[] };
 
 declare module "claude-code" {
   interface PluginState {
@@ -28,7 +31,9 @@ declare module "claude-code" {
       marked: string[];
       /** The key of the pane element holding the focus ring. */
       focused: string | null;
-      /** One line under the list after an action. */
+      /** Ids whose evidence the list shows. */
+      expanded: string[];
+      /** One line under the keys after an action. */
       notice: Shaped<Said>;
     };
   }

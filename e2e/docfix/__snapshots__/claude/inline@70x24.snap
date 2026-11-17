@@ -1,23 +1,24 @@
 # docfix/claude/inline 70x24 @0,12 (70x8)
 ╭──────────────────────────────────────────────────────────────────✕─╮
-│ ─ Doc suggestions  3 ───────────────────────────────────────────── │
-│                                                                    │
 │ AGENTS.md ──────────────────────────────────────────────────────── │
 │ □ `just build` is not enough to verify a pi change; the docs say   │
 │   it is.                                                           │
-│   ! wrong  3×  ••                                                  │
+│   ! wrong  3×  ••  ▾ evidence 1                                    │
+│   <date>      AGENTS.md: the line contradicts what the code does   │
+│               now.                                                 │
 ╰────────────────────────────────────────────────────────────────────╯
 --- styles
 .x67 1
-.x2 1x2 2x15 1x49
+.x2 2x9 . 1x56
+.x2 3x64
 -
-.x2 2x9 1x57
+.x2 1x2 4x7 1x2 5x2 1x18
+.x4 1x10
 -
--
-.x4 3x7 .x2 4x2 .x2 1x2
 -
 --- legend
 1 fg=#999999
 2 bold
-3 fg=#ff6b80
-4 fg=#ffc107
+3 inverse
+4 fg=#ff6b80
+5 fg=#ffc107

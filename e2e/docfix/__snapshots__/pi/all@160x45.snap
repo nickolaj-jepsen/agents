@@ -1,0 +1,45 @@
+# docfix/pi/all 160x45 @18,14 (124x17)
+╭─ Doc suggestions  3 ─────────────────────────────────────────────┬───────────────────────────────────────────────────────╮
+│                                                                  │                                                       │
+│ AGENTS.md ────────────────────────────────────────────────────── │ `just build` is not enough to verify a pi change; the │
+│ ❯ ■ `just build` is not enough to verify a pi     !    3×     •• │ docs say it is.                                       │
+│     change; the docs say it is.                                  │                                                       │
+│                                                                  │ ! wrong   seen 3×   <age>                             │
+│ docs/hosts.md ────────────────────────────────────────────────── │                                                       │
+│   ■ The `legacy` card was removed; the section    ↻    2×    ••• │ Evidence ──────────────────────────────────────────── │
+│     still describes it.                                          │ <date>      AGENTS.md: the line contradicts what the  │
+│                                                                  │             code does now.                            │
+│ docs/modules.md ──────────────────────────────────────────────── │                                                       │
+│   ■ A leaf that imports a third-party module      +    1×     •• │                                                       │
+│     imports it on every host; the page should                    │                                                       │
+│     say that module must be inert when the                       │                                                       │
+│     feature is off.                                              │                                                       │
+│                                                                  │                                                       │
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── m mark all ────┴─ esc later ───────────────────────────────────────────╯
+--- styles
+1x3 2x15 .x2 3 . 1x102
+1 .x66 1 .x55 1
+1 . 4x9 . 3x54 . 1 . 5x53 . 1
+1 . 6 . 6 . 6x41 .x5 7 .x2 8x4 .x2 3x5 . 1 . 5x15 .x39 1
+1 .x5 6x27 .x34 1 .x55 1
+1 .x66 1 . 7 . 3x5 .x3 8x7 .x3 3x10 .x24 1
+1 . 4x13 . 3x50 . 1 .x55 1
+1 .x3 6 . 5x42 .x4 5 .x2 3x4 .x2 3x5 . 1 . 4x8 . 3x44 . 1
+1 .x5 5x19 .x42 1 . 3x10 .x2 5x40 .x2 1
+1 .x66 1 .x13 5x14 .x28 1
+1 . 4x15 . 3x48 . 1 .x55 1
+1 .x3 6 . 5x40 .x6 5 .x2 3x4 .x2 3x5 . 1 .x55 1
+1 .x5 5x41 .x20 1 .x55 1
+1 .x5 5x38 .x23 1 .x55 1
+1 .x5 5x15 .x46 1 .x55 1
+1 .x66 1 .x55 1
+1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x2 . 5 . 3x8 . 1x6 . 5x3 . 3x5 . 1x44
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#878580
+4 fg=#dad8ce bold
+5 fg=#dad8ce
+6 fg=#cf6a4c
+7 fg=#d14d41
+8 fg=#d0a215

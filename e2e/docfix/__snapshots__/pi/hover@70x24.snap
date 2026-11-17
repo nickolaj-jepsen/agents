@@ -7,17 +7,17 @@
 │ docs/hosts.md ────────────────────────────────────────────────── │
 │   □ The `legacy` card was removed; the section    ↻    2×    ••• │
 │     still describes it.                                          │
-│     ↓ 1 more                                                     │
-│                                                                  │
-│ `just build` is not enough to verify a pi change; the docs say   │
-│ it is.                                                           │
+│ docs/modules.md ──────────────────────────────────────────────── │
+│   □ A leaf that imports a third-party module      +    1×     •• │
+│     imports it on every host; the page should                    │
+│     say that module must be inert when the                       │
+│     feature is off.                                              │
 │                                                                  │
 │ ! wrong   seen 3×   <age>                                        │
 │                                                                  │
 │ Evidence ─────────────────────────────────────────────────────── │
 │ <date>      AGENTS.md: the line contradicts what the code does   │
 │             now.                                                 │
-│                                                                  │
 │                                                                  │
 ╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
 --- styles
@@ -29,17 +29,17 @@
 1 . 4x13 . 3x50 . 1
 1 .x3 3 . 4x42 .x4 8 .x2 3x4 .x2 3x5 . 1
 1 .x5 4x19 .x42 1
-1 .x5 3x8 .x53 1
-1 .x66 1
-1 . 8x62 .x3 1
-1 . 8x6 .x59 1
+1 . 4x15 . 3x48 . 1
+1 .x3 3 . 8x40 .x6 8 .x2 3x4 .x2 3x5 . 1
+1 .x5 8x41 .x20 1
+1 .x5 8x38 .x23 1
+1 .x5 8x15 .x46 1
 1 .x66 1
 1 . 6 . 3x5 .x3 7x7 .x3 3x10 .x35 1
 1 .x66 1
 1 . 4x8 . 3x55 . 1
 1 . 3x10 .x2 8x50 .x3 1
 1 .x13 8x4 .x49 1
-1 .x66 1
 1 .x66 1
 1x3 8x2 . 3x4 . 1x2 . 8x5 . 3x4 . 1x2 . 8 . 3x5 . 1x2 . 8 . 3x7 . 1x2 . 8x3 . 3x5 . 1x6
 --- legend

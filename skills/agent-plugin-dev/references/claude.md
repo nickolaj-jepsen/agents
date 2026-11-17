@@ -31,7 +31,7 @@ Checked live on 2.1.319 to 2.1.325:
 - A bare digit arms only the hotkeys of `Button`s wholly inside what is drawn, and a hotkey lives only while its `Button` is mounted. Keep the `Button` drawn if the key must always work.
 - `$.command.register` throws for a name a built-in or a skill already has, and `validate` and `test` don't say so. Type the command in a session.
 
-- **A focused `Button` is drawn inverse by the engine, and that can't be turned off.** A pointer (`❯`) the kit draws on the focused row would double it, so a Claude list has no pointer: the engine's ring is the selection (docfix, 2.1.325). A click presses a row and does not move the ring, so state keyed on focus (docfix's evidence) follows Tab, not the mouse.
+- **A focused `Button` is drawn inverse by the engine, and that can't be turned off.** A pointer (`❯`) the kit draws on the focused row would double it, so a Claude list has no pointer: the engine's ring is the selection (docfix, 2.1.325). A click presses a row and does not move the ring, so state keyed on focus follows Tab, not the mouse (docfix keeps what a row shows in its own state, which a click on the row's evidence line toggles).
 - A `Button`'s children are strings and `Text` only, so a row with metadata columns is one string padded with `cellWidth`, never a `Box` of cells. A `Pane`'s `backgroundColor: "transparent"` drops the stock grey fill; the inline box asks for `rows` and still gets about a third of the terminal.
 - `kit/claude/ui.tsx` is copied into each mod: edit the source and run `just kit-sync`.
 

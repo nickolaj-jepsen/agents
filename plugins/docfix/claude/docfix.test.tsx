@@ -26,7 +26,9 @@ const PANE = {
 function engine(on: On) {
   const files = new Map<string, string>();
   const statuses: (string | undefined)[] = [];
-  const prompts: string[] = [];
+  const fills: { text: string; mode?: string }[] = [];
+  const toasts: string[] = [];
+  const draft = { text: "" };
   on("session.start", (_$, e) => ({ cwd: e.cwd }));
   on("tool.register", (_$, e) => ({ value: { tool: `mcp__docfix__${e.name}` } }));
   on("command.register", (_$, e) => ({ value: { command: e.name } }));
@@ -89,11 +91,17 @@ function engine(on: On) {
   });
   on("ui.open", () => ({ value: { isPlaced: true } }));
   on("ui.close", () => ({ value: undefined }));
-  on("prompt.submit", (_$, e) => {
-    prompts.push(e.text);
-    return { text: e.text };
+  on("ui.focus", () => ({}));
+  on("ui.toast", (_$, e) => {
+    toasts.push(e.text);
+    return { value: undefined };
   });
-  return { files, statuses, prompts };
+  on("prompt.read", () => ({ value: { text: draft.text, cursor: draft.text.length } }));
+  on("prompt.fill", (_$, e) => {
+    fills.push({ text: e.text, mode: e.mode });
+    return { isFilled: true };
+  });
+  return { files, statuses, fills, toasts, draft };
 }
 
 const SUGGEST = {
@@ -120,10 +128,11 @@ test("a suggestion lands in the store and counts on the status line", async ($, 
   expect(untracked.deny ?? untracked.text).toContain("not a file git tracks");
 });
 
-test("apply hands the doc to the agent and resolve removes it", async ($, on) => {
+test("apply drafts one prompt of references in the prompt box and sends nothing", async ($, on) => {
   const world = engine(on);
   await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
   await $.tool.call(SUGGEST);
+  await $.tool.call({ ...SUGGEST, file: "AGENTS.md", claim: "A second gap", same_as: "none" });
   await $.command.run({
     command: "docfix",
     args: "",
@@ -134,8 +143,18 @@ test("apply hands the doc to the agent and resolve removes it", async ($, on) =>
   const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
   await ui.press({ key: "row:agents--run-pnpm-install-force-after-a-sjusk-bump" });
   await ui.press({ key: "apply" });
-  expect(world.prompts).toHaveLength(1);
-  expect(world.prompts[0]).toContain("Apply these docfix suggestions to AGENTS.md");
+  expect(world.fills).toHaveLength(1);
+  const [fill] = world.fills;
+  expect(fill?.mode).toBe("replace");
+  expect(fill?.text).toContain("Apply these docfix suggestions");
+  expect(fill?.text).toContain(".agents/store/docfix/<id>.md");
+  // The one marked suggestion is named by id; its evidence stays in its file.
+  expect(fill?.text).toContain(
+    "- agents--run-pnpm-install-force-after-a-sjusk-bump (missing, seen 1×)",
+  );
+  expect(fill?.text).not.toContain("the shim stayed stale");
+  expect(fill?.text).not.toContain("A second gap");
+  expect(world.toasts.join()).toContain("prompt box");
   await ui.unmount();
 
   await $.tool.call({
@@ -143,6 +162,70 @@ test("apply hands the doc to the agent and resolve removes it", async ($, on) =>
     action: "resolve",
     id: "agents--run-pnpm-install-force-after-a-sjusk-bump",
   });
-  expect(world.files.size).toBe(0);
+  expect(world.files.size).toBe(1);
+});
+
+test("apply appends to a draft the person already typed", async ($, on) => {
+  const world = engine(on);
+  world.draft.text = "also, while you are there";
+  await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
+  await $.tool.call(SUGGEST);
+  await $.command.run({
+    command: "docfix",
+    args: "",
+    origin: { kind: "composer" },
+    presentation: { isFullscreen: true, columns: 160 },
+  });
+  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+  await ui.press({ key: "apply" });
+  expect(world.fills).toHaveLength(0);
+  await ui.press({ key: "row:agents--run-pnpm-install-force-after-a-sjusk-bump" });
+  await ui.press({ key: "apply" });
+  expect(world.fills[0]?.mode).toBe("append");
+  expect(world.fills[0]?.text.startsWith("\n\n")).toBe(true);
+  await ui.unmount();
+});
+
+test("the pane shows a long claim and all its evidence whole", async ($, on) => {
+  engine(on);
+  await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
+  const claim = `${"A claim that runs well past one line of the pane and must not be cut. ".repeat(4)}END-OF-CLAIM`;
+  const evidence = `${"x ".repeat(300)}END-OF-EVIDENCE`;
+  await $.tool.call({ ...SUGGEST, claim: claim.slice(0, 270) + " END-OF-CLAIM", evidence });
+  await $.command.run({
+    command: "docfix",
+    args: "",
+    origin: { kind: "composer" },
+    presentation: { isFullscreen: true, columns: 160 },
+  });
+  const ui = await $.ui.mount({
+    ...PANE,
+    props: { ...PANE.props, bodyColumns: 48 },
+    surface: "terminal",
+  });
+  const row = await ui.find({ type: "Button", text: /END-OF-CLAIM/ });
+  expect(row).toBeDefined();
+  expect(await ui.find({ type: "Button", text: /…/ })).toBeUndefined();
+  expect(await ui.find({ type: "Text", text: /END-OF-EVIDENCE/ })).toBeDefined();
+  await ui.unmount();
+});
+
+test("a dismiss can be undone", async ($, on) => {
+  const world = engine(on);
+  await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
+  await $.tool.call(SUGGEST);
+  await $.command.run({
+    command: "docfix",
+    args: "",
+    origin: { kind: "composer" },
+    presentation: { isFullscreen: true, columns: 160 },
+  });
+  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+  await ui.press({ key: "row:agents--run-pnpm-install-force-after-a-sjusk-bump" });
+  await ui.press({ key: "dismiss" });
   expect(world.statuses.at(-1)).toBeUndefined();
+  expect(await ui.find({ type: "Text", text: /Dismissed 1/ })).toBeDefined();
+  await ui.press({ key: "undo" });
+  expect(world.statuses.at(-1)).toBe("docs 1");
+  await ui.unmount();
 });
