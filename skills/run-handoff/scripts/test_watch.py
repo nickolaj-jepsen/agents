@@ -118,6 +118,20 @@ class WatchTests(unittest.TestCase):
             time.sleep(0.01)
         self.assertTrue(path.exists(), str(path))
 
+    def lease(self, name, **fields):
+        """A command record as `command` leaves it; each test overrides the field it is about."""
+        commands = self.state / "commands"
+        commands.mkdir(parents=True, exist_ok=True)
+        record = {
+            "status": "running",
+            "pid": os.getpid(),
+            "identity": process_identity(os.getpid()),
+            "updated": time.time() - 10,
+            "expires": time.time() + 100,
+            **fields,
+        }
+        (commands / name).write_text(json.dumps(record))
+
     def test_idle_wakes_lead(self):
         code, output = self.result(self.monitor())
         self.assertEqual(code, 124)
@@ -155,19 +169,7 @@ class WatchTests(unittest.TestCase):
         self.assertEqual(code, 0, output)
 
     def test_dead_command_lease_does_not_hide_idle(self):
-        self.state.mkdir()
-        commands = self.state / "commands"
-        commands.mkdir()
-        (commands / "dead.json").write_text(
-            json.dumps(
-                {
-                    "status": "running",
-                    "pid": 2**30,
-                    "updated": time.time() - 10,
-                    "expires": time.time() + 100,
-                }
-            )
-        )
+        self.lease("dead.json", pid=2**30)
         code, output = self.result(self.monitor())
         self.assertEqual(code, 124)
         self.assertEqual(output[-1]["reason"], "idle")
@@ -190,39 +192,13 @@ class WatchTests(unittest.TestCase):
         self.assertEqual(output[-1]["reason"], "idle")
 
     def test_recycled_pid_does_not_keep_lease_alive(self):
-        self.state.mkdir()
-        commands = self.state / "commands"
-        commands.mkdir()
-        (commands / "recycled.json").write_text(
-            json.dumps(
-                {
-                    "status": "running",
-                    "pid": os.getpid(),
-                    "identity": "previous-process",
-                    "updated": time.time() - 10,
-                    "expires": time.time() + 100,
-                }
-            )
-        )
+        self.lease("recycled.json", identity="previous-process")
         code, output = self.result(self.monitor())
         self.assertEqual(code, 124)
         self.assertEqual(output[-1]["reason"], "idle")
 
     def test_expired_live_lease_does_not_hide_idle(self):
-        self.state.mkdir()
-        commands = self.state / "commands"
-        commands.mkdir()
-        (commands / "expired.json").write_text(
-            json.dumps(
-                {
-                    "status": "running",
-                    "pid": os.getpid(),
-                    "identity": process_identity(os.getpid()),
-                    "updated": time.time() - 10,
-                    "expires": time.time() - 1,
-                }
-            )
-        )
+        self.lease("expired.json", expires=time.time() - 1)
         code, output = self.result(self.monitor())
         self.assertEqual(code, 124)
         self.assertEqual(output[-1]["reason"], "idle")

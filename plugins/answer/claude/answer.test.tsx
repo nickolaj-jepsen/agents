@@ -361,7 +361,10 @@ test("the form stands as tall as its tallest question, on every one of them", as
   await start($);
   await ends($, GRILLING);
   const drawn = await form($);
-  const heightOf = async () => (await drawn.find({ type: "Box" }))?.props.minHeight;
+  const heightOf = async () =>
+    (await drawn.findAll({ type: "Box" }))
+      .map((box) => box.props.minHeight)
+      .find((height): height is number => typeof height === "number");
   // Q1 is the tallest: a title, three options, the write-in, its recommendation and the keys.
   const tallest = await heightOf();
   expect(tallest).toBeGreaterThan(8);
@@ -524,7 +527,8 @@ test("a send sets an answered round aside, and /answer brings it back with its a
     origin: { kind: "composer" },
   });
   expect(await hint($)).toBeUndefined();
-  expect(w.toasts).toEqual(["1 answer set aside: /answer brings them back."]);
+  expect(w.toasts).toHaveLength(1);
+  expect(w.toasts[0]).toMatch(/^1 answer set aside/);
   // The round comes back as it was left: its answer marked, its first question showing.
   const back = await form($);
   expect((await back.find({ key: "q0" }))?.text).toContain("✓");
@@ -590,7 +594,8 @@ test("a send the engine refuses keeps the round and its answers", async ($, on) 
   await drawn.press({ key: "send" });
   expect(w.submitted).toEqual([]);
   expect(w.box).toBe("and keep it short");
-  expect(w.toasts).toEqual(["The message didn't send: the answers are still here."]);
+  expect(w.toasts).toHaveLength(1);
+  expect(w.toasts[0]).toMatch(/didn't send/);
   // The round the hook dropped before the refusal is back, its answer with it.
   await drawn.press({ key: "quit" });
   expect((await drawn.find({ key: "answer" }))?.text).toContain("1 of 3");

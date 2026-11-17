@@ -280,19 +280,20 @@ describe("List", () => {
   });
   it("maps clicks to rows, and the mark column to a toggle", () => {
     const l = list();
-    l.render(plain, 60, 20);
+    const out = l.render(plain, 60, 20).map(strip);
+    const at = (needle: string) => out.findIndex((x) => x.includes(needle));
     const ev = (x: number, y: number, type: "click" | "move") =>
       ({ type, button: "left", x, y }) as never;
-    // line 0 header, 1-2 first item (two lines), 3 blank, 4 header, 5 second
-    expect(l.hit(10, 0)).toBeUndefined();
-    expect(l.hit(10, 2)).toEqual({ index: 0, mark: false });
-    l.mouse(ev(10, 5, "click"));
-    expect(l.cursor).toBe(1);
-    expect(l.marked.size).toBe(0);
-    l.mouse(ev(2, 6, "click"));
+    expect(l.hit(10, at("AGENTS.md"))).toBeUndefined();
+    expect(l.hit(10, at("Second"))).toEqual({ index: 1, mark: false });
+    expect(l.hit(10, at("First claim") + 1)).toEqual({ index: 0, mark: false });
+    l.mouse(ev(10, at("Third"), "click"));
     expect(l.cursor).toBe(2);
-    expect(l.marked.has("3")).toBe(true);
-    expect(l.mouse(ev(10, 5, "move"))?.render).toBe(true);
+    expect(l.marked.size).toBe(0);
+    l.mouse(ev(2, at("Second"), "click"));
+    expect(l.cursor).toBe(1);
+    expect(l.marked.has("2")).toBe(true);
+    expect(l.mouse(ev(10, at("Second"), "move"))?.render).toBe(true);
     expect(l.hover).toBe(1);
   });
   it("picks the marked, else the current, and drops marks of gone items", () => {
@@ -508,12 +509,14 @@ describe("bandShell", () => {
   it("scrolls a body taller than its room above the footer, and says so", () => {
     const o = { ...base, maxRows: 20, body: rowsOf(30), footer: { text: "b back" } };
     const top = bandShell(plain, o);
-    expect(top.maxOffset).toBe(30 - 8);
+    expect(top.offset).toBe(0);
     expect(strip(top.lines[1]!)).toContain("row 0");
     expect(strip(top.lines.at(-1)!)).toContain("shift+↑↓ scrolls");
     const end = bandShell(plain, { ...o, offset: 99 });
     expect(end.offset).toBe(top.maxOffset);
-    expect(strip(end.lines[1]!)).toContain("row 22");
+    const reached = strip(end.lines.join("\n"));
+    expect(reached).toContain("row 29");
+    expect(reached).not.toContain("row 0");
     expect(strip(end.lines.at(-2)!)).toContain("b back");
   });
   it("draws the widest slot that fits, and none when none does", () => {
@@ -540,7 +543,8 @@ describe("bandShell", () => {
     const closed = bandShell(plain, { ...base, body: rowsOf(1) }).lines;
     const joined = bandShell(plain, { ...base, isJoined: true, body: rowsOf(1) }).lines;
     expect(joined).toHaveLength(closed.length);
-    expect(strip(joined.at(-1)!)).toBe(`│ esc closes${" ".repeat(46)} │`);
+    expect(strip(joined.at(-1)!)).toMatch(/^│ esc closes +│$/);
+    expect(widths([joined.at(-1)!])).toEqual([60]);
     expect(strip(joined.at(-1)!)).not.toMatch(/[╰╯]/);
   });
   it("can leave a blank row under the top border", () => {

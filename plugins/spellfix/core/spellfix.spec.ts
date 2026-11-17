@@ -17,9 +17,10 @@ test("wordDiff marks a swapped word removed then added", () => {
 
 test("wordDiff keeps the words a reorder preserves", () => {
   const runs = wordDiff("I want you to the tests update", "I want you to update the tests");
-  expect(runs[0]).toEqual({ text: "I want you to", kind: "same" });
-  expect(JSON.stringify(runs)).toContain("update");
-  expect(JSON.stringify(runs)).toContain("tests");
+  expect(runs.filter((r) => r.kind === "same").map((r) => r.text)).toEqual([
+    "I want you to",
+    "the tests",
+  ]);
 });
 
 test("wordDiff's runs reconstruct both sides", () => {

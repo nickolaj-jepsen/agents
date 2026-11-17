@@ -491,7 +491,9 @@ test("the last filed team is the next draft's fallback", async ($, on) => {
   w.draft = { ...DRAFT, team: "nope" };
   await $.command.run({ ...RUN, args: "again" });
   await w.clock.settle();
-  expect(w.prompts[1]).toContain("<defaults>\nteam: SHP\npriority: Low\n</defaults>");
+  const defaults = /<defaults>([\s\S]*?)<\/defaults>/.exec(w.prompts[1] ?? "")?.[1] ?? "";
+  expect(defaults).toContain("team: SHP");
+  expect(defaults).toContain("priority: Low");
   const again = await $.ui.mount(PANE);
   expect((await again.find({ key: "team" }))?.props.value).toBe("SHP");
   await again.unmount();

@@ -150,7 +150,6 @@ describe("review", () => {
       ["AGENTS.md", 2],
       ["docs/z.md", 1],
     ]);
-    expect(applyPrompt([a])).toContain(`action "resolve"`);
   });
 
   test("an apply prompt names the suggestions by id and leaves the evidence in their files", () => {
@@ -167,6 +166,7 @@ describe("review", () => {
     // One prompt for every doc, each doc's suggestions under its path.
     expect(prompt.indexOf("\nAGENTS.md\n")).toBeLessThan(prompt.indexOf("\ndocs/z.md\n"));
     expect(prompt.match(/Don't commit/g)).toHaveLength(1);
+    expect(prompt).toContain(`action "resolve"`);
   });
 
   test("an undo opens a dismissed suggestion again", () => {

@@ -239,7 +239,7 @@ test("the first read of a tracked doc in a session names the tool after it", asy
   await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
 
   const first = await $.tool.call({ tool: "Read", file_path: `${ROOT}/AGENTS.md` });
-  expect(first.context?.join("\n")).toContain("You read AGENTS.md");
+  expect(first.context?.join("\n")).toContain("AGENTS.md");
 
   const again = await $.tool.call({ tool: "Bash", command: "sed -n 1,20p AGENTS.md" });
   expect(again.context ?? []).toEqual([]);

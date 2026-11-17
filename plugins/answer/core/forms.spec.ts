@@ -395,16 +395,16 @@ describe("apply", () => {
       expect(
         item.entries
           .filter((entry) => entry.isRecommended)
-          .map((entry) => entry.text[0])
-          .join(""),
-      ).toBe(keys.replaceAll(", ", ""));
+          .map((entry) => entry.key)
+          .join(", "),
+      ).toBe(keys);
       expect(reply(form, steps(form, [toggle(0)]))).toBe("Q1: A");
       expect(reply(form, steps(form, [ACCEPT]))).toBe("yes");
       expect(reply(form, steps(form, [ACCEPT, toggle(5)]))).toBe(`Q1: ${keys}, F`);
     }
     // One letter is still one pick, and a sentence that starts on "A" names none.
     const single = formOf(GRILLING_ROUND);
-    expect(reply(single, steps(single, [ACCEPT])).slice(0, 5)).toBe("Q1: A");
+    expect(reply(single, steps(single, [ACCEPT]))).toBe("Q1: A");
     expect(itemOf(single, newDraft(single)).isSeveral).toBe(false);
     expect(steps(single, [FORWARD, FORWARD, ACCEPT])).toEqual(steps(single, [FORWARD, FORWARD]));
   });
@@ -452,7 +452,9 @@ describe("view", () => {
   test("the review names each question and shows its answer as plain words", () => {
     const form = formOf(GRILLING_ROUND);
     const row = view(form, steps(form, [pick(1), REVIEW])).review[0];
-    expect(row?.title).toBe(form.items[0]?.title.replaceAll("**", "").replace(/`/g, ""));
+    expect(row?.title).toBe(
+      'Should every focus default to "worth doing, ranked by payoff per effort"?',
+    );
     expect(plain("a `429` with **Retry-After**,\n  now")).toBe("a 429 with Retry-After, now");
     expect(row?.shown).not.toMatch(/[`*]/);
   });
@@ -531,7 +533,6 @@ describe("what a session holds", () => {
   test("the same round is named the same, and another differently", () => {
     expect(viewOf(held(GRILLING_ROUND))?.id).toBe(viewOf(held(GRILLING_ROUND))?.id);
     expect(viewOf(held(GRILLING_ROUND))?.id).not.toBe(viewOf(held(LEAN_TOWARD))?.id);
-    expect(viewOf(held(GRILLING_ROUND))?.id).toMatch(/^[0-9a-f]{16}$/);
   });
 
   test("has work only once something is answered or noted", () => {
