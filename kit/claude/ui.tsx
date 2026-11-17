@@ -674,6 +674,11 @@ export type BandShellOptions = {
   right?: Slot;
   /** A native surface draws this close control where a terminal draws the filling rule. */
   onClose?: () => unknown;
+  /**
+   * A blank row between the divider and the body, for a band with room to spare; a native
+   * surface always has its gap.
+   */
+  isRoomy?: boolean;
   /** Everything between the divider and the footer. */
   body: RenderNode;
   /** Last, so its keys keep their row whatever the body holds. */
@@ -719,7 +724,7 @@ export function bandShell(k: Kit, o: BandShellOptions): JSX.Element {
       minHeight={k.isNative ? undefined : rows}
       justifyContent="space-between"
     >
-      <Box flexDirection="column" rowGap={k.isNative ? gapOf(k) : undefined}>
+      <Box flexDirection="column" rowGap={k.isNative ? gapOf(k) : o.isRoomy ? 1 : undefined}>
         {divider}
         {o.body}
       </Box>
