@@ -19,5 +19,3 @@ before it's filed.
 - **Create**, or **Create & open** in the browser.
 - `Esc` hides the draft to a chip above the prompt: `8` reopens it, `9` twice
   discards it.
-
-Needs a Linear MCP server, connected and signed in.

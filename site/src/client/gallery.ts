@@ -10,6 +10,7 @@ for (const g of document.querySelectorAll<HTMLElement>("[data-gallery]")) galler
 function gallery(root: HTMLElement): void {
   root.classList.add("js");
   for (const el of root.querySelectorAll<HTMLElement>("[data-js]")) el.hidden = false;
+  for (const v of root.querySelectorAll<HTMLVideoElement>("video")) controls(v);
   const items = [...root.querySelectorAll<HTMLElement>(".g-item")];
   const thumbs = [...root.querySelectorAll<HTMLButtonElement>("[data-show]")];
   const switches = [...root.querySelectorAll<HTMLButtonElement>("[data-set-h]")];
@@ -23,7 +24,10 @@ function gallery(root: HTMLElement): void {
   function show(i: number): void {
     if (i === current) return;
     const old = items[current];
-    old?.querySelector("video")?.pause();
+    // A hidden video is paused by the page's own observer (site.ts), so autoplay carries on when it
+    // is shown again; with reduced motion nothing else would pause it.
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches)
+      old?.querySelector("video")?.pause();
     current = i;
     for (const [n, it] of items.entries()) it.hidden = n !== i;
     for (const t of thumbs) t.setAttribute("aria-pressed", String(Number(t.dataset.show) === i));
@@ -65,4 +69,66 @@ function gallery(root: HTMLElement): void {
     const next = list[(at + d + list.length) % list.length];
     if (next) show(items.indexOf(next));
   }
+}
+
+function clock(t: number): string {
+  return Number.isFinite(t)
+    ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`
+    : "0:00";
+}
+
+/** Swaps the browser's controls for the site's: play or pause, the time and a seek slider. */
+function controls(v: HTMLVideoElement): void {
+  const frame = v.parentElement;
+  if (!frame) return;
+  v.removeAttribute("controls");
+  v.controls = false;
+  v.preload = "metadata";
+
+  const bar = document.createElement("div");
+  bar.className = "vc";
+  const play = document.createElement("button");
+  play.type = "button";
+  const time = document.createElement("span");
+  time.className = "vc-time";
+  time.setAttribute("aria-hidden", "true");
+  const seek = document.createElement("input");
+  seek.type = "range";
+  seek.className = "vc-seek";
+  seek.min = "0";
+  seek.max = "1000";
+  seek.step = "10";
+  seek.value = "0";
+  seek.disabled = true;
+  seek.setAttribute("aria-label", "Seek");
+  bar.append(play, time, seek);
+  frame.append(bar);
+
+  const sync = (): void => {
+    const d = v.duration;
+    const ready = Number.isFinite(d) && d > 0;
+    seek.disabled = !ready;
+    const f = ready ? v.currentTime / d : 0;
+    if (document.activeElement !== seek || !seeking) seek.value = String(Math.round(f * 1000));
+    seek.style.setProperty("--p", `${f * 100}%`);
+    seek.setAttribute("aria-valuetext", `${clock(v.currentTime)} of ${clock(d)}`);
+    time.textContent = `${clock(v.currentTime)} / ${clock(d)}`;
+    play.textContent = v.paused ? "play" : "pause";
+    play.setAttribute("aria-label", `${v.paused ? "Play" : "Pause"} the demo`);
+    if (v.paused) bar.dataset.paused = "";
+    else delete bar.dataset.paused;
+  };
+  let seeking = false;
+  const toggle = (): void => void (v.paused ? v.play().catch(() => {}) : v.pause());
+  play.addEventListener("click", toggle);
+  v.addEventListener("click", toggle);
+  seek.addEventListener("input", () => {
+    seeking = true;
+    if (Number.isFinite(v.duration)) v.currentTime = (Number(seek.value) / 1000) * v.duration;
+    sync();
+  });
+  seek.addEventListener("change", () => (seeking = false));
+  for (const e of ["timeupdate", "play", "pause", "loadedmetadata", "durationchange", "seeked"])
+    v.addEventListener(e, sync);
+  sync();
 }

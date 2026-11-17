@@ -1,0 +1,178 @@
+/* A plugin's page: the stage's height cap, the video's own controls, the rail of facts. */
+
+/* The stage never passes 60vh and is never enlarged. It keeps the column's left edge, with its caption
+   and the thumbnails, like the header and the body. */
+.gallery .plate .well {
+  --w: min(calc(var(--pw) * 1px), calc(60vh * var(--pw) / var(--ph)));
+  max-width: var(--w);
+}
+@supports (height: round(up, 1px, 8px)) {
+  .gallery .plate .well {
+    height: round(up, calc(min(100cqi, var(--w)) * var(--ph) / var(--pw)), var(--u));
+  }
+}
+.gallery .g-cap {
+  max-width: var(--measure);
+}
+.gallery .plate .frame video {
+  display: block;
+}
+.gallery.js .plate video {
+  cursor: pointer;
+}
+
+/* The video's control bar: play or pause, the time, a seek slider. Shown on hover, on focus and while paused. */
+.vc {
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--u));
+  height: calc(4 * var(--u));
+  padding: 0 calc(2 * var(--u));
+  background: var(--bg);
+  background-image: linear-gradient(var(--rule-strong), var(--rule-strong));
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  color: var(--text-2);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.frame:hover .vc,
+.frame:focus-within .vc,
+.vc[data-paused] {
+  opacity: 1;
+}
+@media (hover: none) {
+  .vc {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vc {
+    transition: none;
+  }
+}
+.vc button {
+  flex: none;
+  min-width: 5ch;
+  padding: 0 var(--u);
+  height: calc(3 * var(--u));
+  background: none;
+  border: 1px solid var(--ui-hi);
+  border-radius: 0;
+  color: var(--white);
+  font: inherit;
+  line-height: calc(3 * var(--u) - 2px);
+  cursor: pointer;
+}
+.vc button:hover {
+  border-color: var(--text-2);
+}
+.vc-time {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.vc-seek {
+  --p: 0%;
+  flex: 1;
+  min-width: 0;
+  height: calc(3 * var(--u));
+  margin: 0;
+  background: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.vc-seek::-webkit-slider-runnable-track {
+  height: 2px;
+  background: linear-gradient(to right, var(--accent) var(--p), var(--ui-hi) var(--p));
+}
+.vc-seek::-moz-range-track {
+  height: 2px;
+  background: var(--ui-hi);
+}
+.vc-seek::-moz-range-progress {
+  height: 2px;
+  background: var(--accent);
+}
+.vc-seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--u);
+  height: calc(2 * var(--u));
+  margin-top: calc(-1 * var(--u) + 1px);
+  border: 0;
+  border-radius: 0;
+  background: var(--white);
+}
+.vc-seek::-moz-range-thumb {
+  width: var(--u);
+  height: calc(2 * var(--u));
+  border: 0;
+  border-radius: 0;
+  background: var(--white);
+}
+.vc-seek:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* The rail: facts, the harnesses and the install lines, stacked, and in view as the body scrolls. */
+.spread > .rail.rail {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+}
+/* A fact is its label over its value, with one rule under the pair. */
+.spread > .rail > dt {
+  padding: calc(1.5 * var(--u)) 0 0;
+  background: none;
+}
+.spread > .rail > dd {
+  padding: calc(0.5 * var(--u)) 0 calc(1.5 * var(--u));
+}
+.rail .marks {
+  flex-direction: column;
+  gap: var(--u);
+}
+.rail .inst-cmd + .inst-cmd {
+  margin-top: var(--u);
+}
+.rail .cmd + .cmd {
+  margin-top: 0;
+}
+@media (min-width: 64rem) {
+  .spread > .rail.rail {
+    top: calc(var(--mast) + 2 * var(--u));
+    max-height: calc(100vh - var(--mast) - 4 * var(--u));
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ui-hi) transparent;
+  }
+}
+
+/* The pager's way back. */
+.pager:has(.all) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+.pager:has(.all) .prev {
+  grid-column: 1;
+}
+.pager .all {
+  grid-column: 2;
+  align-self: end;
+  text-align: center;
+}
+.pager:has(.all) .next {
+  grid-column: 3;
+}
+.pager .all a {
+  font-family: inherit;
+  font-weight: 400;
+  font-size: inherit;
+}

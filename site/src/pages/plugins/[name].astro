@@ -1,6 +1,8 @@
 ---
 import type { GetStaticPaths } from 'astro';
+import '../../styles/plugin.css';
 import Base from '../../layouts/Base.astro';
+import Command from '../../components/Command.astro';
 import Gallery from '../../components/Gallery.astro';
 import Install from '../../components/Install.astro';
 import Marks from '../../components/Marks.astro';
@@ -73,6 +75,24 @@ const install = pluginInstall(p);
           </>
         )
       }
+      <dt>Runs in</dt>
+      <dd><Marks harnesses={harnesses(p)} /></dd>
+      {
+        install.length > 0 && (
+          <>
+            <dt>Install</dt>
+            <dd>
+              {install.map((c) => (
+                <div class="inst-cmd">
+                  {install.length > 1 && <span class="cmd-label">{c.label}</span>}
+                  <Command command={c.command} what={`${p.name} for ${c.label}`} />
+                </div>
+              ))}
+              {p.install.claude && <p class="inst-note" set:html={CLAUDE_NOTE} />}
+            </dd>
+          </>
+        )
+      }
       <dt>Source</dt>
       <dd><a href={github(`${p.path}/`)}><code>{p.path}/</code></a> on GitHub</dd>
     </dl>
@@ -80,6 +100,7 @@ const install = pluginInstall(p);
 
   <Pager
     label="Plugins"
+    all={{ href: href('#plugins'), name: 'All plugins' }}
     prev={prev && { href: pluginHref(prev.name), name: prev.name }}
     next={next && { href: pluginHref(next.name), name: next.name }}
   />

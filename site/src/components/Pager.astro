@@ -9,12 +9,14 @@ interface Props {
   label: string;
   prev?: Link;
   next?: Link;
+  /** A way back to the whole list, between the two. */
+  all?: Link;
 }
-const { label, prev, next } = Astro.props;
+const { label, prev, next, all } = Astro.props;
 ---
 
 {
-  (prev || next) && (
+  (prev || next || all) && (
     <nav class="pager" aria-label={`${label}, previous and next`}>
       {prev && (
         <div class="prev">
@@ -22,6 +24,11 @@ const { label, prev, next } = Astro.props;
           <a href={prev.href} rel="prev">
             {prev.name}
           </a>
+        </div>
+      )}
+      {all && (
+        <div class="all">
+          <a href={all.href}>{all.name}</a>
         </div>
       )}
       {next && (
