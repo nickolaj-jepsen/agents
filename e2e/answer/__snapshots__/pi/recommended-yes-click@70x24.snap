@@ -1,5 +1,5 @@
 # answer/pi/recommended-yes-click 70x24 @0,8 (70x15)
-╭─ Q2 2 of 3 ────────────────────────────────────────────────────────╮
+╭─ 2 of 3  ✓ Q1  ○ Q2  ○ Q3 ─────────────────────────────────────────╮
 │ Lower the per-generator target to 5-6?                             │
 │                                                                    │
 │ ›1 ○ Yes: Yes. Four generators still give 20-24.                   │
@@ -15,12 +15,12 @@
 │ b back  f forward  y take yes  s skip  r review  n note            │
 ╰───── 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
 --- styles
-1x2 . 2x2 . 3x6 . 1x57
-1 . 4x38 .x29 1
+1x2 . 2x6 .x2 3 . 4x2 .x2 4 . 2x2 .x2 4 . 4x2 . 1x42
+1 . 5x38 .x29 1
 1 .x68 1
 1 . 2x2 . 2x45 .x19 1
 1 .x68 1
-1 .x2 2 . 3x23 .x41 1
+1 .x2 2 . 4x23 .x41 1
 1 .x68 1
 1 .x68 1
 1 .x68 1
@@ -29,9 +29,10 @@
 1 .x68 1
 1 .x68 1
 1 . 2 .x7 2 .x10 2 .x11 2 .x7 2 .x9 2 .x17 1
-1x6 3x62 1x2
+1x6 4x62 1x2
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c
-3 fg=#878580
-4 bold
+3 fg=#879a39
+4 fg=#878580
+5 bold

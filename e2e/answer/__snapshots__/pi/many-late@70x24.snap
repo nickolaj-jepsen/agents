@@ -1,5 +1,5 @@
 # answer/pi/many-late 70x24 @0,12 (70x11)
-╭─ Q9 9 of 12 ───────────────────────────────────────────────────────╮
+╭─ 9 of 12  Q9 ──────────────────────────────────────────────────────╮
 │ Question number 9: pick a strategy?                                │
 │                                                                    │
 │ ›1 ○ A. Option A for 9                                             │
@@ -11,7 +11,7 @@
 │ b back  f forward  s skip  r review  n note  m several             │
 ╰───── 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
 --- styles
-1x2 . 2x2 . 3x7 . 1x56
+1x2 . 2x7 .x2 3x2 . 1x55
 1 . 4x35 .x32 1
 1 .x68 1
 1 . 2x2 . 2x19 .x45 1

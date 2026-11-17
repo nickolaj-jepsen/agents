@@ -1,5 +1,5 @@
 # answer/pi/numbered 70x24 @0,13 (70x10)
-╭─ 1 1 of 2 ─────────────────────────────────────────────────────────╮
+╭─ 1 of 2  ○ 1  ○ 2 ─────────────────────────────────────────────────╮
 │ Should we use a monorepo?                                          │
 │                                                                    │
 │ Yes or no.                                                         │
@@ -10,7 +10,7 @@
 │ b back  f forward  s skip  r review  n note                        │
 ╰───── 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
 --- styles
-1x2 . 2 . 3x6 . 1x58
+1x2 . 2x6 .x2 3 . 2 .x2 3 . 3 . 1x50
 1 . 4x25 .x42 1
 1 .x68 1
 1 .x68 1

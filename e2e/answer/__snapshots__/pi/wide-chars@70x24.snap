@@ -1,5 +1,5 @@
 # answer/pi/wide-chars 70x24 @0,11 (70x12)
-╭─ Q1 1 of 1 ────────────────────────────────────────────────────────╮
+╭─ 1 of 1  ○ Q1 ─────────────────────────────────────────────────────╮
 │ 数据库を使いますか？ 🚀 Use émoji?                                 │
 │                                                                    │
 │ ›1 ○ A. 是的，使用 SQLite 🗃️                                       │
@@ -12,7 +12,7 @@
 │ b back  f forward  s skip  r review  n note  m several             │
 ╰───── 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
 --- styles
-1x2 . 2x2 . 3x6 . 1x57
+1x2 . 2x6 .x2 3 . 2x2 . 1x54
 1 . 4x34 .x33 1
 1 .x68 1
 1 . 2x2 . 2x24 .x39 1

@@ -1,5 +1,5 @@
 # answer/pi/review 70x24 @0,12 (70x11)
-╭─ Review ───────────────────────────────────────────────────────────╮
+╭─ Review  ✓ Q1  ✓ Q2 ───────────────────────────────────────────────╮
 │ 1  Q1  Use SQLite?  → A: SQLite                                    │
 │ 2  Q2  Add caching?  → B: No                                       │
 │                                                                    │
@@ -11,18 +11,19 @@
 │ enter fill the prompt  s send  n note  b back                      │
 ╰────────────────────────── 1-9 revisits · esc closes, answers kept ─╯
 --- styles
-1x2 . 2x6 . 1x60
+1x2 . 2x6 .x2 3 . 4x2 .x2 3 . 4x2 . 1x48
 1 . 2 .x66 1
 1 . 2 .x66 1
 1 .x68 1
-1 . 3x10 .x57 1
+1 . 4x10 .x57 1
 1 .x68 1
 1 .x68 1
 1 .x68 1
 1 .x68 1
 1 . 2x5 .x18 2 .x7 2 .x7 2 .x27 1
-1x27 3x41 1x2
+1x27 4x41 1x2
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c
-3 fg=#878580
+3 fg=#879a39
+4 fg=#878580
