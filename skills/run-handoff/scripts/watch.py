@@ -160,7 +160,14 @@ def watch_locked(args, state):
             previous_report = stamp
         else:
             previous_report = None
-        current = hashlib.sha256(repr(snapshot(worktree)).encode()).hexdigest()
+        try:
+            current = hashlib.sha256(repr(snapshot(worktree)).encode()).hexdigest()
+        except (OSError, subprocess.SubprocessError):
+            if worktree.is_dir():
+                raise
+            # The worktree vanished between the check above and git reading it.
+            emit("missing_worktree", worktree=str(worktree))
+            return 2
         if previous is not None and current != previous:
             last_progress = now
         updated, leased = activity(state, now)
