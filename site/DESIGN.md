@@ -97,22 +97,24 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
   line of summary (the kit in both harnesses whichever is shown, the counts, a way to the props), then
   one sticky bar (the harness switch, terminal size) that applies to everything under it. On a phone
   the bar scrolls away.
-- The harness switch is also the layout: Side by side and Stacked show both harnesses' renders, Claude
-  Code and pi show one alone. The key `f` moves between the two. On a phone there is no Side by side.
+- The harness switch is Both, Claude Code, pi. Both shows the two renders one above the other; there
+  is no side by side, so a render is never shrunk to fit a pair. The key `f` moves between the two.
 - The size switch greys out (and strikes) a size no harness on screen was drawn at. A render shows its
   size at the end of its title bar, yellow when it is the nearest to the size chosen, and one note in
   the bar says which harnesses fell back; never a warning per render.
-- A story's compatibility is one line under its renders (the features it shows), which opens into what
-  each harness does and the caveat. A feature named as the story's own line is not repeated there.
-  There is no separate compatibility table.
+- A story's features are open on the page, never folded: each one's name (left out when it is the
+  story's own line), then a line per harness: its logo, the answer in a word (✓ Yes, ~ Partly, ✗ No,
+  ○ Not yet) and, under it, how or why not. Both answering yes with nothing to add is one line with
+  both logos. No "differs" flag: a ✗ beside a ✓ says it. Features no story shows close the stories,
+  the same way. There is no compatibility table.
 - A render is a terminal window: a bright frame, a title bar a step off the page (the harness's logo,
   what was drawn, its size), and the capture inside a 1u margin of its own canvas, so it reads as an
   object among the page's hairlines.
-- Two renders sit side by side while each keeps 70% of its size or more (a 70-column pair fits from
-  about 1366px); otherwise they stack, each at its own size, scrolling sideways inside its frame where
-  it is wider than the column. A render is never enlarged, and alone it is never shrunk.
-- A harness with no render of a story is one line after the renders (its logo, name and why), not an
-  empty frame. A render alone, with 16rem to spare, has the story's line and features beside it.
+- A render is at its own size, scrolling sideways inside its frame where it is wider than the column.
+  It is never enlarged or shrunk.
+- A harness with no render of a story is one line (its logo, name and why), not an empty frame. Where
+  the widest render leaves 18rem, the story's line, that line and its features stand beside the
+  renders; else they follow them.
 - Props are one harness after the other, across the column; a row puts the name and type beside what
   it is from 64rem. A list whose rows have no descriptions is one line.
 - Status reads glyph then word: ✓ green, ~ yellow, ✗ red, ○ muted. A harness is its logo: lit when it

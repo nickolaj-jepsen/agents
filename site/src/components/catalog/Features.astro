@@ -1,56 +1,77 @@
 ---
 /**
- * The features a story shows, as one line that opens into their compatibility: for each, what
- * each harness does and the caveat. A `<details>`, so it needs no script.
+ * Features, open on the page: each one's name, then a line per harness (its logo, whether it does
+ * it, and how or why not). A feature named as the story's own line goes without its name, which
+ * is already above it. Where both harnesses do it with nothing to add, it is one line.
  */
-import Status from './Status.astro';
-import { differs, HARNESSES, TITLES, type Component, type Story } from '../../lib/catalog.ts';
+import Glyph from '../Glyph.astro';
+import { HARNESSES, TITLES, type Component } from '../../lib/catalog.ts';
+import { renderInline } from '../../lib/markdown.ts';
 
+type Feature = Component['features'][number];
 interface Props {
-  c: Component;
-  s: Story;
-  /** The story's own line, above it: a feature named the same is not said twice. */
+  features: Feature[];
+  /** The story's own line, above it: a feature named the same is not named again. */
   about?: string;
 }
-const { c, s, about } = Astro.props;
-const shown = c.features.filter((f) => HARNESSES.some((h) => f.story[h] === s.id));
-const nd = shown.filter(differs).length;
-const same = (a: string, b?: string) => !!b && a.trim().replace(/\.$/, '').toLowerCase() === b.trim().replace(/\.$/, '').toLowerCase();
-const what = shown.filter((f) => !same(f.label, about)).map((f) => f.label);
+const { features, about } = Astro.props;
+const plain = (t: string) => t.trim().replace(/\.$/, '').toLowerCase();
+const WORD = { yes: 'Yes', partial: 'Partly', no: 'No', planned: 'Not yet' } as const;
+const GLYPH = { yes: '✓', partial: '~', no: '✗', planned: '○' } as const;
+const items = await Promise.all(
+  features.map(async (f) => ({
+    label: about && plain(f.label) === plain(about) ? null : f.label,
+    same: f.support.claude.status === f.support.pi.status && !f.support.claude.note && !f.support.pi.note,
+    status: f.support.claude.status,
+    by: await Promise.all(
+      HARNESSES.map(async (h) => ({
+        h,
+        status: f.support[h].status,
+        note: f.support[h].note ? await renderInline(f.support[h].note!, 'kit/catalog/components/') : '',
+      })),
+    ),
+  })),
+);
 ---
 
 {
-  shown.length > 0 && (
-    <details class="feats">
-      <summary>
-        <span class="lbl">{shown.length === 1 ? 'Feature' : `${shown.length} features`}</span>
-        {what.length > 0 && <span class="what">{what.join(' · ')}</span>}
-        {nd > 0 && <span class="flag">{nd === 1 ? '1 differs' : `${nd} differ`}</span>}
-      </summary>
-      <table class="compat">
-        <thead>
-          <tr>
-            <th scope="col">Feature</th>
-            {HARNESSES.map((h) => <th scope="col" data-h={h}>{TITLES[h]}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {shown.map((f) => (
-            <tr class:list={{ differs: differs(f) }}>
-              <th scope="row">
-                {f.label}
-                {differs(f) && <span class="flag">differs</span>}
-              </th>
-              {HARNESSES.map((h) => (
-                <td data-h={h}>
-                  <Status status={f.support[h].status} />
-                  {f.support[h].note && <div class="note">{f.support[h].note}</div>}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </details>
+  items.length > 0 && (
+    <ul class="feats">
+      {items.map((f) => (
+        <li>
+          {f.label && <p class="flabel">{f.label}</p>}
+          {f.same ? (
+            <p class="fh">
+              <span class="who">
+                {HARNESSES.map((h) => (
+                  <span class={`k ${h}`} data-h={h} title={TITLES[h]}>
+                    <Glyph h={h} />
+                  </span>
+                ))}
+              </span>
+              <span class={`st ${f.status}`}>
+                <span class="g" aria-hidden="true">{GLYPH[f.status]}</span>
+                {WORD[f.status]}
+              </span>
+              <span class="vh">in both</span>
+            </p>
+          ) : (
+            f.by.map((x) => (
+              <p class="fh" data-h={x.h}>
+                <span class={`k ${x.h}`} title={TITLES[x.h]}>
+                  <Glyph h={x.h} />
+                  <span class="vh">{TITLES[x.h]}:</span>
+                </span>
+                <span class={`st ${x.status}`}>
+                  <span class="g" aria-hidden="true">{GLYPH[x.status]}</span>
+                  {WORD[x.status]}
+                </span>
+                {x.note && <span class="fnote" set:html={x.note} />}
+              </p>
+            ))
+          )}
+        </li>
+      ))}
+    </ul>
   )
 }

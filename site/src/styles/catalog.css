@@ -187,10 +187,6 @@
   .toolbar {
     position: static;
   }
-  /* Two renders never fit side by side here, so Stacked is the way to see both. */
-  .toolbar [data-set-lay="side"] {
-    display: none;
-  }
 }
 /* One row at the content's width: the buttons a little tighter than elsewhere. */
 .toolbar .seg.box button,
@@ -363,30 +359,26 @@
   display: none !important;
 }
 
-/* ---- overview matrix and compatibility tables ------------------------------------------ */
+/* ---- overview matrix ------------------------------------------------------------------- */
 
 .scroll {
   position: relative;
   overflow-x: auto;
 }
-.matrix,
-.compat {
+.matrix {
   border-collapse: collapse;
   width: 100%;
   font-size: var(--fs-ui);
   line-height: calc(3 * var(--u));
 }
 .matrix th,
-.matrix td,
-.compat th,
-.compat td {
+.matrix td {
   text-align: left;
   vertical-align: top;
   padding: calc(1.5 * var(--u)) calc(3 * var(--u)) calc(1.5 * var(--u) - 1px) 0;
   border-bottom: 1px solid var(--rule);
 }
-.matrix thead th,
-.compat thead th {
+.matrix thead th {
   font-variant-caps: all-small-caps;
   font-synthesis-small-caps: none;
   letter-spacing: 0.08em;
@@ -452,22 +444,9 @@
 }
 .note code,
 .matrix code,
-.compat code,
 .impl code {
   font-size: var(--mono-em);
   color: var(--white);
-}
-.compat tbody th {
-  font-weight: 500;
-  color: var(--text);
-  min-width: 14rem;
-}
-.compat td {
-  min-width: 14rem;
-}
-.compat .flag {
-  display: block;
-  margin-top: calc(0.5 * var(--u));
 }
 .repo-list li {
   padding: calc(0.5 * var(--u)) 0;
@@ -492,7 +471,7 @@
   margin-top: calc(6 * var(--u));
 }
 
-/* Story rows: the state, its line, then the renders side by side. */
+/* Story rows: the state and its line, the renders, then the features. */
 .story-rows > li {
   padding: calc(3 * var(--u)) 0;
   background: linear-gradient(var(--rule), var(--rule)) bottom / 100% 1px no-repeat;
@@ -525,101 +504,23 @@
   text-underline-offset: 0.25em;
 }
 
-/* The features a story shows: a line that opens into their compatibility. */
-.feats {
-  margin-top: calc(2 * var(--u));
-  font-size: 0.9375rem;
-  line-height: calc(3 * var(--u));
-}
-.feats > summary {
-  display: flex;
-  align-items: baseline;
-  gap: 0 calc(1.5 * var(--u));
-  min-width: 0;
-  cursor: pointer;
-  list-style: none;
-  color: var(--text-2);
-}
-.feats > summary::-webkit-details-marker {
-  display: none;
-}
-.feats > summary::before {
-  content: "▸";
-  font-family: var(--mono);
-  color: var(--text-3);
-  width: 1ch;
-  flex: none;
-}
-.feats[open] > summary::before {
-  content: "▾";
-}
-.feats > summary:hover {
-  color: var(--text);
-}
-.feats .lbl {
-  flex: none;
-  color: var(--text);
-  font-variant-caps: all-small-caps;
-  font-synthesis-small-caps: none;
-  letter-spacing: 0.08em;
-}
-.feats .what {
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.feats[open] .what {
-  white-space: normal;
-}
-.feats > summary .flag {
-  flex: none;
-}
-.feats .compat {
-  margin-top: var(--u);
-  font-size: 0.9375rem;
-}
-.feats .compat th,
-.feats .compat td {
-  min-width: 0;
-}
-.feats .compat tbody th {
-  width: 30%;
-}
-.feats.loose {
-  margin-top: calc(3 * var(--u));
-}
-
-/* A story's renders. Each is drawn at its own size (`--nat`, the picture's width). Without script they
-   wrap: one above the other when two do not fit. catalog.ts sets `data-fit` on each pair: `side`
-   when two fit in a row with each at 70% of its size or more, `stack` when they do not
-   (or the layout says so). Stacked, a render keeps its size and scrolls sideways in its frame where
-   it is wider than the column. A render is never enlarged. */
+/* A story's renders, one above the other, each at its own size; one wider than the column scrolls
+   sideways inside its frame. A render is never enlarged, nor shrunk. */
 .pair {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: calc(3 * var(--u));
   align-items: flex-start;
-}
-.pair[data-fit="side"] {
-  flex-wrap: nowrap;
-}
-.pair[data-fit="stack"] {
-  flex-direction: column;
 }
 /* A render is a terminal window, so it reads as an object among the page's hairlines: a bright
    frame, a title bar filled a step off the page (the harness, what was drawn, at what size), and
    the capture with a margin of its own canvas. */
 .cell {
-  flex: 0 1 auto;
+  flex: none;
   min-width: 0;
   max-width: 100%;
   border: 1px solid var(--ui-hi);
   background: var(--bg);
-}
-.pair[data-fit="side"] .cell {
-  flex: 0 1 calc(var(--nat) + 2 * var(--u) + 2px);
 }
 .cell figcaption {
   display: flex;
@@ -671,9 +572,6 @@
   max-width: none;
   height: auto;
 }
-.pair[data-fit="side"] .view img {
-  width: 100%;
-}
 .size-note {
   font-size: 0.875rem;
   color: var(--yellow);
@@ -712,10 +610,11 @@
   color: var(--text);
 }
 
-/* One render alone, with room beside it: the story's line and its features take that room. */
+/* Where the renders leave room, the story's line, any harness without a render and its features
+   stand beside them (catalog.ts decides); else they follow, in that order. */
 .story-stage[data-beside] {
   display: grid;
-  grid-template-columns: max-content minmax(16rem, 1fr);
+  grid-template-columns: max-content minmax(18rem, 1fr);
   grid-template-rows: auto auto 1fr;
   column-gap: calc(4 * var(--u));
 }
@@ -726,12 +625,13 @@
 .story-stage[data-beside] > .rhead {
   grid-column: 2;
   grid-row: 1;
+  flex-direction: column;
+  gap: var(--u);
 }
 .story-stage[data-beside] > .absent {
   grid-column: 2;
   grid-row: 2;
-  margin-top: 0;
-  margin-bottom: calc(2 * var(--u));
+  margin: 0 0 calc(2 * var(--u));
 }
 .story-stage[data-beside] > .feats {
   grid-column: 2;
@@ -739,12 +639,74 @@
   margin-top: 0;
   align-self: start;
 }
-.story-stage[data-beside] > .rhead {
-  flex-direction: column;
-  gap: var(--u);
+
+/* Features, open: the name, then a line per harness, its logo, whether it does it, and how. */
+.feats {
+  margin-top: calc(2 * var(--u));
+  font-size: 0.9375rem;
+  line-height: calc(3 * var(--u));
 }
-.story-stage[data-beside] .feats .what {
-  white-space: normal;
+.feats > li + li {
+  margin-top: calc(2 * var(--u));
+}
+.flabel {
+  color: var(--text);
+  font-weight: 600;
+  margin-bottom: calc(0.5 * var(--u));
+}
+.fh {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
+  align-items: baseline;
+  color: var(--text-2);
+}
+.fh + .fh {
+  margin-top: calc(0.5 * var(--u));
+}
+.fh .k,
+.fh .who {
+  grid-row: 1;
+  display: inline-flex;
+  gap: calc(0.5 * var(--u));
+  align-self: start;
+  padding-top: 0.3rem;
+}
+.fh .gl {
+  --gl: 1.1em;
+}
+.fh .st {
+  grid-column: 2;
+}
+.fh .fnote {
+  grid-column: 2;
+}
+.st {
+  color: var(--text);
+  white-space: nowrap;
+}
+.st .g {
+  font-family: var(--mono);
+  font-weight: 700;
+  margin-right: 0.4em;
+}
+.st.yes .g {
+  color: var(--green);
+}
+.st.partial .g {
+  color: var(--yellow);
+}
+.st.no .g {
+  color: var(--red);
+}
+.st.planned .g {
+  color: var(--text-3);
+}
+.fnote code {
+  font-size: var(--mono-em);
+  color: var(--text);
+}
+.unshown {
+  margin-top: calc(4 * var(--u));
 }
 
 /* Props: one harness after the other, each across the column. */

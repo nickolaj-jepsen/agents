@@ -1,10 +1,9 @@
 /**
  * The developer pages' controls. Every page is complete without them (both harnesses, the
- * narrowest size, renders side by side where they fit); this adds the harness switch, the size and
- * layout switches, and fits each story's renders to the column. A choice lives in the URL's query
- * (`h`, `size`, `lay`), so a link shows what it says; the harness is remembered across the site,
- * the size and layout for the next page. The one key is `f`, which switches between the harnesses:
- * Claude Code and pi.
+ * narrowest size); this adds the harness and size switches, and puts a story's text beside its
+ * renders where they leave room. A choice lives in the URL's query (`h`, `size`), so a link shows
+ * what it says; the harness is remembered across the site, the size for the next page. The one key
+ * is `f`, which switches between the harnesses: Claude Code and pi.
  */
 import { readHarness, writeHarness } from "./prefs.ts";
 
@@ -30,7 +29,6 @@ const oneOf = <T extends string>(v: string | null, ok: readonly T[]): T | null =
 const state = {
   h: oneOf(q.get("h"), ["both", "pi", "claude"] as const) ?? readHarness() ?? "both",
   size: /^\d+x\d+$/.test(q.get("size") ?? "") ? q.get("size")! : store.get("size"),
-  lay: oneOf(q.get("lay") ?? store.get("lay"), ["side", "stack"] as const) ?? "side",
 };
 
 const $$ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) =>
@@ -51,7 +49,7 @@ function syncUrl(): void {
     v ? u.searchParams.set(k, v) : u.searchParams.delete(k);
   set("h", state.h === "both" ? null : state.h);
   set("size", $$("[data-sizes]").length && state.size ? state.size : null);
-  set("lay", stages.length > 0 && state.lay !== "side" ? state.lay : null);
+  u.searchParams.delete("lay");
   history.replaceState(null, "", u);
 }
 
@@ -120,42 +118,23 @@ function applySize(): void {
   }
 }
 
-// ---- layout ------------------------------------------------------------
+// ---- the story's text beside its renders ------------------------------------------------
 
-// On a phone two renders never fit side by side, and the switch has no Side by side: Stacked is
-// what "both" looks like there.
-const phone = matchMedia("(max-width: 40rem)");
-
-function applyLayout(): void {
-  // The layout buttons are the switch's "both": pressed only while both harnesses are shown.
-  const lay = phone.matches ? "stack" : state.lay;
-  for (const b of $$<HTMLButtonElement>("[data-set-lay]"))
-    b.setAttribute("aria-pressed", String(state.h === "both" && b.dataset.setLay === lay));
-  store.set("lay", state.lay === "side" ? null : state.lay);
-  fit();
-}
-
-// Whether a story's two renders sit side by side, each shrunk to 70% of its size at most, and
-// whether a render alone, at its size, leaves room for the story's text beside it.
-const MIN_SCALE = 0.7;
+// The renders stand one above the other, each at its own size. Where the widest leaves room, the
+// story's line, its features and any harness without a render take the room beside them.
 const FRAME = 2 * 8 + 2; // a render's padding and border
-const TEXT_ROOM = 16 * 16 + 4 * 8; // the text's 16rem column and the gap before it
+const TEXT_ROOM = 18 * 16 + 4 * 8; // the text's 18rem column and the gap before it
 function fit(): void {
   const on = shownHarnesses();
   for (const stage of stages) {
-    const pair = stage.querySelector<HTMLElement>(".pair");
-    const cells = pair ? $$(".cell", pair).filter((c) => on.includes(c.dataset.h!)) : [];
-    const outer = (c: HTMLElement) => parseFloat(c.style.getPropertyValue("--nat")) + FRAME;
-    const room = stage.clientWidth;
-    let side = false;
-    if (pair && cells.length === 2 && state.h === "both" && state.lay === "side") {
-      const gap = parseFloat(getComputedStyle(pair).columnGap) || 0;
-      side = cells.reduce((n, c) => n + outer(c) * MIN_SCALE, 0) + gap <= room;
-    }
-    if (pair) pair.dataset.fit = side ? "side" : "stack";
+    const cells = $$(".cell", stage).filter((c) => on.includes(c.dataset.h!));
+    const widest = Math.max(
+      0,
+      ...cells.map((c) => parseFloat(c.style.getPropertyValue("--nat")) + FRAME),
+    );
     stage.toggleAttribute(
       "data-beside",
-      cells.length === 1 && outer(cells[0]!) + TEXT_ROOM <= room,
+      cells.length > 0 && widest + TEXT_ROOM <= stage.clientWidth,
     );
   }
 }
@@ -165,7 +144,7 @@ function fit(): void {
 function apply(): void {
   applyHarness();
   applySize();
-  applyLayout();
+  fit();
   syncUrl();
 }
 
@@ -178,10 +157,6 @@ document.addEventListener("click", (e) => {
   } else if (b.dataset.setSize) {
     state.size = b.dataset.setSize;
     store.set("size", state.size);
-  } else if (b.dataset.setLay) {
-    state.lay = b.dataset.setLay as typeof state.lay;
-    state.h = "both";
-    writeHarness(null);
   } else return;
   apply();
 });
@@ -229,8 +204,6 @@ if (spyTargets.length) {
   addEventListener("resize", queue);
   update();
 }
-
-phone.addEventListener("change", applyLayout);
 
 // The column's width decides what fits.
 if (stages.length) {

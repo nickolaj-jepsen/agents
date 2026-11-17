@@ -59,13 +59,13 @@ const unshown = c.features.filter((f) => !c.stories.some((s) => HARNESSES.some((
       }
       <li>
         {c.stories.length} {c.stories.length === 1 ? 'story' : 'stories'}, {c.features.length} {c.features.length === 1 ? 'feature' : 'features'}
-        {nd > 0 && <> ({nd} differ)</>}
+        {nd > 0 && <> ({nd} differ between the harnesses)</>}
       </li>
       <li><a href="#props">Props ↓</a></li>
     </ul>
   </header>
 
-  <Toolbar sizes={sizes} layout />
+  <Toolbar sizes={sizes} />
 
   <section id="stories" class="cat-section" aria-labelledby="stories-h">
     <div class="section-head">
@@ -80,7 +80,7 @@ const unshown = c.features.filter((f) => !c.stories.some((s) => HARNESSES.some((
           {c.stories.map((s) => {
             const about = HARNESSES.map((h) => s.by[h]?.about).find(Boolean);
             return (
-              <li id={storyAnchor(s)} class="story-stage" data-lay="side">
+              <li id={storyAnchor(s)} class="story-stage">
                 <div class="rhead">
                   <a class="title" href={`#${storyAnchor(s)}`}>
                     {s.state}
@@ -88,7 +88,7 @@ const unshown = c.features.filter((f) => !c.stories.some((s) => HARNESSES.some((
                   {about && <span class="about">{about}</span>}
                 </div>
                 <Renders c={c} s={s} size={size} />
-                <Features c={c} s={s} about={about} />
+                <Features features={c.features.filter((f) => HARNESSES.some((h) => f.story[h] === s.id))} about={about} />
               </li>
             );
           })}
@@ -97,33 +97,10 @@ const unshown = c.features.filter((f) => !c.stories.some((s) => HARNESSES.some((
     }
     {
       unshown.length > 0 && (
-        <details class="feats loose">
-          <summary>
-            <span class="lbl">{unshown.length} {unshown.length === 1 ? 'feature' : 'features'}</span>
-            <span class="what">not shown by a story</span>
-          </summary>
-          <table class="compat">
-            <thead>
-              <tr>
-                <th scope="col">Feature</th>
-                {HARNESSES.map((h) => <th scope="col" data-h={h}>{TITLES[h]}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {unshown.map((f) => (
-                <tr class:list={{ differs: differs(f) }}>
-                  <th scope="row">{f.label}</th>
-                  {HARNESSES.map((h) => (
-                    <td data-h={h}>
-                      <Status status={f.support[h].status} />
-                      {f.support[h].note && <div class="note">{f.support[h].note}</div>}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </details>
+        <div class="unshown">
+          <h3 class="side-h sc">Features no story shows</h3>
+          <Features features={unshown} />
+        </div>
       )
     }
   </section>

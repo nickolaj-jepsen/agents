@@ -1,8 +1,7 @@
 ---
 /**
- * The catalogue's controls, one sticky bar for the whole page: the harness and the terminal size.
- * The harness switch is also the layout: side by side or stacked show both harnesses, and a
- * harness shows it alone. A size no shown harness was drawn at is greyed out, and when a harness
+ * The catalogue's controls, one sticky bar for the whole page: the harness (both, one above the
+ * other, or one alone) and the terminal size. A size no shown harness was drawn at is greyed out, and when a harness
  * shows its nearest size instead, one note here says so. It starts hidden; catalog.ts shows it.
  */
 import HarnessSwitch from '../HarnessSwitch.astro';
@@ -11,14 +10,12 @@ import { sizeKey, sizeLabel, type Harness } from '../../lib/catalog.ts';
 interface Props {
   /** The terminal sizes the stories were drawn at, with the harnesses drawn at each; none, or one, hides the size switch. */
   sizes?: { w: number; h: number; by: Harness[] }[];
-  /** The page has two harnesses' renders to arrange (a component's stories). */
-  layout?: boolean;
 }
-const { sizes = [], layout = false } = Astro.props;
+const { sizes = [] } = Astro.props;
 ---
 
 <div class="toolbar" data-js hidden>
-  <HarnessSwitch options={['claude', 'pi']} both layouts={layout} />
+  <HarnessSwitch options={['claude', 'pi']} both />
   {
     sizes.length > 1 && (
       <div class="ctl">
