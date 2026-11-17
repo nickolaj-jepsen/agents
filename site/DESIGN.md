@@ -104,17 +104,18 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
   the bar says which harnesses fell back; never a warning per render.
 - A story's features are open on the page, never folded: each one's name (left out when it is the
   story's own line), then a line per harness: its logo, the answer in a word (✓ Yes, ~ Partly, ✗ No,
-  ○ Not yet) and, under it, how or why not. Both answering yes with nothing to add is one line with
-  both logos. No "differs" flag: a ✗ beside a ✓ says it. Features no story shows close the stories,
+  ○ Not yet) and, under it, how or why not. Each logo sits centred in one box as tall as the line, so
+  the logos, glyphs and words line up, a missing harness's line too. No "differs" flag: a ✗ beside a ✓ says it. Features no story shows close the stories,
   the same way. There is no compatibility table.
 - A render is a terminal window: a bright frame, a title bar a step off the page (the harness's logo,
   what was drawn, its size), and the capture inside a 1u margin of its own canvas, so it reads as an
   object among the page's hairlines.
 - A render is at its own size, scrolling sideways inside its frame where it is wider than the column.
   It is never enlarged or shrunk.
-- A harness with no render of a story is one line (its logo, name and why), not an empty frame. Where
-  the widest render leaves 18rem, the story's line, that line and its features stand beside the
-  renders; else they follow them.
+- A harness with no render of a story is one line (its logo, name and why), not an empty frame. The
+  story's name and line always head it, across the column; where the widest render leaves 18rem, that
+  line and the features stand beside the renders, else they follow them. A frame is as wide as its
+  render: a long title bar wraps inside it.
 - Props are one harness after the other, across the column; a row puts the name and type beside what
   it is from 64rem. A list whose rows have no descriptions is one line.
 - Status reads glyph then word: ✓ green, ~ yellow, ✗ red, ○ muted. A harness is its logo: lit when it

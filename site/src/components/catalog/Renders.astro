@@ -67,9 +67,12 @@ const absent = HARNESSES.filter((h) => !drawn.includes(h));
     <ul class="absent">
       {absent.map((h) => (
         <li data-h={h}>
-          <Mark h={h} state={c.impl[h].state === 'none' ? 'none' : 'plan'} />
-          <strong>{TITLES[h]}</strong>
-          <span>{whyNot(c, s, h)}</span>
+          <span class="kb">
+            <Mark h={h} state={c.impl[h].state === 'none' ? 'none' : 'plan'} />
+          </span>
+          <span>
+            <strong>{TITLES[h]}</strong> {whyNot(c, s, h)}
+          </span>
         </li>
       ))}
     </ul>

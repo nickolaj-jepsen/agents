@@ -517,6 +517,8 @@
    the capture with a margin of its own canvas. */
 .cell {
   flex: none;
+  /* As wide as the render: the title bar wraps inside it rather than widening it. */
+  width: min-content;
   min-width: 0;
   max-width: 100%;
   border: 1px solid var(--ui-hi);
@@ -586,10 +588,11 @@
   cursor: default;
 }
 
-/* A harness with no render of the story: one line, after the renders, saying why. */
+/* A harness with no render of the story: one line, after the renders, saying why. Its logo sits in
+   the same box as a feature's, so the two line up. */
 .absent {
   margin-top: calc(2 * var(--u));
-  font-size: var(--fs-ui);
+  font-size: 0.9375rem;
   line-height: calc(3 * var(--u));
   color: var(--text-2);
 }
@@ -597,36 +600,42 @@
   margin-top: 0;
 }
 .absent li {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  column-gap: var(--u);
+}
+.absent .kb {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0 var(--u);
+  align-items: center;
+  justify-content: center;
+  height: calc(3 * var(--u));
 }
 .absent .mk {
-  align-self: center;
+  height: 1.1em;
+}
+.absent .mk.claude {
+  height: calc(1.1em * 0.9);
 }
 .absent strong {
   font-weight: 600;
   color: var(--text);
 }
 
-/* Where the renders leave room, the story's line, any harness without a render and its features
-   stand beside them (catalog.ts decides); else they follow, in that order. */
+/* Where the renders leave room, any harness without a render and the features stand beside them
+   (catalog.ts decides); else they follow. The story's name and line stay above, across. */
 .story-stage[data-beside] {
   display: grid;
   grid-template-columns: max-content minmax(18rem, 1fr);
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto auto auto 1fr;
   column-gap: calc(4 * var(--u));
+}
+.story-stage[data-beside] > .rhead {
+  grid-column: 1 / -1;
+  grid-row: 1;
 }
 .story-stage[data-beside] > .pair {
   grid-column: 1;
-  grid-row: 1 / span 3;
-}
-.story-stage[data-beside] > .rhead {
-  grid-column: 2;
-  grid-row: 1;
-  flex-direction: column;
-  gap: var(--u);
+  grid-row: 2 / span 3;
 }
 .story-stage[data-beside] > .absent {
   grid-column: 2;
@@ -654,22 +663,23 @@
   font-weight: 600;
   margin-bottom: calc(0.5 * var(--u));
 }
+/* The logo in a box as tall as the line and as wide as the wider logo, centred both ways, so every
+   harness's logo, glyph and word sit on one line and the words start at one edge. */
 .fh {
   display: grid;
-  grid-template-columns: 2.75rem minmax(0, 1fr);
-  align-items: baseline;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  column-gap: var(--u);
   color: var(--text-2);
 }
 .fh + .fh {
   margin-top: calc(0.5 * var(--u));
 }
-.fh .k,
-.fh .who {
+.fh .k {
   grid-row: 1;
-  display: inline-flex;
-  gap: calc(0.5 * var(--u));
-  align-self: start;
-  padding-top: 0.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(3 * var(--u));
 }
 .fh .gl {
   --gl: 1.1em;

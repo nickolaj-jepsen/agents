@@ -2,7 +2,7 @@
 /**
  * Features, open on the page: each one's name, then a line per harness (its logo, whether it does
  * it, and how or why not). A feature named as the story's own line goes without its name, which
- * is already above it. Where both harnesses do it with nothing to add, it is one line.
+ * is already above it.
  */
 import Glyph from '../Glyph.astro';
 import { HARNESSES, TITLES, type Component } from '../../lib/catalog.ts';
@@ -21,8 +21,6 @@ const GLYPH = { yes: '✓', partial: '~', no: '✗', planned: '○' } as const;
 const items = await Promise.all(
   features.map(async (f) => ({
     label: about && plain(f.label) === plain(about) ? null : f.label,
-    same: f.support.claude.status === f.support.pi.status && !f.support.claude.note && !f.support.pi.note,
-    status: f.support.claude.status,
     by: await Promise.all(
       HARNESSES.map(async (h) => ({
         h,
@@ -40,36 +38,19 @@ const items = await Promise.all(
       {items.map((f) => (
         <li>
           {f.label && <p class="flabel">{f.label}</p>}
-          {f.same ? (
-            <p class="fh">
-              <span class="who">
-                {HARNESSES.map((h) => (
-                  <span class={`k ${h}`} data-h={h} title={TITLES[h]}>
-                    <Glyph h={h} />
-                  </span>
-                ))}
+          {f.by.map((x) => (
+            <p class="fh" data-h={x.h}>
+              <span class={`k ${x.h}`} title={TITLES[x.h]}>
+                <Glyph h={x.h} />
+                <span class="vh">{TITLES[x.h]}:</span>
               </span>
-              <span class={`st ${f.status}`}>
-                <span class="g" aria-hidden="true">{GLYPH[f.status]}</span>
-                {WORD[f.status]}
+              <span class={`st ${x.status}`}>
+                <span class="g" aria-hidden="true">{GLYPH[x.status]}</span>
+                {WORD[x.status]}
               </span>
-              <span class="vh">in both</span>
+              {x.note && <span class="fnote" set:html={x.note} />}
             </p>
-          ) : (
-            f.by.map((x) => (
-              <p class="fh" data-h={x.h}>
-                <span class={`k ${x.h}`} title={TITLES[x.h]}>
-                  <Glyph h={x.h} />
-                  <span class="vh">{TITLES[x.h]}:</span>
-                </span>
-                <span class={`st ${x.status}`}>
-                  <span class="g" aria-hidden="true">{GLYPH[x.status]}</span>
-                  {WORD[x.status]}
-                </span>
-                {x.note && <span class="fnote" set:html={x.note} />}
-              </p>
-            ))
-          )}
+          ))}
         </li>
       ))}
     </ul>
