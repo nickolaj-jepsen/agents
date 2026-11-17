@@ -202,6 +202,9 @@ test("the pane shows a long claim and all its evidence whole", async ($, on) => 
     props: { ...PANE.props, bodyColumns: 48 },
     surface: "terminal",
   });
+  // A pane this thin starts with its evidence folded: the key shows it.
+  expect(await ui.find({ type: "Text", text: /END-OF-EVIDENCE/ })).toBeUndefined();
+  await ui.press({ key: "evidence" });
   const row = await ui.find({ type: "Button", text: /END-OF-CLAIM/ });
   expect(row).toBeDefined();
   expect(await ui.find({ type: "Button", text: /…/ })).toBeUndefined();

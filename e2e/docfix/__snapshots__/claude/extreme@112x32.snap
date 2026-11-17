@@ -2,8 +2,8 @@
 │                                               ✕
 │ ─ Doc suggestions  5 ──────────────────────────
 │
-│ a: apply   d: dismiss   m: mark   e: evidence
-│ q: later
+│ a: apply   d: dismiss   m: mark
+│ e: evidence   q: later
 │
 │ AGENTS.md ─────────────────────────────────────
 │ □ The section says the build verifies a pi
@@ -23,14 +23,14 @@
 │   but the build only type-checks the cores and
 │   the pi halves and never starts an agent, so a
 │   panel that renders wrong still passes it.
-│   ! wrong  12×  ••  ▾ evidence 2
+│   ! wrong  12×  ••  ▸ evidence 2
 │
 --- styles
 1 .x47 2
 1 . 2x2 3x15 2x30
 1
-1 . 4 .x10 4 2x9 .x3 4 2x6 .x3 4 2x10
-1 . 4 2x7
+1 . 4 .x10 4 2x9 .x3 4 2x6
+1 . 4 2x10 .x3 4 2x7
 1
 1 . 3x9 . 2x37
 1 .x3 3x40

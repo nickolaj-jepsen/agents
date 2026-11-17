@@ -4,7 +4,7 @@
  * (`../core/docfix.ts`), the one pi's half runs.
  *
  * The pane shows every suggestion whole: its claim never cut, its evidence one press away
- * (open by default while the queue is short). An apply drafts the prompt in the person's
+ * (open by default while the queue is short and the pane is not thin). An apply drafts the prompt in the person's
  * prompt box instead of sending it.
  */
 import { atom, read, update } from "claude-code";
@@ -56,7 +56,11 @@ const queue = atom({ plugin: "docfix", key: "queue" } as const, [] as Suggestion
 });
 const marked = atom({ plugin: "docfix", key: "marked" } as const, [] as string[]);
 const focused = atom({ plugin: "docfix", key: "focused" } as const, null as string | null);
-const expanded = atom({ plugin: "docfix", key: "expanded" } as const, [] as string[]);
+// Null until the person opens or folds a row: then the pane's own default holds, which depends on
+// its width. Change the tag when the shape does.
+const expanded = atom({ plugin: "docfix", key: "expanded" } as const, null as string[] | null, {
+  shape: "expanded-2",
+});
 const said = atom(
   { plugin: "docfix", key: "notice" } as const,
   { text: "", status: "warning" } as Said,
@@ -120,6 +124,11 @@ const OPEN_BELOW = 6;
 const TIGHT_ROWS = 16;
 /** Below this many cells the keys say less, so they stay on one row. */
 const NARROW = 76;
+/**
+ * Below this the five keys no longer fit one row (they need 56 cells), and a piece of evidence
+ * is tens of rows: the keys take two rows and the evidence starts folded.
+ */
+const THIN = 56;
 
 /** The width a pane is asked to open at, docked or inline; the surface caps it. */
 const WANTED_COLUMNS = 80;
@@ -159,7 +168,7 @@ async function openPane($: EngineInterface) {
   const list = await refresh($);
   const open = new Set(list.length <= OPEN_BELOW ? list.map((s) => s.id) : []);
   await update($, marked, () => []);
-  await update($, expanded, () => [...open]);
+  await update($, expanded, () => null);
   const opened = await $.ui.open(
     paneOptions({
       id: PANE,
@@ -443,7 +452,7 @@ export const register: Register = (on) => {
     const queued = await read($, queue);
     const ids = new Set(await read($, marked));
     const focus = await read($, focused);
-    const open = new Set(await read($, expanded));
+    const opened = await read($, expanded);
     const { text: noted, status, undo } = await read($, said);
     const now = await $.clock.now();
     const isInline = e.props.placement === "inline";
@@ -459,12 +468,18 @@ export const register: Register = (on) => {
       );
       await clearNotice();
     };
-    const toggleOpen = (id: string) =>
-      update($, expanded, (cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
     // A pane only a few rows tall has no room for blank rows between its blocks, nor for keys
     // that wrap: it spends them on the suggestions.
     const isTight = e.props.scroll.bodyRows < TIGHT_ROWS;
     const isNarrow = width < NARROW;
+    // A short queue opens with its evidence showing, but not in a thin pane: there each piece
+    // is tens of rows, so the claims are read first and one is opened to read why.
+    const isThin = width < THIN;
+    const open = new Set(
+      opened ?? (!isThin && queued.length <= OPEN_BELOW ? queued.map((s) => s.id) : []),
+    );
+    const toggleOpen = (id: string) =>
+      update($, expanded, () => (open.has(id) ? [...open].filter((x) => x !== id) : [...open, id]));
     const frame = (...blocks: (JSX.Element | null)[]) => (
       <Box flexDirection="column" rowGap={isTight ? 0 : 1} paddingX={padding}>
         {blocks}
@@ -538,7 +553,21 @@ export const register: Register = (on) => {
     const groups = byTarget(queued);
     return frame(
       head,
-      buttonRow(kit, keys),
+      isThin ? (
+        // Two rows that each fit, not one that wraps and leaves "later" alone on the second.
+        <Box flexDirection="column">
+          {buttonRow(
+            kit,
+            keys.filter((key) => ["apply", "dismiss", "mark"].includes(key.id ?? "")),
+          )}
+          {buttonRow(
+            kit,
+            keys.filter((key) => !["apply", "dismiss", "mark"].includes(key.id ?? "")),
+          )}
+        </Box>
+      ) : (
+        buttonRow(kit, keys)
+      ),
       noted ? said_(kit, width, noted, status) : null,
       <Box flexDirection="column" rowGap={1}>
         {groups.map(([target, list]) => (
