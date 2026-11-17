@@ -1,4 +1,4 @@
-# answer/pi/recommended 70x24 @0,8 (70x15)
+# answer/pi/recommended 70x24 @0,8 (70x12)
 ╭─ 1 of 3  ○ Q1  ○ Q2  ○ Q3 ─────────────────────────────────────────╮
 │ Should every focus default to the same bar?                        │
 │                                                                    │
@@ -8,12 +8,9 @@
 │                                                                    │
 │  4 ○ Write your own answer                                         │
 │                                                                    │
-│ Recommended: A. A per-kind table is one more thing to keep in      │
-│ sync.                                                              │
-│                                                                    │
 │                                                                    │
 │ b back  f forward  y take A  s skip  r review  n note  m several   │
-╰───── 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
+╰ shift+↑↓ scrolls · 1-9 or enter answers · hjkl moves · esc close… ─╯
 --- styles
 1x2 . 2x6 .x2 3 . 2x2 .x2 3 . 3x2 .x2 3 . 3x2 . 1x42
 1 . 4x43 .x24 1
@@ -24,12 +21,9 @@
 1 .x68 1
 1 .x2 2 . 3x23 .x41 1
 1 .x68 1
-1 . 3x12 .x55 1
-1 .x68 1
-1 .x68 1
 1 .x68 1
 1 . 2 .x7 2 .x10 2 .x9 2 .x7 2 .x9 2 .x7 2 .x11 1
-1x6 3x62 1x2
+1 3x65 .x2 1x2
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c

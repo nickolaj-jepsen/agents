@@ -1,4 +1,4 @@
-# answer/pi/long-title 112x32 @0,7 (112x24)
+# answer/pi/long-title 112x32 @0,8 (112x20)
 ╭─ 1 of 1  ○ Q1 ───────────────────────────────────────────────────────────────────────────────────────────────╮
 │ Why this matters: the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog    │
 │ the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox  │
@@ -16,10 +16,6 @@
 │ brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over │
 │ the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the     │
 │ quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox      │
-│ jumps over the lazy dog the quick brown fox jumps over the lazy dog?                                         │
-│                                                                                                              │
-│ ›1 ○ A. Yes                                                                                                  │
-│  2 ○ B. No                                                                                                   │
 │                                                                                                              │
 │ b back  f forward  s skip  r review  n note  m several                                                       │
 ╰──────────────────────────── shift+↑↓ scrolls · 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
@@ -41,10 +37,6 @@
 1 . 4x108 . 1
 1 . 4x104 .x5 1
 1 . 4x103 .x6 1
-1 . 4x68 .x41 1
-1 .x110 1
-1 . 2x2 . 2x8 .x98 1
-1 .x2 2 .x107 1
 1 .x110 1
 1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x7 2 .x63 1
 1x29 3x81 1x2

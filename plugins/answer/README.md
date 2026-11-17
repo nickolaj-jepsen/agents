@@ -25,7 +25,10 @@ writes your reply into the prompt.
   send drops them.
 - pi has the same form from the same parser (`core/forms.ts`), as its own pi package
   (`pi/`): the same keys, and the form stands as tall as its tallest question so
-  stepping moves nothing.
+  stepping moves nothing. It is a widget above the prompt, which stays shown: `alt+a`
+  or a click on the form gives it the keys, a click on the prompt gives them back, and
+  `Esc` closes it. Closed, it is one row, `Answer 4 questions · alt+a or /answer`,
+  which a click opens. The question stops in the form's top border are clickable.
 
 An open form takes the band above the prompt to itself; the other plugins' rows come back
 when it closes.

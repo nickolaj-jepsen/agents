@@ -1,4 +1,4 @@
-# answer/pi/long-body 112x32 @0,7 (112x24)
+# answer/pi/long-body 112x32 @0,8 (112x20)
 ╭─ 1 of 1  ○ Q1 ───────────────────────────────────────────────────────────────────────────────────────────────╮
 │ Keep the journal?                                                                                            │
 │                                                                                                              │
@@ -16,20 +16,12 @@
 │ Line 12 of what it hangs on.                                                                                 │
 │ Line 13 of what it hangs on.                                                                                 │
 │ Line 14 of what it hangs on.                                                                                 │
-│ Line 15 of what it hangs on.                                                                                 │
-│ Line 16 of what it hangs on.                                                                                 │
-│ Line 17 of what it hangs on.                                                                                 │
-│ Line 18 of what it hangs on.                                                                                 │
 │                                                                                                              │
 │ b back  f forward  s skip  r review  n note  m several                                                       │
 ╰──────────────────────────── shift+↑↓ scrolls · 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
 --- styles
 1x2 . 2x6 .x2 3 . 2x2 . 1x96
 1 . 4x17 .x92 1
-1 .x110 1
-1 .x110 1
-1 .x110 1
-1 .x110 1
 1 .x110 1
 1 .x110 1
 1 .x110 1

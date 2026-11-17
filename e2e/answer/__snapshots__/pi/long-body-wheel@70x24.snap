@@ -1,7 +1,30 @@
-# answer/pi/long-body-wheel 70x24 @0,6 (70x1)
- Answer 1 question · alt+a or /answer
+# answer/pi/long-body-wheel 70x24 @0,8 (70x12)
+╭─ 1 of 1  ○ Q1 ─────────────────────────────────────────────────────╮
+│ Line 2 of what it hangs on.                                        │
+│ Line 3 of what it hangs on.                                        │
+│ Line 4 of what it hangs on.                                        │
+│ Line 5 of what it hangs on.                                        │
+│ Line 6 of what it hangs on.                                        │
+│ Line 7 of what it hangs on.                                        │
+│ Line 8 of what it hangs on.                                        │
+│ Line 9 of what it hangs on.                                        │
+│                                                                    │
+│ b back  f forward  s skip  r review  n note  m several             │
+╰ shift+↑↓ scrolls · 1-9 or enter answers · hjkl moves · esc close… ─╯
 --- styles
-. 1x17 2x19
+1x2 . 2x6 .x2 3 . 2x2 . 1x54
+1 .x68 1
+1 .x68 1
+1 .x68 1
+1 .x68 1
+1 .x68 1
+1 .x68 1
+1 .x68 1
+1 .x68 1
+1 .x68 1
+1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x7 2 .x21 1
+1 3x65 .x2 1x2
 --- legend
-1 fg=#cf6a4c
-2 fg=#878580
+1 fg=#343331
+2 fg=#cf6a4c
+3 fg=#878580

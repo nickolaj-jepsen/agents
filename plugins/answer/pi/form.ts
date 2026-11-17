@@ -1,5 +1,5 @@
 /**
- * The answer form, drawn in the editor's place: one item per screen and a
+ * The answer form, a widget above the prompt that keeps the prompt shown: one item per screen and a
  * review, every row and key chip clickable. A key pick records the answer and goes on
  * to the next item unanswered; a click takes it and opens its note, and a click on the
  * taken answer goes on. A note is also `n` or a click on `add a note` under the answer,
@@ -63,6 +63,8 @@ type Act =
 type Row = BandRow<Act>;
 
 const MIN_WIDTH = 30;
+/** Rows the form leaves free: the transcript, the prompt under it and the footer. */
+const PROMPT_ROWS = 12;
 
 export class AnswerForm implements Component, Focusable {
   /** The highlighted entry on an item's screen. */
@@ -472,19 +474,23 @@ export class AnswerForm implements Component, Focusable {
             ...(item?.canSeveral ? [chip("m", "several", { kind: "several" })] : []),
           ],
     );
-    const keys = this.editing
-      ? "enter goes on · esc leaves the field"
-      : review
-        ? "1-9 revisits · esc closes, answers kept"
-        : this.isSeveral
-          ? "1-9 toggles, f goes on · esc closes, answers kept"
-          : "1-9 or enter answers · hjkl moves · esc closes, answers kept";
+    const keys = !this.isFocused
+      ? "alt+a or a click comes back here · esc closes"
+      : this.editing
+        ? "enter goes on · esc leaves the field"
+        : review
+          ? "1-9 revisits · esc closes, answers kept"
+          : this.isSeveral
+            ? "1-9 toggles, f goes on · esc closes, answers kept"
+            : "1-9 or enter answers · hjkl moves · esc closes, answers kept";
     this.band = bandShell(t, {
       width: w,
       title: item ? `${step + 1} of ${count}` : "Review",
       // Every question's stops; narrower, just the one on show.
       right: [this.stops(), ...(item ? [{ text: t.fg("dim", item.label) }] : [])],
       maxRows: this.tui.terminal.rows,
+      // The prompt stays under the form, and the transcript above it.
+      reserved: PROMPT_ROWS,
       // The tallest question's, so going from one to the next moves nothing.
       height: this.tallest(textWidth),
       body: item ? this.itemRows(item, textWidth) : this.reviewRows(textWidth),

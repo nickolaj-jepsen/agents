@@ -4,6 +4,10 @@
  * editor's place, and its review writes the reply into the editor, above any
  * draft, to send.
  *
+ * The form is a widget above the prompt, which stays shown: a click on the form or alt+a
+ * gives the form the keys, a click on the prompt gives them back, and esc closes it. While
+ * the form is closed the widget is the one row that offers it, which a click opens.
+ *
  * The form is the core's (`../core/forms.ts`), the one Claude Code's mod runs.
  * The draft is this session's own: in memory, and on the session branch so a
  * reload or a resumed session has its round and answers back.
@@ -13,8 +17,10 @@
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import { contentText } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import type { Component, TUI } from "@earendil-works/pi-tui";
 import { type Held, offer, step as stepForm, type View, view, viewOf } from "../core/forms.ts";
 import { AnswerForm, type FormAction, type FormResult } from "./form.ts";
+import { AnswerOffer } from "./offer.ts";
 
 const WIDGET_KEY = "answer";
 const SHORTCUT = "alt+a";
@@ -22,6 +28,12 @@ const ENTRY = "answer-form";
 
 /** What the branch keeps: the form as it stood, or null once the person spoke past it. */
 type Saved = { held: Held | null };
+
+/** What has the keys now: the prompt, as the form opens. The TUI class has it; its interface doesn't. */
+const focusedOf = (tui: TUI): Component | null =>
+  "getFocusedComponent" in tui && typeof tui.getFocusedComponent === "function"
+    ? ((tui.getFocusedComponent() as Component | null) ?? null)
+    : null;
 
 const hasEditor = (ctx: ExtensionContext) => ctx.mode === "tui" && ctx.hasUI;
 
@@ -71,20 +83,24 @@ export default function (pi: ExtensionAPI) {
   let shown = "";
   let lastText = "";
   let form: AnswerForm | undefined;
+  /** The screen the form is on, and what had the keys before it. */
+  let surface: { tui: TUI; back: Component | null } | undefined;
 
   const draw = (ctx: ExtensionContext) => {
     const view = viewOf(held);
     form?.refresh(view);
+    // An open form is the widget; the offer comes back when it closes.
+    if (form) return;
     const next = signature(view);
     if (next === shown) return;
     shown = next;
     if (!view) return ctx.ui.setWidget(WIDGET_KEY, undefined);
-    const t = ctx.ui.theme;
     const { answered, title } = view;
-    ctx.ui.setWidget(WIDGET_KEY, [
-      t.fg("accent", title) +
-        t.fg("dim", `${answered ? ` · ${answered} answered` : ""} · ${SHORTCUT} or /answer`),
-    ]);
+    const note = `${answered ? ` · ${answered} answered` : ""} · ${SHORTCUT} or /answer`;
+    ctx.ui.setWidget(
+      WIDGET_KEY,
+      (_tui, theme) => new AnswerOffer(theme, title, note, () => void open(ctx)),
+    );
   };
 
   /** Holds `next`, on the branch too when it changed. */
@@ -116,8 +132,27 @@ export default function (pi: ExtensionAPI) {
     if (held) hold(ctx, null);
   });
 
+  /** Closes the form: the keys go back where they were, the offer returns, a reply is placed. */
+  const finish = (ctx: ExtensionContext, opened: View, result: FormResult) => {
+    const closing = form;
+    const { tui, back } = surface ?? {};
+    form = undefined;
+    surface = undefined;
+    // Only a form that still has the keys gives them back: after a click on the prompt it is the prompt's.
+    if (tui && closing?.focused) tui.setFocus(back ?? null);
+    shown = "";
+    draw(ctx);
+    // A turn that ended while the form was up has replaced what it answered.
+    const now = viewOf(held);
+    if (!result.fill || now?.id !== opened.id || !now.reply) return;
+    if (result.send) pi.sendUserMessage(now.reply);
+    else ctx.ui.setEditorText(placeReply(ctx.ui.getEditorText(), now.reply));
+  };
+
   const open = async (ctx: ExtensionContext) => {
-    if (!hasEditor(ctx) || form) return;
+    if (!hasEditor(ctx)) return;
+    // Already open: the keys come back to it.
+    if (form) return surface?.tui.setFocus(form);
     const answering = held;
     const opened = answering && view(answering.form, answering.draft);
     if (!answering || !opened) {
@@ -133,32 +168,21 @@ export default function (pi: ExtensionAPI) {
     const steps = answering.form.items.map((_, at) =>
       view(answering.form, { ...answering.draft, step: at }),
     );
-    let result: FormResult;
-    // The form's own handle on the screen: setting the editor's text asks for no redraw, and
-    // with the form gone nothing else does until the next input.
-    let redraw: (() => void) | undefined;
-    try {
-      result = await ctx.ui.custom<FormResult>(
-        (tui, theme, _keybindings, done) => {
-          redraw = () => tui.requestRender();
-          form = new AnswerForm(tui, theme, opened, step, done, steps);
-          return form;
-        },
-        { overlay: false },
+    ctx.ui.setWidget(WIDGET_KEY, (tui, theme) => {
+      const made = new AnswerForm(
+        tui,
+        theme,
+        opened,
+        step,
+        (result) => finish(ctx, opened, result),
+        steps,
       );
-    } finally {
-      form = undefined;
-    }
-    // A turn that ended while the form was up has replaced what it answered.
-    const now = viewOf(held);
-    if (now?.id === opened.id && result.fill && now.reply) {
-      // Sent, the reply is the person's own message and what they had typed stays in the editor.
-      if (result.send) pi.sendUserMessage(now.reply);
-      else {
-        ctx.ui.setEditorText(placeReply(ctx.ui.getEditorText(), now.reply));
-        redraw?.();
-      }
-    }
+      form = made;
+      surface = { tui, back: focusedOf(tui) };
+      return made;
+    });
+    // The prompt stays shown; the form takes the keys.
+    if (form) surface?.tui.setFocus(form);
   };
 
   pi.registerShortcut(SHORTCUT, {

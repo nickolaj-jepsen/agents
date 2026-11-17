@@ -1,4 +1,4 @@
-# answer/pi/long-body 160x45 @0,7 (160x37)
+# answer/pi/long-body 160x45 @0,8 (160x33)
 ╭─ 1 of 1  ○ Q1 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ Keep the journal?                                                                                                                                            │
 │                                                                                                                                                              │
@@ -29,20 +29,12 @@
 │ Line 25 of what it hangs on.                                                                                                                                 │
 │ Line 26 of what it hangs on.                                                                                                                                 │
 │ Line 27 of what it hangs on.                                                                                                                                 │
-│ Line 28 of what it hangs on.                                                                                                                                 │
-│ Line 29 of what it hangs on.                                                                                                                                 │
-│ Line 30 of what it hangs on.                                                                                                                                 │
-│                                                                                                                                                              │
 │                                                                                                                                                              │
 │ b back  f forward  s skip  r review  n note  m several                                                                                                       │
 ╰──────────────────────────────────────────────────────────────────────────── shift+↑↓ scrolls · 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
 --- styles
 1x2 . 2x6 .x2 3 . 2x2 . 1x144
 1 . 4x17 .x140 1
-1 .x158 1
-1 .x158 1
-1 .x158 1
-1 .x158 1
 1 .x158 1
 1 .x158 1
 1 .x158 1

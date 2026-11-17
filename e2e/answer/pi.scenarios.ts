@@ -56,6 +56,27 @@ export default scenarios({
       about: "alt+a: the form on its first question",
       steps: OPEN,
     },
+    "open-by-click": {
+      from: "collapsed",
+      about: "a click on the offer row opens the form, and the row goes",
+      steps: [
+        { click: "alt+a or /answer" },
+        { wait: /1-9/ },
+        { wait: "alt+a or /answer", gone: true },
+      ],
+    },
+    "prompt-click": {
+      from: "open",
+      about:
+        "a click on the prompt gives it the keys: the form stays shown and says how to come back",
+      // The prompt's own top rule: the form's two borders come first (nth counts from 0).
+      steps: [{ click: { text: /─{20,}/, nth: 2 } }, { wait: "comes back here" }],
+    },
+    "prompt-back": {
+      from: "prompt-click",
+      about: "alt+a takes the keys back from the prompt",
+      steps: [{ press: "Alt+a" }, { wait: /1-9 or enter/ }],
+    },
     "open-by-command": {
       from: "collapsed",
       about: "/answer opens the form too",
