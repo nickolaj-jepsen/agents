@@ -9,7 +9,7 @@
 │                                                                                                                                                              │
 │                                                                                                                                                              │
 │ b back  f forward  s skip  r review  n note  m several                                                                                                       │
-╰─────────────────────────────────────────────────────────────────────────────────────────────── 1-9 or enter answers · hjkl moves · esc closes, answers kept ─╯
+│ 1-9 or enter answers · hjkl moves · esc closes, answers kept                                                                                                 │
 --- styles
 1x2 . 2x7 .x2 3 . 2x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x3 .x2 3 . 3x3 .x2 3 . 3x3 . 1x74
 1 . 4x35 .x122 1
@@ -21,7 +21,7 @@
 1 .x158 1
 1 .x158 1
 1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x7 2 .x111 1
-1x96 3x62 1x2
+1 . 3x60 .x97 1
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c

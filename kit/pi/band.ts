@@ -59,8 +59,14 @@ export type BandOptions<A> = {
   offset?: number;
   /** Last, so its keys keep their row whatever the body holds. */
   footer?: BandRow<A>;
-  /** In the bottom border, dim: what the keys do. A note on scrolling is put before it. */
+  /** Dim: what the keys do, in the bottom border (or its own row when `isJoined`). A note on scrolling is put before it. */
   keys: string;
+  /**
+   * The band stands on a line drawn below it, as the prompt's rule is: no bottom border, so its
+   * sides run down to that line, and the keys take a last row of their own.
+   * @default false
+   */
+  isJoined?: boolean;
 };
 
 /** What `bandShell` drew. */
@@ -100,6 +106,8 @@ export function bandShell<A>(theme: Theme, o: BandOptions<A>): Band<A> {
     { text: "" },
     o.footer ?? { text: "" },
   ];
+  const hint = `${maxOffset ? "shift+↑↓ scrolls · " : ""}${o.keys}`;
+  if (o.isJoined) rows.push({ text: paint(theme, "dim", hint) });
 
   const title = ` ${paint(theme, "accent", o.title)}`;
   const lead = border(b.tl + b.h) + title;
@@ -108,7 +116,7 @@ export function bandShell<A>(theme: Theme, o: BandOptions<A>): Band<A> {
     (r) => visibleWidth(lead) + tokens.gutter + visibleWidth(r.text) + 3 <= o.width,
   );
   // Cut to the border, so the corner is always there.
-  const keys = ` ${truncateToWidth(`${maxOffset ? "shift+↑↓ scrolls · " : ""}${o.keys}`, Math.max(1, o.width - 5), tokens.glyph.ellipsis)} `;
+  const keys = ` ${truncateToWidth(hint, Math.max(1, o.width - 5), tokens.glyph.ellipsis)} `;
   const bottomFill = Math.max(0, inner - 1 - visibleWidth(keys));
   const top = lead + (slot ? `${" ".repeat(tokens.gutter)}${slot.text}` : "") + " ";
   const topFill = Math.max(0, o.width - visibleWidth(top) - 1);
@@ -118,7 +126,9 @@ export function bandShell<A>(theme: Theme, o: BandOptions<A>): Band<A> {
   const lines = [
     top + border(b.h.repeat(topFill)) + border(b.tr),
     ...rows.map((row) => cell(row.text)),
-    border(b.bl + b.h.repeat(bottomFill)) + paint(theme, "dim", keys) + border(b.h + b.br),
+    ...(o.isJoined
+      ? []
+      : [border(b.bl + b.h.repeat(bottomFill)) + paint(theme, "dim", keys) + border(b.h + b.br)]),
   ];
 
   // Targets are measured from the text's own start, one padding column in.

@@ -2,9 +2,12 @@ import { region, type Region } from "../lib/screen.ts";
 import { scenarios, type Scenario, type Step } from "../lib/scenario.ts";
 import { says } from "./fixture.ts";
 
-/** The open form's box, or the one line the widget draws while it is closed. */
+/**
+ * The open form, from its top border to its keys (it has no bottom border: the prompt's rule is
+ * its floor), or the one line the widget draws while it is closed.
+ */
 const surface: Region = region.any(
-  region.box(/1-9|esc /),
+  region.rows(/^\s*╭─/, /1-9|esc /),
   region.rows(/Answer \d+ questions?|Pick \d/, /Answer \d+ questions?|Pick \d/),
 );
 

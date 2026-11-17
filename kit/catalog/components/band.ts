@@ -38,6 +38,13 @@ export default defineComponent({
       ),
     },
     {
+      id: "joined",
+      label: "Stands on the line below it: no bottom border, the keys in a last row",
+      story: "band/joined",
+      pi: yes("`isJoined`: the answer form stands on the prompt's rule, so the two read as one"),
+      claude: no("the band is a divider and rows, with no frame to join to the prompt"),
+    },
+    {
       id: "sole",
       label: "Hides every other mod's row while open",
       story: "band/default",

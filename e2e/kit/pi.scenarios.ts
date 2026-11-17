@@ -21,7 +21,8 @@ const plain = { fg: (_c: string, t: string) => t, bold: (t: string) => t } as ne
 const regionOf =
   (s: Story): Region =>
   (grid) => {
-    if (s.frame) return region.box()(grid);
+    // A joined band has no bottom border: it runs to the rule it stands on.
+    if (s.frame) return region.any(region.box(), region.rows(/^\s*╭─/, /^\s*─{10,}\s*$/))(grid);
     const columns = grid[0]?.length ?? 0;
     const rows = grid.length;
     const w = stageWidth(s, columns);

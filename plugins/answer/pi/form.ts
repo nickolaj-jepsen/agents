@@ -497,6 +497,8 @@ export class AnswerForm implements Component, Focusable {
       offset: this.offset,
       footer,
       keys,
+      // The prompt's rule is the form's floor.
+      isJoined: true,
     });
     this.offset = this.band.offset;
     return this.band.lines;

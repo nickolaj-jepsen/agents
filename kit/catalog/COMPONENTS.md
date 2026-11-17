@@ -16,6 +16,7 @@ Features:
 - Top divider with a title on the left and a slot after it: pi yes (in the rounded border: the slot's forms are given widest first, the first that fits is drawn, its cells clickable); claude yes (the rule fills what the title and the slot leave)
 - A title and no slot: pi yes; claude yes
 - Stands as tall as its tallest state: pi yes (`bandRows` counts body rows within the terminal's rows less the transcript's, the frame's own and a minimum of four; a taller body scrolls above the footer); claude yes (`bandRows` keeps `reserved` rows for another mod; a native surface has no heights in rows)
+- Stands on the line below it: no bottom border, the keys in a last row: pi yes (`isJoined`: the answer form stands on the prompt's rule, so the two read as one); claude no (the band is a divider and rows, with no frame to join to the prompt)
 - Hides every other mod's row while open: pi no (the form replaces the editor, so nothing else shares its place); claude yes (`onlyOwnRows` in the `AbovePromptList` hook; the catalogue draws its stories through it)
 
 ## Button row

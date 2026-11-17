@@ -9,7 +9,7 @@
 │   Q2: B                                                                                                                                                      │
 │                                                                                                                                                              │
 │ enter fill the prompt  s send  n note  b back                                                                                                                │
-╰───────────────────────────────────────────────────────────────────────────────────────────────── shift+↑↓ scrolls · 1-9 revisits · esc closes, answers kept ─╯
+│ shift+↑↓ scrolls · 1-9 revisits · esc closes, answers kept                                                                                                   │
 --- styles
 1x2 . 2x6 .x2 3 . 4x2 .x2 3 . 4x2 . 1x138
 1 . 2 .x156 1
@@ -21,7 +21,7 @@
 1 .x158 1
 1 .x158 1
 1 . 2x5 .x18 2 .x7 2 .x7 2 .x117 1
-1x98 4x60 1x2
+1 . 4x58 .x99 1
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c

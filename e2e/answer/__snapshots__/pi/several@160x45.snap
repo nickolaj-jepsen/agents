@@ -12,7 +12,7 @@
 │                                                                                                                                                              │
 │                                                                                                                                                              │
 │ b back  f forward  y take A, B, C  s skip  r review  n note  m several                                                                                       │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────── 1-9 toggles, f goes on · esc closes, answers kept ─╯
+│ 1-9 toggles, f goes on · esc closes, answers kept                                                                                                            │
 --- styles
 1x2 . 2x6 .x2 3 . 2x2 . 1x144
 1 . 4x24 .x133 1
@@ -27,7 +27,7 @@
 1 .x158 1
 1 .x158 1
 1 . 2 .x7 2 .x10 2 .x15 2 .x7 2 .x9 2 .x7 2 .x95 1
-1x107 3x51 1x2
+1 . 3x49 .x108 1
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c

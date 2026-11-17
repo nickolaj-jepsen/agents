@@ -536,6 +536,13 @@ describe("bandShell", () => {
     expect(widths(lines).every((n) => n === 30)).toBe(true);
     expect(strip(lines.at(-1)!)).toMatch(/^╰.*… ─╯$/);
   });
+  it("can stand on the line below it: no bottom border, the keys in a last row", () => {
+    const closed = bandShell(plain, { ...base, body: rowsOf(1) }).lines;
+    const joined = bandShell(plain, { ...base, isJoined: true, body: rowsOf(1) }).lines;
+    expect(joined).toHaveLength(closed.length);
+    expect(strip(joined.at(-1)!)).toBe(`│ esc closes${" ".repeat(46)} │`);
+    expect(strip(joined.at(-1)!)).not.toMatch(/[╰╯]/);
+  });
   it("can leave a blank row under the top border", () => {
     const plainBand = bandShell(plain, { ...base, body: rowsOf(1) }).lines;
     const roomy = bandShell(plain, { ...base, isRoomy: true, body: rowsOf(1) }).lines;

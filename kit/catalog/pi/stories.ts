@@ -174,7 +174,7 @@ const bandStory = (
   state: string,
   about: string,
   settings: string,
-  o: { title: string; stops: boolean; lines: number; height?: number },
+  o: { title: string; stops: boolean; lines: number; height?: number; isJoined?: boolean },
   more: Partial<Story> = {},
 ): Story => ({
   component: "band",
@@ -212,7 +212,9 @@ const bandStory = (
           { key: "s", label: "skip", act: undefined as never },
         ]),
         keys: "esc closes",
-      }).lines;
+        isJoined: o.isJoined,
+        // The line the band stands on is the prompt's rule, drawn by pi; here, one of ours.
+      }).lines.concat(o.isJoined ? [paint(theme, "dim", tokens.glyph.rule.repeat(width))] : []);
     }),
 });
 
@@ -752,6 +754,12 @@ export const stories: Story[] = [
     "A title and no slot: the rule runs on",
     "bandShell(theme, {title, body, footer, keys})",
     { title: "Review", stops: false, lines: 3, height: 6 },
+  ),
+  bandStory(
+    "joined",
+    "Standing on the line below it, as the prompt's rule: no bottom border, the sides run down to it and the keys take a last row",
+    "bandShell(theme, {isJoined: true, ...})",
+    { title: "2 of 3", stops: true, lines: 3, height: 6, isJoined: true },
   ),
   bandStory(
     "height",
