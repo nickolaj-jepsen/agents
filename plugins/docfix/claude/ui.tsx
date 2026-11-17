@@ -745,6 +745,8 @@ export function onlyOwnRows<E extends { props: { rows: readonly { plugin: string
 
 /** One key of a button row. */
 export type KeyChip = {
+  /** The Button's address; the label when left out. Give one when the label changes with the screen. */
+  id?: string;
   hotkey: string;
   label: string;
   press: () => unknown;
@@ -762,9 +764,9 @@ export function buttonRow(k: Kit, keys: KeyChip[]): JSX.Element {
   const { isNative } = k;
   return (
     <Box columnGap={isNative ? "sm" : tokens.keyGap} flexWrap="wrap">
-      {keys.map(({ hotkey, label, press, isLit }) => (
+      {keys.map(({ id, hotkey, label, press, isLit }) => (
         <Button
-          key={label}
+          key={id ?? label}
           plain={isNative ? undefined : true}
           dimColor={!isNative && !isLit}
           variant={isNative && isLit ? "primary" : undefined}
