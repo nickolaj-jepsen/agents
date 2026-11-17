@@ -107,7 +107,8 @@ export function bandShell<A>(theme: Theme, o: BandOptions<A>): Band<A> {
   const slot = (o.right ?? []).find(
     (r) => visibleWidth(lead) + tokens.gutter + visibleWidth(r.text) + 3 <= o.width,
   );
-  const keys = ` ${maxOffset ? "shift+↑↓ scrolls · " : ""}${o.keys} `;
+  // Cut to the border, so the corner is always there.
+  const keys = ` ${truncateToWidth(`${maxOffset ? "shift+↑↓ scrolls · " : ""}${o.keys}`, Math.max(1, o.width - 5), tokens.glyph.ellipsis)} `;
   const bottomFill = Math.max(0, inner - 1 - visibleWidth(keys));
   const top = lead + (slot ? `${" ".repeat(tokens.gutter)}${slot.text}` : "") + " ";
   const topFill = Math.max(0, o.width - visibleWidth(top) - 1);

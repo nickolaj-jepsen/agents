@@ -526,6 +526,16 @@ describe("bandShell", () => {
     expect(at(12, [wide, narrow])).not.toContain("Q2");
     expect(widths([at(12, [wide])])[0]).toBe(12);
   });
+  it("cuts keys that outrun the border, so the corner stays", () => {
+    const { lines } = bandShell(plain, {
+      ...base,
+      width: 30,
+      body: [],
+      keys: "1-9 or enter answers · hjkl moves · esc closes",
+    });
+    expect(widths(lines).every((n) => n === 30)).toBe(true);
+    expect(strip(lines.at(-1)!)).toMatch(/^╰.*… ─╯$/);
+  });
   it("can leave a blank row under the top border", () => {
     const plainBand = bandShell(plain, { ...base, body: rowsOf(1) }).lines;
     const roomy = bandShell(plain, { ...base, isRoomy: true, body: rowsOf(1) }).lines;
