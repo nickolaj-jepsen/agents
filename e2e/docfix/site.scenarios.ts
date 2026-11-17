@@ -76,7 +76,8 @@ export default site({
         { sleep: 2400 },
         poster,
         { press: "a" },
-        { wait: "Apply these docfix suggestions" },
+        // The draft is taller than the prompt box, so its first line has scrolled away.
+        { wait: "For each one:" },
         // The draft sits in the prompt box for a moment, to be read; then it is sent.
         { sleep: 3200 },
         { press: "Enter" },
@@ -105,7 +106,8 @@ export default site({
         { sleep: 2400 },
         poster,
         { press: "a" },
-        { wait: "Apply these docfix suggestions" },
+        // The draft is taller than the prompt box, so its first line has scrolled away.
+        { wait: "For each one:" },
         { sleep: 3200 },
         { press: "Enter" },
         { wait: "claim checked against the code", timeout: 30_000 },
