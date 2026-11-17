@@ -4,6 +4,7 @@ import {
   applyPrompt,
   byTarget,
   dismiss,
+  docTargets,
   evidenceBlocks,
   evidenceLabel,
   normalizeTarget,
@@ -11,6 +12,8 @@ import {
   parse,
   plan,
   readEvidence,
+  readReminder,
+  readsInCommand,
   reopen,
   repeats,
   sentences,
@@ -274,5 +277,40 @@ describe("evidence a person scans", () => {
     expect(lines.at(-1)).toBe("Last one.");
     expect(lines.length).toBeGreaterThan(5);
     expect(sentences("Short. Text.")).toEqual(["Short. Text."]);
+  });
+});
+
+describe("reading a doc", () => {
+  test("a shell command reads the Markdown files a plain reader names", () => {
+    expect(readsInCommand("cd docs && sed -n 1,80p layout.md")).toEqual(["layout.md"]);
+    expect(readsInCommand("cat 'README.md' | head -n 5")).toEqual(["README.md"]);
+    expect(readsInCommand("head -n 40 AGENTS.md; tail docs/traps.md")).toEqual([
+      "AGENTS.md",
+      "docs/traps.md",
+    ]);
+  });
+
+  test("anything else a shell command does is not reading", () => {
+    expect(readsInCommand("git add README.md")).toEqual([]);
+    expect(readsInCommand("echo x > notes.md")).toEqual([]);
+    expect(readsInCommand("cat package.json")).toEqual([]);
+  });
+
+  test("paths become repo docs, a relative one read against the cwd", () => {
+    expect(
+      docTargets(
+        ["/repo/AGENTS.md", "layout.md", "/elsewhere/README.md", "src/a.ts"],
+        "/repo/docs",
+        "/repo",
+      ),
+    ).toEqual(["AGENTS.md", "docs/layout.md"]);
+    expect(docTargets(["/repo/README.md", "README.md"], "/repo", "/repo")).toEqual(["README.md"]);
+  });
+
+  test("the reminder names the docs and the tool, and asks for what was seen", () => {
+    const text = readReminder(["AGENTS.md", "docs/layout.md"]);
+    expect(text).toContain("AGENTS.md, docs/layout.md");
+    expect(text).toContain("docfix");
+    expect(text).toContain("citing what you saw");
   });
 });

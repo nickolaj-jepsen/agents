@@ -1,6 +1,6 @@
 /**
- * The pi half of docfix: the `docfix` tool, the /docfix panel, and the open
- * count in the footer. What a call does to the queue is the core's
+ * The pi half of docfix: the `docfix` tool, the /docfix panel, the open
+ * count in the footer, and the reminder after a session first reads a doc. What a call does to the queue is the core's
  * (`../core/docfix.ts`), the one Claude Code's mod runs.
  */
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
@@ -9,10 +9,13 @@ import { Type } from "typebox";
 import {
   applyPrompt,
   dismiss,
+  docTargets,
   KINDS,
   normalizeTarget,
   openQueue,
   plan,
+  readReminder,
+  readsInCommand,
   reopen,
   statusText,
   TOOL_DESCRIPTION,
@@ -21,7 +24,7 @@ import {
 } from "../core/docfix.ts";
 import { overlayOptions } from "../../../kit/pi/ui.ts";
 import { DocsPanel, EMPTY_TEXT } from "./panel.ts";
-import { isTracked, loadAll, remove, repoRoot, save, storeDir } from "./store.ts";
+import { hasStore, isTracked, loadAll, remove, repoRoot, save, storeDir } from "./store.ts";
 
 const STATUS_KEY = "docfix";
 
@@ -50,8 +53,35 @@ export default function (pi: ExtensionAPI) {
     ctx.ui.setStatus(STATUS_KEY, statusText(open));
   }
 
-  pi.on("session_start", (_event, ctx) => refresh(ctx));
+  // The docs this session was reminded of: each gets one reminder.
+  const reminded = new Set<string>();
+
+  pi.on("session_start", (_event, ctx) => {
+    reminded.clear();
+    return refresh(ctx);
+  });
   pi.on("agent_end", (_event, ctx) => refresh(ctx));
+
+  // The first time a session reads a doc, the tool is named beside it: an agent that later
+  // finds the doc wrong has it in mind. Only the result's text grows; the call is untouched.
+  pi.on("tool_result", async (event, ctx) => {
+    if (event.isError) return;
+    const paths =
+      event.toolName === "read"
+        ? [String(event.input.path ?? "")]
+        : event.toolName === "bash"
+          ? readsInCommand(String(event.input.command ?? ""))
+          : [];
+    if (paths.length === 0) return;
+    const root = await repoRoot(ctx.cwd);
+    if (!root || !hasStore(root)) return;
+    const tracked: string[] = [];
+    for (const target of docTargets(paths, ctx.cwd, root))
+      if (!reminded.has(target) && (await isTracked(root, target))) tracked.push(target);
+    if (tracked.length === 0) return;
+    for (const target of tracked) reminded.add(target);
+    return { content: [...event.content, { type: "text", text: readReminder(tracked) }] };
+  });
 
   pi.registerTool({
     name: TOOL_NAME,
@@ -67,7 +97,7 @@ export default function (pi: ExtensionAPI) {
       evidence: Type.Optional(
         Type.String({
           description:
-            "The doc's line and what contradicts it: a code location, or a command and its output.",
+            "The doc's line and what you saw that contradicts it: a code location, or a command and its output.",
         }),
       ),
       same_as: Type.Optional(

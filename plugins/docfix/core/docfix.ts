@@ -36,11 +36,15 @@ export type Suggestion = {
 };
 
 export const TOOL_DESCRIPTION = [
-  "File a suggestion that a doc in this repo no longer matches reality, instead of editing it.",
-  "Use this when you notice, while doing something else, that a doc doesn't match reality: it contradicts the code or how things behave, it's missing a trap you just hit, or it describes something gone or finished (a removed feature, a completed or abandoned plan).",
-  "File it and carry on. If the doc covers code you're changing in this task, update it in the same change instead; this tool is for docs outside your change.",
-  "Don't go looking for problems, and don't file preferences or task status.",
-  'action "suggest": file is a git-tracked Markdown file (AGENTS.md, CLAUDE.md, docs/**, a README); kind is wrong, missing or stale; claim is one line saying what the doc should say or why it is wrong; evidence cites the doc\'s line and what contradicts it (a code location, or a command and its output).',
+  "File a suggestion that a doc in this repo is wrong, instead of editing it.",
+  "Call it whenever this session has shown you that a git-tracked doc (AGENTS.md, CLAUDE.md, docs/**, a README) doesn't match reality, for example:",
+  "you followed a doc's command or steps and they failed or needed changing;",
+  "code or output you read contradicts a line in a doc;",
+  "you hit a trap or needed a fact that the doc covering that area should have told you;",
+  "a doc describes something removed or renamed, or a plan that is done or abandoned.",
+  "It needs proof you saw in this session: a file and line you read, or a command and its output. A hunch, a guess or a style preference is not proof: don't file those, and don't go looking for problems.",
+  "File it and carry on with your task. If the doc covers code you're changing in this task, update it in the same change instead.",
+  "action \"suggest\": file is the doc's repo path; kind is wrong, missing or stale; claim is one line saying what the doc should say or why it is wrong; evidence quotes the doc's line and what you saw that contradicts it (a code location, or a command and its output).",
   'When the file already has suggestions the call lists them and files nothing: call again with same_as set to the one that says the same thing, or same_as "none" for a different one.',
   'action "resolve" with id is only for the person\'s /docfix apply prompt, after the edit is made.',
 ].join(" ");
@@ -59,7 +63,7 @@ export const INPUT_SCHEMA = {
     evidence: {
       type: "string",
       description:
-        "The doc's line and what contradicts it: a code location, or a command and its output (suggest).",
+        "The doc's line and what you saw that contradicts it: a code location, or a command and its output (suggest).",
     },
     same_as: {
       type: "string",
@@ -124,6 +128,48 @@ export function normalizeTarget(file: string, root: string): Target {
   if (!/\.md$/i.test(path)) return { ok: false, error: `${path} is not a Markdown file` };
   return { ok: true, target: path };
 }
+
+// --- Reading a doc ---------------------------------------------------------------
+
+/** Commands whose file arguments a shell call reads whole or in part. */
+const READERS = new Set(["cat", "head", "tail", "sed", "less", "more", "bat", "nl", "glow"]);
+
+/**
+ * The Markdown files a shell command reads with a plain reader, as written in it:
+ * `cd docs && sed -n 1,80p layout.md` gives `layout.md`. Anything else it runs is not reading.
+ */
+export function readsInCommand(command: string): string[] {
+  const paths: string[] = [];
+  for (const segment of command.split(/&&|\|\||[;|\n]/)) {
+    const words = segment
+      .trim()
+      .split(/\s+/)
+      .map((word) => word.replace(/^["']|["']$/g, ""));
+    if (!READERS.has(words[0] ?? "")) continue;
+    paths.push(...words.slice(1).filter((word) => !word.startsWith("-") && /\.md$/i.test(word)));
+  }
+  return [...new Set(paths)];
+}
+
+/**
+ * The repo-relative docs `paths` name, a relative one read against `cwd`; a path outside the
+ * repo or not Markdown is left out. Whether git tracks one is the harness's check.
+ */
+export function docTargets(paths: readonly string[], cwd: string, root: string): string[] {
+  const targets = paths.flatMap((path) => {
+    const full = path.startsWith("/") ? path : `${cwd.replace(/\/+$/, "")}/${path}`;
+    const target = normalizeTarget(full, root);
+    return target.ok ? [target.target] : [];
+  });
+  return [...new Set(targets)];
+}
+
+/**
+ * What the model reads after it first reads a doc in a session: the tool, at the moment the
+ * doc is in front of it. It files nothing by itself; the bar for proof stays the tool's.
+ */
+export const readReminder = (targets: readonly string[]) =>
+  `You read ${targets.join(", ")}. If this session shows ${targets.length > 1 ? "one of them" : "it"} is wrong, misses a trap you hit, or describes something gone, and that isn't part of your change, file it with the ${TOOL_NAME} tool, citing what you saw. Otherwise ignore this.`;
 
 // --- The file ------------------------------------------------------------------
 

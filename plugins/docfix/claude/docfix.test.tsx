@@ -231,3 +231,22 @@ test("a dismiss can be undone", async ($, on) => {
   expect(world.statuses.at(-1)).toBe("docs 1");
   await ui.unmount();
 });
+
+test("the first read of a tracked doc in a session names the tool after it", async ($, on) => {
+  engine(on);
+  on("tool.call", { tool: "Read" }, () => ({ result: { type: "text" } as never, text: "body" }));
+  on("tool.call", { tool: "Bash" }, () => ({ result: { stdout: "" } as never, text: "body" }));
+  await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
+
+  const first = await $.tool.call({ tool: "Read", file_path: `${ROOT}/AGENTS.md` });
+  expect(first.context?.join("\n")).toContain("You read AGENTS.md");
+
+  const again = await $.tool.call({ tool: "Bash", command: "sed -n 1,20p AGENTS.md" });
+  expect(again.context ?? []).toEqual([]);
+
+  const untracked = await $.tool.call({ tool: "Read", file_path: `${ROOT}/docs/nope.md` });
+  expect(untracked.context ?? []).toEqual([]);
+
+  const code = await $.tool.call({ tool: "Read", file_path: `${ROOT}/src/a.ts` });
+  expect(code.context ?? []).toEqual([]);
+});

@@ -1,6 +1,6 @@
 /**
  * The Claude Code half of docfix: the `docfix` tool, the /docfix pane, and the
- * open count on the status line. What a call does to the queue is the core's
+ * open count on the status line, and the reminder after a session first reads a doc. What a call does to the queue is the core's
  * (`../core/docfix.ts`), the one pi's half runs.
  *
  * The pane shows every suggestion whole: its claim never cut, its evidence one press away
@@ -8,17 +8,20 @@
  * prompt box instead of sending it.
  */
 import { atom, read, update } from "claude-code";
-import type { EngineInterface, Register, RenderNode } from "claude-code";
+import type { EngineInterface, Register, RenderNode, ToolCallResult } from "claude-code";
 import {
   applyPrompt,
   byTarget,
   dismiss,
+  docTargets,
   fileName,
   INPUT_SCHEMA,
   normalizeTarget,
   openQueue,
   parse,
   plan,
+  readReminder,
+  readsInCommand,
   reopen,
   repeats,
   seen,
@@ -76,12 +79,15 @@ const say = (
 
 type Place = { root: string; dir: string };
 
-async function place($: EngineInterface): Promise<Place | string> {
-  const cwd = await $.session.cwd();
+async function rootOf($: EngineInterface, cwd: string) {
   const top = await $.process
     .run(["git", "rev-parse", "--show-toplevel"], { cwd })
     .catch(() => null);
-  const root = top?.exitCode === 0 ? top.stdout.trim() : "";
+  return top?.exitCode === 0 ? top.stdout.trim() : "";
+}
+
+async function place($: EngineInterface): Promise<Place | string> {
+  const root = await rootOf($, await $.session.cwd());
   if (!root) return "not inside a git repository, so there are no repo docs to file against";
   const store = `${root}/.agents/store`;
   if (!(await $.fs.exists(store))) {
@@ -90,6 +96,42 @@ async function place($: EngineInterface): Promise<Place | string> {
       return "this checkout has no note store (.agents/store); run `agent-notes root --ensure`";
   }
   return { root, dir: `${store}/${STORE_DIR}` };
+}
+
+/** `<session>\0<doc>` for each doc a session was reminded of, so each gets one reminder. */
+const reminded = new Set<string>();
+
+/**
+ * The reminder for the docs `paths` name that this session hasn't read before, or undefined.
+ * Only in a checkout with a store: without one there is nowhere to file.
+ */
+async function reminderFor($: EngineInterface, paths: readonly string[]) {
+  if (paths.length === 0) return undefined;
+  const cwd = await $.session.cwd();
+  const root = await rootOf($, cwd);
+  if (!root || !(await $.fs.exists(`${root}/.agents/store`))) return undefined;
+  const session = await $.session.id();
+  const fresh = docTargets(paths, cwd, root).filter((t) => !reminded.has(`${session}\0${t}`));
+  const tracked: string[] = [];
+  for (const target of fresh) {
+    const ls = await $.process.run(["git", "ls-files", "--error-unmatch", "--", target], {
+      cwd: root,
+    });
+    if (ls.exitCode === 0) tracked.push(target);
+  }
+  for (const target of tracked) reminded.add(`${session}\0${target}`);
+  return tracked.length > 0 ? readReminder(tracked) : undefined;
+}
+
+/** `done` with the reminder after it, when the call read a doc for the first time. */
+async function withReminder<T extends ToolCallResult>(
+  $: EngineInterface,
+  done: T,
+  paths: readonly string[],
+): Promise<T> {
+  if (done.deny !== undefined || done.isError) return done;
+  const text = await reminderFor($, paths).catch(() => undefined);
+  return text ? { ...done, context: [...(done.context ?? []), text] } : done;
 }
 
 async function loadAll($: EngineInterface, dir: string): Promise<Suggestion[]> {
@@ -434,6 +476,15 @@ export const register: Register = (on) => {
     await refresh($, where);
     return { result: outcome.text };
   }).catch((_$, _e, next) => ({ deny: `docfix failed: ${String(next.error)}` }));
+
+  // The first time a session reads a doc, the tool is named beside it: an agent that later
+  // finds the doc wrong has it in mind. The hooks only add text; the call itself is untouched.
+  on("tool.call", { tool: "Read" }, async ($, e, next) =>
+    withReminder($, await next(e), [e.file_path]),
+  );
+  on("tool.call", { tool: "Bash" }, async ($, e, next) =>
+    withReminder($, await next(e), readsInCommand(e.command)),
+  );
 
   on("command.run", { command: "docfix" }, async ($) => {
     await openPane($);

@@ -30,6 +30,9 @@ export const repoRoot = async (cwd: string) => {
 export const isTracked = async (root: string, target: string) =>
   (await git(root, ["ls-files", "--error-unmatch", "--", target])).ok;
 
+/** Whether the checkout has a note store, without repairing its links. */
+export const hasStore = (root: string) => existsSync(join(root, ".agents", "store"));
+
 /** The suggestions folder, the note store's links repaired first when they are missing. */
 export async function storeDir(root: string): Promise<string | undefined> {
   const store = join(root, ".agents", "store");
