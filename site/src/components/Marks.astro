@@ -11,7 +11,7 @@ interface Props {
 const { harnesses, short = false } = Astro.props;
 ---
 
-<span class="marks">
+<span class:list={["marks", { short }]}>
   {
     harnesses.map((h) => (
       <span class={`hm ${h}`} title={short ? HARNESS[h] : undefined}>

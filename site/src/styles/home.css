@@ -1,0 +1,93 @@
+/* The home page: cropped posters, the section head's wrap, and the skill rows' install control. */
+
+/* ---- posters: a crop of the capture, shown at 1:1 (never upscaled) ---------------------- */
+
+/* The plate: a hairline frame on the capture's own ground, the crop centred in it. */
+.tiles .tile-pic {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  justify-items: center;
+  aspect-ratio: 620 / 290;
+  overflow: hidden;
+  background: var(--bg);
+  border: 1px solid var(--ui-alt);
+  outline: 0;
+}
+.tiles .tile-pic:has(.crop.whole) {
+  aspect-ratio: 1232 / 746;
+  display: block;
+}
+.tile-pic .crop {
+  position: relative;
+  display: block;
+  width: calc(var(--w) * 1px);
+  /* Never wider than the plate, so never scaled up; shrinks only when the plate is narrower. */
+  max-width: 100%;
+  aspect-ratio: calc(var(--w) / var(--h));
+  overflow: hidden;
+}
+.tile-pic .crop[hidden] {
+  display: none;
+}
+.tile-pic .crop ~ .crop {
+  display: none;
+}
+.tiles.js .tile-pic .crop ~ .crop:not([hidden]) {
+  display: block;
+}
+.tile-pic .crop.whole {
+  width: 100%;
+  aspect-ratio: 1232 / 746;
+}
+.tile-pic .crop.whole img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+}
+/* The image is placed by the crop's origin, in percent of the box, so it scales with it. */
+.tile-pic .crop:not(.whole) img {
+  position: absolute;
+  width: calc(var(--iw) / var(--w) * 100%);
+  max-width: none;
+  height: auto;
+  left: calc(var(--x) / var(--w) * -100%);
+  top: calc(var(--y) / var(--h) * -100%);
+}
+.tiles .tile:hover .tile-pic {
+  border-color: var(--text-3);
+}
+
+/* ---- section head: the switch goes under the heading when it doesn't fit ------------------- */
+
+.section-head {
+  flex-wrap: wrap;
+  row-gap: var(--u);
+}
+@media (max-width: 40rem) {
+  .section-head .aside {
+    flex-basis: 100%;
+    margin-left: 0;
+    align-self: flex-start;
+  }
+}
+
+/* ---- skill rows: install shows on hover or focus where there is a hover ----------------- */
+
+@media (hover: hover) {
+  .srows .end .inst {
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+  .srows > li:hover .end .inst,
+  .srows > li:focus-within .end .inst,
+  .srows .end .inst[open] {
+    opacity: 1;
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+  .srows .end .inst {
+    transition: none;
+  }
+}

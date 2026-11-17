@@ -68,18 +68,46 @@ Phones step prose to 18 and titles to 32 and 28, on the same lines.
   logos, install, tagline) under a harness switch that narrows them to one harness, with its picture and
   install command, then the skills as rows under a head per category. An in-progress plugin or
   skill keeps its place in its group, listed last, with its tag.
+- A poster is a plate (a 1px `uiAlt` frame on the capture's own ground) holding a crop of the capture:
+  the part that shows the plugin (its pane, form, menu or result), at about its own size so the
+  terminal text reads, never enlarged. The crops, and a different still where the demo's poster shows
+  nothing, are in `src/lib/posters.ts`, in the capture's pixels; a plugin without one shows its whole
+  capture. Every plate has one shape, the crop centred in it, so a row of posters lines up. A crop is
+  tied to the recording: when a capture's layout changes, check its crop.
+- A section head wraps: below 40rem the harness switch goes under the heading.
+- Where the pointer hovers, a skill row's install button shows only while the row is hovered, has
+  focus within or has its panel open (by opacity, so it stays focusable); on touch it is always shown.
+- A harness logo sits centred in a fixed box, so Claude Code's wide mark and pi's square one stand
+  evenly beside a name and share its centre line.
 - Install is a small framed button (`install ▾`) that opens a panel of commands, one per harness, each
   with its copy button; other ways sit behind "More ways". The same control on the home page and in a
   page's header.
 - Plugin and skill pages read top to bottom: the header (name, tagline, harness, install, the
-  in-progress notice), then a plugin's gallery across the column, then the body with a rail of facts
-  (needs, files, source) beside it from 64rem; below that the rail follows the body.
+  in-progress notice), then a plugin's gallery, then the body with a rail beside it from 64rem that
+  stays in view (under the masthead); below that the rail follows the body. A fact in the rail is its
+  label over its value, one rule under the pair. A plugin's rail: what it needs, the harnesses it runs
+  in, each install command with its copy button, the source. A skill's: its files and source, then a
+  contents list of its SKILL.md's headings, the one at the reading line (a third of the way down)
+  marked in white with a 2px accent rule; below 64rem the contents is left out.
+- The pager ends the page: previous and next (a skill's within its category), and on a plugin page a
+  way back to all plugins between them.
 - A plugin's gallery is one stage and a strip of thumbnails: the demo first, then the stills, the caption
-  under the stage, and a harness switch when both have media. Without script every item shows, one under another.
+  under the stage, and a harness switch when both have media. The stage keeps the capture's shape,
+  never passes 60vh and is never enlarged; it, its caption and the thumbnails share the column's left
+  edge. A demo has the site's own control bar (play or pause, its time, a seek slider) instead of the
+  browser's: shown on hover, on focus and while paused, always on touch; without script the browser's
+  controls remain, and every item shows, one under another.
 - Commands wrap inside their frame rather than scroll, so the copy button and the whole command stay in
   view; listings scroll sideways inside themselves. Nothing scrolls the page sideways at 320px.
+- A skill's header is followed by the facts a person looks for, from the skill's own data: how to
+  invoke it, when the agent uses it (the description's "Use when" sentences), what it needs (its
+  Requirements section).
 - A skill's `SKILL.md` is "What the agent reads", framed as a file: a title bar with its path and a link
-  to the source, the description, then the body, a step smaller.
+  to the source, the description, then the body, a step smaller. It shows its first screen faded into
+  the page ground, then a full-width "Read all of SKILL.md (N lines)" / "Show less" button; without
+  script it is open. Opening never moves the page; closing brings the frame's top back into view; a
+  contents link or a link to a heading opens it first. "see X", where X is exactly one of its headings,
+  is a link to it.
 
 ## The catalogue
 

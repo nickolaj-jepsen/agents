@@ -28,7 +28,7 @@ if (list && switches.length) {
       t.hidden = !has;
       if (has) shown++;
       // The picture of the chosen harness; else the first, which is the plugin's own.
-      const pics = [...t.querySelectorAll<HTMLImageElement>(".tile-pic img")];
+      const pics = [...t.querySelectorAll<HTMLElement>(".tile-pic .crop")];
       const mine = pics.find((p) => p.dataset.h === h) ?? pics[0];
       for (const p of pics) p.hidden = p !== mine;
     }

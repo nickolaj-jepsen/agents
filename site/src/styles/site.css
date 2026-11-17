@@ -536,7 +536,12 @@ pre {
 }
 .hm .k {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
   align-self: center;
+  flex: none;
+  width: 1.75em;
+  height: 1.5em;
 }
 /* A harness logo: sized by the text it sits in, coloured by its .k. */
 /* A logo is sized by height (--gl). Claude Code's mark is wide, so it stands a little shorter than
