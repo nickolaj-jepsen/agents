@@ -4,8 +4,8 @@
 │ □ `just build` is not enough to verify a pi change; the docs say   │
 │   it is.                                                           │
 │   ! wrong  3×  ••  ▾ evidence 1                                    │
-│   <date>      AGENTS.md: the line contradicts what the code does   │
-│               now.                                                 │
+│                                                                    │
+│   <date>     ───────────────────────────────────────────────────── │
 ╰────────────────────────────────────────────────────────────────────╯
 --- styles
 .x67 1
@@ -13,8 +13,8 @@
 .x2 3x64
 -
 .x2 1x2 4x7 1x2 5x2 1x18
-.x4 1x10
 -
+.x4 1x64
 -
 --- legend
 1 fg=#999999

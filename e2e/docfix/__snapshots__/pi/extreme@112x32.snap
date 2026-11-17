@@ -22,11 +22,11 @@
 │     only type-checks the cores and the pi                 │ ! wrong   seen 12×   <age>                     │
 │     halves and never starts an agent, so                  │                                                │
 │     a panel that renders wrong still                      │ Evidence ───────────────────────────────────── │
-│     passes it.                                            │ <date>                                         │
-│     ↓ 4 more                                              │ `just build` printed error: derivation failed  │
-│                                                           │ while evaluating the attribute and its         │
-│                                                           │ dependencies, error: derivation failed while   │
-│                                                           │ ↓ 24 more                                      │
+│     passes it.                                            │ <date>      pi ─────────────────────────────── │
+│     ↓ 4 more                                              │   `just build` printed error: derivation       │
+│                                                           │   failed while evaluating the attribute and    │
+│                                                           │   its dependencies, error: derivation failed   │
+│                                                           │ ↓ 25 more                                      │
 │                                                           │                                                │
 ╰─ ↑↓ move ── space mark ── a apply ── d dismiss ───────────┴─ pgup/pgdn scroll ── m mark all ── esc later ──╯
 --- styles
@@ -53,10 +53,10 @@
 1 .x5 6x37 .x17 1 . 7 . 3x5 .x3 8x8 .x3 3x10 .x16 1
 1 .x5 6x36 .x18 1 .x48 1
 1 .x5 6x32 .x22 1 . 4x8 . 3x37 . 1
-1 .x5 6x10 .x44 1 . 3x10 .x37 1
-1 .x5 3x8 .x46 1 . 5x45 .x2 1
-1 .x59 1 . 5x38 .x9 1
-1 .x59 1 . 5x44 .x3 1
+1 .x5 6x10 .x44 1 . 3x46 . 1
+1 .x5 3x8 .x46 1 .x3 5x38 .x7 1
+1 .x59 1 .x3 5x41 .x4 1
+1 .x59 1 .x3 5x42 .x3 1
 1 .x59 1 . 3x9 .x38 1
 1 .x59 1 .x48 1
 1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x13 . 5x9 . 3x6 . 1x2 . 5 . 3x8 . 1x2 . 5x3 . 3x5 . 1x3

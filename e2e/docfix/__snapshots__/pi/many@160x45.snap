@@ -7,9 +7,9 @@
 │   □ Claim number 15 about docs/hosts.md: the      ↻    3×     •• │ ! wrong   seen 2×   <age>                             │
 │     page no longer matches what the code does.                   │                                                       │
 │   □ Claim number 14 about docs/hosts.md: the      +    2×     •• │ Evidence ──────────────────────────────────────────── │
-│     page no longer matches what the code does.                   │ <date>      docs/notes.md: the line contradicts what  │
-│   □ Claim number 13 about docs/hosts.md: the      !    1×    ••• │             the code does now.                        │
-│     page no longer matches what the code does.                   │                                                       │
+│     page no longer matches what the code does.                   │ <date>     ────────────────────────────────────────── │
+│   □ Claim number 13 about docs/hosts.md: the      !    1×    ••• │   docs/notes.md: the line contradicts what the code   │
+│     page no longer matches what the code does.                   │   does now.                                           │
 │ docs/modules.md ──────────────────────────────────────────────── │                                                       │
 │   □ Claim number 16 about docs/modules.md: the    !    4×    ••• │                                                       │
 │     page no longer matches what the code does.                   │                                                       │
@@ -51,9 +51,9 @@
 1 .x3 3 . 4x40 .x6 4 .x2 5x4 .x2 3x5 . 1 . 6 . 3x5 .x3 3x7 .x3 3x11 .x23 1
 1 .x5 4x42 .x19 1 .x55 1
 1 .x3 3 . 4x40 .x6 4 .x2 3x4 .x2 3x5 . 1 . 7x8 . 3x44 . 1
-1 .x5 4x42 .x19 1 . 3x10 .x2 4x40 .x2 1
-1 .x3 3 . 4x40 .x6 6 .x2 3x4 .x2 3x5 . 1 .x13 4x18 .x24 1
-1 .x5 4x42 .x19 1 .x55 1
+1 .x5 4x42 .x19 1 . 3x53 . 1
+1 .x3 3 . 4x40 .x6 6 .x2 3x4 .x2 3x5 . 1 .x3 4x49 .x3 1
+1 .x5 4x42 .x19 1 .x3 4x9 .x43 1
 1 . 7x15 . 3x48 . 1 .x55 1
 1 .x3 3 . 4x42 .x4 6 .x2 5x4 .x2 3x5 . 1 .x55 1
 1 .x5 4x42 .x19 1 .x55 1

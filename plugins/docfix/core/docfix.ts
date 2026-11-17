@@ -197,6 +197,88 @@ export function parse(text: string): Suggestion | null {
   };
 }
 
+// --- Reading evidence ----------------------------------------------------------
+
+/** What a suggestion points at: `{"kind":"path","value":"modules/a.nix"}`. */
+export type Citation = { kind: string; value: string };
+
+export type EvidencePart =
+  | { kind: "text"; text: string }
+  /** A paragraph that opens with a label an agent writes, such as `Why the repo didn't say it:`. */
+  | { kind: "labelled"; label: string; text: string }
+  | { kind: "citations"; items: Citation[] };
+
+/** One piece of evidence as a person reads it: when, who, and the text in parts. */
+export type EvidenceView = {
+  when: string;
+  /** The harness that filed it, `pi` or `claude`: the session id is not for reading. */
+  by: string;
+  /** Filed by a migration of an older memory, not by an agent that hit the gap. */
+  isMigrated: boolean;
+  parts: EvidencePart[];
+};
+
+/** Labels an agent opens a paragraph with; the text after the colon is the paragraph. */
+const LABELS = ["Why the repo didn't say it"];
+const MIGRATED = /^Migrated from [\w-]+ memory `[^`]*`\.?$/;
+
+/** The citations a `Citations: [...]` line holds, or undefined when it isn't that. */
+function citationsOf(line: string): Citation[] | undefined {
+  const match = /^Citations:\s*(\[.*\])\s*$/.exec(line.trim());
+  if (!match) return undefined;
+  try {
+    const raw: unknown = JSON.parse(match[1] ?? "");
+    if (!Array.isArray(raw)) return undefined;
+    const items = raw.flatMap((item): Citation[] => {
+      if (typeof item === "string") return [{ kind: "ref", value: item }];
+      if (typeof item !== "object" || item === null) return [];
+      const { kind, value } = item as Record<string, unknown>;
+      if (value === undefined) return [];
+      const text = typeof value === "string" ? value : JSON.stringify(value);
+      return [{ kind: typeof kind === "string" && kind ? kind : "ref", value: text }];
+    });
+    return items.length > 0 ? items : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Evidence text in parts: paragraphs, the labelled ones named, and a `Citations:` JSON line as a
+ * list. The migration's own first line is dropped for a flag. Text this doesn't recognise stays
+ * as it is, a paragraph.
+ */
+export function readEvidence(e: Evidence): EvidenceView {
+  const parts: EvidencePart[] = [];
+  let isMigrated = false;
+  for (const paragraph of e.text.replace(/\r\n/g, "\n").split(/\n\s*\n/)) {
+    const lines = paragraph.split("\n");
+    const at = lines.findIndex((line) => citationsOf(line) !== undefined);
+    const before = (at < 0 ? lines : lines.slice(0, at)).join("\n").trim();
+    if (MIGRATED.test(before)) isMigrated = true;
+    else if (before) {
+      const label = LABELS.find((l) => before.startsWith(`${l}:`));
+      parts.push(
+        label
+          ? { kind: "labelled", label, text: before.slice(label.length + 1).trim() }
+          : { kind: "text", text: before },
+      );
+    }
+    const items = at < 0 ? undefined : citationsOf(lines[at] ?? "");
+    if (items) parts.push({ kind: "citations", items });
+    const after =
+      at < 0
+        ? ""
+        : lines
+            .slice(at + 1)
+            .join("\n")
+            .trim();
+    if (after) parts.push({ kind: "text", text: after });
+  }
+  const by = e.session.includes(":") ? e.session.slice(0, e.session.indexOf(":")) : "";
+  return { when: e.at.slice(0, 10), by, isMigrated, parts };
+}
+
 // --- A call ----------------------------------------------------------------------
 
 export type Call = {

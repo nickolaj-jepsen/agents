@@ -14,8 +14,8 @@
 │ ↻ stale   seen 2×   <age>                                        │
 │                                                                  │
 │ Evidence ─────────────────────────────────────────────────────── │
-│ <date>      docs/hosts.md: the line contradicts what the code    │
-│             does now.                                            │
+│ <date>     ───────────────────────────────────────────────────── │
+│   docs/hosts.md: the line contradicts what the code does now.    │
 │ Dismissed 1: it is not filed again                               │
 ╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
 --- styles
@@ -34,8 +34,8 @@
 1 . 6 . 3x5 .x3 3x7 .x3 3x11 .x34 1
 1 .x66 1
 1 . 4x8 . 3x55 . 1
-1 . 3x10 .x2 6x49 .x4 1
-1 .x13 6x9 .x44 1
+1 . 3x64 . 1
+1 .x3 6x59 .x4 1
 1 . 7x34 .x31 1
 1x3 6x2 . 3x4 . 1x2 . 6x5 . 3x4 . 1x2 . 6 . 3x5 . 1x2 . 6 . 3x7 . 1x2 . 6x3 . 3x5 . 1x6
 --- legend

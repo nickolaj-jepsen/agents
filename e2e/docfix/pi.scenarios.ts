@@ -1,6 +1,6 @@
 import { region } from "../lib/screen.ts";
 import { scenarios } from "../lib/scenario.ts";
-import { checkout, EXTREME, fileSuggestions, MANY, ONE } from "./fixture.ts";
+import { checkout, EXTREME, fileSuggestions, MANY, ONE, STRUCTURED } from "./fixture.ts";
 
 const open = [{ type: "/docfix" }, { press: "Enter" }];
 
@@ -75,6 +75,16 @@ export default scenarios({
         { press: "a" },
         { wait: "Apply these docfix" },
       ],
+    },
+    evidence: {
+      about:
+        "evidence as migrated memories write it: prose, a labelled paragraph, citations as a list not JSON",
+      setup: (ctx) => {
+        checkout(ctx);
+        fileSuggestions(ctx, STRUCTURED);
+      },
+      steps: [...open, { wait: "agent-hub" }],
+      extreme: true,
     },
     many: {
       about: "28 suggestions, more than fit; the cursor well down the list",

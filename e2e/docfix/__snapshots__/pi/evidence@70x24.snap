@@ -1,0 +1,54 @@
+# docfix/pi/evidence 70x24 @1,1 (68x22)
+╭─ Doc suggestions  2 ─────────────────────────────────────────────╮
+│                                                                  │
+│ docs/agent-hub.md ────────────────────────────────────────────── │
+│ ❯ □ agent-hub's unittest suite needs a short      +    2×     •• │
+│     TMPDIR and markdown-it-py on PYTHONPATH; run                 │
+│     it with uv, not bare python.                                 │
+│ docs/agents.md ───────────────────────────────────────────────── │
+│   □ pi's permission gate cannot resolve shell     !    1×    ••• │
+│     variables, so `cat $S/id_ed25519_ao` reads                   │
+│     what `cat ~/.ssh/id_ed25519_ao` denies.                      │
+│                                                                  │
+│ + missing   seen 2×   <age>                                      │
+│                                                                  │
+│ Evidence ─────────────────────────────────────────────────────── │
+│ <date>      claude ───────────────────────────────────────────── │
+│   Hit it again from a worktree: `python -m unittest` failed 20   │
+│   socket tests with AF_UNIX path too long.                       │
+│                                                                  │
+│ <date>      pi  migrated ─────────────────────────────────────── │
+│ ↓ 19 more                                                        │
+│                                                                  │
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
+--- styles
+1x3 2x15 .x2 3 . 1x46
+1 .x66 1
+1 . 4x17 . 3x46 . 1
+1 . 5 . 3 . 5x40 .x6 6 .x2 3x4 .x2 3x5 . 1
+1 .x5 5x44 .x17 1
+1 .x5 5x28 .x33 1
+1 . 4x14 . 3x49 . 1
+1 .x3 3 . 6x41 .x5 7 .x2 3x4 .x2 3x5 . 1
+1 .x5 6x42 .x19 1
+1 .x5 6x39 .x22 1
+1 .x66 1
+1 . 6 . 3x7 .x3 3x7 .x3 3x10 .x33 1
+1 .x66 1
+1 . 4x8 . 3x55 . 1
+1 . 3x64 . 1
+1 .x3 6x60 .x3 1
+1 .x3 6x40 .x23 1
+1 .x66 1
+1 . 3x64 . 1
+1 . 3x9 .x56 1
+1 .x66 1
+1x3 6x2 . 3x4 . 1x2 . 6x5 . 3x4 . 1x2 . 6 . 3x5 . 1x2 . 6 . 3x7 . 1x2 . 6x3 . 3x5 . 1x6
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#878580
+4 fg=#dad8ce bold
+5 fg=#cf6a4c
+6 fg=#dad8ce
+7 fg=#d14d41

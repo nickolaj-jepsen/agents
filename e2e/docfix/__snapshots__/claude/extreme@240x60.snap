@@ -17,41 +17,41 @@
 │   cores and the pi halves and never starts an agent, so a panel that
 │   renders wrong still passes it.
 │   ! wrong  12×  ••  ▾ evidence 2
-│   <date>      `just build` printed error: derivation failed while
-│               evaluating the attribute and its dependencies, error:
-│               derivation failed while evaluating the attribute and its
-│               dependencies, error: derivation failed while evaluating the
-│               attribute and its dependencies, error: derivation failed
-│               while evaluating the attribute and its dependencies, error:
-│               derivation failed while evaluating the attribute and its
-│               dependencies, error: derivation failed while evaluating the
-│               attribute and its dependencies,
 │
-│   <date>      The section says the build verifies a pi change, but the
-│               build only type-checks the cores and the pi halves and
-│               never starts an agent, so a panel that renders wrong still
-│               passes it; The section says the build verifies a pi change,
-│               but the build only type-checks the cores and the pi halves
-│               and never starts an agent, so a panel that renders wrong
-│               still passes it; The section says the build verifies a pi
-│               change, but the build only type-checks the cores and the pi
-│               halves and never starts an agent, so a panel that renders
-│               wrong still passes it.
+│   <date>      pi ────────────────────────────────────────────────────────
+│     `just build` printed error: derivation failed while evaluating the
+│     attribute and its dependencies, error: derivation failed while
+│     evaluating the attribute and its dependencies, error: derivation
+│     failed while evaluating the attribute and its dependencies, error:
+│     derivation failed while evaluating the attribute and its
+│     dependencies, error: derivation failed while evaluating the attribute
+│     and its dependencies, error: derivation failed while evaluating the
+│     attribute and its dependencies,
+│
+│   <date>      pi ────────────────────────────────────────────────────────
+│     The section says the build verifies a pi change, but the build only
+│     type-checks the cores and the pi halves and never starts an agent, so
+│     a panel that renders wrong still passes it; The section says the
+│     build verifies a pi change, but the build only type-checks the cores
+│     and the pi halves and never starts an agent, so a panel that renders
+│     wrong still passes it; The section says the build verifies a pi
+│     change, but the build only type-checks the cores and the pi halves
+│     and never starts an agent, so a panel that renders wrong still passes
+│     it.
 │
 │ □ UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbroke
 │   nUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrok
 │   enUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbro
 │   kenUnbrokenUnbrokenUnbroken
 │   + missing  3×  ••  ▾ evidence 1
-│   <date>      AGENTS.md: the line contradicts what the code does now.
+│
+│   <date>     ────────────────────────────────────────────────────────────
+│     AGENTS.md: the line contradicts what the code does now.
 │
 │ docs/a-very-long-directory-name/with/several/nested/levels/and-an-equally
 │ -long-file-name-for-the-guide.md
 │ □ A claim under a very long target path, so the group header must be cut.
 │   ↻ stale  1×  age   ▾ evidence 1
-│   <date>      docs/a-very-long-directory-name/with/several/nested/levels/
-│               and-an-equally-long-file-name-for-the-guide.md: the line
-│               contradicts what the code does now.
 │
 --- styles
 1 .x73 2
@@ -72,7 +72,8 @@
 1
 1
 1 . 2x2 5x7 2x2 6x3 2x18
-1 .x3 2x10
+1
+1 .x3 2x71
 1
 1
 1
@@ -82,7 +83,7 @@
 1
 1
 1
-1 .x3 2x10
+1 .x3 2x71
 1
 1
 1
@@ -98,15 +99,14 @@
 1
 1
 1 . 2x13 6x2 2x18
-1 .x3 2x10
+1
+1 .x3 2x71
+1
 1
 1 . 3x73
 1 . 3x32
 1
 1 . 2x33
-1 .x3 2x10
-1
-1
 1
 --- legend
 1 dim

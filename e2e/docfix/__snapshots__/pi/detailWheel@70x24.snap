@@ -19,7 +19,7 @@
 │ type-checks the cores and the pi halves and never starts an      │
 │ agent, so a panel that renders wrong still passes it.            │
 │                                                                  │
-│ ↓ 26 more                                                        │
+│ ↓ 24 more                                                        │
 │                                                                  │
 ╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
 --- styles

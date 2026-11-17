@@ -18,25 +18,25 @@
 │   never starts an agent, so a panel that renders wrong still passes
 │   it.
 │   ! wrong  12×  ••  ▾ evidence 2
-│   <date>      `just build` printed error: derivation failed while
-│               evaluating the attribute and its dependencies, error:
-│               derivation failed while evaluating the attribute and
-│               its dependencies, error: derivation failed while
-│               evaluating the attribute and its dependencies, error:
-│               derivation failed while evaluating the attribute and
-│               its dependencies, error: derivation failed while
-│               evaluating the attribute and its dependencies, error:
-│               derivation failed while evaluating the attribute and
-│               its dependencies,
 │
-│   <date>      The section says the build verifies a pi change, but
-│               the build only type-checks the cores and the pi halves
-│               and never starts an agent, so a panel that renders
-│               wrong still passes it; The section says the build
-│               verifies a pi change, but the build only type-checks
-│               the cores and the pi halves and never starts an agent,
-│               so a panel that renders wrong still passes it; The
-│               section says the build verifies a pi change, but the
+│   <date>      pi ────────────────────────────────────────────────────
+│     `just build` printed error: derivation failed while evaluating
+│     the attribute and its dependencies, error: derivation failed
+│     while evaluating the attribute and its dependencies, error:
+│     derivation failed while evaluating the attribute and its
+│     dependencies, error: derivation failed while evaluating the
+│     attribute and its dependencies, error: derivation failed while
+│     evaluating the attribute and its dependencies, error: derivation
+│     failed while evaluating the attribute and its dependencies,
+│
+│   <date>      pi ────────────────────────────────────────────────────
+│     The section says the build verifies a pi change, but the build
+│     only type-checks the cores and the pi halves and never starts an
+│     agent, so a panel that renders wrong still passes it; The section
+│     says the build verifies a pi change, but the build only
+│     type-checks the cores and the pi halves and never starts an
+│     agent, so a panel that renders wrong still passes it; The section
+│     says the build verifies a pi change, but the build only
 │
 --- styles
 1 .x69 2
@@ -58,7 +58,8 @@
 1
 1
 1 . 2x2 5x7 2x2 6x3 2x18
-1 .x3 2x10
+1
+1 .x3 2x67
 1
 1
 1
@@ -68,8 +69,7 @@
 1
 1
 1
-1
-1 .x3 2x10
+1 .x3 2x67
 1
 1
 1

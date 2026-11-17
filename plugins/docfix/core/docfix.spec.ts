@@ -8,6 +8,7 @@ import {
   openQueue,
   parse,
   plan,
+  readEvidence,
   reopen,
   serialize,
   type Call,
@@ -167,5 +168,57 @@ describe("review", () => {
     const back = reopen(gone, "2026-11-16T10:00:00.000Z");
     expect(back).toMatchObject({ status: "open", dismissed: "", id: a.id });
     expect(openQueue([back])).toHaveLength(1);
+  });
+});
+
+describe("readEvidence", () => {
+  const evidence = (text: string, session = "pi:01a1") => ({ at: NOW, session, text });
+
+  test("turns a Citations line into a list instead of raw JSON", () => {
+    const view = readEvidence(
+      evidence(
+        'Migrated from pi memory `grammars`.\n\nMeasured it.\n\nWhy the repo didn\'t say it: No comment says why.\n\nCitations: [{"kind":"path","value":"modules/neovim.nix"},{"kind":"symbol","value":"grammarPlugins"}]',
+      ),
+    );
+    expect(view).toMatchObject({ when: "2026-11-15", by: "pi", isMigrated: true });
+    expect(view.parts).toEqual([
+      { kind: "text", text: "Measured it." },
+      { kind: "labelled", label: "Why the repo didn't say it", text: "No comment says why." },
+      {
+        kind: "citations",
+        items: [
+          { kind: "path", value: "modules/neovim.nix" },
+          { kind: "symbol", value: "grammarPlugins" },
+        ],
+      },
+    ]);
+    expect(JSON.stringify(view.parts)).not.toContain("Citations:");
+  });
+
+  test("keeps text it does not recognise, and malformed citations, as they were", () => {
+    const view = readEvidence(evidence("AGENTS.md:12 says x\nand y\n\nCitations: [not json"));
+    expect(view.isMigrated).toBe(false);
+    expect(view.parts).toEqual([
+      { kind: "text", text: "AGENTS.md:12 says x\nand y" },
+      { kind: "text", text: "Citations: [not json" },
+    ]);
+  });
+
+  test("a Citations line in the middle of a paragraph splits it", () => {
+    const view = readEvidence(
+      evidence('before\nCitations: ["a.md", {"value": 3}]\nafter', "claude:s1"),
+    );
+    expect(view.by).toBe("claude");
+    expect(view.parts).toEqual([
+      { kind: "text", text: "before" },
+      {
+        kind: "citations",
+        items: [
+          { kind: "ref", value: "a.md" },
+          { kind: "ref", value: "3" },
+        ],
+      },
+      { kind: "text", text: "after" },
+    ]);
   });
 });

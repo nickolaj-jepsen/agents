@@ -11,14 +11,14 @@
 │     never starts an agent, so a panel that                       │
 │     ↓ 4 more                                                     │
 │                                                                  │
-│ ↑ 9 more                                                         │
+│ ↑ 7 more                                                         │
+│ type-checks the cores and the pi halves and never starts an      │
+│ agent, so a panel that renders wrong still passes it. The        │
 │ section says the build verifies a pi change, but the build only  │
 │ type-checks the cores and the pi halves and never starts an      │
 │ agent, so a panel that renders wrong still passes it.            │
 │                                                                  │
 │ ! wrong   seen 12×   <age>                                       │
-│                                                                  │
-│ Evidence ─────────────────────────────────────────────────────── │
 │ ↓ 23 more                                                        │
 │                                                                  │
 ╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
@@ -36,13 +36,13 @@
 1 .x5 3x8 .x53 1
 1 .x66 1
 1 . 3x8 .x57 1
+1 . 7x59 .x6 1
+1 . 7x57 .x8 1
 1 . 7x63 .x2 1
 1 . 7x59 .x6 1
 1 . 7x53 .x12 1
 1 .x66 1
 1 . 5 . 3x5 .x3 6x8 .x3 3x10 .x34 1
-1 .x66 1
-1 . 8x8 . 3x55 . 1
 1 . 3x9 .x56 1
 1 .x66 1
 1x3 7x2 . 3x4 . 1x2 . 7x5 . 3x4 . 1x2 . 7 . 3x5 . 1x2 . 7 . 3x7 . 1x2 . 7x3 . 3x5 . 1x6
@@ -54,4 +54,3 @@
 5 fg=#d14d41
 6 fg=#d0a215
 7 fg=#dad8ce
-8 fg=#dad8ce bold

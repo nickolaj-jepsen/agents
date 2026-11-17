@@ -16,8 +16,8 @@
 │ + missing   seen 1×   <age>                                      │
 │                                                                  │
 │ Evidence ─────────────────────────────────────────────────────── │
-│ <date>      docs/modules.md: the line contradicts what the code  │
-│             does now.                                            │
+│ <date>     ───────────────────────────────────────────────────── │
+│   docs/modules.md: the line contradicts what the code does now.  │
 │                                                                  │
 ╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
 --- styles
@@ -38,8 +38,8 @@
 1 . 4 . 3x7 .x3 3x7 .x3 3x11 .x32 1
 1 .x66 1
 1 . 6x8 . 3x55 . 1
-1 . 3x10 .x2 4x51 .x2 1
-1 .x13 4x9 .x44 1
+1 . 3x64 . 1
+1 .x3 4x61 .x2 1
 1 .x66 1
 1x3 4x2 . 3x4 . 1x2 . 4x5 . 3x4 . 1x2 . 4 . 3x5 . 1x2 . 4 . 3x7 . 1x2 . 4x3 . 3x5 . 1x6
 --- legend

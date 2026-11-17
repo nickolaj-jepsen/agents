@@ -1,0 +1,84 @@
+# docfix/pi/evidence 240x60 @58,11 (124x37)
+╭─ Doc suggestions  2 ─────────────────────────────────────────────┬───────────────────────────────────────────────────────╮
+│                                                                  │                                                       │
+│ docs/agent-hub.md ────────────────────────────────────────────── │ agent-hub's unittest suite needs a short TMPDIR and   │
+│ ❯ □ agent-hub's unittest suite needs a short      +    2×     •• │ markdown-it-py on PYTHONPATH; run it with uv, not     │
+│     TMPDIR and markdown-it-py on PYTHONPATH; run                 │ bare python.                                          │
+│     it with uv, not bare python.                                 │                                                       │
+│                                                                  │ + missing   seen 2×   <age>                           │
+│ docs/agents.md ───────────────────────────────────────────────── │                                                       │
+│   □ pi's permission gate cannot resolve shell     !    1×    ••• │ Evidence ──────────────────────────────────────────── │
+│     variables, so `cat $S/id_ed25519_ao` reads                   │ <date>      claude ────────────────────────────────── │
+│     what `cat ~/.ssh/id_ed25519_ao` denies.                      │   Hit it again from a worktree: `python -m unittest`  │
+│                                                                  │   failed 20 socket tests with AF_UNIX path too long.  │
+│                                                                  │                                                       │
+│                                                                  │ <date>      pi  migrated ──────────────────────────── │
+│                                                                  │   From pkgs/agent-hub: TMPDIR=<tmp>   PYTHONPATH=. uv │
+│                                                                  │   run --quiet --with markdown-it-py python -m         │
+│                                                                  │   unittest discover -s tests -p 'test_*.py'. Without  │
+│                                                                  │   a short TMPDIR the socket tests fail with "OSError: │
+│                                                                  │   AF_UNIX path too long" inside a long worktree path; │
+│                                                                  │   without markdown-it-py the render/features imports  │
+│                                                                  │   fail. Baseline: 470 tests, 1 skipped.               │
+│                                                                  │                                                       │
+│                                                                  │   Why the repo didn't say it                          │
+│                                                                  │   Both failures look like code errors, and nothing in │
+│                                                                  │   the repo states the TMPDIR requirement or the       │
+│                                                                  │   markdown-it-py dependency that only the nix build   │
+│                                                                  │   supplies; an agent would report 20 fake failures.   │
+│                                                                  │                                                       │
+│                                                                  │   path     pkgs/agent-hub/package.nix                 │
+│                                                                  │   command  TMPDIR=<tmp>   PYTHONPATH=. uv run --quiet │
+│                                                                  │            --with markdown-it-py python -m unittest   │
+│                                                                  │            discover -s tests -p 'test_*.py'           │
+│                                                                  │   quote    “if it happens again, just wait a bit and  │
+│                                                                  │            try again”                                 │
+│                                                                  │   symbol   dmsSession                                 │
+│                                                                  │                                                       │
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── m mark all ────┴─ esc later ───────────────────────────────────────────╯
+--- styles
+1x3 2x15 .x2 3 . 1x102
+1 .x66 1 .x55 1
+1 . 4x17 . 3x46 . 1 . 5x51 .x3 1
+1 . 6 . 3 . 6x40 .x6 5 .x2 3x4 .x2 3x5 . 1 . 5x49 .x5 1
+1 .x5 6x44 .x17 1 . 5x12 .x42 1
+1 .x5 6x28 .x33 1 .x55 1
+1 .x66 1 . 5 . 3x7 .x3 3x7 .x3 3x10 .x22 1
+1 . 4x14 . 3x49 . 1 .x55 1
+1 .x3 3 . 5x41 .x5 7 .x2 3x4 .x2 3x5 . 1 . 4x8 . 3x44 . 1
+1 .x5 5x42 .x19 1 . 3x53 . 1
+1 .x5 5x39 .x22 1 .x3 5x50 .x2 1
+1 .x66 1 .x3 5x50 .x2 1
+1 .x66 1 .x55 1
+1 .x66 1 . 3x53 . 1
+1 .x66 1 .x3 5x51 . 1
+1 .x66 1 .x3 5x43 .x9 1
+1 .x66 1 .x3 5x50 .x2 1
+1 .x66 1 .x3 5x51 . 1
+1 .x66 1 .x3 5x51 . 1
+1 .x66 1 .x3 5x50 .x2 1
+1 .x66 1 .x3 5x37 .x15 1
+1 .x66 1 .x55 1
+1 .x66 1 .x3 3x26 .x26 1
+1 .x66 1 .x3 5x51 . 1
+1 .x66 1 .x3 5x45 .x7 1
+1 .x66 1 .x3 5x49 .x3 1
+1 .x66 1 .x3 5x49 .x3 1
+1 .x66 1 .x55 1
+1 .x66 1 .x3 3x7 .x2 5x26 .x17 1
+1 .x66 1 .x3 3x7 .x2 5x42 . 1
+1 .x66 1 .x12 5x40 .x3 1
+1 .x66 1 .x12 5x32 .x11 1
+1 .x66 1 .x3 3x7 .x2 5x41 .x2 1
+1 .x66 1 .x12 5x10 .x33 1
+1 .x66 1 .x3 3x7 .x2 5x10 .x33 1
+1 .x66 1 .x55 1
+1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x2 . 5 . 3x8 . 1x6 . 5x3 . 3x5 . 1x44
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#878580
+4 fg=#dad8ce bold
+5 fg=#dad8ce
+6 fg=#cf6a4c
+7 fg=#d14d41

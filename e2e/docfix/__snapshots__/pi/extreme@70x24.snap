@@ -19,7 +19,7 @@
 │ agent, so a panel that renders wrong still passes it. The        │
 │ section says the build verifies a pi change, but the build only  │
 │ type-checks the cores and the pi halves and never starts an      │
-│ ↓ 31 more                                                        │
+│ ↓ 29 more                                                        │
 │                                                                  │
 ╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
 --- styles

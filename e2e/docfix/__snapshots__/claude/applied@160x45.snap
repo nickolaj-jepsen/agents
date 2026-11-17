@@ -42,7 +42,7 @@
   Then call docfix with action "resolve" for each id, applied or found no longer true.
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   ⚠ docfix: docs 3
-  Sonnet 5.5 · high · 0% · •• 97%                                                              ~/.local/state/agents<tmp>                                main
+  Sonnet 5.5 · high · 0% · •• 97%                              main
   ⏵⏵ auto mode on (shift+tab to cycle)
 --- styles
 .x117 1x43
@@ -88,7 +88,7 @@
 .x12 ax6
 9x160
 .x2 bx16
-.x2 5x10 cx3 5x4 cx8 dx6 5x62 cx53 5x4 e 5 cx4
+.x2 5x10 cx3 5x4 cx8 dx6 5x29 e 5 cx4
 .x2 bx15 5x21
 --- legend
 1 dim

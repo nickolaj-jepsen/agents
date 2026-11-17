@@ -21,7 +21,6 @@ import {
   List,
   modalFrame,
   modalRows,
-  entries,
   notice,
   paint,
   prose,
@@ -32,6 +31,7 @@ import {
   type Hint,
 } from "../../../kit/pi/ui.ts";
 import { openQueue, seen, type Kind, type Suggestion } from "../core/docfix.ts";
+import { evidence } from "./evidence.ts";
 
 export type PanelDeps = {
   load(): Promise<Suggestion[]>;
@@ -240,13 +240,7 @@ export class DocsPanel implements Component {
       meta,
       "",
       section(t, width, "Evidence"),
-      ...(s.evidence.length > 0
-        ? entries(
-            t,
-            width,
-            [...s.evidence].reverse().map((e) => ({ date: e.at.slice(0, 10), text: e.text })),
-          )
-        : [paint(t, "dim", "none filed")]),
+      ...(s.evidence.length > 0 ? evidence(t, width, s.evidence) : [paint(t, "dim", "none filed")]),
     ];
     this.detailCache.set(key, lines);
     return lines;

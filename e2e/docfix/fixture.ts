@@ -80,6 +80,62 @@ export const SUGGESTIONS: Suggestion[] = [
   ),
 ];
 
+/**
+ * Evidence as migrated memories and agents write it: a first line naming the memory, prose, a
+ * labelled paragraph and a `Citations:` line of JSON, and a second piece filed by an agent.
+ */
+export const STRUCTURED: Suggestion[] = [
+  suggestion(
+    {
+      id: "agent-hub-needs-short-tmpdir",
+      target: "docs/agent-hub.md",
+      kind: "missing",
+      claim:
+        "agent-hub's unittest suite needs a short TMPDIR and markdown-it-py on PYTHONPATH; run it with uv, not bare python.",
+      evidence: [
+        {
+          at: ago(12),
+          session: "pi:01a1adc1-2153-7212-87e4-53c14efef86c",
+          text: [
+            "Migrated from pi memory `agent-hubs-unittest-suite-needs-a-short-tmpdir`.",
+            "From pkgs/agent-hub: TMPDIR=/tmp/ah PYTHONPATH=. uv run --quiet --with markdown-it-py python -m unittest discover -s tests -p 'test_*.py'. Without a short TMPDIR the socket tests fail with \"OSError: AF_UNIX path too long\" inside a long worktree path; without markdown-it-py the render/features imports fail. Baseline: 470 tests, 1 skipped.",
+            "Why the repo didn't say it: Both failures look like code errors, and nothing in the repo states the TMPDIR requirement or the markdown-it-py dependency that only the nix build supplies; an agent would report 20 fake failures.",
+            'Citations: [{"kind":"path","value":"pkgs/agent-hub/package.nix"},{"kind":"command","value":"TMPDIR=/tmp/ah PYTHONPATH=. uv run --quiet --with markdown-it-py python -m unittest discover -s tests -p \'test_*.py\'"},{"kind":"quote","value":"if it happens again, just wait a bit and try again"},{"kind":"symbol","value":"dmsSession"}]',
+          ].join("\n\n"),
+        },
+        {
+          at: ago(2),
+          session: "claude:5b1c1c3e-7d2e-4b1b-8a46-0f6d6d7c1a11",
+          text: "Hit it again from a worktree: `python -m unittest` failed 20 socket tests with AF_UNIX path too long.",
+        },
+      ],
+    },
+    2,
+    2,
+  ),
+  suggestion(
+    {
+      id: "permission-gate-shell-vars",
+      target: "docs/agents.md",
+      kind: "wrong",
+      claim:
+        "pi's permission gate cannot resolve shell variables, so `cat $S/id_ed25519_ao` reads what `cat ~/.ssh/id_ed25519_ao` denies.",
+      evidence: [
+        {
+          at: ago(13),
+          session: "pi:01a1a722-20b0-731a-a2b3-ddb2a1c10330",
+          text: [
+            "Measured: the path projection resolves only HOME and PWD and declines assignment dataflow, so any other $VAR spelling lands inside cwd and is allowed.",
+            'Citations: [{"kind":"path","value":"modules/programs/pi/default.nix"},{"kind":"path","value":"modules/programs/pi/extensions/node_modules/@gotgenes/pi-permission-system/src/access-intent/bash/shell-variable-expansion.ts"}]',
+          ].join("\n\n"),
+        },
+      ],
+    },
+    13,
+    1,
+  ),
+];
+
 /** One suggestion, for the one-item state. */
 export const ONE: Suggestion[] = [SUGGESTIONS[0]!];
 

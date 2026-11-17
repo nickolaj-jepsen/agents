@@ -8,9 +8,9 @@
 │ □ `just build` is not enough to verify a pi change; the docs say it
 │   is.
 │   ! wrong  3×  ••  ▾ evidence 1
-│   <date>      AGENTS.md: the line contradicts what the code does now.
 │
-│
+│   <date>     ────────────────────────────────────────────────────────
+│     AGENTS.md: the line contradicts what the code does now.
 │
 │
 │
@@ -48,8 +48,8 @@
 1
 1
 1 . 2x2 5x7 2x2 6x2 2x18
-1 .x3 2x10
 1
+1 .x3 2x67
 1
 1
 1

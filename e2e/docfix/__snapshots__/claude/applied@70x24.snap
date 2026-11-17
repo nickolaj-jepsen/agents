@@ -21,7 +21,7 @@
   found no longer true.
 ──────────────────────────────────────────────────────────────────────
   ⚠ docfix: docs 3
-  Sonnet 5.5 · high · 0% · •• 97%                                  …
+  Sonnet 5.5 · high · 0% · •• 97%                              main
   ⏵⏵ auto mode on (shift+tab to cycle)
 --- styles
 .x27 1x43
@@ -46,7 +46,7 @@
 -
 9x70
 .x2 bx16
-.x2 5x10 cx3 5x4 cx8 dx6 5x35
+.x2 5x10 cx3 5x4 cx8 dx6 5x29 e 5 cx4
 .x2 bx15 5x21
 --- legend
 1 dim
@@ -62,3 +62,4 @@ a fg=#ff6b80 underline=single
 b fg=#ffc107
 c fg=#999999 dim
 d fg=p3
+e fg=p2

@@ -30,12 +30,12 @@ import {
   type Suggestion,
 } from "../core/docfix";
 import type { Said } from "./types.d.ts";
+import { evidence } from "./evidence";
 import {
   buttonRow,
   cellWidth,
   clamp,
   emptyState,
-  entries,
   kitOf,
   paneOptions,
   paneTitle,
@@ -330,12 +330,8 @@ function row(r: Rows, s: Suggestion): JSX.Element {
         {`  ${age(s.updated, r.now)}  ${isOpen ? FOLD.open : FOLD.closed} evidence ${s.evidence.length}`}
       </Button>
       {isOpen ? (
-        <Box key={`e:${s.id}`} flexDirection="column" paddingLeft={HANG}>
-          {entries(
-            r.kit,
-            Math.max(1, r.width - HANG),
-            [...s.evidence].reverse().map((ev) => ({ date: ev.at.slice(0, 10), text: ev.text })),
-          )}
+        <Box key={`e:${s.id}`} flexDirection="column" paddingTop={1} paddingLeft={HANG}>
+          {evidence(r.kit, Math.max(1, r.width - HANG), s.evidence)}
         </Box>
       ) : null}
     </Box>

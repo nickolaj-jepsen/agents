@@ -1,0 +1,23 @@
+# docfix/claude/evidence 70x24 @0,12 (70x8)
+╭──────────────────────────────────────────────────────────────────✕─╮
+│ ─ Doc suggestions  2 ───────────────────────────────────────────── │
+│ a: apply   d: dismiss   m: mark   e: evidence   q: later           │
+│ docs/agent-hub.md ──────────────────────────────────────────────── │
+│ □ agent-hub's unittest suite needs a short TMPDIR and              │
+│   markdown-it-py on PYTHONPATH; run it with uv, not bare python.   │
+│   + missing  2×  ••  ▾ evidence 2                                  │
+╰────────────────────────────────────────────────────────────────────╯
+--- styles
+1x67 2 1x2
+1 . 2x2 3x15 2x49 . 1
+1 . 4 .x10 4 2x9 .x3 4 2x6 .x3 4 2x10 .x3 4 2x7 .x11 1
+1 . 3x17 . 2x48 . 1
+1 .x68 1
+1 .x68 1
+1 . 2x33 .x34 1
+1x70
+--- legend
+1 dim
+2 fg=#999999
+3 bold
+4 fg=#b1b9f9

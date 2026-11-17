@@ -1,0 +1,70 @@
+# docfix/pi/evidence 112x32 @1,1 (110x30)
+╭─ Doc suggestions  2 ──────────────────────────────────────┬────────────────────────────────────────────────╮
+│                                                           │                                                │
+│ docs/agent-hub.md ─────────────────────────────────────── │ agent-hub's unittest suite needs a short       │
+│ ❯ □ agent-hub's unittest suite needs a     +    2×     •• │ TMPDIR and markdown-it-py on PYTHONPATH; run   │
+│     short TMPDIR and markdown-it-py on                    │ it with uv, not bare python.                   │
+│     PYTHONPATH; run it with uv, not bare                  │                                                │
+│     python.                                               │ + missing   seen 2×   <age>                    │
+│                                                           │                                                │
+│ docs/agents.md ────────────────────────────────────────── │ Evidence ───────────────────────────────────── │
+│   □ pi's permission gate cannot resolve    !    1×    ••• │ <date>      claude ─────────────────────────── │
+│     shell variables, so `cat                              │   Hit it again from a worktree: `python -m     │
+│     $S/id_ed25519_ao` reads what `cat                     │   unittest` failed 20 socket tests with        │
+│     ~/.ssh/id_ed25519_ao` denies.                         │   AF_UNIX path too long.                       │
+│                                                           │                                                │
+│                                                           │ <date>      pi  migrated ───────────────────── │
+│                                                           │   From pkgs/agent-hub: TMPDIR=<tmp>            │
+│                                                           │   PYTHONPATH=. uv run --quiet --with           │
+│                                                           │   markdown-it-py python -m unittest discover   │
+│                                                           │   -s tests -p 'test_*.py'. Without a short     │
+│                                                           │   TMPDIR the socket tests fail with "OSError:  │
+│                                                           │   AF_UNIX path too long" inside a long         │
+│                                                           │   worktree path; without markdown-it-py the    │
+│                                                           │   render/features imports fail. Baseline: 470  │
+│                                                           │   tests, 1 skipped.                            │
+│                                                           │                                                │
+│                                                           │   Why the repo didn't say it                   │
+│                                                           │   Both failures look like code errors, and     │
+│                                                           │ ↓ 13 more                                      │
+│                                                           │                                                │
+╰─ ↑↓ move ── space mark ── a apply ── d dismiss ───────────┴─ pgup/pgdn scroll ── m mark all ── esc later ──╯
+--- styles
+1x3 2x15 .x2 3 . 1x88
+1 .x59 1 .x48 1
+1 . 4x17 . 3x39 . 1 . 5x40 .x7 1
+1 . 6 . 3 . 6x34 .x5 5 .x2 3x4 .x2 3x5 . 1 . 5x44 .x3 1
+1 .x5 6x34 .x20 1 . 5x28 .x19 1
+1 .x5 6x36 .x18 1 .x48 1
+1 .x5 6x7 .x47 1 . 5 . 3x7 .x3 3x7 .x3 3x10 .x15 1
+1 .x59 1 .x48 1
+1 . 4x14 . 3x42 . 1 . 4x8 . 3x37 . 1
+1 .x3 3 . 5x35 .x4 7 .x2 3x4 .x2 3x5 . 1 . 3x46 . 1
+1 .x5 5x24 .x30 1 .x3 5x40 .x5 1
+1 .x5 5x33 .x21 1 .x3 5x37 .x8 1
+1 .x5 5x29 .x25 1 .x3 5x22 .x23 1
+1 .x59 1 .x48 1
+1 .x59 1 . 3x46 . 1
+1 .x59 1 .x3 5x35 .x10 1
+1 .x59 1 .x3 5x34 .x11 1
+1 .x59 1 .x3 5x42 .x3 1
+1 .x59 1 .x3 5x40 .x5 1
+1 .x59 1 .x3 5x43 .x2 1
+1 .x59 1 .x3 5x36 .x9 1
+1 .x59 1 .x3 5x41 .x4 1
+1 .x59 1 .x3 5x43 .x2 1
+1 .x59 1 .x3 5x17 .x28 1
+1 .x59 1 .x48 1
+1 .x59 1 .x3 3x26 .x19 1
+1 .x59 1 .x3 5x40 .x5 1
+1 .x59 1 . 3x9 .x38 1
+1 .x59 1 .x48 1
+1x3 5x2 . 3x4 . 1x2 . 5x5 . 3x4 . 1x2 . 5 . 3x5 . 1x2 . 5 . 3x7 . 1x13 . 5x9 . 3x6 . 1x2 . 5 . 3x8 . 1x2 . 5x3 . 3x5 . 1x3
+--- legend
+1 fg=#343331
+2 fg=#cf6a4c bold
+3 fg=#878580
+4 fg=#dad8ce bold
+5 fg=#dad8ce
+6 fg=#cf6a4c
+7 fg=#d14d41
