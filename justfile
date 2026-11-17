@@ -104,7 +104,7 @@ site-shots *PLUGINS:
 media:
     {{ nixcmd }} develop .#media -c just _media
 
-# Inside the media shell: the kit's pi stories import pi's packages, which _dev-setup-pi links.
+# Inside the media shell: a pi half imports pi's packages, which _dev-setup-pi links.
 [private]
 _media: _dev-setup-pi
     npm run site-shots

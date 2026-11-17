@@ -4,9 +4,9 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, fontProviders } from "astro/config";
 
-// AGENTS_ROOT points the pages at another copy of the repo's content, such as a fixture with media.
-const repoRoot = process.env.AGENTS_ROOT || fileURLToPath(new URL("..", import.meta.url));
-const media = join(repoRoot, "site/media");
+// The recorded pictures, in this folder: the pages read `data/content.json` and this, and nothing
+// outside `site/` (docs/layout.md).
+const media = fileURLToPath(new URL("media/", import.meta.url));
 const base = "/agents";
 const fonts = "./src/assets/fonts";
 const serif = "./node_modules/@fontsource-variable/source-serif-4/files";
@@ -113,7 +113,4 @@ export default defineConfig({
       },
     },
   ],
-  vite: {
-    define: { __REPO_ROOT__: JSON.stringify(repoRoot) },
-  },
 });

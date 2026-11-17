@@ -34,9 +34,8 @@ site build needs the root only to make the model: `cd site && npm run build` rea
   plays `e2e/<plugin>/site.scenarios.ts` into it, and the Pages workflow does the same before it
   builds. Without it the pages build with no pictures. It is served at
   `/agents/media/` (the `media.json` files stay out); `astro.config.mjs` copies it into the build and
-  serves it in dev.
-- `AGENTS_ROOT=<dir> just site` reads the content from another copy of the repo, such as a fixture with
-  media in it.
+  serves it in dev. Nothing here names a folder above `site/`: the recorded pictures are `media/`,
+  and the model is `data/content.json`.
 - `/dev/` is the docs, with the repo's own guides beside them. The UI kit is not rendered here: its
   components and what each harness has of them are `kit/catalog/COMPONENTS.md`, and `/kit <component>`
   in a session draws one (see `kit/README.md`).
