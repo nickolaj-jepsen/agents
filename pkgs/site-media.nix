@@ -8,26 +8,12 @@
 {
   lib,
   buildNpmPackage,
+  callPackage,
   importNpmLock,
-  nodejs,
-  claude-code,
-  pi-coding-agent,
   tui-test,
-  ffmpeg-headless,
-  oxipng,
-  git,
-  which,
-  makeFontsConf,
-  fontconfig, # fc-list: e2e/lib/fonts.ts links the families it names
-  hunspellWithDicts,
-  hunspellDicts,
-  typescript-language-server,
-  nerd-fonts,
-  dejavu_fonts,
-  noto-fonts-cjk-sans,
-  unifont,
 }: let
   root = ../.; # this file sits one level under it
+  media = callPackage ./media-environment.nix {inherit tui-test;};
 
   # What a recording reads: the mods it loads, the kit they draw with, and the harness that plays
   # them. Not `site/`, `docs/` or the skills: none reaches a screenshot.
@@ -42,42 +28,18 @@
     ];
   };
 
-  piMonorepo = "${pi-coding-agent}/lib/node_modules/pi-monorepo";
-
   common = {
     inherit src;
     npmDeps = importNpmLock {npmRoot = src;};
     inherit (importNpmLock) npmConfigHook;
     dontNpmBuild = true;
     doCheck = false;
-    nativeBuildInputs = [
-      nodejs
-      git
-      which
-      ffmpeg-headless
-      oxipng
-      tui-test
-      claude-code
-      pi-coding-agent
-      (hunspellWithDicts [hunspellDicts.en_US]) # spellfix
-      typescript-language-server # lsp
-      fontconfig
-    ];
+    nativeBuildInputs = media.packages;
     # The shell `just media` gives a person, as the build sees it.
-    PI_MONOREPO = piMonorepo;
-    FONTCONFIG_FILE = makeFontsConf {
-      fontDirectories = [nerd-fonts.hack dejavu_fonts noto-fonts-cjk-sans unifont];
-    };
-    # A pi half imports the pi that runs, never an npm copy that would drift from it: the same
-    # links `just dev-setup` makes for an editor, after npm's install would have pruned them.
+    inherit (media) PI_MONOREPO FONTCONFIG_FILE;
+    # npm's install prunes the pi links, so make them afterwards.
     preBuild = ''
-      mkdir -p node_modules/@earendil-works node_modules/@types
-      ln -s ${piMonorepo} node_modules/@earendil-works/pi-coding-agent
-      for dep in ${piMonorepo}/node_modules/@earendil-works/*; do
-        ln -s "$dep" node_modules/@earendil-works/
-      done
-      ln -s ${piMonorepo}/node_modules/typebox node_modules/
-      ln -s ${piMonorepo}/node_modules/@types/node node_modules/@types/
+      pi-dev-links
     '';
   };
 in {

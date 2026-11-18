@@ -1,7 +1,11 @@
 # Development
 
-`nix develop` (or direnv) gives node, just and the formatters; `just` lists the recipes. `just test` is
-the quick loop; `just check` is the whole thing in a sandbox, and slow.
+`nix develop` (or direnv) gives node, just, both agents, the test runners and the formatters; `just`
+lists the recipes. `just test` is the quick loop; `just check` is the whole thing in a sandbox, and slow.
+
+`just handoff-test` lints and tests the handoff watchdog. `nix run .#handoff-test` runs the same Nix
+wrapper directly from a checkout, and the `handoff-runtime` flake check uses it too, so the tools,
+lint rules and test discovery have one definition.
 
 ## As a flake input
 

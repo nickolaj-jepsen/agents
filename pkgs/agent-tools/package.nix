@@ -4,9 +4,11 @@
 {
   lib,
   buildNpmPackage,
+  callPackage,
   importNpmLock,
   pi-coding-agent,
 }: let
+  pi-dev-links = callPackage ../pi-dev-links.nix {inherit pi-coding-agent;};
   # Only what the check reads, so a skill, demo or README edit doesn't rebuild the mods.
   src = lib.fileset.toSource {
     root = ../..;
@@ -34,18 +36,10 @@ in
     inherit (importNpmLock) npmConfigHook;
     dontNpmBuild = true;
     doCheck = true;
-    # A pi half imports the pi that runs, never an npm copy that would drift from it: the
-    # links `just dev-setup` makes for an editor, made after npm's install would have pruned them.
+    nativeBuildInputs = [pi-dev-links];
+    # npm's install prunes these links, so make them afterwards.
     preCheck = ''
-      mkdir -p node_modules/@earendil-works
-      ln -s ${pi-coding-agent}/lib/node_modules/pi-monorepo node_modules/@earendil-works/pi-coding-agent
-      for dep in ${pi-coding-agent}/lib/node_modules/pi-monorepo/node_modules/@earendil-works/*; do
-        ln -s "$dep" node_modules/@earendil-works/
-      done
-      # typebox as pi aliases it, and Node's types.
-      mkdir -p node_modules/@types
-      ln -s ${pi-coding-agent}/lib/node_modules/pi-monorepo/node_modules/typebox node_modules/
-      ln -s ${pi-coding-agent}/lib/node_modules/pi-monorepo/node_modules/@types/node node_modules/@types/
+      pi-dev-links
     '';
     checkPhase = ''
       runHook preCheck

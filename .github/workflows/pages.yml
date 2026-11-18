@@ -13,7 +13,11 @@ on:
       - "e2e/**"
       - "scripts/**"
       - "flake.lock"
+      - "flake.nix"
+      - "packages.nix"
       - "devshell.nix"
+      - "pkgs/**"
+      - "justfile"
       - "package-lock.json"
       - "README.md"
       - ".github/workflows/pages.yml"
@@ -45,21 +49,12 @@ jobs:
           path: |
             site/media
             site/data/kit.json
-          key: media-${{ hashFiles('e2e/**', 'plugins/**', 'kit/**', 'flake.lock', 'devshell.nix', 'package-lock.json') }}
+          key: media-${{ hashFiles('e2e/**', 'plugins/**', 'kit/**', 'flake.lock', 'flake.nix', 'packages.nix', 'devshell.nix', 'pkgs/**', 'justfile', 'package-lock.json') }}
       - if: steps.media.outputs.cache-hit != 'true'
         uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
       - if: steps.media.outputs.cache-hit != 'true'
         name: Record the media
-        run: |
-          out=$(nix build --no-link --print-out-paths .#site-media)
-          kit=$(nix build --no-link --print-out-paths .#site-kit)
-          chmod -R u+w site/media site/data 2>/dev/null || true
-          rm -rf site/media
-          mkdir -p site/media site/data
-          cp -r "$out"/. site/media/
-          cp -r "$kit"/kit site/media/kit
-          cp "$kit"/kit.json site/data/kit.json
-          chmod -R u+w site/media site/data
+        run: nix develop .#media -c just media
         env:
           NIX_CONFIG: access-tokens = github.com=${{ github.token }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0

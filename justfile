@@ -20,18 +20,12 @@ _dev-setup-direnv:
     if command -v direnv >/dev/null 2>&1; then direnv allow .; fi
 
 # Links nixpkgs' pi into node_modules, so `typecheck` reads the pi halves against it as the
-# nix build does; `npm ci` prunes the links, so re-run this.
+# nix build does. `npm ci` prunes the links, so re-run this.
 [private]
 [script]
 _dev-setup-pi:
     [ -d node_modules ] || npm ci
-    # The media shell names its own pi; elsewhere, build this flake's.
-    pi=${PI_MONOREPO:-$({{ nixcmd }} build --no-link --print-out-paths --inputs-from . nixpkgs#pi-coding-agent)/lib/node_modules/pi-monorepo}
-    mkdir -p node_modules/@earendil-works node_modules/@types
-    ln -sfn "$pi" node_modules/@earendil-works/pi-coding-agent
-    for dep in "$pi"/node_modules/@earendil-works/*; do ln -sfn "$dep" node_modules/@earendil-works/; done
-    ln -sfn "$pi/node_modules/typebox" node_modules/typebox
-    ln -sfn "$pi/node_modules/@types/node" node_modules/@types/node
+    pi-dev-links
 
 # Needs `claude` on PATH: only an interactive session lays the types.
 [private]
@@ -43,10 +37,10 @@ _dev-setup-claude:
 test:
     npm test
 
-[doc('Test the handoff watchdog and finite command leases without a harness')]
+[doc('Lint and test the handoff watchdog and finite command leases without a harness')]
 [group('dev')]
 handoff-test:
-    PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s skills/run-handoff/scripts -p 'test_*.py'
+    handoff-test
 
 [doc('Type-check the plugins, the kit and the e2e harness (tsc -b)')]
 [group('dev')]
