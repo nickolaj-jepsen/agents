@@ -40,6 +40,8 @@ export type VscodeStart = {
   hide?: string[];
   /** MCP servers the session starts with, as a terminal scenario's `start.mcp`. */
   mcp?: Record<string, { command: string; args?: string[]; env?: Record<string, string> }>;
+  /** Merged over the config folder's settings.json, e.g. `pluginConfigs` for a mod's options. */
+  settings?: Record<string, unknown>;
 };
 
 /** What `launchVscode` leaves in the run folder for the next process to find. */
@@ -127,6 +129,7 @@ export async function launchVscode(
         model: "sonnet",
         skipAutoPermissionPrompt: true,
         ...(start.mcp && { enableAllProjectMcpServers: true }),
+        ...start.settings,
       },
     },
   );

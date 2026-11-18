@@ -84,6 +84,7 @@ export function resolveVscode(set: VscodeSet, name: string, seen: string[] = [])
           ? [...(base?.start.hide ?? []), ...(s.start?.hide ?? [])]
           : undefined,
       mcp: s.start?.mcp ?? base?.start.mcp,
+      settings: { ...base?.start.settings, ...s.start?.settings },
     },
     size: s.size ?? base?.size,
     steps: [...(base?.steps ?? []), ...(s.steps ?? [])],
