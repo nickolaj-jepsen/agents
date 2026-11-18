@@ -36,6 +36,7 @@ export const USAGE = `usage: node e2e/cli.ts vscode <verb>
   keys <Key...>                            Enter, Escape, Tab, Down, Ctrl+c, a ...
   wait <regex> [seconds]                   until the panel shows it
   resize <width> <height>                  the window's size (a viewport override)
+  eval <js>                                an expression in the Claude webview's document (for the DOM)
   shot [file] [--window]                   PNG of the Claude panel (the whole window with --window)
   sweep                                    panel PNGs at a narrow and a wide width; prints the paths
   stop                                     end VS Code and the stub, remove the run folder`;
@@ -180,6 +181,14 @@ export async function main(argv: string[]) {
       const { session } = await need();
       await session.resize(w, h);
       console.log(await session.text());
+      session.close();
+      return;
+    }
+    case "eval": {
+      if (args.length === 0) return die("eval <js>");
+      const { session } = await need();
+      await session.settle(800, 6000);
+      console.log(JSON.stringify(await session.evalInView(args.join(" ")), null, 2));
       session.close();
       return;
     }

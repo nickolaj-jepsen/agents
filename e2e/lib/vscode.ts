@@ -370,6 +370,11 @@ export class VscodeSession {
 
   private doc = "document.getElementById('active-frame').contentDocument";
 
+  /** `js` evaluated in the Claude webview's document, whose `document` is the page of `#active-frame`. */
+  async evalInView<T = unknown>(js: string): Promise<T> {
+    return this.view.eval<T>(`(function(document){ return (${js}); })(${this.doc})`);
+  }
+
   /** The visible text of the Claude webview. */
   async text(): Promise<string> {
     try {
@@ -535,6 +540,9 @@ export class VscodeSession {
 
   /** A PNG of the window, or with `panel` of the Claude panel alone. */
   async shot(file: string, o: Shot = {}): Promise<string> {
+    // Attaching re-applies the viewport, which redraws the panel; a shot taken at once catches
+    // it blank.
+    await this.settle(1000, 8000);
     const clip = o.panel ? await this.panelRect() : null;
     const r = await this.page.send<{ data: string }>("Page.captureScreenshot", {
       format: "png",
