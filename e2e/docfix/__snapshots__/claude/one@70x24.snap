@@ -1,20 +1,20 @@
 # docfix/claude/one 70x24 @0,12 (70x8)
 ╭──────────────────────────────────────────────────────────────────✕─╮
 │ ─ Doc suggestions  1 ───────────────────────────────────────────── │
-│ a: apply   d: dismiss   m: mark   e: evidence   q: later           │
-│ AGENTS.md ──────────────────────────────────────────────────────── │
-│ □ `just build` is not enough to verify a pi change; the docs say   │
+│ Closing carries out apply and dismiss                  e: open all │
+│ AGENTS.md ─────────────────────── apply all  dismiss all  skip all │
+│   `just build` is not enough to verify a pi change; the docs say   │
 │   it is.                                                           │
-│   ! wrong  3×  ••  ▾ evidence                                      │
+│   ! wrong  3×  ••  ▸ evidence        a: apply  d: dismiss  s: skip │
 ╰────────────────────────────────────────────────────────────────────╯
 --- styles
 1x67 2 1x2
 1 . 2x2 3x15 2x49 . 1
-1 . 4 .x10 4 2x9 .x3 4 2x6 .x3 4 2x10 .x3 4 2x7 .x11 1
-1 . 3x9 . 2x56 . 1
+1 . 2x37 .x18 4 2x10 . 1
+1 . 3x9 . 2x23 . 2x9 .x2 2x11 .x11 1
 1 .x3 3x62 .x3 1
-1 . 3x8 .x59 1
-1 . 2x2 5x7 2x2 6x2 2x16 .x38 1
+1 .x3 3x6 .x59 1
+1 .x3 5x7 2x2 6x2 2x16 .x8 4 2x7 .x2 4 2x9 .x2 4 .x7 1
 1x70
 --- legend
 1 dim

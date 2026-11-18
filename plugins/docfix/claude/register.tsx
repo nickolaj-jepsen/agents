@@ -3,15 +3,17 @@
  * reminder. What a call does to the queue is the core's (`../core/docfix.ts`), the one pi's half
  * runs.
  *
- * The pane shows every suggestion whole: its claim never cut, its evidence one press away (open
- * by default while the queue is short and the pane is not thin). An apply drafts the prompt in
- * the person's prompt box instead of sending it.
+ * In the pane each suggestion is set to apply, dismiss or neither (skip), and closing the pane
+ * carries that out: the dismissed ones are kept as dismissed, and the applied ones are drafted as
+ * one prompt in the person's prompt box, never sent. A row starts folded, its claim cut at a few
+ * lines; opening it shows the claim whole and its evidence.
  */
 import { atom, read, update } from "claude-code";
-import type { EngineInterface, Register, RenderNode, ToolCallResult } from "claude-code";
+import type { EngineInterface, Register, ToolCallResult } from "claude-code";
 import {
   applyPrompt,
   byTarget,
+  choiceSummary,
   dismiss,
   docTargets,
   fileName,
@@ -22,21 +24,21 @@ import {
   plan,
   readReminder,
   readsInCommand,
-  reopen,
   repeats,
   seen,
   serialize,
   statusText,
   STORE_DIR,
+  toggleChoice,
   TOOL_DESCRIPTION,
   TOOL_NAME,
+  type Choice,
   type Input,
   type Suggestion,
 } from "../core/docfix";
 import type { Said } from "./types.d.ts";
 import { evidence } from "./evidence";
 import {
-  buttonRow,
   cellWidth,
   clamp,
   emptyState,
@@ -48,7 +50,6 @@ import {
   tokens,
   widthCap,
   type Kit,
-  type KeyChip,
 } from "./ui";
 
 const PANE = "docfix";
@@ -57,25 +58,21 @@ const PANE = "docfix";
 const queue = atom({ plugin: "docfix", key: "queue" } as const, [] as Suggestion[], {
   shape: "queue-1",
 });
-const marked = atom({ plugin: "docfix", key: "marked" } as const, [] as string[]);
+const choices = atom({ plugin: "docfix", key: "choices" } as const, {} as Record<string, Choice>, {
+  shape: "choices-1",
+});
 const focused = atom({ plugin: "docfix", key: "focused" } as const, null as string | null);
-// Null until the person opens or folds a row: then the pane's own default holds, which depends on
-// its width. Change the tag when the shape does.
-const expanded = atom({ plugin: "docfix", key: "expanded" } as const, null as string[] | null, {
-  shape: "expanded-2",
+const expanded = atom({ plugin: "docfix", key: "expanded" } as const, [] as string[], {
+  shape: "expanded-3",
 });
 const said = atom(
   { plugin: "docfix", key: "notice" } as const,
   { text: "", status: "warning" } as Said,
-  { shape: "notice-3" },
+  { shape: "notice-4" },
 );
 
-const say = (
-  $: EngineInterface,
-  text: string,
-  status: Said["status"] = "warning",
-  undo?: string[],
-) => update($, said, () => (undo?.length ? { text, status, undo } : { text, status }));
+const say = ($: EngineInterface, text: string, status: Said["status"] = "warning") =>
+  update($, said, () => ({ text, status }));
 
 type Place = { root: string; dir: string };
 
@@ -159,160 +156,141 @@ async function refresh($: EngineInterface, where?: Place | string) {
   return open;
 }
 
-/** A queue this short opens with every suggestion's evidence showing. */
-const OPEN_BELOW = 6;
-
 /** A pane with fewer body rows than this drops the blank rows between its blocks. */
 const TIGHT_ROWS = 16;
-/** Below this many cells the keys say less, so they stay on one row. */
-const NARROW = 76;
-/**
- * Below this the keys no longer fit one row, and a piece of evidence is tens of rows: the keys
- * take two rows and the evidence starts folded.
- */
-const THIN = 56;
+/** Below this many cells a doc header's keys drop their `all`. */
+const NARROW = 60;
+/** Lines of a folded row's claim; an open row shows it whole. */
+const FOLDED_LINES = 3;
+/** Cells a doc's rows are set in from its header, and a row's evidence from its claim. */
+const INDENT = 2;
 
 /** The width a pane is asked to open at, docked or inline; the surface caps it. */
 const WANTED_COLUMNS = 80;
 
 /**
- * Rows the pane would take with its evidence showing as given, a guess at `WANTED_COLUMNS`:
- * what it asks an inline pane to open at, so a short queue is not a box of a few rows to scroll.
+ * Rows the pane takes with every row folded, a guess at `WANTED_COLUMNS`: what it asks an inline
+ * pane to open at, so a short queue is not a box of a few rows to scroll.
  */
-function wantedRows(list: readonly Suggestion[], open: ReadonlySet<string>) {
-  const text = WANTED_COLUMNS - HANG;
+function wantedRows(list: readonly Suggestion[]) {
+  const text = WANTED_COLUMNS - INDENT;
   const body = byTarget(list).reduce(
     (n, [, rows]) =>
-      n +
-      1 +
-      rows.reduce(
-        (m, s) =>
-          m +
-          rowsOf(s.claim, text) +
-          1 +
-          (open.has(s.id)
-            ? s.evidence.reduce(
-                (k, ev) => k + rowsOf(ev.text, text - tokens.dateWidth - tokens.gutter) + 1,
-                0,
-              )
-            : 0) +
-          1,
-        0,
-      ),
+      n + 3 + rows.reduce((m, s) => m + Math.min(FOLDED_LINES, rowsOf(s.claim, text)) + 2, 0),
     0,
   );
-  // The title, the keys, a notice, and the blank rows between them.
-  return 7 + body;
+  // The title, the line under it, and the blank rows between them.
+  return 4 + body;
 }
 
 async function openPane($: EngineInterface) {
   await say($, "");
   const list = await refresh($);
-  const open = new Set(list.length <= OPEN_BELOW ? list.map((s) => s.id) : []);
-  await update($, marked, () => []);
-  await update($, expanded, () => null);
+  await update($, choices, () => ({}));
+  await update($, expanded, () => []);
   const opened = await $.ui.open(
     paneOptions({
       id: PANE,
       title: "Doc suggestions",
       focus: true,
       closeOnEscape: true,
-      rows: wantedRows(list, open),
+      rows: wantedRows(list),
       columns: WANTED_COLUMNS,
     }),
   );
   if (!opened.isPlaced) $.ui.toast(`The doc suggestions pane can't show yet: ${opened.reason}`);
 }
 
-// ---- what a key acts on
+/**
+ * Carries out what the rows are set to, as the pane closes: dismisses the dismissed ones and
+ * drafts one prompt for the applied ones in the person's prompt box, after what they typed.
+ * False when the draft could not be placed: the pane then stays open, its apply rows still set.
+ */
+async function settle($: EngineInterface): Promise<boolean> {
+  const list = await read($, queue);
+  const set = await read($, choices);
+  const applied = list.filter((s) => set[s.id] === "apply");
+  const dismissed = list.filter((s) => set[s.id] === "dismiss");
+  if (dismissed.length > 0) {
+    const where = await place($);
+    if (typeof where === "string") {
+      await say($, where, "error");
+      return false;
+    }
+    const now = new Date(await $.clock.now()).toISOString();
+    for (const s of dismissed) await save($, where.dir, dismiss(s, now));
+    await update($, choices, (cur) =>
+      toggleChoice(
+        cur,
+        dismissed.map((s) => s.id),
+        undefined,
+      ),
+    );
+    await refresh($, where);
+  }
+  if (applied.length > 0) {
+    const text = applyPrompt(applied);
+    const draft = await $.prompt.read();
+    const filled = await $.prompt.fill(
+      draft.text.trim() ? { text: `\n\n${text}`, mode: "append" } : { text },
+    );
+    if (!filled.isFilled) {
+      await say(
+        $,
+        `${dismissed.length > 0 ? `Dismissed ${dismissed.length}. ` : ""}The prompt box can't take the apply draft right now: close again to retry, or set those rows back to skip.`,
+        "error",
+      );
+      return false;
+    }
+  }
+  await update($, choices, () => ({}));
+  const done = [
+    dismissed.length > 0 ? `Dismissed ${dismissed.length}.` : "",
+    applied.length > 0 ? "The apply prompt is in the prompt box: read it, then Enter to send." : "",
+  ].filter(Boolean);
+  if (done.length > 0) $.ui.toast(done.join(" "));
+  return true;
+}
 
-/** The element keys the pane draws: one per row's title, its evidence line and its doc header. */
+// ---- what the focus ring stops on
+
+/**
+ * The element keys the pane draws. The ring stops only on a row's claim and a doc's header;
+ * the rest (a row's evidence line, its apply and dismiss, the header's keys) are for the mouse,
+ * and the keyboard reaches them by their hotkeys.
+ */
 const rowKey = (id: string) => `row:${id}`;
-const evidenceKey = (id: string) => `ev:${id}`;
 const groupKey = (target: string) => `grp:${target}`;
+const evidenceKey = (id: string) => `ev:${id}`;
+const chipKey = (choice: Choice | "skip", owner: string) => `${choice}:${owner}`;
+const ALL_EVIDENCE = "evidence";
 
-/** The suggestions the ring is on: the row, its evidence line, or a whole doc under its header. */
-function underFocus(list: readonly Suggestion[], focus: string | null): Suggestion[] {
-  if (!focus) return [];
-  if (focus.startsWith("grp:")) return list.filter((s) => s.target === focus.slice(4));
-  const id = focus.replace(/^(?:row|ev):/, "");
-  return list.filter((s) => s.id === id);
-}
+/** The stops in the order the pane draws them. */
+const stopsOf = (list: readonly Suggestion[]) =>
+  byTarget(list).flatMap(([target, rows]) => [groupKey(target), ...rows.map((s) => rowKey(s.id))]);
 
-/** What apply and dismiss act on: the marked suggestions, else the one or doc under the ring. */
-function choose(list: readonly Suggestion[], ids: ReadonlySet<string>, focus: string | null) {
-  const chosen = list.filter((s) => ids.has(s.id));
-  return chosen.length > 0 ? chosen : underFocus(list, focus);
-}
-
-async function picked($: EngineInterface): Promise<Suggestion[]> {
-  return choose(await read($, queue), new Set(await read($, marked)), await read($, focused));
+/** The stop an element belongs to: a chip to its row or header, an evidence line to its row. */
+function ownerOf(element: string): string | undefined {
+  const [kind, ...rest] = element.split(":");
+  const id = rest.join(":");
+  if (kind === "row" || kind === "grp") return element;
+  if (kind === "ev") return rowKey(id);
+  if (kind === "apply" || kind === "dismiss" || kind === "skip") return id;
+  return undefined;
 }
 
 /**
- * Moves the ring onto a row. The plugin's own focus call does not come back through its
- * `ui.focus` hook, so what the hook tracks is set here too.
+ * Where a move of the ring onto `element` should land instead, or undefined to let it be: past
+ * a row's or header's extras, on to the next stop going down and back to their owner going up.
  */
-async function focusRow($: EngineInterface, id: string) {
-  const moved = await $.ui.focus({ requestId: PANE, key: rowKey(id) }).catch(() => undefined);
-  if (moved && !("deny" in moved)) await update($, focused, () => rowKey(id));
-}
-
-const NOTHING = "Mark a suggestion, or move onto one, first";
-
-/** Drafts the apply prompt in the person's prompt box, after what they already typed. */
-async function applyPicked($: EngineInterface) {
-  const chosen = await picked($);
-  if (chosen.length === 0) return say($, NOTHING);
-  const text = applyPrompt(chosen);
-  const draft = await $.prompt.read();
-  const filled = await $.prompt.fill(
-    draft.text.trim() ? { text: `\n\n${text}`, mode: "append" } : { text },
-  );
-  if (!filled.isFilled)
-    return say(
-      $,
-      "The prompt box can't take the draft right now; try again from the prompt",
-      "error",
-    );
-  await update($, marked, () => []);
-  await $.ui.close({ id: PANE });
-  $.ui.toast("The apply prompt is in the prompt box: read it, then Enter to send");
-}
-
-async function dismissPicked($: EngineInterface) {
-  const chosen = await picked($);
-  if (chosen.length === 0) return say($, NOTHING);
-  const where = await place($);
-  if (typeof where === "string") return say($, where, "error");
-  const before = await read($, queue);
-  const at = Math.min(...chosen.map((s) => before.findIndex((q) => q.id === s.id)));
-  const now = new Date(await $.clock.now()).toISOString();
-  for (const s of chosen) await save($, where.dir, dismiss(s, now));
-  await update($, marked, (ids) => ids.filter((id) => !chosen.some((s) => s.id === id)));
-  const after = await refresh($, where);
-  await say(
-    $,
-    `Dismissed ${chosen.length}: it is not filed again`,
-    "success",
-    chosen.map((s) => s.id),
-  );
-  // Keep the keyboard going: the ring moves to the row that took the dismissed one's place.
-  const next = after[Math.min(Math.max(0, at), after.length - 1)];
-  if (next) await focusRow($, next.id);
-}
-
-async function undoDismiss($: EngineInterface) {
-  const { undo = [] } = await read($, said);
-  const where = await place($);
-  if (typeof where === "string") return say($, where, "error");
-  const now = new Date(await $.clock.now()).toISOString();
-  const back = (await loadAll($, where.dir)).filter((s) => undo.includes(s.id));
-  for (const s of back) await save($, where.dir, reopen(s, now));
-  await refresh($, where);
-  await say($, `Restored ${back.length}`, "success");
-  const first = back[0];
-  if (first) await focusRow($, first.id);
+function landing(stops: readonly string[], from: string | null, element: string) {
+  const owner = ownerOf(element);
+  if (owner === element) return undefined;
+  if (owner === undefined) return element === ALL_EVIDENCE ? stops[0] : undefined;
+  const at = stops.indexOf(owner);
+  if (at < 0) return undefined;
+  const was = from === null ? -1 : stops.indexOf(ownerOf(from) ?? "");
+  return was <= at && was >= 0 ? (stops[at + 1] ?? owner) : owner;
 }
 
 // ---- the pane
@@ -329,93 +307,155 @@ const age = (iso: string, now: number) => {
 
 /** The fold marks of an evidence line, one cell each. */
 const FOLD = { closed: "▸", open: "▾" } as const;
-/** Cells a row's text hangs in: its mark and the space after it. */
-const HANG = 2;
 
 type Rows = {
   kit: Kit;
+  /** The room a row's text has, inside its doc's indent. */
   width: number;
   now: number;
-  marks: ReadonlySet<string>;
+  set: Readonly<Record<string, Choice>>;
   open: ReadonlySet<string>;
-  /** The id of the row that takes the ring when the pane gets the keyboard. */
+  /** The stop whose keys carry the hotkeys: the ring's, or the first row before it lands. */
+  keyed: string | undefined;
+  /** The row that takes the ring when the pane gets the keyboard. */
   first: string | undefined;
-  toggleMark(id: string): unknown;
-  toggleOpen(id: string): unknown;
+  choose(ids: string[], choice: Choice | undefined): unknown;
+  /** As `choose`, for the row or doc the ring is on as the press lands. */
+  chooseFocused(choice: Choice | undefined): unknown;
+  toggleOpen(ids: string[]): unknown;
 };
 
-/** One suggestion: its claim whole beside its mark, its meta line, and its evidence when open. */
+/** The rows a stop stands for: a row itself, or every row of a doc. */
+function idsOf(list: readonly Suggestion[], stop: string): string[] {
+  if (stop.startsWith("grp:")) {
+    const target = stop.slice("grp:".length);
+    return list.filter((s) => s.target === target).map((s) => s.id);
+  }
+  const id = stop.slice("row:".length);
+  return list.some((s) => s.id === id) ? [id] : [];
+}
+
+/** What a row is set to, or a doc when all its rows agree: `skip` when none is set. */
+type State = Choice | "skip" | "mixed";
+
+const CHOICES = ["apply", "dismiss", "skip"] as const;
+const HOTKEY = { apply: "a", dismiss: "d", skip: "s" } as const;
+
+/** Cells the keys of `chips` take, a plain hotkey drawn as `a: ` before its label. */
+const chipsWidth = (isKeyed: boolean, suffix: string) =>
+  CHOICES.reduce(
+    (n, c, i) => n + (i ? tokens.gutter : 0) + (isKeyed ? 3 : 0) + cellWidth(c + suffix),
+    0,
+  );
+
+/**
+ * The apply, dismiss and skip keys of a row or a doc, the one it is set to lit. Every row and
+ * header draws all three whatever the ring is on: the engine keeps the ring at its place among
+ * the Buttons across a redraw, so a Button that came and went with the ring would move it. Only
+ * the hotkeys follow the ring.
+ */
+function chips(r: Rows, owner: string, ids: string[], state: State, suffix = ""): JSX.Element {
+  const { Box, Button } = r.kit;
+  const isKeyed = r.keyed === owner;
+  return (
+    <Box key={`chips:${owner}`} columnGap={tokens.gutter}>
+      {CHOICES.map((choice) => (
+        <Button
+          key={chipKey(choice, owner)}
+          plain
+          hotkey={isKeyed ? HOTKEY[choice] : undefined}
+          dimColor={state !== choice}
+          label={`${choice}${suffix}`}
+          onPress={() =>
+            // A key pressed just after the ring moved can reach these before the redraw that
+            // moves the hotkeys: it acts on where the ring is now.
+            isKeyed
+              ? r.chooseFocused(choice === "skip" ? undefined : choice)
+              : r.choose(ids, choice === "skip" ? undefined : choice)
+          }
+        />
+      ))}
+    </Box>
+  );
+}
+
+/**
+ * One suggestion: its claim (cut while folded), a meta line that opens its evidence with its
+ * keys at the right, and its evidence when open. What it is set to colours the claim: apply in
+ * success, dismiss struck through.
+ */
 function row(r: Rows, s: Suggestion): JSX.Element {
   const { Box, Button, Text } = r.kit;
-  const isMarked = r.marks.has(s.id);
+  const state = r.set[s.id];
   const isOpen = r.open.has(s.id);
-  const lines = clamp(s.claim, Math.max(1, r.width - HANG));
+  const lines = clamp(s.claim, r.width, isOpen ? {} : { max: FOLDED_LINES });
   const count = seen(s);
-  const title: RenderNode[] = [];
-  title.push(
-    isMarked ? (
-      <Text key="mark" {...roleProps("accent")}>{`${tokens.glyph.multi.on} `}</Text>
-    ) : (
-      `${tokens.glyph.multi.off} `
-    ),
-  );
-  // The claim is the headline of its row, so it is the one thing in semibold.
-  title.push(
-    <Text key="claim" weight="semibold">
-      {lines.map((line, i) => (i === 0 ? line : `\n${" ".repeat(HANG)}${line}`)).join("")}
-    </Text>,
-  );
   return (
     <Box key={`s:${s.id}`} flexDirection="column">
       <Button
         key={rowKey(s.id)}
         plain
         autoFocus={s.id === r.first ? true : undefined}
-        onPress={() => r.toggleMark(s.id)}
+        onPress={() => r.toggleOpen([s.id])}
       >
-        {title}
-      </Button>
-      <Button key={evidenceKey(s.id)} plain dimColor onPress={() => r.toggleOpen(s.id)}>
-        {" ".repeat(HANG)}
-        <Text {...roleProps(s.kind === "wrong" ? "error" : "dim")}>
-          {`${tokens.glyph.kind[s.kind]} ${s.kind}`}
+        <Text
+          weight={state === "dismiss" ? undefined : "semibold"}
+          strikethrough={state === "dismiss" || undefined}
+          {...(state === "dismiss"
+            ? roleProps("dim")
+            : state === "apply"
+              ? roleProps("success")
+              : {})}
+        >
+          {lines.join("\n")}
         </Text>
-        {count > 1 ? "  " : ""}
-        <Text {...roleProps(count >= 3 ? "warning" : "dim")}>{repeats(s)}</Text>
-        {`  ${age(s.updated, r.now)}  ${isOpen ? FOLD.open : FOLD.closed} evidence${s.evidence.length > 1 ? ` ${s.evidence.length}` : ""}`}
       </Button>
+      <Box flexWrap="wrap" columnGap={tokens.gutter} justifyContent="space-between">
+        <Button key={evidenceKey(s.id)} plain dimColor onPress={() => r.toggleOpen([s.id])}>
+          <Text {...roleProps(s.kind === "wrong" ? "error" : "dim")}>
+            {`${tokens.glyph.kind[s.kind]} ${s.kind}`}
+          </Text>
+          {count > 1 ? "  " : ""}
+          <Text {...roleProps(count >= 3 ? "warning" : "dim")}>{repeats(s)}</Text>
+          {`  ${age(s.updated, r.now)}  ${isOpen ? FOLD.open : FOLD.closed} evidence${s.evidence.length > 1 ? ` ${s.evidence.length}` : ""}`}
+        </Button>
+        {chips(r, rowKey(s.id), [s.id], state ?? "skip")}
+      </Box>
       {isOpen ? (
-        <Box key={`e:${s.id}`} flexDirection="column" paddingTop={1} paddingLeft={HANG}>
-          {evidence(r.kit, Math.max(1, r.width - HANG), s.evidence)}
+        <Box key={`e:${s.id}`} flexDirection="column" paddingTop={1} paddingLeft={INDENT}>
+          {evidence(r.kit, Math.max(1, r.width - INDENT), s.evidence)}
         </Box>
       ) : null}
     </Box>
   );
 }
 
-/** A doc's header: its path whole, a dim rule after it, and how many of its rows are marked. */
-function header(r: Rows, target: string, rows: Suggestion[], toggle: () => unknown): JSX.Element {
+/**
+ * A doc's header: its path, which opens or folds its rows, a dim rule, and keys that set every
+ * row of the doc, lit when its rows agree.
+ */
+function header(r: Rows, target: string, rows: Suggestion[], width: number): JSX.Element {
   const { Box, Button, Text } = r.kit;
-  const on = rows.filter((s) => r.marks.has(s.id)).length;
-  const tail = on > 0 ? ` ${on}/${rows.length} marked` : "";
-  const lines = clamp(target, r.width);
+  const owner = groupKey(target);
+  const ids = rows.map((s) => s.id);
+  const states = new Set(ids.map((id) => r.set[id] ?? "skip"));
+  const state: State = states.size === 1 ? ([...states][0] ?? "skip") : "mixed";
+  const lines = clamp(target, width);
   const last = lines.at(-1) ?? "";
-  const room = r.width - cellWidth(last) - cellWidth(tail) - 1;
-  const button = (
-    <Button key={groupKey(target)} plain onPress={toggle}>
-      <Text weight="semibold">{lines.join("\n")}</Text>
-    </Button>
-  );
+  const suffix = width < NARROW ? "" : " all";
+  const room = width - cellWidth(last) - chipsWidth(r.keyed === owner, suffix) - 2;
   return (
-    <Box key={`g:${target}`} flexDirection="row" columnGap={1}>
-      {button}
-      <Text dimColor>{room > 0 ? tokens.glyph.rule.repeat(room) : ""}</Text>
-      {tail ? <Text {...roleProps("accent")}>{tail.trim()}</Text> : null}
+    <Box key={`g:${target}`} flexWrap="wrap" columnGap={1}>
+      <Button key={owner} plain onPress={() => r.toggleOpen(ids)}>
+        <Text weight="semibold">{lines.join("\n")}</Text>
+      </Button>
+      {room > 0 ? <Text dimColor>{tokens.glyph.rule.repeat(room)}</Text> : null}
+      {chips(r, owner, ids, state, suffix)}
     </Box>
   );
 }
 
-/** The line under the keys, wrapped whole. */
+/** The line under the title, wrapped whole. */
 function said_(k: Kit, width: number, text: string, status: Said["status"]): JSX.Element {
   const { Text } = k;
   return <Text {...roleProps(status)}>{clamp(text, width).join("\n")}</Text>;
@@ -491,61 +531,53 @@ export const register: Register = (on) => {
     return { text: "Opened the doc suggestions pane." };
   }).catch((_$, _e, next) => ({ text: `docfix: ${String(next.error)}` }));
 
+  // Closing is what carries the choices out. An unload closes without asking; a draft the prompt
+  // box refuses keeps the pane open, with the notice saying why.
+  on("ui.close", { id: PANE }, async ($, e, next) => {
+    if (e.origin.kind === "unload" || (await settle($))) return next(e);
+    return { value: undefined };
+  });
+
   on("ui.focus", { requestId: PANE }, async ($, e, next) => {
-    await update($, focused, () => e.element ?? null);
-    return next(e);
+    const element = e.element ?? null;
+    const to =
+      element && e.origin.kind === "person"
+        ? landing(stopsOf(await read($, queue)), await read($, focused), element)
+        : undefined;
+    await update($, focused, () => to ?? element);
+    return next(to ? { ...e, element: to } : e);
   }).catch((_$, e, next) => next(e));
 
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
     const els = $.ui.resolve(e);
-    const { Box } = els;
+    const { Box, Button, Text } = els;
     const kit = kitOf(els, e.surface);
     const queued = await read($, queue);
-    const ids = new Set(await read($, marked));
+    const set = await read($, choices);
     const focus = await read($, focused);
-    const opened = await read($, expanded);
-    const { text: noted, status, undo } = await read($, said);
+    const open = new Set(await read($, expanded));
+    const { text: noted, status } = await read($, said);
     const now = await $.clock.now();
     const isInline = e.props.placement === "inline";
     // One cell of padding, which the inline box's own border already gives; and never wider
     // than a reading column.
     const padding = isInline ? 0 : tokens.padding;
     const width = widthCap("reading", e.props.bodyColumns - 2 * padding);
-    const close = () => $.ui.close({ id: PANE });
-    const clearNotice = () => say($, "");
-    const toggleMark = async (id: string) => {
-      await update($, marked, (cur) =>
-        cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id],
-      );
-      await clearNotice();
-    };
-    // A pane only a few rows tall has no room for blank rows between its blocks, nor for keys
-    // that wrap: it spends them on the suggestions.
+    // A pane only a few rows tall has no room for blank rows between its blocks: it spends
+    // them on the suggestions.
     const isTight = e.props.scroll.bodyRows < TIGHT_ROWS;
-    const isNarrow = width < NARROW;
-    // A short queue opens with its evidence showing, but not in a thin pane: there each piece
-    // is tens of rows, so the claims are read first and one is opened to read why.
-    const isThin = width < THIN;
-    const open = new Set(
-      opened ?? (!isThin && queued.length <= OPEN_BELOW ? queued.map((s) => s.id) : []),
-    );
-    const toggleOpen = (id: string) =>
-      update($, expanded, () => (open.has(id) ? [...open].filter((x) => x !== id) : [...open, id]));
     const frame = (...blocks: (JSX.Element | null)[]) => (
       <Box flexDirection="column" rowGap={isTight ? 0 : 1} paddingX={padding}>
         {blocks}
       </Box>
     );
     const head = paneTitle(kit, width, "Doc suggestions", queued.length || undefined);
+    const notice = noted ? said_(kit, width, noted, status) : null;
 
     if (queued.length === 0)
       return frame(
         head,
-        buttonRow(kit, [
-          ...(undo?.length ? [{ hotkey: "u", label: "undo", press: () => undoDismiss($) }] : []),
-          { hotkey: "q", label: "close", press: close, isLit: true },
-        ]),
-        noted ? said_(kit, width, noted, status) : null,
+        notice,
         emptyState(
           kit,
           width,
@@ -553,85 +585,63 @@ export const register: Register = (on) => {
         ),
       );
 
-    const chosen = choose(queued, ids, focus);
-    const n = chosen.length;
-    const named = (verb: string) =>
-      n === 0 || (isNarrow && ids.size === 0)
-        ? verb
-        : n === 1 && ids.size === 0
-          ? `${verb} this`
-          : `${verb} ${n}`;
-    const allMarked = queued.every((s) => ids.has(s.id));
-    const allOpen = queued.every((s) => open.has(s.id));
-    const keys: KeyChip[] = [
-      {
-        id: "apply",
-        hotkey: "a",
-        label: named("apply"),
-        press: () => applyPicked($),
-        isLit: n > 0,
-      },
-      { id: "dismiss", hotkey: "d", label: named("dismiss"), press: () => dismissPicked($) },
-      {
-        id: "mark",
-        hotkey: "m",
-        label: isNarrow ? (allMarked ? "unmark" : "mark") : allMarked ? "unmark all" : "mark all",
-        press: () =>
-          update($, marked, () => (allMarked ? [] : queued.map((s) => s.id))).then(clearNotice),
-      },
-      {
-        id: "evidence",
-        hotkey: "e",
-        label: isNarrow ? "evidence" : allOpen ? "hide evidence" : "show evidence",
-        press: () => update($, expanded, () => (allOpen ? [] : queued.map((s) => s.id))),
-      },
-      ...(undo?.length
-        ? [{ id: "undo", hotkey: "u", label: "undo", press: () => undoDismiss($) }]
-        : []),
-      { id: "close", hotkey: "q", label: "later", press: close },
-    ];
-
+    const stops = stopsOf(queued);
+    const first = queued[0]?.id;
     const rows: Rows = {
       kit,
-      width,
+      width: Math.max(1, width - INDENT),
       now,
-      marks: ids,
+      set,
       open,
-      first: queued[0]?.id,
-      toggleMark,
-      toggleOpen,
+      keyed: focus && stops.includes(focus) ? focus : first ? rowKey(first) : undefined,
+      first,
+      choose: async (ids, choice) => {
+        await update($, choices, (cur) => toggleChoice(cur, ids, choice));
+        await say($, "");
+      },
+      chooseFocused: async (choice) => {
+        const at = await read($, focused);
+        const stop = at && stops.includes(at) ? at : first ? rowKey(first) : "";
+        const ids = idsOf(await read($, queue), stop);
+        if (ids.length === 0) return;
+        await update($, choices, (cur) => toggleChoice(cur, ids, choice));
+        await say($, "");
+      },
+      toggleOpen: (ids) =>
+        update($, expanded, (cur) =>
+          ids.every((id) => cur.includes(id))
+            ? cur.filter((id) => !ids.includes(id))
+            : [...new Set([...cur, ...ids])],
+        ),
     };
-    const groups = byTarget(queued);
+    const summary = choiceSummary(queued.map((s) => set[s.id]));
+    const allOpen = queued.every((s) => open.has(s.id));
+    const bar = (
+      <Box flexWrap="wrap" columnGap={tokens.gutter} justifyContent="space-between">
+        {summary ? (
+          <Text>{`On close: ${summary}`}</Text>
+        ) : (
+          <Text dimColor>Closing carries out apply and dismiss</Text>
+        )}
+        <Button
+          key={ALL_EVIDENCE}
+          plain
+          dimColor
+          hotkey="e"
+          label={allOpen ? "fold all" : "open all"}
+          onPress={() => update($, expanded, () => (allOpen ? [] : queued.map((s) => s.id)))}
+        />
+      </Box>
+    );
     return frame(
       head,
-      isThin ? (
-        // Two rows that each fit, not one that wraps and leaves "later" alone on the second.
-        <Box flexDirection="column">
-          {buttonRow(
-            kit,
-            keys.filter((key) => ["apply", "dismiss", "mark"].includes(key.id ?? "")),
-          )}
-          {buttonRow(
-            kit,
-            keys.filter((key) => !["apply", "dismiss", "mark"].includes(key.id ?? "")),
-          )}
-        </Box>
-      ) : (
-        buttonRow(kit, keys)
-      ),
-      noted ? said_(kit, width, noted, status) : null,
+      bar,
+      notice,
       <Box flexDirection="column" rowGap={1}>
-        {groups.map(([target, list]) => (
-          <Box key={`group:${target}`} flexDirection="column">
-            {header(rows, target, list, () => {
-              const every = list.every((s) => ids.has(s.id));
-              return update($, marked, (cur) =>
-                every
-                  ? cur.filter((id) => !list.some((s) => s.id === id))
-                  : [...new Set([...cur, ...list.map((s) => s.id)])],
-              ).then(clearNotice);
-            })}
-            <Box flexDirection="column" rowGap={1}>
+        {byTarget(queued).map(([target, list]) => (
+          <Box key={`group:${target}`} flexDirection="column" rowGap={isTight ? 0 : 1}>
+            {header(rows, target, list, width)}
+            <Box flexDirection="column" rowGap={1} paddingLeft={INDENT}>
               {list.map((s) => row(rows, s))}
             </Box>
           </Box>

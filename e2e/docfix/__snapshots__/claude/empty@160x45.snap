@@ -2,10 +2,10 @@
 │                                                                     ✕
 │ ─ Doc suggestions ───────────────────────────────────────────────────
 │
-│ q: close
-│
 │ Nothing to review: no open doc suggestions in this repo. An agent
 │ files one when a doc it reads no longer matches the code.
+│
+│
 │
 │
 │
@@ -43,10 +43,10 @@
 1 .x69 2
 1 . 2x2 3x15 2x52
 1
-1 . 4
-1
 1 . 2x65
 1 . 2x57
+1
+1
 1
 1
 1
@@ -84,4 +84,3 @@
 1 dim
 2 fg=#999999
 3 bold
-4 fg=#b1b9f9

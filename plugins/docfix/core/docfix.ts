@@ -504,6 +504,33 @@ export const reopen = (s: Suggestion, now: string): Suggestion => ({
   updated: now,
 });
 
+/** What the person set a row to in /docfix; a row with none is skipped. */
+export type Choice = "apply" | "dismiss";
+
+/** Sets each of `ids` to `choice`, or skips them all when every one already has it. */
+export function toggleChoice(
+  choices: Readonly<Record<string, Choice>>,
+  ids: readonly string[],
+  choice: Choice | undefined,
+): Record<string, Choice> {
+  const next = { ...choices };
+  const isSet = choice !== undefined && ids.every((id) => next[id] === choice);
+  for (const id of ids)
+    if (choice === undefined || isSet) delete next[id];
+    else next[id] = choice;
+  return next;
+}
+
+/** `apply 2, dismiss 1`, or empty when every row is skipped. */
+export function choiceSummary(choices: Iterable<Choice | undefined>): string {
+  const counts = { apply: 0, dismiss: 0 };
+  for (const c of choices) if (c) counts[c] += 1;
+  return (["apply", "dismiss"] as const)
+    .filter((c) => counts[c] > 0)
+    .map((c) => `${c} ${counts[c]}`)
+    .join(", ");
+}
+
 /** The picked suggestions, one group per doc, in queue order. */
 export function byTarget(picked: readonly Suggestion[]): [string, Suggestion[]][] {
   const groups = new Map<string, Suggestion[]>();

@@ -1,8 +1,8 @@
 # docfix/claude/applied 70x24 @0,0 (70x24)
                            ╭─────────────────────────────────────────╮
  ▐▛███▛█   Claude Code v2.1│ docfix                                  │
-▝▜██████▀  Sonnet 5.5 with │ The apply prompt is in the prompt box:  │
- ▝▝   ▝▝   ~/…/state/agents│ read it, then Enter to send             │
+▝▜██████▀  Opus 5.5 with hi│ The apply prompt is in the prompt box:  │
+ ▝▝   ▝▝   ~/…/state/agents│ read it, then Enter to send.            │
                            ╰─────────────────────────────────────────╯
 ▎ Debug mode enabled · logging to /home/nickolaj/.local/state/agents/t
 ▎ mp/agents-d9c3580c/e2e-run   /debug.log
@@ -13,15 +13,15 @@
 
                                               ctrl+g to edit in Nvim
 ──────────────────────────────────────────────────────────────────────
-❯ 2. Edit the doc as it stands now, in its existing structure and
-  voice. For a stale plan, delete or trim what is finished or gone.
-  3. Call docfix with action "resolve" and the id (the file's name
+❯ such as a changelog, as they are.
+  4. Call docfix with action "resolve" and the id (the file's name
   without .md), whether you applied it or found it no longer true.
 
-  Don't commit.
+  Name every doc you changed beyond the ones above. Anything else
+  you notice gets filed with docfix as usual. Don't commit.
 ──────────────────────────────────────────────────────────────────────
   ⚠ docfix: docs 3
-  Sonnet 5.5 · medium · 0% · •• 98%                                …
+  work · Opus 5.5 · high · 0%                                      …
   ⏵⏵ auto mode on (shift+tab to cycle)
 --- styles
 .x27 1x43
@@ -38,15 +38,15 @@
 -
 .x46 5x22
 9x70
--
--
+.x12 ax9
 .x10 ax6
 -
 -
 -
+.x29 ax6
 9x70
 .x2 bx16
-.x2 5x10 cx3 5x6 cx8 dx6 5x33
+.x2 cx4 dx3 5x8 dx3 5x4 dx5 5x39
 .x2 bx15 5x21
 --- legend
 1 dim
@@ -60,5 +60,5 @@
 9 fg=#888888
 a fg=#ff6b80 underline=single
 b fg=#ffc107
-c fg=#999999 dim
-d fg=p3
+c fg=p3
+d fg=#999999 dim

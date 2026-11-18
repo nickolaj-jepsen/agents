@@ -32,6 +32,8 @@ Checked live on 2.1.319 to 2.1.325:
 - `$.command.register` throws for a name a built-in or a skill already has, and `validate` and `test` don't say so. Type the command in a session.
 
 - **A focused `Button` is drawn inverse by the engine, and that can't be turned off.** A pointer (`❯`) the kit draws on the focused row would double it, so a Claude list has no pointer: the engine's ring is the selection (docfix, 2.1.325). A click presses a row and does not move the ring, so state keyed on focus follows Tab, not the mouse (docfix keeps what a row shows in its own state, which a click on the row's evidence line toggles).
+- **The ring keeps its index among the Buttons across a redraw, not its key.** A Button that mounts or unmounts before the ring when the ring moves (keys shown only on the focused row, say) slides the ring onto a neighbour. Keep the number of Buttons the same whatever has focus, and move only their `hotkey` props (docfix, 2.1.325).
+- **The ring can skip a Button.** No prop takes a Button out of the Tab and arrow order, but a `ui.focus` hook on the pane can answer `next({ ...e, element })` to land the ring elsewhere; compare with where it was to tell down from up (docfix's row keys). A hotkey pressed right after a move can reach the Button that held it before the redraw, so its press should act on where the ring is now.
 - A `Button`'s children are strings and `Text` only, so a row with metadata columns is one string padded with `cellWidth`, never a `Box` of cells. A `Pane`'s `backgroundColor: "transparent"` drops the stock grey fill; the inline box asks for `rows` and still gets about a third of the terminal.
 - `kit/claude/ui.tsx` is copied into each mod: edit the source and run `just kit-sync`.
 

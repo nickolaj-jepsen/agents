@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   applyPrompt,
   byTarget,
+  choiceSummary,
   dismiss,
   docTargets,
   evidenceBlocks,
@@ -18,6 +19,7 @@ import {
   repeats,
   sentences,
   serialize,
+  toggleChoice,
   type Call,
   type Suggestion,
 } from "./docfix.ts";
@@ -167,6 +169,17 @@ describe("review", () => {
     expect(prompt.indexOf("\nAGENTS.md\n")).toBeLessThan(prompt.indexOf("\ndocs/z.md\n"));
     expect(prompt.match(/Don't commit/g)).toHaveLength(1);
     expect(prompt).toContain(`action "resolve"`);
+  });
+
+  test("a key sets the rows it acts on, and pressed again skips them", () => {
+    const set = toggleChoice({}, ["a", "b"], "apply");
+    expect(set).toEqual({ a: "apply", b: "apply" });
+    // A doc whose rows differ is set whole, not toggled row by row.
+    expect(toggleChoice({ a: "dismiss" }, ["a", "b"], "apply")).toEqual(set);
+    expect(toggleChoice(set, ["a", "b"], "apply")).toEqual({});
+    expect(toggleChoice({ a: "apply", c: "dismiss" }, ["a"], undefined)).toEqual({ c: "dismiss" });
+    expect(choiceSummary(["dismiss", "apply", undefined, "apply"])).toBe("apply 2, dismiss 1");
+    expect(choiceSummary([undefined])).toBe("");
   });
 
   test("an undo opens a dismissed suggestion again", () => {

@@ -1,14 +1,12 @@
-# docfix/claude/empty 70x24 @0,12 (70x6)
+# docfix/claude/empty 70x24 @0,13 (70x5)
 ╭──────────────────────────────────────────────────────────────────✕─╮
 │ ─ Doc suggestions ──────────────────────────────────────────────── │
-│ q: close                                                           │
 │ Nothing to review: no open doc suggestions in this repo. An agent  │
 │ files one when a doc it reads no longer matches the code.          │
 ╰────────────────────────────────────────────────────────────────────╯
 --- styles
 1x67 2 1x2
 1 . 2x2 3x15 2x49 . 1
-1 . 4 .x66 1
 1 . 2x65 .x2 1
 1 . 2x57 .x10 1
 1x70
@@ -16,4 +14,3 @@
 1 dim
 2 fg=#999999
 3 bold
-4 fg=#b1b9f9

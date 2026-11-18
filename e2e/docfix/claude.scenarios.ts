@@ -26,7 +26,8 @@ export default scenarios({
       steps: [...open, { wait: "AGENTS.md" }],
     },
     queue: {
-      about: "/docfix with three open suggestions (one more is dismissed and hidden)",
+      about:
+        "/docfix with three open suggestions, folded, the first row's keys lit (one more is dismissed and hidden)",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx);
@@ -35,27 +36,36 @@ export default scenarios({
       extreme: true,
     },
     inline: {
-      about: "the pane inline at 100 columns, wide enough for metadata in columns",
+      about: "the pane inline at 100 columns",
       from: "queue",
       size: [100, 36],
     },
-    marked: {
-      about: "two of the three marked by a click on their claims",
+    set: {
+      about:
+        "a on the first row and d on the second: one claim in success, one struck through, and the line under the title says what closing does",
       from: "queue",
-      steps: [{ click: "is not enough" }, { click: "legacy" }],
+      // A resized session loses the pane's keyboard on a click (Claude Code 2.1.325), so start fresh.
+      fresh: true,
+      steps: [{ press: "a" }, { press: "Down" }, { press: "d" }],
+    },
+    clicked: {
+      about: "a click on the last row's dismiss sets it; the ring stays on the first row",
+      from: "queue",
+      steps: [{ click: { text: /dismiss(?=  skip\s*$)/m, nth: 1 } }],
     },
     group: {
-      about: "a click on a doc's header marks all its rows",
+      about: "Up from the first row onto its doc's header: the header's keys; a sets the whole doc",
       from: "queue",
-      steps: [{ click: "docs/hosts.md" }],
+      fresh: true,
+      steps: [{ press: "Up" }, { press: "a" }],
     },
-    folded: {
-      about: "a click on a row's evidence line folds that row's evidence",
+    opened: {
+      about: "a click on a row's claim opens it: its claim whole and its evidence",
       from: "queue",
-      steps: [{ click: "▾ evidence" }],
+      steps: [{ click: "legacy" }],
     },
-    collapsed: {
-      about: "e hides every row's evidence, and the key now offers to show it",
+    all: {
+      about: "e opens every row, and the key now folds them",
       from: "queue",
       steps: [{ press: "e" }],
     },
@@ -66,51 +76,57 @@ export default scenarios({
     },
     keyboard: {
       about:
-        "Down twice moves the ring past the first row's evidence line onto the second row; Enter marks it",
+        "Down moves the ring past the first row's evidence line and keys onto the second row, whose keys light",
       from: "queue",
-      steps: [{ press: ["Down", "Down", "Enter"] }],
+      fresh: true,
+      steps: [{ press: "Down" }],
     },
     dismissed: {
       about:
-        "d on a clicked (marked) row: the queue one shorter, the ring on the row that took its place, undo offered",
+        "d on the first row, then Esc: the pane closes, a toast says one was dismissed, and the status count drops",
       from: "queue",
-      // A resized session loses the pane's keyboard on a click (Claude Code 2.1.325), so start fresh.
+      region: region.full,
+      mask: [{ pattern: /e2e-[A-Za-z0-9]{6}/g, with: "e2e-run" }],
       fresh: true,
-      steps: [{ click: "is not enough" }, { press: "d" }, { wait: "Dismissed 1" }],
-    },
-    undone: {
-      about: "u after a dismiss: the suggestion is back and the ring is on it",
-      from: "dismissed",
-      fresh: true,
-      steps: [{ press: "u" }, { wait: "Restored 1" }],
+      steps: [
+        { press: "d" },
+        { wait: "On close: dismiss 1" },
+        { press: "Escape" },
+        { wait: "Dismissed 1" },
+      ],
     },
     applied: {
       about:
-        "a on two marked rows: the pane closes and the prompt box holds one drafted prompt, unsent",
+        "a on two rows, then Esc: the pane closes and the prompt box holds one drafted prompt, unsent",
       from: "queue",
       region: region.full,
       // The debug banner above the transcript names a run folder, which wraps at 70 columns.
       mask: [{ pattern: /e2e-[A-Za-z0-9]{6}/g, with: "e2e-run" }],
+      fresh: true,
       steps: [
-        { click: "is not enough" },
-        { click: "legacy" },
         { press: "a" },
-        { wait: "Apply these docfix" },
+        // Down from the first row lands on the next doc's header, whose a sets its one row. Keys
+        // sent in one write can beat the ring's move, so each is a step of its own.
+        { press: "Down" },
+        { press: "a" },
+        { wait: "On close: apply 2" },
+        { press: "Escape" },
+        // The draft is taller than the prompt box, so its first line has scrolled away.
+        { wait: "For each one" },
       ],
     },
     evidence: {
       about:
-        "evidence as migrated memories write it: prose, a labelled paragraph, citations as a list not JSON",
+        "evidence as migrated memories write it, opened: prose, a labelled paragraph, citations as a list not JSON",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx, STRUCTURED);
       },
-      steps: [...open, { wait: "agent-hub" }],
+      steps: [...open, { wait: "agent-hub" }, { press: "Enter" }],
       extreme: true,
     },
     many: {
-      about:
-        "28 suggestions, more than fit: their evidence starts folded, and the pane scrolls as a whole",
+      about: "28 suggestions, more than fit: every row folded, and the pane scrolls as a whole",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx, MANY);
@@ -118,12 +134,13 @@ export default scenarios({
       steps: [...open, { wait: "Claim number" }],
     },
     extreme: {
-      about: "very long claims, evidence and paths, wide characters, one unbroken word",
+      about:
+        "very long claims, evidence and paths, wide characters, one unbroken word; the first row opened",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx, EXTREME);
       },
-      steps: [...open, { wait: "AGENTS.md" }],
+      steps: [...open, { wait: "AGENTS.md" }, { press: "Enter" }],
       extreme: true,
     },
   },

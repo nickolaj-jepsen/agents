@@ -1,8 +1,8 @@
 # docfix/claude/applied 160x45 @0,0 (160x45)
                                                                                                                      ╭─────────────────────────────────────────╮
  ▐▛███▛█   Claude Code <ver>                                                                                         │ docfix                                  │
-▝▜██████▀  Sonnet 5.5 with medium effort · Claude Ultra                                                              │ The apply prompt is in the prompt box:  │
- ▝▝   ▝▝   ~/.local/state/agents<tmp>                                                                                │ read it, then Enter to send             │
+▝▜██████▀  Opus 5.5 with high effort · Claude Team                                                                   │ The apply prompt is in the prompt box:  │
+ ▝▝   ▝▝   ~/.local/state/agents<tmp>                                                                                │ read it, then Enter to send.            │
                                                                                                                      ╰─────────────────────────────────────────╯
 ▎ Debug mode enabled · logging to <tmp>
 
@@ -24,9 +24,7 @@
 
                                                                                                                                         ctrl+g to edit in Nvim
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-❯ Apply these docfix suggestions. The file under each claim holds its evidence: read it first.
-
-  AGENTS.md
+❯ AGENTS.md
   - wrong: `just build` is not enough to verify a pi change; the docs say it is. (seen 3×)
     .agents/store/docfix/agents-md-says-just-build-verifies.md
 
@@ -37,17 +35,19 @@
   For each one:
   1. Check the claim against this repo's code. One that no longer holds needs no edit.
   2. Edit the doc as it stands now, in its existing structure and voice. For a stale plan, delete or trim what is finished or gone.
-  3. Call docfix with action "resolve" and the id (the file's name without .md), whether you applied it or found it no longer true.
+  3. Search once for the outdated wording in the docs beside it (its folder, or the skill or plugin it belongs to). Where another doc states the same fact,
+  fix it there too instead of filing a suggestion. Change only that fact, and leave records of the past, such as a changelog, as they are.
+  4. Call docfix with action "resolve" and the id (the file's name without .md), whether you applied it or found it no longer true.
 
-  Don't commit.
+  Name every doc you changed beyond the ones above. Anything else you notice gets filed with docfix as usual. Don't commit.
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   ⚠ docfix: docs 3
-  Sonnet 5.5 · medium · 0% · •• 98%                                                            ~/.local/state/agents<tmp>                                main
+  work · Opus 5.5 · high · 0%                                                                  ~/.local/state/agents<tmp>                                main
   ⏵⏵ auto mode on (shift+tab to cycle)
 --- styles
 .x117 1x43
 2x2 3x6 .x3 4x11 . 5x8 .x86 1 . 5x6 .x34 1
-2x2 3x5 2x2 .x2 5x44 .x62 1 .x41 1
+2x2 3x5 2x2 .x2 5x39 .x67 1 .x41 1
 2x9 .x2 5x56 .x50 1 .x41 1
 .x117 1x43
 1 . 5x107
@@ -70,8 +70,6 @@
 -
 .x136 5x22
 9x160
-.x14 ax6
--
 -
 -
 -
@@ -83,12 +81,14 @@
 -
 .x34 ax6
 -
+-
+.x115 ax9
 .x10 ax6
 -
--
+.x93 ax6
 9x160
 .x2 bx16
-.x2 5x10 cx3 5x6 cx8 dx6 5x60 cx53 5x4 e 5 cx4
+.x2 cx4 dx3 5x8 dx3 5x4 dx5 5x66 dx53 5x4 e 5 dx4
 .x2 bx15 5x21
 --- legend
 1 dim
@@ -102,6 +102,6 @@
 9 fg=#888888
 a fg=#ff6b80 underline=single
 b fg=#ffc107
-c fg=#999999 dim
-d fg=p3
+c fg=p3
+d fg=#999999 dim
 e fg=p2

@@ -16,24 +16,21 @@ export type Suggestion = {
   evidence: Evidence[];
 };
 
-/**
- * What the line under the keys says after an action, and in which role. `undo` holds the ids
- * a dismiss just closed, so the notice can offer to open them again.
- */
-export type Said = { text: string; status: "success" | "warning" | "error"; undo?: string[] };
+/** What the line under the title says when something went wrong, and in which role. */
+export type Said = { text: string; status: "success" | "warning" | "error" };
 
 declare module "claude-code" {
   interface PluginState {
     docfix: {
       /** The open queue as the pane last loaded it. */
       queue: Shaped<Suggestion[]>;
-      /** Ids marked for apply or dismiss. */
-      marked: string[];
+      /** What each row is set to; a row not in it is skipped. Closing the pane carries it out. */
+      choices: Shaped<Record<string, "apply" | "dismiss">>;
       /** The key of the pane element holding the focus ring. */
       focused: string | null;
       /** Ids whose evidence the list shows. */
-      expanded: string[];
-      /** One line under the keys after an action. */
+      expanded: Shaped<string[]>;
+      /** One line under the title when something went wrong. */
       notice: Shaped<Said>;
     };
   }
