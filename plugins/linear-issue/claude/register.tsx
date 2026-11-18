@@ -3,7 +3,7 @@ import type { EngineInterface, Register, RenderElement, RenderNode } from "claud
 
 import type { Duplicate, Filed, Form, Last, Option } from "./types.d.ts";
 import { guiBand, guiPane } from "./gui";
-import { kitOf, paneOptions, pick } from "./ui";
+import { forSurface, kitOf, paneOptions } from "./ui";
 
 // The built-in's card has no extension point, so the button is spliced into the
 // tree it draws, found by these labels. A rename only hides the button (see warnDrift).
@@ -737,7 +737,7 @@ export const register: Register = (on) => {
       });
     // The terminal's form is drawn here; a graphical surface's, from the kit's functions, is
     // `gui.tsx`. The mobile app draws no Input or Select, so it shows the draft as written.
-    return pick(k, {
+    return forSurface(k, {
       tui: () => terminal(),
       gui: () => gui(false),
       mobile: () => gui(true),
@@ -1039,7 +1039,7 @@ export const register: Register = (on) => {
     const isArmed = await read($, isDiscardArmed);
     if (issues.length === 0 && !draft) return next(e);
     // No digits on a graphical surface: its buttons are pressed by a click.
-    return pick(k, {
+    return forSurface(k, {
       tui: () => terminal(),
       gui: () =>
         guiBand(k, {
@@ -1172,7 +1172,10 @@ export const register: Register = (on) => {
         key="linear-issue"
         label="Linear issue"
         // The digit is the terminal's way in: a graphical surface would draw it as a chip.
-        hotkey={pick(k, { tui: () => HOTKEYS.find((h) => !taken.has(h)), gui: () => undefined })}
+        hotkey={forSurface(k, {
+          tui: () => HOTKEYS.find((h) => !taken.has(h)),
+          gui: () => undefined,
+        })}
         plain={style?.plain}
         dimColor={style?.dimColor}
         onPress={async () => {

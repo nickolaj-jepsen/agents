@@ -1,7 +1,7 @@
 /**
  * What the draft pane and the band above the prompt draw on the desktop app and in VS Code, from
  * the kit's functions: a short form, a toolbar with Create at its far edge, the description whole.
- * The terminal's drawing stays in `register.tsx`; `pick` chooses between the two.
+ * The terminal's drawing stays in `register.tsx`; `forSurface` chooses between the two.
  */
 import type { ElementTable } from "claude-code";
 

@@ -11,7 +11,7 @@ import type {
 import { guiBand, terminalBand } from "./band";
 import type { BandActions, BandView } from "./band";
 import type { Picker, Report } from "./types.d.ts";
-import { kitOf } from "./ui";
+import { forSurface, kitOf } from "./ui";
 import {
   addInput,
   autoAdds,
@@ -614,23 +614,30 @@ export const register: Register = (on, options) => {
       pick: (key) => pickFromBand($, key),
       answer: (key) => answerFromBand($, key),
     };
-    // The one place the drawing splits by surface: the terminal's band is the mod's own (its keys
-    // sit in the labels), the graphical one is the kit's.
-    if (kit.isNative) return stacked(guiBand(kit, view, actions));
-
-    // Kept mounted whenever there's a draft: the key bound to ACTION reaches only a mounted Button.
-    const toggle = (
-      <Button key="spellfix" plain action={ACTION} onPress={() => togglePicker($)}>
-        {p ? "close" : busy ? "Checking spelling…" : n ? `${n} misspelled` : "check spelling"}
-        <Text dimColor> ctrl+q</Text>
-      </Button>
+    // The terminal's band is the mod's own (its keys sit in the labels), the graphical one is the
+    // kit's: the kit's one door for a drawing by surface.
+    return stacked(
+      forSurface(kit, {
+        tui: () => {
+          // Kept mounted whenever there's a draft: the key bound to ACTION reaches only a mounted
+          // Button.
+          const toggle = (
+            <Button key="spellfix" plain action={ACTION} onPress={() => togglePicker($)}>
+              {p ? "close" : busy ? "Checking spelling…" : n ? `${n} misspelled` : "check spelling"}
+              <Text dimColor> ctrl+q</Text>
+            </Button>
+          );
+          // With nothing flagged it stays mounted for ctrl+q (Haiku may still find a typo), drawn
+          // in no cells.
+          const hidden = (
+            <Box key="hidden" width={0} height={0} overflow="hidden">
+              {toggle}
+            </Box>
+          );
+          return terminalBand(kit, view, actions, toggle, hidden, isQuiet);
+        },
+        gui: () => guiBand(kit, view, actions),
+      }),
     );
-    // With nothing flagged it stays mounted for ctrl+q (Haiku may still find a typo), drawn in no cells.
-    const hidden = (
-      <Box key="hidden" width={0} height={0} overflow="hidden">
-        {toggle}
-      </Box>
-    );
-    return stacked(terminalBand(kit, view, actions, toggle, hidden, isQuiet));
   });
 };

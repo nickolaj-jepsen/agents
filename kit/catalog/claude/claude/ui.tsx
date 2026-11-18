@@ -114,6 +114,29 @@ export function surfaceOf<T extends object>(k: Kit, o: BySurface<T> | undefined)
   return { ...o.gui, ...own };
 }
 
+/** One drawing per surface, each made only when it is the one shown. */
+export type Drawings<T> = {
+  tui: () => T;
+  gui: () => T;
+  desktop?: () => T;
+  vscode?: () => T;
+  mobile?: () => T;
+};
+
+/**
+ * The one door through which a mod draws by surface itself. A mod describes content and intent
+ * and the kit draws it on each surface; this is for what the kit can't draw yet: a terminal
+ * screen the mod lays out to the cell, beside a graphical one built from the kit's functions,
+ * or a value only one surface has (a hotkey the graphical surfaces would draw as a chip). `tui`
+ * is the terminal's; `gui` every graphical surface's; `desktop`, `vscode` and `mobile` replace
+ * `gui` on that one. Only the chosen one runs.
+ */
+export function forSurface<T>(k: Kit, drawings: Drawings<T>): T {
+  if (!k.isNative) return drawings.tui();
+  const own = (drawings as Record<string, (() => T) | undefined>)[k.surface];
+  return (own ?? drawings.gui)();
+}
+
 /**
  * The house style's numbers, glyphs and colour roles; one edit here restyles every mod that
  * carries a fresh copy of this file.
@@ -627,12 +650,9 @@ export function paneTitle(
         {said ? <Text dimColor>{said}</Text> : null}
       </Text>
     ) : null;
-    if (!own.actions?.length)
-      return text ? (
-        <Box key="toolbar" paddingX={tokens.gui.across.inset}>
-          {text}
-        </Box>
-      ) : null;
+    const actions = own.actions ?? [];
+    if (!text && actions.length === 0) return null;
+    // One line at the inset with or without actions; with no text the actions keep the far edge.
     return (
       <Box
         key="toolbar"
@@ -645,9 +665,16 @@ export function paneTitle(
         paddingX={tokens.gui.across.inset}
       >
         <Box flexShrink={1}>{text}</Box>
-        <Box flexDirection="row" columnGap={tokens.gui.across.xs}>
-          {own.actions.map((a) => actionButton(k, a))}
-        </Box>
+        {actions.length > 0 ? (
+          <Box
+            flexDirection="row"
+            flexWrap="wrap"
+            columnGap={tokens.gui.across.xs}
+            rowGap={tokens.gui.space.xs}
+          >
+            {actions.map((a) => actionButton(k, a))}
+          </Box>
+        ) : null}
       </Box>
     );
   }
@@ -1221,39 +1248,66 @@ function sideRule(k: Kit, key: string): JSX.Element {
   return <Box key={key} width={0.2} flexShrink={0} backgroundColor={tokens.gui.rule} />;
 }
 
+/** How much faster than its text a row's detail shrinks when the line is too long. */
+const DETAIL_SHRINK = 8;
+
+/** The button at a graphical row's far edge. */
+type RowButton = {
+  key: string;
+  label: string;
+  onPress: () => unknown;
+  /** Filled, as the chosen option of a choice; quiet otherwise. */
+  isFilled?: boolean;
+};
+
+/** What every graphical row is drawn from: `card`, `foldedRow` and `listRow`. */
+type GuiRow = {
+  key: string;
+  /** The mark before the text, in a column of its own. None sets the text at the inset. */
+  mark?: JSX.Element;
+  /** The row's line: cut at the edge by the surface while folded, whole as prose once opened. */
+  text: string;
+  /** The text is plain, not markdown: a path or a name, its backticks and underscores kept. */
+  isPlain?: boolean;
+  /** The folded line dim and struck through: a suggestion set to be dismissed. */
+  isStruck?: boolean;
+  /** Nothing to press: the line dim and no button. */
+  isDim?: boolean;
+  /** A short dim word beside the text, or at the line's end before the button with `isAtEnd`. */
+  detail?: { text: string; isAtEnd?: boolean };
+  /** A dim line under a folded row's text. */
+  meta?: string;
+  /** The button at the line's far edge; none for a row that can't be pressed. */
+  button?: RowButton;
+  /** Opened: the row sits in a well, its text whole, a rule down from the mark to the body's end. */
+  isOpen?: boolean;
+  /** What an opened row shows under its text, set in from the mark. */
+  body?: readonly (JSX.Element | null)[];
+};
+
 /**
- * The graphical card: a row, opened in place. Folded, it is one line: the kind's icon, the claim
- * cut at the edge and a quiet button that opens it. Opened, the same line shows the claim whole
- * and the row takes a fill that holds everything under it, set in from the icon, with a rule
- * running down from the icon so the body reads as that line's own: the kind and its history, the
- * evidence, and the keys that set it. A Button cannot wrap or hold an icon, so it is never the
- * row itself.
+ * The one graphical row. Folded, it is one line: the mark, the text cut at the edge, its detail,
+ * and a quiet button at the far edge. The line is one line of text tall whether it has a button
+ * or not, so every folded row is the same height. Opened, the line shows the text whole and the
+ * row takes a fill that holds everything under it, set in from the mark, with a rule running
+ * down from the mark so the body reads as that line's own. A Button cannot wrap or hold an icon
+ * and never shrinks, so it is never the row itself.
  */
-function cardGui(k: Kit, o: CardOptions): JSX.Element {
+function guiRow(k: Kit, o: GuiRow): JSX.Element {
   const { Box, Button, Text } = k;
   const { space, across } = tokens.gui;
-  const times = o.seen ?? 1;
-  const kind = capital(o.kind);
-  const mark =
-    o.tone === "apply"
-      ? icon(k, "success", { tone: "success", alt: "Set to apply" })
-      : o.tone === "dismiss"
-        ? icon(k, "error", { alt: "Set to dismiss" })
-        : icon(k, o.kind, { tone: KIND_TONE[o.kind], alt: kind });
-  const isDismissed = o.tone === "dismiss";
-  const claim = o.isOpen ? (
-    prose(k, o.claim)
+  const isOpen = Boolean(o.isOpen);
+  const { detail, button } = o;
+  const line = isOpen ? (
+    prose(k, o.text)
   ) : (
     <Text
       wrap="truncate-end"
-      dimColor={isDismissed || undefined}
-      strikethrough={isDismissed || undefined}
+      dimColor={o.isDim || o.isStruck || undefined}
+      strikethrough={o.isStruck || undefined}
     >
-      {inlineCode(k, linesOf(o.claim).join(" "))}
+      {o.isPlain ? o.text : inlineCode(k, linesOf(o.text).join(" "))}
     </Text>
-  );
-  const history = [times > 1 ? `seen ${times} times` : "", o.age ? `${o.age} ago` : ""].filter(
-    Boolean,
   );
   return (
     <Box
@@ -1262,46 +1316,117 @@ function cardGui(k: Kit, o: CardOptions): JSX.Element {
       flexWrap="nowrap"
       columnGap={across.sm}
       paddingX={across.inset}
-      paddingY={o.isOpen ? space.sm : space.xs}
-      backgroundColor={o.isOpen ? tokens.gui.fill : undefined}
+      paddingY={isOpen ? space.sm : space.xs}
+      backgroundColor={isOpen ? tokens.gui.fill : undefined}
       // A round border is the surface's only rounded corner; it is drawn in no colour.
       borderStyle="round"
       borderColor="#00000000"
     >
-      <Box flexDirection="column" alignItems="center" flexShrink={0} rowGap={space.xs}>
-        <Box height={1} alignItems="center">
-          {mark}
+      {o.mark ? (
+        <Box key="mark" flexDirection="column" alignItems="center" flexShrink={0} rowGap={space.xs}>
+          <Box height={1} alignItems="center">
+            {o.mark}
+          </Box>
+          {isOpen ? <Box flexGrow={1}>{sideRule(k, "thread")}</Box> : null}
         </Box>
-        {o.isOpen ? <Box flexGrow={1}>{sideRule(k, "thread")}</Box> : null}
-      </Box>
-      <Box flexDirection="column" flexGrow={1} flexShrink={1} rowGap={space.sm}>
+      ) : null}
+      <Box
+        key="text"
+        flexDirection="column"
+        flexGrow={1}
+        flexShrink={1}
+        rowGap={isOpen ? space.sm : space.xs}
+      >
         <Box
+          key="line"
           flexDirection="row"
           flexWrap="nowrap"
-          alignItems={o.isOpen ? "flex-start" : "center"}
+          alignItems={isOpen ? "flex-start" : "center"}
           columnGap={across.md}
+          // One line of text, whatever the button's own height: a row without one is as tall.
+          height={isOpen ? undefined : 1}
         >
-          <Box flexGrow={1} flexShrink={1}>
-            {claim}
+          <Box
+            flexDirection="row"
+            flexWrap="nowrap"
+            flexGrow={1}
+            flexShrink={1}
+            columnGap={across.md}
+          >
+            <Box flexShrink={1}>{line}</Box>
+            {detail && !detail.isAtEnd ? (
+              // The text is what names the row: a long detail gives way first.
+              <Box flexShrink={DETAIL_SHRINK}>
+                <Text wrap="truncate-end" dimColor>
+                  {detail.text}
+                </Text>
+              </Box>
+            ) : null}
           </Box>
-          <Button
-            key={o.details.key}
-            dimColor
-            label={o.isOpen ? "Close" : "Open"}
-            onPress={() => o.onToggle({ isAlone: true })}
-          />
+          {detail?.isAtEnd ? (
+            // At the end it is short (an age) and keeps its room; the text gives way.
+            <Box flexShrink={0}>
+              <Text dimColor>{detail.text}</Text>
+            </Box>
+          ) : null}
+          {button ? (
+            <Button
+              key={button.key}
+              variant={button.isFilled ? "primary" : undefined}
+              dimColor={!button.isFilled || undefined}
+              label={button.label}
+              onPress={() => button.onPress()}
+            />
+          ) : null}
         </Box>
-        {o.isOpen ? (
-          <Text>
-            <Text {...roleProps(KIND_ROLE[o.kind])}>{kind}</Text>
-            {history.length ? <Text dimColor>{`  ·  ${history.join("  ·  ")}`}</Text> : null}
+        {o.meta && !isOpen ? (
+          <Text wrap="truncate-end" dimColor>
+            {o.meta}
           </Text>
         ) : null}
-        {o.isOpen ? o.details.render(k) : null}
-        {o.isOpen ? choice(k, o.choice.options, o.choice) : null}
+        {isOpen ? o.body : null}
       </Box>
     </Box>
   );
+}
+
+/**
+ * The graphical card: a row, opened in place (`guiRow`). Its mark is the kind's icon, or what it
+ * is set to; opened, its body is the kind and its history, the evidence, and the keys that set it.
+ */
+function cardGui(k: Kit, o: CardOptions): JSX.Element {
+  const { Text } = k;
+  const times = o.seen ?? 1;
+  const kind = capital(o.kind);
+  const mark =
+    o.tone === "apply"
+      ? icon(k, "success", { tone: "success", alt: "Set to apply" })
+      : o.tone === "dismiss"
+        ? icon(k, "error", { alt: "Set to dismiss" })
+        : icon(k, o.kind, { tone: KIND_TONE[o.kind], alt: kind });
+  const history = [times > 1 ? `seen ${times} times` : "", o.age ? `${o.age} ago` : ""].filter(
+    Boolean,
+  );
+  return guiRow(k, {
+    key: o.key,
+    mark,
+    text: o.claim,
+    isStruck: o.tone === "dismiss",
+    isOpen: o.isOpen,
+    button: {
+      key: o.details.key,
+      label: o.isOpen ? "Close" : "Open",
+      onPress: () => o.onToggle({ isAlone: true }),
+    },
+    body: [
+      <Text key="meta">
+        <Text {...roleProps(KIND_ROLE[o.kind])}>{kind}</Text>
+        {history.length ? <Text dimColor>{`  ·  ${history.join("  ·  ")}`}</Text> : null}
+      </Text>,
+      o.details.render(k),
+      choice(k, o.choice.options, o.choice),
+    ],
+  });
 }
 
 /**
@@ -1405,6 +1530,7 @@ export function statusBand(
     const first = (
       <Button key={o.key} dimColor label={capital(o.hint)} onPress={() => o.onPress()} />
     );
+    // At the inset, as every block is: what opens under the band starts at the same edge.
     if (extra.length === 0)
       return (
         <Box
@@ -1412,6 +1538,7 @@ export function statusBand(
           flexWrap="nowrap"
           columnGap={tokens.gui.across.sm}
           alignItems="center"
+          paddingX={tokens.gui.across.inset}
         >
           {mark}
           {text}
@@ -1420,7 +1547,7 @@ export function statusBand(
       );
     // With more than one button the line is the text, and the buttons wrap under it.
     return (
-      <Box flexDirection="column" rowGap={tokens.gui.space.xs}>
+      <Box flexDirection="column" rowGap={tokens.gui.space.xs} paddingX={tokens.gui.across.inset}>
         <Box flexDirection="row" flexWrap="nowrap" columnGap={tokens.gui.across.sm}>
           {mark}
           {text}
@@ -1596,79 +1723,26 @@ export type ListOptions = {
 /** Cells a mark takes with the space after it. */
 const MARK = 2;
 
-/** How much faster than its title a row's detail shrinks when the line is too long. */
-const DETAIL_SHRINK = 8;
-
 /**
- * A graphical row that is pressed, not opened: the title cut at the edge by the surface, its
- * detail dim beside it, and one quiet button at the far edge, laid out as a folded card is. A
- * Button cannot wrap or hold an icon and never shrinks, so it is not the row itself but a short
- * word beside it. A dimmed row has no button.
+ * A graphical row that is pressed, not opened (`guiRow`): the title cut at the edge, its detail
+ * dim beside it or at its end, and one quiet button at the far edge. A dimmed row has no button.
  */
 function listRowGui(k: Kit, item: ListItem): JSX.Element {
-  const { Box, Button, Text } = k;
-  const { space, across } = tokens.gui;
   const meta = item.meta ?? [];
-  const isEnd = item.gui?.isDetailAtEnd;
   const label =
     item.action ?? (item.isMarked === undefined ? "Open" : item.isMarked ? "Chosen" : "Choose");
-  return (
-    <Box
-      key={`${item.key}:row`}
-      flexDirection="row"
-      flexWrap="nowrap"
-      alignItems="center"
-      columnGap={across.md}
-      paddingX={across.inset}
-      paddingY={space.xs}
-      // A round border is the surface's only rounded corner; it is drawn in no colour.
-      borderStyle="round"
-      borderColor="#00000000"
-    >
-      {item.icon ? (
-        <Box key="icon" height={1} alignItems="center" flexShrink={0}>
-          {icon(k, item.icon)}
-        </Box>
-      ) : null}
-      <Box flexDirection="column" flexGrow={1} flexShrink={1} rowGap={space.xs}>
-        <Box flexDirection="row" flexWrap="nowrap" columnGap={across.md}>
-          <Box flexShrink={1}>
-            <Text wrap="truncate-end" dimColor={item.isDim || undefined}>
-              {item.title}
-            </Text>
-          </Box>
-          {item.detail && !isEnd ? (
-            // The title is what names the row: a long detail gives way first.
-            <Box flexShrink={DETAIL_SHRINK}>
-              <Text wrap="truncate-end" dimColor>
-                {item.detail}
-              </Text>
-            </Box>
-          ) : null}
-        </Box>
-        {meta.length > 0 ? (
-          <Text wrap="truncate-end" dimColor>
-            {meta.map((c) => c.text).join("  ·  ")}
-          </Text>
-        ) : null}
-      </Box>
-      {item.detail && isEnd ? (
-        // At the end it is short (an age) and keeps its room; the title gives way.
-        <Box flexShrink={0}>
-          <Text dimColor>{item.detail}</Text>
-        </Box>
-      ) : null}
-      {item.isDim ? null : (
-        <Button
-          key={item.key}
-          variant={item.isMarked ? "primary" : undefined}
-          dimColor={!item.isMarked || undefined}
-          label={label}
-          onPress={() => item.onPress()}
-        />
-      )}
-    </Box>
-  );
+  return guiRow(k, {
+    key: `${item.key}:row`,
+    mark: item.icon ? icon(k, item.icon) : undefined,
+    text: item.title,
+    isPlain: true,
+    isDim: item.isDim,
+    detail: item.detail ? { text: item.detail, isAtEnd: item.gui?.isDetailAtEnd } : undefined,
+    meta: meta.length > 0 ? meta.map((c) => c.text).join("  ·  ") : undefined,
+    button: item.isDim
+      ? undefined
+      : { key: item.key, label, isFilled: item.isMarked, onPress: item.onPress },
+  });
 }
 
 /**
@@ -1786,14 +1860,20 @@ export function list(k: Kit, groups: ListGroup[], options: ListOptions = {}): JS
           isAll: own.isAll,
           onMore: own.onMore,
         });
-        return (
-          <Box
-            key={`group${g}`}
-            flexDirection="column"
-            rowGap={k.isNative ? tokens.gui.space.xs : undefined}
-          >
+        const rows = shown.map((row) => listRow(k, row, rowOptions));
+        // Rows space themselves with their padding, as `card`'s do: no gap between them.
+        return k.isNative ? (
+          <Box key={`group${g}`} flexDirection="column" rowGap={tokens.gui.space.xs}>
             {group.title ? section(k, group.title) : null}
-            {shown.map((row) => listRow(k, row, rowOptions))}
+            <Box key="rows" flexDirection="column">
+              {rows}
+            </Box>
+            {more}
+          </Box>
+        ) : (
+          <Box key={`group${g}`} flexDirection="column">
+            {group.title ? section(k, group.title) : null}
+            {rows}
             {more}
           </Box>
         );
@@ -1993,17 +2073,6 @@ export function buttonRow(k: Kit, keys: KeyChip[]): JSX.Element {
   );
 }
 
-// ---- surfaces
-
-/**
- * Draws whichever of two trees belongs to the kit's surface: a screen whose terminal drawing is
- * the mod's own, to the cell, and whose graphical drawing is built from the kit's patterns. A mod
- * uses it to keep its surface-reading out of its own code; only the chosen side runs.
- */
-export function forSurface<T>(k: Kit, drawings: { tui: () => T; gui: () => T }): T {
-  return k.isNative ? drawings.gui() : drawings.tui();
-}
-
 // ---- images
 
 export type ImageSize = { width: number; height: number };
@@ -2101,27 +2170,7 @@ export function imageGallery(
   );
 }
 
-// ---- by surface, labelled fields and folded rows
-
-/**
- * Two drawings of one screen, for a screen the kit has no function for on the terminal: `tui` is
- * the terminal's, `gui` every graphical surface's, and `desktop`, `vscode` or `mobile` override
- * `gui` on that one. Only the one for this surface is called.
- */
-export function pick<T>(
-  k: Kit,
-  o: {
-    tui: () => T;
-    gui: () => T;
-    desktop?: () => T;
-    vscode?: () => T;
-    mobile?: () => T;
-  },
-): T {
-  if (!k.isNative) return o.tui();
-  const own = (o as Record<string, (() => T) | undefined>)[k.surface];
-  return (own ?? o.gui)();
-}
+// ---- forms and folded rows
 
 /** One field of a form: its name, and the control that holds or sets its value. */
 export type FieldItem = { key: string; label: string; control: JSX.Element };
@@ -2196,7 +2245,6 @@ export type FoldedRowOptions = {
  */
 export function foldedRow(k: Kit, o: FoldedRowOptions): JSX.Element {
   const { Box, Button, Text } = k;
-  const { space, across } = tokens.gui;
   if (!k.isNative)
     return (
       <Box key={o.key} flexDirection="column">
@@ -2211,48 +2259,15 @@ export function foldedRow(k: Kit, o: FoldedRowOptions): JSX.Element {
         ) : null}
       </Box>
     );
-  return (
-    <Box
-      key={o.key}
-      flexDirection="row"
-      flexWrap="nowrap"
-      columnGap={across.sm}
-      paddingX={across.inset}
-      paddingY={o.isOpen ? space.sm : space.xs}
-      backgroundColor={o.isOpen ? tokens.gui.fill : undefined}
-      borderStyle="round"
-      borderColor="#00000000"
-    >
-      <Box flexDirection="column" alignItems="center" flexShrink={0} rowGap={space.xs}>
-        <Box height={1} alignItems="center">
-          {icon(k, o.icon.name, { tone: o.icon.tone, alt: o.icon.alt })}
-        </Box>
-        {o.isOpen ? <Box flexGrow={1}>{sideRule(k, "thread")}</Box> : null}
-      </Box>
-      <Box flexDirection="column" flexGrow={1} flexShrink={1} rowGap={space.sm}>
-        <Box
-          flexDirection="row"
-          flexWrap="nowrap"
-          alignItems={o.isOpen ? "flex-start" : "center"}
-          columnGap={across.md}
-        >
-          <Box flexGrow={1} flexShrink={1}>
-            {o.isOpen ? (
-              prose(k, o.text)
-            ) : (
-              <Text wrap="truncate-end">{inlineCode(k, linesOf(o.text).join(" "))}</Text>
-            )}
-          </Box>
-          <Button
-            key={o.toggleKey}
-            dimColor
-            label={o.isOpen ? "Close" : "Open"}
-            onPress={() => o.onToggle()}
-          />
-        </Box>
-        {o.isOpen ? (o.body?.(k) ?? null) : null}
-        {o.isOpen && o.actions ? choice(k, o.actions, { gui: { layout: "row" } }) : null}
-      </Box>
-    </Box>
-  );
+  return guiRow(k, {
+    key: o.key,
+    mark: icon(k, o.icon.name, { tone: o.icon.tone, alt: o.icon.alt }),
+    text: o.text,
+    isOpen: o.isOpen,
+    button: { key: o.toggleKey, label: o.isOpen ? "Close" : "Open", onPress: o.onToggle },
+    body: [
+      o.body?.(k) ?? null,
+      o.actions ? choice(k, o.actions, { key: `${o.key}:actions`, gui: { layout: "row" } }) : null,
+    ],
+  });
 }
