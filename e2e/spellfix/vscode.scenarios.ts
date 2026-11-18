@@ -55,7 +55,7 @@ export default vscodeScenarios({
       steps: draft(TWO),
     },
     clean: {
-      about: "a draft with nothing flagged: the quiet line that offers Haiku",
+      about: "a draft with nothing flagged: the band draws nothing",
       start: { turns: [reply], plugins: ["spellfix"] },
       steps: draft("Please fix the handler"),
     },

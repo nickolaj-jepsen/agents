@@ -34,7 +34,7 @@ export function guiBand(k: Kit, v: BandView, a: BandActions): JSX.Element {
   const { Box, Text } = k;
   const { picker: p, report: done, added: words, isBusy, count: n } = v;
   const inset = tokens.gui.across.inset;
-  const head = (text: string, hint: string, status: "warning" | "success") =>
+  const head = (text: string, hint: string, status: "warning") =>
     statusBand(k, { key: "spellfix", text, hint, status, onPress: a.toggle });
 
   if (p) {
@@ -125,7 +125,7 @@ export function guiBand(k: Kit, v: BandView, a: BandActions): JSX.Element {
         ? notice(k, "Checking spelling", "dim")
         : n > 0
           ? head(`${n} misspelled`, "review", "warning")
-          : head("No misspellings", "ask Haiku", "success"),
+          : null,
       ...notes.map((text) => notice(k, text, "text")),
       notes.length > 0
         ? actionBar(k, [

@@ -444,19 +444,13 @@ for (const surface of ["desktop", "vscode"] as const) {
     await band.unmount();
   });
 
-  test(`${surface}: with nothing flagged the line says so and offers Haiku`, async ($, on) => {
+  test(`${surface}: with nothing flagged the band draws nothing`, async ($, on) => {
     const w = world(on, haikuSays({}, `<extra word="form" nth="1">from</extra>`));
 
     await paste($, w, "a form sent home");
     const band = await mount($);
-    expect(await band.find({ type: "Text", text: /^No misspellings$/ })).toBeDefined();
-    await expectNative(band, keys);
-
-    await band.press({ key: "spellfix" });
-    await w.clock.settle();
-    expect(await band.find({ type: "Text", text: /^form$/ })).toBeDefined();
-    expect((await band.find({ key: "ai" }))?.text).toBe("from");
-    await expectNative(band, keys);
+    expect(await band.find({ type: "Text", text: /misspell/i })).toBeUndefined();
+    expect(await band.find({ type: "Button" })).toBeUndefined();
     await band.unmount();
   });
 
@@ -586,7 +580,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     expect(personal(w).has("qiuck")).toBe(true);
     expect(w.box.text).toBe("a qiuck fox");
     await paste($, w, "one more qiuck here");
-    expect(await band.find({ type: "Text", text: /^No misspellings$/ })).toBeDefined();
+    expect(await band.find({ type: "Text", text: /misspell/i })).toBeUndefined();
     await band.unmount();
   });
 
@@ -630,6 +624,20 @@ for (const surface of ["desktop", "vscode"] as const) {
     ).toBeDefined();
     await w.clock.advance(1000);
     expect(await shownCount(band)).toBe("");
+
+    // With nothing flagged any more only the report is left: no count line, no Haiku button.
+    expect(await band.find({ type: "Text", text: /^No misspellings$/ })).toBeUndefined();
+    expect(await band.find({ key: "spellfix" })).toBeUndefined();
+    expect((await band.find({ key: "undo" }))?.text).toBe("Undo");
+    expect((await band.find({ key: "dismiss" }))?.text).toBe("Dismiss");
+    await expectNative(band, keys);
+
+    // Undo drops the report, and the draft's typos are counted again.
+    await band.press({ key: "undo" });
+    await w.clock.advance(1000);
+    expect(w.box.text).toBe("teh qiuck fox ");
+    expect(await band.find({ type: "Text", text: /^Fixed/ })).toBeUndefined();
+    expect(await shownCount(band)).toBe("2 misspelled");
 
     await band.unmount();
   });
