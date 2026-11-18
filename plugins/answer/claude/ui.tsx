@@ -585,9 +585,22 @@ export function paneTitle(
   k: Kit,
   title: string,
   count?: number | string,
-  options: BySurface<PaneTitleGui> = {},
+  options: BySurface<PaneTitleGui> & {
+    /**
+     * The terminal draws a bold heading with the count dim beside it, in place of the title line
+     * of rules: for a pane that is a short menu.
+     */
+    isHeading?: boolean;
+  } = {},
 ): JSX.Element | null {
   const { Box, Text } = k;
+  if (!k.isNative && options.isHeading)
+    return (
+      <Box flexDirection="row">
+        <Text bold>{title}</Text>
+        {count === undefined ? null : <Text dimColor>{`  ${count}`}</Text>}
+      </Box>
+    );
   if (k.isNative) {
     const own = surfaceOf(k, options);
     const said = own.count ?? (count === undefined ? "" : String(count));
@@ -608,7 +621,12 @@ export function paneTitle(
         {said ? <Text dimColor>{said}</Text> : null}
       </Text>
     ) : null;
-    if (!own.actions?.length) return text;
+    if (!own.actions?.length)
+      return text ? (
+        <Box key="toolbar" paddingX={tokens.gui.across.inset}>
+          {text}
+        </Box>
+      ) : null;
     return (
       <Box
         key="toolbar"
@@ -768,13 +786,19 @@ export function notice(
 /**
  * What a list says when there is nothing in it, wrapped and dim.
  * @param text Say what is missing and, if it helps, what makes rows appear.
+ * @param options `gui.text` is the text as a graphical surface says it: a fuller sentence, or one
+ *   without the terminal's `…`.
  */
-export function emptyState(k: Kit, text: string): JSX.Element {
+export function emptyState(
+  k: Kit,
+  text: string,
+  options: { gui?: { text?: string } } = {},
+): JSX.Element {
   const { Box, Text } = k;
   if (k.isNative)
     return (
       <Box paddingX={tokens.gui.across.inset}>
-        <Text dimColor>{text}</Text>
+        <Text dimColor>{options.gui?.text ?? text}</Text>
       </Box>
     );
   return <Text dimColor>{clamp(text, k.columns).join("\n")}</Text>;
@@ -1448,8 +1472,26 @@ export type ListItem = {
    * `primary` on a graphical surface. Left out, the row is no choice.
    */
   isMarked?: boolean;
-  /** Dims the row, as for something that cannot be acted on. */
+  /**
+   * Dims the row, as for something that cannot be acted on. A graphical surface draws it with no
+   * button, so it cannot be pressed; the terminal keeps it pressable.
+   */
   isDim?: boolean;
+  /**
+   * A short dim word after the title: a host, a state, why the row can't run. A graphical surface
+   * sets it beside the title with a gap (or at the row's end with `gui.isDetailAtEnd`); the
+   * terminal sets it after the padded title with `tui.isInline`, and otherwise as the first
+   * metadata field.
+   */
+  detail?: string;
+  /** A key that presses the row. Terminal only: a graphical surface draws no key on a row. */
+  hotkey?: string;
+  /** An icon before the title on a graphical surface; the terminal draws none. */
+  icon?: IconName;
+  gui?: {
+    /** Detail at the far end, before the button, as the age of a note is. */
+    isDetailAtEnd?: boolean;
+  };
   /** The word on a graphical surface's button for the row: `Open`, or `Choose` on a choice. */
   action?: string;
   /**
@@ -1476,10 +1518,22 @@ export type ListOptions = {
     isColumns?: boolean;
     /** Bounds for each title's `clamp`. */
     title?: ClampOptions;
+    /**
+     * A menu: each row is one Button, the title padded to the widest in the list and its detail
+     * dim after it on the same line; the title is not cut.
+     * @default false
+     */
+    isInline?: boolean;
+    /** The width `isInline` pads titles to; `list` sets it to the widest title of its rows. */
+    labelWidth?: number;
   };
   gui?: {
     /** Rows shown before the `N more` row. @default `tokens.gui.maxItems` */
     maxItems?: number;
+    /** Show every row, as after the person asked for the rest. */
+    isAll?: boolean;
+    /** Makes a group's `N more` row a Button that asks for the rest. */
+    onMore?: () => unknown;
   };
   desktop?: ListOptions["gui"];
   vscode?: ListOptions["gui"];
@@ -1489,31 +1543,108 @@ export type ListOptions = {
 /** Cells a mark takes with the space after it. */
 const MARK = 2;
 
+/** How much faster than its title a row's detail shrinks when the line is too long. */
+const DETAIL_SHRINK = 8;
+
 /**
- * One row of a list: a `Button` whose text is the mark, the clamped title and the metadata.
- * A focused row is drawn by the engine; this draws no pointer of its own. A graphical surface
- * draws a button as wide as the room, the title over its metadata line.
+ * A graphical row that is pressed, not opened: the title cut at the edge by the surface, its
+ * detail dim beside it, and one quiet button at the far edge, laid out as a folded card is. A
+ * Button cannot wrap or hold an icon and never shrinks, so it is not the row itself but a short
+ * word beside it. A dimmed row has no button.
  */
-export function listRow(k: Kit, item: ListItem, options: ListOptions = {}): JSX.Element {
+function listRowGui(k: Kit, item: ListItem): JSX.Element {
   const { Box, Button, Text } = k;
+  const { space, across } = tokens.gui;
   const meta = item.meta ?? [];
-  if (k.isNative) {
-    // A Button does not wrap its label, so a row's title is prose beside a short button.
-    const label =
-      item.action ?? (item.isMarked === undefined ? "Open" : item.isMarked ? "Chosen" : "Choose");
-    return (
-      <Box key={`${item.key}:row`} flexDirection="column" rowGap="xs">
-        <Text dimColor={item.isDim || undefined}>{item.title}</Text>
-        {meta.length > 0 ? <Text dimColor>{meta.map((c) => c.text).join("  ·  ")}</Text> : null}
+  const isEnd = item.gui?.isDetailAtEnd;
+  const label =
+    item.action ?? (item.isMarked === undefined ? "Open" : item.isMarked ? "Chosen" : "Choose");
+  return (
+    <Box
+      key={`${item.key}:row`}
+      flexDirection="row"
+      flexWrap="nowrap"
+      alignItems="center"
+      columnGap={across.md}
+      paddingX={across.inset}
+      paddingY={space.xs}
+      // A round border is the surface's only rounded corner; it is drawn in no colour.
+      borderStyle="round"
+      borderColor="#00000000"
+    >
+      {item.icon ? (
+        <Box key="icon" height={1} alignItems="center" flexShrink={0}>
+          {icon(k, item.icon)}
+        </Box>
+      ) : null}
+      <Box flexDirection="column" flexGrow={1} flexShrink={1} rowGap={space.xs}>
+        <Box flexDirection="row" flexWrap="nowrap" columnGap={across.md}>
+          <Box flexShrink={1}>
+            <Text wrap="truncate-end" dimColor={item.isDim || undefined}>
+              {item.title}
+            </Text>
+          </Box>
+          {item.detail && !isEnd ? (
+            // The title is what names the row: a long detail gives way first.
+            <Box flexShrink={DETAIL_SHRINK}>
+              <Text wrap="truncate-end" dimColor>
+                {item.detail}
+              </Text>
+            </Box>
+          ) : null}
+        </Box>
+        {meta.length > 0 ? (
+          <Text wrap="truncate-end" dimColor>
+            {meta.map((c) => c.text).join("  ·  ")}
+          </Text>
+        ) : null}
+      </Box>
+      {item.detail && isEnd ? (
+        // At the end it is short (an age) and keeps its room; the title gives way.
+        <Box flexShrink={0}>
+          <Text dimColor>{item.detail}</Text>
+        </Box>
+      ) : null}
+      {item.isDim ? null : (
         <Button
           key={item.key}
-          variant={item.isMarked ? "primary" : "secondary"}
+          variant={item.isMarked ? "primary" : undefined}
+          dimColor={!item.isMarked || undefined}
           label={label}
           onPress={() => item.onPress()}
         />
-      </Box>
+      )}
+    </Box>
+  );
+}
+
+/**
+ * One row of a list: a `Button` whose text is the mark, the clamped title and the metadata.
+ * A focused row is drawn by the engine; this draws no pointer of its own. A graphical surface
+ * draws a row of text with a short quiet button at its end (`listRowGui`).
+ */
+export function listRow(k: Kit, item: ListItem, options: ListOptions = {}): JSX.Element {
+  const { Button, Text } = k;
+  if (k.isNative) return listRowGui(k, item);
+  if (options.tui?.isInline) {
+    const pad = Math.max(0, (options.tui.labelWidth ?? 0) - cellWidth(item.title));
+    return (
+      <Button
+        key={item.key}
+        plain
+        hotkey={item.hotkey}
+        dimColor={item.isDim || undefined}
+        onPress={() => item.onPress()}
+      >
+        {`${item.title}${" ".repeat(pad)}`}
+        {item.detail ? <Text dimColor>{`  ${item.detail}`}</Text> : null}
+      </Button>
     );
   }
+  const meta = [
+    ...(item.detail ? [{ text: item.detail, width: cellWidth(item.detail) }] : []),
+    ...(item.meta ?? []),
+  ];
   const { isColumns = false } = options.tui ?? {};
   const width = k.columns;
   const gutter = tokens.gutter;
@@ -1557,19 +1688,25 @@ export function listRow(k: Kit, item: ListItem, options: ListOptions = {}): JSX.
     });
   }
   return (
-    <Button key={item.key} plain dimColor={item.isDim || undefined} onPress={() => item.onPress()}>
+    <Button
+      key={item.key}
+      plain
+      hotkey={item.hotkey}
+      dimColor={item.isDim || undefined}
+      onPress={() => item.onPress()}
+    >
       {children}
     </Button>
   );
 }
 
-/** Rows under one section header. */
+/** Rows under one section header; an empty title draws no header. */
 export type ListGroup = { title: string; rows: ListItem[] };
 
 /**
  * Groups of rows, each under a section header, one blank row between groups. A Claude pane
  * scrolls as a whole, so the terminal has no windowing and no `n more`; a graphical surface shows
- * `gui.maxItems` rows of a group and says how many more.
+ * `gui.maxItems` rows of a group and says how many more. A group with no title is rows alone.
  */
 export function list(k: Kit, groups: ListGroup[], options: ListOptions = {}): JSX.Element {
   const { Box } = k;
@@ -1579,14 +1716,31 @@ export function list(k: Kit, groups: ListGroup[], options: ListOptions = {}): JS
     vscode: options.vscode,
     mobile: options.mobile,
   });
+  const rowOptions: ListOptions = options.tui?.isInline
+    ? {
+        ...options,
+        tui: {
+          ...options.tui,
+          labelWidth: Math.max(0, ...groups.flatMap((g) => g.rows.map((r) => cellWidth(r.title)))),
+        },
+      }
+    : options;
   return (
-    <Box flexDirection="column" rowGap={k.isNative ? "md" : 1}>
+    <Box flexDirection="column" rowGap={k.isNative ? tokens.gui.space.md : 1}>
       {groups.map((group, g) => {
-        const { shown, more } = capped(k, group.rows, { gui: own });
+        const { shown, more } = capped(k, group.rows, {
+          gui: own,
+          isAll: own.isAll,
+          onMore: own.onMore,
+        });
         return (
-          <Box key={`group${g}`} flexDirection="column" rowGap={k.isNative ? "sm" : undefined}>
-            {section(k, group.title)}
-            {shown.map((row) => listRow(k, row, options))}
+          <Box
+            key={`group${g}`}
+            flexDirection="column"
+            rowGap={k.isNative ? tokens.gui.space.xs : undefined}
+          >
+            {group.title ? section(k, group.title) : null}
+            {shown.map((row) => listRow(k, row, rowOptions))}
             {more}
           </Box>
         );
@@ -1603,7 +1757,12 @@ export function list(k: Kit, groups: ListGroup[], options: ListOptions = {}): JS
 export function stack(
   k: Kit,
   children: readonly (JSX.Element | null)[],
-  options: { isTight?: boolean; gui?: { gap?: GuiSpace | "none" } } = {},
+  options: {
+    isTight?: boolean;
+    /** `tui.gap` is the terminal's rows between blocks, none for a short menu. @default 1 */
+    tui?: { gap?: 0 | 1 };
+    gui?: { gap?: GuiSpace | "none" };
+  } = {},
 ): JSX.Element {
   const { Box } = k;
   const gap = options.gui?.gap ?? "md";
@@ -1617,7 +1776,7 @@ export function stack(
             : tokens.gui.space[gap]
           : options.isTight && k.isTight
             ? 0
-            : 1
+            : (options.tui?.gap ?? 1)
       }
     >
       {children}
