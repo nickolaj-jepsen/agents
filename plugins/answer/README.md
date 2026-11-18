@@ -20,8 +20,15 @@ order: 4
   prompt` writes the reply into the prompt, above any draft, for you to send. `s`
   sends it at once as your message, and leaves your draft where it was. A send that
   fails keeps the answers in the form.
-- Every row, key and button takes a click, so the mouse alone works. In the desktop
-  app, VS Code and mobile the host draws its own controls in place of the keys.
+- Every row, key and button takes a click, so the mouse alone works.
+- In the desktop app and VS Code the form is drawn with the host's own controls, not
+  the terminal's rows: the offer is a status line with an `Answer` button; the form's
+  top line holds how many are answered and one tab per question and the review, the
+  current one filled; each option is a button, the chosen one filled, with its detail
+  under it; your own answer and a note open as text fields under the options; the
+  keys are an action row (`Back`, `Skip`, `Add note`, `Pick several`, `Take B`,
+  `Next`, `Close`) of which only the one worth pressing is filled. The review lists
+  each question over its answer, with `Send` filled once something is answered.
 - Answers last the session: a turn a background task starts keeps them, your own
   send sets the round aside, and sending the reply itself just closes it. A round set
   aside comes back with `/answer`, answers and all (pi: `alt+a` or `/answer`).
