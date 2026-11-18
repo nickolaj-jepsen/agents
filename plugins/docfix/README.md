@@ -36,6 +36,10 @@ order: 7
   check the claim against the code, edit the doc as it stands now, and resolve
   the suggestion. The evidence stays in its file for the agent to read. Nothing
   is committed.
+  - Where the same fact stands in a doc beside it (its folder, skill or
+    plugin), the agent fixes it there too and names that doc. It doesn't file a
+    second suggestion, and it searches only for that fact, so the apply doesn't
+    turn into a review of every doc.
 - **Dismiss** keeps the suggestion, so the same claim isn't filed again. `u` opens
   the last dismissed ones again.
 

@@ -535,8 +535,9 @@ export function applyPrompt(picked: readonly Suggestion[]): string {
     "For each one:",
     "1. Check the claim against this repo's code. One that no longer holds needs no edit.",
     "2. Edit the doc as it stands now, in its existing structure and voice. For a stale plan, delete or trim what is finished or gone.",
-    `3. Call ${TOOL_NAME} with action "resolve" and the id (the file's name without .md), whether you applied it or found it no longer true.`,
+    "3. Search once for the outdated wording in the docs beside it (its folder, or the skill or plugin it belongs to). Where another doc states the same fact, fix it there too instead of filing a suggestion. Change only that fact, and leave records of the past, such as a changelog, as they are.",
+    `4. Call ${TOOL_NAME} with action "resolve" and the id (the file's name without .md), whether you applied it or found it no longer true.`,
     "",
-    "Don't commit.",
+    "Name every doc you changed beyond the ones above. Anything else you notice gets filed with docfix as usual. Don't commit.",
   ].join("\n");
 }
