@@ -31,8 +31,10 @@ The desktop app and the VS Code extension draw the same tree with their own cont
 - What differs by surface is said in options: `{ tui, gui }`, with `desktop`, `vscode` or `mobile` to override `gui` on one surface. The kit merges them with `surfaceOf`. Examples in the kit today:
   - `paneTitle(k, title, count, { gui: { count, summary, actions } })`: the toolbar.
   - `actionBar(k, actions, { gui: { isHidden: true } })`: the terminal's action row, not drawn where the toolbar holds the actions.
-  - `notice(k, text, status, { gui: { isHidden: true } })`: a terminal-only line.
-  - `statusBand(k, { ..., gui: { text, icon, tone, actions } })`: the count in words, and more quiet actions.
+  - `notice(k, text, status, { gui: { isHidden: true } })`: a terminal-only line; `gui.isCut` one line cut at the edge, `gui.isFlush` no inset of its own.
+  - `prose(k, text, { gui: { isInset: true } })`: a pane's own block of prose, at the inset.
+  - `foldedRow(k, { ..., meta, tone })`: a dim line under the folded text, and the line in a state's colour.
+  - `statusBand(k, { ..., gui: { text, icon, tone, actions, isOneLine } })`: the count in words, more quiet actions, and everything on one line with the text cut.
   - `emptyState(k, text, { gui: { text } })`: a fuller sentence where there is room.
   - `choice(k, options, { gui: { layout: "row" } })`, `capped(k, items, { gui: { maxItems } })`, `stack(k, blocks, { gui: { gap: "sm" } })`.
   - `choice(k, options, { gui: { layout: "rows", onward } })`: one row per option, led by a Button of its `tag`; the chosen one of a single choice opens with its `body` and `onward` filled at its far edge. An option with a `field` is that control's row.
@@ -44,7 +46,7 @@ The desktop app and the VS Code extension draw the same tree with their own cont
 - A plugin never draws a graphical pattern itself. If the kit's drawing is wrong for a screen, change the kit, run `just kit-sync`, and check every mod that uses it.
 - Spacing is `tokens.gui.space` (down) and `tokens.gui.across` (across), as numbers. A step name is a whole line or none in VS Code.
 
-These functions follow the style: `pane`, `paneTitle`, `section`, `card`, `foldedRow`, `list`, `listRow`, `labelled`, `labelledRow`, `choice`, `actionBar`, `statusBand`, `capped`, `stack`, `facts`, `subhead`, `rule`, `indent`, `prose`, `notice`, `emptyState`, `icon`, `excerpt`, `fieldRow`. These still draw the older look, with step names: `entries`, `note`, `bandShell`, `buttonRow`, `gapOf`, `imageGallery`. Converting a mod starts with the kit functions it calls: bring their graphical drawing to the style, then the mod.
+These functions follow the style: `pane`, `paneTitle`, `section`, `card`, `foldedRow`, `list`, `listRow`, `labelled`, `labelledRow`, `fields`, `properties`, `editable`, `choice`, `actionBar`, `statusBand`, `capped`, `stack`, `facts`, `subhead`, `rule`, `indent`, `prose`, `notice`, `emptyState`, `icon`, `excerpt`, `fieldRow`. These still draw the older look, with step names: `entries`, `note`, `bandShell`, `buttonRow`, `gapOf`, `imageGallery`. Converting a mod starts with the kit functions it calls: bring their graphical drawing to the style, then the mod.
 
 ### The one door: `forSurface`
 
@@ -76,7 +78,6 @@ When `claude` on your PATH is a wrapper that adds `--plugin-dir` (a system confi
 Read from the extension's webview (2.1.327) and checked by screenshot:
 
 - **Button.** Its look comes from `dimColor` alone: without it, a filled button in the theme's button colour; with it, a quiet outlined one. `variant` is ignored, so the kit sets `dimColor` on every button that is not the main one. A label never wraps and the button never shrinks, so a long one runs off the pane, even as a `Text` with `truncate-end` in a shrinking `Box`. Its children are strings and `Text` only: no `Svg`, no `Box`, and a `Text` child's colour is dropped (2.1.327). `role="dismiss"` draws a plain button, no close mark.
-- **Select** is the native drop-down, as wide as the room.
 - **Link** is a plain link that opens its URL. It can't raise a press, so it can't be a mod's control.
 - **Markdown links** with `onLinkPress` raise a press, but draw in the link colour, underlined: too loud for a row.
 - **Box.**
@@ -88,9 +89,11 @@ Read from the extension's webview (2.1.327) and checked by screenshot:
   - `weight` `semibold` and `bold` draw bold; `medium` draws regular.
   - `size` and `mono` do nothing. A code span needs `Markdown`, or a `Text` with the code background (`tokens.gui.chip`).
   - `dimColor` is 65% opacity, so dim text inside a dim block fades twice.
+  - `color` takes a theme key or a hex colour. A key is the theme's own foreground: `error` and `success` are red and green in Dark Modern, but `warning` is grey (`#bfbfbf`). Text that must read as a warning takes the kit's `tokens.gui.tone.warning`, the colour of its icon.
   - `wrap="truncate-end"` keeps one line and cuts it at the edge with `…`. `maxLines` cuts at a word and can leave the line short.
 - **Svg** is an image of fixed size in CSS pixels, with a required `alt`. It can't read the theme or `currentColor`, so its colours are fixed.
-- **Input** shows one line, whatever `rows` says. A pointer's click on the field focuses it, so a field always drawn is reached in one click (answer's write-in, 2.1.327). A click on a Button that reveals an `Input` leaves the focus on that Button: `autoFocus` and `$.ui.focus` don't move it there, and InputProps has nothing else for it; Tab reaches the field. With no `submitLabel`, or an empty one, the field has no button beside it, focused or not; with a word, a filled button of that word shows beside it. Enter submits either way.
+- **Select** is the page's own `<select>`, its options in the platform's popup. It grows to fill what is left of its line (at least 8 characters), and its `label` is drawn before it on the same line, so names of different lengths start their selects at different places: set names in a column of their own (`fields`).
+- **Input** shows one line, whatever `rows` says, and fills what is left of its line like a Select. `placeholder` draws. A pointer's click on the field focuses it, so a field always drawn is reached in one click (answer's write-in, 2.1.327). A click on a Button that reveals an `Input` leaves the focus on that Button: `autoFocus` and `$.ui.focus` don't move it there, and InputProps has nothing else for it; Tab reaches the field. With no `submitLabel`, or an empty one, the field has no button beside it, focused or not; with a word, a filled button of that word shows beside it, one more filled control in view, so leave it out. Enter submits either way.
 - **The prompt.** VS Code raises no `prompt.edit` or `prompt.change`. A mod that watches the draft reads `$.prompt.read()` in its render hook. The band redraws only now and then while the person types, so what it shows can lag the draft by an edit or more.
 - The inline pane's body is at most about 234 pixels tall in a 420 by 800 window, and scrolls. The band above the prompt is capped the same, at 234 pixels, and scrolls.
 
@@ -125,6 +128,7 @@ node e2e/vscode.ts stop
   ```
 
 - A click leaves the pointer where it landed, so a button under it shows its hover fill in the shot.
+- `type` reaches the prompt, not a pane's `Input` focused from `eval`. To fill a field, set its value with the element's own setter and raise `input` (`Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set`, then `dispatchEvent(new Event("input", { bubbles: true }))`), as for a Select's `change`; linear-issue's scenarios do both.
 
 ## Traps
 

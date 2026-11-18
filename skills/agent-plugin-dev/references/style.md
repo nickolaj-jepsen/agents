@@ -155,14 +155,25 @@ Say what happens at the narrowest size. A review that does not name it has not f
 
 ## Graphical surfaces
 
-The desktop app and the VS Code extension draw a mod's tree with their own controls, in a proportional font. Cells, glyphs and the terminal's rules above do not apply there. The kit draws both from one call (`claude.md`, "Graphical surfaces"), and docfix's pane is the reference screen.
+The desktop app and the VS Code extension draw a mod's tree with their own controls, in a proportional font. Cells, glyphs and the terminal's rules above do not apply there. The kit draws both from one call (`claude.md`, "Graphical surfaces"). docfix's pane is the reference for a list, linear-issue's draft pane for a form.
 
 ### The idea
 
 - A calm list where things open in place. A row is one line; opening it shows its detail under it, in the same pane.
+- A form reads as the record it makes, not as a wall of controls: its values as text, and a quiet Edit that opens the controls in place.
 - The host already frames the pane and draws its title and close mark. Draw no box, border or card inside it.
 - Only the action worth pressing now is filled. Every other button is quiet. A choice's chosen option, and the current tab of a toolbar, are filled as well: they say what is chosen, not what to press.
 - Design for the inline pane: about 234 pixels tall (13 lines of text) in a 420-pixel-wide editor. A docked pane is about 350 pixels wide and draws the same; it needs no layout of its own.
+- Put what must not be missed in those 13 lines: the first thing in the pane is what the person must know before acting (a possible duplicate), then the content itself.
+
+### Where the actions go
+
+The host can't pin a footer: the pane's body scrolls as a whole. So where the commit sits depends on how the pane is read.
+
+- **A list acted on as a whole** (docfix's queue, a picker): its commit is in the toolbar, the first line (`paneTitle` with `gui.actions`). The list may scroll far, rows open in place, and what the commit will do is said beside it.
+- **A form answered a step at a time** (answer's questions): the way on (`Next`) is on the row of the answer just given, where the click was, and the last step's action (`Send`) sits under what it sends. The toolbar holds the navigation (tabs) and the way out. In a 234-pixel band the row just pressed is the one in view; the toolbar and the foot are what scroll away.
+- **A form**, read top to bottom and then committed (a draft to file): its actions are an action row (`actionBar`) after the last thing it commits, where reading ends. Never a toolbar over content the person has not read yet. What is still being checked and what went wrong sit right above the row.
+- **A state with nothing to read** (drafting, failed): its line, then its one way out under it.
 
 ### Spacing
 
@@ -193,15 +204,17 @@ Every block shares the inset, so their left edges line up. An opened row's fill 
 
 There are no type sizes: VS Code draws every `size` alike. Hierarchy is weight, dim and colour.
 
-| What                                   | Drawn                                              |
-| -------------------------------------- | -------------------------------------------------- |
-| A group heading (a doc's path)         | semibold                                           |
-| A row                                  | regular, its icon before it                        |
-| A row's meta line                      | the kind's word in its status colour, the rest dim |
-| A heading inside an item ("Details")   | semibold and dim (`subhead`)                       |
-| A label: a date and who, a fact's name | dim                                                |
-| Body text: a claim, evidence           | regular                                            |
-| A count, the empty state               | dim                                                |
+| What                                   | Drawn                                                  |
+| -------------------------------------- | ------------------------------------------------------ |
+| A group heading (a doc's path)         | semibold                                               |
+| A record's title (an issue's)          | semibold, whole, under a dim line naming where it goes |
+| A record's properties                  | dim, each after its icon                               |
+| A row                                  | regular, its icon before it                            |
+| A row's meta line                      | the kind's word in its status colour, the rest dim     |
+| A heading inside an item ("Details")   | semibold and dim (`subhead`)                           |
+| A label: a date and who, a fact's name | dim                                                    |
+| Body text: a claim, evidence           | regular                                                |
+| A count, the empty state               | dim                                                    |
 
 The colour roles are the terminal's. Colour marks a state only: a kind's icon and word, a row set to apply. Most rows carry one coloured icon and nothing else in colour.
 
@@ -234,15 +247,10 @@ Every row is the kit's one row drawing, so `card`, `foldedRow` and `listRow` sha
 
 **Groups** (`section`). A semibold heading at the inset, its rows `xs` under it, groups `md` apart. Nothing at the heading's right: no keys that act on a whole group, and no press that opens every row of it.
 
-**The toolbar** (`paneTitle` with `gui.actions`). The pane's first line, at the inset with or without actions. On the left, the count, dim (`3 open`), or what closing will do once something is set (`On close: apply 1, dismiss 1`). At the far edge, the pane's actions, wrapping when they don't fit. The main one (Submit) is quiet until there is something to submit, then filled. The terminal's action row at the foot is not drawn here. An empty title leaves the line to the count and the actions.
+**The toolbar** (`paneTitle` with `gui.actions`). For a list acted on as a whole, and for a step-by-step form's navigation ("Where the actions go"). The pane's first line, at the inset with or without actions. On the left, the count, dim (`3 open`), or what closing will do once something is set (`On close: apply 1, dismiss 1`). At the far edge, the pane's actions, wrapping when they don't fit. The main one (Submit) is quiet until there is something to submit, then filled. The terminal's action row at the foot is not drawn here. An empty title leaves the line to the count and the actions.
 
 - Navigation is tabs at the line's start, in place of the count (`gui.tabs`: answer's `Q1 Q2 Q3 Review`): the current one filled, as a choice's chosen option, the rest quiet. They wrap among themselves, and the actions (`Close`) keep the far edge of the first line.
 - A Button holds no icon, so a tab says a place is done with `✓` in its label (`✓ Q1`). It is a mark, not a control, and the only glyph a label carries.
-
-**Where the main action sits.** Two kinds of screen, two places:
-
-- A list whose rows are each set, then carried out together (docfix): the main action (Submit) is in the toolbar, in view however far the list scrolls.
-- A form answered a step at a time (answer): the way on (`Next`) is on the row of the answer just given, where the click was, and the last step's action (`Send`) sits under what it sends, in reading order. The toolbar holds the navigation and the way out. In a 234-pixel band the row just pressed is the one in view; the toolbar and the foot are what scroll away.
 
 **Choices** (`choice`, `gui.layout: "row"`). One button per option in a row, the chosen one filled and the rest quiet. An option that means "nothing" (skip) is never filled.
 
@@ -260,6 +268,11 @@ Every row is the kit's one row drawing, so `card`, `foldedRow` and `listRow` sha
 
 **Form fields** (`labelled`, `labelledRow`). The field's name as a sub-heading (semibold, dim) at the inset, the control (an `Input`, a `Select`, a choice) `xs` under it. `labelledRow` sets short fields side by side, wrapping.
 
+**A record that opens to edit** (`editable`). For a form whose values are mostly right. Folded: a dim line saying what the record is (`New issue in Platform`) with a quiet `Edit` at its far edge, then the values as text: the title semibold and whole, its properties under it. Opened: the same line says `Done` in the same place, and the controls sit in a well (the opened row's fill), at the inset. A surface that draws no fields (mobile) shows the values with no `Edit`.
+
+- Do keep the title whole in the summary: an `Input` is one line in VS Code and cuts it.
+- Don't draw the controls before they are asked for: a grid of selects reads as a database row, not as the thing being made.
+
 - A field a click must reach is drawn already, where it belongs, with a placeholder that says what goes in it (`Add a note`). A press that reveals one leaves the focus on the press, so it takes a second click.
 - A field gives no `submitLabel` here: VS Code then draws no button beside it, and Enter still submits. With one, a filled button of that word appears beside it, one more filled control.
 
@@ -267,13 +280,26 @@ Every row is the kit's one row drawing, so `card`, `foldedRow` and `listRow` sha
 
 **An action row** (`actionBar`). A word or two per button, labels capitalised, the main one filled. These are the only buttons that may carry a hotkey.
 
-**Prose and labels.** Text a person or an agent wrote (a claim, evidence) is `Markdown` (`prose`), so code spans and links draw. Headings, labels, meta and anything cut to one line are `Text`. A Markdown block can't be cut, so a folded row is a `Text`.
+**Properties** (`properties`). A record's properties on one line, wrapping: each value dim after its icon, as a tracker shows an issue's status, priority and labels. A property left unset (no project) is left out.
+
+**A form** (`fields`). Each field's name dim in a column, its control after it filling the row, so every control starts at one edge. A field with `isWide` (a title) has its name over a control the form's whole width. Fields `sm` apart. A Select or Input fills what is left of its line by itself.
+
+- Several-of-many from a long set (labels): the chosen ones as a `choice` row, filled when on and quiet when off (one turned off stays, to turn back on), then an `Input` that finds more: what is typed offers up to six matches as quiet buttons, a press adds one and empties the field, Enter adds the first.
+
+**Form fields** (`labelled`, `labelledRow`). The field's name as a sub-heading (semibold, dim) at the inset, the control `xs` under it, for a lone field outside a record. `labelledRow` sets short fields side by side, wrapping.
+
+**A warning row** (`foldedRow` with `tone`). What must be seen before acting (an open issue that may already cover the draft) is a folded row first in the pane: its icon and its line in the state's colour, what it names in a dim line under it (`meta`), and `Open`. Opened, it shows the rest and the action it offers instead (`Comment instead`), quiet. One at most. No fill: a quiet button's outline vanishes on a tinted background.
+
+**An action row** (`actionBar`). A word or two per button, labels capitalised, the main one filled. On a form it is the pane's last block. These are the only buttons that may carry a hotkey.
+
+**Prose and labels.** Text a person or an agent wrote (a claim, evidence) is `Markdown` (`prose`), so code spans and links draw. Headings, labels, meta and anything cut to one line are `Text`. A Markdown block can't be cut, so a folded row is a `Text`. Prose that is a block of the pane's own (a description), not text inside a row, is at the inset: `gui.isInset`. A footnote (where a draft came from) is one dim line cut at the edge: `notice` with `gui.isCut`.
 
 **Facts** (`facts`). A dim label, then its value beside it, wrapping under itself. Several entries of evidence each get a dim label line (`2026-11-16  claude`) over their text; there is no date column.
 
 **The band above the prompt** (`statusBand`). The status icon, the count in words (`3 doc suggestions to review`) and a quiet button with a verb (`Review`), at the inset. The prompt's send button stays the one filled control in view.
 
-- More actions (`gui.actions`: `Copy link`, `Dismiss`) are quiet buttons too. The line is then the text alone, and the buttons wrap under it at the inset.
+- More actions (`gui.actions`: `Copy link`, `Dismiss`) are quiet buttons too. The line is then the text alone, and the buttons wrap under it at the inset: news to read whole (`Filed PLT-431: …`).
+- A line that names something the person already knows (a draft they hid) is one line with `gui.isOneLine`: the text cut at the edge, every button after it. The host names the mod over the band, so the text is the thing itself (the draft's title), not `Linear draft:`.
 - A band that opens a picker under itself (spellfix) says `Close` on its button while the picker is open. What opens is blocks at the inset, so the icon and everything under it share one left edge.
 
 **The empty state** (`emptyState`). One dim paragraph at the inset: what is missing, and what makes rows appear.
@@ -284,7 +310,8 @@ Every row is the kit's one row drawing, so `card`, `foldedRow` and `listRow` sha
 
 **Icons** (`icon`). Stroked drawings on a 16-pixel grid, drawn 16 pixels square.
 
-- The set: `wrong`, `stale`, `missing`, `warning`, `success`, `error`, `pending` (a dashed circle: not answered yet), `question` (the band's offer of a form), `write` (a pencil: your own words), `note`.
+- The set: `wrong`, `stale`, `missing`, `warning`, `success`, `error`; a form's `pending` (a dashed circle: not answered yet), `question` (the band's offer of a form), `write` (a pencil: your own words), `note`; a record's properties `status`, `priorityNone`, `priorityLow`, `priorityMedium`, `priorityHigh`, `priorityUrgent`, `project`, `label`; and `draft`.
+- A filled shape uses `currentColor`, which the kit sets to the tone; a faint part (a priority's unlit bars) is the same colour at `stroke-opacity=".35"`.
 - An icon is an image and can't follow the theme, so its colours are fixed in `tokens.gui.tone`: neutral `#8b8f98`, error `#e5534b`, warning `#d4962a`, success `#3fa65b`.
 - An icon is neutral unless it marks a state.
 - A new icon goes into the kit's set, on the same grid with the same 1.5 stroke.
@@ -299,7 +326,7 @@ Every row is the kit's one row drawing, so `card`, `foldedRow` and `listRow` sha
 - Hotkeys only on the buttons of an action row; never on a row's buttons.
 - No horizontal overflow at 420 pixels. A button never wraps, so a label is a word or two. `claude.md` has the check.
 - No text ends in `…`. The surface cuts a line itself; progress is said in words (`Drafting the issue`, `Checking spelling`).
-- No frame inside the pane; a fill only under an opened row.
+- No frame inside the pane; a fill only under an opened row or an opened `editable`.
 
 `expectNative` checks most of these in a mod's tests (`claude.md`).
 
