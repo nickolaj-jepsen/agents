@@ -92,7 +92,10 @@
           }
           # The site's pictures and the catalogue's model, cached by the store: `just media` builds
           # these. Two units, so a change to one recording does not replay the other.
-          // lib.mapAttrs' (name: value: lib.nameValuePair "site-${name}" value) (pkgs.callPackage ./pkgs/site-media.nix {inherit tui-test;});
+          # Select the outputs explicitly: callPackage also adds an `override` function to the set.
+          // lib.mapAttrs' (name: value: lib.nameValuePair "site-${name}" value) {
+            inherit (pkgs.callPackage ./pkgs/site-media.nix {inherit tui-test;}) media kit;
+          };
 
         checks =
           {
