@@ -10,7 +10,13 @@ One Haiku call answers every flagged word, and adds the ones it calls correct to
 the personal word list. It also finds real-word typos hunspell can't (`form` for
 `from`).
 
-In Claude Code its picker is the band button above the prompt.
+In Claude Code its picker is the band above the prompt. In the terminal that is a row of keys; in the
+desktop app and VS Code it is a status line, "2 misspelled" with a Review button, which opens the word in
+its context, a row of suggestion buttons (Haiku's marked beside it), and Skip, Fix all and, with a
+personal dictionary, Add word. After Fix all a notice lists the changes with Undo and Dismiss.
+
+VS Code raises no prompt events, so there the band reads the draft on each redraw instead; the
+keybinding below does not reach it, and every action is a click.
 
 ## Keys
 

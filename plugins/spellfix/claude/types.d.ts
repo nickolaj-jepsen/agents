@@ -9,6 +9,9 @@ export type Extra = Miss & { fix: string };
 export type Picker = Miss & {
   before: string;
   after: string;
+  /** The longer context a graphical surface wraps or cuts itself. */
+  lead: string;
+  trail: string;
   suggestions: string[];
   isExtra: boolean;
   ai: string | null;

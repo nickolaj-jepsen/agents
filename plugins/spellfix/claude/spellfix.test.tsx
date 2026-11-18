@@ -1,6 +1,8 @@
 import type { On, PromptBox, PromptEditInput, PromptEditResult } from "claude-code";
 import { expect, mock, test } from "claude-code/testing";
 import type { Engine, MockClock, Mounted } from "claude-code/testing";
+import { ACTION_KEYS } from "./band";
+import { expectNative } from "./checks";
 
 const BAND = {
   plugin: "spellfix",
@@ -58,7 +60,7 @@ function world(on: On, haiku: (prompt: string) => string | Promise<string> = hai
 
   on("prompt.read", () => ({ value: w.box }));
   on("prompt.fill", (_, e) => {
-    w.box = { text: e.text, cursor: e.text.length };
+    w.box = { text: e.text, cursor: e.cursor ?? e.text.length };
     return { isFilled: true };
   });
   on("prompt.edit", (_, e) => {
@@ -151,9 +153,13 @@ async function openPicker(
 }
 
 /** The misspelling count the band shows, or "" while it shows none. */
-async function shownCount(band: Pick<Mounted, "find">) {
-  const text = (await band.find({ key: "spellfix" }))?.text ?? "";
-  return /\d+ misspelled/.exec(text)?.[0] ?? "";
+async function shownCount(band: Pick<Mounted, "findAll">) {
+  for (const e of await band.findAll({}))
+    if (e.type === "Button" || e.type === "Text") {
+      const n = /\d+ misspelled/.exec(e.text ?? "")?.[0];
+      if (n) return n;
+    }
+  return "";
 }
 
 for (const surface of ["terminal", "desktop", "vscode"] as const) {
@@ -418,30 +424,103 @@ test("Haiku's typos in words hunspell skips are offered, but never in code, URLs
   await band.unmount();
 });
 
-// The band was drawn for the terminal, where the picker is driven by keys. On the GUI surfaces it is
-// pinned only as far as it mounts, shows the word and its suggestions, and answers a press on each
-// Button. Its terminal-only drawing there (the clamped context, key hints) is not asserted.
+// On the desktop app and VS Code the band is the kit's: a count line whose button opens and closes
+// the picker, the word in its context, a row of suggestion buttons (no hotkeys) and an action row.
 for (const surface of ["desktop", "vscode"] as const) {
-  test(`${surface}: the picker shows the word and a button per suggestion; a press fixes it`, async ($, on) => {
+  const mount = ($: Engine) => $.ui.mount({ ...BAND, surface });
+  const keys = { hotkeys: ACTION_KEYS };
+
+  test(`${surface}: the count is a status line with one quiet button`, async ($, on) => {
+    const w = world(on);
+
+    await paste($, w, "teh qiuck fox");
+    const band = await mount($);
+    expect(await band.find({ type: "Text", text: /^2 misspelled$/ })).toBeDefined();
+    const open = await band.find({ type: "Button", key: "spellfix" });
+    expect(open?.text).toBe("Review");
+    expect(open?.props.dimColor).toBe(true);
+    expect(open?.props.hotkey).toBeUndefined();
+    await expectNative(band, keys);
+    await band.unmount();
+  });
+
+  test(`${surface}: with nothing flagged the line says so and offers Haiku`, async ($, on) => {
+    const w = world(on, haikuSays({}, `<extra word="form" nth="1">from</extra>`));
+
+    await paste($, w, "a form sent home");
+    const band = await mount($);
+    expect(await band.find({ type: "Text", text: /^No misspellings$/ })).toBeDefined();
+    await expectNative(band, keys);
+
+    await band.press({ key: "spellfix" });
+    await w.clock.settle();
+    expect(await band.find({ type: "Text", text: /^form$/ })).toBeDefined();
+    expect((await band.find({ key: "ai" }))?.text).toBe("from");
+    await expectNative(band, keys);
+    await band.unmount();
+  });
+
+  test(`${surface}: the picker shows the word in its context and a button per suggestion`, async ($, on) => {
     const w = world(on);
 
     await paste($, w, "the qiuck fox and teh dog", 6);
     const band = await openPicker($, w, surface);
-    expect(await band.find({ type: "Text", text: /qiuck/ })).toBeDefined();
-    expect((await band.find({ key: "ai" }))?.text).toContain("quick");
-    expect((await band.find({ key: "s0" }))?.text).toContain("quick");
-    expect((await band.find({ key: "s1" }))?.text).toContain("quack");
+    // The word is marked by weight and colour, with the text round it in its own elements.
+    const word = await band.find({ type: "Text", text: /^qiuck$/ });
+    expect(word?.props.weight).toBe("bold");
+    expect(await band.find({ type: "Text", text: /^the $/ })).toBeDefined();
+    expect(await band.find({ type: "Text", text: /^ fox and teh dog$/ })).toBeDefined();
+    // The Haiku button keeps its word's case, with its source beside it.
+    expect((await band.find({ key: "ai" }))?.text).toBe("quick");
+    expect(await band.find({ type: "Text", text: /^Haiku$/ })).toBeDefined();
+    expect((await band.find({ key: "s0" }))?.text).toBe("quick");
+    expect((await band.find({ key: "s1" }))?.text).toBe("quack");
+    expect((await band.find({ key: "spellfix" }))?.text).toBe("Close");
+    for (const key of ["ai", "s0", "s1"])
+      expect((await band.find({ type: "Button", key }))?.props.dimColor).toBe(true);
     for (const key of ["skip", "all"])
       expect(await band.find({ type: "Button", key })).toBeDefined();
+    expect(await band.find({ key: "add" })).toBeUndefined();
+    await expectNative(band, keys);
 
     // The second suggestion, then the picker moves on to `teh`, whose Haiku pick fixes it.
     await band.press({ key: "s1" });
     await w.clock.settle();
     expect(w.box.text).toBe("the quack fox and teh dog");
-    expect(await band.find({ type: "Text", text: /teh/ })).toBeDefined();
+    expect(await band.find({ type: "Text", text: /^teh$/ })).toBeDefined();
     await band.press({ key: "ai" });
     await w.clock.settle();
     expect(w.box.text).toBe("the quack fox and the dog");
+    await band.unmount();
+  });
+
+  test(`${surface}: a press fills the prompt and keeps the cursor where it was`, async ($, on) => {
+    const w = world(on);
+
+    await paste($, w, "the qiuck fox and teh dog", 6);
+    const band = await openPicker($, w, surface);
+    await band.press({ key: "s0" });
+    await w.clock.settle();
+    expect(w.box).toEqual({ text: "the quick fox and teh dog", cursor: 6 });
+    await band.unmount();
+  });
+
+  test(`${surface}: a long context is the surface's to wrap, whole up to a sentence each way`, async ($, on) => {
+    const w = world(on);
+    const long = `${"word ".repeat(40)}qiuck${" more".repeat(40)}`;
+
+    await paste($, w, long, 0);
+    const band = await openPicker($, w, surface);
+    const lead = (await band.find({ type: "Text", text: /^(word )+$/ }))?.text ?? "";
+    const trail = (await band.find({ type: "Text", text: /^( more)+$/ }))?.text ?? "";
+    expect(lead.length).toBeGreaterThan(60);
+    expect(lead.length).toBeLessThanOrEqual(80);
+    expect(trail.length).toBeGreaterThan(60);
+    expect(trail.length).toBeLessThanOrEqual(80);
+    // Cut between words, never inside one.
+    expect(lead.startsWith("word ")).toBe(true);
+    expect(trail.endsWith(" more")).toBe(true);
+    await expectNative(band, keys);
     await band.unmount();
   });
 
@@ -452,16 +531,45 @@ for (const surface of ["desktop", "vscode"] as const) {
     const band = await openPicker($, w, surface);
     await band.press({ key: "skip" });
     await w.clock.settle();
-    expect(await band.find({ type: "Text", text: /teh/ })).toBeDefined();
+    expect(await band.find({ type: "Text", text: /^teh$/ })).toBeDefined();
+    expect(await band.find({ type: "Text", text: /^Fix all changes teh → the$/ })).toBeDefined();
 
     // The skipped word stays out of fix all.
     await band.press({ key: "all" });
     await w.clock.settle();
     expect(w.box.text).toBe("the qiuck fox");
-    expect(await band.find({ type: "Text", text: /teh→the/ })).toBeDefined();
+    expect(await band.find({ type: "Text", text: /^Fixed teh → the$/ })).toBeDefined();
+    expect((await band.find({ key: "dismiss" }))?.text).toBe("Dismiss");
+    await expectNative(band, keys);
     await band.press({ key: "undo" });
     await w.clock.settle();
     expect(w.box.text).toBe("teh qiuck fox");
+    await band.unmount();
+  });
+
+  test(`${surface}: dismiss keeps the fix and drops the report`, async ($, on) => {
+    const w = world(on);
+
+    await paste($, w, "teh qiuck fox");
+    const band = await openPicker($, w, surface);
+    await band.press({ key: "all" });
+    await w.clock.settle();
+    await band.press({ key: "dismiss" });
+    await w.clock.settle();
+    expect(w.box.text).toBe("the quick fox");
+    expect(await band.find({ key: "undo" })).toBeUndefined();
+    await band.unmount();
+  });
+
+  test(`${surface}: Close closes the picker`, async ($, on) => {
+    const w = world(on);
+
+    await paste($, w, "teh qiuck fox");
+    const band = await openPicker($, w, surface);
+    await band.press({ key: "spellfix" });
+    await w.clock.settle();
+    expect(await band.find({ key: "skip" })).toBeUndefined();
+    expect((await band.find({ key: "spellfix" }))?.text).toBe("Review");
     await band.unmount();
   });
 
@@ -470,12 +578,35 @@ for (const surface of ["desktop", "vscode"] as const) {
 
     await paste($, w, "a qiuck fox");
     const band = await openPicker($, w, surface);
+    expect((await band.find({ key: "add" }))?.text).toBe("Add word");
+    expect(await band.find({ type: "Text", text: /^Haiku has no suggestion$/ })).toBeDefined();
+    await expectNative(band, keys);
     await band.press({ key: "add" });
     await w.clock.settle();
     expect(personal(w).has("qiuck")).toBe(true);
     expect(w.box.text).toBe("a qiuck fox");
     await paste($, w, "one more qiuck here");
-    expect(await shownCount(band)).toBe("");
+    expect(await band.find({ type: "Text", text: /^No misspellings$/ })).toBeDefined();
     await band.unmount();
   });
+
+  test(
+    `${surface}: words Haiku added are named, and Undo add takes them back`,
+    OPTIONS,
+    async ($, on) => {
+      const w = world(on, haikuSays({ Jepsen: `<word text="Jepsen" verdict="correct"/>` }));
+
+      await paste($, w, "ask Jepsen about teh fox", 0);
+      const band = await openPicker($, w, surface);
+      expect(
+        await band.find({ type: "Text", text: /^Added Jepsen to the dictionary$/ }),
+      ).toBeDefined();
+      expect((await band.find({ key: "undo" }))?.text).toBe("Undo add");
+      await expectNative(band, keys);
+      await band.press({ key: "undo" });
+      await w.clock.settle();
+      expect(personal(w).has("Jepsen")).toBe(false);
+      await band.unmount();
+    },
+  );
 }

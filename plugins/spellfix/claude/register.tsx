@@ -8,7 +8,10 @@ import type {
   Timer,
 } from "claude-code";
 
+import { guiBand, terminalBand } from "./band";
+import type { BandActions, BandView } from "./band";
 import type { Picker, Report } from "./types.d.ts";
+import { kitOf } from "./ui";
 import {
   addInput,
   autoAdds,
@@ -55,6 +58,10 @@ let config: Config = { hunspell: "hunspell", dictionaries: "en_US", personal: ""
 const ignored = new Set<string>();
 // Auto-added words taken back with `8`: the batch leaves them flagged for the rest of the draft.
 const unadded = new Set<string>();
+// Some hosts (VS Code) raise no prompt events. Until one arrives the band looks at the draft on
+// each render instead, and `seen` is the draft it last took in.
+let isEventDriven = false;
+let seen = "";
 let timer: Timer | undefined;
 let checkId = 0;
 let hasWarned = false;
@@ -256,6 +263,24 @@ async function landed($: EngineInterface, b: Batch) {
   else if (p.wantsAi && answered.ai) await applyLate($, answered, answered.ai);
 }
 
+/**
+ * Takes in a draft the host raised no event for: what the edit and change hooks do when it did.
+ * A draft this mod filled in itself is already `seen`.
+ */
+async function watchDraft($: EngineInterface) {
+  if (isEventDriven) return;
+  const box = await $.prompt.read();
+  if (box.text === seen) return;
+  if (box.text === "") {
+    ignored.clear();
+    unadded.clear();
+  }
+  seen = box.text;
+  await closePicker($);
+  await dismiss($);
+  scheduleCheck($, box);
+}
+
 function scheduleCheck($: EngineInterface, box: PromptBox) {
   timer?.cancel();
   timer = $.clock.after(CHECK_DELAY_MS, () => void refreshCount($, box));
@@ -293,10 +318,26 @@ async function togglePicker($: EngineInterface) {
   else $.ui.toast("No misspellings");
 }
 
+/** The words a graphical surface sets round `miss`, to wrap or cut as it likes: no more than a sentence or so each way. */
+function surround(text: string, miss: Miss): [string, string] {
+  const reach = 80;
+  const flat = (s: string) => s.replace(/\s+/g, " ");
+  // A window that starts or ends inside a word drops that part word.
+  const lead = flat(text.slice(Math.max(0, miss.start - reach), miss.start));
+  const trail = flat(text.slice(miss.end, miss.end + reach));
+  const isCutBefore = miss.start > reach && /\S/.test(text.charAt(miss.start - reach - 1));
+  const isCutAfter = text.length > miss.end + reach && /\S/.test(text.charAt(miss.end + reach));
+  return [
+    isCutBefore ? lead.replace(/^\S*/, "").replace(/^ /, "") : lead,
+    isCutAfter ? trail.replace(/\S*$/, "").replace(/ $/, "") : trail,
+  ];
+}
+
 async function show($: EngineInterface, text: string, miss: Miss | Extra) {
   const suggestions = isExtra(miss) ? [] : await suggest($, miss.word);
   const before = text.slice(Math.max(0, miss.start - 30), miss.start).replace(/\s+/g, " ");
   const after = text.slice(miss.end, miss.end + 30).replace(/\s+/g, " ");
+  const [lead, trail] = surround(text, miss);
   const isAiDone = batch?.text === text && batch.result !== undefined;
   const shown: Picker = {
     word: miss.word,
@@ -304,6 +345,8 @@ async function show($: EngineInterface, text: string, miss: Miss | Extra) {
     end: miss.end,
     before,
     after,
+    lead,
+    trail,
     suggestions,
     isExtra: isExtra(miss),
     ai: isAiDone ? fixFor(miss) : null,
@@ -315,13 +358,14 @@ async function show($: EngineInterface, text: string, miss: Miss | Extra) {
   await update($, picker, () => shown);
 }
 
-/** Applies a pick made before its answer arrived; outside an edit, so the cursor ends up at the end. */
+/** Applies a pick made before its answer arrived; outside an edit, so the fill says where the cursor stays. */
 async function applyLate($: EngineInterface, p: Picker, choice: string) {
   const box = await $.prompt.read();
   if (box.text.slice(p.start, p.end) !== p.word) return;
   const fixed = splice(box, p, choice);
   noteSplice(box.text, p, choice);
-  await $.prompt.fill({ text: fixed.text, mode: "replace" });
+  seen = fixed.text;
+  await $.prompt.fill({ text: fixed.text, cursor: fixed.cursor, mode: "replace" });
   await advance($, fixed.text, p.start + choice.length);
 }
 
@@ -378,7 +422,10 @@ async function applyAll($: EngineInterface, box: PromptBox): Promise<PromptBox |
 async function applyAllLate($: EngineInterface) {
   const box = await $.prompt.read();
   const fixed = await applyAll($, box);
-  if (fixed) await $.prompt.fill({ text: fixed.text, mode: "replace" });
+  if (fixed) {
+    seen = fixed.text;
+    await $.prompt.fill({ text: fixed.text, cursor: fixed.cursor, mode: "replace" });
+  }
 }
 
 /**
@@ -436,7 +483,10 @@ async function pick(
 async function pickFromBand($: EngineInterface, key: string) {
   const box = await $.prompt.read();
   const fixed = await pick($, key, box);
-  if (fixed && fixed.text !== box.text) await $.prompt.fill({ text: fixed.text, mode: "replace" });
+  if (fixed && fixed.text !== box.text) {
+    seen = fixed.text;
+    await $.prompt.fill({ text: fixed.text, cursor: fixed.cursor, mode: "replace" });
+  }
 }
 
 /**
@@ -464,7 +514,8 @@ async function answerFromBand($: EngineInterface, key: string) {
   const box = await $.prompt.read();
   const answered = await answerReport($, key, box);
   if (answered && answered.text !== box.text) {
-    await $.prompt.fill({ text: answered.text, mode: "replace" });
+    seen = answered.text;
+    await $.prompt.fill({ text: answered.text, cursor: answered.cursor, mode: "replace" });
   }
 }
 
@@ -476,8 +527,11 @@ async function dismiss($: EngineInterface) {
 
 export const register: Register = (on, options) => {
   config = readConfig(options);
+  isEventDriven = false;
+  seen = "";
 
   on("prompt.edit", async ($, e, next) => {
+    isEventDriven = true;
     const key = e.key && !e.key.ctrl && !e.key.meta ? e.key.key : undefined;
     const box = { text: e.text, cursor: e.cursor };
 
@@ -503,6 +557,7 @@ export const register: Register = (on, options) => {
   });
 
   on("prompt.change", async ($, e, next) => {
+    isEventDriven = true;
     if (e.origin.kind === "clear") {
       ignored.clear();
       unadded.clear();
@@ -520,6 +575,7 @@ export const register: Register = (on, options) => {
     if (e.props.hasSurvey) return next(e);
     // Another plugin's row stays drawn above this one.
     const below = await next(e);
+    await watchDraft($);
     const p = await read($, picker);
     const done = await read($, report);
     const words = await read($, added);
@@ -529,13 +585,31 @@ export const register: Register = (on, options) => {
     const isQuiet = !p && !done && !busy && n === 0 && words.length === 0;
     if (isQuiet && !draft) return below;
 
-    const { Box, Button, Text } = $.ui.resolve(e);
+    const kit = kitOf($.ui.resolve(e), e);
+    const { Box, Button, Text } = kit;
     const stacked = (tree: RenderElement) => (
       <Box flexDirection="column">
         {below}
         {tree}
       </Box>
     );
+    const view: BandView = {
+      picker: p,
+      report: done,
+      added: words,
+      isBusy: busy,
+      count: n,
+      hasPersonal: Boolean(config.personal),
+    };
+    const actions: BandActions = {
+      toggle: () => togglePicker($),
+      pick: (key) => pickFromBand($, key),
+      answer: (key) => answerFromBand($, key),
+    };
+    // The one place the drawing splits by surface: the terminal's band is the mod's own (its keys
+    // sit in the labels), the graphical one is the kit's.
+    if (kit.isNative) return stacked(guiBand(kit, view, actions));
+
     // Kept mounted whenever there's a draft: the key bound to ACTION reaches only a mounted Button.
     const toggle = (
       <Button key="spellfix" plain action={ACTION} onPress={() => togglePicker($)}>
@@ -549,111 +623,6 @@ export const register: Register = (on, options) => {
         {toggle}
       </Box>
     );
-    if (isQuiet) return stacked(hidden);
-
-    if (p) {
-      const slot = p.isAiDone ? (p.ai ?? "no idea") : p.wantsAi ? "waiting…" : "…";
-      // Ideally these would be marked inline in the prompt itself; mods can't decorate the
-      // composer's text yet, so the band lists them instead.
-      const summary = [...p.summary, ...(words.length ? [`added: ${words.join(", ")}`] : [])];
-      return stacked(
-        <Box flexDirection="column">
-          <Text wrap="truncate-end">
-            <Text dimColor>…{p.before}</Text>
-            <Text weight="bold" underline color={p.isExtra ? "yellow" : "red"}>
-              {p.word}
-            </Text>
-            <Text dimColor>{p.after}…</Text>
-          </Text>
-          <Box flexWrap="wrap" columnGap={2}>
-            <Button key="ai" hotkey="1" plain onPress={() => pickFromBand($, "1")}>
-              {slot}
-              <Text dimColor> (Haiku)</Text>
-            </Button>
-            {p.suggestions.map((s, i) => (
-              <Button
-                key={`s${i}`}
-                hotkey={String(i + 2)}
-                plain
-                onPress={() => pickFromBand($, String(i + 2))}
-              >
-                {s}
-              </Button>
-            ))}
-            <Button key="skip" hotkey="s" plain label="skip" onPress={() => pickFromBand($, "s")} />
-            {config.personal && !p.isExtra ? (
-              <Button
-                key="add"
-                hotkey="d"
-                plain
-                label="add to dictionary"
-                onPress={() => pickFromBand($, "d")}
-              />
-            ) : null}
-            <Button
-              key="all"
-              hotkey="a"
-              plain
-              label={p.wantsAll ? "waiting…" : "fix all"}
-              onPress={() => pickFromBand($, "a")}
-            />
-            {toggle}
-          </Box>
-          {summary.length > 0 && (
-            <Box columnGap={2}>
-              <Text wrap="truncate-end" dimColor>
-                {summary.join(" · ")}
-              </Text>
-              {words.length > 0 && (
-                <Button
-                  key="undo"
-                  hotkey="8"
-                  plain
-                  label="undo add"
-                  onPress={() => pickFromBand($, "8")}
-                />
-              )}
-            </Box>
-          )}
-        </Box>,
-      );
-    }
-
-    const notes: [string, string][] = [
-      ...(done ? [["fixed: ", done.changes.join(", ")] as [string, string]] : []),
-      ...(words.length ? [["added: ", words.join(", ")] as [string, string]] : []),
-    ];
-    return stacked(
-      <Box columnGap={2}>
-        {notes.length > 0 && (
-          <>
-            <Text wrap="truncate-end">
-              {notes.flatMap(([label, list], i) => [
-                <Text key={`n${i}`} dimColor>
-                  {i ? ` · ${label}` : label}
-                </Text>,
-                list,
-              ])}
-            </Text>
-            <Button
-              key="undo"
-              hotkey="8"
-              plain
-              label="undo"
-              onPress={() => answerFromBand($, "8")}
-            />
-            <Button
-              key="dismiss"
-              hotkey="9"
-              plain
-              label="dismiss"
-              role="dismiss"
-              onPress={() => answerFromBand($, "9")}
-            />
-          </>
-        )}
-        {busy || n > 0 ? toggle : hidden}
-      </Box>,
-    );
+    return stacked(terminalBand(kit, view, actions, toggle, hidden, isQuiet));
   });
 };
