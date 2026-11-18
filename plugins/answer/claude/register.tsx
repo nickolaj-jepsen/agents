@@ -13,9 +13,11 @@ import {
   cellWidth,
   choice,
   clamp,
-  facts,
+  excerpt,
+  fieldRow,
   forSurface,
   kitOf,
+  list,
   note as noteLines,
   noteText,
   onlyOwnRows,
@@ -26,12 +28,11 @@ import {
   rowsOf,
   stack,
   statusBand,
-  subhead,
   tokens,
   type Action as ActionSpec,
   type ChoiceOption,
   type KeyChip,
-  type Kit,
+  type ListItem,
 } from "./ui";
 
 const PLUGIN = "answer";
@@ -43,7 +44,7 @@ const keyOf = (field: typeof WRITE | typeof NOTE) => `${field}-field`;
 const CHORD = "alt+a";
 
 // Change the tag when Current changes shape: a reload keeps what the old code stored.
-const current = atom({ plugin: "answer", key: "current" } as const, null, { shape: "current-10" });
+const current = atom({ plugin: "answer", key: "current" } as const, null, { shape: "current-11" });
 /** The round a send set aside, for `/answer` to bring back. */
 const aside = atom({ plugin: "answer", key: "aside" } as const, null, { shape: "aside-1" });
 
@@ -76,6 +77,7 @@ const over = (c: Current | null, held: Held): Current => {
     view,
     editing: isSameItem ? (c?.editing ?? null) : null,
     several: isSameItem ? (c?.several ?? null) : null,
+    isBodyOpen: isSameItem ? (c?.isBodyOpen ?? false) : false,
     isOpen: isSameForm ? (c?.isOpen ?? false) : false,
     stash: isSameForm ? (c?.stash ?? null) : null,
     filled: isSameForm ? (c?.filled ?? null) : null,
@@ -728,28 +730,29 @@ export const register: Register = (on) => {
       },
       gui: () => {
         const { inset } = tokens.gui.across;
-        /** A block that is not already set in by the kit: its left edge lines up with the rest. */
+        /** A block not already set in by the kit: its left edge lines up with the rest. */
         const block = (key: string, node: JSX.Element | null) =>
           node ? (
             <Box key={key} flexDirection="column" paddingX={inset}>
               {node}
             </Box>
           ) : null;
-        /** A text field under what it is about, with the word its Enter says. */
+        /**
+         * A field, always drawn where it belongs, so a click lands in it: a press that reveals one
+         * leaves the focus on the press. It says no word for its Enter, so the surface draws no
+         * button of its own beside it.
+         */
         const field = (
           key: typeof WRITE | typeof NOTE,
           placeholder: string,
           value: string,
-          submitLabel: string,
           onSubmit: (text: string) => unknown,
         ) =>
           "Input" in els ? (
             <els.Input
               key={keyOf(key)}
-              autoFocus
               placeholder={placeholder}
               value={value}
-              submitLabel={submitLabel}
               onInput={(text) => {
                 typed = { field: key, text };
               }}
@@ -766,19 +769,20 @@ export const register: Register = (on) => {
               text: view.answered
                 ? `${view.title}, ${view.answered} of ${view.count} answered`
                 : view.title,
+              icon: "question",
+              tone: "neutral",
             },
             onPress: () => open($),
           });
 
-        // How far along, and at the far edge one tab per question and the review: the current one
-        // filled. The inline band is a few lines tall, so the tabs share the toolbar's line.
+        // One tab per question, marked once answered, and the review: the current one filled.
+        // The way out keeps the far edge.
         const toolbar = paneTitle(kit, "", undefined, {
           gui: {
-            count: `${view.answered} of ${view.count} answered`,
-            actions: [
+            tabs: [
               ...view.review.map((row, i): ActionSpec => ({
                 key: `q${i}`,
-                label: row.label,
+                label: row.isAnswered ? `${tokens.glyph.done} ${row.label}` : row.label,
                 isPrimary: !view.isReview && i === view.step,
                 onPress: () => leave($, () => ({ do: "go", step: i })),
               })),
@@ -789,10 +793,10 @@ export const register: Register = (on) => {
                 onPress: () => leave($, () => ({ do: "review" })),
               },
             ],
+            actions: [{ key: "quit", label: "close", onPress: () => close($) }],
           },
         });
-        const note = (text: string) => facts(kit, [{ label: "Note", value: text }]);
-        /** An action of the row below: its key is the press's name. */
+        /** An action of the row at the foot: its key is the press's name. */
         const act = (key: string, label: string, extra: Partial<ActionSpec> = {}): ActionSpec => ({
           key,
           label,
@@ -801,127 +805,123 @@ export const register: Register = (on) => {
         });
 
         if (!view.item) {
-          const rows = view.review.map((row, i) => (
-            <Box key={`row${i}`} flexDirection="column" rowGap={tokens.gui.space.xs}>
-              <Box columnGap={tokens.gui.across.md}>
-                <Text dimColor>{row.label}</Text>
-                <Box flexShrink={1}>
-                  <Text dimColor wrap="truncate-end">
-                    {row.title}
-                  </Text>
-                </Box>
-              </Box>
-              <Text dimColor={!row.isAnswered}>{row.isAnswered ? row.shown : "Not answered"}</Text>
-              {row.note ? note(row.note) : null}
-            </Box>
-          ));
-          // The send comes before the reply it sends, so it stays in the band's first lines.
+          // Each question on one line: its answer, the question beside it, a press to go back to it.
+          const rows = view.review.map((row, i): ListItem => ({
+            key: `item${i}`,
+            title: row.isAnswered ? row.shown : "Not answered",
+            detail: row.title,
+            icon: row.isAnswered ? "success" : "pending",
+            iconTone: row.isAnswered ? "success" : "neutral",
+            action: row.isAnswered ? "Change" : "Answer",
+            meta: row.note ? [{ text: `Note: ${row.note}`, width: 0 }] : undefined,
+            onPress: () => leave($, () => ({ do: "go", step: i })),
+          }));
           return stack(
             kit,
             [
               toolbar,
+              list(kit, [{ title: "", rows }]),
               block(
-                "review",
-                stack(
-                  kit,
-                  [
-                    ...rows,
-                    editing === NOTE
-                      ? field(NOTE, "A note on the whole round", view.note, "keep", (t) =>
-                          keepNote($, t),
-                        )
-                      : view.note
-                        ? note(view.note)
-                        : null,
-                  ],
-                  { gui: { gap: "sm" } },
-                ),
+                "round-note",
+                field(NOTE, "Add a note on the whole round", view.note, (t) => keepNote($, t)),
               ),
-              // The tabs go back; Back is the terminal's key for the same.
               actionBar(kit, [
-                act("note", view.note ? "edit note" : "add note", { hotkey: "n" }),
-                act("fill", "fill the prompt"),
                 act("send", "send", { hotkey: "s", isPrimary: Boolean(view.reply) }),
-                act("quit", "close"),
+                act("fill", "fill the prompt"),
               ]),
-              block("reply", facts(kit, [{ label: "Reply", value: view.reply || "Nothing yet" }])),
             ],
-            { gui: { gap: "md" } },
+            { gui: { gap: "sm" } },
           );
         }
 
         const { item } = view;
         const several = isSeveral(c);
         const isChosen = item.entries.some((row) => row.isChosen);
-        // The answers: each a button, the chosen one filled, what it means directly under it.
-        const options = item.entries.map((row, k): ChoiceOption => ({
-          key: `e${k}`,
-          label: row.kind === "write" ? row.text : labelOf(row, k),
-          short: `Option ${row.key || k + 1}`,
-          detail:
-            row.kind === "write"
-              ? item.written || undefined
-              : [row.isRecommended ? "Recommended" : "", row.detail]
-                  .filter(Boolean)
-                  .join("  ·  ") || undefined,
-          isOn: row.isChosen,
-          onPress: () => choose($, row, k),
-        }));
+        // With this one answered and every other too, the way on is the review.
+        const onward = {
+          key: "next",
+          label: view.answered === view.count ? "Review" : "Next",
+          onPress: () => leave($, () => ({ do: "next" })),
+        };
+        const note = field(NOTE, "Add a note", item.note, (t) => keepNote($, t));
+        // A single answer opens in place with its note under it; several, or none yet, keep the
+        // note under the answers once there is one or it was asked for.
+        const isNoteLoose =
+          (several && isChosen) || (!isChosen && (editing === NOTE || !!item.note));
+        const options = item.entries.map((row, k): ChoiceOption => {
+          if (row.kind === "write")
+            return {
+              key: `e${k}`,
+              label: row.text,
+              icon: "write",
+              field:
+                field(WRITE, row.text, item.written, (t) => move($, { do: "write", text: t })) ??
+                undefined,
+              isOn: row.isChosen,
+              body: note,
+              onPress: () => choose($, row, k),
+            };
+          const words =
+            row.kind === "accept"
+              ? row.text.replace(/^Yes:\s*(?:Yes\b[.,:]?\s*)?/i, "")
+              : row.key
+                ? row.text.replace(/^[A-H][.)]\s*/, "")
+                : row.text;
+          return {
+            key: `e${k}`,
+            tag: row.kind === "accept" ? "Yes" : row.key || undefined,
+            label: words || "As recommended",
+            detail:
+              [row.isRecommended ? "Recommended" : "", row.detail.replace(/\s*\n\s*/g, " ")]
+                .filter(Boolean)
+                .join("  ·  ") || undefined,
+            isOn: row.isChosen,
+            body: note,
+            onPress: () => choose($, row, k),
+          };
+        });
+        const body = [item.body, item.recommended ? `**Recommended:** ${item.recommended}` : ""]
+          .filter(Boolean)
+          .join("\n\n");
         return stack(
           kit,
           [
             toolbar,
-            block(
-              "question",
-              stack(
-                kit,
-                [
-                  <Box key="title" flexDirection="column">
-                    <Text weight="semibold">{item.title}</Text>
-                    {item.body ? prose(kit, item.body) : null}
-                  </Box>,
-                  choice(kit, options, {
-                    key: "options",
-                    isMulti: several,
-                    gui: { layout: "stack" },
-                  }),
-                  // A field opens under the answers it is about, where the eye already is.
-                  editing === WRITE
-                    ? field(WRITE, "Write your own answer", item.written, "save", (t) =>
-                        move($, { do: "write", text: t }),
-                      )
-                    : null,
-                  editing === NOTE
-                    ? field(
-                        NOTE,
-                        "A note on this answer, or Enter to go on",
-                        item.note,
-                        "next",
-                        (t) => keepNote($, t),
-                      )
-                    : item.note
-                      ? note(item.note)
-                      : null,
-                  item.recommended ? prose(kit, `**Recommended:** ${item.recommended}`) : null,
-                ],
-                { gui: { gap: "sm" } },
-              ),
-            ),
+            <Box key="question" flexDirection="column">
+              {block("title", prose(kit, `**${item.title.replace(/\*\*/g, "")}**`))}
+              {excerpt(kit, {
+                key: "body",
+                text: body,
+                isOpen: c.isBodyOpen,
+                toggleKey: "more",
+                onToggle: () => edit($, (was) => ({ ...was, isBodyOpen: !was.isBodyOpen })),
+              })}
+            </Box>,
+            choice(kit, options, {
+              key: "options",
+              isMulti: several,
+              gui: { layout: "rows", onward },
+            }),
+            isNoteLoose && note
+              ? fieldRow(kit, { key: "note-row", icon: "note", alt: "Note", field: note })
+              : null,
             actionBar(kit, [
-              ...(view.step > 0 ? [act("back", "back", { hotkey: "h" })] : []),
               act("skip", "skip", { hotkey: "s" }),
-              act("note", item.note ? "edit note" : "add note", { hotkey: "n" }),
               ...(item.canSeveral
                 ? [act("several", several ? "pick one" : "pick several", { hotkey: "m" })]
                 : []),
-              ...(item.canAccept
-                ? [act("accept", `take ${item.accepts}`, { hotkey: "y", isPrimary: !isChosen })]
+              ...(isChosen || isNoteLoose ? [] : [act("note", "add note", { hotkey: "n" })]),
+              // One press takes a recommendation of several options; one is a press on its row.
+              ...(item.canAccept && item.accepts.includes(",")
+                ? [act("accept", `take ${item.accepts}`, { hotkey: "y" })]
                 : []),
-              act("next", "next", { hotkey: "l", isPrimary: isChosen }),
-              act("quit", "close"),
+              // A single answer's way on is on its own row; several have theirs here.
+              ...(several
+                ? [{ ...onward, hotkey: "l", isPrimary: isChosen, onPress: onward.onPress }]
+                : []),
             ]),
           ],
-          { gui: { gap: "md" } },
+          { gui: { gap: "sm" } },
         );
       },
     });

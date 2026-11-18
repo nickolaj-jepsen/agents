@@ -93,6 +93,8 @@ export type Current = {
   editing: Editing;
   /** Whether picks toggle on the shown item; null follows its answer. */
   several: boolean | null;
+  /** The shown item's body opened whole on a graphical surface; it folds to a line otherwise. */
+  isBodyOpen: boolean;
   /** Drawn as the form, not its one row. */
   isOpen: boolean;
   /** The prompt's text, set aside while the form is open; null with none. */

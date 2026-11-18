@@ -22,13 +22,17 @@ order: 4
   fails keeps the answers in the form.
 - Every row, key and button takes a click, so the mouse alone works.
 - In the desktop app and VS Code the form is drawn with the host's own controls, not
-  the terminal's rows: the offer is a status line with an `Answer` button; the form's
-  top line holds how many are answered and one tab per question and the review, the
-  current one filled; each option is a button, the chosen one filled, with its detail
-  under it; your own answer and a note open as text fields under the options; the
-  keys are an action row (`Back`, `Skip`, `Add note`, `Pick several`, `Take B`,
-  `Next`, `Close`) of which only the one worth pressing is filled. The review lists
-  each question over its answer, with `Send` filled once something is answered.
+  the terminal's rows. The offer is a status line with an `Answer` button. The form's
+  top line has a tab per question (`✓ Q1` once answered) and the review, the current
+  one filled, and `Close`. Under the question and the first line of its body (`More`
+  opens the rest), each option is one line: a button of its letter, its words and its
+  detail beside it, so three options, the write-in and the keys fit the band. The last
+  row is a field to write your own answer; a click lands in it and Enter keeps it. A
+  chosen option opens in place: its words whole, a field for a note, and `Next`
+  (`Review` on the last one). `Skip`, `Pick several`, `Add note` and, for a
+  recommendation of several options, `Take A, B, C` are quiet buttons at the foot. The
+  review lists each answer beside its question, a field for a note on the whole round,
+  and `Send`, filled once something is answered, with `Fill the prompt` beside it.
 - Answers last the session: a turn a background task starts keeps them, your own
   send sets the round aside, and sending the reply itself just closes it. A round set
   aside comes back with `/answer`, answers and all (pi: `alt+a` or `/answer`).
