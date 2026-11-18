@@ -2,7 +2,8 @@ import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register, RenderElement, RenderNode } from "claude-code";
 
 import type { Duplicate, Filed, Form, Last, Option } from "./types.d.ts";
-import { paneOptions } from "./ui";
+import { guiBand, guiPane } from "./gui";
+import { kitOf, paneOptions, pick } from "./ui";
 
 // The built-in's card has no extension point, so the button is spliced into the
 // tree it draws, found by these labels. A rename only hides the button (see warnDrift).
@@ -50,6 +51,8 @@ const filed = atom({ plugin: "linear-issue", key: "filed" } as const, []);
 const isPaneOpen = atom({ plugin: "linear-issue", key: "isPaneOpen" } as const, false);
 const focused = atom({ plugin: "linear-issue", key: "focused" } as const, null);
 const isDiscardArmed = atom({ plugin: "linear-issue", key: "isDiscardArmed" } as const, false);
+// Whether the possible duplicate is opened in place (graphical surfaces).
+const isDuplicateOpen = atom({ plugin: "linear-issue", key: "isDuplicateOpen" } as const, false);
 
 // Set by a Learn more press, cleared once the expanded card has been checked.
 let isExpanding = false;
@@ -652,6 +655,7 @@ async function submit($: EngineInterface, { asComment = false, open = false } = 
 
 async function discard($: EngineInterface) {
   await update($, isDiscardArmed, () => false);
+  await update($, isDuplicateOpen, () => false);
   await update($, form, () => null);
   await $.ui.close({ id: PANE });
 }
@@ -706,378 +710,441 @@ export const register: Register = (on) => {
   });
 
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
-    const { Box, Text, Button, Markdown } = $.ui.resolve(e);
+    const els = $.ui.resolve(e);
+    const { Box, Text, Button, Markdown } = els;
+    const k = kitOf(els, e);
     const f = await read($, form);
     const focus = await read($, focused);
-    const width = e.props.bodyColumns;
-    // Sized to the pane so the footer stays put; the description takes what is left.
-    const rows = e.props.scroll.bodyRows;
-    // Inline above the prompt a pane gets few rows: drop the title border, rule and source.
-    const compact = rows < COMPACT_ROWS;
-    const rule = compact ? null : (
-      <Text dimColor wrap="truncate-end">
-        {`─ ${HINTS} ${"─".repeat(Math.max(width - HINTS.length - 3, 0))}`}
-      </Text>
-    );
-    const discardButton = (
-      <Button key="discard" label="Discard" role="dismiss" onPress={() => discard($)} />
-    );
-    // A button draws "[ label ]", two columns from the next.
-    const buttonRows = (buttons: RenderElement[]) =>
-      wrappedRows(
-        buttons.map((b) => (isElement(b) && b.type === "Button" ? b.props.label : "").length + 6),
-        width,
+    const isOpen = await read($, isDuplicateOpen);
+    const set = (patch: Partial<Form>) => patchForm($, patch);
+    const gui = (isReadOnly: boolean) =>
+      guiPane(k, {
+        form: f,
+        isDuplicateOpen: isOpen,
+        priorities: PRIORITIES,
+        isReadOnly,
+        Input: els.Input,
+        Select: els.Select,
+        on: {
+          create: () => submit($),
+          createOpen: () => submit($, { open: true }),
+          comment: () => submit($, { asComment: true }),
+          discard: () => discard($),
+          toggleDuplicate: () => update($, isDuplicateOpen, (open) => !open),
+          set,
+          switchTeam: (team) => switchTeam($, team),
+        },
+      });
+    // The terminal's form is drawn here; a graphical surface's, from the kit's functions, is
+    // `gui.tsx`. The mobile app draws no Input or Select, so it shows the draft as written.
+    return pick(k, {
+      tui: () => terminal(),
+      gui: () => gui(false),
+      mobile: () => gui(true),
+    });
+
+    function terminal() {
+      const width = e.props.bodyColumns;
+      // Sized to the pane so the footer stays put; the description takes what is left.
+      const rows = e.props.scroll.bodyRows;
+      // Inline above the prompt a pane gets few rows: drop the title border, rule and source.
+      const compact = rows < COMPACT_ROWS;
+      const rule = compact ? null : (
+        <Text dimColor wrap="truncate-end">
+          {`─ ${HINTS} ${"─".repeat(Math.max(width - HINTS.length - 3, 0))}`}
+        </Text>
       );
-    // Buttons that need more than a row wrap, and the summary gives up its place to them.
-    const footer = (buttons: RenderElement[], summary: string) => (
-      <Box flexDirection="column">
-        {rule}
-        {buttonRows(buttons) > 1 ? (
-          <Box flexDirection="row" flexWrap="wrap" columnGap={2}>
-            {buttons}
-          </Box>
-        ) : (
-          <Box flexDirection="row" justifyContent="space-between">
-            <Box flexDirection="row" columnGap={2} flexShrink={0}>
+      const discardButton = (
+        <Button key="discard" label="Discard" role="dismiss" onPress={() => discard($)} />
+      );
+      // A button draws "[ label ]", two columns from the next.
+      const buttonRows = (buttons: RenderElement[]) =>
+        wrappedRows(
+          buttons.map((b) => (isElement(b) && b.type === "Button" ? b.props.label : "").length + 6),
+          width,
+        );
+      // Buttons that need more than a row wrap, and the summary gives up its place to them.
+      const footer = (buttons: RenderElement[], summary: string) => (
+        <Box flexDirection="column">
+          {rule}
+          {buttonRows(buttons) > 1 ? (
+            <Box flexDirection="row" flexWrap="wrap" columnGap={2}>
               {buttons}
             </Box>
-            <Box flexShrink={1} marginLeft={2}>
-              <Text dimColor wrap="truncate-end">
-                {summary}
-              </Text>
+          ) : (
+            <Box flexDirection="row" justifyContent="space-between">
+              <Box flexDirection="row" columnGap={2} flexShrink={0}>
+                {buttons}
+              </Box>
+              <Box flexShrink={1} marginLeft={2}>
+                <Text dimColor wrap="truncate-end">
+                  {summary}
+                </Text>
+              </Box>
             </Box>
-          </Box>
-        )}
-      </Box>
-    );
-    const status = (line: RenderNode) => (
-      <Box flexDirection="column" height={rows}>
-        <Box flexGrow={1}>{line}</Box>
-        {footer([discardButton], "Esc hides the draft")}
-      </Box>
-    );
-    if (!f) return <Text dimColor>No Linear draft open.</Text>;
-    if (f.phase === "drafting") return status(<Text dimColor>Drafting the issue…</Text>);
-    if (f.phase === "failed")
-      return status(<Text color="error">Linear draft failed: {f.error}</Text>);
-
-    const set = (patch: Partial<Form>) => patchForm($, patch);
-    const priority = PRIORITIES.find((p) => p.value === String(f.priority))?.label ?? "No priority";
-    const statusName = f.statuses.find((s) => s.value === f.state)?.label ?? "";
-    const summary = [
-      f.team,
-      statusName,
-      priority,
-      f.labelIds.length > 0 && `${f.labelIds.length} label${f.labelIds.length === 1 ? "" : "s"}`,
-      f.isCheckingDuplicates && "checking for duplicates…",
-    ]
-      .filter(Boolean)
-      .join(" · ");
-    const createButton = (
-      <Button
-        key="create"
-        label={f.phase === "filing" ? "Creating…" : "Create"}
-        variant="primary"
-        onPress={() => submit($)}
-      />
-    );
-    const buttons = [
-      createButton,
-      <Button key="create-open" label="Create & open" onPress={() => submit($, { open: true })} />,
-      f.duplicate && (
-        <Button
-          key="comment"
-          label={`Comment on ${f.duplicate.issue}`}
-          onPress={() => submit($, { asComment: true })}
-        />
-      ),
-      discardButton,
-    ].filter((b): b is RenderElement => Boolean(b));
-    // No fixed height: an Input in a height-capped box stops wrapping when focused and
-    // hides what is typed past its width.
-    const field = (key: string, child: RenderNode, isBordered: boolean) => (
-      <Box
-        key={`field-${key}`}
-        flexDirection="column"
-        paddingX={1}
-        {...(isBordered && { borderStyle: "round" })}
-        {...(focus?.startsWith(key) ? { borderColor: "claude" } : { borderDimColor: true })}
-      >
-        {child}
-      </Box>
-    );
-
-    if (e.surface === "mobile") {
-      // No Input or Select here: the draft as written, to create or discard.
-      return (
-        <Box flexDirection="column">
-          <Text weight="semibold">{f.title}</Text>
-          <Text dimColor>{summary}</Text>
-          <Markdown text={f.description} />
-          {f.error && <Text color="error">{f.error}</Text>}
-          {footer(buttons, "")}
+          )}
         </Box>
       );
-    }
-    const { Input, Select } = $.ui.resolve(e);
-    const chosen = f.labels.filter((l) => f.labelIds.includes(l.value));
-    const selects: [string, string, string, Option[], (v: string) => unknown][] = [
-      ["team", "Team", f.team, f.teams, (team) => switchTeam($, team)],
-      ["priority", "Priority", String(f.priority), PRIORITIES, (p) => set({ priority: Number(p) })],
-      ["status", "Status", f.state, f.statuses, (state) => set({ state })],
-      ["project", "Project", f.project, f.projects, (project) => set({ project })],
-    ];
-    // Each select draws "Label: value ▾", two columns from the next.
-    const selectRows = wrappedRows(
-      selects.map(
-        ([, label, value, options]) =>
-          label.length + (options.find((o) => o.value === value)?.label.length ?? 0) + 6,
-      ),
-      width,
-    );
-    // Columns inside a bordered, padded field.
-    const inner = Math.max(width - 4, 1);
-    // Focused, a title that no longer fits beside the engine's "⏎ submit" hint wraps a row.
-    const titleRows =
-      focus?.startsWith("title") && TITLE_LABEL.length + f.title.length + HINT_WIDTH > inner
-        ? 2
-        : 1;
-    const fixed =
-      (compact ? titleRows : titleRows + 2) + // title field
-      selectRows +
-      (chosen.length > 0 ? 1 : 0) + // labels
-      (f.duplicate ? 2 : 0) +
-      1 + // space above the description
-      (compact ? 0 : 1) + // source
-      (f.error ? 1 : 0) +
-      (compact ? 0 : 1) + // footer rule
-      buttonRows(buttons);
-    // Lines the description wraps to in its box.
-    const descriptionLines = f.description
-      .split("\n")
-      .reduce((n, line) => n + Math.max(1, Math.ceil(line.length / width)), 0);
-    // A focused Select draws its option list under its row, pushing everything below it down.
-    const openList = Math.min(
-      selects.find(([key]) => key === focus)?.[3].length ?? 0,
-      OPEN_LIST_ROWS,
-    );
-    let descriptionRows = Math.max(3, rows - fixed - openList);
-    const isClipped = descriptionLines > descriptionRows;
-    // Compact has no source row, so the clipped note takes one from the description.
-    if (compact && isClipped) descriptionRows = Math.max(3, descriptionRows - 1);
-
-    return (
-      <Box flexDirection="column">
-        {field(
-          "title",
-          // Enter empties an Input unless the hook draws a different value, so a submit
-          // remounts it under a new key, keeping the text and the focus.
-          <Input
-            key={`title-${f.titleRevision ?? 0}`}
-            label="Title"
-            // Keep the default "⏎ submit": with a shorter hint the engine truncates a title just
-            // over one line instead of wrapping it, hiding what is typed (Claude Code 2.1.308).
-            value={f.title}
-            autoFocus
-            onInput={(title) => set({ title: oneLine(title) })}
-            onSubmit={(title) =>
-              set({ title: oneLine(title), titleRevision: (f.titleRevision ?? 0) + 1 })
-            }
-          />,
-          !compact,
-        )}
-        <Box flexDirection="row" flexWrap="wrap" columnGap={2} paddingX={1}>
-          {selects.map(([key, label, value, options, onSelect]) => (
-            <Select
-              key={key}
-              label={label}
-              value={value}
-              options={options.slice(0, SELECT_MAX)}
-              onSelect={onSelect}
-            />
-          ))}
+      const status = (line: RenderNode) => (
+        <Box flexDirection="column" height={rows}>
+          <Box flexGrow={1}>{line}</Box>
+          {footer([discardButton], "Esc hides the draft")}
         </Box>
-        {chosen.length > 0 && (
-          // The drafter's picks; adding is left to Linear, searching labels here worked poorly.
-          <Box flexDirection="row" flexWrap="wrap" columnGap={1} paddingX={1}>
-            <Text dimColor>Labels</Text>
-            {chosen.map((l) => (
-              <Button
-                key={`label-${l.value}`}
-                label={`× ${l.label}`}
-                plain
-                onPress={() => set({ labelIds: f.labelIds.filter((id) => id !== l.value) })}
+      );
+      if (!f) return <Text dimColor>No Linear draft open.</Text>;
+      if (f.phase === "drafting") return status(<Text dimColor>Drafting the issue…</Text>);
+      if (f.phase === "failed")
+        return status(<Text color="error">Linear draft failed: {f.error}</Text>);
+
+      const priority =
+        PRIORITIES.find((p) => p.value === String(f.priority))?.label ?? "No priority";
+      const statusName = f.statuses.find((s) => s.value === f.state)?.label ?? "";
+      const summary = [
+        f.team,
+        statusName,
+        priority,
+        f.labelIds.length > 0 && `${f.labelIds.length} label${f.labelIds.length === 1 ? "" : "s"}`,
+        f.isCheckingDuplicates && "checking for duplicates…",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+      const createButton = (
+        <Button
+          key="create"
+          label={f.phase === "filing" ? "Creating…" : "Create"}
+          variant="primary"
+          onPress={() => submit($)}
+        />
+      );
+      const buttons = [
+        createButton,
+        <Button
+          key="create-open"
+          label="Create & open"
+          onPress={() => submit($, { open: true })}
+        />,
+        f.duplicate && (
+          <Button
+            key="comment"
+            label={`Comment on ${f.duplicate.issue}`}
+            onPress={() => submit($, { asComment: true })}
+          />
+        ),
+        discardButton,
+      ].filter((b): b is RenderElement => Boolean(b));
+      // No fixed height: an Input in a height-capped box stops wrapping when focused and
+      // hides what is typed past its width.
+      const field = (key: string, child: RenderNode, isBordered: boolean) => (
+        <Box
+          key={`field-${key}`}
+          flexDirection="column"
+          paddingX={1}
+          {...(isBordered && { borderStyle: "round" })}
+          {...(focus?.startsWith(key) ? { borderColor: "claude" } : { borderDimColor: true })}
+        >
+          {child}
+        </Box>
+      );
+
+      const { Input, Select } = els;
+      const chosen = f.labels.filter((l) => f.labelIds.includes(l.value));
+      const selects: [string, string, string, Option[], (v: string) => unknown][] = [
+        ["team", "Team", f.team, f.teams, (team) => switchTeam($, team)],
+        [
+          "priority",
+          "Priority",
+          String(f.priority),
+          PRIORITIES,
+          (p) => set({ priority: Number(p) }),
+        ],
+        ["status", "Status", f.state, f.statuses, (state) => set({ state })],
+        ["project", "Project", f.project, f.projects, (project) => set({ project })],
+      ];
+      // Each select draws "Label: value ▾", two columns from the next.
+      const selectRows = wrappedRows(
+        selects.map(
+          ([, label, value, options]) =>
+            label.length + (options.find((o) => o.value === value)?.label.length ?? 0) + 6,
+        ),
+        width,
+      );
+      // Columns inside a bordered, padded field.
+      const inner = Math.max(width - 4, 1);
+      // Focused, a title that no longer fits beside the engine's "⏎ submit" hint wraps a row.
+      const titleRows =
+        focus?.startsWith("title") && TITLE_LABEL.length + f.title.length + HINT_WIDTH > inner
+          ? 2
+          : 1;
+      const fixed =
+        (compact ? titleRows : titleRows + 2) + // title field
+        selectRows +
+        (chosen.length > 0 ? 1 : 0) + // labels
+        (f.duplicate ? 2 : 0) +
+        1 + // space above the description
+        (compact ? 0 : 1) + // source
+        (f.error ? 1 : 0) +
+        (compact ? 0 : 1) + // footer rule
+        buttonRows(buttons);
+      // Lines the description wraps to in its box.
+      const descriptionLines = f.description
+        .split("\n")
+        .reduce((n, line) => n + Math.max(1, Math.ceil(line.length / width)), 0);
+      // A focused Select draws its option list under its row, pushing everything below it down.
+      const openList = Math.min(
+        selects.find(([key]) => key === focus)?.[3].length ?? 0,
+        OPEN_LIST_ROWS,
+      );
+      let descriptionRows = Math.max(3, rows - fixed - openList);
+      const isClipped = descriptionLines > descriptionRows;
+      // Compact has no source row, so the clipped note takes one from the description.
+      if (compact && isClipped) descriptionRows = Math.max(3, descriptionRows - 1);
+
+      return (
+        <Box flexDirection="column">
+          {field(
+            "title",
+            // Enter empties an Input unless the hook draws a different value, so a submit
+            // remounts it under a new key, keeping the text and the focus.
+            <Input
+              key={`title-${f.titleRevision ?? 0}`}
+              label="Title"
+              // Keep the default "⏎ submit": with a shorter hint the engine truncates a title just
+              // over one line instead of wrapping it, hiding what is typed (Claude Code 2.1.308).
+              value={f.title}
+              autoFocus
+              onInput={(title) => set({ title: oneLine(title) })}
+              onSubmit={(title) =>
+                set({ title: oneLine(title), titleRevision: (f.titleRevision ?? 0) + 1 })
+              }
+            />,
+            !compact,
+          )}
+          <Box flexDirection="row" flexWrap="wrap" columnGap={2} paddingX={1}>
+            {selects.map(([key, label, value, options, onSelect]) => (
+              <Select
+                key={key}
+                label={label}
+                value={value}
+                options={options.slice(0, SELECT_MAX)}
+                onSelect={onSelect}
               />
             ))}
           </Box>
-        )}
-        {f.duplicate && (
-          <Box flexDirection="column" paddingX={1}>
-            <Text color="warning" wrap="truncate-end">
-              {f.duplicate.issue} ({f.duplicate.title}) may already cover this; the comment would
-              add:
-            </Text>
-            <Text dimColor wrap="truncate-end">
-              {f.duplicate.comment}
-            </Text>
-          </Box>
-        )}
-        {/* Read-only: in Claude Code 2.1.308 a focused multi-line Input collapses to one line
+          {chosen.length > 0 && (
+            // The drafter's picks; adding is left to Linear, searching labels here worked poorly.
+            <Box flexDirection="row" flexWrap="wrap" columnGap={1} paddingX={1}>
+              <Text dimColor>Labels</Text>
+              {chosen.map((l) => (
+                <Button
+                  key={`label-${l.value}`}
+                  label={`× ${l.label}`}
+                  plain
+                  onPress={() => set({ labelIds: f.labelIds.filter((id) => id !== l.value) })}
+                />
+              ))}
+            </Box>
+          )}
+          {f.duplicate && (
+            <Box flexDirection="column" paddingX={1}>
+              <Text color="warning" wrap="truncate-end">
+                {f.duplicate.issue} ({f.duplicate.title}) may already cover this; the comment would
+                add:
+              </Text>
+              <Text dimColor wrap="truncate-end">
+                {f.duplicate.comment}
+              </Text>
+            </Box>
+          )}
+          {/* Read-only: in Claude Code 2.1.308 a focused multi-line Input collapses to one line
             once a line is wider than the field. Make it an Input again when that is fixed. */}
-        {/* Unbordered: borders mark what is editable, and Markdown sizes tables to the pane's
+          {/* Unbordered: borders mark what is editable, and Markdown sizes tables to the pane's
             width, so a border's columns would break every table row. */}
-        <Box flexDirection="column" marginTop={1} height={descriptionRows} overflow="hidden">
-          {blocks(f.description).map((b) => {
-            // Markdown sizes tables and fences to the terminal, not the pane, so those are
-            // drawn here to the pane's width; Linear renders the markdown itself.
-            if (b.kind === "markdown") return <Markdown text={b.lines.join("\n")} />;
-            if (b.kind === "code") {
+          <Box flexDirection="column" marginTop={1} height={descriptionRows} overflow="hidden">
+            {blocks(f.description).map((b) => {
+              // Markdown sizes tables and fences to the terminal, not the pane, so those are
+              // drawn here to the pane's width; Linear renders the markdown itself.
+              if (b.kind === "markdown") return <Markdown text={b.lines.join("\n")} />;
+              if (b.kind === "code") {
+                return (
+                  <Box flexDirection="column" paddingLeft={2}>
+                    {b.lines.map((l) => (
+                      <Text dimColor wrap="truncate-end">
+                        {l || " "}
+                      </Text>
+                    ))}
+                  </Box>
+                );
+              }
+              const rows = b.lines.map(cells).filter((r) => !r.every((c) => /^:?-+:?$/.test(c)));
+              const cols = Math.max(...rows.map((r) => r.length));
+              const natural = Array.from({ length: cols }, (_, i) =>
+                Math.max(...rows.map((r) => r[i]?.length ?? 0), 1),
+              );
+              const room = Math.max(width - (cols - 1) * 2, cols);
+              const total = natural.reduce((a, n) => a + n, 0);
+              const widths = natural.map((n) =>
+                total <= room ? n : Math.max(4, Math.floor((room * n) / total)),
+              );
               return (
-                <Box flexDirection="column" paddingLeft={2}>
-                  {b.lines.map((l) => (
-                    <Text dimColor wrap="truncate-end">
-                      {l || " "}
-                    </Text>
+                <Box flexDirection="column" marginY={1}>
+                  {rows.map((r, ri) => (
+                    <Box flexDirection="row" columnGap={2}>
+                      {widths.map((w, ci) => (
+                        <Box width={w}>
+                          <Text
+                            wrap="wrap"
+                            dimColor={ri > 0 && ci > 0}
+                            weight={ri === 0 ? "semibold" : undefined}
+                          >
+                            {r[ci] ?? ""}
+                          </Text>
+                        </Box>
+                      ))}
+                    </Box>
                   ))}
                 </Box>
               );
-            }
-            const rows = b.lines.map(cells).filter((r) => !r.every((c) => /^:?-+:?$/.test(c)));
-            const cols = Math.max(...rows.map((r) => r.length));
-            const natural = Array.from({ length: cols }, (_, i) =>
-              Math.max(...rows.map((r) => r[i]?.length ?? 0), 1),
-            );
-            const room = Math.max(width - (cols - 1) * 2, cols);
-            const total = natural.reduce((a, n) => a + n, 0);
-            const widths = natural.map((n) =>
-              total <= room ? n : Math.max(4, Math.floor((room * n) / total)),
-            );
-            return (
-              <Box flexDirection="column" marginY={1}>
-                {rows.map((r, ri) => (
-                  <Box flexDirection="row" columnGap={2}>
-                    {widths.map((w, ci) => (
-                      <Box width={w}>
-                        <Text
-                          wrap="wrap"
-                          dimColor={ri > 0 && ci > 0}
-                          weight={ri === 0 ? "semibold" : undefined}
-                        >
-                          {r[ci] ?? ""}
-                        </Text>
-                      </Box>
-                    ))}
-                  </Box>
-                ))}
-              </Box>
-            );
-          })}
+            })}
+          </Box>
+          {(!compact || isClipped) && (
+            <Box paddingX={1}>
+              <Text dimColor wrap="truncate-end">
+                {isClipped
+                  ? "Description continues; it is filed whole, edit it in Linear."
+                  : f.source}
+              </Text>
+            </Box>
+          )}
+          {f.error && (
+            <Box paddingX={1}>
+              <Text color="error">{f.error}</Text>
+            </Box>
+          )}
+          {footer(buttons, summary)}
         </Box>
-        {(!compact || isClipped) && (
-          <Box paddingX={1}>
-            <Text dimColor wrap="truncate-end">
-              {isClipped
-                ? "Description continues; it is filed whole, edit it in Linear."
-                : f.source}
-            </Text>
-          </Box>
-        )}
-        {f.error && (
-          <Box paddingX={1}>
-            <Text color="error">{f.error}</Text>
-          </Box>
-        )}
-        {footer(buttons, summary)}
-      </Box>
-    );
+      );
+    }
   });
 
   // The band asks each plugin for its own row: this one holds the draft chip and the filed
   // issues, and passes while it has neither.
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
     if (e.props.hasSurvey) return next(e);
-    const { Box, Text, Button } = $.ui.resolve(e);
+    const els = $.ui.resolve(e);
+    const { Box, Text, Button } = els;
+    const k = kitOf(els, e);
 
     const issues = await read($, filed);
     const draft = (await read($, isPaneOpen)) ? null : await read($, form);
     const isArmed = await read($, isDiscardArmed);
     if (issues.length === 0 && !draft) return next(e);
-    return (
-      <Box flexDirection="column">
-        {draft && (
-          <Box key="draft" flexDirection="row">
-            <Text color="claude">✎ </Text>
-            <Text wrap="truncate-end">
-              Linear draft:{" "}
-              {draft.phase === "drafting" ? "drafting…" : draft.title || "untitled"}{" "}
-            </Text>
-            <Box marginLeft={1}>
-              <Button key="draft-open" label="Open" hotkey="8" plain onPress={() => openPane($)} />
-            </Box>
-            <Box marginLeft={1}>
-              {/* A digit in an empty prompt presses this, so a prompt starting "9" must not discard. */}
-              <Button
-                key="draft-discard"
-                label={isArmed ? "Press 9 again to discard" : "Discard"}
-                hotkey="9"
-                plain
-                onPress={async () => {
-                  if (await read($, isDiscardArmed)) return discard($);
-                  await update($, isDiscardArmed, () => true);
-                  $.clock.after(DISCARD_ARM_MS, () => void update($, isDiscardArmed, () => false));
-                }}
-              />
-            </Box>
-          </Box>
-        )}
-        {issues.map((i) => (
-          <Box key={`filed-${i.key}`} flexDirection="row">
-            <Text color="success">✓ </Text>
-            <Text wrap="truncate-end">
-              {i.key} {i.title}{" "}
-            </Text>
-            {i.url !== "" && (
+    // No digits on a graphical surface: its buttons are pressed by a click.
+    return pick(k, {
+      tui: () => terminal(),
+      gui: () =>
+        guiBand(k, {
+          draft,
+          issues,
+          onOpen: () => openPane($),
+          onDiscard: () => discard($),
+          onOpenUrl: (url) => openUrl($, url),
+          onCopy: async (url) => {
+            const r = await $.ui.copy({ text: url });
+            $.ui.toast(r.isCopied ? `Copied ${url}` : `Couldn't copy: ${r.reason}`);
+          },
+          onDismiss: (key) => update($, filed, (list) => list.filter((x) => x.key !== key)),
+        }),
+    });
+
+    function terminal() {
+      return (
+        <Box flexDirection="column">
+          {draft && (
+            <Box key="draft" flexDirection="row">
+              <Text color="claude">✎ </Text>
+              <Text wrap="truncate-end">
+                Linear draft:{" "}
+                {draft.phase === "drafting" ? "drafting…" : draft.title || "untitled"}{" "}
+              </Text>
               <Box marginLeft={1}>
                 <Button
-                  key={`open-${i.key}`}
+                  key="draft-open"
                   label="Open"
+                  hotkey="8"
                   plain
-                  onPress={() => openUrl($, i.url)}
+                  onPress={() => openPane($)}
                 />
               </Box>
-            )}
-            {i.url !== "" && (
               <Box marginLeft={1}>
+                {/* A digit in an empty prompt presses this, so a prompt starting "9" must not discard. */}
                 <Button
-                  key={`copy-${i.key}`}
-                  label="Copy link"
+                  key="draft-discard"
+                  label={isArmed ? "Press 9 again to discard" : "Discard"}
+                  hotkey="9"
                   plain
                   onPress={async () => {
-                    const r = await $.ui.copy({ text: i.url });
-                    $.ui.toast(r.isCopied ? `Copied ${i.url}` : `Couldn't copy: ${r.reason}`);
+                    if (await read($, isDiscardArmed)) return discard($);
+                    await update($, isDiscardArmed, () => true);
+                    $.clock.after(
+                      DISCARD_ARM_MS,
+                      () => void update($, isDiscardArmed, () => false),
+                    );
                   }}
                 />
               </Box>
-            )}
-            <Box marginLeft={1}>
-              <Button
-                key={`dismiss-${i.key}`}
-                label="×"
-                plain
-                onPress={() => update($, filed, (list) => list.filter((x) => x.key !== i.key))}
-              />
             </Box>
-          </Box>
-        ))}
-      </Box>
-    );
+          )}
+          {issues.map((i) => (
+            <Box key={`filed-${i.key}`} flexDirection="row">
+              <Text color="success">✓ </Text>
+              <Text wrap="truncate-end">
+                {i.key} {i.title}{" "}
+              </Text>
+              {i.url !== "" && (
+                <Box marginLeft={1}>
+                  <Button
+                    key={`open-${i.key}`}
+                    label="Open"
+                    plain
+                    onPress={() => openUrl($, i.url)}
+                  />
+                </Box>
+              )}
+              {i.url !== "" && (
+                <Box marginLeft={1}>
+                  <Button
+                    key={`copy-${i.key}`}
+                    label="Copy link"
+                    plain
+                    onPress={async () => {
+                      const r = await $.ui.copy({ text: i.url });
+                      $.ui.toast(r.isCopied ? `Copied ${i.url}` : `Couldn't copy: ${r.reason}`);
+                    }}
+                  />
+                </Box>
+              )}
+              <Box marginLeft={1}>
+                <Button
+                  key={`dismiss-${i.key}`}
+                  label="×"
+                  plain
+                  onPress={() => update($, filed, (list) => list.filter((x) => x.key !== i.key))}
+                />
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      );
+    }
   });
 
   // The built-in card's own row, which this hook names to splice the button into.
   on("ui.render", { component: "AbovePrompt", plugin: YSK }, async ($, e, next) => {
     const tree = await next(e);
     if (e.props.hasSurvey) return tree;
-    const { Box, Button } = $.ui.resolve(e);
+    const els = $.ui.resolve(e);
+    const { Box, Button } = els;
+    const k = kitOf(els, e);
 
     const card = cardText(tree);
     if (card !== "" && card === (await read($, hidden))) return <Box />;
@@ -1104,7 +1171,8 @@ export const register: Register = (on) => {
       <Button
         key="linear-issue"
         label="Linear issue"
-        hotkey={HOTKEYS.find((k) => !taken.has(k))}
+        // The digit is the terminal's way in: a graphical surface would draw it as a chip.
+        hotkey={pick(k, { tui: () => HOTKEYS.find((h) => !taken.has(h)), gui: () => undefined })}
         plain={style?.plain}
         dimColor={style?.dimColor}
         onPress={async () => {

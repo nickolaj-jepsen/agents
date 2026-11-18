@@ -50,6 +50,8 @@ declare module "claude-code" {
       focused: string | null;
       // Set by the chip's first Discard press; a second within a few seconds discards.
       isDiscardArmed: boolean;
+      // Whether the possible duplicate is opened in place (graphical surfaces).
+      isDuplicateOpen: boolean;
     };
   }
 }
