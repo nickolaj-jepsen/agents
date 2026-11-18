@@ -236,14 +236,34 @@ Every row is the kit's one row drawing, so `card`, `foldedRow` and `listRow` sha
 
 **The toolbar** (`paneTitle` with `gui.actions`). The pane's first line, at the inset with or without actions. On the left, the count, dim (`3 open`), or what closing will do once something is set (`On close: apply 1, dismiss 1`). At the far edge, the pane's actions, wrapping when they don't fit. The main one (Submit) is quiet until there is something to submit, then filled. The terminal's action row at the foot is not drawn here. An empty title leaves the line to the count and the actions.
 
-- When the actions are navigation (answer's `Q1 Q2 Q3 Review`), they are tabs: the current one is filled, as a choice's chosen option, and the rest are quiet.
+- Navigation is tabs at the line's start, in place of the count (`gui.tabs`: answer's `Q1 Q2 Q3 Review`): the current one filled, as a choice's chosen option, the rest quiet. They wrap among themselves, and the actions (`Close`) keep the far edge of the first line.
+- A Button holds no icon, so a tab says a place is done with `✓` in its label (`✓ Q1`). It is a mark, not a control, and the only glyph a label carries.
+
+**Where the main action sits.** Two kinds of screen, two places:
+
+- A list whose rows are each set, then carried out together (docfix): the main action (Submit) is in the toolbar, in view however far the list scrolls.
+- A form answered a step at a time (answer): the way on (`Next`) is on the row of the answer just given, where the click was, and the last step's action (`Send`) sits under what it sends, in reading order. The toolbar holds the navigation and the way out. In a 234-pixel band the row just pressed is the one in view; the toolbar and the foot are what scroll away.
 
 **Choices** (`choice`, `gui.layout: "row"`). One button per option in a row, the chosen one filled and the rest quiet. An option that means "nothing" (skip) is never filled.
 
 - A label is capitalised. A label that is a word of the person's own (a spelling suggestion) keeps its case: `isLiteral`.
 - A label longer than `tokens.gui.maxLabel` cells (a sentence) is set as text under a button that says `short` (`Option A`), in the stacked layout. Give every sentence-length option a `short`; without one the button runs off the pane. The two compose: `short` is capitalised, the sentence under it keeps its case.
 
+**Choice rows** (`choice`, `gui.layout: "rows"`). For options a person reads before picking, with words and a detail each (answer's options). Each is one line:
+
+- led by a Button of the option's own name (`A`), the label as text beside it, then the detail dim, cut at the edge. The leads sit in one column (`tokens.gui.lead`), so every label starts at one edge. A 234-pixel band holds the question, its body's line, three options, the write-in and the action row; a fourth option pushes the action row under the fold.
+- The chosen one's lead is filled. Of a single choice it opens in place, in a well as an opened row does: the label (semibold while it is a name) and the detail run on as one paragraph, whole; what belongs to the answer (a note's field) under it; and the way on, filled, at its far edge (`Next`, or `Review` when it is the last).
+- A choice of several opens no row: its leads fill, and its way on is on the action row.
+- An option with no name of its own (a pick list's route) leads with a Button of its words.
+- A field among the options (write your own) is a row of its own, always drawn, led by an icon (`write`): a click lands in the field itself. `fieldRow` sets another field (a note) in the same columns.
+- A pressed row's button is a verb at the far edge (`Open`); a choice row leads with the option's name, as a radio does: the eye reads down the names, and what is chosen is filled where the row starts.
+
 **Form fields** (`labelled`, `labelledRow`). The field's name as a sub-heading (semibold, dim) at the inset, the control (an `Input`, a `Select`, a choice) `xs` under it. `labelledRow` sets short fields side by side, wrapping.
+
+- A field a click must reach is drawn already, where it belongs, with a placeholder that says what goes in it (`Add a note`). A press that reveals one leaves the focus on the press, so it takes a second click.
+- A field gives no `submitLabel` here: VS Code then draws no button beside it, and Enter still submits. With one, a filled button of that word appears beside it, one more filled control.
+
+**A passage that gives way** (`excerpt`). Text the screen carries but the person has mostly read already (a question's body, which the transcript shows above): its first line dim, cut at the edge, and a quiet `More` at the far edge when there is more. Opened, it is whole in a well, with `Less`. A short passage is the line alone.
 
 **An action row** (`actionBar`). A word or two per button, labels capitalised, the main one filled. These are the only buttons that may carry a hotkey.
 
@@ -264,7 +284,7 @@ Every row is the kit's one row drawing, so `card`, `foldedRow` and `listRow` sha
 
 **Icons** (`icon`). Stroked drawings on a 16-pixel grid, drawn 16 pixels square.
 
-- The set: `wrong`, `stale`, `missing`, `warning`, `success`, `error`.
+- The set: `wrong`, `stale`, `missing`, `warning`, `success`, `error`, `pending` (a dashed circle: not answered yet), `question` (the band's offer of a form), `write` (a pencil: your own words), `note`.
 - An icon is an image and can't follow the theme, so its colours are fixed in `tokens.gui.tone`: neutral `#8b8f98`, error `#e5534b`, warning `#d4962a`, success `#3fa65b`.
 - An icon is neutral unless it marks a state.
 - A new icon goes into the kit's set, on the same grid with the same 1.5 stroke.

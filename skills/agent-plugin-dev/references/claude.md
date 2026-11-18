@@ -35,13 +35,16 @@ The desktop app and the VS Code extension draw the same tree with their own cont
   - `statusBand(k, { ..., gui: { text, icon, tone, actions } })`: the count in words, and more quiet actions.
   - `emptyState(k, text, { gui: { text } })`: a fuller sentence where there is room.
   - `choice(k, options, { gui: { layout: "row" } })`, `capped(k, items, { gui: { maxItems } })`, `stack(k, blocks, { gui: { gap: "sm" } })`.
+  - `choice(k, options, { gui: { layout: "rows", onward } })`: one row per option, led by a Button of its `tag`; the chosen one of a single choice opens with its `body` and `onward` filled at its far edge. An option with a `field` is that control's row.
+  - `paneTitle(k, "", undefined, { gui: { tabs, actions } })`: tabs at the line's start, the actions at its far edge.
+  - `excerpt(k, { text, isOpen, onToggle })`: a passage cut to one dim line with `More`; the terminal draws it whole. `fieldRow(k, { icon, field })`: a field in a choice row's columns.
   - `list(k, groups, { gui: { isAll, onMore } })`, and a row's `gui.isDetailAtEnd`.
   - `card(k, { ..., onToggle })`: the graphical drawing calls `onToggle({ isAlone: true })`, and the mod opens that row alone.
 - An option when the same content is said or placed differently: a shorter word, a part one surface leaves out, a layout. A new kit function when a screen needs a pattern the kit lacks; it gets both drawings, and its stories (`kit/README.md`).
 - A plugin never draws a graphical pattern itself. If the kit's drawing is wrong for a screen, change the kit, run `just kit-sync`, and check every mod that uses it.
 - Spacing is `tokens.gui.space` (down) and `tokens.gui.across` (across), as numbers. A step name is a whole line or none in VS Code.
 
-These functions follow the style: `pane`, `paneTitle`, `section`, `card`, `foldedRow`, `list`, `listRow`, `labelled`, `labelledRow`, `choice`, `actionBar`, `statusBand`, `capped`, `stack`, `facts`, `subhead`, `rule`, `indent`, `prose`, `notice`, `emptyState`, `icon`. These still draw the older look, with step names: `entries`, `note`, `bandShell`, `buttonRow`, `gapOf`, `imageGallery`. Converting a mod starts with the kit functions it calls: bring their graphical drawing to the style, then the mod.
+These functions follow the style: `pane`, `paneTitle`, `section`, `card`, `foldedRow`, `list`, `listRow`, `labelled`, `labelledRow`, `choice`, `actionBar`, `statusBand`, `capped`, `stack`, `facts`, `subhead`, `rule`, `indent`, `prose`, `notice`, `emptyState`, `icon`, `excerpt`, `fieldRow`. These still draw the older look, with step names: `entries`, `note`, `bandShell`, `buttonRow`, `gapOf`, `imageGallery`. Converting a mod starts with the kit functions it calls: bring their graphical drawing to the style, then the mod.
 
 ### The one door: `forSurface`
 
@@ -72,12 +75,13 @@ When `claude` on your PATH is a wrapper that adds `--plugin-dir` (a system confi
 
 Read from the extension's webview (2.1.327) and checked by screenshot:
 
-- **Button.** Its look comes from `dimColor` alone: without it, a filled button in the theme's button colour; with it, a quiet outlined one. `variant` is ignored, so the kit sets `dimColor` on every button that is not the main one. A label never wraps and the button never shrinks, so a long one runs off the pane. Its children are strings and `Text` only: no `Svg`, no `Box`.
+- **Button.** Its look comes from `dimColor` alone: without it, a filled button in the theme's button colour; with it, a quiet outlined one. `variant` is ignored, so the kit sets `dimColor` on every button that is not the main one. A label never wraps and the button never shrinks, so a long one runs off the pane, even as a `Text` with `truncate-end` in a shrinking `Box`. Its children are strings and `Text` only: no `Svg`, no `Box`, and a `Text` child's colour is dropped (2.1.327). `role="dismiss"` draws a plain button, no close mark.
+- **Select** is the native drop-down, as wide as the room.
 - **Link** is a plain link that opens its URL. It can't raise a press, so it can't be a mod's control.
 - **Markdown links** with `onLinkPress` raise a press, but draw in the link colour, underlined: too loud for a row.
 - **Box.**
   - `backgroundColor` takes a theme key, a hex colour (eight digits for alpha) or `rgb()`. The keys that paint: `text`, `secondaryText`, `subtle`, `background`, `error`, `success`, `warning`, `claude`, `suggestion`, `userMessageBackground` (the theme's second background), `bashMessageBackgroundColor` (the code background), `diffAdded`, `diffRemoved`.
-  - Gaps, padding and `width` take fractions: a row gap is in lines, a column gap and a width in cells. A Box `width={0.2}` with a fill is a thin rule as tall as its row.
+  - Gaps, padding and `width` take fractions: a row gap is in lines, a column gap and a width in cells (`ch`). A Box `width={0.2}` with a fill is a thin rule as tall as its row. `minWidth` is in cells too (the kit's lead column). There is no `flexBasis`; `width={0}` with `flexGrow={1}` is a basis of nothing, which takes only the room its neighbours leave (a row's detail).
   - Any `borderStyle` is a 1-pixel border on all four sides; `round` also rounds the corners (6 pixels). There is no border on one side. For rounded corners with no border, set `borderColor="#00000000"`.
   - `hover` does nothing.
 - **Text.**
@@ -86,7 +90,7 @@ Read from the extension's webview (2.1.327) and checked by screenshot:
   - `dimColor` is 65% opacity, so dim text inside a dim block fades twice.
   - `wrap="truncate-end"` keeps one line and cuts it at the edge with `…`. `maxLines` cuts at a word and can leave the line short.
 - **Svg** is an image of fixed size in CSS pixels, with a required `alt`. It can't read the theme or `currentColor`, so its colours are fixed.
-- **Input** shows one line, whatever `rows` says. A click on a Button that reveals an `Input` leaves the focus on that Button: `autoFocus` and `$.ui.focus` don't move it there, and InputProps has nothing else for it. Tab reaches the field. This is a known gap: a write-in reached by a click needs a second click or Tab.
+- **Input** shows one line, whatever `rows` says. A pointer's click on the field focuses it, so a field always drawn is reached in one click (answer's write-in, 2.1.327). A click on a Button that reveals an `Input` leaves the focus on that Button: `autoFocus` and `$.ui.focus` don't move it there, and InputProps has nothing else for it; Tab reaches the field. With no `submitLabel`, or an empty one, the field has no button beside it, focused or not; with a word, a filled button of that word shows beside it. Enter submits either way.
 - **The prompt.** VS Code raises no `prompt.edit` or `prompt.change`. A mod that watches the draft reads `$.prompt.read()` in its render hook. The band redraws only now and then while the person types, so what it shows can lag the draft by an edit or more.
 - The inline pane's body is at most about 234 pixels tall in a 420 by 800 window, and scrolls. The band above the prompt is capped the same, at 234 pixels, and scrolls.
 
