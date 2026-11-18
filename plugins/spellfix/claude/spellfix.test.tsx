@@ -609,4 +609,28 @@ for (const surface of ["desktop", "vscode"] as const) {
       await band.unmount();
     },
   );
+
+  test(`${surface}: a host with no prompt events is read on each redraw`, async ($, on) => {
+    const w = world(on);
+
+    // Typed where no prompt.edit or prompt.change is raised, as in VS Code.
+    w.box = { text: "teh qiuck fox ", cursor: 14 };
+    const band = await mount($);
+    await w.clock.advance(1000);
+    expect(await shownCount(band)).toBe("2 misspelled");
+
+    await band.press({ key: "spellfix" });
+    await w.clock.settle();
+    await band.press({ key: "all" });
+    await w.clock.settle();
+    expect(w.box.text).toBe("the quick fox ");
+    // The fix was this mod's own: its report stays, and the count follows the new draft.
+    expect(
+      await band.find({ type: "Text", text: /^Fixed teh → the, qiuck → quick$/ }),
+    ).toBeDefined();
+    await w.clock.advance(1000);
+    expect(await shownCount(band)).toBe("");
+
+    await band.unmount();
+  });
 }

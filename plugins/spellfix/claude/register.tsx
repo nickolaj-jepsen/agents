@@ -62,6 +62,8 @@ const unadded = new Set<string>();
 // each render instead, and `seen` is the draft it last took in.
 let isEventDriven = false;
 let seen = "";
+// The draft this mod last wrote itself, which still has its picker or report.
+let written = "";
 let timer: Timer | undefined;
 let checkId = 0;
 let hasWarned = false;
@@ -265,7 +267,7 @@ async function landed($: EngineInterface, b: Batch) {
 
 /**
  * Takes in a draft the host raised no event for: what the edit and change hooks do when it did.
- * A draft this mod filled in itself is already `seen`.
+ * A draft this mod filled in itself keeps its picker and report, as a plugin-origin change does.
  */
 async function watchDraft($: EngineInterface) {
   if (isEventDriven) return;
@@ -276,8 +278,13 @@ async function watchDraft($: EngineInterface) {
     unadded.clear();
   }
   seen = box.text;
-  await closePicker($);
-  await dismiss($);
+  // A render hook may not write state, so the close waits for a timer of its own.
+  if (box.text !== written) {
+    void $.clock.after(0, async () => {
+      await closePicker($);
+      await dismiss($);
+    });
+  }
   scheduleCheck($, box);
 }
 
@@ -364,7 +371,7 @@ async function applyLate($: EngineInterface, p: Picker, choice: string) {
   if (box.text.slice(p.start, p.end) !== p.word) return;
   const fixed = splice(box, p, choice);
   noteSplice(box.text, p, choice);
-  seen = fixed.text;
+  written = fixed.text;
   await $.prompt.fill({ text: fixed.text, cursor: fixed.cursor, mode: "replace" });
   await advance($, fixed.text, p.start + choice.length);
 }
@@ -423,7 +430,7 @@ async function applyAllLate($: EngineInterface) {
   const box = await $.prompt.read();
   const fixed = await applyAll($, box);
   if (fixed) {
-    seen = fixed.text;
+    written = fixed.text;
     await $.prompt.fill({ text: fixed.text, cursor: fixed.cursor, mode: "replace" });
   }
 }
@@ -484,7 +491,7 @@ async function pickFromBand($: EngineInterface, key: string) {
   const box = await $.prompt.read();
   const fixed = await pick($, key, box);
   if (fixed && fixed.text !== box.text) {
-    seen = fixed.text;
+    written = fixed.text;
     await $.prompt.fill({ text: fixed.text, cursor: fixed.cursor, mode: "replace" });
   }
 }
@@ -514,7 +521,7 @@ async function answerFromBand($: EngineInterface, key: string) {
   const box = await $.prompt.read();
   const answered = await answerReport($, key, box);
   if (answered && answered.text !== box.text) {
-    seen = answered.text;
+    written = answered.text;
     await $.prompt.fill({ text: answered.text, cursor: answered.cursor, mode: "replace" });
   }
 }
@@ -529,6 +536,7 @@ export const register: Register = (on, options) => {
   config = readConfig(options);
   isEventDriven = false;
   seen = "";
+  written = "";
 
   on("prompt.edit", async ($, e, next) => {
     isEventDriven = true;
