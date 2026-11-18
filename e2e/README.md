@@ -184,6 +184,16 @@ again.
 - A leftover `VSCODE_IPC_HOOK_CLI` makes `code` hand the folder to a VS Code that is already
   running, which is why those variables are dropped.
 - `E2E_KEEP=1` leaves a VS Code that failed to start, with its `vscode.log`, for a look.
+- A band that reads the draft on render (spellfix) can lag what `type` typed. VS Code raises no
+  prompt event, and the band redraws only now and then: in a test on 2.1.327 it showed one word
+  fewer than the draft held, in the process that typed and after it exited alike, and a resize did
+  not redraw it. This is the host, not the driver's connection. Don't wait for such a band inside
+  `goto`; end the scenario at the typed draft and go on with verbs (`wait`, `click`) in later calls.
+- `wait` reads the webview's text, which holds no `Input`'s placeholder. `Escape` leaves a field
+  but does not hide a pane.
+- The setup's git reads no global or system config, and the session keeps `agent-notes` data in
+  the run's folder (`lib/setup.ts`), so neither the person's git hooks nor a mod's
+  `agent-notes root --ensure` reach their real notes store.
 
 ## Traps
 

@@ -161,7 +161,7 @@ The desktop app and the VS Code extension draw a mod's tree with their own contr
 
 - A calm list where things open in place. A row is one line; opening it shows its detail under it, in the same pane.
 - The host already frames the pane and draws its title and close mark. Draw no box, border or card inside it.
-- Only the control worth pressing now is filled. Every other button is quiet.
+- Only the action worth pressing now is filled. Every other button is quiet. A choice's chosen option, and the current tab of a toolbar, are filled as well: they say what is chosen, not what to press.
 - Design for the inline pane: about 234 pixels tall (13 lines of text) in a 420-pixel-wide editor. A docked pane is about 350 pixels wide and draws the same; it needs no layout of its own.
 
 ### Spacing
@@ -176,16 +176,16 @@ Down the page, `tokens.gui.space`, in lines of body text (a line is about 18 pix
 | `sm` | 0.5   | the parts of one item: its text, meta line, detail and keys; the paragraphs of detail  |
 | `md` | 0.9   | things that stand alone: groups, and the pane's regions (toolbar, list, `Show N more`) |
 
-Rows space themselves with padding, 0.2 folded and 0.5 opened, and have no gap between them.
+Rows space themselves with padding, 0.2 folded and 0.5 opened, and have no gap between them. A folded row is one line of text tall whether it has a button or not.
 
 Across, `tokens.gui.across`, in cells:
 
-| Step    | Cells | Between                                                                                |
-| ------- | ----- | -------------------------------------------------------------------------------------- |
-| `xs`    | 0.6   | the buttons of one row                                                                 |
-| `sm`    | 0.8   | an icon and its text                                                                   |
-| `md`    | 1.2   | a line's text and its control; a label and its value                                   |
-| `inset` | 1     | each side of every block: toolbar, headings, rows, notices, empty state, `Show N more` |
+| Step    | Cells | Between                                                                                                 |
+| ------- | ----- | ------------------------------------------------------------------------------------------------------- |
+| `xs`    | 0.6   | the buttons of one row                                                                                  |
+| `sm`    | 0.8   | an icon and its text                                                                                    |
+| `md`    | 1.2   | a line's text and its control; a label and its value                                                    |
+| `inset` | 1     | each side of every block: toolbar, headings, rows, notices, empty state, `Show N more`, the band's line |
 
 Every block shares the inset, so their left edges line up. An opened row's fill spans the pane's width, and its content keeps the inset.
 
@@ -209,12 +209,21 @@ The colour roles are the terminal's. Colour marks a state only: a kind's icon an
 
 Each names the kit function that draws it; `claude.md` says how to call them.
 
-**A folded row** (`card`). One line: the icon, the text cut at the edge by the surface, and a quiet `Open` at the far edge.
+Every row is the kit's one row drawing, so `card`, `foldedRow` and `listRow` share their inset, height and gaps. A mod picks the function by what a press does:
+
+- a press opens the row in place: `card` for a reviewed suggestion, `foldedRow` for anything else;
+- a press acts at once (opens a file, copies a link, runs a command): `listRow`, or `list` for groups of them.
+
+**A folded row** (`card`, `foldedRow`). One line: the icon, the text cut at the edge by the surface, and a quiet `Open` at the far edge.
 
 - Do keep it to one line, with code spans in chips.
 - Don't wrap a folded row to two or three lines: the inline pane then holds three rows.
 
-**An opened row** (`card`, opened).
+**A pressed row** (`listRow`). One line: an optional icon, the title cut at the edge, a short dim detail beside it (a host, a state) or at the line's end with `gui.isDetailAtEnd` (an age), and a quiet button with the verb at the far edge (`Open`, `Copy`). Nothing opens under it.
+
+**A row that can't run** (`listRow` with `isDim`). The title dim and no button. Its detail says why (`PR #12 is open`). The terminal keeps it pressable, to say why in a toast.
+
+**An opened row** (`card`, `foldedRow`, opened).
 
 - The row sits in a well: the theme's second background, with rounded corners.
 - Its text is shown whole, and its button says `Close`.
@@ -225,9 +234,16 @@ Each names the kit function that draws it; `claude.md` says how to call them.
 
 **Groups** (`section`). A semibold heading at the inset, its rows `xs` under it, groups `md` apart. Nothing at the heading's right: no keys that act on a whole group, and no press that opens every row of it.
 
-**The toolbar** (`paneTitle` with `gui.actions`). The pane's first line. On the left, the count, dim (`3 open`), or what closing will do once something is set (`On close: apply 1, dismiss 1`). At the far edge, the pane's actions. The main one (Submit) is quiet until there is something to submit, then filled. The terminal's action row at the foot is not drawn here.
+**The toolbar** (`paneTitle` with `gui.actions`). The pane's first line, at the inset with or without actions. On the left, the count, dim (`3 open`), or what closing will do once something is set (`On close: apply 1, dismiss 1`). At the far edge, the pane's actions, wrapping when they don't fit. The main one (Submit) is quiet until there is something to submit, then filled. The terminal's action row at the foot is not drawn here. An empty title leaves the line to the count and the actions.
+
+- When the actions are navigation (answer's `Q1 Q2 Q3 Review`), they are tabs: the current one is filled, as a choice's chosen option, and the rest are quiet.
 
 **Choices** (`choice`, `gui.layout: "row"`). One button per option in a row, the chosen one filled and the rest quiet. An option that means "nothing" (skip) is never filled.
+
+- A label is capitalised. A label that is a word of the person's own (a spelling suggestion) keeps its case: `isLiteral`.
+- A label longer than `tokens.gui.maxLabel` cells (a sentence) is set as text under a button that says `short` (`Option A`), in the stacked layout. Give every sentence-length option a `short`; without one the button runs off the pane. The two compose: `short` is capitalised, the sentence under it keeps its case.
+
+**Form fields** (`labelled`, `labelledRow`). The field's name as a sub-heading (semibold, dim) at the inset, the control (an `Input`, a `Select`, a choice) `xs` under it. `labelledRow` sets short fields side by side, wrapping.
 
 **An action row** (`actionBar`). A word or two per button, labels capitalised, the main one filled. These are the only buttons that may carry a hotkey.
 
@@ -235,7 +251,10 @@ Each names the kit function that draws it; `claude.md` says how to call them.
 
 **Facts** (`facts`). A dim label, then its value beside it, wrapping under itself. Several entries of evidence each get a dim label line (`2026-11-16  claude`) over their text; there is no date column.
 
-**The band above the prompt** (`statusBand`). The status icon, the count in words (`3 doc suggestions to review`) and a quiet button with a verb (`Review`). The prompt's send button stays the one filled control in view.
+**The band above the prompt** (`statusBand`). The status icon, the count in words (`3 doc suggestions to review`) and a quiet button with a verb (`Review`), at the inset. The prompt's send button stays the one filled control in view.
+
+- More actions (`gui.actions`: `Copy link`, `Dismiss`) are quiet buttons too. The line is then the text alone, and the buttons wrap under it at the inset.
+- A band that opens a picker under itself (spellfix) says `Close` on its button while the picker is open. What opens is blocks at the inset, so the icon and everything under it share one left edge.
 
 **The empty state** (`emptyState`). One dim paragraph at the inset: what is missing, and what makes rows appear.
 
@@ -258,7 +277,8 @@ Each names the kit function that draws it; `claude.md` says how to call them.
 - No text cut or padded by the mod: the surface cuts a line (`truncate-end`).
 - Nothing sized to the viewport or counted in cells by the mod: no width, height or minimum height but the kit's.
 - Hotkeys only on the buttons of an action row; never on a row's buttons.
-- No horizontal overflow at 420 pixels. A button never wraps, so a label is a word or two.
+- No horizontal overflow at 420 pixels. A button never wraps, so a label is a word or two. `claude.md` has the check.
+- No text ends in `…`. The surface cuts a line itself; progress is said in words (`Drafting the issue`, `Checking spelling`).
 - No frame inside the pane; a fill only under an opened row.
 
 `expectNative` checks most of these in a mod's tests (`claude.md`).

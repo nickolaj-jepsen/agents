@@ -4,9 +4,9 @@ import type { VscodeStep } from "../lib/vscode-scenario.ts";
 
 /**
  * Each scenario ends with the draft typed. VS Code raises no prompt events; the mod reads the draft
- * on each redraw, and (observed on 2.1.327) the redraws for a draft typed by the process that started
- * the window arrive only once that process has exited, so nothing here waits for the band. Look at
- * the state with the driver's verbs afterwards: `wait "2 misspelled"`, `click Review`, `shot`.
+ * on each redraw, and the host redraws the band only now and then, so it can lag the draft (e2e
+ * README, "VS Code", Traps) and nothing here waits for it. Look at the state with the driver's verbs
+ * afterwards: `wait "2 misspelled"`, `click Review`, `shot`.
  */
 
 /** hunspell flags `teh` and `seperate`; the real hunspell on PATH answers, with five suggestions for `teh`. */

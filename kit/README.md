@@ -34,6 +34,22 @@ catalogue mod's copy is always there (`kit/claude/copies.ts`).
 `ui.tsx`: `expectNative`, the graphical style's rules as test assertions, which a mod's tests
 import from `./checks`. It is a `.tsx` file so `tsc -b`, which has no Claude types, leaves it out.
 
+On the desktop app and VS Code each function draws the graphical style instead
+(`skills/agent-plugin-dev/references/style.md`, "Graphical surfaces"). The graphical vocabulary:
+
+- `paneTitle`: the toolbar, the count or what closing does, and the pane's actions at the far edge.
+- `section`: a group's heading. `stack`, `pane`: blocks in a column, spaced by `tokens.gui.space`.
+- `card`, `foldedRow`: a row that opens in place. `listRow`, `list`: a row a press acts on at once.
+  All three are one internal row drawing (`guiRow`), so they share inset, height and gaps.
+- `choice`: options as buttons, the chosen one filled (`short` for a sentence, `isLiteral` to keep case).
+- `labelled`, `labelledRow`: form fields under their names.
+- `statusBand`: the line above the prompt, its way in and more quiet actions.
+- `actionBar`, `capped`, `facts`, `subhead`, `prose`, `notice`, `emptyState`, `icon`.
+- `forSurface`: the one door through which a mod draws by surface itself (`claude.md`, "The one
+  door").
+
+The catalogue below shows the terminal drawings only; these graphical drawings have no stories yet.
+
 `ui.tsx` and the spec stay out of `tsc -b`, because the Claude types are only laid when a mod
 loads. Check a mod with `tsc -p plugins/<name>/claude`.
 

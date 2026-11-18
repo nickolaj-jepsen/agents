@@ -27,19 +27,30 @@ The desktop app and the VS Code extension draw the same tree with their own cont
 
 ### Drawing with the kit
 
-- A mod never reads the surface. Each kit function has a terminal drawing and a graphical one, and picks by `k.isNative`.
+- A mod never reads the surface. It says what it shows and what a press means; each kit function has a terminal drawing and a graphical one, and picks by `k.isNative`.
 - What differs by surface is said in options: `{ tui, gui }`, with `desktop`, `vscode` or `mobile` to override `gui` on one surface. The kit merges them with `surfaceOf`. Examples in the kit today:
   - `paneTitle(k, title, count, { gui: { count, summary, actions } })`: the toolbar.
   - `actionBar(k, actions, { gui: { isHidden: true } })`: the terminal's action row, not drawn where the toolbar holds the actions.
   - `notice(k, text, status, { gui: { isHidden: true } })`: a terminal-only line.
-  - `statusBand(k, { ..., gui: { text } })`: the count in words.
+  - `statusBand(k, { ..., gui: { text, icon, tone, actions } })`: the count in words, and more quiet actions.
+  - `emptyState(k, text, { gui: { text } })`: a fuller sentence where there is room.
   - `choice(k, options, { gui: { layout: "row" } })`, `capped(k, items, { gui: { maxItems } })`, `stack(k, blocks, { gui: { gap: "sm" } })`.
+  - `list(k, groups, { gui: { isAll, onMore } })`, and a row's `gui.isDetailAtEnd`.
   - `card(k, { ..., onToggle })`: the graphical drawing calls `onToggle({ isAlone: true })`, and the mod opens that row alone.
 - An option when the same content is said or placed differently: a shorter word, a part one surface leaves out, a layout. A new kit function when a screen needs a pattern the kit lacks; it gets both drawings, and its stories (`kit/README.md`).
 - A plugin never draws a graphical pattern itself. If the kit's drawing is wrong for a screen, change the kit, run `just kit-sync`, and check every mod that uses it.
 - Spacing is `tokens.gui.space` (down) and `tokens.gui.across` (across), as numbers. A step name is a whole line or none in VS Code.
 
-These functions follow the style: `pane`, `paneTitle`, `section`, `card`, `choice`, `actionBar`, `statusBand`, `capped`, `stack`, `facts`, `subhead`, `rule`, `indent`, `prose`, `notice`, `emptyState`, `icon`. These still draw the older look, with step names: `list`, `listRow`, `entries`, `note`, `bandShell`, `buttonRow`, `gapOf`, `imageGallery`. Converting a mod starts with the kit functions it calls: bring their graphical drawing to the style, then the mod.
+These functions follow the style: `pane`, `paneTitle`, `section`, `card`, `foldedRow`, `list`, `listRow`, `labelled`, `labelledRow`, `choice`, `actionBar`, `statusBand`, `capped`, `stack`, `facts`, `subhead`, `rule`, `indent`, `prose`, `notice`, `emptyState`, `icon`. These still draw the older look, with step names: `entries`, `note`, `bandShell`, `buttonRow`, `gapOf`, `imageGallery`. Converting a mod starts with the kit functions it calls: bring their graphical drawing to the style, then the mod.
+
+### The one door: `forSurface`
+
+`forSurface(k, { tui, gui, desktop?, vscode?, mobile? })` runs the one drawing that belongs to the surface: `tui` on the terminal, else the surface's own slot, else `gui`. It is the only place a mod draws by surface itself, and it is an exception to the rule above.
+
+- Use it only for a terminal screen the mod lays out to the cell (its keys in the labels, rows measured to fit a band) that no kit function draws, beside a graphical drawing made of kit functions. linear-issue's pane and band, answer's band and spellfix's band do this.
+- A value only one surface has goes through it too, such as a digit hotkey that a graphical surface would draw as a chip (linear-issue's toolbar button).
+- The `gui` side is still kit functions only. Never read `k.isNative` or `e.surface` in a mod to choose a drawing.
+- Closing a door means moving the terminal drawing into a kit function with both drawings, then calling that.
 
 ### Tests
 
@@ -49,7 +60,9 @@ These functions follow the style: `pane`, `paneTitle`, `section`, `card`, `choic
 - press every keyed action with `ui.press({ key })`, and check what it did;
 - call `expectNative(ui)` on each state. It is the kit's `kit/claude/checks.tsx`, which `just kit-sync` copies beside each mod's `ui.tsx`: import it from `./checks`. Pass `{ hotkeys: ["submit"] }` for the action-row buttons that may carry a hotkey.
 
-When `claude` on your PATH is a wrapper that adds `--plugin-dir` (a system config's), `plugin test` fails through it. Run the binary it wraps, with a throwaway home:
+- A test can't close a pane: a mounted pane has no close, as a person's close needs a session. Test what closing does through the code it runs, and the close itself in a session.
+
+When `claude` on your PATH is a wrapper that adds `--plugin-dir` (a system config's), `plugin test` fails through it ("not run from this spelling"). Run the binary it wraps, with a throwaway home:
 
 ```bash
 (export HOME=$(mktemp -d); cd plugins/<mod>; "$(dirname "$(command -v claude)")/.claude-wrapped" plugin test .)
@@ -73,7 +86,9 @@ Read from the extension's webview (2.1.327) and checked by screenshot:
   - `dimColor` is 65% opacity, so dim text inside a dim block fades twice.
   - `wrap="truncate-end"` keeps one line and cuts it at the edge with `…`. `maxLines` cuts at a word and can leave the line short.
 - **Svg** is an image of fixed size in CSS pixels, with a required `alt`. It can't read the theme or `currentColor`, so its colours are fixed.
-- The inline pane's body is at most about 234 pixels tall in a 420 by 800 window, and scrolls.
+- **Input** shows one line, whatever `rows` says. A click on a Button that reveals an `Input` leaves the focus on that Button: `autoFocus` and `$.ui.focus` don't move it there, and InputProps has nothing else for it. Tab reaches the field. This is a known gap: a write-in reached by a click needs a second click or Tab.
+- **The prompt.** VS Code raises no `prompt.edit` or `prompt.change`. A mod that watches the draft reads `$.prompt.read()` in its render hook. The band redraws only now and then while the person types, so what it shows can lag the draft by an edit or more.
+- The inline pane's body is at most about 234 pixels tall in a 420 by 800 window, and scrolls. The band above the prompt is capped the same, at 234 pixels, and scrolls.
 
 The desktop app is not checked: no driver reaches it. It reads the same props, and the kit's numbers are cells, which every surface sizes; confirm fractional spacing, the transparent round border and the theme keys there before relying on them.
 
@@ -91,12 +106,18 @@ node e2e/vscode.ts stop
 
 - Unset every inherited `CLAUDE*` and `ANTHROPIC*` variable first. Starting takes 20 to 30 seconds, and a change to the mod needs `stop` and `goto` again.
 - Shoot each state at 420 by 800 (the real pane), at 420 "full", and at 1280 by 720 (docked). Open every PNG.
-- For a full photograph, lift the inline pane's height cap in the page, then shoot at a taller size. This is for the photograph only, never the mod:
+- For a full photograph, lift the inline pane's and the band's height caps in the page, then shoot at a taller size. The band's cap is on `[class*=band_]`, inside `[class*=abovePrompt_]`. This is for the photograph only, never the mod:
 
   ```bash
   node e2e/vscode.ts resize 420 1500
-  node e2e/vscode.ts eval '(() => { const s = document.createElement("style"); s.textContent = "[class*=paneBody_],[class*=abovePrompt_]{max-height:none!important}"; document.head.appendChild(s); })()'
+  node e2e/vscode.ts eval '(() => { const s = document.createElement("style"); s.textContent = "[class*=paneBody_],[class*=abovePrompt_],[class*=band_]{max-height:none!important}"; document.head.appendChild(s); })()'
   node e2e/vscode.ts shot "$out"/queue-420-full.png
+  ```
+
+- Check for horizontal overflow at 420 pixels. This lists what reaches past the webview's right edge, or says none does:
+
+  ```bash
+  node e2e/vscode.ts eval '(() => { const w = document.documentElement.clientWidth; const bad = [...document.querySelectorAll("*")].filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.right > w + 0.5; }).map((e) => e.tagName + " " + (e.textContent || "").trim().slice(0, 30)); return bad.length ? bad.slice(0, 5) : "no overflow"; })()'
   ```
 
 - A click leaves the pointer where it landed, so a button under it shows its hover fill in the shot.
@@ -114,6 +135,8 @@ Checked live on 2.1.319 to 2.1.325:
 - **A focused `Button` is drawn inverse by the engine, and that can't be turned off.** A pointer (`❯`) the kit draws on the focused row would double it, so a Claude list has no pointer: the engine's ring is the selection (docfix, 2.1.325). A click presses a row and does not move the ring, so state keyed on focus follows Tab, not the mouse (docfix keeps what a row shows in its own state, which a click on the row's evidence line toggles).
 - **The ring keeps its index among the Buttons across a redraw, not its key.** A Button that mounts or unmounts before the ring when the ring moves (keys shown only on the focused row, say) slides the ring onto a neighbour. Keep the number of Buttons the same whatever has focus, and move only their `hotkey` props (docfix, 2.1.325).
 - **The ring can skip a Button.** No prop takes a Button out of the Tab and arrow order, but a `ui.focus` hook on the pane can answer `next({ ...e, element })` to land the ring elsewhere; compare with where it was to tell down from up (docfix's row keys). A hotkey pressed right after a move can reach the Button that held it before the redraw, so its press should act on where the ring is now.
+- **The engine denies a state write inside a `ui.render` hook.** A render that finds stale state leaves the fix to a timer or the next event (spellfix, 2.1.327).
+- **In a VS Code scenario**, `wait` reads the webview's text, which holds no `Input`'s placeholder: wait for a label near it. `Escape` leaves a field but does not hide a pane.
 - **A mod's own `$.ui.close` skips its own `ui.close` hook** (the debug log says `skipped: re-entry`). A submit Button that closes the pane must do the closing work itself before it calls `close` (docfix, 2.1.325).
 - A band that steps aside while a pane is up must do so before `$.ui.open`: hidden after it, the inline pane is placed against the old layout and now and then comes out two rows tall (docfix, 2.1.325).
 - No hotkey can be space or Enter, and the engine presses a focused `Button` only on Enter, so a pane can't give space a job of its own (docfix, 2.1.325).

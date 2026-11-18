@@ -67,6 +67,14 @@ New files must be `git add`ed or the flake ignores them.
   `claude plugin test` says so. `$.command.register` throws when a built-in (`review`, now
   `/code-review`) or a skill (`tuicr`) already has the name, and the mod's own catch logs it at debug.
   Check a new name by typing it in a real session.
+- `claude plugin test` refuses to run through a `claude` wrapper that puts options before `plugin`
+  (a system config's `--plugin-dir`): "not run from this spelling". Run the binary it wraps, with a
+  throwaway home:
+  `(export HOME=$(mktemp -d); cd plugins/<mod>; "$(dirname "$(command -v claude)")/.claude-wrapped" plugin test .)`.
+- An e2e fixture's git reads no global or system config (`e2e/lib/setup.ts`), and every session the
+  drivers start keeps `agent-notes` data in the run's folder. Without both, a fixture's checkout ran
+  the person's `post-checkout` hook and docfix's `agent-notes root --ensure`, which left folders in
+  their real notes store. A new driver or fixture helper keeps both.
 - `pi.getSettings()` throws `Extension runtime not initialized` in an extension's factory. Read settings
   inside `execute()` or an event handler; a try/catch around the factory call yields empty settings.
 - A Claude Code or pi session that ends inside a worktree may close it once nothing runs there
