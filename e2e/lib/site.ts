@@ -31,6 +31,8 @@ export const BUDGET = { mp4: 1024 * 1024, png: 300 * 1024 };
 export type SiteScenario = Scenario & {
   /** One sentence under the picture. */
   caption: string;
+  /** Capture embedded Kitty images on a private display instead of using the tui-test rasterizer. */
+  capture?: "kitty";
   /** The folder the agent runs in, as its header shows it (`/tmp/s-x7k2/<project>`). Default `app`. */
   project?: string;
   /** The agent it runs in. Default claude. */

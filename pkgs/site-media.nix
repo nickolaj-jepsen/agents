@@ -55,7 +55,9 @@ in {
   `site/media/<plugin>/`: the demos and stills of every plugin that has scenarios.
   */
   media = buildNpmPackage (withSource [(root + "/plugins") (root + "/kit") (root + "/e2e")]
+    // media.graphicsEnv
     // {
+      nativeBuildInputs = common.nativeBuildInputs ++ media.graphicsPackages;
       pname = "agents-site-media";
       version = "0";
       # Recorded on a stubbed model in a config folder of the run's own: no sign-in, no network.

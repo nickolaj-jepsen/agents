@@ -4,10 +4,15 @@
   callPackage,
   claude-code,
   dejavu_fonts,
+  ffmpeg-full,
   ffmpeg-headless,
   fontconfig,
   git,
   hunspell,
+  kitty,
+  lib,
+  mesa,
+  stdenv,
   makeFontsConf,
   nerd-fonts,
   nodejs,
@@ -19,6 +24,8 @@
   typescript-language-server,
   unifont,
   which,
+  xauth,
+  xvfb-run,
 }: let
   piMonorepo = "${pi-coding-agent}/lib/node_modules/pi-monorepo";
 in {
@@ -37,6 +44,13 @@ in {
     (hunspell.withDicts (dicts: [dicts.en_US])) # spellfix
     typescript-language-server # lsp; it finds tsserver in the project's own typescript, else its bundled one
   ];
+
+  # Only the plugin media runner uses these; the component catalogue still uses tui-test.
+  graphicsPackages = lib.optionals stdenv.hostPlatform.isLinux [kitty xauth xvfb-run];
+  graphicsEnv = lib.optionalAttrs stdenv.hostPlatform.isLinux {
+    CAST_FFMPEG = lib.getExe ffmpeg-full;
+    CAST_MESA = "${mesa}/lib";
+  };
 
   # What `pi-dev-links` links into node_modules for the kit's pi stories.
   PI_MONOREPO = piMonorepo;

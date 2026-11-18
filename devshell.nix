@@ -26,10 +26,11 @@
 
     # What `just media` needs and nothing of the machine's: the agents, the fonts, the tools the
     # scenarios call. The Pages workflow records in it; so can anyone, signed out.
-    devShells.media = pkgs.mkShell {
-      name = "agents-media";
-      packages = media.packages ++ [pkgs.just];
-      inherit (media) PI_MONOREPO FONTCONFIG_FILE;
-    };
+    devShells.media = pkgs.mkShell (media.graphicsEnv
+      // {
+        name = "agents-media";
+        packages = media.packages ++ media.graphicsPackages ++ [pkgs.just];
+        inherit (media) PI_MONOREPO FONTCONFIG_FILE;
+      });
   };
 }

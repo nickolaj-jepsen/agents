@@ -96,6 +96,11 @@ site-build:
 site-shots *PLUGINS:
     npm run site-shots -- {{ PLUGINS }}
 
+[doc('Export a trusted asciicast to PNG and MP4 using Kitty on a private X11 display (Linux)')]
+[group('dev')]
+capture-cast CAST OUT:
+    {{ nixcmd }} shell --inputs-from . nixpkgs#nodejs nixpkgs#xvfb-run nixpkgs#xauth nixpkgs#kitty nixpkgs#ffmpeg-full -c node e2e/capture-cast.ts {{ quote(CAST) }} {{ quote(OUT) }}
+
 [doc("Record the site's media and the catalogue through the store: an unchanged recording is not replayed")]
 [group('site')]
 [script]

@@ -152,6 +152,26 @@ names. `E2E_KEEP=1` and `SITE_JOBS=<n>` (scenarios side by side) work as in the 
 Needs `tui-test`, and `ffmpeg` for the video: without one on PATH the runner builds nixpkgs' and
 clears `LD_LIBRARY_PATH` for it.
 
+### Capture inline graphics
+
+Set `capture: "kitty"` on a site demo or still that shows inline images. The Linux Pages build
+and `just media` record a cast with `tui-test`, then replay it in Kitty on a private Xvfb display.
+A cast without Kitty graphics fails the scenario instead of publishing a blank preview.
+Kitty demos use their final screen as the poster; non-Linux media builds skip Kitty captures.
+
+For a targeted run, use `nix develop .#media -c just site-shots image-preview`. To export a saved
+cast yourself, pass the cast path and an output prefix:
+
+```bash
+just capture-cast /path/to/demo.mp4.tui-test.cast ./image-preview
+```
+
+On Linux this replays the cast in Kitty on a private Xvfb display and captures the window pixels.
+It writes `image-preview.mp4` and `image-preview.png` (the final screen), replacing those files if
+present. The output directory must exist. It accepts fixed-size asciicast v2 recordings only.
+Use casts you trust: the replay sends their terminal escape sequences to Kitty. The command does
+not rerun the scenario or update the site's media manifest.
+
 ### Add a site scenario
 
 `e2e/<plugin>/site.scenarios.ts`, never `claude.scenarios.ts` / `pi.scenarios.ts`: the regression

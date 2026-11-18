@@ -18,7 +18,8 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
+import { promisify } from "node:util";
 import { checkoutRoot } from "./lib/harness.ts";
 import { loadSet, play, resolveScenario } from "./lib/scenario.ts";
 import {
@@ -109,7 +110,9 @@ async function play1(
   record: false | string,
 ) {
   const r = resolveScenario(asSet(set, harness), name);
-  const demo = demosOf(set).find((d) => d.harness === harness);
+  const demo = demosOf(set).find((d) => d.harness === harness)?.demo;
+  const scenario = record ? demo : set.stills[name];
+  const kitty = scenario?.capture === "kitty";
   // Under /tmp so the folder shows in the agent's header without a user's home in it.
   const runDir = mkdtempSync("/tmp/s-");
   const session = await Session.open({
@@ -120,12 +123,36 @@ async function play1(
     backend: "daemon",
     name: `site-${set.plugin}-${record || name}`,
     runDir,
-    project: (record ? demo?.demo : set.stills[name])?.project ?? "app",
+    project: scenario?.project ?? "app",
   });
   const look = { zoom: ZOOM };
   try {
-    if (record) {
-      await play(session, demo?.demo.prepare ?? []);
+    if (kitty) {
+      const prefix = join(out, record || name);
+      const cast = `${prefix}.cast`;
+      if (record) {
+        await play(session, demo?.prepare ?? []);
+        await session.waitHintsGone();
+        await session.settle();
+      }
+      await session.record(cast);
+      try {
+        await play(session, record ? pace(r.steps, `${set.plugin}/${record}`) : r.steps);
+        if (!record) await session.waitHintsGone();
+        await session.settle();
+      } finally {
+        await session.stopRecording();
+      }
+      await promisify(execFile)(process.execPath, [
+        join(checkoutRoot, "e2e", "capture-cast.ts"),
+        "--require-graphics",
+        cast,
+        prefix,
+      ]);
+      if (!record) rmSync(`${prefix}.mp4`);
+      rmSync(cast);
+    } else if (record) {
+      await play(session, demo?.prepare ?? []);
       await session.waitHintsGone();
       await session.settle();
       const mp4 = join(out, `${record}.mp4`);
@@ -208,12 +235,19 @@ function squeeze(file: string, budget: number) {
 
 async function runPlugin(plugin: string, file: string) {
   const set = (await loadSet(file)) as unknown as SiteSet;
+  const supported = (scenario: { capture?: "kitty" }) =>
+    scenario.capture !== "kitty" || process.platform === "linux";
+  const demos = demosOf(set).filter(({ demo }) => supported(demo));
+  const stills = Object.entries(set.stills).filter(([, s]) => supported(s));
+  if (demos.length === 0 && stills.length === 0) {
+    console.error(`site: ${plugin}: Kitty capture requires Linux, skipping`);
+    return;
+  }
   const stage = mkdtempSync(join(tmpdir(), `site-${plugin}-`));
   type Job = { name: string; harness: "claude" | "pi"; record: false | string };
   const jobs: Job[] = [];
-  const demos = demosOf(set);
   for (const d of demos) jobs.push({ name: "demo", harness: d.harness, record: d.base });
-  for (const [name, s] of Object.entries(set.stills))
+  for (const [name, s] of stills)
     jobs.push({ name, harness: s.harness ?? "claude", record: false });
 
   const jobsPerPlugin = Number(process.env.SITE_JOBS ?? 2);
@@ -252,7 +286,7 @@ async function runPlugin(plugin: string, file: string) {
       ...pngSize(join(stage, `${d.base}.png`)),
     });
   }
-  for (const [name, s] of Object.entries(set.stills)) {
+  for (const [name, s] of stills) {
     squeeze(join(stage, `${name}.png`), BUDGET.png);
     media.stills.push({
       png: rel(`${name}.png`),
