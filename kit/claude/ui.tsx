@@ -201,6 +201,16 @@ export const tokens = {
     /** An icon's side, in CSS pixels. */
     icon: 16,
     /**
+     * The column, in cells, that leads each row of a choice drawn as rows: its key's Button (`A`)
+     * or an icon, centred, so every row's text starts at one edge.
+     */
+    lead: 4.6,
+    /**
+     * A passage longer than this, in cells, or of more than one line, is cut to one line with a
+     * `More` beside it (`excerpt`): about what one line of a 420-pixel band holds beside the button.
+     */
+    excerptCells: 40,
+    /**
      * The vertical rhythm, in lines of body text. A step name is a whole line or none on VS Code,
      * too coarse for a short pane, so the kit spaces with these numbers. `xs` sits between the
      * lines of one part (a label and its text), `sm` between the parts of one item (claim, meta,
@@ -472,6 +482,11 @@ const ICONS = {
   warning: '<path d="M8 2.6 14.2 13.2H1.8L8 2.6Z"/><path d="M8 6.8v2.9"/><path d="M8 11.7v.01"/>',
   success: '<circle cx="8" cy="8" r="6.2"/><path d="M5.2 8.2l2 2 3.6-4"/>',
   error: '<circle cx="8" cy="8" r="6.2"/><path d="M5.9 5.9l4.2 4.2M10.1 5.9l-4.2 4.2"/>',
+  pending: '<circle cx="8" cy="8" r="6.2" stroke-dasharray="2.4 2.4"/>',
+  note: '<path d="M2.6 3.4h10.8v7.2H7.4l-3 2.4v-2.4H2.6Z"/><path d="M5.2 6h5.6M5.2 8h3.6"/>',
+  question:
+    '<circle cx="8" cy="8" r="6.2"/><path d="M6.3 6.3a1.8 1.8 0 1 1 2.5 1.7c-.5.2-.8.6-.8 1.1v.4"/><path d="M8 11.4v.01"/>',
+  write: '<path d="M10.6 2.9l2.5 2.5-7.6 7.6-3.1.6.6-3.1 7.6-7.6Z"/><path d="M9.2 4.3l2.5 2.5"/>',
 } as const;
 
 /** One of the kit's icons. */
@@ -488,6 +503,10 @@ const ICON_GLYPH: Record<IconName, string> = {
   warning: tokens.glyph.status.warning,
   success: tokens.glyph.done,
   error: tokens.glyph.times,
+  pending: tokens.glyph.single.off,
+  question: "?",
+  note: tokens.glyph.noteEnd,
+  write: "✎",
 };
 
 /**
@@ -599,6 +618,11 @@ export type PaneTitleGui = {
   summary?: string;
   /** The pane's actions, drawn at the title line's far edge: the line becomes the toolbar. */
   actions?: readonly Action[];
+  /**
+   * Navigation at the line's start, in place of the count: one Button per place, the current one
+   * `isPrimary` (filled), as a choice's chosen option.
+   */
+  tabs?: readonly Action[];
 };
 
 /**
@@ -651,24 +675,40 @@ export function paneTitle(
       </Text>
     ) : null;
     const actions = own.actions ?? [];
-    if (!text && actions.length === 0) return null;
+    const tabs = own.tabs ?? [];
+    const left = tabs.length ? (
+      <Box
+        flexDirection="row"
+        flexWrap="wrap"
+        columnGap={tokens.gui.across.xs}
+        rowGap={tokens.gui.space.xs}
+      >
+        {tabs.map((a) => actionButton(k, a))}
+      </Box>
+    ) : (
+      text
+    );
+    if (!left && actions.length === 0) return null;
     // One line at the inset with or without actions; with no text the actions keep the far edge.
     return (
       <Box
         key="toolbar"
         flexDirection="row"
-        flexWrap="wrap"
-        alignItems="center"
+        // Tabs wrap among themselves, so the actions keep the far edge of the first line.
+        flexWrap={tabs.length ? "nowrap" : "wrap"}
+        alignItems={tabs.length ? "flex-start" : "center"}
         justifyContent="space-between"
         columnGap={tokens.gui.across.md}
         rowGap={tokens.gui.space.xs}
         paddingX={tokens.gui.across.inset}
       >
-        <Box flexShrink={1}>{text}</Box>
+        <Box flexShrink={1}>{left}</Box>
         {actions.length > 0 ? (
           <Box
             flexDirection="row"
             flexWrap="wrap"
+            // Beside tabs the line does not wrap, so the tabs give way, never the actions.
+            flexShrink={tabs.length ? 0 : undefined}
             columnGap={tokens.gui.across.xs}
             rowGap={tokens.gui.space.xs}
           >
@@ -1033,6 +1073,18 @@ export type ChoiceOption = {
   short?: string;
   /** The label is a word of the person's own (a suggestion), so a graphical surface keeps its case. */
   isLiteral?: boolean;
+  /**
+   * The `rows` layout: the option's own name as the person and a reply say it (`A`), on the
+   * Button that leads its row, the label as text beside it. Without one the Button carries the
+   * label.
+   */
+  tag?: string;
+  /** The `rows` layout: a control in place of the label, a write-in's field, led by `icon`. */
+  field?: JSX.Element;
+  /** The `rows` layout: the mark that leads a row with a `field`. */
+  icon?: IconName;
+  /** The `rows` layout: what the chosen option shows under its detail once it opens, a note's field. */
+  body?: JSX.Element | null;
   onPress: () => unknown;
 };
 
@@ -1052,10 +1104,16 @@ export type ChoiceOptions = {
   gui?: {
     /**
      * `row` sets the buttons side by side, wrapping; `stack` one under the other, each as wide as
-     * the room.
+     * the room. `rows` is a list of one-line rows, each led by a Button of its `tag`, the label and
+     * the detail cut beside it; the one chosen of a single choice opens in place, its detail whole.
      * @default "stack"
      */
-    layout?: "row" | "stack";
+    layout?: "row" | "stack" | "rows";
+    /**
+     * The `rows` layout: the way on from a single choice, a filled Button at the chosen row's far
+     * edge (`Next`). A choice of several opens no row, so its way on is the mod's to place.
+     */
+    onward?: { key: string; label: string; onPress: () => unknown };
   };
   desktop?: ChoiceOptions["gui"];
   vscode?: ChoiceOptions["gui"];
@@ -1078,12 +1136,13 @@ export function choice(
 ): JSX.Element {
   const { Box, Button, Text } = k;
   if (k.isNative) {
-    const { layout = "stack" } = surfaceOf(k, {
+    const { layout = "stack", onward } = surfaceOf(k, {
       gui: settings.gui,
       desktop: settings.desktop,
       vscode: settings.vscode,
       mobile: settings.mobile,
     });
+    if (layout === "rows") return choiceRows(k, options, settings, onward);
     const isRow = layout === "row";
     return (
       <Box
@@ -1156,6 +1215,79 @@ export function choice(
       ))}
     </Box>
   );
+}
+
+/**
+ * A choice as rows (`guiRow`), for options a person reads before picking: each row is one line,
+ * led by a Button of the option's tag (filled when chosen), its label and its detail cut at the
+ * edge beside it. The option chosen of a single choice opens in its well: the label and the detail
+ * whole, its `body` under them and the way on at its far edge. A row with a `field` holds that
+ * control in place of the label, led by its icon, so a click lands in the field itself.
+ */
+function choiceRows(
+  k: Kit,
+  options: readonly ChoiceOption[],
+  settings: ChoiceOptions,
+  onward: NonNullable<ChoiceOptions["gui"]>["onward"],
+): JSX.Element {
+  const { Box, Button, Text } = k;
+  // Keys of different widths sit in one column, so every row's text starts at one edge.
+  const isTagged = options.some((o) => o.tag !== undefined);
+  return (
+    <Box key={settings.key} flexDirection="column">
+      {options.map((o) => {
+        const isOn = Boolean(o.isOn && !o.isQuiet);
+        const isOpen = isOn && !settings.isMulti;
+        const mark = o.field ? (
+          icon(k, o.icon ?? "write")
+        ) : (
+          <Button
+            key={o.key}
+            variant={isOn ? "primary" : undefined}
+            dimColor={!isOn || undefined}
+            label={o.tag ?? (o.isLiteral ? o.label : capital(o.label))}
+            onPress={() => o.onPress()}
+          />
+        );
+        const label = o.field || o.tag === undefined ? "" : o.label;
+        // Opened, the label and what it means are one paragraph: the label in the heavier weight
+        // while it is a name, the detail running on after it.
+        const named = cellWidth(label) <= tokens.gui.maxLabel ? `**${label}**` : label;
+        const whole = isOpen ? [label ? named : "", o.detail ?? ""].filter(Boolean).join("  ") : "";
+        return guiRow(k, {
+          key: `${o.key}:row`,
+          mark,
+          markWidth: isTagged ? tokens.gui.lead : undefined,
+          text: isOpen ? whole : label,
+          field: o.field,
+          detail: !isOpen && o.detail ? { text: o.detail } : undefined,
+          isOpen,
+          button: isOpen && onward ? { ...onward, isFilled: true } : undefined,
+          body: isOpen
+            ? [o.field && o.detail ? <Text key="detail">{o.detail}</Text> : null, o.body ?? null]
+            : undefined,
+        });
+      })}
+    </Box>
+  );
+}
+
+/**
+ * A control on a row of its own, led by an icon in a choice's lead column (`choice`'s `rows`), so
+ * a field under a choice's rows (a note) lines up with them. The terminal draws the control alone.
+ */
+export function fieldRow(
+  k: Kit,
+  o: { key: string; icon: IconName; alt?: string; field: JSX.Element },
+): JSX.Element {
+  if (!k.isNative) return o.field;
+  return guiRow(k, {
+    key: o.key,
+    mark: icon(k, o.icon, { alt: o.alt }),
+    markWidth: tokens.gui.lead,
+    text: "",
+    field: o.field,
+  });
 }
 
 /**
@@ -1248,9 +1380,6 @@ function sideRule(k: Kit, key: string): JSX.Element {
   return <Box key={key} width={0.2} flexShrink={0} backgroundColor={tokens.gui.rule} />;
 }
 
-/** How much faster than its text a row's detail shrinks when the line is too long. */
-const DETAIL_SHRINK = 8;
-
 /** The button at a graphical row's far edge. */
 type RowButton = {
   key: string;
@@ -1265,8 +1394,15 @@ type GuiRow = {
   key: string;
   /** The mark before the text, in a column of its own. None sets the text at the inset. */
   mark?: JSX.Element;
+  /**
+   * The mark's column at least this many cells wide, its mark at the start: rows whose marks
+   * differ in width (a choice's key Buttons) keep their text at one edge.
+   */
+  markWidth?: number;
   /** The row's line: cut at the edge by the surface while folded, whole as prose once opened. */
   text: string;
+  /** A control in place of the text (an `Input`), as wide as the line allows. */
+  field?: JSX.Element;
   /** The text is plain, not markdown: a path or a name, its backticks and underscores kept. */
   isPlain?: boolean;
   /** The folded line dim and struck through: a suggestion set to be dismissed. */
@@ -1298,8 +1434,12 @@ function guiRow(k: Kit, o: GuiRow): JSX.Element {
   const { space, across } = tokens.gui;
   const isOpen = Boolean(o.isOpen);
   const { detail, button } = o;
-  const line = isOpen ? (
-    prose(k, o.text)
+  const line = o.field ? (
+    o.field
+  ) : isOpen ? (
+    o.text ? (
+      prose(k, o.text)
+    ) : null
   ) : (
     <Text
       wrap="truncate-end"
@@ -1323,11 +1463,19 @@ function guiRow(k: Kit, o: GuiRow): JSX.Element {
       borderColor="#00000000"
     >
       {o.mark ? (
-        <Box key="mark" flexDirection="column" alignItems="center" flexShrink={0} rowGap={space.xs}>
-          <Box height={1} alignItems="center">
-            {o.mark}
+        <Box
+          key="mark"
+          flexDirection="column"
+          alignItems="flex-start"
+          flexShrink={0}
+          minWidth={o.markWidth}
+        >
+          <Box flexDirection="column" alignItems="center" flexGrow={1} rowGap={space.xs}>
+            <Box height={1} alignItems="center">
+              {o.mark}
+            </Box>
+            {isOpen ? <Box flexGrow={1}>{sideRule(k, "thread")}</Box> : null}
           </Box>
-          {isOpen ? <Box flexGrow={1}>{sideRule(k, "thread")}</Box> : null}
         </Box>
       ) : null}
       <Box
@@ -1353,10 +1501,13 @@ function guiRow(k: Kit, o: GuiRow): JSX.Element {
             flexShrink={1}
             columnGap={across.md}
           >
-            <Box flexShrink={1}>{line}</Box>
+            <Box flexShrink={1} flexGrow={o.field ? 1 : undefined}>
+              {line}
+            </Box>
             {detail && !detail.isAtEnd ? (
-              // The text is what names the row: a long detail gives way first.
-              <Box flexShrink={DETAIL_SHRINK}>
+              // The text is what names the row: the detail takes only the room the text leaves
+              // (no width of its own, growing into the rest), so it gives way first and whole.
+              <Box width={0} flexGrow={1} flexShrink={1}>
                 <Text wrap="truncate-end" dimColor>
                   {detail.text}
                 </Text>
@@ -1668,6 +1819,8 @@ export type ListItem = {
   hotkey?: string;
   /** An icon before the title on a graphical surface; the terminal draws none. */
   icon?: IconName;
+  /** The state the icon marks; grey when none. */
+  iconTone?: IconTone;
   gui?: {
     /** Detail at the far end, before the button, as the age of a note is. */
     isDetailAtEnd?: boolean;
@@ -1733,7 +1886,7 @@ function listRowGui(k: Kit, item: ListItem): JSX.Element {
     item.action ?? (item.isMarked === undefined ? "Open" : item.isMarked ? "Chosen" : "Choose");
   return guiRow(k, {
     key: `${item.key}:row`,
-    mark: item.icon ? icon(k, item.icon) : undefined,
+    mark: item.icon ? icon(k, item.icon, { tone: item.iconTone }) : undefined,
     text: item.title,
     isPlain: true,
     isDim: item.isDim,
@@ -2219,6 +2372,37 @@ export function labelledRow(k: Kit, items: readonly FieldItem[]): JSX.Element {
       {items.map((f) => fieldBox(k, f, false))}
     </Box>
   );
+}
+
+export type ExcerptOptions = {
+  key: string;
+  /** Prose or markdown. Nothing is drawn for none. */
+  text: string;
+  isOpen: boolean;
+  /** The address of the `More` / `Less` button. */
+  toggleKey: string;
+  onToggle: () => unknown;
+};
+
+/**
+ * A passage that gives way to what follows it: a graphical surface shows its first line dim, cut
+ * at the edge, with a quiet `More` at the far edge when there is more; opened, the passage is
+ * whole in a well, with `Less`. The terminal draws it whole.
+ */
+export function excerpt(k: Kit, o: ExcerptOptions): JSX.Element | null {
+  const text = o.text.trim();
+  if (!text) return null;
+  if (!k.isNative) return prose(k, text);
+  const isLong = linesOf(text).length > 1 || cellWidth(text) > tokens.gui.excerptCells;
+  return guiRow(k, {
+    key: o.key,
+    text,
+    isDim: !o.isOpen,
+    isOpen: isLong && o.isOpen,
+    button: isLong
+      ? { key: o.toggleKey, label: o.isOpen ? "Less" : "More", onPress: o.onToggle }
+      : undefined,
+  });
 }
 
 export type FoldedRowOptions = {
