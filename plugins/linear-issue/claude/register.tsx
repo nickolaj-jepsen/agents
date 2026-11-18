@@ -1,7 +1,7 @@
 import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register, RenderElement, RenderNode } from "claude-code";
 
-import type { Duplicate, Filed, Form, Last, Option } from "./types.d.ts";
+import type { Duplicate, Editing, Filed, Form, Last, Option } from "./types.d.ts";
 import { guiBand, guiPane } from "./gui";
 import { forSurface, kitOf, paneOptions } from "./ui";
 
@@ -53,6 +53,9 @@ const focused = atom({ plugin: "linear-issue", key: "focused" } as const, null);
 const isDiscardArmed = atom({ plugin: "linear-issue", key: "isDiscardArmed" } as const, false);
 // Whether the possible duplicate is opened in place (graphical surfaces).
 const isDuplicateOpen = atom({ plugin: "linear-issue", key: "isDuplicateOpen" } as const, false);
+// The fields opened to edit, and the label search (graphical surfaces).
+const CLOSED_EDITING: Editing = { isOpen: false, query: "", queryRevision: 0, shown: [] };
+const editing = atom({ plugin: "linear-issue", key: "editing" } as const, CLOSED_EDITING);
 
 // Set by a Learn more press, cleared once the expanded card has been checked.
 let isExpanding = false;
@@ -656,6 +659,7 @@ async function submit($: EngineInterface, { asComment = false, open = false } = 
 async function discard($: EngineInterface) {
   await update($, isDiscardArmed, () => false);
   await update($, isDuplicateOpen, () => false);
+  await update($, editing, () => CLOSED_EDITING);
   await update($, form, () => null);
   await $.ui.close({ id: PANE });
 }
@@ -716,11 +720,15 @@ export const register: Register = (on) => {
     const f = await read($, form);
     const focus = await read($, focused);
     const isOpen = await read($, isDuplicateOpen);
+    const edit = await read($, editing);
     const set = (patch: Partial<Form>) => patchForm($, patch);
+    const setEditing = (patch: (cur: Editing) => Partial<Editing>) =>
+      update($, editing, (cur) => ({ ...cur, ...patch(cur) }));
     const gui = (isReadOnly: boolean) =>
       guiPane(k, {
         form: f,
         isDuplicateOpen: isOpen,
+        editing: edit,
         priorities: PRIORITIES,
         isReadOnly,
         Input: els.Input,
@@ -733,6 +741,38 @@ export const register: Register = (on) => {
           toggleDuplicate: () => update($, isDuplicateOpen, (open) => !open),
           set,
           switchTeam: (team) => switchTeam($, team),
+          // Opening shows the chosen labels as on-or-off, so one turned off can be turned back on.
+          toggleEditing: () =>
+            setEditing((cur) =>
+              cur.isOpen
+                ? { isOpen: false, query: "", queryRevision: cur.queryRevision + 1 }
+                : { isOpen: true, shown: f?.labelIds ?? [] },
+            ),
+          search: (query) => setEditing(() => ({ query })),
+          addLabel: async (id) => {
+            await update(
+              $,
+              form,
+              (cur) => cur && { ...cur, labelIds: [...cur.labelIds.filter((l) => l !== id), id] },
+            );
+            await setEditing((cur) => ({
+              query: "",
+              queryRevision: cur.queryRevision + 1,
+              shown: [...cur.shown.filter((l) => l !== id), id],
+            }));
+          },
+          toggleLabel: (id) =>
+            update(
+              $,
+              form,
+              (cur) =>
+                cur && {
+                  ...cur,
+                  labelIds: cur.labelIds.includes(id)
+                    ? cur.labelIds.filter((l) => l !== id)
+                    : [...cur.labelIds, id],
+                },
+            ),
         },
       });
     // The terminal's form is drawn here; a graphical surface's, from the kit's functions, is

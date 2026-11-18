@@ -32,6 +32,16 @@ export type Form = {
   isCheckingDuplicates: boolean;
 };
 
+/** The graphical surfaces' editing of the draft's fields, opened in place. */
+export type Editing = {
+  isOpen: boolean;
+  // What is typed in the field that finds a label to add, and its remount count to empty it.
+  query: string;
+  queryRevision: number;
+  // The labels offered as on-or-off: the chosen ones when editing opened, and any added since.
+  shown: string[];
+};
+
 /** What the last filed issue used, the fallback for the next draft. */
 export type Last = { team: string; priority: number };
 
@@ -52,6 +62,8 @@ declare module "claude-code" {
       isDiscardArmed: boolean;
       // Whether the possible duplicate is opened in place (graphical surfaces).
       isDuplicateOpen: boolean;
+      // Whether the fields are opened to edit, and the label search (graphical surfaces).
+      editing: Editing;
     };
   }
 }

@@ -52,6 +52,22 @@ const repo = (ctx: SetupContext) => {
   ctx.git("checkout", "-q", "-b", "fix/retry-after");
 };
 
+/** The stand-in Linear server signed out: a Linear server, but none that can file. */
+const signedOut = {
+  linear: {
+    command: process.execPath,
+    args: [new URL("signed-out-mcp.ts", import.meta.url).pathname],
+  },
+};
+
+/** Sets the native Select that is `nth` in the pane and raises the change the page listens for. */
+const pick = (nth: number, value: string) =>
+  `(() => { const s = document.querySelectorAll("select")[${nth}]; const set = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set; set.call(s, "${value}"); s.dispatchEvent(new Event("change", { bubbles: true })); })()`;
+
+/** Types into the Input whose placeholder is `placeholder`, as the page's own change does. */
+const fill = (placeholder: string, text: string) =>
+  `(() => { const i = document.querySelector('input[placeholder="${placeholder}"]'); const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set; set.call(i, ${JSON.stringify(text)}); i.dispatchEvent(new Event("input", { bubbles: true })); })()`;
+
 const start = (answer: object, verdict = NONE) => ({
   mcp: linearMcp,
   turns: drafting(answer, verdict),
@@ -75,26 +91,67 @@ export default vscodeScenarios({
       steps: drafted,
     },
     labels: {
-      about: "a draft with three labels, each a quiet button that removes itself",
+      about: "a draft with three labels: each a property under the title, after its dot",
       setup: repo,
       start: start(draft({ labels: ["Bug", "Feature", "reliability"] })),
       steps: drafted,
     },
+    edit: {
+      about: "Edit pressed: the fields open in a well in place of the summary, Done closes them",
+      setup: repo,
+      start: start(draft()),
+      steps: [...drafted, { click: "Edit" }, { wait: "Edit the issue" }],
+    },
     team: {
-      about: "another team picked: its statuses and projects load, and the labels it also has stay",
+      about: "another team picked while editing: its statuses and projects load, its labels stay",
       setup: repo,
       start: start(draft({ labels: ["Bug", "Feature", "reliability"] })),
       steps: [
         ...drafted,
-        {
-          // The Select is a native one: set it and raise the change the page listens for.
-          run: async (v) => {
-            await v.evalInView(
-              `(() => { const s = document.querySelector("select"); const set = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set; set.call(s, "MOB"); s.dispatchEvent(new Event("change", { bubbles: true })); })()`,
-            );
-          },
-        },
+        { click: "Edit" },
+        { wait: "Edit the issue" },
+        // The Select is a native one: set it and raise the change the page listens for.
+        { run: async (v) => void (await v.evalInView(pick(0, "MOB"))) },
         { sleep: 2000 },
+      ],
+    },
+    "label-search": {
+      about: "a label being found: what is typed offers the labels that match, a press adds one",
+      setup: repo,
+      start: start(draft()),
+      steps: [
+        ...drafted,
+        { click: "Edit" },
+        { wait: "Edit the issue" },
+        { run: async (v) => void (await v.evalInView(fill("Find a label to add", "per"))) },
+        { wait: "Area/performance" },
+      ],
+    },
+    "long-title": {
+      about: "a title far longer than a line: whole in the summary, a one-line field when edited",
+      setup: repo,
+      start: start(
+        draft({
+          title:
+            "Honor Retry-After on every 429 from the shop API in the sync worker, the webhook relay and the nightly reconciliation job, and cap the wait at MAX_DELAY",
+        }),
+      ),
+      steps: drafted,
+    },
+    drafting: {
+      about: "the draft being written: one line and Discard (Linear signed out, so it waits)",
+      setup: repo,
+      start: { mcp: signedOut, turns: drafting(draft(), NONE) },
+      steps: [{ type: `/linear ${NOTE}` }, { press: "Enter" }, { wait: "Drafting the issue" }],
+    },
+    failed: {
+      about: "drafting failed: what went wrong, in the error colour, and Discard",
+      setup: repo,
+      start: { mcp: signedOut, turns: drafting(draft(), NONE) },
+      steps: [
+        { type: `/linear ${NOTE}` },
+        { press: "Enter" },
+        { wait: "Linear draft failed", timeout: 60_000 },
       ],
     },
     long: {
@@ -112,16 +169,15 @@ export default vscodeScenarios({
       steps: drafted,
     },
     duplicate: {
-      about:
-        "an open issue already covers it: a folded row, one line, between the labels and the description",
+      about: "an open issue may already cover it: a warning row first in the pane, over the issue",
       setup: repo,
       start: start(draft(), DUPLICATE),
       steps: [...drafted, { wait: "PLT-212" }],
     },
     "duplicate-open": {
-      about: "the duplicate opened in place: the comment it would add, and Comment on this",
+      about: "the duplicate opened in place: its title, the comment it would add, Comment instead",
       from: "duplicate",
-      steps: [{ click: "Open" }, { wait: "Comment on this" }],
+      steps: [{ click: "Open" }, { wait: "Comment instead" }],
     },
     filed: {
       about: "Create pressed: the pane closes and a success line stays above the prompt",
@@ -141,7 +197,7 @@ export default vscodeScenarios({
             await v.evalInView('document.querySelector("[aria-label=Close]")?.click()');
           },
         },
-        { wait: "Linear draft: " },
+        { wait: "Discard" },
       ],
     },
   },
