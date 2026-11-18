@@ -161,6 +161,11 @@ export const tokens = {
     /** A long list shows this many rows, then an `N more` row. */
     maxItems: 12,
     /**
+     * The widest a choice's label may be, in cells, before a graphical surface sets it as text
+     * under a Button of its `short` word: a Button never wraps and runs off a 420-pixel pane.
+     */
+    maxLabel: 34,
+    /**
      * Icon colours. The host's theme cannot be read from a mod and an image cannot follow it, so
      * the neutral is one mid-grey that reads on light and dark; colour marks a state only.
      */
@@ -604,8 +609,9 @@ export function paneTitle(
   if (k.isNative) {
     const own = surfaceOf(k, options);
     const said = own.count ?? (count === undefined ? "" : String(count));
+    // No title, or the host's own, leaves the line to the count and the actions.
     const lead =
-      title === k.title ? null : (
+      !title || title === k.title ? null : (
         <Text weight="semibold">{`${title}${said || own.summary ? "  " : ""}`}</Text>
       );
     // The pane's toolbar: what it holds, or what closing it will do, and its actions at the far
@@ -993,6 +999,11 @@ export type ChoiceOption = {
   isQuiet?: boolean;
   /** The terminal's key for it. A graphical surface draws a chip for each hotkey, so it drops them. */
   hotkey?: string;
+  /**
+   * A word or two for the Button when `label` is too long for one: a Button never wraps, so a
+   * graphical surface sets such a label as text under a Button that carries this instead.
+   */
+  short?: string;
   onPress: () => unknown;
 };
 
@@ -1054,23 +1065,27 @@ export function choice(
         rowGap={isRow ? tokens.gui.space.xs : tokens.gui.space.sm}
       >
         {options.map((o) => {
-          // A Button does not wrap its label, so a label is a word or two; the detail is prose.
+          // A Button does not wrap its label, so a label is a word or two; the detail is prose. A
+          // longer label moves under a Button that carries its `short` word.
+          const isLong =
+            !isRow && o.short !== undefined && cellWidth(o.label) > tokens.gui.maxLabel;
           const button = (
             <Button
               key={o.key}
               variant={o.isOn && !o.isQuiet ? "primary" : "secondary"}
               // The surface draws every variant alike, so only the chosen one is not dim.
               dimColor={!(o.isOn && !o.isQuiet) || undefined}
-              label={capital(o.label)}
+              label={capital(isLong ? (o.short ?? o.label) : o.label)}
               onPress={() => o.onPress()}
             />
           );
-          return isRow || !o.detail ? (
+          return isRow || (!o.detail && !isLong) ? (
             button
           ) : (
             <Box key={`${o.key}:detail`} flexDirection="column">
               {button}
-              <Text dimColor>{o.detail}</Text>
+              {isLong ? <Text>{o.label}</Text> : null}
+              {o.detail ? <Text dimColor>{o.detail}</Text> : null}
             </Box>
           );
         })}
@@ -1972,6 +1987,17 @@ export function buttonRow(k: Kit, keys: KeyChip[]): JSX.Element {
       ))}
     </Box>
   );
+}
+
+// ---- surfaces
+
+/**
+ * Draws whichever of two trees belongs to the kit's surface: a screen whose terminal drawing is
+ * the mod's own, to the cell, and whose graphical drawing is built from the kit's patterns. A mod
+ * uses it to keep its surface-reading out of its own code; only the chosen side runs.
+ */
+export function forSurface<T>(k: Kit, drawings: { tui: () => T; gui: () => T }): T {
+  return k.isNative ? drawings.gui() : drawings.tui();
 }
 
 // ---- images
