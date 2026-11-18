@@ -64,11 +64,6 @@ export default scenarios({
       from: "queue",
       steps: [{ click: "legacy" }],
     },
-    all: {
-      about: "e opens every row, and the key now folds them",
-      from: "queue",
-      steps: [{ press: "e" }],
-    },
     hover: {
       about: "the pointer on a row: the engine lights it as it does the focused one",
       from: "queue",
@@ -92,6 +87,20 @@ export default scenarios({
         { press: "d" },
         { wait: "On close: dismiss 1" },
         { press: "Escape" },
+        { wait: "Dismissed 1" },
+      ],
+    },
+    submitted: {
+      about:
+        "d on the first row, then a click on submit: the pane closes, a toast says one was dismissed",
+      from: "queue",
+      region: region.full,
+      mask: [{ pattern: /e2e-[A-Za-z0-9]{6}/g, with: "e2e-run" }],
+      fresh: true,
+      steps: [
+        { press: "d" },
+        { wait: "On close: dismiss 1" },
+        { click: "[ submit ]" },
         { wait: "Dismissed 1" },
       ],
     },

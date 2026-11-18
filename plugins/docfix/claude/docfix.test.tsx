@@ -146,13 +146,13 @@ test("a row set to apply or dismiss shows on the line under the title; again, it
   await $.command.run(COMMAND);
 
   const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
-  expect(await ui.find({ type: "Text", text: /Closing carries out/ })).toBeDefined();
+  expect(await ui.find({ type: "Text", text: /carry out apply and dismiss/ })).toBeDefined();
   await ui.press({ key: `apply:row:${ID}` });
   expect(await ui.find({ type: "Text", text: /On close: apply 1/ })).toBeDefined();
   await ui.press({ key: `dismiss:row:${ID}` });
   expect(await ui.find({ type: "Text", text: /On close: dismiss 1/ })).toBeDefined();
   await ui.press({ key: `dismiss:row:${ID}` });
-  expect(await ui.find({ type: "Text", text: /Closing carries out/ })).toBeDefined();
+  expect(await ui.find({ type: "Text", text: /carry out apply and dismiss/ })).toBeDefined();
   // Setting a row does nothing yet: closing the pane carries it out (the e2e scenarios).
   expect(world.fills).toHaveLength(0);
   expect(world.statuses.at(-1)).toBe("docs 2");
@@ -176,7 +176,7 @@ test("skip sets a row back, and the keys are drawn whatever the ring is on", asy
   });
   expect(await ui.findAll({ type: "Button" })).toHaveLength(count);
   await ui.press({ key: `skip:row:${ID}` });
-  expect(await ui.find({ type: "Text", text: /Closing carries out/ })).toBeDefined();
+  expect(await ui.find({ type: "Text", text: /carry out apply and dismiss/ })).toBeDefined();
   await ui.unmount();
 });
 
@@ -199,7 +199,7 @@ test("a folded row cuts a long claim; opening it shows the claim and its evidenc
   await ui.press({ key: String(row?.key) });
   expect(await ui.find({ type: "Text", text: /END-OF-CLAIM/ })).toBeDefined();
   expect(await ui.find({ type: "Text", text: /END-OF-EVIDENCE/ })).toBeDefined();
-  await ui.press({ key: "evidence" });
+  await ui.press({ key: String(row?.key).replace(/^row:/, "ev:") });
   expect(await ui.find({ type: "Text", text: /END-OF-EVIDENCE/ })).toBeUndefined();
   await ui.unmount();
 });

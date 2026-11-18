@@ -162,7 +162,7 @@ const TIGHT_ROWS = 16;
 const NARROW = 60;
 /** Lines of a folded row's claim; an open row shows it whole. */
 const FOLDED_LINES = 3;
-/** Cells a doc's rows are set in from its header, and a row's evidence from its claim. */
+/** Cells a row's evidence is set in from its claim. */
 const INDENT = 2;
 
 /** The width a pane is asked to open at, docked or inline; the surface caps it. */
@@ -173,14 +173,14 @@ const WANTED_COLUMNS = 80;
  * pane to open at, so a short queue is not a box of a few rows to scroll.
  */
 function wantedRows(list: readonly Suggestion[]) {
-  const text = WANTED_COLUMNS - INDENT;
+  const text = WANTED_COLUMNS;
   const body = byTarget(list).reduce(
     (n, [, rows]) =>
       n + 3 + rows.reduce((m, s) => m + Math.min(FOLDED_LINES, rowsOf(s.claim, text)) + 2, 0),
     0,
   );
-  // The title, the line under it, and the blank rows between them.
-  return 4 + body;
+  // The title, the line under it, the submit key, and the blank rows between them.
+  return 6 + body;
 }
 
 async function openPane($: EngineInterface) {
@@ -255,25 +255,30 @@ async function settle($: EngineInterface): Promise<boolean> {
 // ---- what the focus ring stops on
 
 /**
- * The element keys the pane draws. The ring stops only on a row's claim and a doc's header;
- * the rest (a row's evidence line, its apply and dismiss, the header's keys) are for the mouse,
- * and the keyboard reaches them by their hotkeys.
+ * The element keys the pane draws. The ring stops only on a row's claim, a doc's header and the
+ * submit key; the rest (a row's evidence key, its apply and dismiss, the header's keys) are for
+ * the mouse, and the keyboard reaches them by their hotkeys.
  */
 const rowKey = (id: string) => `row:${id}`;
 const groupKey = (target: string) => `grp:${target}`;
 const evidenceKey = (id: string) => `ev:${id}`;
 const chipKey = (choice: Choice | "skip", owner: string) => `${choice}:${owner}`;
-const ALL_EVIDENCE = "evidence";
+const SUBMIT = "submit";
 
 /** The stops in the order the pane draws them. */
-const stopsOf = (list: readonly Suggestion[]) =>
-  byTarget(list).flatMap(([target, rows]) => [groupKey(target), ...rows.map((s) => rowKey(s.id))]);
+const stopsOf = (list: readonly Suggestion[]) => [
+  ...byTarget(list).flatMap(([target, rows]) => [
+    groupKey(target),
+    ...rows.map((s) => rowKey(s.id)),
+  ]),
+  SUBMIT,
+];
 
 /** The stop an element belongs to: a chip to its row or header, an evidence line to its row. */
 function ownerOf(element: string): string | undefined {
   const [kind, ...rest] = element.split(":");
   const id = rest.join(":");
-  if (kind === "row" || kind === "grp") return element;
+  if (kind === "row" || kind === "grp" || element === SUBMIT) return element;
   if (kind === "ev") return rowKey(id);
   if (kind === "apply" || kind === "dismiss" || kind === "skip") return id;
   return undefined;
@@ -286,7 +291,7 @@ function ownerOf(element: string): string | undefined {
 function landing(stops: readonly string[], from: string | null, element: string) {
   const owner = ownerOf(element);
   if (owner === element) return undefined;
-  if (owner === undefined) return element === ALL_EVIDENCE ? stops[0] : undefined;
+  if (owner === undefined) return undefined;
   const at = stops.indexOf(owner);
   if (at < 0) return undefined;
   const was = from === null ? -1 : stops.indexOf(ownerOf(from) ?? "");
@@ -305,12 +310,15 @@ const age = (iso: string, now: number) => {
   return `${Math.floor(ms / 60_000)}m`;
 };
 
+/** Each kind in a colour of its own, so it stands apart from the dim count and age after it. */
+const KIND_ROLE = { wrong: "error", stale: "warning", missing: "text" } as const;
+
 /** The fold marks of an evidence line, one cell each. */
 const FOLD = { closed: "▸", open: "▾" } as const;
 
 type Rows = {
   kit: Kit;
-  /** The room a row's text has, inside its doc's indent. */
+  /** The room a row's text has. */
   width: number;
   now: number;
   set: Readonly<Record<string, Choice>>;
@@ -331,6 +339,7 @@ function idsOf(list: readonly Suggestion[], stop: string): string[] {
     const target = stop.slice("grp:".length);
     return list.filter((s) => s.target === target).map((s) => s.id);
   }
+  if (!stop.startsWith("row:")) return [];
   const id = stop.slice("row:".length);
   return list.some((s) => s.id === id) ? [id] : [];
 }
@@ -411,14 +420,17 @@ function row(r: Rows, s: Suggestion): JSX.Element {
         </Text>
       </Button>
       <Box flexWrap="wrap" columnGap={tokens.gutter} justifyContent="space-between">
-        <Button key={evidenceKey(s.id)} plain dimColor onPress={() => r.toggleOpen([s.id])}>
-          <Text {...roleProps(s.kind === "wrong" ? "error" : "dim")}>
+        <Box flexWrap="wrap" columnGap={tokens.gutter}>
+          <Text weight="bold" {...roleProps(KIND_ROLE[s.kind])}>
             {`${tokens.glyph.kind[s.kind]} ${s.kind}`}
           </Text>
-          {count > 1 ? "  " : ""}
-          <Text {...roleProps(count >= 3 ? "warning" : "dim")}>{repeats(s)}</Text>
-          {`  ${age(s.updated, r.now)}  ${isOpen ? FOLD.open : FOLD.closed} evidence${s.evidence.length > 1 ? ` ${s.evidence.length}` : ""}`}
-        </Button>
+          <Text dimColor>
+            {[count > 1 ? repeats(s) : "", age(s.updated, r.now)].filter(Boolean).join("  ")}
+          </Text>
+          <Button key={evidenceKey(s.id)} plain dimColor onPress={() => r.toggleOpen([s.id])}>
+            {`${isOpen ? FOLD.open : FOLD.closed} evidence${s.evidence.length > 1 ? ` ${s.evidence.length}` : ""}`}
+          </Button>
+        </Box>
         {chips(r, rowKey(s.id), [s.id], state ?? "skip")}
       </Box>
       {isOpen ? (
@@ -589,11 +601,19 @@ export const register: Register = (on) => {
     const first = queued[0]?.id;
     const rows: Rows = {
       kit,
-      width: Math.max(1, width - INDENT),
+      width,
       now,
       set,
       open,
-      keyed: focus && stops.includes(focus) ? focus : first ? rowKey(first) : undefined,
+      // On submit no row's keys are lit: a, d and s there would set a row out of sight.
+      keyed:
+        focus === SUBMIT
+          ? undefined
+          : focus && stops.includes(focus)
+            ? focus
+            : first
+              ? rowKey(first)
+              : undefined,
       first,
       choose: async (ids, choice) => {
         await update($, choices, (cur) => toggleChoice(cur, ids, choice));
@@ -601,6 +621,7 @@ export const register: Register = (on) => {
       },
       chooseFocused: async (choice) => {
         const at = await read($, focused);
+        if (at === SUBMIT) return;
         const stop = at && stops.includes(at) ? at : first ? rowKey(first) : "";
         const ids = idsOf(await read($, queue), stop);
         if (ids.length === 0) return;
@@ -615,21 +636,22 @@ export const register: Register = (on) => {
         ),
     };
     const summary = choiceSummary(queued.map((s) => set[s.id]));
-    const allOpen = queued.every((s) => open.has(s.id));
-    const bar = (
-      <Box flexWrap="wrap" columnGap={tokens.gutter} justifyContent="space-between">
-        {summary ? (
-          <Text>{`On close: ${summary}`}</Text>
-        ) : (
-          <Text dimColor>Closing carries out apply and dismiss</Text>
-        )}
+    const bar = summary ? (
+      <Text>{`On close: ${summary}`}</Text>
+    ) : (
+      <Text dimColor>Submit or close to carry out apply and dismiss</Text>
+    );
+    // Submit carries the choices out and closes, as Esc or the close mark does. It settles first:
+    // a close the mod raises itself skips the mod's own ui.close hook.
+    const submit = (
+      <Box key="footer">
         <Button
-          key={ALL_EVIDENCE}
-          plain
-          dimColor
-          hotkey="e"
-          label={allOpen ? "fold all" : "open all"}
-          onPress={() => update($, expanded, () => (allOpen ? [] : queued.map((s) => s.id)))}
+          key={SUBMIT}
+          variant="primary"
+          label="submit"
+          onPress={async () => {
+            if (await settle($)) await $.ui.close({ id: PANE });
+          }}
         />
       </Box>
     );
@@ -641,12 +663,13 @@ export const register: Register = (on) => {
         {byTarget(queued).map(([target, list]) => (
           <Box key={`group:${target}`} flexDirection="column" rowGap={isTight ? 0 : 1}>
             {header(rows, target, list, width)}
-            <Box flexDirection="column" rowGap={1} paddingLeft={INDENT}>
+            <Box flexDirection="column" rowGap={1}>
               {list.map((s) => row(rows, s))}
             </Box>
           </Box>
         ))}
       </Box>,
+      submit,
     );
   });
 };

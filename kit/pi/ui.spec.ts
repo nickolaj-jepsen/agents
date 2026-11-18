@@ -9,6 +9,7 @@ import {
   clamp,
   entries,
   List,
+  hintAt,
   modalFrame,
   note,
   section,
@@ -140,6 +141,13 @@ describe("modalFrame", () => {
     expect(lines[1]).toBe("│" + " ".repeat(28) + "│");
     expect(lines[2]).toBe("│ body" + " ".repeat(22) + " │");
     expect(lines.at(-2)).toBe("│" + " ".repeat(28) + "│");
+  });
+  it("finds the hint under a column of the bottom border", () => {
+    const border = frame(72).at(-1)!;
+    const x = border.indexOf("esc later");
+    expect(hintAt(72, hints, x)).toBe(hints[4]);
+    expect(hintAt(72, hints, x - 2)).toBeUndefined();
+    expect(hintAt(30, hints, frame(30).at(-1)!.indexOf("esc"))).toBe(hints[4]);
   });
   it("lets a notice take the blank row above the hints", () => {
     const lines = modalFrame(plain, {

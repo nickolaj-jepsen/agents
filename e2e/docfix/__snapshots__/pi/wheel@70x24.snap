@@ -1,54 +1,54 @@
 # docfix/pi/wheel 70x24 @1,1 (68x22)
 ╭─ Doc suggestions  28 ────────────────────────────────────────────╮
 │                                                                  │
-│ Closing carries out apply and dismiss                            │
+│ Submit or close to carry out apply and dismiss                   │
 │                                                                  │
 │ ↑ 34 more                                                        │
-│     + missing  •••  ▸ evidence              apply  dismiss  skip │
+│   + missing  •••  ▸ evidence                apply  dismiss  skip │
 │                                                                  │
 │   docs/homelab.md ───────────── apply all  dismiss all  skip all │
 │                                                                  │
-│     Claim number 11 about docs/homelab.md: the page no longer    │
-│     matches what the code does.                                  │
-│     + missing  3×  •••  ▸ evidence          apply  dismiss  skip │
+│   Claim number 11 about docs/homelab.md: the page no longer      │
+│   matches what the code does.                                    │
+│   + missing  3×  •••  ▸ evidence            apply  dismiss  skip │
 │                                                                  │
-│     Claim number 10 about docs/homelab.md: the page no longer    │
-│     matches what the code does.                                  │
-│     ! wrong  2×  •••  ▸ evidence            apply  dismiss  skip │
+│   Claim number 10 about docs/homelab.md: the page no longer      │
+│   matches what the code does.                                    │
+│   ! wrong  2×  •••  ▸ evidence              apply  dismiss  skip │
 │                                                                  │
-│     Claim number 9 about docs/homelab.md: the page no longer     │
-│     matches what the code does.                                  │
+│   Claim number 9 about docs/homelab.md: the page no longer       │
+│   matches what the code does.                                    │
 │ ↓ 79 more                                                        │
 │                                                                  │
-╰─ ↑↓ move ── a apply ── d dismiss ── s skip ── esc close ─────────╯
+╰─ ↑↓ move ── a apply ── d dismiss ── ⏎ submit ── esc close ───────╯
 --- styles
 1x3 2x15 .x2 3x2 . 1x45
 1 .x66 1
-1 . 3x37 .x28 1
+1 . 3x46 .x19 1
 1 .x66 1
 1 . 3x9 .x56 1
-1 .x5 3x9 .x2 3x3 .x2 3x10 .x14 3x5 .x2 3x7 .x2 4x4 . 1
+1 .x3 4x9 .x2 3x3 .x2 3x10 .x16 3x5 .x2 3x7 .x2 4x4 . 1
 1 .x66 1
 1 .x3 4x15 . 3x13 . 3x9 .x2 3x11 .x2 4x8 . 1
 1 .x66 1
-1 .x5 4x57 .x4 1
-1 .x5 4x27 .x34 1
-1 .x5 3x9 .x2 5x2 .x2 3x3 .x2 3x10 .x10 3x5 .x2 3x7 .x2 4x4 . 1
+1 .x3 4x57 .x6 1
+1 .x3 4x27 .x36 1
+1 .x3 4x9 .x2 5x2 .x2 3x3 .x2 3x10 .x12 3x5 .x2 3x7 .x2 4x4 . 1
 1 .x66 1
-1 .x5 4x57 .x4 1
-1 .x5 4x27 .x34 1
-1 .x5 6x7 .x2 3x2 .x2 3x3 .x2 3x10 .x12 3x5 .x2 3x7 .x2 4x4 . 1
+1 .x3 4x57 .x6 1
+1 .x3 4x27 .x36 1
+1 .x3 6x7 .x2 3x2 .x2 3x3 .x2 3x10 .x14 3x5 .x2 3x7 .x2 4x4 . 1
 1 .x66 1
-1 .x5 4x56 .x5 1
-1 .x5 4x27 .x34 1
+1 .x3 4x56 .x7 1
+1 .x3 4x27 .x36 1
 1 . 3x9 .x56 1
 1 .x66 1
-1x3 7x2 . 3x4 . 1x2 . 7 . 3x5 . 1x2 . 7 . 3x7 . 1x2 . 7 . 3x4 . 1x2 . 7x3 . 3x5 . 1x10
+1x3 7x2 . 3x4 . 1x2 . 7 . 3x5 . 1x2 . 7 . 3x7 . 1x2 . 7 . 3x6 . 1x2 . 7x3 . 3x5 . 1x8
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c bold
 3 fg=#878580
 4 fg=#dad8ce bold
 5 fg=#d0a215
-6 fg=#d14d41
+6 fg=#d14d41 bold
 7 fg=#dad8ce

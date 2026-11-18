@@ -1,54 +1,51 @@
 # docfix/pi/scrolled 70x24 @1,1 (68x22)
 ╭─ Doc suggestions  5 ─────────────────────────────────────────────╮
 │                                                                  │
-│ Closing carries out apply and dismiss                            │
+│ Submit or close to carry out apply and dismiss                   │
 │                                                                  │
 │ ↑ 15 more                                                        │
-│     ! wrong  12×  ••  ▾ evidence 2          apply  dismiss  skip │
 │                                                                  │
-│       <date>      pi ─────────────────────────────────────────── │
-│         `just build` printed error: derivation failed while      │
-│         evaluating the attribute and its dependencies, error:    │
-│         derivation failed while evaluating the attribute and its │
-│         dependencies, error: derivation failed while evaluating  │
-│         the attribute and its dependencies, error: derivation    │
-│         failed while evaluating the attribute and its            │
-│         dependencies, error: derivation failed while evaluating  │
-│         the attribute and its dependencies, error: derivation    │
-│         failed while evaluating the attribute and its            │
-│         dependencies,                                            │
+│     <date>      pi ───────────────────────────────────────────── │
+│       `just build` printed error: derivation failed while        │
+│       evaluating the attribute and its dependencies, error:      │
+│       derivation failed while evaluating the attribute and its   │
+│       dependencies, error: derivation failed while evaluating    │
+│       the attribute and its dependencies, error: derivation      │
+│       failed while evaluating the attribute and its              │
+│       dependencies, error: derivation failed while evaluating    │
+│       the attribute and its dependencies, error: derivation      │
+│       failed while evaluating the attribute and its              │
+│       dependencies,                                              │
 │                                                                  │
-│ ↓ 37 more                                                        │
+│     <date>      pi ───────────────────────────────────────────── │
+│ ↓ 36 more                                                        │
 │                                                                  │
-╰─ ↑↓ move ── a apply ── d dismiss ── s skip ── esc close ─────────╯
+╰─ ↑↓ move ── a apply ── d dismiss ── ⏎ submit ── esc close ───────╯
 --- styles
 1x3 2x15 .x2 3 . 1x46
 1 .x66 1
-1 . 3x37 .x28 1
-1 .x66 1
-1 . 3x9 .x56 1
-1 .x5 4x7 .x2 5x3 .x2 3x2 .x2 3x12 .x10 3x5 .x2 3x7 .x2 6x4 . 1
-1 .x66 1
-1 .x7 3x58 . 1
-1 .x9 7x51 .x6 1
-1 .x9 7x53 .x4 1
-1 .x9 7x56 . 1
-1 .x9 7x55 .x2 1
-1 .x9 7x53 .x4 1
-1 .x9 7x45 .x12 1
-1 .x9 7x55 .x2 1
-1 .x9 7x53 .x4 1
-1 .x9 7x45 .x12 1
-1 .x9 7x13 .x44 1
+1 . 3x46 .x19 1
 1 .x66 1
 1 . 3x9 .x56 1
 1 .x66 1
-1x3 7x2 . 3x4 . 1x2 . 7 . 3x5 . 1x2 . 7 . 3x7 . 1x2 . 7 . 3x4 . 1x2 . 7x3 . 3x5 . 1x10
+1 .x5 3x60 . 1
+1 .x7 4x51 .x8 1
+1 .x7 4x53 .x6 1
+1 .x7 4x56 .x3 1
+1 .x7 4x55 .x4 1
+1 .x7 4x53 .x6 1
+1 .x7 4x45 .x14 1
+1 .x7 4x55 .x4 1
+1 .x7 4x53 .x6 1
+1 .x7 4x45 .x14 1
+1 .x7 4x13 .x46 1
+1 .x66 1
+1 .x5 3x60 . 1
+1 . 3x9 .x56 1
+1 .x66 1
+1x3 4x2 . 3x4 . 1x2 . 4 . 3x5 . 1x2 . 4 . 3x7 . 1x2 . 4 . 3x6 . 1x2 . 4x3 . 3x5 . 1x8
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c bold
 3 fg=#878580
-4 fg=#d14d41
-5 fg=#d0a215
-6 fg=#dad8ce bold
-7 fg=#dad8ce
+4 fg=#dad8ce

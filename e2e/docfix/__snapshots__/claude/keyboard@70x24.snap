@@ -1,25 +1,23 @@
 # docfix/claude/keyboard 70x24 @0,12 (70x8)
 ╭──────────────────────────────────────────────────────────────────✕─╮
 │ ─ Doc suggestions  3 ───────────────────────────────────────────── │
-│ Closing carries out apply and dismiss                  e: open all │
+│ Submit or close to carry out apply and dismiss                     │
 │ AGENTS.md ─────────────────────── apply all  dismiss all  skip all │
-│   `just build` is not enough to verify a pi change; the docs say   │
-│   it is.                                                           │
-│   ! wrong  3×  ••  ▸ evidence                 apply  dismiss  skip │
+│ `just build` is not enough to verify a pi change; the docs say it  │
+│ is.                                                                │
+│ ! wrong  3×  ••  ▸ evidence                   apply  dismiss  skip │
 ╰────────────────────────────────────────────────────────────────────╯
 --- styles
 1x67 2 1x2
 1 . 2x2 3x15 2x49 . 1
-1 . 2x37 .x18 4 2x10 . 1
+1 . 2x46 .x21 1
 1 . 3x9 . 2x23 . 2x9 .x2 2x11 .x11 1
-1 .x3 3x62 .x3 1
-1 .x3 3x6 .x59 1
-1 .x3 5x7 2x2 6x2 2x16 .x17 2x5 .x2 2x7 .x7 1
+1 . 3x65 .x2 1
+1 . 3x3 .x64 1
+1 . 4x7 .x2 2x6 .x2 2x10 .x19 2x5 .x2 2x7 .x7 1
 1x70
 --- legend
 1 dim
 2 fg=#999999
 3 bold
-4 fg=#b1b9f9
-5 fg=#ff6b80
-6 fg=#ffc107
+4 fg=#ff6b80 bold

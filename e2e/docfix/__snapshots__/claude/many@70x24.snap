@@ -1,25 +1,24 @@
 # docfix/claude/many 70x24 @0,12 (70x8)
 ╭──────────────────────────────────────────────────────────────────✕─╮
 │ ─ Doc suggestions  28 ──────────────────────────────────────────── │
-│ Closing carries out apply and dismiss                  e: open all │
+│ Submit or close to carry out apply and dismiss                     │
 │ AGENTS.md ─────────────────────── apply all  dismiss all  skip all │
-│   Claim number 4 about AGENTS.md: the page no longer matches what  │
-│   the code does.                                                   │
-│   ! wrong  4×  age  ▸ evidence       a: apply  d: dismiss  s: skip │
+│ Claim number 4 about AGENTS.md: the page no longer matches what    │
+│ the code does.                                                     │
+│ ! wrong  4×  age  ▸ evidence         a: apply  d: dismiss  s: skip │
 ╰────────────────────────────────────────────────────────────────────╯
 --- styles
 1x67 2 1x2
 1 . 2x2 3x15 2x49 . 1
-1 . 2x37 .x18 4 2x10 . 1
+1 . 2x46 .x21 1
 1 . 3x9 . 2x23 . 2x9 .x2 2x11 .x11 1
-1 .x3 3x63 .x2 1
-1 .x3 3x14 .x51 1
-1 .x3 5x7 2x2 6x2 2x17 .x7 4 2x7 .x2 4 2x9 .x2 4 .x7 1
+1 . 3x63 .x4 1
+1 . 3x14 .x53 1
+1 . 4x7 .x2 2x7 .x2 2x10 .x9 5 2x7 .x2 5 2x9 .x2 5 .x7 1
 1x70
 --- legend
 1 dim
 2 fg=#999999
 3 bold
-4 fg=#b1b9f9
-5 fg=#ff6b80
-6 fg=#ffc107
+4 fg=#ff6b80 bold
+5 fg=#b1b9f9

@@ -2,28 +2,28 @@
 │                                                                     ✕
 │ ─ Doc suggestions  3 ────────────────────────────────────────────────
 │
-│ Closing carries out apply and dismiss                     e: open all
+│ Submit or close to carry out apply and dismiss
 │
 │ AGENTS.md ────────────────────────── apply all  dismiss all  skip all
 │
-│   `just build` is not enough to verify a pi change; the docs say it
-│   is.
-│   ! wrong  3×  ••  ▸ evidence           a: apply  d: dismiss  s: skip
+│ `just build` is not enough to verify a pi change; the docs say it is.
+│ ! wrong  3×  ••  ▸ evidence             a: apply  d: dismiss  s: skip
 │
 │ docs/hosts.md ────────────────────── apply all  dismiss all  skip all
 │
-│   The `legacy` card was removed; the section still describes it.
-│   ↻ stale  2×  age  ▾ evidence                   apply  dismiss  skip
+│ The `legacy` card was removed; the section still describes it.
+│ ↻ stale  2×  age  ▾ evidence                     apply  dismiss  skip
 │
-│     docs/hosts.md: the line contradicts what the code does now.
+│   docs/hosts.md: the line contradicts what the code does now.
 │
 │ docs/modules.md ──────────────────── apply all  dismiss all  skip all
 │
-│   A leaf that imports a third-party module imports it on every host;
-│   the page should say that module must be inert when the feature is
-│   off.
-│   + missing  ••  ▸ evidence                      apply  dismiss  skip
+│ A leaf that imports a third-party module imports it on every host;
+│ the page should say that module must be inert when the feature is
+│ off.
+│ + missing  ••  ▸ evidence                        apply  dismiss  skip
 │
+│ [ submit ]
 │
 │
 │
@@ -42,28 +42,28 @@
 1 .x69 2
 1 . 2x2 3x15 2x52
 1
-1 . 2x37 .x21 4 2x10
+1 . 2x46
 1
 1 . 3x9 . 2x26 . 2x9 .x2 2x11
 1
-1 .x3 3x65
-1 .x3 3x3
-1 .x3 5x7 2x2 6x2 2x16 .x11 4 2x7 .x2 4 2x9 .x2 4
+1 . 3x69
+1 . 4x7 .x2 2x6 .x2 2x10 .x13 5 2x7 .x2 5 2x9 .x2 5
 1
 1 . 3x13 . 2x22 . 2x9 .x2 2x11
 1
-1 .x3 3x62
-1 .x3 2x28 .x19 2x5 .x2 2x7
+1 . 3x62
+1 . 6x7 .x2 2x7 .x2 2x10 .x21 2x5 .x2 2x7
 1
 1
 1
 1 . 3x15 . 2x20 . 2x9 .x2 2x11
 1
-1 .x3 3x66
-1 .x3 3x65
-1 .x3 3x4
-1 .x3 2x25 .x22 2x5 .x2 2x7
+1 . 3x66
+1 . 3x65
+1 . 3x4
+1 . 3x9 .x2 2x2 .x2 2x10 .x24 2x5 .x2 2x7
 1
+1 . 7x10
 1
 1
 1
@@ -82,6 +82,7 @@
 1 dim
 2 fg=#999999
 3 bold
-4 fg=#b1b9f9
-5 fg=#ff6b80
-6 fg=#ffc107
+4 fg=#ff6b80 bold
+5 fg=#b1b9f9
+6 fg=#ffc107 bold
+7 fg=#b1b9f9 bold

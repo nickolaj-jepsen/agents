@@ -4,7 +4,7 @@ export { entries } from "./entries.ts";
 export type { Entry, EntriesOptions } from "./entries.ts";
 export { bandAct, bandRows, bandShell, chipRow } from "./band.ts";
 export type { Band, BandCell, BandOptions, BandRow, Chip } from "./band.ts";
-export { bodyOrigin, modalFrame, splitFrame, splitLayout } from "./frame.ts";
+export { bodyOrigin, hintAt, modalFrame, splitFrame, splitLayout } from "./frame.ts";
 export type { Hint, ModalOptions, SplitLayout, SplitOptions } from "./frame.ts";
 export { List } from "./list.ts";
 export type { Column, ListOptions } from "./list.ts";

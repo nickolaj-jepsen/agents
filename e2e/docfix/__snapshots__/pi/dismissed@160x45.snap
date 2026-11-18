@@ -1,41 +1,42 @@
 # docfix/pi/dismissed 160x45 @32,14 (96x16)
 ╭─ Doc suggestions  2 ─────────────────────────────────────────────────────────────────────────╮
 │                                                                                              │
-│ Closing carries out apply and dismiss                                                        │
+│ Submit or close to carry out apply and dismiss                                               │
 │                                                                                              │
 │   docs/hosts.md ─────────────────────────────────────────── apply all  dismiss all  skip all │
 │                                                                                              │
-│   ❯ The `legacy` card was removed; the section still describes it.                           │
-│     ↻ stale  2×  •••  ▸ evidence                                        apply  dismiss  skip │
+│ ❯ The `legacy` card was removed; the section still describes it.                             │
+│   ↻ stale  2×  •••  ▸ evidence                                          apply  dismiss  skip │
 │                                                                                              │
 │   docs/modules.md ───────────────────────────────────────── apply all  dismiss all  skip all │
 │                                                                                              │
-│     A leaf that imports a third-party module imports it on every host; the page should say   │
-│     that module must be inert when the feature is off.                                       │
-│     + missing  ••  ▸ evidence                                           apply  dismiss  skip │
+│   A leaf that imports a third-party module imports it on every host; the page should say     │
+│   that module must be inert when the feature is off.                                         │
+│   + missing  ••  ▸ evidence                                             apply  dismiss  skip │
 │                                                                                              │
-╰─ ↑↓ move ── a apply ── d dismiss ── s skip ── ⏎ evidence ── e all ── esc close ──────────────╯
+╰─ ↑↓ move ── a apply ── d dismiss ── s skip ── space evidence ── ⏎ submit ── esc close ───────╯
 --- styles
 1x3 2x15 .x2 3 . 1x74
 1 .x94 1
-1 . 3x37 .x56 1
+1 . 3x46 .x47 1
 1 .x94 1
 1 .x3 4x13 . 3x43 . 3x9 .x2 3x11 .x2 4x8 . 1
 1 .x94 1
-1 .x3 5 . 2x62 .x27 1
-1 .x5 3x7 .x2 3x2 .x2 3x3 .x2 3x10 .x40 3x5 .x2 3x7 .x2 4x4 . 1
+1 . 5 . 2x62 .x29 1
+1 .x3 6x7 .x2 3x2 .x2 3x3 .x2 3x10 .x42 3x5 .x2 3x7 .x2 4x4 . 1
 1 .x94 1
 1 .x3 4x15 . 3x41 . 3x9 .x2 3x11 .x2 4x8 . 1
 1 .x94 1
-1 .x5 4x86 .x3 1
-1 .x5 4x50 .x39 1
-1 .x5 3x9 .x2 3x2 .x2 3x10 .x43 3x5 .x2 3x7 .x2 4x4 . 1
+1 .x3 4x86 .x5 1
+1 .x3 4x50 .x41 1
+1 .x3 4x9 .x2 3x2 .x2 3x10 .x45 3x5 .x2 3x7 .x2 4x4 . 1
 1 .x94 1
-1x3 6x2 . 3x4 . 1x2 . 6 . 3x5 . 1x2 . 6 . 3x7 . 1x2 . 6 . 3x4 . 1x2 . 6 . 3x8 . 1x2 . 6 . 3x3 . 1x2 . 6x3 . 3x5 . 1x15
+1x3 7x2 . 3x4 . 1x2 . 7 . 3x5 . 1x2 . 7 . 3x7 . 1x2 . 7 . 3x4 . 1x2 . 7x5 . 3x8 . 1x2 . 7 . 3x6 . 1x2 . 7x3 . 3x5 . 1x8
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c bold
 3 fg=#878580
 4 fg=#dad8ce bold
 5 fg=#cf6a4c
-6 fg=#dad8ce
+6 fg=#d0a215 bold
+7 fg=#dad8ce

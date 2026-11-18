@@ -46,14 +46,9 @@ export default scenarios({
       steps: [{ press: ["Up", "d"] }],
     },
     opened: {
-      about: "Enter opens the selected row: its claim whole and its evidence under it",
+      about: "space opens the selected row: its claim whole and its evidence under it",
       from: "queue",
-      steps: [{ press: "Enter" }],
-    },
-    all: {
-      about: "e opens every row",
-      from: "queue",
-      steps: [{ press: "e" }],
+      steps: [{ press: "Space" }],
     },
     clicked: {
       about: "a click on the last row's dismiss selects that row and sets it",
@@ -74,15 +69,22 @@ export default scenarios({
     },
     applied: {
       about:
-        "a on two rows, then Esc: the panel closes and the editor holds one drafted prompt, unsent",
+        "a on two rows, then Enter to submit: the panel closes and the editor holds one drafted prompt, unsent",
       from: "queue",
       region: region.full,
       steps: [
         { press: "a" },
         { press: ["Down", "Down", "a"] },
-        { press: "Escape" },
+        { press: "Enter" },
         { wait: "For each one" },
       ],
+    },
+    submitted: {
+      about:
+        "d on the first row, then a click on the footer's submit: the panel closes, the count drops",
+      from: "queue",
+      region: region.full,
+      steps: [{ press: "d" }, { click: "⏎ submit" }, { wait: "docs 2" }],
     },
     evidence: {
       about:
@@ -91,7 +93,7 @@ export default scenarios({
         checkout(ctx);
         fileSuggestions(ctx, STRUCTURED);
       },
-      steps: [...open, { wait: "agent-hub" }, { press: "Enter" }],
+      steps: [...open, { wait: "agent-hub" }, { press: "Space" }],
       extreme: true,
     },
     many: {
@@ -127,7 +129,7 @@ export default scenarios({
         checkout(ctx);
         fileSuggestions(ctx, EXTREME);
       },
-      steps: [...open, { wait: "AGENTS.md" }, { press: "Enter" }],
+      steps: [...open, { wait: "AGENTS.md" }, { press: "Space" }],
       extreme: true,
     },
     scrolled: {

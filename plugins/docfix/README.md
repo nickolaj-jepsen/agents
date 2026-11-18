@@ -28,15 +28,16 @@ order: 7
 ## Reviewing them
 
 - `/docfix` lists the open ones by doc. A row starts folded, its claim cut at
-  three lines. `Enter` or a click on it opens it: the claim whole and its
-  evidence under it. `e` opens or folds them all.
+  three lines. A click on it opens it: the claim whole and its evidence under
+  it. From the keyboard that is `Enter` in Claude Code and `space` in pi.
 - Set each row to **apply**, **dismiss** or **skip** with `a`, `d` and `s`, or a
   click on the word at the right of its row. Every row starts on skip. On a
   doc's header the keys set every row of that doc. An apply row's claim turns
   green and a dismiss row's is struck through. The line under the title says
   what closing will do.
-- Closing the pane (`Esc` or its close mark) carries the choices out. Nothing
-  happens before that, so a row set by mistake is set back with `s`.
+- **Submit** at the foot of the pane, or closing it (`Esc` or its close mark),
+  carries the choices out. In pi, `Enter` submits. Nothing happens before
+  that, so a row set by mistake is set back with `s`.
   - **Apply** drafts one prompt in your prompt box, not sent. It lists each
     claim under its doc, with the file that holds its evidence, and asks the
     agent to check the claim against the code, edit the doc as it stands now,

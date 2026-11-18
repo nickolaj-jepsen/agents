@@ -2,81 +2,81 @@
 │                                                                     ✕
 │ ─ Doc suggestions  2 ────────────────────────────────────────────────
 │
-│ Closing carries out apply and dismiss                     e: open all
+│ Submit or close to carry out apply and dismiss
 │
 │ docs/agent-hub.md ────────────────── apply all  dismiss all  skip all
 │
-│   agent-hub's unittest suite needs a short TMPDIR and markdown-it-py
-│   on PYTHONPATH; run it with uv, not bare python.
-│   + missing  2×  ••  ▾ evidence 2       a: apply  d: dismiss  s: skip
+│ agent-hub's unittest suite needs a short TMPDIR and markdown-it-py on
+│ PYTHONPATH; run it with uv, not bare python.
+│ + missing  2×  ••  ▾ evidence 2         a: apply  d: dismiss  s: skip
 │
-│     <date>      claude ──────────────────────────────────────────────
-│       Hit it again from a worktree: `python -m unittest` failed 20
-│       socket tests with AF_UNIX path too long.
+│   <date>      claude ────────────────────────────────────────────────
+│     Hit it again from a worktree: `python -m unittest` failed 20
+│     socket tests with AF_UNIX path too long.
 │
-│     <date>      pi  migrated ────────────────────────────────────────
-│       Why the repo didn't say it
-│       Both failures look like code errors, and nothing in the repo
-│       states the TMPDIR requirement or the markdown-it-py dependency
-│       that only the nix build supplies; an agent would report 20 fake
-│       failures.
+│   <date>      pi  migrated ──────────────────────────────────────────
+│     Why the repo didn't say it
+│     Both failures look like code errors, and nothing in the repo
+│     states the TMPDIR requirement or the markdown-it-py dependency
+│     that only the nix build supplies; an agent would report 20 fake
+│     failures.
 │
-│       Details
-│       From pkgs/agent-hub: TMPDIR=<tmp>   PYTHONPATH=. uv run --quiet
-│       --with markdown-it-py python -m unittest discover -s tests -p
-│       'test_*.py'.
-│       Without a short TMPDIR the socket tests fail with "OSError:
-│       AF_UNIX path too long" inside a long worktree path; without
-│       markdown-it-py the render/features imports fail.
-│       Baseline: 470 tests, 1 skipped.
+│     Details
+│     From pkgs/agent-hub: TMPDIR=<tmp>   PYTHONPATH=. uv run --quiet
+│     --with markdown-it-py python -m unittest discover -s tests -p
+│     'test_*.py'.
+│     Without a short TMPDIR the socket tests fail with "OSError:
+│     AF_UNIX path too long" inside a long worktree path; without
+│     markdown-it-py the render/features imports fail.
+│     Baseline: 470 tests, 1 skipped.
 │
-│       Points at
-│       path     pkgs/agent-hub/package.nix
-│       command  TMPDIR=<tmp>   PYTHONPATH=. uv run --quiet --with
-│                markdown-it-py python -m unittest discover -s tests -p
-│                'test_*.py'
-│       quote    “if it happens again, just wait a bit and try again”
-│       symbol   dmsSession
+│     Points at
+│     path     pkgs/agent-hub/package.nix
+│     command  TMPDIR=<tmp>   PYTHONPATH=. uv run --quiet --with
+│              markdown-it-py python -m unittest discover -s tests -p
+│              'test_*.py'
+│     quote    “if it happens again, just wait a bit and try again”
+│     symbol   dmsSession
 │
 --- styles
 1 .x69 2
 1 . 2x2 3x15 2x52
 1
-1 . 2x37 .x21 4 2x10
+1 . 2x46
 1
 1 . 3x17 . 2x18 . 2x9 .x2 2x11
 1
-1 .x3 3x66
-1 .x3 3x47
-1 .x3 2x31 .x7 4 2x7 .x2 4 2x9 .x2 4
+1 . 3x69
+1 . 3x44
+1 . 3x9 .x2 2x6 .x2 2x12 .x9 4 2x7 .x2 4 2x9 .x2 4
 1
-1 .x5 2x65
-1
-1
-1
-1 .x5 2x65
-1 .x7 2x26
+1 .x3 2x67
 1
 1
 1
+1 .x3 2x67
+1 .x5 2x26
 1
 1
-1 .x7 2x7
 1
 1
+1
+1 .x5 2x7
 1
 1
 1
 1
 1
 1
-1 .x7 2x9
-1 .x7 2x7
-1 .x7 2x7
 1
 1
-1 .x7 2x7
-1 .x7 2x7
+1 .x5 2x9
+1 .x5 2x7
+1 .x5 2x7
+1
+1
+1 .x5 2x7
+1 .x5 2x7
 1
 --- legend
 1 dim

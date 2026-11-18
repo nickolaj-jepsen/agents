@@ -74,8 +74,8 @@ function place(hints: Hint[], width: number, tee?: number): Placed[] | undefined
   return out;
 }
 
-function bottomBorder(theme: Theme, width: number, hints: Hint[], tee?: number) {
-  const b = tokens.border;
+/** The hints the bottom border keeps, each with its column and its label as cut to fit. */
+function layout(width: number, hints: Hint[], tee?: number) {
   const kept = [...hints];
   let placed = place(kept, width, tee);
   // Drop the lowest priority first; the way out is never dropped.
@@ -88,18 +88,35 @@ function bottomBorder(theme: Theme, width: number, hints: Hint[], tee?: number) 
   // Even the way out alone does not fit with the junction: let it run on and omit the junction.
   const junction = placed ? tee : undefined;
   placed ??= place(kept, width);
-  const parts: string[] = [];
-  let col = 3;
-  for (const { hint, start } of placed ?? kept.map((h) => ({ hint: h, start: 3 }))) {
-    if (start > col) parts.push(" ", rule(theme, start - col - 2, col + 1, junction, b.up), " ");
+  const shown = (placed ?? kept.map((h) => ({ hint: h, start: 3 }))).map(({ hint, start }) => {
     const room = width - start - 4;
     const label = truncateToWidth(
       hint.label,
       Math.max(1, room - visibleWidth(hint.key) - 1),
       tokens.glyph.ellipsis,
     );
+    return { hint, start, label, end: start + visibleWidth(hint.key) + 1 + visibleWidth(label) };
+  });
+  return { shown, junction };
+}
+
+/**
+ * The hint drawn at column `x` of a frame's bottom border, for a click on it; undefined between
+ * hints. `width` and `hints` are what the frame was drawn with.
+ */
+export function hintAt(width: number, hints: Hint[], x: number): Hint | undefined {
+  return layout(width, hints).shown.find((h) => x >= h.start && x < h.end)?.hint;
+}
+
+function bottomBorder(theme: Theme, width: number, hints: Hint[], tee?: number) {
+  const b = tokens.border;
+  const { shown, junction } = layout(width, hints, tee);
+  const parts: string[] = [];
+  let col = 3;
+  for (const { hint, start, label, end } of shown) {
+    if (start > col) parts.push(" ", rule(theme, start - col - 2, col + 1, junction, b.up), " ");
     parts.push(paint(theme, "text", hint.key) + " " + paint(theme, "dim", label));
-    col = start + visibleWidth(hint.key) + 1 + visibleWidth(label);
+    col = end;
   }
   return (
     border(theme, b.bl + b.h + " ") +

@@ -1,0 +1,62 @@
+# docfix/pi/submitted 70x24 @0,0 (70x24)
+
+ ▀▀█  <ver>
+ █▀ █ escape interrupt · ctrl+c/ctrl+d clear/exit · / commands · !
+ bash · ctrl+o more
+ Press ctrl+o to show full startup help.
+
+ Pi can explain its own features and look up its docs. Ask it how to
+ use or extend Pi.
+
+
+ Warning: codemode_only: not registered, declarations stay visible:
+ subagent, get_subagent_result, steer_subagent
+
+
+
+
+
+
+
+
+── ─────────────────────────────────────  ──  ── 0% / 1M ── ••••• ──
+
+──────────────────────────────────────────────────────────────────────
+  Go  DeepSeek V4.1 Flash 1017   high                         main
+--- styles
+-
+. 1 2x2 .x2 3x6
+. 4x2 . 5 . 3x6 6x13 3x13 6x14 3 6x12 3 6x4
+. 6x7 3x6 6x5
+. 3x39
+-
+. 3x69
+. 3x17
+-
+-
+. 7x69
+. 7x45
+-
+-
+-
+-
+-
+-
+-
+-
+8x40 . 3 8x4 9 8x4 3x7 8x4 3x5 8x3
+-
+8x70
+.x2 3x2 .x2 ax24 .x2 8x6 .x24 b . 6x4
+--- legend
+1 fg=#e48a7a bg=#4f8eb3
+2 fg=#e48a7a
+3 fg=#878580
+4 fg=#4f8eb3
+5 fg=#eab65d
+6 fg=#b7b5ac
+7 fg=#d0a215
+8 fg=#cf6a4c
+9 fg=#cf6a4c bold
+a fg=#878580 bold
+b fg=#879a39

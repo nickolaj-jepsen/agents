@@ -2,51 +2,51 @@
 │                                               ✕
 │ ─ Doc suggestions  2 ──────────────────────────
 │
-│ Closing carries out apply and dismiss
-│ e: open all
+│ Submit or close to carry out apply and dismiss
 │
 │ docs/agent-hub.md ──────── apply  dismiss  skip
 │
-│   agent-hub's unittest suite needs a short
-│   TMPDIR and markdown-it-py on PYTHONPATH; run
-│   it with uv, not bare python.
-│   + missing  2×  ••  ▾ evidence 2
-│   a: apply  d: dismiss  s: skip
+│ agent-hub's unittest suite needs a short TMPDIR
+│ and markdown-it-py on PYTHONPATH; run it with
+│ uv, not bare python.
+│ + missing  2×  ••  ▾ evidence 2
+│ a: apply  d: dismiss  s: skip
 │
-│     <date>      claude ────────────────────────
-│       Hit it again from a worktree: `python -m
-│       unittest` failed 20 socket tests with
-│       AF_UNIX path too long.
+│   <date>      claude ──────────────────────────
+│     Hit it again from a worktree: `python -m
+│     unittest` failed 20 socket tests with
+│     AF_UNIX path too long.
 │
-│     <date>      pi  migrated ──────────────────
-│       Why the repo didn't say it
-│       Both failures look like code errors, and
-│       nothing in the repo states the TMPDIR
-│       requirement or the markdown-it-py
-│       dependency that only the nix build
+│   <date>      pi  migrated ────────────────────
+│     Why the repo didn't say it
+│     Both failures look like code errors, and
+│     nothing in the repo states the TMPDIR
+│     requirement or the markdown-it-py
+│     dependency that only the nix build
+│     supplies; an agent would report 20 fake
 │
 --- styles
 1 .x47 2
 1 . 2x2 3x15 2x30
 1
-1 . 2x37
-1 . 4 2x10
+1 . 2x46
 1
 1 . 3x17 . 2x8 . 2x5 .x2 2x7
 1
-1 .x3 3x40
-1 .x3 3x44
-1 .x3 3x28
-1 .x3 2x31
-1 .x3 4 2x7 .x2 4 2x9 .x2 4
+1 . 3x47
+1 . 3x45
+1 . 3x20
+1 . 3x9 .x2 2x6 .x2 2x12
+1 . 4 2x7 .x2 4 2x9 .x2 4
 1
-1 .x5 2x43
-1
-1
+1 .x3 2x45
 1
 1
-1 .x5 2x43
-1 .x7 2x26
+1
+1
+1 .x3 2x45
+1 .x5 2x26
+1
 1
 1
 1

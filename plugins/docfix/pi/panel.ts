@@ -4,8 +4,8 @@
  * and its evidence under it at the panel's full width. The panel scrolls as a whole and keeps
  * the selected row in view.
  *
- * Closing carries the choices out: the dismissed ones are dismissed here, and the applied ones go
- * to the caller, which drafts the prompt.
+ * Submitting or closing carries the choices out: the dismissed ones are dismissed here, and the
+ * applied ones go to the caller, which drafts the prompt.
  */
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import {
@@ -20,6 +20,7 @@ import {
 import {
   bodyOrigin,
   clamp,
+  hintAt,
   emptyState,
   modalFrame,
   modalRows,
@@ -55,7 +56,7 @@ const SEEN_WARN = 3;
 const FRAME_ROWS = 4;
 /** Lines of a folded row's claim; an open row shows it whole. */
 const FOLDED_LINES = 3;
-/** The pointer's gutter, before a header; a row is set in twice as far. */
+/** The pointer's gutter, before a header or a row; a row's evidence is set in as far again. */
 const GUTTER = 2;
 /** Lines one wheel notch moves the panel. */
 const WHEEL_LINES = 3;
@@ -63,6 +64,11 @@ const WHEEL_LINES = 3;
 const NARROW = 60;
 
 const CHOICES = ["apply", "dismiss", "skip"] as const;
+/** Each kind in a colour of its own, so it stands apart from the dim count and age after it. */
+const KIND_ROLE = { wrong: "error", stale: "warning", missing: "text" } as const;
+/** The footer's keys that close the panel; a click on either does too. */
+const SUBMIT: Hint = { key: "⏎", label: "submit", essential: true };
+const CLOSE: Hint = { key: "esc", label: "close", essential: true };
 type State = Choice | "skip" | "mixed";
 
 const days = (iso: string, now: number) => {
@@ -99,6 +105,8 @@ export class DocsPanel implements Component {
   private hits: Hit[] = [];
   /** Where the body's first line sits in the panel's cells, and its window. */
   private window = { top: 0, height: 1, max: 0 };
+  /** The panel as last drawn, for a click on the footer: its width, height and hints. */
+  private drawn = { width: 0, height: 0, hints: [] as Hint[] };
 
   constructor(
     private readonly tui: TUI,
@@ -153,7 +161,7 @@ export class DocsPanel implements Component {
     this.follow = false;
   }
 
-  /** Carries the choices out and closes; a dismiss that fails keeps the panel open. */
+  /** Submits: carries the choices out and closes; a dismiss that fails keeps the panel open. */
   private close() {
     if (this.isClosing) return;
     const applied = this.items.filter((s) => this.set[s.id] === "apply");
@@ -171,26 +179,30 @@ export class DocsPanel implements Component {
   }
 
   handleInput(data: string): void {
-    if (matchesKey(data, Key.escape) || data === "q") return this.close();
+    if (matchesKey(data, Key.escape) || matchesKey(data, Key.enter) || data === "q")
+      return this.close();
     if (this.items.length === 0) return;
     const stop = this.stops()[this.at];
     if (matchesKey(data, Key.up) || data === "k") this.move(-1);
     else if (matchesKey(data, Key.down) || data === "j") this.move(1);
     else if (matchesKey(data, Key.pageDown)) this.scrollBy(this.window.height - 1);
     else if (matchesKey(data, Key.pageUp)) this.scrollBy(-(this.window.height - 1));
-    else if (matchesKey(data, Key.enter) || data === " ") this.toggleOpen(this.idsOf(stop));
+    else if (data === " ") this.toggleOpen(this.idsOf(stop));
     else if (data === "a") this.choose(this.idsOf(stop), "apply");
     else if (data === "d") this.choose(this.idsOf(stop), "dismiss");
     else if (data === "s") this.choose(this.idsOf(stop), undefined);
-    else if (data === "e") {
-      const all = this.items.map((s) => s.id);
-      if (all.every((id) => this.open.has(id))) this.open.clear();
-      else this.open = new Set(all);
-    } else return;
+    else return;
     this.tui.requestRender();
   }
 
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
+    const isLeft = event.type === "click" && event.button === "left";
+    if (isLeft && event.y === this.drawn.height - 1) {
+      const hint = hintAt(this.drawn.width, this.drawn.hints, event.x);
+      if (hint !== SUBMIT && hint !== CLOSE) return undefined;
+      this.close();
+      return { handled: true };
+    }
     if (this.items.length === 0) return undefined;
     if (event.type === "wheel") {
       this.scrollBy(Math.sign(event.wheelDelta ?? 0) * WHEEL_LINES);
@@ -279,7 +291,7 @@ export class DocsPanel implements Component {
   /** A row: its claim, cut while folded and coloured by its state; its meta and keys; its evidence. */
   private row(s: Suggestion, n: number, width: number, now: number, isAt: boolean) {
     const t = this.theme;
-    const indent = 2 * GUTTER;
+    const indent = GUTTER;
     const room = width - indent;
     const state = this.set[s.id];
     const isOpen = this.open.has(s.id);
@@ -290,14 +302,13 @@ export class DocsPanel implements Component {
         : t.bold(paint(t, state === "apply" ? "success" : isAt ? "accent" : "text", l));
     const lines = claim.map(
       (l, i) =>
-        (i === 0 && isAt
-          ? " ".repeat(GUTTER) + paint(t, "accent", tokens.glyph.pointer) + " "
-          : " ".repeat(indent)) + style(l),
+        (i === 0 && isAt ? paint(t, "accent", tokens.glyph.pointer) + " " : " ".repeat(indent)) +
+        style(l),
     );
     const hits: Hit[] = claim.map(() => ({ stop: n }));
     const count = seen(s);
     const meta = [
-      paint(t, s.kind === "wrong" ? "error" : "dim", `${tokens.glyph.kind[s.kind]} ${s.kind}`),
+      t.bold(paint(t, KIND_ROLE[s.kind], `${tokens.glyph.kind[s.kind]} ${s.kind}`)),
       ...(count > 1 ? [paint(t, count >= SEEN_WARN ? "warning" : "dim", repeats(s))] : []),
       paint(t, "dim", age(s.updated, now)),
       paint(
@@ -337,10 +348,10 @@ export class DocsPanel implements Component {
       { key: "a", label: "apply" },
       { key: "d", label: "dismiss" },
       { key: "s", label: "skip" },
-      { key: "⏎", label: "evidence" },
+      { key: "space", label: "evidence" },
       ...(this.window.max > 0 ? [{ key: "pgup/pgdn", label: "scroll" }] : []),
-      { key: "e", label: "all" },
-      { key: "esc", label: "close", essential: true },
+      SUBMIT,
+      CLOSE,
     ];
   }
 
@@ -354,11 +365,11 @@ export class DocsPanel implements Component {
     if (this.items.length === 0) {
       this.hits = [];
       this.window = { top: 0, height: 0, max: 0 };
-      return modalFrame(t, {
+      return this.frame({
         width,
         title: TITLE,
         body: emptyState(t, content, EMPTY_TEXT),
-        hints: [{ key: "esc", label: "close", essential: true }],
+        hints: [CLOSE],
         notice: message,
       });
     }
@@ -367,7 +378,7 @@ export class DocsPanel implements Component {
     const head = [
       summary
         ? paint(t, "text", `On close: ${summary}`)
-        : paint(t, "dim", "Closing carries out apply and dismiss"),
+        : paint(t, "dim", "Submit or close to carry out apply and dismiss"),
       "",
     ];
 
@@ -413,7 +424,7 @@ export class DocsPanel implements Component {
     this.window = { top: bodyOrigin.y + head.length, height, max };
     const shown = this.windowed(lines, height);
 
-    return modalFrame(t, {
+    return this.frame({
       width,
       title: TITLE,
       count: this.items.length,
@@ -421,6 +432,13 @@ export class DocsPanel implements Component {
       hints: this.hints(),
       notice: message,
     });
+  }
+
+  /** The kit's frame, kept in mind for a click on its footer. */
+  private frame(o: Parameters<typeof modalFrame>[1]) {
+    const lines = modalFrame(this.theme, o);
+    this.drawn = { width: o.width, height: lines.length, hints: o.hints };
+    return lines;
   }
 
   /**
