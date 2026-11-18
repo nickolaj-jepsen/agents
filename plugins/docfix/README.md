@@ -22,8 +22,9 @@ order: 7
   Markdown file in the checkout's note store (`.agents/store/docfix/`), which
   every worktree of the repo shares.
 - A repeat bumps the existing suggestion's seen count instead of adding one. The
-  tool's result says `seen N×` in the transcript, and the status line shows
-  `docs N` while any are open.
+  tool's result says `seen N×` in the transcript. While any are open, Claude
+  Code shows `⚠ docfix: docs N` above the prompt, and a click on it opens the
+  review pane; pi shows `docs N` in its footer.
 
 ## Reviewing them
 

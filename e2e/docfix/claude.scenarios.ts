@@ -1,8 +1,16 @@
-import { region } from "../lib/screen.ts";
+import { region, type Region } from "../lib/screen.ts";
 import { scenarios } from "../lib/scenario.ts";
 import { checkout, EXTREME, fileSuggestions, MANY, ONE, STRUCTURED } from "./fixture.ts";
 
 const open = [{ type: "/docfix" }, { press: "Enter" }];
+
+/** The whole screen but the footer's two rows, whose folder path shows only now and then. */
+const aboveFooter: Region = (grid) => ({
+  x: 0,
+  y: 0,
+  w: grid[0]?.length ?? 0,
+  h: Math.max(1, grid.length - 2),
+});
 
 export default scenarios({
   plugin: "docfix",
@@ -34,6 +42,22 @@ export default scenarios({
       },
       steps: [...open, { wait: "AGENTS.md" }],
       extreme: true,
+    },
+    band: {
+      about: "the count above the prompt, a draft typed (it hides the prompt's random placeholder)",
+      setup: (ctx) => {
+        checkout(ctx);
+        fileSuggestions(ctx);
+      },
+      // From the band to the draft: the footer under it shows the folder only now and then.
+      region: region.rows(/docfix: docs 3/, /a draft/),
+      steps: [{ wait: "docfix: docs 3" }, { type: "a draft" }],
+    },
+    bandClicked: {
+      about: "a click on the count above the prompt opens the pane, and the count steps aside",
+      from: "band",
+      region: region.any(region.sidebar, region.box()),
+      steps: [{ click: "docfix: docs 3" }, { wait: "Doc suggestions" }],
     },
     inline: {
       about: "the pane inline at 100 columns",
@@ -80,8 +104,10 @@ export default scenarios({
       about:
         "d on the first row, then Esc: the pane closes, a toast says one was dismissed, and the status count drops",
       from: "queue",
-      region: region.full,
+      region: aboveFooter,
       mask: [{ pattern: /e2e-[A-Za-z0-9]{6}/g, with: "e2e-run" }],
+      // The toast is gone by the time a resize to a second size settles: one size only.
+      sizes: [[160, 45]],
       fresh: true,
       steps: [
         { press: "d" },
@@ -94,8 +120,10 @@ export default scenarios({
       about:
         "d on the first row, then a click on submit: the pane closes, a toast says one was dismissed",
       from: "queue",
-      region: region.full,
+      region: aboveFooter,
       mask: [{ pattern: /e2e-[A-Za-z0-9]{6}/g, with: "e2e-run" }],
+      // The toast is gone by the time a resize to a second size settles: one size only.
+      sizes: [[160, 45]],
       fresh: true,
       steps: [
         { press: "d" },
@@ -108,7 +136,7 @@ export default scenarios({
       about:
         "a on two rows, then Esc: the pane closes and the prompt box holds one drafted prompt, unsent",
       from: "queue",
-      region: region.full,
+      region: aboveFooter,
       // The debug banner above the transcript names a run folder, which wraps at 70 columns.
       mask: [{ pattern: /e2e-[A-Za-z0-9]{6}/g, with: "e2e-run" }],
       fresh: true,

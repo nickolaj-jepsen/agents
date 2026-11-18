@@ -1,10 +1,11 @@
 /**
  * The mod over the core, whose queue logic has its own tests (`core/docfix.spec.ts`): here the
- * tool's file IO, the status count, and the pane: what a row is set to, its folding and its keys.
+ * tool's file IO, the count above the prompt, and the pane: what a row is set to, its folding and its keys.
  * What closing carries out needs a person's close, which only a session has (e2e/docfix).
  */
 import type { On } from "claude-code";
 import { expect, test } from "claude-code/testing";
+import type { Engine } from "claude-code/testing";
 
 const ROOT = "/repo";
 const DIR = `${ROOT}/.agents/store/docfix`;
@@ -26,7 +27,6 @@ const PANE = {
 /** An engine with a repo at ROOT tracking AGENTS.md, its files in a Map. */
 function engine(on: On) {
   const files = new Map<string, string>();
-  const statuses: (string | undefined)[] = [];
   const fills: { text: string; mode?: string }[] = [];
   const toasts: string[] = [];
   const draft = { text: "" };
@@ -86,10 +86,6 @@ function engine(on: On) {
       },
     };
   });
-  on("ui.status", (_$, e) => {
-    statuses.push(e.text);
-    return { value: undefined };
-  });
   on("ui.open", () => ({ value: { isPlaced: true } }));
   on("ui.close", () => ({ value: undefined }));
   on("ui.focus", () => ({}));
@@ -102,7 +98,7 @@ function engine(on: On) {
     fills.push({ text: e.text, mode: e.mode });
     return { isFilled: true };
   });
-  return { files, statuses, fills, toasts, draft };
+  return { files, fills, toasts, draft };
 }
 
 const SUGGEST = {
@@ -114,7 +110,29 @@ const SUGGEST = {
   evidence: "AGENTS.md:12 says pnpm install; the shim stayed stale",
 };
 
-test("a suggestion lands in the store and counts on the status line", async ($, on) => {
+const BAND = {
+  plugin: "docfix",
+  component: "AbovePrompt",
+  props: {
+    hasSurvey: false,
+    isCollapsed: false,
+    isWorking: false,
+    maxRows: 20,
+    bodyColumns: 120,
+    scroll: { offset: 0, bodyRows: 20 },
+    view: {},
+  },
+} as const;
+
+/** The count the band above the prompt shows, or undefined when it draws none. */
+async function bandCount($: Engine) {
+  const band = await $.ui.mount({ ...BAND, surface: "terminal" });
+  const shown = await band.find({ type: "Button", text: /docfix: docs \d+/ });
+  await band.unmount();
+  return shown?.text.match(/docs (\d+)/)?.[1];
+}
+
+test("a suggestion lands in the store and counts above the prompt", async ($, on) => {
   const world = engine(on);
   await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
 
@@ -123,7 +141,7 @@ test("a suggestion lands in the store and counts on the status line", async ($, 
   expect([...world.files.keys()]).toEqual([
     `${DIR}/agents--run-pnpm-install-force-after-a-sjusk-bump.md`,
   ]);
-  expect(world.statuses.at(-1)).toBe("docs 1");
+  expect(await bandCount($)).toBe("1");
 
   const untracked = await $.tool.call({ ...SUGGEST, file: "docs/nope.md" });
   expect(untracked.deny ?? untracked.text).toContain("not a file git tracks");
@@ -143,7 +161,10 @@ test("a row set to apply or dismiss shows on the line under the title; again, it
   await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
   await $.tool.call(SUGGEST);
   await $.tool.call({ ...SUGGEST, file: "AGENTS.md", claim: "A second gap", same_as: "none" });
+  expect(await bandCount($)).toBe("2");
   await $.command.run(COMMAND);
+  // The pane shows the count itself, so the band above the prompt steps aside.
+  expect(await bandCount($)).toBeUndefined();
 
   const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
   expect(await ui.find({ type: "Text", text: /carry out apply and dismiss/ })).toBeDefined();
@@ -155,7 +176,6 @@ test("a row set to apply or dismiss shows on the line under the title; again, it
   expect(await ui.find({ type: "Text", text: /carry out apply and dismiss/ })).toBeDefined();
   // Setting a row does nothing yet: closing the pane carries it out (the e2e scenarios).
   expect(world.fills).toHaveLength(0);
-  expect(world.statuses.at(-1)).toBe("docs 2");
   await ui.unmount();
 });
 

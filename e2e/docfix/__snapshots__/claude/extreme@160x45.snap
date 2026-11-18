@@ -1,4 +1,4 @@
-# docfix/claude/extreme 160x45 @88,0 (72x39)
+# docfix/claude/extreme 160x45 @88,0 (72x40)
 │                                                                     ✕
 │ ─ Doc suggestions  5 ────────────────────────────────────────────────
 │
@@ -37,6 +37,7 @@
 │     type-checks the cores and the pi halves and never starts an
 │     agent, so a panel that renders wrong still passes it; The section
 │     says the build verifies a pi change, but the build only
+│     type-checks the cores and the pi halves and never starts an
 │
 --- styles
 1 .x69 2
@@ -70,6 +71,7 @@
 1
 1
 1 .x3 2x67
+1
 1
 1
 1

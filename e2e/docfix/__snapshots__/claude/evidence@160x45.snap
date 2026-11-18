@@ -1,4 +1,4 @@
-# docfix/claude/evidence 160x45 @88,0 (72x39)
+# docfix/claude/evidence 160x45 @88,0 (72x40)
 │                                                                     ✕
 │ ─ Doc suggestions  2 ────────────────────────────────────────────────
 │
@@ -37,6 +37,7 @@
 │              'test_*.py'
 │     quote    “if it happens again, just wait a bit and try again”
 │     symbol   dmsSession
+│
 │
 --- styles
 1 .x69 2
@@ -77,6 +78,7 @@
 1
 1 .x5 2x7
 1 .x5 2x7
+1
 1
 --- legend
 1 dim

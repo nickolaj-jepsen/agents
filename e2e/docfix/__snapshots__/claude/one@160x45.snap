@@ -1,4 +1,4 @@
-# docfix/claude/one 160x45 @88,0 (72x39)
+# docfix/claude/one 160x45 @88,0 (72x40)
 │                                                                     ✕
 │ ─ Doc suggestions  1 ────────────────────────────────────────────────
 │
@@ -10,6 +10,7 @@
 │ ! wrong  3×  ••  ▸ evidence             a: apply  d: dismiss  s: skip
 │
 │ [ submit ]
+│
 │
 │
 │
@@ -50,6 +51,7 @@
 1 . 4x7 .x2 2x6 .x2 2x10 .x13 5 2x7 .x2 5 2x9 .x2 5
 1
 1 . 6x10
+1
 1
 1
 1

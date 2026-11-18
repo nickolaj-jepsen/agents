@@ -1,4 +1,4 @@
-# docfix/claude/evidence 112x32 @62,0 (50x26)
+# docfix/claude/evidence 112x32 @62,0 (50x27)
 │                                               ✕
 │ ─ Doc suggestions  2 ──────────────────────────
 │
@@ -24,6 +24,7 @@
 │     requirement or the markdown-it-py
 │     dependency that only the nix build
 │     supplies; an agent would report 20 fake
+│     failures.
 │
 --- styles
 1 .x47 2
@@ -46,6 +47,7 @@
 1
 1 .x3 2x45
 1 .x5 2x26
+1
 1
 1
 1

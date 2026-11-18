@@ -30,6 +30,8 @@ declare module "claude-code" {
       focused: string | null;
       /** Ids whose evidence the list shows. */
       expanded: Shaped<string[]>;
+      /** Whether the pane is up; the count above the prompt steps aside while it is. */
+      paneShown: boolean;
       /** One line under the title when something went wrong. */
       notice: Shaped<Said>;
     };

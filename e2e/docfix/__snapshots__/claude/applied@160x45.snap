@@ -1,4 +1,4 @@
-# docfix/claude/applied 160x45 @0,0 (160x45)
+# docfix/claude/applied 160x45 @0,0 (160x43)
                                                                                                                      ╭─────────────────────────────────────────╮
  ▐▛███▛█   Claude Code <ver>                                                                                         │ docfix                                  │
 ▝▜██████▀  Opus 5.5 with high effort · Claude Team                                                                   │ The apply prompt is in the prompt box:  │
@@ -24,7 +24,8 @@
 
                                                                                                                                         ctrl+g to edit in Nvim
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-❯ AGENTS.md
+❯
+  AGENTS.md
   - wrong: `just build` is not enough to verify a pi change; the docs say it is. (seen 3×)
     .agents/store/docfix/agents-md-says-just-build-verifies.md
 
@@ -41,9 +42,6 @@
 
   Name every doc you changed beyond the ones above. Anything else you notice gets filed with docfix as usual. Don't commit.
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  ⚠ docfix: docs 3
-  work · Opus 5.5 · high · 0%                                                                  ~/.local/state/agents<tmp>                                main
-  ⏵⏵ auto mode on (shift+tab to cycle)
 --- styles
 .x117 1x43
 2x2 3x6 .x3 4x11 . 5x8 .x86 1 . 5x6 .x34 1
@@ -79,6 +77,7 @@
 -
 -
 -
+-
 .x34 ax6
 -
 -
@@ -87,9 +86,6 @@
 -
 .x93 ax6
 9x160
-.x2 bx16
-.x2 cx4 dx3 5x8 dx3 5x4 dx5 5x66 dx53 5x4 e 5 dx4
-.x2 bx15 5x21
 --- legend
 1 dim
 2 fg=#d77757
@@ -101,7 +97,3 @@
 8 fg=#ffffff bg=#373737
 9 fg=#888888
 a fg=#ff6b80 underline=single
-b fg=#ffc107
-c fg=p3
-d fg=#999999 dim
-e fg=p2

@@ -1,4 +1,4 @@
-# docfix/claude/applied 70x24 @0,0 (70x24)
+# docfix/claude/applied 70x24 @0,0 (70x22)
                            ╭─────────────────────────────────────────╮
  ▐▛███▛█   Claude Code v2.1│ docfix                                  │
 ▝▜██████▀  Opus 5.5 with hi│ The apply prompt is in the prompt box:  │
@@ -13,16 +13,14 @@
 
                                               ctrl+g to edit in Nvim
 ──────────────────────────────────────────────────────────────────────
-❯ such as a changelog, as they are.
+❯ suggestion. Change only that fact, and leave records of the past,
+  such as a changelog, as they are.
   4. Call docfix with action "resolve" and the id (the file's name
   without .md), whether you applied it or found it no longer true.
 
   Name every doc you changed beyond the ones above. Anything else
   you notice gets filed with docfix as usual. Don't commit.
 ──────────────────────────────────────────────────────────────────────
-  ⚠ docfix: docs 3
-  work · Opus 5.5 · high · 0%                                      …
-  ⏵⏵ auto mode on (shift+tab to cycle)
 --- styles
 .x27 1x43
 2x2 3x6 .x3 4x11 . 5x4 1 . 5x6 .x34 1
@@ -38,6 +36,7 @@
 -
 .x46 5x22
 9x70
+-
 .x12 ax9
 .x10 ax6
 -
@@ -45,9 +44,6 @@
 -
 .x29 ax6
 9x70
-.x2 bx16
-.x2 cx4 dx3 5x8 dx3 5x4 dx5 5x39
-.x2 bx15 5x21
 --- legend
 1 dim
 2 fg=#d77757
@@ -59,6 +55,3 @@
 8 fg=#ffffff bg=#373737
 9 fg=#888888
 a fg=#ff6b80 underline=single
-b fg=#ffc107
-c fg=p3
-d fg=#999999 dim

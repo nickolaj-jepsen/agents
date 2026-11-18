@@ -1,4 +1,4 @@
-# docfix/claude/queue 240x60 @159,0 (81x54)
+# docfix/claude/queue 240x60 @159,0 (81x55)
 │                                                                              ✕
 │ ─ Doc suggestions  3 ─────────────────────────────────────────────────────────
 │
@@ -21,6 +21,7 @@
 │ + missing  ••  ▸ evidence                                 apply  dismiss  skip
 │
 │ [ submit ]
+│
 │
 │
 │
@@ -76,6 +77,7 @@
 1 . 3x9 .x2 2x2 .x2 2x10 .x33 2x5 .x2 2x7
 1
 1 . 7x10
+1
 1
 1
 1

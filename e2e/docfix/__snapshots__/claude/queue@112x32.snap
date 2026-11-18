@@ -1,4 +1,4 @@
-# docfix/claude/queue 112x32 @62,0 (50x26)
+# docfix/claude/queue 112x32 @62,0 (50x27)
 │                                               ✕
 │ ─ Doc suggestions  3 ──────────────────────────
 │
@@ -24,6 +24,7 @@
 │ imports it on every host; the page should say
 │ that module must be inert when the feature is …
 │ + missing  ••  ▸ evidence  apply  dismiss  skip
+│
 │
 --- styles
 1 .x47 2
@@ -51,6 +52,7 @@
 1 . 3x45
 1 . 3x47
 1 . 3x9 .x2 2x2 .x2 2x10 .x2 2x5 .x2 2x7
+1
 1
 --- legend
 1 dim

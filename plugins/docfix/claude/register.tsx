@@ -3,6 +3,8 @@
  * reminder. What a call does to the queue is the core's (`../core/docfix.ts`), the one pi's half
  * runs.
  *
+ * While any are open, a band above the prompt counts them; a click on it opens the pane.
+ *
  * In the pane each suggestion is set to apply, dismiss or neither (skip), and closing the pane
  * carries that out: the dismissed ones are kept as dismissed, and the applied ones are drafted as
  * one prompt in the person's prompt box, never sent. A row starts folded, its claim cut at a few
@@ -27,7 +29,6 @@ import {
   repeats,
   seen,
   serialize,
-  statusText,
   STORE_DIR,
   toggleChoice,
   TOOL_DESCRIPTION,
@@ -65,6 +66,8 @@ const focused = atom({ plugin: "docfix", key: "focused" } as const, null as stri
 const expanded = atom({ plugin: "docfix", key: "expanded" } as const, [] as string[], {
   shape: "expanded-3",
 });
+/** Whether the pane is up: the band above the prompt steps aside while it is. */
+const paneShown = atom({ plugin: "docfix", key: "paneShown" } as const, false);
 const said = atom(
   { plugin: "docfix", key: "notice" } as const,
   { text: "", status: "warning" } as Said,
@@ -152,7 +155,6 @@ async function refresh($: EngineInterface, where?: Place | string) {
   const all = typeof at === "string" ? [] : await loadAll($, at.dir);
   const open = openQueue(all);
   await update($, queue, () => open);
-  $.ui.status(statusText(open.length));
   return open;
 }
 
@@ -188,6 +190,8 @@ async function openPane($: EngineInterface) {
   const list = await refresh($);
   await update($, choices, () => ({}));
   await update($, expanded, () => []);
+  // The band steps aside first, so the pane is placed against the layout it will keep.
+  await update($, paneShown, () => true);
   const opened = await $.ui.open(
     paneOptions({
       id: PANE,
@@ -198,7 +202,9 @@ async function openPane($: EngineInterface) {
       columns: WANTED_COLUMNS,
     }),
   );
-  if (!opened.isPlaced) $.ui.toast(`The doc suggestions pane can't show yet: ${opened.reason}`);
+  if (opened.isPlaced) return;
+  await update($, paneShown, () => false);
+  $.ui.toast(`The doc suggestions pane can't show yet: ${opened.reason}`);
 }
 
 /**
@@ -546,8 +552,9 @@ export const register: Register = (on) => {
   // Closing is what carries the choices out. An unload closes without asking; a draft the prompt
   // box refuses keeps the pane open, with the notice saying why.
   on("ui.close", { id: PANE }, async ($, e, next) => {
-    if (e.origin.kind === "unload" || (await settle($))) return next(e);
-    return { value: undefined };
+    if (e.origin.kind !== "unload" && !(await settle($))) return { value: undefined };
+    await update($, paneShown, () => false);
+    return next(e);
   });
 
   on("ui.focus", { requestId: PANE }, async ($, e, next) => {
@@ -559,6 +566,24 @@ export const register: Register = (on) => {
     await update($, focused, () => to ?? element);
     return next(to ? { ...e, element: to } : e);
   }).catch((_$, e, next) => next(e));
+
+  // The open count, above the prompt; a click opens the pane. A survey has the band to itself.
+  on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
+    if (e.props.hasSurvey) return next(e);
+    const below = await next(e);
+    const n = (await read($, queue)).length;
+    if (n === 0 || (await read($, paneShown))) return below;
+    const { Box, Button, Text } = $.ui.resolve(e);
+    return (
+      <Box flexDirection="column">
+        {below}
+        <Button key="docfix:open" plain onPress={() => openPane($)}>
+          <Text {...roleProps("warning")}>{`⚠ docfix: docs ${n}`}</Text>
+          <Text dimColor> review</Text>
+        </Button>
+      </Box>
+    );
+  });
 
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
     const els = $.ui.resolve(e);
@@ -650,7 +675,9 @@ export const register: Register = (on) => {
           variant="primary"
           label="submit"
           onPress={async () => {
-            if (await settle($)) await $.ui.close({ id: PANE });
+            if (!(await settle($))) return;
+            await update($, paneShown, () => false);
+            await $.ui.close({ id: PANE });
           }}
         />
       </Box>
