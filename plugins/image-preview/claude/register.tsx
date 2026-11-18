@@ -61,7 +61,7 @@ export const register: Register = (on) => {
     const line = await next(e);
     const els = $.ui.resolve(e);
     const { Box } = els;
-    const gallery = imageGallery(kitOf(els, e.surface), images, {
+    const gallery = imageGallery(kitOf(els, e), images, {
       columns: availableColumns(READ_MAX_COLUMNS, e.viewport?.columns),
       rows: READ_MAX_ROWS,
     });
@@ -86,7 +86,7 @@ export const register: Register = (on) => {
     const { Box } = els;
     return (
       <Box flexDirection="column" marginBottom={1}>
-        {imageGallery(kitOf(els, e.surface), [image], {
+        {imageGallery(kitOf(els, e), [image], {
           columns: availableColumns(READ_MAX_COLUMNS, e.viewport?.columns),
           rows: READ_MAX_ROWS,
         })}
@@ -125,7 +125,7 @@ export const register: Register = (on) => {
     const { Box, Text } = els;
     return (
       <Box flexDirection="column" rowGap={1} marginTop={1} marginBottom={1}>
-        {imageGallery(kitOf(els, e.surface), result.images, {
+        {imageGallery(kitOf(els, e), result.images, {
           columns: availableColumns(MAX_COLUMNS, e.viewport?.columns),
           rows: MAX_ROWS,
           caption: result.caption,

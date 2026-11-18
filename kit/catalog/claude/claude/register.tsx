@@ -8,7 +8,7 @@ import { atom, read, update } from "claude-code";
 import type { Register } from "claude-code";
 import { stageWidth, storyId, stories, type Story } from "../stories";
 import { renders } from "./render";
-import { kitOf, onlyOwnRows, paneOptions } from "./ui";
+import { kitOf, onlyOwnRows, paneOptions, withColumns } from "./ui";
 
 const PANE = "kit";
 const PLUGIN = "kit-catalog";
@@ -66,7 +66,7 @@ export const register: Register = (on) => {
     const s = find(await read($, story));
     if (!s || s.surface !== "pane") return <Text dimColor>/kit &lt;component&gt; [state]</Text>;
     const width = stageWidth(s, e.props.bodyColumns);
-    const body = renders[storyId(s)]?.(kitOf(els, e.surface), width, {
+    const body = renders[storyId(s)]?.(withColumns(kitOf(els, e), width), width, {
       columns: e.props.bodyColumns,
       rows: e.props.scroll.bodyRows,
     });
@@ -79,7 +79,7 @@ export const register: Register = (on) => {
     const els = $.ui.resolve(e);
     const make = renders[storyId(s)];
     if (!make) return next(e);
-    return make(kitOf(els, e.surface), e.props.bodyColumns, {
+    return make(kitOf(els, e), e.props.bodyColumns, {
       columns: e.props.bodyColumns,
       rows: e.props.maxRows,
     });

@@ -5,7 +5,7 @@
  */
 import type { On } from "claude-code";
 import { expect, test } from "claude-code/testing";
-import type { Engine } from "claude-code/testing";
+import type { Engine, Mounted } from "claude-code/testing";
 
 const ROOT = "/repo";
 const DIR = `${ROOT}/.agents/store/docfix`;
@@ -124,10 +124,16 @@ const BAND = {
   },
 } as const;
 
-/** The count the band above the prompt shows, or undefined when it draws none. */
+/**
+ * The count the band above the prompt shows, or undefined when it draws none. The terminal's is one
+ * Button; a graphical surface's is a line of text with its own Button to open the pane.
+ */
 async function bandCount($: Engine, surface: "terminal" | "desktop" | "vscode" = "terminal") {
   const band = await $.ui.mount({ ...BAND, surface });
-  const shown = await band.find({ type: "Button", text: /docfix: docs \d+/ });
+  const shown = await band.find({
+    type: surface === "terminal" ? "Button" : "Text",
+    text: /docfix: docs \d+/,
+  });
   await band.unmount();
   return shown?.text.match(/docs (\d+)/)?.[1];
 }
@@ -280,8 +286,42 @@ test("the first read of a tracked doc in a session names the tool after it", asy
   expect(code.context ?? []).toEqual([]);
 });
 
-// The mod was drawn for the terminal; here its tree on the GUI surfaces is pinned only as far as it
-// mounts, shows its content and answers a press. Its terminal-only drawing there is not asserted.
+/** The glyphs a graphical surface draws no controls with. */
+const GLYPHS = /[□■☐☑○●✎▸▾❯↑↓╰│]/;
+
+type Tree = Pick<Mounted, "findAll">;
+
+/** What a mounted pane shows, one string per element that shows text. */
+async function shown(ui: Tree) {
+  return (await ui.findAll({})).map((e) => e.text).filter(Boolean);
+}
+
+/**
+ * The graphical drawing's rules: its own idioms, none of the terminal's. No rule of repeated
+ * characters, no glyph standing in for a control, nothing clamped, no key hints, no hotkey on a
+ * button of a row and nothing sized to the viewport.
+ */
+async function expectNative(ui: Tree) {
+  const all = await ui.findAll({});
+  for (const text of await shown(ui)) {
+    expect(text).not.toMatch(/[─-]{3,}/);
+    expect(text).not.toMatch(GLYPHS);
+    expect(text).not.toMatch(/…$/m);
+    expect(text).not.toMatch(/\b(?:ctrl\+|Enter\b|Esc\b)|\b[a-z]: /);
+  }
+  for (const e of all) {
+    if (e.type === "Button") expect(e.props.hotkey).toBeUndefined();
+    if (e.type === "Box") {
+      expect(e.props.minHeight).toBeUndefined();
+      expect(e.props.width).toBeUndefined();
+      expect(e.props.height).toBeUndefined();
+    }
+    if (e.type === "Text") expect(e.props.wrap).toBeUndefined();
+  }
+}
+
+// The graphical drawing is the kit's own: the same content on desktop and vscode in the elements
+// those surfaces draw (Markdown claims, Svg icons, real Buttons, no cells).
 for (const surface of ["desktop", "vscode"] as const) {
   test(`${surface}: the band counts the docs and its button opens the pane`, async ($, on) => {
     engine(on);
@@ -289,6 +329,10 @@ for (const surface of ["desktop", "vscode"] as const) {
     await $.tool.call(SUGGEST);
     await $.tool.call({ ...SUGGEST, claim: "A second gap", same_as: "none" });
     expect(await bandCount($, surface)).toBe("2");
+    const band = await $.ui.mount({ ...BAND, surface });
+    expect(await band.find({ type: "Svg" })).toBeDefined();
+    expect(await band.find({ type: "Button", key: "docfix:open" })).toBeDefined();
+    await band.unmount();
     await $.command.run(COMMAND);
     expect(await bandCount($, surface)).toBeUndefined();
   });
@@ -301,28 +345,38 @@ for (const surface of ["desktop", "vscode"] as const) {
     await $.command.run(COMMAND);
     const ui = await $.ui.mount({ ...PANE, surface });
     expect(await ui.find({ type: "Text", text: /AGENTS\.md/ })).toBeDefined();
-    expect(await ui.find({ type: "Button", text: /sjusk/ })).toBeDefined();
-    expect(await ui.find({ type: "Button", text: /A second gap/ })).toBeDefined();
+    // A claim is prose: one Markdown each, whole.
+    expect(await ui.find({ type: "Markdown", text: /sjusk/ })).toBeDefined();
+    expect(await ui.find({ type: "Markdown", text: /A second gap/ })).toBeDefined();
+    expect(await ui.find({ type: "Svg" })).toBeDefined();
     for (const key of [
       `apply:row:${ID}`,
       `dismiss:row:${ID}`,
       `skip:row:${ID}`,
       "apply:grp:AGENTS.md",
+      "skip:grp:AGENTS.md",
+      `ev:${ID}`,
+      "submit",
     ])
       expect(await ui.find({ type: "Button", key })).toBeDefined();
+    await expectNative(ui);
 
     await ui.press({ key: `apply:row:${ID}` });
     expect(await ui.find({ type: "Text", text: /On close: apply 1/ })).toBeDefined();
-    await ui.press({ key: `skip:row:${ID}` });
+    expect(await ui.find({ type: "Text", text: /Apply on close/ })).toBeDefined();
+    await ui.press({ key: `apply:row:${ID}` });
     expect(await ui.find({ type: "Text", text: /carry out apply and dismiss/ })).toBeDefined();
     // A doc's header sets every row of the doc; setting a row does nothing until the pane closes.
     await ui.press({ key: "dismiss:grp:AGENTS.md" });
     expect(await ui.find({ type: "Text", text: /On close: dismiss 2/ })).toBeDefined();
+    await ui.press({ key: "skip:grp:AGENTS.md" });
+    expect(await ui.find({ type: "Text", text: /carry out apply and dismiss/ })).toBeDefined();
     expect(world.fills).toHaveLength(0);
+    await expectNative(ui);
     await ui.unmount();
   });
 
-  test(`${surface}: a row opens to its whole claim and evidence`, async ($, on) => {
+  test(`${surface}: the claim is whole, and a row opens to its evidence`, async ($, on) => {
     engine(on);
     await $.session.start({ cwd: ROOT, surface, isInteractive: true });
     const claim = "A claim that runs well past one line of the pane and must not be cut. ".repeat(
@@ -332,11 +386,42 @@ for (const surface of ["desktop", "vscode"] as const) {
     await $.tool.call({ ...SUGGEST, claim: claim.slice(0, 270) + " END-OF-CLAIM", evidence });
     await $.command.run(COMMAND);
     const ui = await $.ui.mount({ ...PANE, props: { ...PANE.props, bodyColumns: 48 }, surface });
-    const row = await ui.find({ type: "Button", text: /A claim that runs/ });
-    expect(row?.key).toMatch(/^row:/);
-    await ui.press({ key: String(row?.key) });
-    expect(await ui.find({ type: "Text", text: /END-OF-CLAIM/ })).toBeDefined();
-    expect(await ui.find({ type: "Text", text: /END-OF-EVIDENCE/ })).toBeDefined();
+    // Nothing is folded on a graphical surface: the whole claim shows, the evidence waits.
+    expect(await ui.find({ type: "Markdown", text: /END-OF-CLAIM/ })).toBeDefined();
+    expect(await ui.find({ text: /END-OF-EVIDENCE/ })).toBeUndefined();
+    const toggle = String((await ui.find({ type: "Button", text: /evidence/ }))?.key);
+    expect(toggle).toMatch(/^ev:/);
+    await ui.press({ key: toggle });
+    expect(await ui.find({ type: "Markdown", text: /END-OF-EVIDENCE/ })).toBeDefined();
+    await expectNative(ui);
+    await ui.press({ key: toggle });
+    expect(await ui.find({ text: /END-OF-EVIDENCE/ })).toBeUndefined();
+    await ui.unmount();
+  });
+
+  test(`${surface}: a long queue shows its first suggestions and a button for the rest`, async ($, on) => {
+    engine(on);
+    await $.session.start({ cwd: ROOT, surface, isInteractive: true });
+    for (let i = 0; i < 20; i++)
+      await $.tool.call({ ...SUGGEST, claim: `Claim number ${i} of many`, same_as: "none" });
+    await $.command.run(COMMAND);
+    const ui = await $.ui.mount({ ...PANE, surface });
+    expect(await ui.findAll({ type: "Markdown" })).toHaveLength(12);
+    const more = await ui.find({ type: "Button", key: "more" });
+    expect(more?.text).toBe("Show 8 more");
+    await ui.press({ key: "more" });
+    expect(await ui.findAll({ type: "Markdown" })).toHaveLength(20);
+    expect(await ui.find({ type: "Button", key: "more" })).toBeUndefined();
+    await ui.unmount();
+  });
+
+  test(`${surface}: nothing to review says so`, async ($, on) => {
+    engine(on);
+    await $.session.start({ cwd: ROOT, surface, isInteractive: true });
+    await $.command.run(COMMAND);
+    const ui = await $.ui.mount({ ...PANE, surface });
+    expect(await ui.find({ type: "Text", text: /Nothing to review/ })).toBeDefined();
+    await expectNative(ui);
     await ui.unmount();
   });
 }

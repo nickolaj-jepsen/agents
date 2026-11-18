@@ -493,7 +493,7 @@ export const register: Register = (on) => {
     room = { rows: e.props.maxRows, columns: e.props.bodyColumns };
     const els = $.ui.resolve(e);
     const { Box, Text, Button, Markdown } = els;
-    const kit = kitOf(els, e.surface);
+    const kit = kitOf(els, e);
     /** The kept note as drawn: the gutter dim, the words as the note's own colour. */
     const noteRows = (text: string, indent = 0) =>
       noteLines(kit, text, { indent, role: "note", italic: true });
@@ -610,10 +610,7 @@ export const register: Register = (on) => {
     ];
     const shell = (body: JSX.Element, isRoomy = gaps === 2) =>
       bandShell(kit, {
-        isRoomy,
-        columns,
-        height,
-        maxRows: e.props.maxRows,
+        tui: { isRoomy, columns, height, maxRows: e.props.maxRows },
         title: view.isReview ? "Review" : `${view.step + 1} of ${view.count}`,
         right: { nodes: questions, width: stops + "r: review".length },
         onClose: () => close($),

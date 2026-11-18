@@ -1,10 +1,11 @@
 /**
- * A suggestion's evidence as a person reads it: each piece under a dim rule that says when and
- * who, its paragraphs at the full width of the pane, the labelled ones named, and the
+ * A suggestion's evidence as a person reads it: each piece under a dim label that says when and
+ * who, its paragraphs at the full width of the room, the labelled ones named, and the
  * citations as a list of what they point at instead of the JSON an agent wrote them as.
- * What is in the text is the core's (`readEvidence`); this only draws it.
+ * What is in the text is the core's (`readEvidence`); this only says what goes where, and the
+ * kit draws it for the surface.
  */
-import { cellWidth, clamp, fit, tokens, type Kit } from "./ui";
+import { facts, indent, prose, rule, stack, type Kit } from "./ui";
 import {
   evidenceBlocks,
   evidenceLabel,
@@ -13,72 +14,53 @@ import {
   type EvidenceBlock,
 } from "../core/docfix";
 
-/** Cells an entry's text is set in from its rule. */
-const INDENT = 2;
-/** Cells between a citation's kind and what it points at. */
-const GAP = 2;
-
-function block(k: Kit, width: number, b: EvidenceBlock, key: string): JSX.Element {
+function block(k: Kit, b: EvidenceBlock, key: string): JSX.Element {
   const { Box, Text } = k;
-  const head = b.heading ? <Text dimColor>{b.heading}</Text> : null;
-  if (!b.items)
+  if (b.items)
     return (
       <Box key={key} flexDirection="column">
-        {head}
-        <Text>{b.lines.flatMap((line) => clamp(line, width)).join("\n")}</Text>
+        {facts(
+          k,
+          b.items.map((c) => ({
+            label: c.kind,
+            value: c.value,
+            isQuote: c.kind === "quote",
+            isCode: c.kind !== "quote",
+          })),
+          b.heading || undefined,
+        )}
       </Box>
     );
-  // The kinds sit in one dim column and what they point at hangs beside it, so a list of
-  // paths is read down its right edge.
-  const kinds = Math.min(
-    Math.max(...b.items.map((c) => cellWidth(c.kind))),
-    Math.max(4, Math.floor(width / 3)),
-  );
-  const room = Math.max(1, width - kinds - GAP);
   return (
     <Box key={key} flexDirection="column">
-      {head}
-      <Text>
-        {b.items.flatMap((c, i) => {
-          const value = c.kind === "quote" ? `“${c.value}”` : c.value;
-          const [first = "", ...rest] = clamp(value, room);
-          return [
-            i > 0 ? "\n" : "",
-            <Text key={`k${i}`} dimColor>
-              {fit(c.kind, kinds)}
-            </Text>,
-            `${" ".repeat(GAP)}${first}`,
-            ...rest.map((line) => `\n${" ".repeat(kinds + GAP)}${line}`),
-          ];
-        })}
-      </Text>
+      {b.heading ? <Text dimColor>{b.heading}</Text> : null}
+      {prose(k, b.lines.join("\n"))}
     </Box>
   );
 }
 
 /**
- * The evidence, newest first, one blank row between pieces: one piece has no rule of its own, its
- * age saying when; several each get a dated rule.
+ * The evidence, newest first: one piece has no label of its own, its age saying when; several
+ * each get a dated label.
  */
-export function evidence(k: Kit, width: number, items: readonly Evidence[]): JSX.Element {
-  const { Box, Text } = k;
+export function evidence(k: Kit, items: readonly Evidence[]): JSX.Element {
+  const { Box } = k;
   const isSingle = items.length === 1;
-  return (
-    <Box flexDirection="column" rowGap={1}>
-      {[...items].reverse().map((e, i) => {
-        const view = readEvidence(e);
-        const label = evidenceLabel(view);
-        const rule = tokens.glyph.rule.repeat(Math.max(0, width - cellWidth(label) - 1));
-        const room = Math.max(1, width - (isSingle ? 0 : INDENT));
-        return (
-          <Box key={`ev${i}`} flexDirection="column">
-            {isSingle ? null : <Text dimColor>{rule ? `${label} ${rule}` : label}</Text>}
-            <Box flexDirection="column" rowGap={1} paddingLeft={isSingle ? 0 : INDENT}>
-              {evidenceBlocks(view).map((b, n) => block(k, room, b, `p${n}`))}
-            </Box>
-          </Box>
+  return stack(
+    k,
+    [...items].reverse().map((e, i) => {
+      const view = readEvidence(e);
+      const blocks = (inner: Kit) =>
+        stack(
+          inner,
+          evidenceBlocks(view).map((b, n) => block(inner, b, `p${n}`)),
         );
-      })}
-    </Box>
+      return (
+        <Box key={`ev${i}`} flexDirection="column">
+          {isSingle ? null : rule(k, evidenceLabel(view))}
+          {isSingle ? blocks(k) : indent(k, blocks)}
+        </Box>
+      );
+    }),
   );
 }

@@ -18,6 +18,7 @@ import {
   section,
   tokens,
   widthCap,
+  withColumns,
   type Cell,
   type ClampOptions,
   type Entry,
@@ -109,7 +110,7 @@ const capped =
     const cap = Math.min(width, widthCap(cls, env.columns));
     return (
       <Box flexDirection="column" rowGap={1} width={cap}>
-        {paneTitle(k, cap, "Doc suggestions", 3)}
+        <Box>{paneTitle(withColumns(k, cap), "Doc suggestions", 3)}</Box>
         <Text>{clamp(SENTENCE, cap).join("\n")}</Text>
       </Box>
     );
@@ -117,8 +118,8 @@ const capped =
 
 const listAt =
   (groups: ListGroup[], isColumns = false): Render =>
-  (k, width) =>
-    list(k, groups, { width, isColumns, title: TITLE });
+  (k) =>
+    list(k, groups, { tui: { isColumns, title: TITLE } });
 
 const KEYS = (labels: string[]) =>
   labels.map((label, i) => ({ hotkey: String(i + 1), label, press: none, isLit: i === 0 }));
@@ -146,9 +147,7 @@ const bandOf =
   (k, width, env) => {
     const { Box, Text } = k;
     return bandShell(k, {
-      columns: width,
-      height: o.height,
-      maxRows: env.rows,
+      tui: { columns: width, height: o.height, maxRows: env.rows },
       title: o.title,
       right: o.right ? stops(k) : undefined,
       body: (
@@ -224,13 +223,12 @@ export const renders: Record<string, Render> = {
     const { Box } = k;
     return (
       <Box flexDirection="column" rowGap={1}>
-        {section(k, width, "Evidence")}
+        {section(k, "Evidence")}
         {section(
           k,
-          width,
           "docs/a-very-long-directory-name/with/several/nested/levels/and-an-equally-long-file-name-for-the-guide.md",
         )}
-        {section(k, 12, "docs/agents.md")}
+        {section(withColumns(k, 12), "docs/agents.md")}
       </Box>
     );
   },
@@ -238,21 +236,19 @@ export const renders: Record<string, Render> = {
     const { Box } = k;
     return (
       <Box flexDirection="column" rowGap={1}>
-        {note(k, SENTENCE, { width: Math.min(48, width) })}
-        {note(k, "One line.", { width: Math.min(48, width) })}
+        {note(withColumns(k, Math.min(48, width)), SENTENCE, { isWrapped: true })}
+        {note(withColumns(k, Math.min(48, width)), "One line.", { isWrapped: true })}
       </Box>
     );
   },
 
-  "entries/wide": (k, width) => entries(k, width, LOG),
-  "entries/narrow": (k, width) => entries(k, Math.min(40, width), LOG),
-  "entries/one": (k, width) => entries(k, width, LOG.slice(0, 1)),
-  "entries/long-text": (k, width) =>
-    entries(k, width, [LONG_ENTRY, ...LOG.slice(1)], { lines: { max: 3 } }),
-  "entries/wide-chars": (k, width) =>
+  "entries/wide": (k) => entries(k, LOG),
+  "entries/narrow": (k, width) => entries(withColumns(k, Math.min(40, width)), LOG),
+  "entries/one": (k) => entries(k, LOG.slice(0, 1)),
+  "entries/long-text": (k) => entries(k, [LONG_ENTRY, ...LOG.slice(1)], { lines: { max: 3 } }),
+  "entries/wide-chars": (k) =>
     entries(
       k,
-      width,
       [
         { date: "2026-11-13", text: CJK },
         { date: "2026-10-16", text: `混在 mixed ＡＢＣ ${CJK}` },
@@ -260,36 +256,33 @@ export const renders: Record<string, Render> = {
       { lines: { max: 3 } },
     ),
 
-  "empty/default": (k, width) =>
-    emptyState(k, width, "Nothing to review: no open doc suggestions in this repo."),
-  "empty/long": (k, width) => emptyState(k, width, `${SENTENCE} ${SENTENCE}`),
+  "empty/default": (k) => emptyState(k, "Nothing to review: no open doc suggestions in this repo."),
+  "empty/long": (k) => emptyState(k, `${SENTENCE} ${SENTENCE}`),
 
-  "notice/success": (k, width) => notice(k, width, "Dismissed 2", "success"),
-  "notice/warning": (k, width) =>
-    notice(k, width, "Two of the files changed on disk since the queue loaded", "warning"),
-  "notice/error": (k, width) =>
+  "notice/success": (k) => notice(k, "Dismissed 2", "success"),
+  "notice/warning": (k) =>
+    notice(k, "Two of the files changed on disk since the queue loaded", "warning"),
+  "notice/error": (k) =>
     notice(
       k,
-      width,
       "Dismiss failed: EACCES: permission denied, open '/home/user/.agents/store/docfix/x.md'",
       "error",
     ),
-  "notice/long": (k, width) => notice(k, width, `${SENTENCE} ${SENTENCE}`, "dim"),
+  "notice/long": (k) => notice(k, `${SENTENCE} ${SENTENCE}`, "dim"),
 
-  "list/empty": (k, width) =>
-    emptyState(k, width, "Nothing to review: no open items in this repo."),
+  "list/empty": (k) => emptyState(k, "Nothing to review: no open items in this repo."),
   "list/one": listAt(GROUPED().slice(0, 1)),
   "list/grouped": listAt(GROUPED()),
-  "list/marks-multi": (k, width) => {
+  "list/marks-multi": (k) => {
     const groups = GROUPED(false);
     groups[0]!.rows[0]!.isMarked = true;
     groups[1]!.rows[1]!.isMarked = true;
-    return list(k, groups, { width, title: TITLE });
+    return list(k, groups, { tui: { title: TITLE } });
   },
-  "list/marks-single": (k, width) => {
+  "list/marks-single": (k) => {
     const groups = GROUPED(false);
     groups[1]!.rows[0]!.isMarked = true;
-    return list(k, groups, { width, title: TITLE, marks: "single" });
+    return list(k, groups, { tui: { title: TITLE }, marks: "single" });
   },
   "list/coloured-metadata": listAt(GROUPED(false)),
   "list/column-drop": (k, width) => {
@@ -298,17 +291,17 @@ export const renders: Record<string, Render> = {
     return (
       <Box flexDirection="column" rowGap={1}>
         <Text dimColor>isColumns</Text>
-        {list(k, rows, { width, isColumns: true, title: TITLE })}
+        {list(k, rows, { tui: { isColumns: true, title: TITLE } })}
         <Text dimColor>not isColumns</Text>
-        {list(k, rows, { width: Math.min(44, width), title: TITLE })}
+        {list(withColumns(k, Math.min(44, width)), rows, { tui: { title: TITLE } })}
       </Box>
     );
   },
   "list/extreme-titles": listAt(EXTREME),
   "list/wide-chars": listAt(WIDE),
 
-  "frame/title-count": (k, width) => paneTitle(k, width, "Doc suggestions", 3),
-  "frame/title-bare": (k, width) => paneTitle(k, width, "Doc suggestions"),
+  "frame/title-count": (k) => <k.Box>{paneTitle(k, "Doc suggestions", 3)}</k.Box>,
+  "frame/title-bare": (k) => <k.Box>{paneTitle(k, "Doc suggestions")}</k.Box>,
   "frame/reading": capped("reading"),
   "frame/dialog": capped("dialog"),
 
@@ -326,8 +319,8 @@ export const renders: Record<string, Render> = {
           <Text dimColor>2 days ago</Text>
         </Box>
         <Box marginTop={1} flexDirection="column">
-          {section(k, width, "Evidence")}
-          {entries(k, width, EVIDENCE)}
+          {section(k, "Evidence")}
+          {entries(k, EVIDENCE)}
         </Box>
       </Box>
     );
@@ -337,7 +330,7 @@ export const renders: Record<string, Render> = {
     const measure = Math.min(tokens.prose, width);
     return (
       <Box flexDirection="column" width={width}>
-        {section(k, width, `Prose at width ${width}`)}
+        {section(k, `Prose at width ${width}`)}
         <Text>{clamp(LONG, measure).join("\n")}</Text>
       </Box>
     );
@@ -347,9 +340,9 @@ export const renders: Record<string, Render> = {
     const { Box } = k;
     return (
       <Box flexDirection="column" rowGap={1}>
-        {list(k, GROUPED().slice(0, 2), { width, title: TITLE })}
-        {section(k, width, "Evidence")}
-        {entries(k, width, LOG.slice(0, 2), { lines: { max: 3 } })}
+        {list(k, GROUPED().slice(0, 2), { tui: { title: TITLE } })}
+        {section(k, "Evidence")}
+        {entries(k, LOG.slice(0, 2), { lines: { max: 3 } })}
       </Box>
     );
   },

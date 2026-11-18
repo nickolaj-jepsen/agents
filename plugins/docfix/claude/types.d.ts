@@ -32,6 +32,8 @@ declare module "claude-code" {
       expanded: Shaped<string[]>;
       /** Whether the pane is up; the count above the prompt steps aside while it is. */
       paneShown: boolean;
+      /** Whether a long queue shows every suggestion, not the first few (graphical surfaces). */
+      showAll: boolean;
       /** One line under the title when something went wrong. */
       notice: Shaped<Said>;
     };
