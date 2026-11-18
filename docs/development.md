@@ -27,6 +27,17 @@ Dependabot (`.github/dependabot.yml`) opens at most one PR a day that updates ev
 together. `CI gate` checks it, and `.github/workflows/dependabot-auto-merge.yml` merges it. The repo
 needs "Allow auto-merge" and a ruleset on `main` requiring `CI gate`.
 
+## Caching
+
+Nix reuses a check or recording whenever every input it reads is unchanged, so each derivation reads
+only what it needs: `agent-tools` skips READMEs, `readme` reads only content, and `site-kit` reads no
+plugin, so a plugin edit re-records `site-media` but not the catalogue.
+
+CI also shares builds between runs through a Cachix cache. The repo's `CACHIX_CACHE` variable names it
+and the `CACHIX_AUTH_TOKEN` secret lets a run on `main` push to it; without them the workflows run as
+before, and a pull request or Dependabot run (which gets no Actions secrets) only reads. The Pages
+workflow also keys its file cache on the two media derivation paths, which hash every input.
+
 ## End-to-end tests
 
 `e2e/` plays each plugin's screens in a real Claude Code and a real pi, local only: neither `npm test`,

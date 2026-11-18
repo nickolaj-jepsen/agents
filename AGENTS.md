@@ -78,7 +78,9 @@ New files must be `git add`ed or the flake ignores them.
 - The site's media are the derivations `.#site-media` and `.#site-kit` (`just media`). They read
   git-tracked files only, so `git add` a new scenario, or `just media-fresh` records the tree as it
   stands. A recording is not independent of its neighbours either: a site scenario that names no
-  `plugins` loads every mod, so a change under `plugins/` or `kit/` re-records all of it.
+  `plugins` loads every mod, so a change under `plugins/` or `kit/` re-records all of it. `site-kit`
+  reads no plugin, so a new file the kit's scenarios need from outside `kit/` and `e2e/{lib,assets,kit}`
+  must be added to its fileset in `pkgs/site-media.nix`.
 - A script that starts a Claude session and may kill it before its screen is up sets
   `CLAUDE_CODE_NO_FLICKER=1`. Fullscreen from settings arms a boot canary; two sessions that die
   early record `fullscreenAutoDisabled` in `~/.claude.json`, and every later session, the person's

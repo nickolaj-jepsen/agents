@@ -40,21 +40,33 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+      # Pulls the recordings Nix has already made, and pushes new ones; read-only without the token.
+      - if: vars.CACHIX_CACHE != ''
+        uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
+        with:
+          name: ${{ vars.CACHIX_CACHE }}
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
       # `.#site-media` and `.#site-kit` record on a stubbed model in a config folder of their own, so
-      # the same inputs give the same pictures: cache on them. A runner is ephemeral, so without this
-      # the store is empty and every push re-records; a binary cache would stand in for it.
+      # the same inputs give the same pictures. A derivation's path is a hash of every input it
+      # reads (files, agents, fonts, tools), so the two paths are the exact cache key: an edit
+      # that reaches neither (a doc, the workflow) still hits.
+      - id: key
+        run: echo "media=media-$(nix path-info --derivation .#site-media .#site-kit | sha256sum | cut -c1-32)" >> "$GITHUB_OUTPUT"
+        env:
+          NIX_CONFIG: access-tokens = github.com=${{ github.token }}
+      # The recordings as files, for when no binary cache is configured: a runner starts with an
+      # empty store.
       - id: media
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             site/media
             site/data/kit.json
-          key: media-${{ hashFiles('e2e/**', 'plugins/**', 'kit/**', 'flake.lock', 'flake.nix', 'packages.nix', 'devshell.nix', 'pkgs/**', 'justfile', 'package-lock.json') }}
-      - if: steps.media.outputs.cache-hit != 'true'
-        uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+          key: ${{ steps.key.outputs.media }}
       - if: steps.media.outputs.cache-hit != 'true'
         name: Record the media
-        run: nix develop .#media -c just media
+        run: nix shell --inputs-from . nixpkgs#just --command just media
         env:
           NIX_CONFIG: access-tokens = github.com=${{ github.token }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0

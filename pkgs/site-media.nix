@@ -4,7 +4,8 @@
 #
 # Why two and not one per plugin: a site scenario that names no `plugins` loads every mod in
 # `plugins/`, so every plugin's recording reads the whole plugin tree. A change under `plugins/`
-# therefore invalidates all of them; only the kit's stories are separable.
+# therefore invalidates all of them; only the kit's stories are separable, and they read no plugin,
+# so `site-kit` has a source of its own.
 {
   lib,
   buildNpmPackage,
@@ -15,38 +16,45 @@
   root = ../.; # this file sits one level under it
   media = callPackage ./media-environment.nix {inherit tui-test;};
 
-  # What a recording reads: the mods it loads, the kit they draw with, and the harness that plays
-  # them. Not `site/`, `docs/` or the skills: none reaches a screenshot.
-  src = lib.fileset.toSource {
-    inherit root;
-    fileset = lib.fileset.unions [
-      (root + "/package.json")
-      (root + "/package-lock.json")
-      (root + "/plugins")
-      (root + "/kit")
-      (root + "/e2e")
-    ];
-  };
-
   common = {
-    inherit src;
-    npmDeps = importNpmLock {npmRoot = src;};
-    inherit (importNpmLock) npmConfigHook;
+    inherit (media) PI_MONOREPO FONTCONFIG_FILE;
     dontNpmBuild = true;
     doCheck = false;
     nativeBuildInputs = media.packages;
-    # The shell `just media` gives a person, as the build sees it.
-    inherit (media) PI_MONOREPO FONTCONFIG_FILE;
     # npm's install prunes the pi links, so make them afterwards.
     preBuild = ''
       pi-dev-links
     '';
   };
+
+  # A build's source is the files its recording reads and nothing else, so an edit elsewhere leaves
+  # its store path, and so the derivation, as it was. Not `site/`, `docs/` or the skills: none
+  # reaches a screenshot.
+  withSource = fileset: let
+    src = lib.fileset.toSource {
+      inherit root;
+      fileset = lib.fileset.unions ([(root + "/package.json") (root + "/package-lock.json")] ++ fileset);
+    };
+  in
+    common
+    // {
+      inherit src;
+      npmDeps = importNpmLock {npmRoot = src;};
+      inherit (importNpmLock) npmConfigHook;
+    };
+
+  # The e2e harness without any plugin's scenarios and snapshots: a folder per plugin beside
+  # `lib/`, `assets/` and `kit/`.
+  sharedHarness = ["lib" "assets" "kit"];
+  pluginScenarios = map (name: root + "/e2e/${name}") (
+    lib.attrNames (lib.filterAttrs (name: type: type == "directory" && !(lib.elem name sharedHarness)) (builtins.readDir (root + "/e2e")))
+  );
+  harnessOnly = lib.fileset.difference (root + "/e2e") (lib.fileset.unions pluginScenarios);
 in {
   /**
   `site/media/<plugin>/`: the demos and stills of every plugin that has scenarios.
   */
-  media = buildNpmPackage (common
+  media = buildNpmPackage (withSource [(root + "/plugins") (root + "/kit") (root + "/e2e")]
     // {
       pname = "agents-site-media";
       version = "0";
@@ -68,7 +76,9 @@ in {
   /**
   `site/media/kit/` and `site/data/kit.json`: the catalogue's crops and model.
   */
-  kit = buildNpmPackage (common
+  # No plugin: the kit's scenarios load the catalogue mods and nothing else, so a plugin edit
+  # leaves it cached.
+  kit = buildNpmPackage (withSource [(root + "/kit") harnessOnly]
     // {
       pname = "agents-site-kit";
       version = "0";
