@@ -41,7 +41,14 @@ export default vscodeScenarios({
         fileSuggestions(ctx, STRUCTURED);
       },
       start: reply,
-      steps: [...open, { wait: "agent-hub" }, { click: "Show evidence" }],
+      steps: [...open, { wait: "agent-hub" }, { click: "Open" }],
+    },
+    open: {
+      about:
+        "the default suggestions with the first row opened: claim, meta, evidence and its choices",
+      setup: withSuggestions,
+      start: reply,
+      steps: [...open, { wait: "AGENTS.md" }, { click: "Open" }],
     },
     set: {
       about: "the default suggestions with one row set to apply, one to dismiss and a doc to skip",
@@ -50,8 +57,10 @@ export default vscodeScenarios({
       steps: [
         ...open,
         { wait: "AGENTS.md" },
+        { click: "Open" },
         { click: "Apply" },
-        { click: { text: "Dismiss", nth: 1 } },
+        { click: "Open" },
+        { click: "Dismiss" },
       ],
     },
     many: {
@@ -70,7 +79,7 @@ export default vscodeScenarios({
         fileSuggestions(ctx, EXTREME);
       },
       start: reply,
-      steps: [...open, { wait: "Doc suggestions" }, { click: "Show evidence" }],
+      steps: [...open, { wait: "Doc suggestions" }, { click: "Open" }],
     },
   },
 });

@@ -517,8 +517,6 @@ export type SectionOptions = {
   count?: number;
   /** The title is a path, command or symbol: set in the monospaced face on a graphical surface. */
   isCode?: boolean;
-  /** The word on a graphical surface's button that does what pressing the title does. */
-  action?: string;
 };
 
 /** Below this many cells a header's keys drop their suffix. */
@@ -536,21 +534,23 @@ export function section(k: Kit, title: string, options: SectionOptions = {}): JS
   const width = k.columns;
   const isControl = key !== undefined && onPress !== undefined;
   if (k.isNative) {
+    // A flat heading: the title and, quiet, the keys that set the rows under it.
     const isMany = (options.count ?? 2) > 1;
-    const controls = isMany && (set || (onPress && options.action));
     return (
-      <Box key={key ? `g:${key}` : undefined} flexDirection="column">
-        <Text weight="semibold" mono={options.isCode || undefined}>
-          {title}
-        </Text>
-        {controls ? (
-          <Box flexDirection="row" flexWrap="wrap" columnGap="sm" rowGap="md" paddingTop={1}>
-            {set ? choice(k, set.options, set) : null}
-            {onPress && options.action ? (
-              <Button key={key} dimColor label={options.action} onPress={() => onPress()} />
-            ) : null}
-          </Box>
-        ) : null}
+      <Box
+        key={key ? `g:${key}` : undefined}
+        flexDirection="row"
+        flexWrap="wrap"
+        alignItems="center"
+        columnGap="md"
+        rowGap="sm"
+      >
+        <Box flexShrink={1}>
+          <Text weight="semibold" mono={options.isCode || undefined}>
+            {title}
+          </Text>
+        </Box>
+        {set && isMany ? choice(k, set.options, set) : null}
       </Box>
     );
   }
@@ -648,7 +648,7 @@ export function pane(
   const { Box } = k;
   if (k.isNative)
     return (
-      <Box flexDirection="column" rowGap="md">
+      <Box flexDirection="column" rowGap="sm">
         {blocks(k)}
       </Box>
     );
@@ -725,10 +725,10 @@ export function notice(
   k: Kit,
   text: string,
   status: "success" | "warning" | "error" | "dim" | "text" = "warning",
-  options: { isWrapped?: boolean } = {},
-): JSX.Element {
+  options: { isWrapped?: boolean; gui?: { isHidden?: boolean } } = {},
+): JSX.Element | null {
   const { Text } = k;
-  if (k.isNative) return <Text {...roleProps(status)}>{text}</Text>;
+  if (k.isNative) return options.gui?.isHidden ? null : <Text {...roleProps(status)}>{text}</Text>;
   const lines = options.isWrapped
     ? clamp(text, k.columns).join("\n")
     : (clamp(text, k.columns, { min: 1, max: 1 })[0] ?? "");
@@ -981,7 +981,6 @@ export function choice(
     });
     const suffix = settings.suffix ? ` ${settings.suffix}` : "";
     const isRow = layout === "row";
-    const isChosen = options.some((o) => o.isOn && !o.isQuiet);
     return (
       <Box
         key={settings.key}
@@ -996,8 +995,8 @@ export function choice(
             <Button
               key={o.key}
               variant={o.isOn && !o.isQuiet ? "primary" : "secondary"}
-              // The surface draws every variant alike, so what is not chosen recedes instead.
-              dimColor={o.isQuiet || (isChosen && !o.isOn) || undefined}
+              // The surface draws every variant alike, so only the chosen one is not dim.
+              dimColor={!(o.isOn && !o.isQuiet) || undefined}
               label={capital(`${o.label}${suffix}`)}
               onPress={() => o.onPress()}
             />
@@ -1078,6 +1077,12 @@ export function capped<T>(
 
 // ---- card
 
+/** The first sentence of a claim, or its first line: what a collapsed row says. */
+const firstSentence = (text: string) => {
+  const line = linesOf(text)[0] ?? "";
+  return /^(.+?[.!?])\s+(?=[A-Z`“"])/.exec(line)?.[1] ?? line;
+};
+
 /** What a reviewed item is: a kind and the colour role it is drawn in. */
 const KIND_TONE = { wrong: "error", stale: "warning", missing: "neutral" } as const;
 const KIND_ROLE = { wrong: "error", stale: "warning", missing: "text" } as const;
@@ -1121,50 +1126,43 @@ export function card(k: Kit, o: CardOptions): JSX.Element {
   const times = o.seen ?? 1;
   if (k.isNative) {
     const label = capital(o.kind);
-    const meta = [times > 1 ? `Seen ${times} times` : "", o.age ? `${o.age} ago` : ""]
+    const meta = [label, times > 1 ? `Seen ${times} times` : "", o.age ? `${o.age} ago` : ""]
       .filter(Boolean)
       .join("  ·  ");
+    const mark =
+      o.tone === "apply"
+        ? icon(k, "success", { tone: "success", alt: "apply" })
+        : o.tone === "dismiss"
+          ? icon(k, "error", { alt: "dismiss" })
+          : icon(k, o.kind, { tone: KIND_TONE[o.kind], alt: label });
+    const said = o.tone ? `_${capital(o.tone)}_ · ` : "";
+    // Flat: one row per item, a mark and the claim wrapping beside it, and one quiet button that
+    // opens it. A Button does not wrap and cannot hold an icon, so it is not the row itself.
     return (
-      <Box
-        key={o.key}
-        flexDirection="column"
-        rowGap="md"
-        borderStyle="round"
-        borderDimColor
-        paddingX="md"
-        paddingY="md"
-      >
-        <Box flexDirection="column" rowGap="xs">
-          <Box columnGap="sm" flexWrap="wrap" alignItems="center">
-            {icon(k, o.kind, { tone: KIND_TONE[o.kind], alt: label })}
-            <Text weight="semibold" {...roleProps(KIND_ROLE[o.kind])}>
-              {label}
-            </Text>
-            {meta ? <Text dimColor>{meta}</Text> : null}
-          </Box>
-          {prose(k, o.claim, { isDim: o.tone === "dismiss" })}
-        </Box>
-        {o.tone ? (
-          <Box columnGap="sm" alignItems="center">
-            {icon(k, o.tone === "apply" ? "success" : "error", {
-              tone: o.tone === "apply" ? "success" : "neutral",
-              alt: o.tone,
+      <Box key={o.key} flexDirection="column" rowGap="md">
+        <Box flexDirection="row" flexWrap="nowrap" alignItems="flex-start" columnGap="sm">
+          {mark}
+          <Box flexGrow={1} flexShrink={1}>
+            {prose(k, said + (o.isOpen ? o.claim : firstSentence(o.claim)), {
+              isDim: o.tone === "dismiss",
             })}
-            <Text {...roleProps(o.tone === "apply" ? "success" : "dim")}>
-              {`${capital(o.tone)} on close`}
-            </Text>
           </Box>
-        ) : null}
-        <Box flexDirection="row" flexWrap="wrap" columnGap="sm" rowGap="md">
-          {choice(k, o.choice.options, o.choice)}
           <Button
             key={o.details.key}
             dimColor
-            label={`${o.isOpen ? "Hide" : "Show"} evidence${o.details.count > 1 ? ` (${o.details.count})` : ""}`}
+            label={o.isOpen ? "Close" : "Open"}
             onPress={() => o.onToggle()}
           />
         </Box>
-        {o.isOpen ? indent(k, o.details.render) : null}
+        {o.isOpen ? (
+          <Box flexDirection="column" rowGap="md">
+            <Text dimColor size="caption">
+              {meta}
+            </Text>
+            {o.details.render(k)}
+            {choice(k, o.choice.options, o.choice)}
+          </Box>
+        ) : null}
       </Box>
     );
   }
@@ -1259,6 +1257,7 @@ export type Action = {
   onPress: () => unknown;
   /** The one worth pressing: Submit. */
   isPrimary?: boolean;
+  gui?: { isPrimary?: boolean };
   /** A key for it; a graphical surface draws a chip for each, so give one only to an action. */
   hotkey?: string;
 };
@@ -1267,14 +1266,32 @@ export type Action = {
  * The pane's action row: its Submit, its Close. Labels are as written on the terminal and
  * capitalised on a graphical surface.
  */
-export function actionBar(k: Kit, actions: readonly Action[]): JSX.Element {
-  const { Box, Button } = k;
+export function actionBar(
+  k: Kit,
+  actions: readonly Action[],
+  options: { gui?: { summary?: string } } = {},
+): JSX.Element {
+  const { Box, Button, Text } = k;
+  const summary = k.isNative ? options.gui?.summary : undefined;
   return (
-    <Box key="actions" columnGap={k.isNative ? "sm" : undefined} flexWrap="wrap">
+    <Box
+      key="actions"
+      columnGap={k.isNative ? "md" : undefined}
+      rowGap={k.isNative ? "sm" : undefined}
+      alignItems={k.isNative ? "center" : undefined}
+      paddingTop={k.isNative ? 1 : undefined}
+      flexWrap="wrap"
+    >
+      {summary ? <Text>{summary}</Text> : null}
       {actions.map((a) => (
         <Button
           key={a.key}
-          variant={a.isPrimary ? "primary" : undefined}
+          variant={
+            (k.isNative && a.gui?.isPrimary !== undefined ? a.gui.isPrimary : a.isPrimary)
+              ? "primary"
+              : undefined
+          }
+          dimColor={(k.isNative && !(a.gui?.isPrimary ?? a.isPrimary)) || undefined}
           hotkey={a.hotkey}
           label={k.isNative ? capital(a.label) : a.label}
           onPress={() => a.onPress()}
@@ -1463,11 +1480,14 @@ export function list(k: Kit, groups: ListGroup[], options: ListOptions = {}): JS
 export function stack(
   k: Kit,
   children: readonly (JSX.Element | null)[],
-  options: { isTight?: boolean } = {},
+  options: { isTight?: boolean; gui?: { gap?: "xs" | "sm" | "md" | "lg" } } = {},
 ): JSX.Element {
   const { Box } = k;
   return (
-    <Box flexDirection="column" rowGap={k.isNative ? "md" : options.isTight && k.isTight ? 0 : 1}>
+    <Box
+      flexDirection="column"
+      rowGap={k.isNative ? (options.gui?.gap ?? "md") : options.isTight && k.isTight ? 0 : 1}
+    >
       {children}
     </Box>
   );

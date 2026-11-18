@@ -406,7 +406,6 @@ function header(k: Kit, r: Rows, target: string, rows: Suggestion[]): JSX.Elemen
     onPress: () => r.toggleOpen(ids),
     count: rows.length,
     isCode: true,
-    action: ids.every((id) => r.open.has(id)) ? "Hide all evidence" : "Show all evidence",
     choice: {
       options: optionsOf(r, owner, ids, state),
       suffix: "all",
@@ -588,8 +587,11 @@ export const register: Register = (on) => {
         ];
 
       const bar = summary
-        ? notice(k, `On close: ${summary}`, "text", { isWrapped: true })
-        : notice(k, "Submit or close to carry out apply and dismiss", "dim", { isWrapped: true });
+        ? notice(k, `On close: ${summary}`, "text", { isWrapped: true, gui: { isHidden: true } })
+        : notice(k, "Submit or close to carry out apply and dismiss", "dim", {
+            isWrapped: true,
+            gui: { isHidden: true },
+          });
       // A long queue shows its first suggestions; the rest is one press away.
       const { shown, more } = capped(k, queued, {
         isAll,
@@ -597,18 +599,23 @@ export const register: Register = (on) => {
       });
       // Submit carries the choices out and closes, as Esc or the close mark does. It settles
       // first: a close the mod raises itself skips the mod's own ui.close hook.
-      const submit = actionBar(k, [
-        {
-          key: SUBMIT,
-          label: "submit",
-          isPrimary: true,
-          onPress: async () => {
-            if (!(await settle($))) return;
-            await update($, paneShown, () => false);
-            await $.ui.close({ id: PANE });
+      const submit = actionBar(
+        k,
+        [
+          {
+            key: SUBMIT,
+            label: "submit",
+            isPrimary: true,
+            gui: { isPrimary: Boolean(summary) },
+            onPress: async () => {
+              if (!(await settle($))) return;
+              await update($, paneShown, () => false);
+              await $.ui.close({ id: PANE });
+            },
           },
-        },
-      ]);
+        ],
+        { gui: { summary: summary ? `On close: ${summary}` : "Nothing set" } },
+      );
       return [
         head,
         bar,
@@ -623,9 +630,10 @@ export const register: Register = (on) => {
                 stack(
                   k,
                   list.map((s) => row(k, rows, s)),
+                  { gui: { gap: "sm" } },
                 ),
               ],
-              { isTight: true },
+              { isTight: true, gui: { gap: "sm" } },
             ),
           ),
         ),

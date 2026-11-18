@@ -312,6 +312,9 @@ async function expectNative(ui: Tree) {
   for (const e of all) {
     if (e.type === "Button") expect(e.props.hotkey).toBeUndefined();
     if (e.type === "Box") {
+      // Flat: no frames and no padding that nests.
+      expect(e.props.borderStyle).toBeUndefined();
+      expect(e.props.paddingX).toBeUndefined();
       expect(e.props.minHeight).toBeUndefined();
       expect(e.props.width).toBeUndefined();
       expect(e.props.height).toBeUndefined();
@@ -345,32 +348,33 @@ for (const surface of ["desktop", "vscode"] as const) {
     await $.command.run(COMMAND);
     const ui = await $.ui.mount({ ...PANE, surface });
     expect(await ui.find({ type: "Text", text: /AGENTS\.md/ })).toBeDefined();
-    // A claim is prose: one Markdown each, whole.
+    // A collapsed row is a mark, the claim as prose and a quiet button that opens it.
     expect(await ui.find({ type: "Markdown", text: /sjusk/ })).toBeDefined();
     expect(await ui.find({ type: "Markdown", text: /A second gap/ })).toBeDefined();
     expect(await ui.find({ type: "Svg" })).toBeDefined();
-    for (const key of [
-      `apply:row:${ID}`,
-      `dismiss:row:${ID}`,
-      `skip:row:${ID}`,
-      "apply:grp:AGENTS.md",
-      "skip:grp:AGENTS.md",
-      `ev:${ID}`,
-      "submit",
-    ])
+    for (const key of [`ev:${ID}`, "apply:grp:AGENTS.md", "skip:grp:AGENTS.md", "submit"])
       expect(await ui.find({ type: "Button", key })).toBeDefined();
+    // Its choices wait inside the row; Submit is not the main button while nothing is set.
+    expect(await ui.find({ type: "Button", key: `apply:row:${ID}` })).toBeUndefined();
+    expect((await ui.find({ type: "Button", key: "submit" }))?.props.variant).toBeUndefined();
+    expect(await ui.find({ type: "Text", text: /Nothing set/ })).toBeDefined();
     await expectNative(ui);
 
+    await ui.press({ key: `ev:${ID}` });
+    for (const key of [`apply:row:${ID}`, `dismiss:row:${ID}`, `skip:row:${ID}`])
+      expect(await ui.find({ type: "Button", key })).toBeDefined();
+    await expectNative(ui);
     await ui.press({ key: `apply:row:${ID}` });
     expect(await ui.find({ type: "Text", text: /On close: apply 1/ })).toBeDefined();
-    expect(await ui.find({ type: "Text", text: /Apply on close/ })).toBeDefined();
+    expect((await ui.find({ type: "Button", key: "submit" }))?.props.variant).toBe("primary");
+    expect(await ui.find({ type: "Markdown", text: /Apply/ })).toBeDefined();
     await ui.press({ key: `apply:row:${ID}` });
-    expect(await ui.find({ type: "Text", text: /carry out apply and dismiss/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /Nothing set/ })).toBeDefined();
     // A doc's header sets every row of the doc; setting a row does nothing until the pane closes.
     await ui.press({ key: "dismiss:grp:AGENTS.md" });
     expect(await ui.find({ type: "Text", text: /On close: dismiss 2/ })).toBeDefined();
     await ui.press({ key: "skip:grp:AGENTS.md" });
-    expect(await ui.find({ type: "Text", text: /carry out apply and dismiss/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /Nothing set/ })).toBeDefined();
     expect(world.fills).toHaveLength(0);
     await expectNative(ui);
     await ui.unmount();
@@ -386,12 +390,13 @@ for (const surface of ["desktop", "vscode"] as const) {
     await $.tool.call({ ...SUGGEST, claim: claim.slice(0, 270) + " END-OF-CLAIM", evidence });
     await $.command.run(COMMAND);
     const ui = await $.ui.mount({ ...PANE, props: { ...PANE.props, bodyColumns: 48 }, surface });
-    // Nothing is folded on a graphical surface: the whole claim shows, the evidence waits.
-    expect(await ui.find({ type: "Markdown", text: /END-OF-CLAIM/ })).toBeDefined();
+    // Collapsed, a row says the first sentence; opened, it has the whole claim and its evidence.
+    expect(await ui.find({ text: /END-OF-CLAIM/ })).toBeUndefined();
     expect(await ui.find({ text: /END-OF-EVIDENCE/ })).toBeUndefined();
-    const toggle = String((await ui.find({ type: "Button", text: /evidence/ }))?.key);
+    const toggle = String((await ui.find({ type: "Button", text: /Open/ }))?.key);
     expect(toggle).toMatch(/^ev:/);
     await ui.press({ key: toggle });
+    expect(await ui.find({ type: "Markdown", text: /END-OF-CLAIM/ })).toBeDefined();
     expect(await ui.find({ type: "Markdown", text: /END-OF-EVIDENCE/ })).toBeDefined();
     await expectNative(ui);
     await ui.press({ key: toggle });
