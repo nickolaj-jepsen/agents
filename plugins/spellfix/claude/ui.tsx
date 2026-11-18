@@ -161,6 +161,11 @@ export const tokens = {
     /** A long list shows this many rows, then an `N more` row. */
     maxItems: 12,
     /**
+     * The widest a choice's label may be, in cells, before a graphical surface sets it as text
+     * under a Button of its `short` word: a Button never wraps and runs off a 420-pixel pane.
+     */
+    maxLabel: 34,
+    /**
      * Icon colours. The host's theme cannot be read from a mod and an image cannot follow it, so
      * the neutral is one mid-grey that reads on light and dark; colour marks a state only.
      */
@@ -585,14 +590,28 @@ export function paneTitle(
   k: Kit,
   title: string,
   count?: number | string,
-  options: BySurface<PaneTitleGui> = {},
+  options: BySurface<PaneTitleGui> & {
+    /**
+     * The terminal draws a bold heading with the count dim beside it, in place of the title line
+     * of rules: for a pane that is a short menu.
+     */
+    isHeading?: boolean;
+  } = {},
 ): JSX.Element | null {
   const { Box, Text } = k;
+  if (!k.isNative && options.isHeading)
+    return (
+      <Box flexDirection="row">
+        <Text bold>{title}</Text>
+        {count === undefined ? null : <Text dimColor>{`  ${count}`}</Text>}
+      </Box>
+    );
   if (k.isNative) {
     const own = surfaceOf(k, options);
     const said = own.count ?? (count === undefined ? "" : String(count));
+    // No title, or the host's own, leaves the line to the count and the actions.
     const lead =
-      title === k.title ? null : (
+      !title || title === k.title ? null : (
         <Text weight="semibold">{`${title}${said || own.summary ? "  " : ""}`}</Text>
       );
     // The pane's toolbar: what it holds, or what closing it will do, and its actions at the far
@@ -608,7 +627,12 @@ export function paneTitle(
         {said ? <Text dimColor>{said}</Text> : null}
       </Text>
     ) : null;
-    if (!own.actions?.length) return text;
+    if (!own.actions?.length)
+      return text ? (
+        <Box key="toolbar" paddingX={tokens.gui.across.inset}>
+          {text}
+        </Box>
+      ) : null;
     return (
       <Box
         key="toolbar"
@@ -768,13 +792,19 @@ export function notice(
 /**
  * What a list says when there is nothing in it, wrapped and dim.
  * @param text Say what is missing and, if it helps, what makes rows appear.
+ * @param options `gui.text` is the text as a graphical surface says it: a fuller sentence, or one
+ *   without the terminal's `…`.
  */
-export function emptyState(k: Kit, text: string): JSX.Element {
+export function emptyState(
+  k: Kit,
+  text: string,
+  options: { gui?: { text?: string } } = {},
+): JSX.Element {
   const { Box, Text } = k;
   if (k.isNative)
     return (
       <Box paddingX={tokens.gui.across.inset}>
-        <Text dimColor>{text}</Text>
+        <Text dimColor>{options.gui?.text ?? text}</Text>
       </Box>
     );
   return <Text dimColor>{clamp(text, k.columns).join("\n")}</Text>;
@@ -969,6 +999,11 @@ export type ChoiceOption = {
   isQuiet?: boolean;
   /** The terminal's key for it. A graphical surface draws a chip for each hotkey, so it drops them. */
   hotkey?: string;
+  /**
+   * A word or two for the Button when `label` is too long for one: a Button never wraps, so a
+   * graphical surface sets such a label as text under a Button that carries this instead.
+   */
+  short?: string;
   /** The label is a word of the person's own (a suggestion), so a graphical surface keeps its case. */
   isLiteral?: boolean;
   onPress: () => unknown;
@@ -1032,23 +1067,29 @@ export function choice(
         rowGap={isRow ? tokens.gui.space.xs : tokens.gui.space.sm}
       >
         {options.map((o) => {
-          // A Button does not wrap its label, so a label is a word or two; the detail is prose.
+          // A Button does not wrap its label, so a label is a word or two; the detail is prose. A
+          // longer label moves under a Button that carries its `short` word.
+          const isLong =
+            !isRow && o.short !== undefined && cellWidth(o.label) > tokens.gui.maxLabel;
           const button = (
             <Button
               key={o.key}
               variant={o.isOn && !o.isQuiet ? "primary" : "secondary"}
               // The surface draws every variant alike, so only the chosen one is not dim.
               dimColor={!(o.isOn && !o.isQuiet) || undefined}
-              label={o.isLiteral ? o.label : capital(o.label)}
+              label={
+                isLong ? capital(o.short ?? o.label) : o.isLiteral ? o.label : capital(o.label)
+              }
               onPress={() => o.onPress()}
             />
           );
-          return isRow || !o.detail ? (
+          return isRow || (!o.detail && !isLong) ? (
             button
           ) : (
             <Box key={`${o.key}:detail`} flexDirection="column">
               {button}
-              <Text dimColor>{o.detail}</Text>
+              {isLong ? <Text>{o.label}</Text> : null}
+              {o.detail ? <Text dimColor>{o.detail}</Text> : null}
             </Box>
           );
         })}
@@ -1336,29 +1377,63 @@ export function statusBand(
     hint: string;
     status?: "warning" | "error" | "success";
     onPress: () => unknown;
-    /** `text` as a graphical surface says it, in words rather than the terminal's shorthand. */
-    gui?: { text?: string };
+    /**
+     * `text` as a graphical surface says it, in words rather than the terminal's shorthand.
+     * `icon` and `tone` replace the status's own mark; `actions` are quiet buttons after the way
+     * in: the line is then the text, with the buttons under it.
+     */
+    gui?: {
+      text?: string;
+      icon?: IconName;
+      tone?: IconTone;
+      actions?: readonly { key: string; label: string; onPress: () => unknown }[];
+    };
   },
 ): JSX.Element {
   const { Box, Button, Text } = k;
   const status = o.status ?? "warning";
   // A line of the band, not a call to arms: the way in is a quiet button, so the prompt's own
   // send stays the one filled control in view.
-  if (k.isNative)
-    return (
-      <Box
-        flexDirection="row"
-        flexWrap="nowrap"
-        columnGap={tokens.gui.across.sm}
-        alignItems="center"
-      >
-        {icon(k, status, { tone: status })}
-        <Box flexShrink={1}>
-          <Text>{o.gui?.text ?? o.text}</Text>
-        </Box>
-        <Button key={o.key} dimColor label={capital(o.hint)} onPress={() => o.onPress()} />
+  if (k.isNative) {
+    const extra = o.gui?.actions ?? [];
+    const mark = icon(k, o.gui?.icon ?? status, { tone: o.gui?.tone ?? status });
+    const text = (
+      <Box flexShrink={1}>
+        <Text>{o.gui?.text ?? o.text}</Text>
       </Box>
     );
+    const first = (
+      <Button key={o.key} dimColor label={capital(o.hint)} onPress={() => o.onPress()} />
+    );
+    if (extra.length === 0)
+      return (
+        <Box
+          flexDirection="row"
+          flexWrap="nowrap"
+          columnGap={tokens.gui.across.sm}
+          alignItems="center"
+        >
+          {mark}
+          {text}
+          {first}
+        </Box>
+      );
+    // With more than one button the line is the text, and the buttons wrap under it.
+    return (
+      <Box flexDirection="column" rowGap={tokens.gui.space.xs}>
+        <Box flexDirection="row" flexWrap="nowrap" columnGap={tokens.gui.across.sm}>
+          {mark}
+          {text}
+        </Box>
+        <Box flexDirection="row" flexWrap="wrap" columnGap={tokens.gui.across.xs}>
+          {first}
+          {extra.map((a) => (
+            <Button key={a.key} dimColor label={capital(a.label)} onPress={() => a.onPress()} />
+          ))}
+        </Box>
+      </Box>
+    );
+  }
   return (
     <Button key={o.key} plain onPress={() => o.onPress()}>
       <Text {...roleProps(status)}>{`${ICON_GLYPH[status]} ${o.text}`}</Text>
@@ -1450,8 +1525,26 @@ export type ListItem = {
    * `primary` on a graphical surface. Left out, the row is no choice.
    */
   isMarked?: boolean;
-  /** Dims the row, as for something that cannot be acted on. */
+  /**
+   * Dims the row, as for something that cannot be acted on. A graphical surface draws it with no
+   * button, so it cannot be pressed; the terminal keeps it pressable.
+   */
   isDim?: boolean;
+  /**
+   * A short dim word after the title: a host, a state, why the row can't run. A graphical surface
+   * sets it beside the title with a gap (or at the row's end with `gui.isDetailAtEnd`); the
+   * terminal sets it after the padded title with `tui.isInline`, and otherwise as the first
+   * metadata field.
+   */
+  detail?: string;
+  /** A key that presses the row. Terminal only: a graphical surface draws no key on a row. */
+  hotkey?: string;
+  /** An icon before the title on a graphical surface; the terminal draws none. */
+  icon?: IconName;
+  gui?: {
+    /** Detail at the far end, before the button, as the age of a note is. */
+    isDetailAtEnd?: boolean;
+  };
   /** The word on a graphical surface's button for the row: `Open`, or `Choose` on a choice. */
   action?: string;
   /**
@@ -1478,10 +1571,22 @@ export type ListOptions = {
     isColumns?: boolean;
     /** Bounds for each title's `clamp`. */
     title?: ClampOptions;
+    /**
+     * A menu: each row is one Button, the title padded to the widest in the list and its detail
+     * dim after it on the same line; the title is not cut.
+     * @default false
+     */
+    isInline?: boolean;
+    /** The width `isInline` pads titles to; `list` sets it to the widest title of its rows. */
+    labelWidth?: number;
   };
   gui?: {
     /** Rows shown before the `N more` row. @default `tokens.gui.maxItems` */
     maxItems?: number;
+    /** Show every row, as after the person asked for the rest. */
+    isAll?: boolean;
+    /** Makes a group's `N more` row a Button that asks for the rest. */
+    onMore?: () => unknown;
   };
   desktop?: ListOptions["gui"];
   vscode?: ListOptions["gui"];
@@ -1491,31 +1596,108 @@ export type ListOptions = {
 /** Cells a mark takes with the space after it. */
 const MARK = 2;
 
+/** How much faster than its title a row's detail shrinks when the line is too long. */
+const DETAIL_SHRINK = 8;
+
 /**
- * One row of a list: a `Button` whose text is the mark, the clamped title and the metadata.
- * A focused row is drawn by the engine; this draws no pointer of its own. A graphical surface
- * draws a button as wide as the room, the title over its metadata line.
+ * A graphical row that is pressed, not opened: the title cut at the edge by the surface, its
+ * detail dim beside it, and one quiet button at the far edge, laid out as a folded card is. A
+ * Button cannot wrap or hold an icon and never shrinks, so it is not the row itself but a short
+ * word beside it. A dimmed row has no button.
  */
-export function listRow(k: Kit, item: ListItem, options: ListOptions = {}): JSX.Element {
+function listRowGui(k: Kit, item: ListItem): JSX.Element {
   const { Box, Button, Text } = k;
+  const { space, across } = tokens.gui;
   const meta = item.meta ?? [];
-  if (k.isNative) {
-    // A Button does not wrap its label, so a row's title is prose beside a short button.
-    const label =
-      item.action ?? (item.isMarked === undefined ? "Open" : item.isMarked ? "Chosen" : "Choose");
-    return (
-      <Box key={`${item.key}:row`} flexDirection="column" rowGap="xs">
-        <Text dimColor={item.isDim || undefined}>{item.title}</Text>
-        {meta.length > 0 ? <Text dimColor>{meta.map((c) => c.text).join("  ·  ")}</Text> : null}
+  const isEnd = item.gui?.isDetailAtEnd;
+  const label =
+    item.action ?? (item.isMarked === undefined ? "Open" : item.isMarked ? "Chosen" : "Choose");
+  return (
+    <Box
+      key={`${item.key}:row`}
+      flexDirection="row"
+      flexWrap="nowrap"
+      alignItems="center"
+      columnGap={across.md}
+      paddingX={across.inset}
+      paddingY={space.xs}
+      // A round border is the surface's only rounded corner; it is drawn in no colour.
+      borderStyle="round"
+      borderColor="#00000000"
+    >
+      {item.icon ? (
+        <Box key="icon" height={1} alignItems="center" flexShrink={0}>
+          {icon(k, item.icon)}
+        </Box>
+      ) : null}
+      <Box flexDirection="column" flexGrow={1} flexShrink={1} rowGap={space.xs}>
+        <Box flexDirection="row" flexWrap="nowrap" columnGap={across.md}>
+          <Box flexShrink={1}>
+            <Text wrap="truncate-end" dimColor={item.isDim || undefined}>
+              {item.title}
+            </Text>
+          </Box>
+          {item.detail && !isEnd ? (
+            // The title is what names the row: a long detail gives way first.
+            <Box flexShrink={DETAIL_SHRINK}>
+              <Text wrap="truncate-end" dimColor>
+                {item.detail}
+              </Text>
+            </Box>
+          ) : null}
+        </Box>
+        {meta.length > 0 ? (
+          <Text wrap="truncate-end" dimColor>
+            {meta.map((c) => c.text).join("  ·  ")}
+          </Text>
+        ) : null}
+      </Box>
+      {item.detail && isEnd ? (
+        // At the end it is short (an age) and keeps its room; the title gives way.
+        <Box flexShrink={0}>
+          <Text dimColor>{item.detail}</Text>
+        </Box>
+      ) : null}
+      {item.isDim ? null : (
         <Button
           key={item.key}
-          variant={item.isMarked ? "primary" : "secondary"}
+          variant={item.isMarked ? "primary" : undefined}
+          dimColor={!item.isMarked || undefined}
           label={label}
           onPress={() => item.onPress()}
         />
-      </Box>
+      )}
+    </Box>
+  );
+}
+
+/**
+ * One row of a list: a `Button` whose text is the mark, the clamped title and the metadata.
+ * A focused row is drawn by the engine; this draws no pointer of its own. A graphical surface
+ * draws a row of text with a short quiet button at its end (`listRowGui`).
+ */
+export function listRow(k: Kit, item: ListItem, options: ListOptions = {}): JSX.Element {
+  const { Button, Text } = k;
+  if (k.isNative) return listRowGui(k, item);
+  if (options.tui?.isInline) {
+    const pad = Math.max(0, (options.tui.labelWidth ?? 0) - cellWidth(item.title));
+    return (
+      <Button
+        key={item.key}
+        plain
+        hotkey={item.hotkey}
+        dimColor={item.isDim || undefined}
+        onPress={() => item.onPress()}
+      >
+        {`${item.title}${" ".repeat(pad)}`}
+        {item.detail ? <Text dimColor>{`  ${item.detail}`}</Text> : null}
+      </Button>
     );
   }
+  const meta = [
+    ...(item.detail ? [{ text: item.detail, width: cellWidth(item.detail) }] : []),
+    ...(item.meta ?? []),
+  ];
   const { isColumns = false } = options.tui ?? {};
   const width = k.columns;
   const gutter = tokens.gutter;
@@ -1559,19 +1741,25 @@ export function listRow(k: Kit, item: ListItem, options: ListOptions = {}): JSX.
     });
   }
   return (
-    <Button key={item.key} plain dimColor={item.isDim || undefined} onPress={() => item.onPress()}>
+    <Button
+      key={item.key}
+      plain
+      hotkey={item.hotkey}
+      dimColor={item.isDim || undefined}
+      onPress={() => item.onPress()}
+    >
       {children}
     </Button>
   );
 }
 
-/** Rows under one section header. */
+/** Rows under one section header; an empty title draws no header. */
 export type ListGroup = { title: string; rows: ListItem[] };
 
 /**
  * Groups of rows, each under a section header, one blank row between groups. A Claude pane
  * scrolls as a whole, so the terminal has no windowing and no `n more`; a graphical surface shows
- * `gui.maxItems` rows of a group and says how many more.
+ * `gui.maxItems` rows of a group and says how many more. A group with no title is rows alone.
  */
 export function list(k: Kit, groups: ListGroup[], options: ListOptions = {}): JSX.Element {
   const { Box } = k;
@@ -1581,14 +1769,31 @@ export function list(k: Kit, groups: ListGroup[], options: ListOptions = {}): JS
     vscode: options.vscode,
     mobile: options.mobile,
   });
+  const rowOptions: ListOptions = options.tui?.isInline
+    ? {
+        ...options,
+        tui: {
+          ...options.tui,
+          labelWidth: Math.max(0, ...groups.flatMap((g) => g.rows.map((r) => cellWidth(r.title)))),
+        },
+      }
+    : options;
   return (
-    <Box flexDirection="column" rowGap={k.isNative ? "md" : 1}>
+    <Box flexDirection="column" rowGap={k.isNative ? tokens.gui.space.md : 1}>
       {groups.map((group, g) => {
-        const { shown, more } = capped(k, group.rows, { gui: own });
+        const { shown, more } = capped(k, group.rows, {
+          gui: own,
+          isAll: own.isAll,
+          onMore: own.onMore,
+        });
         return (
-          <Box key={`group${g}`} flexDirection="column" rowGap={k.isNative ? "sm" : undefined}>
-            {section(k, group.title)}
-            {shown.map((row) => listRow(k, row, options))}
+          <Box
+            key={`group${g}`}
+            flexDirection="column"
+            rowGap={k.isNative ? tokens.gui.space.xs : undefined}
+          >
+            {group.title ? section(k, group.title) : null}
+            {shown.map((row) => listRow(k, row, rowOptions))}
             {more}
           </Box>
         );
@@ -1605,7 +1810,12 @@ export function list(k: Kit, groups: ListGroup[], options: ListOptions = {}): JS
 export function stack(
   k: Kit,
   children: readonly (JSX.Element | null)[],
-  options: { isTight?: boolean; gui?: { gap?: GuiSpace | "none" } } = {},
+  options: {
+    isTight?: boolean;
+    /** `tui.gap` is the terminal's rows between blocks, none for a short menu. @default 1 */
+    tui?: { gap?: 0 | 1 };
+    gui?: { gap?: GuiSpace | "none" };
+  } = {},
 ): JSX.Element {
   const { Box } = k;
   const gap = options.gui?.gap ?? "md";
@@ -1619,7 +1829,7 @@ export function stack(
             : tokens.gui.space[gap]
           : options.isTight && k.isTight
             ? 0
-            : 1
+            : (options.tui?.gap ?? 1)
       }
     >
       {children}
@@ -1783,6 +1993,17 @@ export function buttonRow(k: Kit, keys: KeyChip[]): JSX.Element {
   );
 }
 
+// ---- surfaces
+
+/**
+ * Draws whichever of two trees belongs to the kit's surface: a screen whose terminal drawing is
+ * the mod's own, to the cell, and whose graphical drawing is built from the kit's patterns. A mod
+ * uses it to keep its surface-reading out of its own code; only the chosen side runs.
+ */
+export function forSurface<T>(k: Kit, drawings: { tui: () => T; gui: () => T }): T {
+  return k.isNative ? drawings.gui() : drawings.tui();
+}
+
 // ---- images
 
 export type ImageSize = { width: number; height: number };
@@ -1876,6 +2097,162 @@ export function imageGallery(
           </Box>
         );
       })}
+    </Box>
+  );
+}
+
+// ---- by surface, labelled fields and folded rows
+
+/**
+ * Two drawings of one screen, for a screen the kit has no function for on the terminal: `tui` is
+ * the terminal's, `gui` every graphical surface's, and `desktop`, `vscode` or `mobile` override
+ * `gui` on that one. Only the one for this surface is called.
+ */
+export function pick<T>(
+  k: Kit,
+  o: {
+    tui: () => T;
+    gui: () => T;
+    desktop?: () => T;
+    vscode?: () => T;
+    mobile?: () => T;
+  },
+): T {
+  if (!k.isNative) return o.tui();
+  const own = (o as Record<string, (() => T) | undefined>)[k.surface];
+  return (own ?? o.gui)();
+}
+
+/** One field of a form: its name, and the control that holds or sets its value. */
+export type FieldItem = { key: string; label: string; control: JSX.Element };
+
+function fieldBox(k: Kit, f: FieldItem, isInset: boolean): JSX.Element {
+  const { Box, Text } = k;
+  if (k.isNative)
+    return (
+      <Box
+        key={`field:${f.key}`}
+        flexDirection="column"
+        rowGap={tokens.gui.space.xs}
+        paddingX={isInset ? tokens.gui.across.inset : undefined}
+      >
+        {subhead(k, f.label)}
+        {f.control}
+      </Box>
+    );
+  return (
+    <Box key={`field:${f.key}`} flexDirection="column">
+      <Text dimColor>{f.label}</Text>
+      {f.control}
+    </Box>
+  );
+}
+
+/**
+ * A control under its name: a graphical surface sets the name as a dim, semibold sub-heading at
+ * the inset, the control under it; the terminal a dim line over the control.
+ */
+export function labelled(k: Kit, f: FieldItem): JSX.Element {
+  return fieldBox(k, f, true);
+}
+
+/** Several short fields side by side, wrapping onto the next line when they do not fit. */
+export function labelledRow(k: Kit, items: readonly FieldItem[]): JSX.Element {
+  const { Box } = k;
+  return (
+    <Box
+      flexDirection="row"
+      flexWrap="wrap"
+      columnGap={k.isNative ? tokens.gui.across.md : tokens.gutter}
+      rowGap={k.isNative ? tokens.gui.space.sm : undefined}
+      paddingX={k.isNative ? tokens.gui.across.inset : undefined}
+    >
+      {items.map((f) => fieldBox(k, f, false))}
+    </Box>
+  );
+}
+
+export type FoldedRowOptions = {
+  key: string;
+  /** The row's line; whole, as prose, when opened. */
+  text: string;
+  /** The mark before it. */
+  icon: { name: IconName; tone?: IconTone; alt?: string };
+  isOpen: boolean;
+  /** The address of the Open / Close button. */
+  toggleKey: string;
+  /** Opens or folds it; a graphical surface opens one row alone. */
+  onToggle: () => unknown;
+  /** What an opened row shows under its text, set in from the icon. */
+  body?: (k: Kit) => JSX.Element | null;
+  /** The row's actions, once opened: quiet buttons in a row. */
+  actions?: readonly ChoiceOption[];
+};
+
+/**
+ * A row that opens in place, for what is not a reviewed suggestion (`card`'s kinds): a graphical
+ * surface draws the folded row, one line with a quiet `Open`, and the opened row in its well with
+ * the body set in under the text; the terminal a plain button and the body under it.
+ */
+export function foldedRow(k: Kit, o: FoldedRowOptions): JSX.Element {
+  const { Box, Button, Text } = k;
+  const { space, across } = tokens.gui;
+  if (!k.isNative)
+    return (
+      <Box key={o.key} flexDirection="column">
+        <Button key={o.toggleKey} plain onPress={() => o.onToggle()}>
+          <Text weight="semibold">{o.text}</Text>
+        </Button>
+        {o.isOpen ? (
+          <Box flexDirection="column" paddingLeft={INDENT}>
+            {o.body?.(withColumns(k, Math.max(1, k.columns - INDENT)))}
+            {o.actions ? choice(k, o.actions) : null}
+          </Box>
+        ) : null}
+      </Box>
+    );
+  return (
+    <Box
+      key={o.key}
+      flexDirection="row"
+      flexWrap="nowrap"
+      columnGap={across.sm}
+      paddingX={across.inset}
+      paddingY={o.isOpen ? space.sm : space.xs}
+      backgroundColor={o.isOpen ? tokens.gui.fill : undefined}
+      borderStyle="round"
+      borderColor="#00000000"
+    >
+      <Box flexDirection="column" alignItems="center" flexShrink={0} rowGap={space.xs}>
+        <Box height={1} alignItems="center">
+          {icon(k, o.icon.name, { tone: o.icon.tone, alt: o.icon.alt })}
+        </Box>
+        {o.isOpen ? <Box flexGrow={1}>{sideRule(k, "thread")}</Box> : null}
+      </Box>
+      <Box flexDirection="column" flexGrow={1} flexShrink={1} rowGap={space.sm}>
+        <Box
+          flexDirection="row"
+          flexWrap="nowrap"
+          alignItems={o.isOpen ? "flex-start" : "center"}
+          columnGap={across.md}
+        >
+          <Box flexGrow={1} flexShrink={1}>
+            {o.isOpen ? (
+              prose(k, o.text)
+            ) : (
+              <Text wrap="truncate-end">{inlineCode(k, linesOf(o.text).join(" "))}</Text>
+            )}
+          </Box>
+          <Button
+            key={o.toggleKey}
+            dimColor
+            label={o.isOpen ? "Close" : "Open"}
+            onPress={() => o.onToggle()}
+          />
+        </Box>
+        {o.isOpen ? (o.body?.(k) ?? null) : null}
+        {o.isOpen && o.actions ? choice(k, o.actions, { gui: { layout: "row" } }) : null}
+      </Box>
     </Box>
   );
 }
