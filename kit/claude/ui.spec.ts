@@ -2,7 +2,17 @@ import { readFileSync } from "node:fs";
 import { relative } from "node:path";
 import { describe, expect, it } from "vitest";
 import { pairs, root } from "./copies.ts";
-import { alignRight, cellWidth, clamp, fit, noteText, rowsOf, widthCap } from "./ui.tsx";
+import {
+  alignRight,
+  cellWidth,
+  clamp,
+  fileUrl,
+  fit,
+  fitImage,
+  noteText,
+  rowsOf,
+  widthCap,
+} from "./ui.tsx";
 
 describe("the copies", () => {
   it("are verbatim: run `just kit-sync` after editing kit/claude/ui.tsx or kit/catalog/samples.ts", () => {
@@ -98,6 +108,38 @@ describe("text helpers", () => {
   it("noteText puts │ on each line but the last, ╰▸ on it", () => {
     expect(noteText("one\ntwo\nthree", "  ")).toBe("  │  one\n  │  two\n  ╰▸ three");
     expect(noteText("one")).toBe("╰▸ one");
+  });
+});
+
+describe("fitImage", () => {
+  it("fills the available width while preserving the image's aspect ratio", () => {
+    expect(fitImage({ width: 1600, height: 800 }, { columns: 80, rows: 30 })).toEqual({
+      columns: 80,
+      rows: 20,
+    });
+  });
+
+  it("fits portrait images to the row limit and narrows their columns", () => {
+    expect(fitImage({ width: 600, height: 1200 }, { columns: 80, rows: 15 })).toEqual({
+      columns: 15,
+      rows: 15,
+    });
+  });
+
+  it("clamps both axes, handles unknown dimensions and never returns zero", () => {
+    expect(fitImage(null, { columns: 400, rows: 400 })).toEqual({ columns: 255, rows: 80 });
+    expect(fitImage({ width: 0, height: -1 }, { columns: 0, rows: 0 })).toEqual({
+      columns: 1,
+      rows: 1,
+    });
+    expect(fitImage({ width: 100, height: 50 }, { columns: NaN, rows: NaN })).toEqual({
+      columns: 1,
+      rows: 1,
+    });
+  });
+
+  it("escapes file URL path segments but keeps their slashes", () => {
+    expect(fileUrl("/tmp/a picture#1.png")).toBe("file:///tmp/a%20picture%231.png");
   });
 });
 

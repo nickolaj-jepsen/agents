@@ -33,6 +33,10 @@
     {
       "name": "docfix",
       "source": "./plugins/docfix"
+    },
+    {
+      "name": "image-preview",
+      "source": "./plugins/image-preview"
     }
   ]
 }

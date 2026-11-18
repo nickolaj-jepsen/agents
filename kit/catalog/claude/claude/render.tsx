@@ -10,6 +10,7 @@ import {
   cellWidth,
   emptyState,
   entries,
+  imageGallery,
   list,
   note,
   notice,
@@ -32,6 +33,8 @@ import {
   LOG,
   LONG,
   LONG_ENTRY,
+  LANDSCAPE_PNG,
+  PORTRAIT_PNG,
   SENTENCE,
   WIDE as WIDE_ROWS,
   type Row,
@@ -161,6 +164,54 @@ const bandOf =
   };
 
 export const renders: Record<string, Render> = {
+  "image/landscape": (k, width) =>
+    imageGallery(
+      k,
+      [
+        {
+          key: "landscape",
+          source: { png: LANDSCAPE_PNG },
+          size: { width: 64, height: 36 },
+          alt: "[image] landscape.png",
+          path: "/tmp/a picture #1.png",
+        },
+      ],
+      { columns: width, rows: 15 },
+    ),
+  "image/gallery": (k, width) =>
+    imageGallery(
+      k,
+      [
+        {
+          key: "landscape",
+          source: { png: LANDSCAPE_PNG },
+          size: { width: 64, height: 36 },
+          alt: "[image] landscape.png",
+          path: "/tmp/landscape.png",
+        },
+        {
+          key: "portrait",
+          source: { png: PORTRAIT_PNG },
+          size: { width: 24, height: 64 },
+          alt: "[image] portrait.png",
+          path: "/tmp/portrait.png",
+        },
+        {
+          key: "unknown",
+          source: { png: LANDSCAPE_PNG },
+          size: null,
+          alt: "[image] 日本語 mixed ＡＢＣ.png",
+          path: `/tmp/${"a-very-long-directory-name/".repeat(4)}a picture #1 日本語.png`,
+        },
+      ],
+      {
+        columns: width,
+        rows: 12,
+        caption:
+          "Generated images with a very long caption that wraps instead of pushing the gallery beyond the terminal width.",
+      },
+    ),
+
   "clamp/unbounded": clampDemo(SENTENCE, {}),
   "clamp/truncate": clampDemo(LONG, { min: 1, max: 1 }),
   "clamp/max-lines": clampDemo(LONG, { max: 2 }),

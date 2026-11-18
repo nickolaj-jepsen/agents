@@ -113,6 +113,12 @@ export const WIDE: Row[] = [
   ),
 ];
 
+/** Small valid PNGs for the Claude image stories: a landscape and a portrait. */
+export const LANDSCAPE_PNG =
+  "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAkCAYAAAA5DDySAAAAdklEQVR42u3ZsRGAIAwFUIZxAAtHsLO2ZyVXYyHcAAu5Q8wrfpm78JrkQtqOXFtZ1r2Z2esTAAAAAAAAEBjg7w98qgfQo4FyncMCAAAAAADeAPQYMyMBPrEJAgAAAAAAAJMC2AQBAHARAgAAQFwAP0MAAIQGuAEhKJcojry0RgAAAABJRU5ErkJggg==";
+export const PORTRAIT_PNG =
+  "iVBORw0KGgoAAAANSUhEUgAAABgAAABACAYAAAAAqrdiAAAAaElEQVR42u3Yuw2AMAwFwAzDABSMkI4laJmJIRgxbODwEUoiXfFK+xrbUpKWdStRpjmHqdUnAGAA4GuDWj0AMALQdJP387gdAOBHIJrxJ8CrTQYAOgGcCgDAqQAAmr8PAAD/RQBAL8AFPqSooo9jlH0AAAAASUVORK5CYII=";
+
 /** Dated entries for the entries stories. */
 export const LOG: { date: string; text: string }[] = [
   {

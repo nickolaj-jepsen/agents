@@ -1,0 +1,46 @@
+# image-preview/claude/read 70x24 @0,0 (70x17)
+
+ ▐▛███▛█   Claude Code <ver>
+▝▜██████▀  Sonnet 5.5 · API Usage Billing
+ ▝▝   ▝▝   ~/…/agents<tmp>
+
+
+❯ show the preview
+
+  Read 1 file
+
+  [image] picture#1-日本語.png
+
+  /home/nickolaj/.local/state/agents<tmp>
+  <run>/cwd/a-very-long-directory-name/with-several-levels/picture#1-
+  日本語.png
+
+● preview ready
+--- styles
+-
+1x2 2x6 .x3 3x11 . 4x8
+1x2 2x5 1x2 .x2 4x30
+1x9 .x2 4x53
+-
+-
+5x2 6x16 7x52
+-
+.x2 4x5 8 4x6
+-
+.x2 4x28
+-
+.x2 4x68
+.x2 4x67
+.x2 4x10
+-
+9
+--- legend
+1 fg=#d77757
+2 fg=#d77757 bg=#000000
+3 bold
+4 fg=#999999
+5 fg=#999999 bg=#373737
+6 fg=#ffffff bg=#373737
+7 bg=#373737
+8 fg=#999999 bold
+9 fg=#ffffff

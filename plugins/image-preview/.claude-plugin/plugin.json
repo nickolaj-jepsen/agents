@@ -1,0 +1,8 @@
+{
+  "name": "image-preview",
+  "version": "0.1.0",
+  "description": "Render PNG images from Read and SendUserFile inline in the terminal transcript",
+  "author": {
+    "name": "Nickolaj Jepsen"
+  }
+}

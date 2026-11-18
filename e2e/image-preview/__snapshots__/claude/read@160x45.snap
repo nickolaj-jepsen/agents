@@ -1,0 +1,42 @@
+# image-preview/claude/read 160x45 @0,0 (160x15)
+
+ ▐▛███▛█   Claude Code <ver>
+▝▜██████▀  Sonnet 5.5 · API Usage Billing
+ ▝▝   ▝▝   ~/.local/state/agents<tmp>
+
+
+❯ show the preview
+
+  Read 1 file
+
+  [image] picture#1-日本語.png
+
+  <tmp>
+
+● preview ready
+--- styles
+-
+1x2 2x6 .x3 3x11 . 4x8
+1x2 2x5 1x2 .x2 4x30
+1x9 .x2 4x64
+-
+-
+5x2 6x16 7x142
+-
+.x2 4x5 8 4x6
+-
+.x2 4x28
+-
+.x2 4x145
+-
+9
+--- legend
+1 fg=#d77757
+2 fg=#d77757 bg=#000000
+3 bold
+4 fg=#999999
+5 fg=#999999 bg=#373737
+6 fg=#ffffff bg=#373737
+7 bg=#373737
+8 fg=#999999 bold
+9 fg=#ffffff

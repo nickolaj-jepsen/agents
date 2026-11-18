@@ -71,6 +71,20 @@ export const stories: Story[] = [
   }),
 
   pane(
+    "image",
+    "landscape",
+    "One inline PNG with a clickable local path",
+    "imageGallery(kit, [image], {columns: width})",
+  ),
+  pane(
+    "image",
+    "gallery",
+    "Landscape, portrait and unknown dimensions, a caption and an extreme escaped path",
+    "imageGallery(kit, images, {columns: width, rows: 12, caption})",
+    { extreme: true },
+  ),
+
+  pane(
     "detail",
     "block",
     "The selected claim in full, a meta line, then a section with dated entries",

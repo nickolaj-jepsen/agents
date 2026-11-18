@@ -104,6 +104,19 @@ Features:
 - Hints in the border: pi yes (left-aligned, the border running on); claude no (Box borders carry no text; the keys are a button row under the body (see buttons))
 - Hints drop lowest priority first, the way out stays: pi yes; claude no (the button row wraps and drops nothing)
 
+## Image gallery
+
+Draws PNG images at their aspect ratios, with optional file links and a caption.
+
+- pi: not possible: The pi kit has no terminal image component.
+- claude: exists: `fitImage`, `imageGallery`
+
+Features:
+
+- Fit landscape, portrait and unknown dimensions without distortion: pi no (The pi kit has no terminal image component.); claude yes (Terminal cells count as two pixels tall; both axes stay within 255 cells)
+- Inline PNG bytes or a local file read by the terminal: pi no (The pi kit has no terminal image component.); claude yes
+- A dim file link under each image, including long escaped paths: pi no (The pi kit has no terminal image component.); claude yes
+
 ## List
 
 A grouped, scrolling list with a cursor, marks and metadata columns.

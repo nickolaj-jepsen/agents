@@ -120,6 +120,10 @@ then builds `.#tui-test` from this flake.
 - The daemon's socket path must stay short, so it lives in `$XDG_RUNTIME_DIR/tt-e2e`.
 - tui-test has no paste call: `paste` wraps the text in bracketed-paste escapes.
   `type` sends a newline as a raw `\n`.
+- Claude's `Image` draws its `alt` under the Ghostty backend: its debug log reports
+  `kittyGraphics=no` for `libghostty`. Screenshots check the fallback and layout text; use
+  `claude plugin test` to check the image source and cell box, and a graphics-capable terminal
+  to inspect the pixels.
 - After a resize pi leaves old rows on screen outside its surface. The crop hides
   them, which is why every snapshot has a region.
 - A test session never inherits the parent agent's `CLAUDE_CODE_*` variables, or it would print

@@ -7,26 +7,32 @@
  * every mod that uses it carries a verbatim copy at `claude/ui.tsx`: edit this one and run
  * `just kit-sync`; `kit/claude/ui.spec.ts` fails while a copy differs.
  */
-import type { ElementTable, RenderNode } from "claude-code";
+import type { ElementTable, ImageSource, RenderNode } from "claude-code";
 
 /** The elements the kit draws with, from `$.ui.resolve(e)`. */
-export type Els = Pick<ElementTable<"terminal">, "Box" | "Text" | "Button">;
+export type Els = Pick<ElementTable<"terminal">, "Box" | "Text" | "Button" | "Link">;
 
-/** What every drawing function takes first. */
-export type Kit = Els & {
-  /** The desktop app and the others that draw real controls in a proportional font. */
-  isNative: boolean;
-};
+/** The terminal-only picture element. */
+export type ImageEls = Pick<ElementTable<"terminal">, "Image">;
+
+/** What every drawing function takes first. Image is absent on native surfaces. */
+export type Kit = Els &
+  Partial<ImageEls> & {
+    /** The desktop app and the others that draw real controls in a proportional font. */
+    isNative: boolean;
+  };
 
 /**
  * Binds the resolved elements to the surface they came from.
  * @param els What `$.ui.resolve(e)` answered.
  * @param surface `e.surface`; anything but `terminal` draws native controls.
  */
-export const kitOf = (els: Els, surface: string): Kit => ({
+export const kitOf = (els: Els & Partial<ImageEls>, surface: string): Kit => ({
   Box: els.Box,
   Text: els.Text,
   Button: els.Button,
+  Image: els.Image,
+  Link: els.Link,
   isNative: surface !== "terminal",
 });
 
@@ -763,6 +769,103 @@ export function buttonRow(k: Kit, keys: KeyChip[]): JSX.Element {
           onPress={() => press()}
         />
       ))}
+    </Box>
+  );
+}
+
+// ---- images
+
+export type ImageSize = { width: number; height: number };
+export type ImageBox = { columns: number; rows: number };
+
+export type FitImageOptions = {
+  /** Available terminal columns; the result never exceeds 255. */
+  columns: number;
+  /** Available terminal rows; the result never exceeds 255. @default 30 */
+  rows?: number;
+  /** Terminal cell height divided by its width. @default 2 */
+  cellRatio?: number;
+};
+
+/** Fits an image inside a terminal cell box without changing its aspect ratio. */
+export function fitImage(size: ImageSize | null, options: FitImageOptions): ImageBox {
+  const bound = (value: number, fallback: number) =>
+    Math.max(1, Math.min(255, Math.floor(Number.isFinite(value) ? value : fallback)));
+  const columns = bound(options.columns, 1);
+  const rows = bound(options.rows ?? 30, 30);
+  const ratio =
+    Number.isFinite(options.cellRatio) && (options.cellRatio ?? 0) > 0 ? options.cellRatio! : 2;
+  const image =
+    size &&
+    Number.isFinite(size.width) &&
+    Number.isFinite(size.height) &&
+    size.width > 0 &&
+    size.height > 0
+      ? size
+      : { width: 16, height: 10 };
+  const aspect = image.width / image.height;
+
+  let fittedColumns = columns;
+  let fittedRows = Math.max(1, Math.round(fittedColumns / aspect / ratio));
+  if (fittedRows > rows) {
+    fittedRows = rows;
+    fittedColumns = Math.max(1, Math.round(fittedRows * ratio * aspect));
+  }
+  return {
+    columns: Math.max(1, Math.min(columns, fittedColumns)),
+    rows: Math.max(1, Math.min(rows, fittedRows)),
+  };
+}
+
+export type ImageItem = {
+  /** A stable address among this gallery's images. */
+  key: string;
+  /** Inline PNG bytes, or a local PNG file for the terminal to read. */
+  source: ImageSource;
+  /** Pixel dimensions; null uses a 16:10 box until dimensions are known. */
+  size: ImageSize | null;
+  /** Fallback text where the terminal cannot draw images. */
+  alt: string;
+  /** An absolute local path, drawn as a dim link below the image. */
+  path?: string;
+};
+
+export type ImageGalleryOptions = FitImageOptions & {
+  /** Optional dim text above the gallery. */
+  caption?: string;
+};
+
+/** Encodes an absolute path as a file URL without escaping its slashes. */
+export const fileUrl = (path: string) =>
+  `file://${path.split("/").map(encodeURIComponent).join("/")}`;
+
+/** Draws images at their aspect ratios, each with an optional path link below it. */
+export function imageGallery(
+  k: Kit,
+  images: readonly ImageItem[],
+  options: ImageGalleryOptions,
+): JSX.Element {
+  const { Box, Text, Image, Link } = k;
+  return (
+    <Box flexDirection="column" rowGap={1}>
+      {options.caption ? <Text dimColor>{options.caption}</Text> : null}
+      {images.map((image) => {
+        const box = fitImage(image.size, options);
+        return (
+          <Box key={image.key} flexDirection="column" rowGap={1}>
+            {Image ? (
+              <Image source={image.source} columns={box.columns} rows={box.rows} alt={image.alt} />
+            ) : (
+              <Text dimColor>{image.alt}</Text>
+            )}
+            {image.path ? (
+              <Text dimColor wrap="wrap">
+                {Link ? <Link href={fileUrl(image.path)} label={image.path} /> : image.path}
+              </Text>
+            ) : null}
+          </Box>
+        );
+      })}
     </Box>
   );
 }
