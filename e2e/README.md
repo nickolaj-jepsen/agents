@@ -136,7 +136,9 @@ npm run e2e:vscode -- stop
 ```
 
 `resize <width> <height>` sets the window's size. Each verb prints the panel's text after it. One
-VS Code lives at a time, in its own state file, so a terminal `goto` can be parked beside it.
+VS Code lives at a time, in its own state file, so a terminal `goto` can be parked beside it. Set
+`E2E_VSCODE_SESSION=<name>` on every verb to keep a second window under that name, as two agents
+working at once must.
 
 Scenarios are `e2e/<plugin>/vscode.scenarios.ts`, a `vscodeScenarios({...})` from
 `lib/vscode-scenario.ts` (`harness: "vscode"`). The shape is the terminal's: `setup` is the same

@@ -17,7 +17,12 @@ const stateDir = join(
   process.env.XDG_STATE_HOME ?? join(homedir(), ".local", "state"),
   "agent-tools-e2e",
 );
-const currentFile = join(stateDir, "vscode-current.json");
+// E2E_VSCODE_SESSION names a session of its own, so several agents can each park a window at once.
+const sessionName = (process.env.E2E_VSCODE_SESSION ?? "").replace(/[^A-Za-z0-9_-]/g, "");
+const currentFile = join(
+  stateDir,
+  sessionName ? `vscode-current-${sessionName}.json` : "vscode-current.json",
+);
 
 type Current = { plugin: string; scenario: string; runDir: string; file: string };
 
