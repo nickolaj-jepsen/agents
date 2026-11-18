@@ -78,6 +78,11 @@ export function resolveVscode(set: VscodeSet, name: string, seen: string[] = [])
       turns: s.start?.turns ?? base?.start.turns,
       plugins: s.start?.plugins ?? base?.start.plugins,
       env: { ...base?.start.env, ...s.start?.env },
+      bin: base?.start.bin || s.start?.bin ? { ...base?.start.bin, ...s.start?.bin } : undefined,
+      hide:
+        base?.start.hide || s.start?.hide
+          ? [...(base?.start.hide ?? []), ...(s.start?.hide ?? [])]
+          : undefined,
     },
     size: s.size ?? base?.size,
     steps: [...(base?.steps ?? []), ...(s.steps ?? [])],

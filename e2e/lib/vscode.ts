@@ -13,11 +13,13 @@
 import { execFileSync, spawn } from "node:child_process";
 import { createServer } from "node:net";
 import {
+  chmodSync,
   mkdirSync,
   openSync,
   readFileSync,
   readdirSync,
   realpathSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
@@ -32,6 +34,10 @@ export type VscodeStart = {
   /** The mods (`plugins/<name>`) to load; every mod of the checkout when left out. */
   plugins?: string[];
   env?: Record<string, string>;
+  /** Programs the session finds first on its PATH, by name: the script text of each. */
+  bin?: Record<string, string>;
+  /** Commands the session must not find at all, as a machine without them. */
+  hide?: string[];
 };
 
 /** What `launchVscode` leaves in the run folder for the next process to find. */
@@ -50,6 +56,41 @@ const freePort = () =>
       server.close(() => resolve(port));
     });
   });
+
+/**
+ * A PATH for the session: `bin`'s scripts first, then a folder of links to every command of this
+ * process's PATH but `hide`'s and `bin`'s. A PATH cannot mask a command a later directory has, so
+ * a program a scenario wants missing is left out of the links.
+ */
+function sessionPath(runDir: string, bin: Record<string, string>, hide: string[]): string {
+  const stand = join(runDir, "bin");
+  const links = join(runDir, "path");
+  mkdirSync(stand, { recursive: true });
+  mkdirSync(links, { recursive: true });
+  for (const [name, script] of Object.entries(bin)) {
+    writeFileSync(join(stand, name), script);
+    chmodSync(join(stand, name), 0o755);
+  }
+  const skip = new Set([...hide, ...Object.keys(bin)]);
+  for (const dir of (process.env.PATH ?? "").split(":").filter(Boolean)) {
+    let names: string[];
+    try {
+      names = readdirSync(dir);
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      if (skip.has(name)) continue;
+      skip.add(name);
+      try {
+        symlinkSync(join(dir, name), join(links, name));
+      } catch {
+        /* not linkable */
+      }
+    }
+  }
+  return `${stand}:${links}`;
+}
 
 const quote = (s: string) => `'${s.replaceAll("'", `'\\''`)}'`;
 
@@ -86,6 +127,9 @@ export async function launchVscode(
   const env: Record<string, string> = {};
   for (const [k, v] of Object.entries(process.env))
     if (v !== undefined && !inherited(k)) env[k] = v;
+  // VS Code itself starts by the real `code`, found before the session's PATH can shadow it.
+  const codeBin = execFileSync("which", ["code"], { encoding: "utf8" }).trim();
+  if (start.bin || start.hide) env.PATH = sessionPath(runDir, start.bin ?? {}, start.hide ?? []);
   Object.assign(env, config, {
     ANTHROPIC_API_KEY: STUB_KEY,
     ANTHROPIC_BASE_URL: `http://127.0.0.1:${stubPort}`,
@@ -118,7 +162,7 @@ export async function launchVscode(
   // A reused profile restores the old Claude tab and the new one hangs: always a fresh one.
   // Only the Claude extension runs: another one's toast (direnv's) lands on the panel.
   const extensionsDir = join(process.env.HOME ?? "", ".vscode", "extensions");
-  const others = execFileSync("code", ["--list-extensions", "--extensions-dir", extensionsDir], {
+  const others = execFileSync(codeBin, ["--list-extensions", "--extensions-dir", extensionsDir], {
     encoding: "utf8",
     env,
   })
@@ -126,7 +170,7 @@ export async function launchVscode(
     .map((e) => e.trim())
     .filter((e) => e && e !== "anthropic.claude-code");
   const code = [
-    "code --ozone-platform=wayland --disable-gpu --password-store=basic",
+    `${quote(codeBin)} --ozone-platform=wayland --disable-gpu --password-store=basic`,
     `--user-data-dir ${quote(join(runDir, "ud"))}`,
     // The person's installed extensions, read only; the profile is the run's own.
     '--extensions-dir "$HOME/.vscode/extensions"',
