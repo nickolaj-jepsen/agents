@@ -42,7 +42,7 @@ import {
 } from "./samples";
 
 export type Env = { columns: number; rows: number };
-type Render = (k: Kit, width: number, env: Env) => JSX.Element;
+type Render = (k: Kit, width: number, env: Env) => JSX.Element | null;
 
 const none = () => undefined;
 

@@ -79,10 +79,12 @@ export const register: Register = (on) => {
     const els = $.ui.resolve(e);
     const make = renders[storyId(s)];
     if (!make) return next(e);
-    return make(kitOf(els, e), e.props.bodyColumns, {
-      columns: e.props.bodyColumns,
-      rows: e.props.maxRows,
-    });
+    return (
+      make(kitOf(els, e), e.props.bodyColumns, {
+        columns: e.props.bodyColumns,
+        rows: e.props.maxRows,
+      }) ?? next(e)
+    );
   });
 
   // The stage is the band's alone.
