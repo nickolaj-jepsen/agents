@@ -9,6 +9,7 @@
     "typecheck": "tsc -b",
     "e2e": "node e2e/run.ts",
     "e2e:cli": "node e2e/cli.ts",
+    "e2e:vscode": "node e2e/vscode.ts",
     "site-shots": "node e2e/site.ts",
     "catalog": "node kit/catalog/build.ts",
     "readme": "node scripts/readme.ts",

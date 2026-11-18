@@ -94,7 +94,7 @@ function devWrapper(bin: "claude-dev" | "pi-dev", runDir: string): string | unde
 }
 
 /** The plugins of this checkout with a Claude half: `only`, or all. */
-function checkoutMods(only?: string[]): string[] {
+export function checkoutMods(only?: string[]): string[] {
   const root = join(checkoutRoot, "plugins");
   return (only ?? readdirSync(root).sort())
     .map((name) => join(root, name))
@@ -112,13 +112,16 @@ const KEYBINDINGS = {
   ],
 };
 
-const STUB_KEY = "sk-ant-api03-stub-key-for-the-e2e-model-stub-0000000000000000";
+export const STUB_KEY = "sk-ant-api03-stub-key-for-the-e2e-model-stub-0000000000000000";
 
 /**
  * A config folder for one session and the environment that points Claude at it. The one prompt that
  * stays, a folder's trust, is the driver's, as in any session.
  */
-function hermeticClaude(run: Run): Record<string, string> {
+export function hermeticClaude(
+  run: Run,
+  extra: { config?: Record<string, unknown>; settings?: Record<string, unknown> } = {},
+): Record<string, string> {
   const dir = join(run.runDir, "claude-config");
   mkdirSync(dir, { recursive: true });
   writeFileSync(
@@ -131,11 +134,14 @@ function hermeticClaude(run: Run): Record<string, string> {
       hasResetAutoModeOptInForDefaultOffer: true,
       effortCalloutV2Dismissed: true,
       customApiKeyResponses: { approved: [STUB_KEY.slice(-20)], rejected: [] },
+      ...extra.config,
     }),
   );
   writeFileSync(
     join(dir, "settings.json"),
-    JSON.stringify({ tui: "fullscreen", model: "sonnet", skipAutoPermissionPrompt: true }),
+    JSON.stringify(
+      extra.settings ?? { tui: "fullscreen", model: "sonnet", skipAutoPermissionPrompt: true },
+    ),
   );
   writeFileSync(join(dir, "keybindings.json"), JSON.stringify(KEYBINDINGS));
   return { CLAUDE_CONFIG_DIR: dir, ANTHROPIC_API_KEY: STUB_KEY };

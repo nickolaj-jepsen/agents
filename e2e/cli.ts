@@ -47,7 +47,8 @@ const USAGE = `usage: node e2e/cli.ts <verb>
   resize <cols> <rows>
   shot [file]                              PNG of the screen; prints the path
   sweep                                    PNG at 70x24, 112x32, 160x45 and 240x60; prints the paths
-  stop                                     end the session and remove its folder`;
+  stop                                     end the session and remove its folder
+  vscode <verb>                            the same in a headless VS Code (\`vscode\` alone lists them)`;
 
 const readCurrent = (): Current | undefined =>
   existsSync(currentFile) ? (JSON.parse(readFileSync(currentFile, "utf8")) as Current) : undefined;
@@ -89,6 +90,12 @@ const flag = (args: string[], name: string) => {
 async function main() {
   const [verb, ...args] = process.argv.slice(2);
   switch (verb) {
+    case "vscode": {
+      // Its own state file and verbs, so a terminal session and a VS Code one coexist.
+      const { main: vscode } = await import("./vscode.ts");
+      await vscode(args);
+      process.exit(0);
+    }
     case "ls": {
       for (const f of scenarioFiles(args[0])) {
         const set = await loadSet(f.file);

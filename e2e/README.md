@@ -112,6 +112,77 @@ npm run e2e:cli -- snap                   # the scenario's snapshot, as it is no
 Each verb prints the screen after it. The CLI finds `tui-test` through `TUI_TEST_BIN`, then `PATH`,
 then builds `.#tui-test` from this flake.
 
+## VS Code
+
+A mod can also be seen in the Claude Code extension for VS Code, which draws the same mod in a
+webview. `e2e/vscode.ts` parks a real, headless VS Code on a scenario's screen so you can read,
+click and photograph it. It is local only, for a person or an agent that is developing a mod: no
+test and no check runs it, and it has no snapshots.
+
+It needs `code` on PATH with the `anthropic.claude-code` extension installed, and nix (it runs
+`cage`, a Wayland compositor with a headless output, from nixpkgs). Nothing else of the machine
+is used, but the extensions folder, read only.
+
+```bash
+npm run e2e:vscode -- ls docfix            # or: node e2e/cli.ts vscode ls docfix
+npm run e2e:vscode -- goto docfix queue
+npm run e2e:vscode -- cap                  # the Claude panel as text
+npm run e2e:vscode -- click apply [--nth 1]
+npm run e2e:vscode -- type "hello"         # then: keys Enter
+npm run e2e:vscode -- wait "docfix: docs"
+npm run e2e:vscode -- shot [file] [--window]   # the panel; --window is the whole window
+npm run e2e:vscode -- sweep                # panel PNGs at 420x800 and 1280x720
+npm run e2e:vscode -- stop
+```
+
+`resize <width> <height>` sets the window's size. Each verb prints the panel's text after it. One
+VS Code lives at a time, in its own state file, so a terminal `goto` can be parked beside it.
+
+Scenarios are `e2e/<plugin>/vscode.scenarios.ts`, a `vscodeScenarios({...})` from
+`lib/vscode-scenario.ts` (`harness: "vscode"`). The shape is the terminal's: `setup` is the same
+`SetupContext` function (so `docfix/fixture.ts` serves both), `start.turns` the same stubbed
+`Turn`s, and `steps` are `type`, `press`, `click`, `hover`, `wait`, `sleep`, `resize` and `run`.
+A click lands on the visible element whose own text matches, buttons and links first and an exact
+text before a partial one; `{ text, nth }` picks a later one.
+
+### How it works
+
+- `goto` starts VS Code detached (`setsid`, under `cage`) with a fresh profile, so it outlives the
+  command. Each verb reconnects over the saved Chrome DevTools port (`lib/vscode.ts`).
+- The workbench is the `page` target. Ctrl+Shift+Escape opens the Claude tab, whose webview is an
+  `iframe` target; the UI is the document of `#active-frame` inside it. Text, clicks, keys and
+  typing are sent to that target, and a screenshot is taken from the page, clipped to the webview
+  for a panel shot.
+- The extension's `claude` inherits VS Code's environment, so that is where the hermetic setup
+  goes: a config folder of the run's own (`hermeticClaude` in `lib/harness.ts`), the model stub for
+  `ANTHROPIC_BASE_URL`, and the checkout's mods as `CLAUDE_CODE_PLUGIN_DIRS`. Every inherited
+  `CLAUDE*`, `ANTHROPIC*` and `VSCODE_*` variable is dropped first.
+- Only the Claude extension runs, and the explorer and the chat sidebar are hidden, so the panel
+  has the window's width and nothing lands on it.
+- `stop` ends every process whose command line or environment names the run folder, and the stub.
+  It touches nothing else.
+- A session starts on the first prompt or slash command: the panel is empty until then, and a mod's
+  band shows only after a turn.
+
+### Resize
+
+cage keeps its one output at 1280x720 and has no way to change it. `resize` overrides the page's
+viewport instead (`Emulation.setDeviceMetricsOverride`), and the workbench reflows to it. The
+override ends with the connection, so the size is saved in the run's state and each verb applies it
+again.
+
+### Traps
+
+- The extension spawns `claude` only for a folder with a trust record in the config folder's
+  `.claude.json`. Without one it logs "Launching Claude on channel" and never starts, and the tab
+  shows "Waiting for your plugins…", then "stopped responding". `goto` writes the record.
+- Start from a fresh `--user-data-dir`. A reused one restores the old Claude tab, and the new one
+  hangs. The run's profile is always new.
+- `code` returns at once, so cage runs `sh -c 'code …; sleep infinity'` to stay alive.
+- A leftover `VSCODE_IPC_HOOK_CLI` makes `code` hand the folder to a VS Code that is already
+  running, which is why those variables are dropped.
+- `E2E_KEEP=1` leaves a VS Code that failed to start, with its `vscode.log`, for a look.
+
 ## Traps
 
 - PNGs need fonts under `$HOME/.local/share/fonts`, which NixOS lacks. `lib/fonts.ts`
