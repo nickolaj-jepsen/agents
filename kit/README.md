@@ -43,6 +43,8 @@ On the desktop app and VS Code each function draws the graphical style instead
   All three are one internal row drawing (`guiRow`), so they share inset, height and gaps.
 - `choice`: options as buttons, the chosen one filled (`short` for a sentence, `isLiteral` to keep case).
 - `labelled`, `labelledRow`: form fields under their names.
+- `editable`, `fields`, `properties`: a record read as its values, which opens to edit in place: its
+  properties after their icons, and its fields in a form whose names share a column.
 - `statusBand`: the line above the prompt, its way in and more quiet actions.
 - `actionBar`, `capped`, `facts`, `subhead`, `prose`, `notice`, `emptyState`, `icon`.
 - `forSurface`: the one door through which a mod draws by surface itself (`claude.md`, "The one

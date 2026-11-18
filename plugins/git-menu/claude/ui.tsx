@@ -232,6 +232,11 @@ export const tokens = {
     chip: "bashMessageBackgroundColor",
     /** A thin rule's colour: one grey at low alpha, which reads on a light theme and a dark one. */
     rule: "#8b8f9866",
+    /**
+     * The least a form's label column takes, in cells, so its controls start at one edge: a
+     * label longer than this pushes only its own control.
+     */
+    labelColumn: 7,
   },
   /**
    * The style's roles as a mod draws them: `dim` is `dimColor`, `text` is the default,
@@ -487,6 +492,19 @@ const ICONS = {
   question:
     '<circle cx="8" cy="8" r="6.2"/><path d="M6.3 6.3a1.8 1.8 0 1 1 2.5 1.7c-.5.2-.8.6-.8 1.1v.4"/><path d="M8 11.4v.01"/>',
   write: '<path d="M10.6 2.9l2.5 2.5-7.6 7.6-3.1.6.6-3.1 7.6-7.6Z"/><path d="M9.2 4.3l2.5 2.5"/>',
+  // The properties of a record, as a tracker draws them beside their values.
+  status: '<circle cx="8" cy="8" r="5.6"/><circle cx="8" cy="8" r="1.6" fill="currentColor"/>',
+  priorityNone: '<path d="M3.2 8h1.4M7.3 8h1.4M11.4 8h1.4"/>',
+  priorityLow:
+    '<path d="M4 13v-2.6"/><path d="M8 13V7.4" stroke-opacity=".35"/><path d="M12 13V4.4" stroke-opacity=".35"/>',
+  priorityMedium: '<path d="M4 13v-2.6M8 13V7.4"/><path d="M12 13V4.4" stroke-opacity=".35"/>',
+  priorityHigh: '<path d="M4 13v-2.6M8 13V7.4M12 13V4.4"/>',
+  priorityUrgent:
+    '<rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.6" fill="currentColor" stroke="none"/><path d="M8 5.2v3.4M8 10.8v.01" stroke="#ffffff"/>',
+  project:
+    '<path d="M8 2.4 13.2 5.2v5.6L8 13.6 2.8 10.8V5.2Z"/><path d="M2.8 5.2 8 8l5.2-2.8M8 8v5.6"/>',
+  label: '<circle cx="8" cy="8" r="3.4" fill="currentColor" stroke="none"/>',
+  draft: '<path d="M10.6 2.8 13.2 5.4 5.7 12.9 2.6 13.4 3.1 10.3Z"/><path d="M9.2 4.2l2.6 2.6"/>',
 } as const;
 
 /** One of the kit's icons. */
@@ -507,6 +525,15 @@ const ICON_GLYPH: Record<IconName, string> = {
   question: "?",
   note: tokens.glyph.noteEnd,
   write: "✎",
+  status: tokens.glyph.single.off,
+  priorityNone: "-",
+  priorityLow: "!",
+  priorityMedium: "!!",
+  priorityHigh: "!!!",
+  priorityUrgent: tokens.glyph.status.warning,
+  project: tokens.glyph.multi.off,
+  label: tokens.glyph.single.on,
+  draft: "✎",
 };
 
 /**
@@ -519,7 +546,7 @@ export const iconSvg = (
   tone: IconTone = "neutral",
   size: number = tokens.gui.icon,
 ) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 16 16" fill="none" stroke="${tokens.gui.tone[tone]}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 16 16" fill="none" color="${tokens.gui.tone[tone]}" stroke="${tokens.gui.tone[tone]}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
 
 /**
  * An icon: an image on a graphical surface, its glyph in a role's colour on the terminal.
@@ -550,6 +577,10 @@ export type ProseOptions = {
     /** The terminal's weight. */
     weight?: "semibold" | "bold";
   };
+  gui?: {
+    /** A block of the pane's own, at the inset as every block is, not text inside a row. */
+    isInset?: boolean;
+  };
 };
 
 /**
@@ -560,7 +591,12 @@ export type ProseOptions = {
 export function prose(k: Kit, text: string, options: ProseOptions = {}): JSX.Element {
   const { Text, Markdown } = k;
   const { role = "text", isDim } = options;
-  if (k.isNative) return <Markdown text={text} dimColor={isDim || undefined} />;
+  if (k.isNative) {
+    const md = <Markdown text={text} dimColor={isDim || undefined} />;
+    if (!options.gui?.isInset) return md;
+    const { Box } = k;
+    return <Box paddingX={tokens.gui.across.inset}>{md}</Box>;
+  }
   const { lines, weight } = options.tui ?? {};
   return (
     <Text weight={weight} {...roleProps(isDim ? "dim" : role)}>
@@ -841,13 +877,24 @@ export function notice(
   k: Kit,
   text: string,
   status: "success" | "warning" | "error" | "dim" | "text" = "warning",
-  options: { isWrapped?: boolean; gui?: { isHidden?: boolean } } = {},
+  options: {
+    isWrapped?: boolean;
+    gui?: {
+      isHidden?: boolean;
+      /** One line, cut at the edge by the surface: a footnote, not news. */
+      isCut?: boolean;
+      /** No inset of its own: it sits in a block that has one, beside the block's controls. */
+      isFlush?: boolean;
+    };
+  } = {},
 ): JSX.Element | null {
   const { Box, Text } = k;
   if (k.isNative)
     return options.gui?.isHidden ? null : (
-      <Box paddingX={tokens.gui.across.inset}>
-        <Text {...roleProps(status)}>{text}</Text>
+      <Box paddingX={options.gui?.isFlush ? undefined : tokens.gui.across.inset}>
+        <Text wrap={options.gui?.isCut ? "truncate-end" : undefined} {...roleProps(status)}>
+          {text}
+        </Text>
       </Box>
     );
   const lines = options.isWrapped
@@ -1419,6 +1466,8 @@ type GuiRow = {
   isOpen?: boolean;
   /** What an opened row shows under its text, set in from the mark. */
   body?: readonly (JSX.Element | null)[];
+  /** A state the row is (a warning): its folded line is in that colour, as its icon is. */
+  tone?: "warning" | "error";
 };
 
 /**
@@ -1445,6 +1494,8 @@ function guiRow(k: Kit, o: GuiRow): JSX.Element {
       wrap="truncate-end"
       dimColor={o.isDim || o.isStruck || undefined}
       strikethrough={o.isStruck || undefined}
+      // The icon's own colour: VS Code's theme draws `warning` text grey in its dark themes.
+      color={o.tone ? tokens.gui.tone[o.tone] : undefined}
     >
       {o.isPlain ? o.text : inlineCode(k, linesOf(o.text).join(" "))}
     </Text>
@@ -1663,6 +1714,11 @@ export function statusBand(
       icon?: IconName;
       tone?: IconTone;
       actions?: readonly { key: string; label: string; onPress: () => unknown }[];
+      /**
+       * Everything on one line: the text cut at the edge by the surface, every button after it.
+       * For a line that names something already known (a hidden draft), not news to read whole.
+       */
+      isOneLine?: boolean;
     };
   },
 ): JSX.Element {
@@ -1672,17 +1728,18 @@ export function statusBand(
   // send stays the one filled control in view.
   if (k.isNative) {
     const extra = o.gui?.actions ?? [];
+    const isOneLine = Boolean(o.gui?.isOneLine);
     const mark = icon(k, o.gui?.icon ?? status, { tone: o.gui?.tone ?? status });
     const text = (
-      <Box flexShrink={1}>
-        <Text>{o.gui?.text ?? o.text}</Text>
+      <Box flexShrink={1} flexGrow={isOneLine ? 1 : undefined}>
+        <Text wrap={isOneLine ? "truncate-end" : undefined}>{o.gui?.text ?? o.text}</Text>
       </Box>
     );
     const first = (
       <Button key={o.key} dimColor label={capital(o.hint)} onPress={() => o.onPress()} />
     );
     // At the inset, as every block is: what opens under the band starts at the same edge.
-    if (extra.length === 0)
+    if (extra.length === 0 || isOneLine)
       return (
         <Box
           flexDirection="row"
@@ -1693,7 +1750,12 @@ export function statusBand(
         >
           {mark}
           {text}
-          {first}
+          <Box flexDirection="row" flexShrink={0} columnGap={tokens.gui.across.xs}>
+            {first}
+            {extra.map((a) => (
+              <Button key={a.key} dimColor label={capital(a.label)} onPress={() => a.onPress()} />
+            ))}
+          </Box>
         </Box>
       );
     // With more than one button the line is the text, and the buttons wrap under it.
@@ -2326,7 +2388,13 @@ export function imageGallery(
 // ---- forms and folded rows
 
 /** One field of a form: its name, and the control that holds or sets its value. */
-export type FieldItem = { key: string; label: string; control: JSX.Element };
+export type FieldItem = {
+  key: string;
+  label: string;
+  control: JSX.Element;
+  /** In `fields`, the name over the control and the control the form's whole width: a title. */
+  isWide?: boolean;
+};
 
 function fieldBox(k: Kit, f: FieldItem, isInset: boolean): JSX.Element {
   const { Box, Text } = k;
@@ -2411,6 +2479,13 @@ export type FoldedRowOptions = {
   text: string;
   /** The mark before it. */
   icon: { name: IconName; tone?: IconTone; alt?: string };
+  /** A dim line under the folded text: what the line names, said whole once opened. */
+  meta?: string;
+  /**
+   * The row is a state to be seen before anything else (a possible duplicate): its folded line is
+   * in that state's colour, as its icon is. One such row at most, first in its pane.
+   */
+  tone?: "warning" | "error";
   isOpen: boolean;
   /** The address of the Open / Close button. */
   toggleKey: string;
@@ -2447,6 +2522,8 @@ export function foldedRow(k: Kit, o: FoldedRowOptions): JSX.Element {
     key: o.key,
     mark: icon(k, o.icon.name, { tone: o.icon.tone, alt: o.icon.alt }),
     text: o.text,
+    meta: o.meta,
+    tone: o.tone,
     isOpen: o.isOpen,
     button: { key: o.toggleKey, label: o.isOpen ? "Close" : "Open", onPress: o.onToggle },
     body: [
@@ -2454,4 +2531,193 @@ export function foldedRow(k: Kit, o: FoldedRowOptions): JSX.Element {
       o.actions ? choice(k, o.actions, { key: `${o.key}:actions`, gui: { layout: "row" } }) : null,
     ],
   });
+}
+
+/**
+ * A form: each field's name and its control. A graphical surface sets the names in a dim column
+ * whose controls start at one edge, and an `isWide` field's name over a control the form's whole
+ * width; the terminal a dim line over each control.
+ */
+export function fields(k: Kit, items: readonly FieldItem[]): JSX.Element {
+  const { Box, Text } = k;
+  if (!k.isNative)
+    return (
+      <Box flexDirection="column">
+        {items.map((f) => (
+          <Box key={`field:${f.key}`} flexDirection="column">
+            <Text dimColor>{f.label}</Text>
+            {f.control}
+          </Box>
+        ))}
+      </Box>
+    );
+  const { space, across } = tokens.gui;
+  return (
+    <Box flexDirection="column" rowGap={space.sm}>
+      {items.map((f) =>
+        f.isWide ? (
+          <Box
+            key={`field:${f.key}`}
+            flexDirection="column"
+            rowGap={space.xs}
+            paddingX={across.inset}
+          >
+            <Text dimColor>{f.label}</Text>
+            {f.control}
+          </Box>
+        ) : (
+          <Box
+            key={`field:${f.key}`}
+            flexDirection="row"
+            flexWrap="nowrap"
+            alignItems="flex-start"
+            columnGap={across.md}
+            paddingX={across.inset}
+          >
+            <Box flexShrink={0} minWidth={tokens.gui.labelColumn} paddingTop={0.1}>
+              <Text dimColor>{f.label}</Text>
+            </Box>
+            <Box flexDirection="column" flexGrow={1} flexShrink={1}>
+              {f.control}
+            </Box>
+          </Box>
+        ),
+      )}
+    </Box>
+  );
+}
+
+/** One property of a record: its value, and the icon that says which property it is. */
+export type Property = {
+  key: string;
+  text: string;
+  icon?: IconName;
+  /** What the icon says, for a reader that cannot see it: the property's name. */
+  alt?: string;
+};
+
+/**
+ * A record's properties on one line, as a tracker shows an issue's status, priority and labels: a
+ * graphical surface sets each value after its icon, wrapping; the terminal the values dim, two
+ * cells apart.
+ */
+export function properties(k: Kit, items: readonly Property[]): JSX.Element {
+  const { Box, Text } = k;
+  if (!k.isNative)
+    return (
+      <Text dimColor>
+        {clamp(items.map((p) => p.text).join(" ".repeat(tokens.gutter)), k.columns).join("\n")}
+      </Text>
+    );
+  const { space, across } = tokens.gui;
+  return (
+    <Box
+      flexDirection="row"
+      flexWrap="wrap"
+      columnGap={across.md * 1.5}
+      rowGap={space.xs}
+      paddingX={across.inset}
+    >
+      {items.map((p) => (
+        <Box
+          key={p.key}
+          flexDirection="row"
+          flexWrap="nowrap"
+          alignItems="center"
+          columnGap={across.sm * 0.6}
+        >
+          {p.icon ? icon(k, p.icon, { alt: p.alt ?? p.key, size: 14 }) : null}
+          <Text dimColor>{p.text}</Text>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+export type EditableOptions = {
+  key: string;
+  /** The address of the Edit / Done button. */
+  toggleKey: string;
+  isOpen: boolean;
+  onToggle: () => unknown;
+  /** The dim first line, the toggle at its far edge: what the block is, folded and opened. */
+  head: { folded: string; opened: string };
+  /** What it shows folded: the values as read. */
+  view: (k: Kit) => readonly (JSX.Element | null)[];
+  /** What it shows opened: the controls that set them, as `fields`. */
+  edit: (k: Kit) => readonly (JSX.Element | null)[];
+  /** Nothing can be edited here (a surface without fields): the values alone, no toggle. */
+  isReadOnly?: boolean;
+};
+
+/**
+ * A summary that opens to edit: the values as they read, with a quiet Edit at the far edge of a dim
+ * first line; opened, the same place says Done and the controls sit in a well, as an opened row's
+ * body does. For a short form whose values are mostly right: it reads as the record, not as a wall
+ * of controls.
+ */
+export function editable(k: Kit, o: EditableOptions): JSX.Element {
+  const { Box, Button, Text } = k;
+  const head = o.isOpen ? o.head.opened : o.head.folded;
+  const toggle = o.isReadOnly ? null : (
+    <Button
+      key={o.toggleKey}
+      plain={k.isNative ? undefined : true}
+      dimColor
+      label={o.isOpen ? "Done" : "Edit"}
+      onPress={() => o.onToggle()}
+    />
+  );
+  if (!k.isNative)
+    return (
+      <Box key={o.key} flexDirection="column">
+        <Box flexDirection="row" columnGap={tokens.gutter}>
+          <Text dimColor>{head}</Text>
+          {toggle}
+        </Box>
+        {o.isOpen ? o.edit(k) : o.view(k)}
+      </Box>
+    );
+  const { space, across } = tokens.gui;
+  const line = (
+    <Box
+      key="head"
+      flexDirection="row"
+      flexWrap="nowrap"
+      alignItems="center"
+      justifyContent="space-between"
+      columnGap={across.md}
+      height={1}
+      paddingX={across.inset}
+    >
+      <Box flexShrink={1}>
+        <Text dimColor wrap="truncate-end">
+          {head}
+        </Text>
+      </Box>
+      {toggle}
+    </Box>
+  );
+  if (!o.isOpen)
+    return (
+      <Box key={o.key} flexDirection="column" rowGap={space.xs}>
+        {line}
+        {o.view(k)}
+      </Box>
+    );
+  // The well spans the pane, as an opened row's does; what is in it keeps the inset.
+  return (
+    <Box
+      key={o.key}
+      flexDirection="column"
+      rowGap={space.sm}
+      paddingY={space.sm}
+      backgroundColor={tokens.gui.fill}
+      borderStyle="round"
+      borderColor="#00000000"
+    >
+      {line}
+      {o.edit(k)}
+    </Box>
+  );
 }
