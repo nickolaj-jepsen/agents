@@ -8,7 +8,7 @@ import type {
 } from "claude-code";
 
 import type { FolderApp, Menu, MenuKind, Row } from "./types.d.ts";
-import { paneOptions } from "./ui";
+import { emptyState, kitOf, list, notice, paneOptions, paneTitle, stack } from "./ui";
 import {
   chooseRemote,
   editorCandidates,
@@ -39,6 +39,8 @@ const DETACH = [
 const REVIEW = 'if [ -n "$(git status --porcelain)" ]; then exec "$0" -w; fi; exec "$0"';
 
 const menu = atom({ plugin: "git-menu", key: "menu" } as const, null);
+/** Whether the rest of a long list is shown: a graphical surface lists the first few. */
+const showAll = atom({ plugin: "git-menu", key: "showAll" } as const, false);
 
 let isMacAnswer: Promise<boolean> | undefined;
 
@@ -255,6 +257,7 @@ const isOpen = async ($: EngineInterface) => (await $.ui.panes()).some((p) => p.
 
 async function close($: EngineInterface) {
   await update($, menu, () => null);
+  await update($, showAll, () => false);
   await $.ui.close({ id: PANE });
 }
 
@@ -268,6 +271,7 @@ async function show($: EngineInterface, kind: MenuKind) {
   const cwd = await $.session.cwd();
   const title = TITLES[kind];
   await update($, menu, () => ({ kind, title, rows: null }));
+  await update($, showAll, () => false);
   const opened = await $.ui.open(
     paneOptions({ id: PANE, title, focus: true, closeOnEscape: true, rows: 10 }),
   );
@@ -341,45 +345,64 @@ export const register: Register = (on) => {
 
   on("ui.close", { id: PANE }, async ($, e, next) => {
     await update($, menu, () => null);
+    await update($, showAll, () => false);
     return next(e);
   });
 
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
-    const { Box, Text, Button } = $.ui.resolve(e);
+    const k = kitOf($.ui.resolve(e), e);
+    const { Text } = k;
     const m = await read($, menu);
+    const isAll = await read($, showAll);
     if (!m) return <Text dimColor>No menu open.</Text>;
     const rows = m.rows ?? [];
-    // Notes share one column, so the rows read as a table.
-    const width = Math.max(0, ...rows.map((r) => r.label.length));
-    return (
-      <Box flexDirection="column">
-        <Box flexDirection="row">
-          <Text bold>{m.title}</Text>
-          {m.context ? <Text dimColor>{`  ${m.context}`}</Text> : null}
-        </Box>
-        {m.error ? (
-          <Text dimColor>{m.error}</Text>
-        ) : m.rows === null ? (
-          <Text dimColor>{m.kind === "notes" ? "Looking for notes…" : "Asking git…"}</Text>
-        ) : (
-          rows.map((row, i) => {
-            const note = row.unavailable ?? row.description;
-            return (
-              <Button
-                key={row.id}
-                plain
-                hotkey={i < 9 ? String(i + 1) : undefined}
-                dimColor={row.action === undefined}
-                onPress={(p) => void press($, row, p.surface)}
-              >
-                {row.label.padEnd(width)}
-                {note ? <Text dimColor>{`  ${note}`}</Text> : null}
-              </Button>
-            );
-          })
-        )}
-        <Text dimColor>{HINTS}</Text>
-      </Box>
+    const count =
+      m.kind === "notes" && rows.length
+        ? `${rows.length} ${rows.length === 1 ? "note" : "notes"}`
+        : "";
+    // What the pane says in place of rows: while it looks, or why there are none.
+    const says = (text: string, gui: string) => emptyState(k, text, { gui: { text: gui } });
+    return stack(
+      k,
+      [
+        paneTitle(k, m.title, m.context, { isHeading: true, gui: { count: count || m.context } }),
+        m.error
+          ? says(
+              m.error,
+              m.kind === "notes"
+                ? "No notes yet. Plans and notes saved in this checkout's store show up here."
+                : m.error,
+            )
+          : m.rows === null
+            ? says(
+                m.kind === "notes" ? "Looking for notes…" : "Asking git…",
+                m.kind === "notes" ? "Looking for notes" : "Asking git",
+              )
+            : list(
+                k,
+                [
+                  {
+                    title: "",
+                    rows: rows.map((row, i) => ({
+                      key: row.id,
+                      title: row.label,
+                      detail: row.unavailable ?? row.description,
+                      isDim: row.action === undefined,
+                      hotkey: i < 9 ? String(i + 1) : undefined,
+                      action: row.action?.kind === "copy" ? "Copy" : "Open",
+                      gui: { isDetailAtEnd: m.kind === "notes" },
+                      onPress: () => void press($, row, e.surface),
+                    })),
+                  },
+                ],
+                {
+                  tui: { isInline: true },
+                  gui: { isAll, onMore: () => update($, showAll, () => true) },
+                },
+              ),
+        notice(k, HINTS, "dim", { gui: { isHidden: true } }),
+      ],
+      { tui: { gap: 0 } },
     );
   });
 };

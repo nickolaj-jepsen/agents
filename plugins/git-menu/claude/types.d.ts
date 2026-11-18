@@ -39,6 +39,7 @@ declare module "claude-code" {
   interface PluginState {
     "git-menu": {
       menu: Menu | null;
+      showAll: boolean;
     };
   }
 }

@@ -19,4 +19,5 @@ order: 2
 - `/open diff` opens [tuicr](https://github.com/agavra/tuicr) on the changes in a
   new Ghostty window, and tells the model how to read your comments back.
 
-Rows that can't run say why.
+Rows that can't run say why. In the terminal a number key picks a row; in the desktop app and
+VS Code each row has a quiet button at its end, and a row that can't run has none.
