@@ -45,16 +45,8 @@ const PI_TURNS: Turn[] = [
 ];
 
 const ask = "Point the install steps in README.md at `just dev-setup`";
-/** The first row to apply, and the second (past its doc's header) to apply too. */
-const ROWS = [
-  { press: "a" },
-  { sleep: 1200 },
-  { press: "Down" },
-  { sleep: 500 },
-  { press: "Down" },
-  { sleep: 700 },
-  { press: "a" },
-];
+/** The first row to apply, and the next one to apply too. */
+const ROWS = [{ press: "a" }, { sleep: 1200 }, { press: "Down" }, { sleep: 1200 }, { press: "a" }];
 
 export default site({
   plugin: "docfix",
@@ -146,7 +138,6 @@ export default site({
         { press: "Enter" },
         { wait: "AGENTS.md" },
         { press: "a" },
-        { press: "Down" },
         { press: "Down" },
         { press: "d" },
       ],

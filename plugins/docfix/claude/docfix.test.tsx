@@ -199,7 +199,7 @@ test("skip sets a row back, and the keys are drawn whatever the ring is on", asy
   await $.ui.focus({
     component: "Pane",
     requestId: "docfix",
-    element: "grp:AGENTS.md",
+    element: "submit",
     origin: { kind: "person" },
   });
   expect(await ui.findAll({ type: "Button" })).toHaveLength(count);
@@ -232,15 +232,20 @@ test("a folded row cuts a long claim; opening it shows the claim and its evidenc
   await ui.unmount();
 });
 
-test("a doc's header sets every row of the doc", async ($, on) => {
+test("a doc's header is its path and a rule, with no keys of its own", async ($, on) => {
   engine(on);
   await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
   await $.tool.call(SUGGEST);
   await $.tool.call({ ...SUGGEST, claim: "A second gap", same_as: "none" });
   await $.command.run(COMMAND);
   const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
-  await ui.press({ key: "dismiss:grp:AGENTS.md" });
-  expect(await ui.find({ type: "Text", text: /On close: dismiss 2/ })).toBeDefined();
+  expect(await ui.find({ type: "Text", text: /^AGENTS\.md ─+$/ })).toBeDefined();
+  // Only rows and the submit key are pressable: a claim, evidence and three keys a row, and submit.
+  const keys = (await ui.findAll({ type: "Button" })).map((b) => String(b.key));
+  expect(keys.filter((key) => !/^(row|ev):|^(apply|dismiss|skip):row:|^submit$/.test(key))).toEqual(
+    [],
+  );
+  expect(keys).toHaveLength(2 * 5 + 1);
   await ui.unmount();
 });
 
@@ -356,8 +361,10 @@ for (const surface of ["desktop", "vscode"] as const) {
     expect(await ui.find({ type: "Text", text: /A second gap/ })).toBeDefined();
     expect(await ui.find({ type: "Markdown" })).toBeUndefined();
     expect(await ui.find({ type: "Svg" })).toBeDefined();
-    for (const key of [`ev:${ID}`, "apply:grp:AGENTS.md", "skip:grp:AGENTS.md", "submit"])
+    for (const key of [`ev:${ID}`, "submit"])
       expect(await ui.find({ type: "Button", key })).toBeDefined();
+    // A doc's heading is its path alone.
+    expect(await ui.find({ type: "Button", text: /all$/i })).toBeUndefined();
     // Its choices wait inside the row; Submit, at the top, is quiet while nothing is set.
     expect(await ui.find({ type: "Button", key: `apply:row:${ID}` })).toBeUndefined();
     const submit = async () => (await ui.find({ type: "Button", key: "submit" }))?.props;
@@ -381,12 +388,8 @@ for (const surface of ["desktop", "vscode"] as const) {
       (await ui.find({ type: "Button", key: `apply:row:${ID}` }))?.props.dimColor,
     ).toBeUndefined();
     expect((await ui.find({ type: "Button", key: `skip:row:${ID}` }))?.props.dimColor).toBe(true);
+    // Pressed again, the row is skipped; setting a row does nothing until the pane closes.
     await ui.press({ key: `apply:row:${ID}` });
-    expect(await ui.find({ type: "Text", text: /^2 open$/ })).toBeDefined();
-    // A doc's header sets every row of the doc; setting a row does nothing until the pane closes.
-    await ui.press({ key: "dismiss:grp:AGENTS.md" });
-    expect(await ui.find({ type: "Text", text: /On close: dismiss 2/ })).toBeDefined();
-    await ui.press({ key: "skip:grp:AGENTS.md" });
     expect(await ui.find({ type: "Text", text: /^2 open$/ })).toBeDefined();
     expect(world.fills).toHaveLength(0);
     await expectNative(ui);

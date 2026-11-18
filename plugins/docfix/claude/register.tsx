@@ -260,30 +260,26 @@ async function settle($: EngineInterface): Promise<boolean> {
 // ---- what the focus ring stops on
 
 /**
- * The element keys the pane draws. The ring stops only on a row's claim, a doc's header and the
- * submit key; the rest (a row's evidence key, its apply and dismiss, the header's keys) are for
- * the mouse, and the keyboard reaches them by their hotkeys.
+ * The element keys the pane draws. The ring stops only on a row's claim and the submit key; the
+ * rest (a row's evidence key, its apply, dismiss and skip) are for the mouse, and the keyboard
+ * reaches them by their hotkeys.
  */
 const rowKey = (id: string) => `row:${id}`;
-const groupKey = (target: string) => `grp:${target}`;
 const evidenceKey = (id: string) => `ev:${id}`;
 const chipKey = (choice: Choice | "skip", owner: string) => `${choice}:${owner}`;
 const SUBMIT = "submit";
 
 /** The stops in the order the pane draws them. */
 const stopsOf = (list: readonly Suggestion[]) => [
-  ...byTarget(list).flatMap(([target, rows]) => [
-    groupKey(target),
-    ...rows.map((s) => rowKey(s.id)),
-  ]),
+  ...byTarget(list).flatMap(([, rows]) => rows.map((s) => rowKey(s.id))),
   SUBMIT,
 ];
 
-/** The stop an element belongs to: a chip to its row or header, an evidence line to its row. */
+/** The stop an element belongs to: a chip or an evidence line to its row. */
 function ownerOf(element: string): string | undefined {
   const [kind, ...rest] = element.split(":");
   const id = rest.join(":");
-  if (kind === "row" || kind === "grp" || element === SUBMIT) return element;
+  if (kind === "row" || element === SUBMIT) return element;
   if (kind === "ev") return rowKey(id);
   if (kind === "apply" || kind === "dismiss" || kind === "skip") return id;
   return undefined;
@@ -291,7 +287,7 @@ function ownerOf(element: string): string | undefined {
 
 /**
  * Where a move of the ring onto `element` should land instead, or undefined to let it be: past
- * a row's or header's extras, on to the next stop going down and back to their owner going up.
+ * a row's extras, on to the next stop going down and back to their owner going up.
  */
 function landing(stops: readonly string[], from: string | null, element: string) {
   const owner = ownerOf(element);
@@ -324,32 +320,28 @@ type Rows = {
   /** The row that takes the ring when the pane gets the keyboard. */
   first: string | undefined;
   choose(ids: string[], choice: Choice | undefined): unknown;
-  /** As `choose`, for the row or doc the ring is on as the press lands. */
+  /** As `choose`, for the row the ring is on as the press lands. */
   chooseFocused(choice: Choice | undefined): unknown;
-  /** Opens or folds rows; `isAlone` opens them and folds every other. */
-  toggleOpen(ids: string[], isAlone?: boolean): unknown;
+  /** Opens or folds a row; `isAlone` opens it and folds every other. */
+  toggleOpen(id: string, isAlone?: boolean): unknown;
 };
 
-/** The rows a stop stands for: a row itself, or every row of a doc. */
+/** The row a stop stands for, as a list: none for the submit key or a row gone from the queue. */
 function idsOf(list: readonly Suggestion[], stop: string): string[] {
-  if (stop.startsWith("grp:")) {
-    const target = stop.slice("grp:".length);
-    return list.filter((s) => s.target === target).map((s) => s.id);
-  }
   if (!stop.startsWith("row:")) return [];
   const id = stop.slice("row:".length);
   return list.some((s) => s.id === id) ? [id] : [];
 }
 
-/** What a row is set to, or a doc when all its rows agree: `skip` when none is set. */
-type State = Choice | "skip" | "mixed";
+/** What a row is set to: `skip` when none is set. */
+type State = Choice | "skip";
 
 const CHOICES = ["apply", "dismiss", "skip"] as const;
 const HOTKEY = { apply: "a", dismiss: "d", skip: "s" } as const;
 
 /**
- * The apply, dismiss and skip options of a row or a doc, the one it is set to on. Every row and
- * header offers all three whatever the ring is on: the engine keeps the ring at its place among
+ * The apply, dismiss and skip options of a row, the one it is set to on. Every row offers all
+ * three whatever the ring is on: the engine keeps the ring at its place among
  * the Buttons across a redraw, so a Button that came and went with the ring would move it. Only
  * the hotkeys follow the ring.
  */
@@ -382,7 +374,7 @@ function row(k: Kit, r: Rows, s: Suggestion): JSX.Element {
     age: age(s.updated, r.now),
     tone: state,
     isOpen: r.open.has(s.id),
-    onToggle: (how) => r.toggleOpen([s.id], how?.isAlone),
+    onToggle: (how) => r.toggleOpen(s.id, how?.isAlone),
     autoFocus: s.id === r.first,
     details: {
       key: evidenceKey(s.id),
@@ -391,25 +383,6 @@ function row(k: Kit, r: Rows, s: Suggestion): JSX.Element {
     },
     choice: {
       options: optionsOf(r, rowKey(s.id), [s.id], state ?? "skip"),
-      gui: { layout: "row" },
-    },
-  });
-}
-
-/** A doc's header: its path, which opens or folds its rows, and keys that set every row of the doc. */
-function header(k: Kit, r: Rows, target: string, rows: Suggestion[]): JSX.Element {
-  const owner = groupKey(target);
-  const ids = rows.map((s) => s.id);
-  const states = new Set(ids.map((id) => r.set[id] ?? "skip"));
-  const state: State = states.size === 1 ? ([...states][0] ?? "skip") : "mixed";
-  return section(k, target, {
-    key: owner,
-    onPress: () => r.toggleOpen(ids),
-    count: rows.length,
-    isCode: true,
-    choice: {
-      options: optionsOf(r, owner, ids, state),
-      suffix: "all",
       gui: { layout: "row" },
     },
   });
@@ -564,13 +537,9 @@ export const register: Register = (on) => {
         await update($, choices, (cur) => toggleChoice(cur, ids, choice));
         await say($, "");
       },
-      toggleOpen: (ids, isAlone) =>
+      toggleOpen: (id, isAlone) =>
         update($, expanded, (cur) =>
-          ids.every((id) => cur.includes(id))
-            ? cur.filter((id) => !ids.includes(id))
-            : isAlone
-              ? ids
-              : [...new Set([...cur, ...ids])],
+          cur.includes(id) ? cur.filter((at) => at !== id) : isAlone ? [id] : [...cur, id],
         ),
     };
     const summary = choiceSummary(queued.map((s) => set[s.id]));
@@ -633,7 +602,7 @@ export const register: Register = (on) => {
             stack(
               k,
               [
-                header(k, rows, target, list),
+                section(k, target, { isCode: true, isWrapped: true }),
                 stack(
                   k,
                   list.map((s) => row(k, rows, s)),

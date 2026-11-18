@@ -524,86 +524,42 @@ export function prose(k: Kit, text: string, options: ProseOptions = {}): JSX.Ele
 
 // ---- blocks
 
-/**
- * A title that can be pressed and carry keys of its own: a doc's header over its rows.
- * `choice` sets everything the section heads.
- */
 export type SectionOptions = {
-  /** The title Button's address. */
-  key?: string;
-  /** Pressing the title: opens or folds what it heads. */
-  onPress?: () => unknown;
-  /** Keys at the title's right that set everything the section heads. */
-  choice?: ChoiceSet;
-  /**
-   * How many rows the section heads. A graphical surface draws no keys for one, whose own keys
-   * do the same.
-   */
-  count?: number;
   /** The title is a path, command or symbol: set in the monospaced face on a graphical surface. */
   isCode?: boolean;
+  /**
+   * The terminal wraps the title whole, its rule after the last line, instead of cutting it to one
+   * line with `…`: a path, whose end is the part that names it.
+   */
+  isWrapped?: boolean;
 };
 
-/** Below this many cells a header's keys drop their suffix. */
-const NARROW = 60;
-
 /**
- * A section header: bold title, then a dim rule to the edge on the terminal. With `onPress` and
- * `choice` it is also the control of its rows: a graphical surface draws the title as a heading
- * and the keys under it.
- * @param title Wrapped on a graphical surface; cut with `…` on the terminal unless it is pressable.
+ * A section header: bold title, then a dim rule to the edge on the terminal. A graphical surface
+ * draws a flat heading at its rows' inset.
+ * @param title Wrapped on a graphical surface; cut with `…` on the terminal unless `isWrapped`.
  */
 export function section(k: Kit, title: string, options: SectionOptions = {}): JSX.Element {
-  const { Box, Button, Text } = k;
-  const { key, onPress, choice: set } = options;
+  const { Box, Text } = k;
   const width = k.columns;
-  const isControl = key !== undefined && onPress !== undefined;
-  if (k.isNative) {
-    // A flat heading over its rows, at their inset: the title and, at the far edge, the quiet
-    // keys that set every row under it, which wrap under the title when the room is short.
-    const isMany = (options.count ?? 2) > 1;
+  if (k.isNative)
     return (
-      <Box
-        key={key ? `g:${key}` : undefined}
-        flexDirection="row"
-        flexWrap="wrap"
-        alignItems="center"
-        justifyContent="space-between"
-        columnGap={tokens.gui.across.md}
-        rowGap={tokens.gui.space.xs}
-        paddingX={tokens.gui.across.inset}
-      >
-        <Box flexShrink={1}>
-          <Text weight="semibold" mono={options.isCode || undefined}>
-            {title}
-          </Text>
-        </Box>
-        {set && isMany ? choice(k, set.options, set) : null}
+      <Box paddingX={tokens.gui.across.inset}>
+        <Text weight="semibold" mono={options.isCode || undefined}>
+          {title}
+        </Text>
       </Box>
     );
-  }
-  if (!isControl) {
-    const head = clamp(title, Math.max(1, width), { min: 1, max: 1 })[0] ?? "";
-    const room = width - cellWidth(head) - 1;
-    return (
-      <Text>
-        <Text weight="semibold">{head}</Text>
-        {room > 0 ? <Text dimColor>{` ${tokens.glyph.rule.repeat(room)}`}</Text> : null}
-      </Text>
-    );
-  }
-  const lines = clamp(title, width);
+  const lines = options.isWrapped
+    ? clamp(title, Math.max(1, width))
+    : clamp(title, Math.max(1, width), { min: 1, max: 1 });
   const last = lines.at(-1) ?? "";
-  const suffix = set?.suffix && width >= NARROW ? ` ${set.suffix}` : "";
-  const room = width - cellWidth(last) - (set ? chipsWidth(set.options, suffix) : 0) - 2;
+  const room = width - cellWidth(last) - 1;
   return (
-    <Box key={`g:${key}`} flexWrap="wrap" columnGap={1}>
-      <Button key={key} plain onPress={() => onPress()}>
-        <Text weight="semibold">{lines.join("\n")}</Text>
-      </Button>
-      {room > 0 ? <Text dimColor>{tokens.glyph.rule.repeat(room)}</Text> : null}
-      {set ? choice(k, set.options, set) : null}
-    </Box>
+    <Text>
+      <Text weight="semibold">{lines.join("\n")}</Text>
+      {room > 0 ? <Text dimColor>{` ${tokens.glyph.rule.repeat(room)}`}</Text> : null}
+    </Text>
   );
 }
 
@@ -1019,8 +975,6 @@ export type ChoiceOption = {
 export type ChoiceOptions = {
   /** Several options can be on at once; the terminal draws squares in place of circles. */
   isMulti?: boolean;
-  /** Said after each label when there is room, `apply all`: a group's keys. */
-  suffix?: string;
   /** The Button group's address. */
   key?: string;
   tui?: {
@@ -1047,14 +1001,6 @@ export type ChoiceOptions = {
 /** A choice's options with the options they are drawn by. */
 export type ChoiceSet = ChoiceOptions & { options: ChoiceOption[] };
 
-/** Cells the keys of `options` take as plain terminal keys, a hotkey drawn as `a: ` before its label. */
-const chipsWidth = (options: readonly ChoiceOption[], suffix: string) =>
-  options.reduce(
-    (n, o, i) =>
-      n + (i ? tokens.gutter : 0) + (o.hotkey ? 3 : 0) + cellWidth(`${o.label}${suffix}`),
-    0,
-  );
-
 const capital = (text: string) => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
 
 /**
@@ -1074,7 +1020,6 @@ export function choice(
       vscode: settings.vscode,
       mobile: settings.mobile,
     });
-    const suffix = settings.suffix ? ` ${settings.suffix}` : "";
     const isRow = layout === "row";
     return (
       <Box
@@ -1092,7 +1037,7 @@ export function choice(
               variant={o.isOn && !o.isQuiet ? "primary" : "secondary"}
               // The surface draws every variant alike, so only the chosen one is not dim.
               dimColor={!(o.isOn && !o.isQuiet) || undefined}
-              label={capital(`${o.label}${suffix}`)}
+              label={capital(o.label)}
               onPress={() => o.onPress()}
             />
           );
@@ -1127,7 +1072,6 @@ export function choice(
         )}
       </Box>
     );
-  const suffix = settings.suffix && k.columns >= NARROW ? ` ${settings.suffix}` : "";
   return (
     <Box key={settings.key} columnGap={tokens.gutter}>
       {options.map((o) => (
@@ -1136,7 +1080,7 @@ export function choice(
           plain
           hotkey={o.hotkey}
           dimColor={!o.isOn}
-          label={`${o.label}${suffix}`}
+          label={o.label}
           onPress={() => o.onPress()}
         />
       ))}

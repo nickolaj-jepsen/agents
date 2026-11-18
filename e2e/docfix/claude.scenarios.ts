@@ -77,12 +77,6 @@ export default scenarios({
       from: "queue",
       steps: [{ click: { text: /dismiss(?=  skip\s*$)/m, nth: 1 } }],
     },
-    group: {
-      about: "Up from the first row onto its doc's header: the header's keys; a sets the whole doc",
-      from: "queue",
-      fresh: true,
-      steps: [{ press: "Up" }, { press: "a" }],
-    },
     opened: {
       about: "a click on a row's claim opens it: its claim whole and its evidence",
       from: "queue",
@@ -142,8 +136,8 @@ export default scenarios({
       fresh: true,
       steps: [
         { press: "a" },
-        // Down from the first row lands on the next doc's header, whose a sets its one row. Keys
-        // sent in one write can beat the ring's move, so each is a step of its own.
+        // Down from the first row lands on the next row. Keys sent in one write can beat the
+        // ring's move, so each is a step of its own.
         { press: "Down" },
         { press: "a" },
         { wait: "On close: apply 2" },
