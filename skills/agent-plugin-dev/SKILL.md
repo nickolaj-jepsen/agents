@@ -1,6 +1,6 @@
 ---
 name: agent-plugin-dev
-description: Design, build and check the UI of a plugin in this repo, for Claude Code (a mod's pane, band, status, in the terminal, the desktop app and VS Code) and pi (an extension's overlay, form, widget): the house style, the shared UI kit, and drivers that park a real session (terminal or VS Code) on any screen and photograph it. Use when developing, fixing or reviewing what a mod or pi extension draws, its keys, mouse or focus; before handing any plugin UI change back; when a plugin seems to do nothing; or when asking how one renders.
+description: "Design, build and check the UI of a plugin in this repo, for Claude Code (a mod's pane, band, status, in the terminal, the desktop app and VS Code) and pi (an extension's overlay, form, widget): the house style, the shared UI kit, and drivers that park a real session (terminal or VS Code) on any screen and photograph it. Use when developing, fixing or reviewing what a mod or pi extension draws, its keys, mouse or focus; before handing any plugin UI change back; when a plugin seems to do nothing; or when asking how one renders."
 compatibility: Works in a checkout of nickolaj-jepsen/agents, with nix, Claude Code signed in and pi.
 metadata:
   summary: "the UI of a Claude Code mod or pi extension, with a house style, a shared kit and a driver that parks a real session on any screen."
