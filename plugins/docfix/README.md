@@ -27,21 +27,30 @@ order: 7
 
 ## Reviewing them
 
-- `/docfix` lists the open ones by doc. Each claim and its evidence are shown
-  whole: nothing is cut, and in pi a long detail scrolls.
-- Mark several with `Enter` (in pi, `space`) or a click on a row. A doc's header
-  marks all of it, and `m` marks everything.
-- **Apply** drafts one prompt in your prompt box, not sent. It lists each claim
-  under its doc, with the file that holds its evidence, and asks the agent to
-  check the claim against the code, edit the doc as it stands now, and resolve
-  the suggestion. The evidence stays in its file for the agent to read. Nothing
-  is committed.
+- `/docfix` lists the open ones by doc. A row starts folded, its claim cut at
+  three lines. `Enter` or a click on it opens it: the claim whole and its
+  evidence under it. `e` opens or folds them all.
+- Set each row to **apply**, **dismiss** or **skip** with `a`, `d` and `s`, or a
+  click on the word at the right of its row. Every row starts on skip. On a
+  doc's header the keys set every row of that doc. An apply row's claim turns
+  green and a dismiss row's is struck through. The line under the title says
+  what closing will do.
+- Closing the pane (`Esc` or its close mark) carries the choices out. Nothing
+  happens before that, so a row set by mistake is set back with `s`.
+  - **Apply** drafts one prompt in your prompt box, not sent. It lists each
+    claim under its doc, with the file that holds its evidence, and asks the
+    agent to check the claim against the code, edit the doc as it stands now,
+    and resolve the suggestion. The evidence stays in its file for the agent to
+    read. Nothing is committed.
   - Where the same fact stands in a doc beside it (its folder, skill or
     plugin), the agent fixes it there too and names that doc. It doesn't file a
     second suggestion, and it searches only for that fact, so the apply doesn't
     turn into a review of every doc.
-- **Dismiss** keeps the suggestion, so the same claim isn't filed again. `u` opens
-  the last dismissed ones again.
+  - **Dismiss** keeps the suggestion, so the same claim isn't filed again.
+  - If the prompt box can't take the draft, the pane stays open with its rows
+    still set, and says why.
+- In Claude Code, the arrows stop only on rows and doc headers; the words at
+  the right of a row are for the mouse.
 
 pi has the same tool, panel and footer count from the same core (`core/docfix.ts`),
 subagents included. Claude Code ships `/docs`, so the command is `/docfix` in both.

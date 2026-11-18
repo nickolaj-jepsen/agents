@@ -8,8 +8,8 @@ export default scenarios({
   plugin: "docfix",
   harness: "pi",
   region: region.box(/Doc suggestions/),
-  // The age of a suggestion: "2d", "1mo", "today" in the list and "2 days ago" beside it.
-  mask: [{ pattern: /\b\d+(?:d|mo)\b|\btoday\b|\b\d+ days? ago\b/g, with: "<age>" }],
+  // The age of a suggestion: "2d", "1mo", "today".
+  mask: [{ pattern: /\b\d+(?:d|mo)\b|\btoday\b/g, with: "<age>" }],
   scenarios: {
     empty: {
       about: "/docfix in a checkout with no suggestions filed",
@@ -25,7 +25,8 @@ export default scenarios({
       steps: [...open, { wait: "AGENTS.md" }],
     },
     queue: {
-      about: "/docfix with three open suggestions (one more is dismissed and hidden)",
+      about:
+        "/docfix with three open suggestions, folded, the first row selected (one more is dismissed and hidden)",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx);
@@ -33,61 +34,68 @@ export default scenarios({
       steps: [...open, { wait: "AGENTS.md" }],
       extreme: true,
     },
-    marked: {
-      about: "two of the three marked, the cursor on the second",
+    set: {
+      about:
+        "a on the first row and d on the second: one claim in success, one struck through, the line on top says what closing does",
       from: "queue",
-      steps: [{ press: "Space" }, { press: "Down" }, { press: "Space" }],
+      steps: [{ press: "a" }, { press: ["Down", "Down", "d"] }],
     },
-    hover: {
-      about: "the pointer over the second row: its title bold, the cursor still on the first",
+    group: {
+      about: "Up onto the first doc's header, then d: every row of the doc set to dismiss",
       from: "queue",
-      steps: [{ hover: "legacy" }],
+      steps: [{ press: ["Up", "d"] }],
     },
-    dismissed: {
-      about: "the notice after a dismiss, the queue one shorter, undo offered in the hints",
+    opened: {
+      about: "Enter opens the selected row: its claim whole and its evidence under it",
       from: "queue",
-      steps: [{ press: "d" }, { wait: "Dismissed 1" }],
-    },
-    undone: {
-      about: "u after a dismiss: the suggestion is back",
-      from: "dismissed",
-      steps: [{ press: "u" }, { wait: "Restored 1" }],
+      steps: [{ press: "Enter" }],
     },
     all: {
-      about: "m marks every row",
+      about: "e opens every row",
       from: "queue",
-      steps: [{ press: "m" }],
+      steps: [{ press: "e" }],
     },
-    doubleClick: {
-      about: "a double click on a row marks it, as space does",
+    clicked: {
+      about: "a click on the last row's dismiss selects that row and sets it",
       from: "queue",
-      steps: [{ doubleClick: "legacy" }],
+      steps: [{ click: { text: "dismiss", nth: 3 } }],
+    },
+    dismissed: {
+      about:
+        "d on the first row, then Esc: the panel closes and the footer count drops; /docfix again shows two",
+      from: "queue",
+      steps: [
+        { press: "d" },
+        { press: "Escape" },
+        { wait: "docs 2" },
+        ...open,
+        { wait: "Doc suggestions" },
+      ],
     },
     applied: {
       about:
-        "a on two marked rows: the panel closes and the editor holds one drafted prompt, unsent",
+        "a on two rows, then Esc: the panel closes and the editor holds one drafted prompt, unsent",
       from: "queue",
       region: region.full,
       steps: [
-        { press: "Space" },
-        { press: "Down" },
-        { press: "Space" },
         { press: "a" },
+        { press: ["Down", "Down", "a"] },
+        { press: "Escape" },
         { wait: "For each one" },
       ],
     },
     evidence: {
       about:
-        "evidence as migrated memories write it: prose, a labelled paragraph, citations as a list not JSON",
+        "evidence as migrated memories write it, opened: prose, a labelled paragraph, citations as a list not JSON",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx, STRUCTURED);
       },
-      steps: [...open, { wait: "agent-hub" }],
+      steps: [...open, { wait: "agent-hub" }, { press: "Enter" }],
       extreme: true,
     },
     many: {
-      about: "28 suggestions, more than fit; the cursor well down the list",
+      about: "28 suggestions, more than fit; the selection well down the list, scrolled into view",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx, MANY);
@@ -95,16 +103,16 @@ export default scenarios({
       steps: [...open, { wait: "Claim number" }, { press: Array(20).fill("Down") }],
     },
     wheel: {
-      about: "three wheel-up events over the list move the cursor up three rows",
+      about: "three wheel-down events scroll the panel, not the selection",
       from: "many",
-      // A list's window depends on the sizes it was drawn at, so this starts its own session.
+      // A window depends on the sizes it was drawn at, so this starts its own session.
       fresh: true,
       steps: [
         {
-          // The driver has no wheel call: send the SGR sequence (button 64 is wheel up).
+          // The driver has no wheel call: send the SGR sequence (button 65 is wheel down).
           run: async (s) => {
             for (let i = 0; i < 3; i++) {
-              await s.term.write("\x1b[<64;60;20M");
+              await s.term.write("\x1b[<65;60;20M");
               await new Promise((r) => setTimeout(r, 200));
             }
           },
@@ -113,35 +121,19 @@ export default scenarios({
       ],
     },
     extreme: {
-      about: "very long claims, evidence and paths, wide characters, one unbroken word",
+      about:
+        "very long claims, evidence and paths, wide characters, one unbroken word; the first row opened",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx, EXTREME);
       },
-      steps: [...open, { wait: "AGENTS.md" }],
+      steps: [...open, { wait: "AGENTS.md" }, { press: "Enter" }],
       extreme: true,
     },
     scrolled: {
-      about:
-        "the extreme detail one page down: what was cut off below is now in view, `↑ n more` above",
+      about: "the opened extreme row one page down: `↑ n more` above",
       from: "extreme",
       steps: [{ press: "PageDown" }],
-    },
-    detailWheel: {
-      about: "two wheel-down events over the detail scroll it, not the list's cursor",
-      from: "extreme",
-      fresh: true,
-      steps: [
-        {
-          run: async (s) => {
-            for (let i = 0; i < 2; i++) {
-              await s.term.write("\x1b[<65;120;15M");
-              await new Promise((r) => setTimeout(r, 200));
-            }
-          },
-        },
-        { sleep: 300 },
-      ],
     },
   },
 });

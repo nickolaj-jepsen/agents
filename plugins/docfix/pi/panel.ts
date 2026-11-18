@@ -1,13 +1,17 @@
 /**
- * The /docfix panel: the open queue grouped by doc, the selected suggestion in full beside it.
- * Nothing is cut: a claim wraps to as many lines as it needs, and a detail taller than its pane
- * scrolls (PgUp/PgDn, or the wheel over it). Dismiss happens in place and can be undone; apply
- * closes the panel and the caller drafts the prompt.
+ * The /docfix panel: the open queue grouped by doc in one column, each row set to apply, dismiss
+ * or skip. A row starts folded, its claim cut at a few lines; opening it shows the claim whole
+ * and its evidence under it at the panel's full width. The panel scrolls as a whole and keeps
+ * the selected row in view.
+ *
+ * Closing carries the choices out: the dismissed ones are dismissed here, and the applied ones go
+ * to the caller, which drafts the prompt.
  */
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import {
   Key,
   matchesKey,
+  visibleWidth,
   type Component,
   type TUI,
   type TuiMouseEvent,
@@ -15,28 +19,31 @@ import {
 } from "@earendil-works/pi-tui";
 import {
   bodyOrigin,
-  emptyState,
   clamp,
-  List,
+  emptyState,
   modalFrame,
   modalRows,
   notice,
   paint,
-  prose,
-  section,
-  splitFrame,
-  splitLayout,
   tokens,
   type Hint,
 } from "../../../kit/pi/ui.ts";
-import { openQueue, repeats, seen, type Kind, type Suggestion } from "../core/docfix.ts";
-import { evidence, evidenceTitle } from "./evidence.ts";
+import {
+  byTarget,
+  choiceSummary,
+  openQueue,
+  repeats,
+  seen,
+  toggleChoice,
+  type Choice,
+  type Suggestion,
+} from "../core/docfix.ts";
+import { evidence } from "./evidence.ts";
 
 export type PanelDeps = {
   load(): Promise<Suggestion[]>;
+  /** Dismisses what closing the panel carries out. */
   dismiss(picked: Suggestion[]): Promise<void>;
-  /** Opens dismissed suggestions again: what `u` does after a dismiss. */
-  restore(picked: Suggestion[]): Promise<void>;
 };
 
 export const EMPTY_TEXT = "Nothing to review: no open doc suggestions in this repo.";
@@ -46,67 +53,52 @@ const TITLE = "Doc suggestions";
 const SEEN_WARN = 3;
 /** Frame rows around the body: the top and bottom borders, the blank rows under and above. */
 const FRAME_ROWS = 4;
-/** Cells before a stacked row's title, and its metadata columns less: a title's width, roughly. */
-const LIST_PREFIX = 4 + 16;
-/** A claim of more lines than this at the list's width is also given to the stacked detail. */
-const LONG_CLAIM = 4;
-/** Lines one wheel notch over the detail moves it. */
+/** Lines of a folded row's claim; an open row shows it whole. */
+const FOLDED_LINES = 3;
+/** The pointer's gutter, before a header; a row is set in twice as far. */
+const GUTTER = 2;
+/** Lines one wheel notch moves the panel. */
 const WHEEL_LINES = 3;
+/** Below this content width a doc's keys drop their `all`. */
+const NARROW = 60;
+
+const CHOICES = ["apply", "dismiss", "skip"] as const;
+type State = Choice | "skip" | "mixed";
 
 const days = (iso: string, now: number) => {
   const n = Math.floor((now - Date.parse(iso)) / 86_400_000);
   return Number.isFinite(n) && n >= 1 ? n : 0;
 };
-const ageShort = (iso: string, now: number) => {
+const age = (iso: string, now: number) => {
   const n = days(iso, now);
   if (n < 1) return "today";
   return n < 30 ? `${n}d` : `${Math.floor(n / 30)}mo`;
 };
-const ageLong = (iso: string, now: number) => {
-  const n = days(iso, now);
-  return n < 1 ? "today" : n === 1 ? "1 day ago" : `${n} days ago`;
-};
 
-const KIND_ICON: Record<Kind, string> = tokens.glyph.kind;
+/** A place the selection stops: a doc's header, or a row. */
+type Stop = { kind: "doc"; target: string; ids: string[] } | { kind: "row"; s: Suggestion };
+
+/** What a body line is, for the mouse: whose it is, and where its keys sit. */
+type Hit = {
+  stop: number;
+  /** The keys on this line, by their columns in the body. */
+  keys?: { from: number; to: number; choice: Choice | undefined }[];
+};
 
 type Note = { text: string; status: "success" | "error" };
 
 export class DocsPanel implements Component {
-  private readonly list = new List<Suggestion>({
-    id: (s) => s.id,
-    group: (s) => s.target,
-    title: (s) => s.claim,
-    // No `max`: a claim is shown whole.
-    titleLines: { min: 1 },
-    marks: "multi",
-    columns: [
-      {
-        width: 1,
-        priority: 3,
-        text: (s) => KIND_ICON[s.kind],
-        role: (s) => (s.kind === "wrong" ? "error" : "text"),
-      },
-      {
-        width: 4,
-        priority: 2,
-        text: (s) => repeats(s),
-        role: (s) => (seen(s) >= SEEN_WARN ? "warning" : undefined),
-      },
-      { width: 5, priority: 1, text: (s) => ageShort(s.updated, Date.now()) },
-    ],
-  });
-  private note: Note | undefined;
-  /** What the last dismiss closed, while `u` can still open it again. */
-  private undo: Suggestion[] = [];
-  private detailCache = new Map<string, string[]>();
-  /** Where the list's first row sits in the panel's cells, as of the last render. */
-  private listAt = { x: 0, y: 0 };
-  /** Where the detail starts in the panel's cells, as of the last render. */
-  private detailAt = { x: 0, y: 0 };
+  private items: Suggestion[];
+  private set: Record<string, Choice> = {};
+  private open = new Set<string>();
+  private at = 1;
   private scroll = 0;
-  /** How far the detail can scroll and how many rows a page is, as of the last render. */
-  private reach = { max: 0, page: 1 };
-  private lastId: string | undefined;
+  private note: Note | undefined;
+  private isClosing = false;
+  /** Each body line's owner, as of the last render. */
+  private hits: Hit[] = [];
+  /** Where the body's first line sits in the panel's cells, and its window. */
+  private window = { top: 0, height: 1, max: 0 };
 
   constructor(
     private readonly tui: TUI,
@@ -115,152 +107,329 @@ export class DocsPanel implements Component {
     initial: Suggestion[],
     private readonly done: (apply: Suggestion[] | undefined) => void,
   ) {
-    this.list.setItems(openQueue(initial));
+    this.items = openQueue(initial);
   }
 
-  private async reload() {
-    this.list.setItems(openQueue(await this.deps.load()));
-    this.detailCache.clear();
-    this.tui.requestRender();
+  invalidate() {}
+
+  /** Headers and rows in the order drawn. */
+  private stops(): Stop[] {
+    return byTarget(this.items).flatMap(([target, rows]): Stop[] => [
+      { kind: "doc", target, ids: rows.map((s) => s.id) },
+      ...rows.map((s): Stop => ({ kind: "row", s })),
+    ]);
   }
 
-  /** Nothing is cached across themes. */
-  invalidate() {
-    this.detailCache.clear();
+  private idsOf(stop: Stop | undefined) {
+    if (!stop) return [];
+    return stop.kind === "doc" ? stop.ids : [stop.s.id];
   }
 
-  private say(text: string, status: Note["status"] = "success") {
-    this.note = { text, status };
+  private choose(ids: string[], choice: Choice | undefined) {
+    if (ids.length === 0) return;
+    this.set = toggleChoice(this.set, ids, choice);
+    this.note = undefined;
   }
+
+  private toggleOpen(ids: string[]) {
+    const isOpen = ids.every((id) => this.open.has(id));
+    for (const id of ids) {
+      if (isOpen) this.open.delete(id);
+      else this.open.add(id);
+    }
+  }
+
+  private move(by: number) {
+    const count = this.stops().length;
+    this.at = Math.max(0, Math.min(count - 1, this.at + by));
+    this.follow = true;
+  }
+
+  /** Set by a move: the next render scrolls the selection into view. */
+  private follow = true;
 
   private scrollBy(lines: number) {
-    this.scroll = Math.max(0, Math.min(this.reach.max, this.scroll + lines));
+    this.scroll = Math.max(0, Math.min(this.window.max, this.scroll + lines));
+    this.follow = false;
   }
 
-  private dismiss() {
-    const picked = this.list.picked();
-    void this.deps.dismiss(picked).then(
-      () => {
-        this.undo = picked;
-        this.say(`Dismissed ${picked.length}: it is not filed again`);
-        return this.reload();
-      },
+  /** Carries the choices out and closes; a dismiss that fails keeps the panel open. */
+  private close() {
+    if (this.isClosing) return;
+    const applied = this.items.filter((s) => this.set[s.id] === "apply");
+    const dismissed = this.items.filter((s) => this.set[s.id] === "dismiss");
+    if (dismissed.length === 0) return this.done(applied);
+    this.isClosing = true;
+    void this.deps.dismiss(dismissed).then(
+      () => this.done(applied),
       (error) => {
-        this.say(`Dismiss failed: ${String(error)}`, "error");
+        this.isClosing = false;
+        this.note = { text: `Dismiss failed: ${String(error)}`, status: "error" };
         this.tui.requestRender();
       },
     );
-  }
-
-  private restore() {
-    const back = this.undo;
-    this.undo = [];
-    void this.deps.restore(back).then(
-      () => {
-        this.say(`Restored ${back.length}`);
-        return this.reload();
-      },
-      (error) => {
-        this.say(`Restore failed: ${String(error)}`, "error");
-        this.tui.requestRender();
-      },
-    );
-  }
-
-  /** Marks every row, or clears the marks when all are on. */
-  private markAll() {
-    const { list } = this;
-    const every = list.items.every((s) => list.marked.has(s.id));
-    if (every) list.marked.clear();
-    else for (const s of list.items) list.marked.add(s.id);
   }
 
   handleInput(data: string): void {
-    this.note = undefined;
-    if (matchesKey(data, Key.escape) || data === "q") return this.done(undefined);
-    const list = this.list;
-    if (list.items.length === 0) return;
-    if (matchesKey(data, Key.up) || data === "k") list.move(-1);
-    else if (matchesKey(data, Key.down) || data === "j") list.move(1);
-    else if (matchesKey(data, Key.pageDown)) this.scrollBy(this.reach.page);
-    else if (matchesKey(data, Key.pageUp)) this.scrollBy(-this.reach.page);
-    else if (data === " " || data === "x") list.toggle();
-    else if (data === "m") this.markAll();
-    else if (data === "a" || matchesKey(data, Key.enter)) return this.done(list.picked());
-    else if (data === "d") this.dismiss();
-    else if (data === "u" && this.undo.length > 0) this.restore();
-    else return;
+    if (matchesKey(data, Key.escape) || data === "q") return this.close();
+    if (this.items.length === 0) return;
+    const stop = this.stops()[this.at];
+    if (matchesKey(data, Key.up) || data === "k") this.move(-1);
+    else if (matchesKey(data, Key.down) || data === "j") this.move(1);
+    else if (matchesKey(data, Key.pageDown)) this.scrollBy(this.window.height - 1);
+    else if (matchesKey(data, Key.pageUp)) this.scrollBy(-(this.window.height - 1));
+    else if (matchesKey(data, Key.enter) || data === " ") this.toggleOpen(this.idsOf(stop));
+    else if (data === "a") this.choose(this.idsOf(stop), "apply");
+    else if (data === "d") this.choose(this.idsOf(stop), "dismiss");
+    else if (data === "s") this.choose(this.idsOf(stop), undefined);
+    else if (data === "e") {
+      const all = this.items.map((s) => s.id);
+      if (all.every((id) => this.open.has(id))) this.open.clear();
+      else this.open = new Set(all);
+    } else return;
     this.tui.requestRender();
   }
 
-  /** Whether a point of the last render, in the panel's cells, is over the detail. */
-  private isOverDetail(x: number, y: number) {
-    return x >= this.detailAt.x && y >= this.detailAt.y;
-  }
-
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
-    if (this.list.items.length === 0) return undefined;
+    if (this.items.length === 0) return undefined;
     if (event.type === "wheel") {
-      const step = Math.sign(event.wheelDelta ?? 0);
-      if (this.isOverDetail(event.x, event.y)) this.scrollBy(step * WHEEL_LINES);
-      else this.list.move(step);
+      this.scrollBy(Math.sign(event.wheelDelta ?? 0) * WHEEL_LINES);
+      this.tui.requestRender();
       return { handled: true };
     }
-    const local = { ...event, x: event.x - this.listAt.x, y: event.y - this.listAt.y };
-    const result = this.list.mouse(local);
-    if (result?.handled && event.type === "click") {
-      this.note = undefined;
-      // A second click on a row marks it, as space does, so the mouse reaches every action.
-      if (event.button === "left" && (event.clickCount ?? 1) >= 2) this.list.toggle();
-    }
-    return result;
+    if (event.type !== "click" || event.button !== "left") return undefined;
+    const line = event.y - this.window.top;
+    if (line < 0 || line >= this.window.height) return undefined;
+    const hit = this.hits[this.scroll + line - (this.scroll > 0 ? 1 : 0)];
+    if (!hit) return undefined;
+    const x = event.x - bodyOrigin.x;
+    const key = hit.keys?.find((k) => x >= k.from && x < k.to);
+    const stop = this.stops()[hit.stop];
+    this.at = hit.stop;
+    this.note = undefined;
+    if (key) this.choose(this.idsOf(stop), key.choice);
+    else this.toggleOpen(this.idsOf(stop));
+    this.tui.requestRender();
+    return { handled: true };
   }
 
-  /**
-   * The suggestion in full: the claim when the list does not show it whole, what it is, and every
-   * piece of evidence, newest first, under a header rule.
-   */
-  private detail(s: Suggestion, width: number, now: number, withClaim: boolean): string[] {
-    const key = `${width}:${withClaim}:${s.id}:${s.updated}`;
-    const cached = this.detailCache.get(key);
-    if (cached) return cached;
+  private stateOf(ids: string[]): State {
+    const states = new Set(ids.map((id) => this.set[id] ?? "skip"));
+    return states.size === 1 ? ([...states][0] ?? "skip") : "mixed";
+  }
+
+  /** The apply, dismiss and skip keys, the one set lit; with their columns from `from`. */
+  private keys(state: State, from: number, suffix = "") {
     const t = this.theme;
+    const parts: string[] = [];
+    const keys: NonNullable<Hit["keys"]> = [];
+    let col = from;
+    for (const [i, choice] of CHOICES.entries()) {
+      if (i > 0) {
+        parts.push(" ".repeat(tokens.gutter));
+        col += tokens.gutter;
+      }
+      const label = choice + suffix;
+      parts.push(state === choice ? t.bold(paint(t, "text", label)) : paint(t, "dim", label));
+      keys.push({
+        from: col,
+        to: col + visibleWidth(label),
+        choice: choice === "skip" ? undefined : choice,
+      });
+      col += visibleWidth(label);
+    }
+    return { text: parts.join(""), width: col - from, keys };
+  }
+
+  /** A doc's header: the pointer's gutter, its path, a rule, and the keys that set every row. */
+  private header(stop: Extract<Stop, { kind: "doc" }>, n: number, width: number, isAt: boolean) {
+    const t = this.theme;
+    const room = width - GUTTER;
+    const suffix = room < NARROW ? "" : " all";
+    const probe = this.keys("mixed", 0, suffix);
+    const path = clamp(stop.target, room);
+    const last = path.at(-1) ?? "";
+    const rule = room - visibleWidth(last) - probe.width - 2;
+    const pointer = (i: number) =>
+      i === 0 && isAt ? paint(t, "accent", tokens.glyph.pointer) + " " : " ".repeat(GUTTER);
+    const title = (s: string) => t.bold(paint(t, isAt ? "accent" : "text", s));
+    const lines: string[] = [];
+    const hits: Hit[] = [];
+    path.slice(0, -1).forEach((l, i) => {
+      lines.push(pointer(i) + title(l));
+      hits.push({ stop: n });
+    });
+    const tail = rule > 0 ? " " + paint(t, "dim", tokens.glyph.rule.repeat(rule)) + " " : null;
+    if (tail) {
+      const from = GUTTER + visibleWidth(last) + rule + 2;
+      const k = this.keys(this.stateOf(stop.ids), from, suffix);
+      lines.push(pointer(path.length - 1) + title(last) + tail + k.text);
+      hits.push({ stop: n, keys: k.keys });
+    } else {
+      // A path that leaves no room for the keys gets them on a line of their own.
+      lines.push(pointer(path.length - 1) + title(last));
+      hits.push({ stop: n });
+      const k = this.keys(this.stateOf(stop.ids), room - probe.width + GUTTER, suffix);
+      lines.push(" ".repeat(room - probe.width + GUTTER) + k.text);
+      hits.push({ stop: n, keys: k.keys });
+    }
+    return { lines, hits };
+  }
+
+  /** A row: its claim, cut while folded and coloured by its state; its meta and keys; its evidence. */
+  private row(s: Suggestion, n: number, width: number, now: number, isAt: boolean) {
+    const t = this.theme;
+    const indent = 2 * GUTTER;
+    const room = width - indent;
+    const state = this.set[s.id];
+    const isOpen = this.open.has(s.id);
+    const claim = clamp(s.claim, room, isOpen ? {} : { max: FOLDED_LINES });
+    const style = (l: string) =>
+      state === "dismiss"
+        ? t.strikethrough(paint(t, "dim", l))
+        : t.bold(paint(t, state === "apply" ? "success" : isAt ? "accent" : "text", l));
+    const lines = claim.map(
+      (l, i) =>
+        (i === 0 && isAt
+          ? " ".repeat(GUTTER) + paint(t, "accent", tokens.glyph.pointer) + " "
+          : " ".repeat(indent)) + style(l),
+    );
+    const hits: Hit[] = claim.map(() => ({ stop: n }));
     const count = seen(s);
     const meta = [
-      paint(t, s.kind === "wrong" ? "error" : "text", KIND_ICON[s.kind]) +
-        " " +
-        paint(t, "dim", s.kind),
-      ...(count > 1
-        ? [paint(t, count >= SEEN_WARN ? "warning" : "dim", `seen ${count}${tokens.glyph.times}`)]
-        : []),
-      paint(t, "dim", ageLong(s.updated, now)),
-    ].join("   ");
-    const lines = [
-      ...(withClaim ? [...prose(t, width, s.claim), ""] : []),
-      meta,
-      "",
-      section(t, width, evidenceTitle(s.evidence)),
-      ...(s.evidence.length > 0 ? evidence(t, width, s.evidence) : [paint(t, "dim", "none filed")]),
+      paint(t, s.kind === "wrong" ? "error" : "dim", `${tokens.glyph.kind[s.kind]} ${s.kind}`),
+      ...(count > 1 ? [paint(t, count >= SEEN_WARN ? "warning" : "dim", repeats(s))] : []),
+      paint(t, "dim", age(s.updated, now)),
+      paint(
+        t,
+        "dim",
+        `${isOpen ? "▾" : "▸"} evidence${s.evidence.length > 1 ? ` ${s.evidence.length}` : ""}`,
+      ),
+    ].join("  ");
+    const probe = this.keys("skip", 0);
+    const gap = room - visibleWidth(meta) - probe.width;
+    if (gap >= tokens.gutter) {
+      const k = this.keys(state ?? "skip", indent + visibleWidth(meta) + gap);
+      lines.push(" ".repeat(indent) + meta + " ".repeat(gap) + k.text);
+      hits.push({ stop: n, keys: k.keys });
+    } else {
+      // Too narrow for both on one line: the keys go under the meta, at the right.
+      const k = this.keys(state ?? "skip", width - probe.width);
+      lines.push(" ".repeat(indent) + meta, " ".repeat(width - probe.width) + k.text);
+      hits.push({ stop: n }, { stop: n, keys: k.keys });
+    }
+    if (isOpen) {
+      const body = [
+        "",
+        ...(s.evidence.length > 0
+          ? evidence(t, Math.max(1, room - GUTTER), s.evidence)
+          : [paint(t, "dim", "none filed")]),
+      ].map((l) => (l ? " ".repeat(indent + GUTTER) + l : l));
+      lines.push(...body);
+      hits.push(...body.map(() => ({ stop: n })));
+    }
+    return { lines, hits };
+  }
+
+  private hints(): Hint[] {
+    return [
+      { key: "↑↓", label: "move" },
+      { key: "a", label: "apply" },
+      { key: "d", label: "dismiss" },
+      { key: "s", label: "skip" },
+      { key: "⏎", label: "evidence" },
+      ...(this.window.max > 0 ? [{ key: "pgup/pgdn", label: "scroll" }] : []),
+      { key: "e", label: "all" },
+      { key: "esc", label: "close", essential: true },
     ];
-    this.detailCache.set(key, lines);
-    return lines;
+  }
+
+  render(width: number): string[] {
+    const t = this.theme;
+    const content = width - 2 - 2 * tokens.padding;
+    const rows = modalRows(this.tui.terminal.rows) - FRAME_ROWS;
+    const now = Date.now();
+    const message = this.note ? notice(t, content, this.note.text, this.note.status) : undefined;
+
+    if (this.items.length === 0) {
+      this.hits = [];
+      this.window = { top: 0, height: 0, max: 0 };
+      return modalFrame(t, {
+        width,
+        title: TITLE,
+        body: emptyState(t, content, EMPTY_TEXT),
+        hints: [{ key: "esc", label: "close", essential: true }],
+        notice: message,
+      });
+    }
+
+    const summary = choiceSummary(this.items.map((s) => this.set[s.id]));
+    const head = [
+      summary
+        ? paint(t, "text", `On close: ${summary}`)
+        : paint(t, "dim", "Closing carries out apply and dismiss"),
+      "",
+    ];
+
+    const stops = this.stops();
+    this.at = Math.max(0, Math.min(stops.length - 1, this.at));
+    const lines: string[] = [];
+    const hits: Hit[] = [];
+    const span = new Map<number, [number, number]>();
+    stops.forEach((stop, n) => {
+      const isAt = n === this.at;
+      const drawn =
+        stop.kind === "doc"
+          ? this.header(stop, n, content, isAt)
+          : this.row(stop.s, n, content, now, isAt);
+      // A blank row before every doc but the first and under every header; between rows too.
+      if (lines.length > 0) {
+        lines.push("");
+        hits.push({ stop: n });
+      }
+      const start = lines.length;
+      lines.push(...drawn.lines);
+      hits.push(...drawn.hits);
+      span.set(n, [start, lines.length]);
+    });
+    this.hits = hits;
+
+    // The window: as tall as the content up to the room, the selection kept in view.
+    const height = Math.max(1, Math.min(rows - head.length, lines.length));
+    const max = Math.max(0, lines.length - height);
+    const [from, to] = span.get(this.at) ?? [0, 0];
+    if (this.follow) {
+      // The selection in view, with its doc's header when it is the doc's first row; an open
+      // row's evidence is scrolled to by hand.
+      const before = stops[this.at - 1];
+      const top = before?.kind === "doc" ? (span.get(this.at - 1)?.[0] ?? from) : from;
+      // A window that scrolls gives a row at each end to `↑ n more` and `↓ n more`.
+      const room = Math.max(1, height - 2);
+      const end = Math.min(to, top + room);
+      if (top < this.scroll) this.scroll = top;
+      else if (end > this.scroll + room) this.scroll = end - room;
+    }
+    this.scroll = Math.max(0, Math.min(max, this.scroll));
+    this.window = { top: bodyOrigin.y + head.length, height, max };
+    const shown = this.windowed(lines, height);
+
+    return modalFrame(t, {
+      width,
+      title: TITLE,
+      count: this.items.length,
+      body: [...head, ...shown],
+      hints: this.hints(),
+      notice: message,
+    });
   }
 
   /**
-   * `lines` in a pane `height` rows tall: whole when they fit, else the window at `scroll`
-   * with a dim `↑ n more` / `↓ n more` row standing in for what is above and below.
+   * `lines` in `height` rows: whole when they fit, else the window at `scroll` with a dim
+   * `↑ n more` / `↓ n more` row standing in for what is above and below.
    */
   private windowed(lines: string[], height: number): string[] {
     const t = this.theme;
-    if (lines.length <= height) {
-      this.scroll = 0;
-      this.reach = { max: 0, page: Math.max(1, height - 1) };
-      return lines;
-    }
-    // At the end the top marker alone takes a row; the window never scrolls past that.
-    const max = Math.max(0, lines.length - (height - 1));
-    this.scroll = Math.min(this.scroll, max);
-    this.reach = { max, page: Math.max(1, height - 2) };
+    if (lines.length <= height) return lines;
     const top = this.scroll > 0 ? 1 : 0;
     let room = height - top;
     if (this.scroll + room < lines.length) room -= 1;
@@ -271,107 +440,5 @@ export class DocsPanel implements Component {
       ...lines.slice(this.scroll, end),
       ...(end < lines.length ? [more(tokens.glyph.more.down, lines.length - end)] : []),
     ];
-  }
-
-  private hints(): Hint[] {
-    return [
-      { key: "↑↓", label: "move" },
-      { key: "space", label: "mark" },
-      { key: "a", label: "apply" },
-      { key: "d", label: "dismiss" },
-      ...(this.undo.length > 0 ? [{ key: "u", label: "undo" }] : []),
-      ...(this.reach.max > 0 ? [{ key: "pgup/pgdn", label: "scroll" }] : []),
-      { key: "m", label: "mark all" },
-      { key: "esc", label: "later", essential: true },
-    ];
-  }
-
-  render(width: number): string[] {
-    const t = this.theme;
-    const list = this.list;
-    const content = width - 2 - 2 * tokens.padding;
-    const rows = modalRows(this.tui.terminal.rows) - FRAME_ROWS;
-    const now = Date.now();
-    const message = this.note ? notice(t, content, this.note.text, this.note.status) : undefined;
-
-    if (list.items.length === 0) {
-      this.listAt = { x: 0, y: 0 };
-      this.detailAt = { x: width, y: 0 };
-      this.reach = { max: 0, page: 1 };
-      return modalFrame(t, {
-        width,
-        title: TITLE,
-        body: emptyState(t, content, EMPTY_TEXT),
-        hints: [
-          ...(this.undo.length > 0 ? [{ key: "u", label: "undo" }] : []),
-          { key: "esc", label: "close", essential: true },
-        ],
-        notice: message,
-      });
-    }
-
-    const layout = splitLayout(width, this.tui.terminal.columns);
-    const current = list.current;
-    if (current?.id !== this.lastId) {
-      this.scroll = 0;
-      this.lastId = current?.id;
-    }
-    // The tallest detail sets the height, so the panel stays put as the cursor moves.
-    const tallest = (w: number, withClaim: (s: Suggestion) => boolean) =>
-      list.items.reduce((n, s) => Math.max(n, this.detail(s, w, now, withClaim(s)).length), 0);
-
-    if (layout.stacked) {
-      // The claim is in the list above, whole, so the detail starts at the meta line: unless it
-      // is too long for the list's few rows, when the detail carries it, scrolling.
-      const share = Math.max(9, Math.floor((rows - 1) * 0.45));
-      const isLong = (s: Suggestion) => clamp(s.claim, content - LIST_PREFIX).length > LONG_CLAIM;
-      const d = Math.min(share, tallest(content, isLong));
-      const shown = list.render(
-        t,
-        content,
-        Math.min(list.naturalRows(t, content), Math.max(1, rows - 1 - d)),
-      );
-      const detail = current
-        ? this.windowed(this.detail(current, content, now, isLong(current)), d)
-        : [];
-      while (detail.length < d) detail.push("");
-      this.listAt = bodyOrigin;
-      this.detailAt = { x: 0, y: bodyOrigin.y + shown.length + 1 };
-      return modalFrame(t, {
-        width,
-        title: TITLE,
-        count: list.items.length,
-        body: [...shown, "", ...detail],
-        hints: this.hints(),
-        notice: message,
-      });
-    }
-
-    const height = Math.max(
-      1,
-      Math.min(
-        rows,
-        Math.max(
-          list.naturalRows(t, layout.left),
-          tallest(layout.right, () => true),
-        ),
-      ),
-    );
-    const left = list.render(t, layout.left, height);
-    const right = current
-      ? this.windowed(this.detail(current, layout.right, now, true), height)
-      : [];
-    this.listAt = layout.leftAt;
-    this.detailAt = layout.rightAt;
-    return splitFrame(t, {
-      layout,
-      width,
-      title: TITLE,
-      count: list.items.length,
-      left,
-      right,
-      hints: this.hints(),
-      notice: message,
-    });
   }
 }

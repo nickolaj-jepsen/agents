@@ -15,7 +15,6 @@ import {
   plan,
   readReminder,
   readsInCommand,
-  reopen,
   statusText,
   TOOL_DESCRIPTION,
   TOOL_NAME,
@@ -170,21 +169,16 @@ export default function (pi: ExtensionAPI) {
                 for (const s of list) await save(where.dir, dismiss(s, now));
                 await refresh(ctx);
               },
-              restore: async (list) => {
-                const now = new Date().toISOString();
-                for (const s of list) await save(where.dir, reopen(s, now));
-                await refresh(ctx);
-              },
             },
             initial,
             done,
           ),
         {
           overlay: true,
-          // Two panes while there is a queue; the empty state is a small dialog.
+          // One column at the reading width while there is a queue; the empty state is a small dialog.
           overlayOptions: empty
             ? overlayOptions("auto", EMPTY_TEXT.length + 4)
-            : overlayOptions("split"),
+            : overlayOptions("reading"),
         },
       );
       await refresh(ctx);

@@ -1,56 +1,54 @@
-# docfix/pi/scrolled 70x24 @1,1 (68x23)
+# docfix/pi/scrolled 70x24 @1,1 (68x22)
 ╭─ Doc suggestions  5 ─────────────────────────────────────────────╮
 │                                                                  │
-│ ❯ □ The section says the build verifies a pi      !   12×     •• │
-│     change, but the build only type-checks the                   │
-│     cores and the pi halves and never starts an                  │
-│     agent, so a panel that renders wrong still                   │
-│     passes it. The section says the build                        │
-│     verifies a pi change, but the build only                     │
-│     type-checks the cores and the pi halves and                  │
-│     never starts an agent, so a panel that                       │
-│     ↓ 4 more                                                     │
+│ Closing carries out apply and dismiss                            │
 │                                                                  │
-│ ↑ 7 more                                                         │
-│ type-checks the cores and the pi halves and never starts an      │
-│ agent, so a panel that renders wrong still passes it. The        │
-│ section says the build verifies a pi change, but the build only  │
-│ type-checks the cores and the pi halves and never starts an      │
-│ agent, so a panel that renders wrong still passes it.            │
+│ ↑ 15 more                                                        │
+│     ! wrong  12×  ••  ▾ evidence 2          apply  dismiss  skip │
 │                                                                  │
-│ ! wrong   seen 12×   <age>                                       │
-│ ↓ 23 more                                                        │
+│       <date>      pi ─────────────────────────────────────────── │
+│         `just build` printed error: derivation failed while      │
+│         evaluating the attribute and its dependencies, error:    │
+│         derivation failed while evaluating the attribute and its │
+│         dependencies, error: derivation failed while evaluating  │
+│         the attribute and its dependencies, error: derivation    │
+│         failed while evaluating the attribute and its            │
+│         dependencies, error: derivation failed while evaluating  │
+│         the attribute and its dependencies, error: derivation    │
+│         failed while evaluating the attribute and its            │
+│         dependencies,                                            │
 │                                                                  │
-╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
+│ ↓ 37 more                                                        │
+│                                                                  │
+╰─ ↑↓ move ── a apply ── d dismiss ── s skip ── esc close ─────────╯
 --- styles
 1x3 2x15 .x2 3 . 1x46
 1 .x66 1
-1 . 4 . 3 . 4x40 .x6 5 .x2 6x4 .x2 3x5 . 1
-1 .x5 4x42 .x19 1
-1 .x5 4x43 .x18 1
-1 .x5 4x42 .x19 1
-1 .x5 4x37 .x24 1
-1 .x5 4x40 .x21 1
-1 .x5 4x43 .x18 1
-1 .x5 4x38 .x23 1
-1 .x5 3x8 .x53 1
+1 . 3x37 .x28 1
 1 .x66 1
-1 . 3x8 .x57 1
-1 . 7x59 .x6 1
-1 . 7x57 .x8 1
-1 . 7x63 .x2 1
-1 . 7x59 .x6 1
-1 . 7x53 .x12 1
+1 . 3x9 .x56 1
+1 .x5 4x7 .x2 5x3 .x2 3x2 .x2 3x12 .x10 3x5 .x2 3x7 .x2 6x4 . 1
 1 .x66 1
-1 . 5 . 3x5 .x3 6x8 .x3 3x10 .x34 1
+1 .x7 3x58 . 1
+1 .x9 7x51 .x6 1
+1 .x9 7x53 .x4 1
+1 .x9 7x56 . 1
+1 .x9 7x55 .x2 1
+1 .x9 7x53 .x4 1
+1 .x9 7x45 .x12 1
+1 .x9 7x55 .x2 1
+1 .x9 7x53 .x4 1
+1 .x9 7x45 .x12 1
+1 .x9 7x13 .x44 1
+1 .x66 1
 1 . 3x9 .x56 1
 1 .x66 1
-1x3 7x2 . 3x4 . 1x2 . 7x5 . 3x4 . 1x2 . 7 . 3x5 . 1x2 . 7 . 3x7 . 1x2 . 7x3 . 3x5 . 1x6
+1x3 7x2 . 3x4 . 1x2 . 7 . 3x5 . 1x2 . 7 . 3x7 . 1x2 . 7 . 3x4 . 1x2 . 7x3 . 3x5 . 1x10
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c bold
 3 fg=#878580
-4 fg=#cf6a4c
-5 fg=#d14d41
-6 fg=#d0a215
+4 fg=#d14d41
+5 fg=#d0a215
+6 fg=#dad8ce bold
 7 fg=#dad8ce

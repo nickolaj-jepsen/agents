@@ -7,6 +7,8 @@
  Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.
 
 
+ Warning: codemode_only: not registered, declarations stay visible: subagent, get_subagent_result, steer_subagent
+
  The apply prompt is in the editor: read it, then Enter to send
 
 
@@ -26,9 +28,7 @@
 
 
 
-─────────────────────────────────────────────────────────────────────────── ↑ 3 more ───────────────────────────────────────────────────────────────────────────
-- wrong: `just build` is not enough to verify a pi change; the docs say it is. (seen 3×)
-  .agents/store/docfix/agents-md-says-just-build-verifies.md
+──  ↑5────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  ──  ── 0% / 1M ── ••••• ──
 
 docs/hosts.md
 - stale: The `legacy` card was removed; the section still describes it. (seen 2×)
@@ -37,13 +37,13 @@ docs/hosts.md
 For each one:
 1. Check the claim against this repo's code. One that no longer holds needs no edit.
 2. Edit the doc as it stands now, in its existing structure and voice. For a stale plan, delete or trim what is finished or gone.
-3. Call docfix with action "resolve" and the id (the file's name without .md), whether you applied it or found it no longer true.
+3. Search once for the outdated wording in the docs beside it (its folder, or the skill or plugin it belongs to). Where another doc states the same fact, fix
+it there too instead of filing a suggestion. Change only that fact, and leave records of the past, such as a changelog, as they are.
+4. Call docfix with action "resolve" and the id (the file's name without .md), whether you applied it or found it no longer true.
 
-Don't commit.
+Name every doc you changed beyond the ones above. Anything else you notice gets filed with docfix as usual. Don't commit.
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-~/.local/state/agents<tmp>                               (main)
-0.0%/1.0M (auto)                                                                                                        (opencode-go) deepseek-v4.1-flash • high
-docs 3
+  OpenCode Go  DeepSeek V4.1 Flash 1017   high  docs 3                                        ~/.local/state/agents<tmp>                                main
 --- styles
 -
 . 1 2x2 .x2 3x6
@@ -52,6 +52,8 @@ docs 3
 -
 . 3x85
 -
+-
+. 7x112
 -
 . 3x62
 -
@@ -72,24 +74,22 @@ docs 3
 -
 -
 -
-7x160
+8x3 3x3 8x124 . 3 8x4 9 8x4 3x7 8x4 3x5 8x3
 -
 -
 -
+.x16 ax6
 -
 -
+.x32 ax6
 -
 -
+.x109 ax9
+.x8 ax6
 -
--
--
--
--
--
-7x160
-3x63
-3x160
--
+.x91 ax6
+8x160
+.x2 3x11 .x2 bx24 .x2 8x6 .x2 3x6 .x40 3x53 cx3 . d . 6x4
 --- legend
 1 fg=#e48a7a bg=#4f8eb3
 2 fg=#e48a7a
@@ -97,4 +97,10 @@ docs 3
 4 fg=#4f8eb3
 5 fg=#eab65d
 6 fg=#b7b5ac
-7 fg=#cf6a4c
+7 fg=#d0a215
+8 fg=#cf6a4c
+9 fg=#cf6a4c bold
+a fg=#d14d41 underline=single
+b fg=#878580 bold
+c fg=#dad8ce
+d fg=#879a39

@@ -27,13 +27,13 @@ const turns: Turn[] = [
     toolCall: { name: "mcp__docfix__docfix", arguments: FILED },
   },
   { text: "Filed. The install steps in README.md are updated; nothing else was touched." },
-  // Apply drafts one prompt for every marked doc and the demo sends it; the model resolves both.
+  // Closing drafts one prompt for every row set to apply and the demo sends it; the model resolves both.
   { toolCall: { name: "mcp__docfix__docfix", arguments: { action: "resolve", id: FILED_ID } } },
   { toolCall: { name: "mcp__docfix__docfix", arguments: { action: "resolve", id: LEGACY_ID } } },
   { text: "Both claims checked against the code and resolved; nothing is committed." },
 ];
 
-/** The same story in pi, where the tool is `docfix`; marking one doc keeps it to one resolve. */
+/** The same story in pi, where the tool is `docfix`; applying one keeps it to one resolve. */
 const PI_TURNS: Turn[] = [
   {
     text: turns[0]!.text,
@@ -45,14 +45,23 @@ const PI_TURNS: Turn[] = [
 ];
 
 const ask = "Point the install steps in README.md at `just dev-setup`";
-const ROWS = [{ click: "is not enough" }, { click: "legacy" }];
+/** The first row to apply, and the second (past its doc's header) to apply too. */
+const ROWS = [
+  { press: "a" },
+  { sleep: 1200 },
+  { press: "Down" },
+  { sleep: 500 },
+  { press: "Down" },
+  { sleep: 700 },
+  { press: "a" },
+];
 
 export default site({
   plugin: "docfix",
   demo: [
     {
       caption:
-        "The agent files a doc suggestion instead of editing a doc outside its change; /docfix lists them, and Apply drafts the marked ones as a prompt for you to send.",
+        "The agent files a doc suggestion instead of editing a doc outside its change; /docfix lists them, and closing it drafts the ones set to apply as a prompt for you to send.",
       project: "shop-api",
       setup,
       start: {
@@ -73,7 +82,7 @@ export default site({
         ...ROWS,
         { sleep: 2400 },
         poster,
-        { press: "a" },
+        { press: "Escape" },
         // The draft is taller than the prompt box, so its first line has scrolled away.
         { wait: "For each one:" },
         // The draft sits in the prompt box for a moment, to be read; then it is sent.
@@ -86,7 +95,7 @@ export default site({
     {
       harness: "pi",
       caption:
-        "pi has the same tool and panel: the agent files the suggestion, /docfix lists them, and Apply drafts the marked one as a prompt for you to send.",
+        "pi has the same tool and panel: the agent files the suggestion, /docfix lists them, and closing it drafts the one set to apply as a prompt for you to send.",
       project: "shop-api",
       setup,
       start: { hermetic: true, plugins: ["docfix"], turns: PI_TURNS },
@@ -100,10 +109,10 @@ export default site({
         { press: "Enter" },
         { wait: "Doc suggestions" },
         { sleep: 2600 },
-        { press: "Space" },
+        { press: "a" },
         { sleep: 2400 },
         poster,
-        { press: "a" },
+        { press: "Escape" },
         { wait: "For each one:" },
         { sleep: 3200 },
         { press: "Enter" },
@@ -124,15 +133,23 @@ export default site({
       start: { hermetic: true, turns: [] },
       steps: [{ type: "/docfix" }, { press: "Enter" }, { wait: "AGENTS.md" }],
     },
-    marked: {
-      caption: "Mark the ones to act on, then Apply or Dismiss them.",
+    set: {
+      caption: "Set each one to apply, dismiss or skip; closing the pane carries it out.",
       project: "shop-api",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx);
       },
       start: { hermetic: true, turns: [] },
-      steps: [{ type: "/docfix" }, { press: "Enter" }, { wait: "AGENTS.md" }, ...ROWS],
+      steps: [
+        { type: "/docfix" },
+        { press: "Enter" },
+        { wait: "AGENTS.md" },
+        { press: "a" },
+        { press: "Down" },
+        { press: "Down" },
+        { press: "d" },
+      ],
     },
     pi: {
       caption: "pi has the same panel and the same tool, from the same core.",
@@ -147,9 +164,11 @@ export default site({
         { type: "/docfix" },
         { press: "Enter" },
         { wait: "AGENTS.md" },
-        { press: "Space" },
+        { press: "a" },
         { press: "Down" },
-        { press: "Space" },
+        { press: "Down" },
+        { press: "d" },
+        { press: "Enter" },
       ],
     },
   },

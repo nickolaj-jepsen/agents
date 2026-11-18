@@ -1,29 +1,27 @@
-# docfix/pi/one 70x24 @1,6 (68x12)
+# docfix/pi/one 70x24 @1,6 (68x11)
 ╭─ Doc suggestions  1 ─────────────────────────────────────────────╮
 │                                                                  │
-│ AGENTS.md ────────────────────────────────────────────────────── │
-│ ❯ □ `just build` is not enough to verify a pi     !    3×     •• │
-│     change; the docs say it is.                                  │
+│ Closing carries out apply and dismiss                            │
 │                                                                  │
-│ ! wrong   seen 3×   <age>                                        │
+│   AGENTS.md ─────────────────── apply all  dismiss all  skip all │
 │                                                                  │
-│ Evidence  <date>     ─────────────────────────────────────────── │
-│ AGENTS.md: the line contradicts what the code does now.          │
+│   ❯ `just build` is not enough to verify a pi change; the docs   │
+│     say it is.                                                   │
+│     ! wrong  3×  ••  ▸ evidence             apply  dismiss  skip │
 │                                                                  │
-╰─ ↑↓ move ── space mark ── a apply ── d dismiss ── esc later ─────╯
+╰─ ↑↓ move ── a apply ── d dismiss ── s skip ── esc close ─────────╯
 --- styles
 1x3 2x15 .x2 3 . 1x46
 1 .x66 1
-1 . 4x9 . 3x54 . 1
-1 . 5 . 3 . 5x41 .x5 6 .x2 7x4 .x2 3x5 . 1
-1 .x5 5x27 .x34 1
+1 . 3x37 .x28 1
 1 .x66 1
-1 . 6 . 3x5 .x3 7x7 .x3 3x10 .x35 1
+1 .x3 4x9 . 3x19 . 3x9 .x2 3x11 .x2 4x8 . 1
 1 .x66 1
-1 . 4x20 . 3x43 . 1
-1 . 8x55 .x10 1
+1 .x3 5 . 2x58 .x3 1
+1 .x5 2x10 .x51 1
+1 .x5 6x7 .x2 7x2 .x2 3x2 .x2 3x10 .x13 3x5 .x2 3x7 .x2 4x4 . 1
 1 .x66 1
-1x3 8x2 . 3x4 . 1x2 . 8x5 . 3x4 . 1x2 . 8 . 3x5 . 1x2 . 8 . 3x7 . 1x2 . 8x3 . 3x5 . 1x6
+1x3 8x2 . 3x4 . 1x2 . 8 . 3x5 . 1x2 . 8 . 3x7 . 1x2 . 8 . 3x4 . 1x2 . 8x3 . 3x5 . 1x10
 --- legend
 1 fg=#343331
 2 fg=#cf6a4c bold

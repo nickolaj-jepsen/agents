@@ -1,5 +1,4 @@
 # docfix/pi/applied 70x24 @0,0 (70x24)
-
  ▀▀█  <ver>
  █▀ █ escape interrupt · ctrl+c/ctrl+d clear/exit · / commands · !
  bash · ctrl+o more
@@ -9,22 +8,22 @@
  use or extend Pi.
 
 
+ Warning: codemode_only: not registered, declarations stay visible:
+ subagent, get_subagent_result, steer_subagent
+
  The apply prompt is in the editor: read it, then Enter to send
 
-───────────────────────────── ↑ 15 more ──────────────────────────────
-holds needs no edit.
-2. Edit the doc as it stands now, in its existing structure and
-voice. For a stale plan, delete or trim what is finished or gone.
-3. Call docfix with action "resolve" and the id (the file's name
+──  ↑21─────────────────────────────────  ──  ── 0% / 1M ── ••••• ──
+suggestion. Change only that fact, and leave records of the past,
+such as a changelog, as they are.
+4. Call docfix with action "resolve" and the id (the file's name
 without .md), whether you applied it or found it no longer true.
 
-Don't commit.
+Name every doc you changed beyond the ones above. Anything else you
+notice gets filed with docfix as usual. Don't commit.
 ──────────────────────────────────────────────────────────────────────
-~/.local/state/agents<tmp>                               (main)
-0.0%/1.0M (auto)              (opencode-go) deepseek-v4.1-flash • high
-docs 3
+  Go  DeepSeek V4.1 Flash 1017   high                         main
 --- styles
--
 . 1 2x2 .x2 3x6
 . 4x2 . 5 . 3x6 6x13 3x13 6x14 3 6x12 3 6x4
 . 6x7 3x6 6x5
@@ -34,20 +33,21 @@ docs 3
 . 3x17
 -
 -
+. 7x69
+. 7x45
+-
 . 3x62
 -
-7x70
+8x3 3x4 8x33 . 3 8x4 9 8x4 3x7 8x4 3x5 8x3
+-
+.x10 ax9
+.x8 ax6
 -
 -
 -
--
--
--
--
-7x70
-3x63
-3x70
--
+.x23 ax6
+8x70
+.x2 3x2 .x2 bx24 .x2 8x6 .x24 c . 6x4
 --- legend
 1 fg=#e48a7a bg=#4f8eb3
 2 fg=#e48a7a
@@ -55,4 +55,9 @@ docs 3
 4 fg=#4f8eb3
 5 fg=#eab65d
 6 fg=#b7b5ac
-7 fg=#cf6a4c
+7 fg=#d0a215
+8 fg=#cf6a4c
+9 fg=#cf6a4c bold
+a fg=#d14d41 underline=single
+b fg=#878580 bold
+c fg=#879a39
