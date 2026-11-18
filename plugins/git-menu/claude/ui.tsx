@@ -1004,6 +1004,8 @@ export type ChoiceOption = {
    * graphical surface sets such a label as text under a Button that carries this instead.
    */
   short?: string;
+  /** The label is a word of the person's own (a suggestion), so a graphical surface keeps its case. */
+  isLiteral?: boolean;
   onPress: () => unknown;
 };
 
@@ -1075,7 +1077,9 @@ export function choice(
               variant={o.isOn && !o.isQuiet ? "primary" : "secondary"}
               // The surface draws every variant alike, so only the chosen one is not dim.
               dimColor={!(o.isOn && !o.isQuiet) || undefined}
-              label={capital(isLong ? (o.short ?? o.label) : o.label)}
+              label={
+                isLong ? capital(o.short ?? o.label) : o.isLiteral ? o.label : capital(o.label)
+              }
               onPress={() => o.onPress()}
             />
           );
