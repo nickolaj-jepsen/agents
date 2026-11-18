@@ -45,5 +45,5 @@ README.md is generated (`just readme`; `nix flake check` fails while it is stale
 - `docs/*.md`: the developer pages, each starting with a `# Title`. `docs/_intro.md` is the top of the
   README and the home page; `docs/_install.md` is the README's install section.
 - `e2e/<plugin>/site.scenarios.ts`: the plugin's demos and stills. They are recorded, not committed:
-  `just media` writes `site/media/` (and the kit catalogue's crops), which the Pages workflow does
+  `just media` builds `.#site-media` and `.#site-kit` in the store, which the Pages workflow does
   before every build. The README links the featured plugins' posters on the site.

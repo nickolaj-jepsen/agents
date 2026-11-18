@@ -36,24 +36,32 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # The media replay from the e2e scenarios on a stubbed model, so the same inputs give the same
-      # pictures: cache on them.
+      # `.#site-media` and `.#site-kit` record on a stubbed model in a config folder of their own, so
+      # the same inputs give the same pictures: cache on them. A runner is ephemeral, so without this
+      # the store is empty and every push re-records; a binary cache would stand in for it.
       - id: media
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: site/media
+          path: |
+            site/media
+            site/data/kit.json
           key: media-${{ hashFiles('e2e/**', 'plugins/**', 'kit/**', 'flake.lock', 'devshell.nix', 'package-lock.json') }}
       - if: steps.media.outputs.cache-hit != 'true'
         uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
-      # E2E_UPDATE: the kit's snapshots gate local runs, not the site; a newer Claude Code that draws
-      # a story differently still gets its picture.
       - if: steps.media.outputs.cache-hit != 'true'
         name: Record the media
-        run: nix develop .#media --command just _media
+        run: |
+          out=$(nix build --no-link --print-out-paths .#site-media)
+          kit=$(nix build --no-link --print-out-paths .#site-kit)
+          chmod -R u+w site/media site/data 2>/dev/null || true
+          rm -rf site/media
+          mkdir -p site/media site/data
+          cp -r "$out"/. site/media/
+          cp -r "$kit"/kit site/media/kit
+          cp "$kit"/kit.json site/data/kit.json
+          chmod -R u+w site/media site/data
         env:
           NIX_CONFIG: access-tokens = github.com=${{ github.token }}
-          E2E_UPDATE: "1"
-          E2E_JOBS: "2"
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24

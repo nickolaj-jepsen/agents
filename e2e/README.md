@@ -139,9 +139,9 @@ A run writes `site/media/<plugin>/`: `demo.mp4` and its poster `demo.png` (`demo
 harness's demo), a `<still>.png` per still, and `media.json`, the captions, sizes and paths the site
 reads, relative to the repo root.
 
-The files are not committed. The Pages workflow records them before every build, in the same shell
-as `just media` (`nix develop .#media`: the agents from this flake's nixpkgs, the fonts, ffmpeg and
-hunspell, and nothing of the machine's).
+The files are not committed. `just media` builds `.#site-media` and `.#site-kit`, which record in the
+same hermetic shell: the agents from this flake's nixpkgs, the fonts, ffmpeg and hunspell, and nothing
+of the machine's. The Pages workflow builds the same two.
 
 A plugin whose run fails keeps its old files, and the failed screens are left in the temp folder it
 names. `E2E_KEEP=1` and `SITE_JOBS=<n>` (scenarios side by side) work as in the regression run.

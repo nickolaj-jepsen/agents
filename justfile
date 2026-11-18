@@ -102,9 +102,26 @@ site-build:
 site-shots *PLUGINS:
     npm run site-shots -- {{ PLUGINS }}
 
-[doc("Record all of the site's media, signed out, in the shell the Pages workflow uses")]
+[doc("Record the site's media and the catalogue through the store: an unchanged recording is not replayed")]
 [group('site')]
+[script]
 media:
+    # `.#site-media` and `.#site-kit` read git-tracked files only: `git add` a new scenario, or use
+    # `just media-fresh` to record what is in the tree as it stands.
+    out=$({{ nixcmd }} build --no-link --print-out-paths .#site-media)
+    kit=$({{ nixcmd }} build --no-link --print-out-paths .#site-kit)
+    rm -rf site/media
+    mkdir -p site/media site/data
+    cp -r "$out"/. site/media/
+    cp -r "$kit"/kit site/media/kit
+    cp "$kit"/kit.json site/data/kit.json
+    # The store's files are read-only: the next run has to replace them.
+    chmod -R u+w site/media site/data
+    echo "media: site/media/ and site/data/kit.json written from the store"
+
+[doc("Record everything into the tree, ignoring the store: the escape hatch when a recording looks wrong")]
+[group('site')]
+media-fresh:
     {{ nixcmd }} develop .#media -c just _media
 
 # Inside the media shell: a pi half imports pi's packages, which _dev-setup-pi links.

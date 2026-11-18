@@ -84,11 +84,15 @@
           config.allowUnfree = true;
         };
 
-        packages = {
-          inherit agent-tools;
-          inherit tui-test;
-          default = agent-tools;
-        };
+        packages =
+          {
+            inherit agent-tools;
+            inherit tui-test;
+            default = agent-tools;
+          }
+          # The site's pictures and the catalogue's model, cached by the store: `just media` builds
+          # these. Two units, so a change to one recording does not replay the other.
+          // lib.mapAttrs' (name: value: lib.nameValuePair "site-${name}" value) (pkgs.callPackage ./pkgs/site-media.nix {inherit tui-test;});
 
         checks =
           {

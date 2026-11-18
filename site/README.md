@@ -31,9 +31,10 @@ site build needs the root only to make the model: `cd site && npm run build` rea
   reads that file and nothing else.
 - A relative link in a source resolves against its file: one to a plugin, skill or doc lands on its page,
   anything else in the repo on GitHub (`src/lib/markdown.ts`).
-- `site/media/` is recorded, not committed. `just media` (in `nix develop .#media`, signed out)
-  plays `e2e/<plugin>/site.scenarios.ts` and the kit's stories into it, and the Pages workflow does
-  the same before it builds. Without it the pages build with no pictures. It is served at
+- `site/media/` is recorded, not committed. `just media` builds `.#site-media` and `.#site-kit`:
+  derivations that play `e2e/<plugin>/site.scenarios.ts` and the kit's stories, signed out and on a
+  stubbed model. Nix keys them on the files and agent versions they read, so an unchanged recording
+  comes back from the store instead of being replayed, and the Pages workflow builds the same two. Without it the pages build with no pictures. It is served at
   `/agents/media/` (the `media.json` files stay out); `astro.config.mjs` copies it into the build and
   serves it in dev. Nothing here names a folder above `site/`: the recorded pictures are `media/`,
   and the models are `data/content.json` and `data/kit.json`.
