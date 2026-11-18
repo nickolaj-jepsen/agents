@@ -25,7 +25,11 @@ export default vscodeScenarios({
       about: "the count above the prompt after one stubbed turn",
       setup: withSuggestions,
       start: reply,
-      steps: [{ type: "hello" }, { press: "Enter" }, { wait: "docfix: docs 3", timeout: 30_000 }],
+      steps: [
+        { type: "hello" },
+        { press: "Enter" },
+        { wait: "3 doc suggestions to review", timeout: 30_000 },
+      ],
     },
     queue: {
       about:
@@ -59,6 +63,7 @@ export default vscodeScenarios({
         { wait: "AGENTS.md" },
         { click: "Open" },
         { click: "Apply" },
+        // Opening the next row folds the first, so its Open is the first left.
         { click: "Open" },
         { click: "Dismiss" },
       ],

@@ -326,7 +326,8 @@ type Rows = {
   choose(ids: string[], choice: Choice | undefined): unknown;
   /** As `choose`, for the row or doc the ring is on as the press lands. */
   chooseFocused(choice: Choice | undefined): unknown;
-  toggleOpen(ids: string[]): unknown;
+  /** Opens or folds rows; `isAlone` opens them and folds every other. */
+  toggleOpen(ids: string[], isAlone?: boolean): unknown;
 };
 
 /** The rows a stop stands for: a row itself, or every row of a doc. */
@@ -381,7 +382,7 @@ function row(k: Kit, r: Rows, s: Suggestion): JSX.Element {
     age: age(s.updated, r.now),
     tone: state,
     isOpen: r.open.has(s.id),
-    onToggle: () => r.toggleOpen([s.id]),
+    onToggle: (how) => r.toggleOpen([s.id], how?.isAlone),
     autoFocus: s.id === r.first,
     details: {
       key: evidenceKey(s.id),
@@ -517,6 +518,7 @@ export const register: Register = (on) => {
           key: "docfix:open",
           text: `docfix: docs ${n}`,
           hint: "review",
+          gui: { text: n === 1 ? "1 doc suggestion to review" : `${n} doc suggestions to review` },
           status: "warning",
           onPress: () => openPane($),
         })}
@@ -562,18 +564,41 @@ export const register: Register = (on) => {
         await update($, choices, (cur) => toggleChoice(cur, ids, choice));
         await say($, "");
       },
-      toggleOpen: (ids) =>
+      toggleOpen: (ids, isAlone) =>
         update($, expanded, (cur) =>
           ids.every((id) => cur.includes(id))
             ? cur.filter((id) => !ids.includes(id))
-            : [...new Set([...cur, ...ids])],
+            : isAlone
+              ? ids
+              : [...new Set([...cur, ...ids])],
         ),
     };
     const summary = choiceSummary(queued.map((s) => set[s.id]));
 
+    // Submit carries the choices out and closes, as Esc or the close mark does. It settles
+    // first: a close the mod raises itself skips the mod's own ui.close hook.
+    const actions = [
+      {
+        key: SUBMIT,
+        label: "submit",
+        isPrimary: true,
+        gui: { isPrimary: Boolean(summary) },
+        onPress: async () => {
+          if (!(await settle($))) return;
+          await update($, paneShown, () => false);
+          await $.ui.close({ id: PANE });
+        },
+      },
+    ];
+
     return pane(kit, (k) => {
+      // A graphical surface sets Submit at the top, beside what closing will do.
       const head = paneTitle(k, "Doc suggestions", queued.length || undefined, {
-        gui: { count: queued.length ? `${queued.length} open` : undefined },
+        gui: {
+          count: queued.length ? `${queued.length} open` : undefined,
+          summary: summary ? `On close: ${summary}` : undefined,
+          actions: queued.length ? actions : undefined,
+        },
       });
       const said_ = noted ? notice(k, noted, status, { isWrapped: true }) : null;
       if (queued.length === 0)
@@ -597,25 +622,7 @@ export const register: Register = (on) => {
         isAll,
         onMore: () => update($, showAll, () => true),
       });
-      // Submit carries the choices out and closes, as Esc or the close mark does. It settles
-      // first: a close the mod raises itself skips the mod's own ui.close hook.
-      const submit = actionBar(
-        k,
-        [
-          {
-            key: SUBMIT,
-            label: "submit",
-            isPrimary: true,
-            gui: { isPrimary: Boolean(summary) },
-            onPress: async () => {
-              if (!(await settle($))) return;
-              await update($, paneShown, () => false);
-              await $.ui.close({ id: PANE });
-            },
-          },
-        ],
-        { gui: { summary: summary ? `On close: ${summary}` : "Nothing set" } },
-      );
+      const submit = actionBar(k, actions, { gui: { isHidden: true } });
       return [
         head,
         bar,
@@ -630,10 +637,10 @@ export const register: Register = (on) => {
                 stack(
                   k,
                   list.map((s) => row(k, rows, s)),
-                  { gui: { gap: "sm" } },
+                  { gui: { gap: "none" } },
                 ),
               ],
-              { isTight: true, gui: { gap: "sm" } },
+              { isTight: true, gui: { gap: "xs" } },
             ),
           ),
         ),

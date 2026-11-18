@@ -172,6 +172,28 @@ export const tokens = {
     },
     /** An icon's side, in CSS pixels. */
     icon: 16,
+    /**
+     * The vertical rhythm, in lines of body text. A step name is a whole line or none on VS Code,
+     * too coarse for a short pane, so the kit spaces with these numbers. `xs` sits between the
+     * lines of one part (a label and its text), `sm` between the parts of one item (claim, meta,
+     * evidence, keys), `md` between items that stand alone (groups, the pane's regions).
+     */
+    space: { xs: 0.2, sm: 0.5, md: 0.9 },
+    /**
+     * Horizontal room, in cells: `xs` between the buttons of a row, `sm` after an icon, `md`
+     * between a line's text and its control, and `inset` on each side of a row, which is where
+     * an opened row's fill reaches.
+     */
+    across: { xs: 0.6, sm: 0.8, md: 1.2, inset: 1 },
+    /**
+     * The fill of an opened row: the theme's own second background, a well the row's body sits
+     * in, which a quiet button's outline still reads on.
+     */
+    fill: "userMessageBackground",
+    /** Behind a code span in a Text, which has no code face: the theme's code background. */
+    chip: "bashMessageBackgroundColor",
+    /** A thin rule's colour: one grey at low alpha, which reads on a light theme and a dark one. */
+    rule: "#8b8f9866",
   },
   /**
    * The style's roles as a mod draws them: `dim` is `dimColor`, `text` is the default,
@@ -190,6 +212,9 @@ export const tokens = {
 
 /** One of the style's colour roles. */
 export type Role = keyof typeof tokens.role;
+
+/** A step of the graphical surfaces' rhythm. */
+export type GuiSpace = keyof typeof tokens.gui.space;
 
 /** The props of a `Text` in `role`. */
 export const roleProps = (role: Role) =>
@@ -534,7 +559,8 @@ export function section(k: Kit, title: string, options: SectionOptions = {}): JS
   const width = k.columns;
   const isControl = key !== undefined && onPress !== undefined;
   if (k.isNative) {
-    // A flat heading: the title and, quiet, the keys that set the rows under it.
+    // A flat heading over its rows, at their inset: the title and, at the far edge, the quiet
+    // keys that set every row under it, which wrap under the title when the room is short.
     const isMany = (options.count ?? 2) > 1;
     return (
       <Box
@@ -542,8 +568,10 @@ export function section(k: Kit, title: string, options: SectionOptions = {}): JS
         flexDirection="row"
         flexWrap="wrap"
         alignItems="center"
-        columnGap="md"
-        rowGap="sm"
+        justifyContent="space-between"
+        columnGap={tokens.gui.across.md}
+        rowGap={tokens.gui.space.xs}
+        paddingX={tokens.gui.across.inset}
       >
         <Box flexShrink={1}>
           <Text weight="semibold" mono={options.isCode || undefined}>
@@ -579,27 +607,68 @@ export function section(k: Kit, title: string, options: SectionOptions = {}): JS
   );
 }
 
+/** What a graphical surface's pane title line says and holds. */
+export type PaneTitleGui = {
+  /** The count as said here, `3 open`. */
+  count?: string;
+  /** What closing will do, said in place of the count while there is something to do. */
+  summary?: string;
+  /** The pane's actions, drawn at the title line's far edge: the line becomes the toolbar. */
+  actions?: readonly Action[];
+};
+
 /**
  * A pane's title line, `─ Title  count ─────`, so both harnesses share one. A graphical surface
- * already draws the pane's own title above the body, so it draws only what the title leaves out.
+ * already draws the pane's own title above the body, so it draws only what the title leaves out;
+ * given `gui.actions`, the line is the pane's toolbar, its actions at the far edge.
  * @param count Dim, after the title; left out when none.
- * @param options `gui.count` is the count as a graphical surface says it, `3 open`.
+ * @param options `gui.count` is the count as a graphical surface says it, `3 open`; `gui.summary`
+ *   what closing will do, said in its place.
  */
 export function paneTitle(
   k: Kit,
   title: string,
   count?: number | string,
-  options: BySurface<{ count?: string }> = {},
+  options: BySurface<PaneTitleGui> = {},
 ): JSX.Element | null {
-  const { Text } = k;
+  const { Box, Text } = k;
   if (k.isNative) {
-    const said = surfaceOf(k, options).count ?? (count === undefined ? "" : String(count));
-    if (title === k.title) return said ? <Text dimColor>{said}</Text> : null;
-    return (
+    const own = surfaceOf(k, options);
+    const said = own.count ?? (count === undefined ? "" : String(count));
+    const lead =
+      title === k.title ? null : (
+        <Text weight="semibold">{`${title}${said || own.summary ? "  " : ""}`}</Text>
+      );
+    // The pane's toolbar: what it holds, or what closing it will do, and its actions at the far
+    // edge, as a source-control view sets its commit over the changes.
+    const text = own.summary ? (
       <Text>
-        <Text weight="semibold">{title}</Text>
-        {said ? <Text dimColor>{`  ${said}`}</Text> : null}
+        {lead}
+        {own.summary}
       </Text>
+    ) : said || lead ? (
+      <Text>
+        {lead}
+        {said ? <Text dimColor>{said}</Text> : null}
+      </Text>
+    ) : null;
+    if (!own.actions?.length) return text;
+    return (
+      <Box
+        key="toolbar"
+        flexDirection="row"
+        flexWrap="wrap"
+        alignItems="center"
+        justifyContent="space-between"
+        columnGap={tokens.gui.across.md}
+        rowGap={tokens.gui.space.xs}
+        paddingX={tokens.gui.across.inset}
+      >
+        <Box flexShrink={1}>{text}</Box>
+        <Box flexDirection="row" columnGap={tokens.gui.across.xs}>
+          {own.actions.map((a) => actionButton(k, a))}
+        </Box>
+      </Box>
     );
   }
   const width = k.columns;
@@ -648,7 +717,7 @@ export function pane(
   const { Box } = k;
   if (k.isNative)
     return (
-      <Box flexDirection="column" rowGap="sm">
+      <Box flexDirection="column" rowGap={tokens.gui.space.md}>
         {blocks(k)}
       </Box>
     );
@@ -727,8 +796,13 @@ export function notice(
   status: "success" | "warning" | "error" | "dim" | "text" = "warning",
   options: { isWrapped?: boolean; gui?: { isHidden?: boolean } } = {},
 ): JSX.Element | null {
-  const { Text } = k;
-  if (k.isNative) return options.gui?.isHidden ? null : <Text {...roleProps(status)}>{text}</Text>;
+  const { Box, Text } = k;
+  if (k.isNative)
+    return options.gui?.isHidden ? null : (
+      <Box paddingX={tokens.gui.across.inset}>
+        <Text {...roleProps(status)}>{text}</Text>
+      </Box>
+    );
   const lines = options.isWrapped
     ? clamp(text, k.columns).join("\n")
     : (clamp(text, k.columns, { min: 1, max: 1 })[0] ?? "");
@@ -740,9 +814,27 @@ export function notice(
  * @param text Say what is missing and, if it helps, what makes rows appear.
  */
 export function emptyState(k: Kit, text: string): JSX.Element {
-  const { Text } = k;
-  if (k.isNative) return <Text dimColor>{text}</Text>;
+  const { Box, Text } = k;
+  if (k.isNative)
+    return (
+      <Box paddingX={tokens.gui.across.inset}>
+        <Text dimColor>{text}</Text>
+      </Box>
+    );
   return <Text dimColor>{clamp(text, k.columns).join("\n")}</Text>;
+}
+
+/**
+ * The heading of a part inside an item: dim on the terminal; a graphical surface sets it in the
+ * heavier weight too, so it reads apart from a dim label that says when and who.
+ */
+export function subhead(k: Kit, text: string): JSX.Element {
+  const { Text } = k;
+  return (
+    <Text dimColor weight={k.isNative ? "semibold" : undefined}>
+      {text}
+    </Text>
+  );
 }
 
 /** The evidence's rule: a dim label, with a dim rule after it to the edge on the terminal. */
@@ -767,9 +859,12 @@ const INDENT = 2;
  */
 export function indent(k: Kit, children: (k: Kit) => JSX.Element): JSX.Element {
   const { Box } = k;
+  // A graphical surface sets nothing in: what heads the block is a dim line above it, and a
+  // second step in from an opened row's own would only narrow the text.
+  if (k.isNative) return children(k);
   return (
-    <Box paddingLeft={k.isNative ? "md" : INDENT} flexDirection="column">
-      {children(k.isNative ? k : withColumns(k, k.columns - INDENT))}
+    <Box paddingLeft={INDENT} flexDirection="column">
+      {children(withColumns(k, k.columns - INDENT))}
     </Box>
   );
 }
@@ -793,14 +888,14 @@ const FACT_GAP = 2;
  */
 export function facts(k: Kit, items: readonly Fact[], heading?: string): JSX.Element {
   const { Box, Text } = k;
-  const head = heading ? <Text dimColor>{heading}</Text> : null;
+  const head = heading ? subhead(k, heading) : null;
   const shown = (f: Fact) => (f.isQuote ? `“${f.value}”` : f.value);
   if (k.isNative)
     return (
-      <Box flexDirection="column" rowGap="xs">
+      <Box flexDirection="column" rowGap={tokens.gui.space.xs}>
         {head}
         {items.map((f, i) => (
-          <Box key={`f${i}`} columnGap="md">
+          <Box key={`f${i}`} flexWrap="nowrap" columnGap={tokens.gui.across.md}>
             <Text dimColor>{f.label}</Text>
             <Box flexShrink={1}>
               <Text mono={f.isCode || undefined}>{shown(f)}</Text>
@@ -986,8 +1081,8 @@ export function choice(
         key={settings.key}
         flexDirection={isRow ? "row" : "column"}
         flexWrap={isRow ? "wrap" : undefined}
-        columnGap="sm"
-        rowGap="md"
+        columnGap={tokens.gui.across.xs}
+        rowGap={isRow ? tokens.gui.space.xs : tokens.gui.space.sm}
       >
         {options.map((o) => {
           // A Button does not wrap its label, so a label is a word or two; the detail is prose.
@@ -1065,23 +1160,22 @@ export function capped<T>(
   if (!k.isNative || options.isAll || items.length <= max) return { shown: [...items], more: null };
   const left = items.length - max;
   const { onMore } = options;
+  const { Box } = k;
   return {
     shown: items.slice(0, max),
-    more: onMore ? (
-      <Button key="more" label={`Show ${left} more`} onPress={() => onMore()} />
-    ) : (
-      <Text key="more" dimColor>{`${left} more`}</Text>
+    more: (
+      <Box key="more:box" paddingX={tokens.gui.across.inset}>
+        {onMore ? (
+          <Button key="more" dimColor label={`Show ${left} more`} onPress={() => onMore()} />
+        ) : (
+          <Text dimColor>{`${left} more`}</Text>
+        )}
+      </Box>
     ),
   };
 }
 
 // ---- card
-
-/** The first sentence of a claim, or its first line: what a collapsed row says. */
-const firstSentence = (text: string) => {
-  const line = linesOf(text)[0] ?? "";
-  return /^(.+?[.!?])\s+(?=[A-Z`“"])/.exec(line)?.[1] ?? line;
-};
 
 /** What a reviewed item is: a kind and the colour role it is drawn in. */
 const KIND_TONE = { wrong: "error", stale: "warning", missing: "neutral" } as const;
@@ -1102,7 +1196,11 @@ export type CardOptions = {
   /** What it is set to: colours the claim, apply in success and dismiss struck through. */
   tone?: "apply" | "dismiss";
   isOpen: boolean;
-  onToggle: () => unknown;
+  /**
+   * Opens or folds it. A graphical surface asks for `isAlone`: opening a row folds the others,
+   * so a short pane holds the one being read.
+   */
+  onToggle: (options?: { isAlone?: boolean }) => unknown;
   /** The details' toggle, which says how many pieces there are. */
   details: { key: string; count: number; render: (k: Kit) => JSX.Element };
   /** The keys that set it. */
@@ -1115,57 +1213,119 @@ export type CardOptions = {
   };
 };
 
+/** Words between backticks, as a Text can set them: in a chip, since a Text has no code face. */
+function inlineCode(k: Kit, text: string): RenderNode[] {
+  const { Text } = k;
+  return text
+    .split(/(`[^`\n]+`)/)
+    .filter(Boolean)
+    .map((part, i) =>
+      part.startsWith("`") && part.endsWith("`") && part.length > 2 ? (
+        <Text key={`c${i}`} backgroundColor={tokens.gui.chip}>{` ${part.slice(1, -1)} `}</Text>
+      ) : (
+        part.replace(/\*\*|__/g, "")
+      ),
+    );
+}
+
+/** A thin rule down the side of what it marks: a Box of a fraction of a cell, filled. */
+function sideRule(k: Kit, key: string): JSX.Element {
+  const { Box } = k;
+  return <Box key={key} width={0.2} flexShrink={0} backgroundColor={tokens.gui.rule} />;
+}
+
 /**
- * One reviewed item: its claim, its kind, how often and how long ago, its keys and its details.
- * The terminal cuts a folded claim and sets the keys at the right of the meta line; a graphical
- * surface draws a card: the kind with its icon, the whole claim as prose, the keys as buttons, and
- * the details behind a button.
+ * The graphical card: a row, opened in place. Folded, it is one line: the kind's icon, the claim
+ * cut at the edge and a quiet button that opens it. Opened, the same line shows the claim whole
+ * and the row takes a fill that holds everything under it, set in from the icon, with a rule
+ * running down from the icon so the body reads as that line's own: the kind and its history, the
+ * evidence, and the keys that set it. A Button cannot wrap or hold an icon, so it is never the
+ * row itself.
  */
-export function card(k: Kit, o: CardOptions): JSX.Element {
+function cardGui(k: Kit, o: CardOptions): JSX.Element {
   const { Box, Button, Text } = k;
+  const { space, across } = tokens.gui;
   const times = o.seen ?? 1;
-  if (k.isNative) {
-    const label = capital(o.kind);
-    const meta = [label, times > 1 ? `Seen ${times} times` : "", o.age ? `${o.age} ago` : ""]
-      .filter(Boolean)
-      .join("  ·  ");
-    const mark =
-      o.tone === "apply"
-        ? icon(k, "success", { tone: "success", alt: "apply" })
-        : o.tone === "dismiss"
-          ? icon(k, "error", { alt: "dismiss" })
-          : icon(k, o.kind, { tone: KIND_TONE[o.kind], alt: label });
-    const said = o.tone ? `_${capital(o.tone)}_ · ` : "";
-    // Flat: one row per item, a mark and the claim wrapping beside it, and one quiet button that
-    // opens it. A Button does not wrap and cannot hold an icon, so it is not the row itself.
-    return (
-      <Box key={o.key} flexDirection="column" rowGap="md">
-        <Box flexDirection="row" flexWrap="nowrap" alignItems="flex-start" columnGap="sm">
+  const kind = capital(o.kind);
+  const mark =
+    o.tone === "apply"
+      ? icon(k, "success", { tone: "success", alt: "Set to apply" })
+      : o.tone === "dismiss"
+        ? icon(k, "error", { alt: "Set to dismiss" })
+        : icon(k, o.kind, { tone: KIND_TONE[o.kind], alt: kind });
+  const isDismissed = o.tone === "dismiss";
+  const claim = o.isOpen ? (
+    prose(k, o.claim)
+  ) : (
+    <Text
+      wrap="truncate-end"
+      dimColor={isDismissed || undefined}
+      strikethrough={isDismissed || undefined}
+    >
+      {inlineCode(k, linesOf(o.claim).join(" "))}
+    </Text>
+  );
+  const history = [times > 1 ? `seen ${times} times` : "", o.age ? `${o.age} ago` : ""].filter(
+    Boolean,
+  );
+  return (
+    <Box
+      key={o.key}
+      flexDirection="row"
+      flexWrap="nowrap"
+      columnGap={across.sm}
+      paddingX={across.inset}
+      paddingY={o.isOpen ? space.sm : space.xs}
+      backgroundColor={o.isOpen ? tokens.gui.fill : undefined}
+      // A round border is the surface's only rounded corner; it is drawn in no colour.
+      borderStyle="round"
+      borderColor="#00000000"
+    >
+      <Box flexDirection="column" alignItems="center" flexShrink={0} rowGap={space.xs}>
+        <Box height={1} alignItems="center">
           {mark}
+        </Box>
+        {o.isOpen ? <Box flexGrow={1}>{sideRule(k, "thread")}</Box> : null}
+      </Box>
+      <Box flexDirection="column" flexGrow={1} flexShrink={1} rowGap={space.sm}>
+        <Box
+          flexDirection="row"
+          flexWrap="nowrap"
+          alignItems={o.isOpen ? "flex-start" : "center"}
+          columnGap={across.md}
+        >
           <Box flexGrow={1} flexShrink={1}>
-            {prose(k, said + (o.isOpen ? o.claim : firstSentence(o.claim)), {
-              isDim: o.tone === "dismiss",
-            })}
+            {claim}
           </Box>
           <Button
             key={o.details.key}
             dimColor
             label={o.isOpen ? "Close" : "Open"}
-            onPress={() => o.onToggle()}
+            onPress={() => o.onToggle({ isAlone: true })}
           />
         </Box>
         {o.isOpen ? (
-          <Box flexDirection="column" rowGap="md">
-            <Text dimColor size="caption">
-              {meta}
-            </Text>
-            {o.details.render(k)}
-            {choice(k, o.choice.options, o.choice)}
-          </Box>
+          <Text>
+            <Text {...roleProps(KIND_ROLE[o.kind])}>{kind}</Text>
+            {history.length ? <Text dimColor>{`  ·  ${history.join("  ·  ")}`}</Text> : null}
+          </Text>
         ) : null}
+        {o.isOpen ? o.details.render(k) : null}
+        {o.isOpen ? choice(k, o.choice.options, o.choice) : null}
       </Box>
-    );
-  }
+    </Box>
+  );
+}
+
+/**
+ * One reviewed item: its claim, its kind, how often and how long ago, its keys and its details.
+ * The terminal cuts a folded claim and sets the keys at the right of the meta line; a graphical
+ * surface draws a row that opens in place (`cardGui`).
+ */
+export function card(k: Kit, o: CardOptions): JSX.Element {
+  const { Box, Button, Text } = k;
+  const times = o.seen ?? 1;
+  if (k.isNative) return cardGui(k, o);
   const width = k.columns;
   const state = o.tone;
   const lines = clamp(
@@ -1230,16 +1390,27 @@ export function statusBand(
     hint: string;
     status?: "warning" | "error" | "success";
     onPress: () => unknown;
+    /** `text` as a graphical surface says it, in words rather than the terminal's shorthand. */
+    gui?: { text?: string };
   },
 ): JSX.Element {
   const { Box, Button, Text } = k;
   const status = o.status ?? "warning";
+  // A line of the band, not a call to arms: the way in is a quiet button, so the prompt's own
+  // send stays the one filled control in view.
   if (k.isNative)
     return (
-      <Box columnGap="sm" alignItems="center">
+      <Box
+        flexDirection="row"
+        flexWrap="nowrap"
+        columnGap={tokens.gui.across.sm}
+        alignItems="center"
+      >
         {icon(k, status, { tone: status })}
-        <Text>{o.text}</Text>
-        <Button key={o.key} label={capital(o.hint)} onPress={() => o.onPress()} />
+        <Box flexShrink={1}>
+          <Text>{o.gui?.text ?? o.text}</Text>
+        </Box>
+        <Button key={o.key} dimColor label={capital(o.hint)} onPress={() => o.onPress()} />
       </Box>
     );
   return (
@@ -1269,35 +1440,42 @@ export type Action = {
 export function actionBar(
   k: Kit,
   actions: readonly Action[],
-  options: { gui?: { summary?: string } } = {},
-): JSX.Element {
-  const { Box, Button, Text } = k;
+  options: { gui?: { summary?: string; isHidden?: boolean } } = {},
+): JSX.Element | null {
+  const { Box, Text } = k;
+  if (k.isNative && options.gui?.isHidden) return null;
   const summary = k.isNative ? options.gui?.summary : undefined;
   return (
     <Box
       key="actions"
-      columnGap={k.isNative ? "md" : undefined}
-      rowGap={k.isNative ? "sm" : undefined}
+      columnGap={k.isNative ? tokens.gui.across.md : undefined}
+      rowGap={k.isNative ? tokens.gui.space.xs : undefined}
       alignItems={k.isNative ? "center" : undefined}
-      paddingTop={k.isNative ? 1 : undefined}
+      paddingX={k.isNative ? tokens.gui.across.inset : undefined}
       flexWrap="wrap"
     >
       {summary ? <Text>{summary}</Text> : null}
-      {actions.map((a) => (
-        <Button
-          key={a.key}
-          variant={
-            (k.isNative && a.gui?.isPrimary !== undefined ? a.gui.isPrimary : a.isPrimary)
-              ? "primary"
-              : undefined
-          }
-          dimColor={(k.isNative && !(a.gui?.isPrimary ?? a.isPrimary)) || undefined}
-          hotkey={a.hotkey}
-          label={k.isNative ? capital(a.label) : a.label}
-          onPress={() => a.onPress()}
-        />
-      ))}
+      {actions.map((a) => actionButton(k, a))}
     </Box>
+  );
+}
+
+/**
+ * One action's Button. A graphical surface fills only the one worth pressing now and draws the
+ * rest quiet: VS Code paints a Button by its `dimColor` alone, so the variant follows it.
+ */
+function actionButton(k: Kit, a: Action): JSX.Element {
+  const { Button } = k;
+  const isPrimary = k.isNative ? (a.gui?.isPrimary ?? a.isPrimary) : a.isPrimary;
+  return (
+    <Button
+      key={a.key}
+      variant={isPrimary ? "primary" : undefined}
+      dimColor={(k.isNative && !isPrimary) || undefined}
+      hotkey={a.hotkey}
+      label={k.isNative ? capital(a.label) : a.label}
+      onPress={() => a.onPress()}
+    />
   );
 }
 
@@ -1475,18 +1653,28 @@ export function list(k: Kit, groups: ListGroup[], options: ListOptions = {}): JS
 
 /**
  * Blocks in a column with the gap of the style: a blank row on the terminal, dropped in a pane
- * too short for them when `isTight`; a graphical surface's own gap.
+ * too short for them when `isTight`; on a graphical surface a step of `tokens.gui.space`, `md`
+ * unless `gui.gap` says, or `none` for rows that space themselves.
  */
 export function stack(
   k: Kit,
   children: readonly (JSX.Element | null)[],
-  options: { isTight?: boolean; gui?: { gap?: "xs" | "sm" | "md" | "lg" } } = {},
+  options: { isTight?: boolean; gui?: { gap?: GuiSpace | "none" } } = {},
 ): JSX.Element {
   const { Box } = k;
+  const gap = options.gui?.gap ?? "md";
   return (
     <Box
       flexDirection="column"
-      rowGap={k.isNative ? (options.gui?.gap ?? "md") : options.isTight && k.isTight ? 0 : 1}
+      rowGap={
+        k.isNative
+          ? gap === "none"
+            ? 0
+            : tokens.gui.space[gap]
+          : options.isTight && k.isTight
+            ? 0
+            : 1
+      }
     >
       {children}
     </Box>

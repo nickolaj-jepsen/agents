@@ -129,7 +129,7 @@ npm run e2e:vscode -- goto docfix queue
 npm run e2e:vscode -- cap                  # the Claude panel as text
 npm run e2e:vscode -- click apply [--nth 1]
 npm run e2e:vscode -- type "hello"         # then: keys Enter
-npm run e2e:vscode -- wait "docfix: docs"
+npm run e2e:vscode -- wait "doc suggestions to review"
 npm run e2e:vscode -- shot [file] [--window]   # the panel; --window is the whole window
 npm run e2e:vscode -- sweep                # panel PNGs at 420x800 and 1280x720
 npm run e2e:vscode -- stop

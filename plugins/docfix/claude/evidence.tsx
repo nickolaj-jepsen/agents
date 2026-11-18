@@ -5,7 +5,7 @@
  * What is in the text is the core's (`readEvidence`); this only says what goes where, and the
  * kit draws it for the surface.
  */
-import { facts, indent, prose, rule, stack, type Kit } from "./ui";
+import { facts, indent, prose, rule, stack, subhead, type Kit } from "./ui";
 import {
   evidenceBlocks,
   evidenceLabel,
@@ -15,7 +15,7 @@ import {
 } from "../core/docfix";
 
 function block(k: Kit, b: EvidenceBlock, key: string): JSX.Element {
-  const { Box, Text } = k;
+  const { Box } = k;
   if (b.items)
     return (
       <Box key={key} flexDirection="column">
@@ -33,7 +33,7 @@ function block(k: Kit, b: EvidenceBlock, key: string): JSX.Element {
     );
   return (
     <Box key={key} flexDirection="column">
-      {b.heading ? <Text dimColor>{b.heading}</Text> : null}
+      {b.heading ? subhead(k, b.heading) : null}
       {prose(k, b.lines.join("\n"))}
     </Box>
   );
@@ -54,6 +54,7 @@ export function evidence(k: Kit, items: readonly Evidence[]): JSX.Element {
         stack(
           inner,
           evidenceBlocks(view).map((b, n) => block(inner, b, `p${n}`)),
+          { gui: { gap: "sm" } },
         );
       return (
         <Box key={`ev${i}`} flexDirection="column">
@@ -62,5 +63,6 @@ export function evidence(k: Kit, items: readonly Evidence[]): JSX.Element {
         </Box>
       );
     }),
+    { gui: { gap: "sm" } },
   );
 }
