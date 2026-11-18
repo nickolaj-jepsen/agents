@@ -248,13 +248,17 @@ const RUN = {
   presentation: { isFullscreen: false, columns: 120 },
 } as const;
 
-async function startSession($: Engine, on: On) {
+async function startSession(
+  $: Engine,
+  on: On,
+  surface: "terminal" | "desktop" | "vscode" = "terminal",
+) {
   on("command.register", () => ({ value: { command: "linear" } }));
   on("session.start", (_, e) => ({ cwd: e.cwd }));
-  await $.session.start({ cwd: "/repo", surface: "terminal", isInteractive: true });
+  await $.session.start({ cwd: "/repo", surface, isInteractive: true });
 }
 
-async function expand(band: Mounted<"terminal", "AbovePrompt">, w: World) {
+async function expand(band: Pick<Mounted, "press">, w: World) {
   await band.press({ plugin: "cc-plugin-you-should-know", key: "Learn more" });
   await w.clock.settle();
 }
@@ -564,3 +568,109 @@ test("a Linear server added later shows the button", { plugins: [YSK] }, async (
   expect(await band.find({ key: "linear-issue" })).toBeDefined();
   await band.unmount();
 });
+
+// The mod was drawn for the terminal; here its band and pane on the GUI surfaces are pinned only as
+// far as they mount, show their content and answer a press. Their terminal-only drawing there is not
+// asserted.
+for (const surface of ["desktop", "vscode"] as const) {
+  test(
+    `${surface}: the button shows in the expanded card, and a press drafts into the pane and files it`,
+    { plugins: [YSK] },
+    async ($, on) => {
+      const w = world(on);
+      await startSession($, on, surface);
+      const band = await $.ui.mount({ ...BAND, surface });
+      expect(await band.find({ key: "linear-issue" })).toBeUndefined();
+      await expand(band, w);
+      const buttons = (await band.findAll({ type: "Button" })).map((b) => b.key);
+      expect(buttons).toEqual(["Understood", "Chat in main session", "linear-issue", "Dismiss"]);
+      await band.press({ key: "linear-issue" });
+      await w.clock.settle();
+      expect(w.prompts[0]).toContain("One-off /ask questions now cost more");
+
+      const pane = await $.ui.mount({ ...PANE, surface });
+      expect((await pane.find({ key: "title-0" }))?.props.value).toBe(
+        "Cap get_rate outage latency",
+      );
+      expect(await pane.find({ key: "team" })).toBeDefined();
+      expect((await pane.find({ key: "status" }))?.props.value).toBe("MSC-todo");
+      expect(await pane.find({ key: "label-MSC-bug" })).toBeDefined();
+      await pane.select({ key: "priority", value: "2" });
+      await pane.input({ key: "title-0", text: "Cap outage latency", kind: "change" });
+      await pane.press({ key: "create" });
+      await w.clock.settle();
+      expect(saved(w, "save_issue")).toMatchObject({
+        team: "MSC",
+        title: "Cap outage latency",
+        state: "MSC-todo",
+        priority: 2,
+        labels: ["MSC-bug"],
+      });
+      await pane.unmount();
+
+      expect((await band.find({ type: "Text", text: /MSC-900/ }))?.text).toContain(
+        "Cap outage latency",
+      );
+      await band.press({ key: "open-MSC-900" });
+      await w.clock.settle();
+      expect(w.runs).toContainEqual(["xdg-open", "https://linear.app/x/issue/MSC-900/cap"]);
+      await band.press({ key: "dismiss-MSC-900" });
+      expect(await band.find({ key: "open-MSC-900" })).toBeUndefined();
+      await band.unmount();
+    },
+  );
+
+  test(`${surface}: the pane offers to comment on an open duplicate, and discard drops the draft`, async ($, on) => {
+    const w = world(on);
+    w.verdict = { duplicate: { issue: "SHP-1", comment: "Seen again in rates.py." } };
+    await startSession($, on, surface);
+    await $.command.run({ ...RUN, args: "rates" });
+    await w.clock.settle();
+
+    const pane = await $.ui.mount({ ...PANE, surface });
+    for (const key of ["create", "create-open", "comment", "discard"])
+      expect(await pane.find({ type: "Button", key })).toBeDefined();
+    await pane.press({ key: "comment" });
+    await w.clock.settle();
+    expect(saved(w, "save_comment")).toEqual({ issueId: "SHP-1", body: "Seen again in rates.py." });
+    expect(saved(w, "save_issue")).toBeUndefined();
+    await pane.unmount();
+
+    // A new draft; while it is open a second /linear drafts nothing, until Discard drops it.
+    await $.command.run({ ...RUN, args: "again" });
+    await w.clock.settle();
+    expect(w.prompts).toHaveLength(2);
+    await $.command.run({ ...RUN, args: "once more" });
+    await w.clock.settle();
+    expect(w.prompts).toHaveLength(2);
+    const again = await $.ui.mount({ ...PANE, surface });
+    await again.press({ key: "discard" });
+    await w.clock.settle();
+    await again.unmount();
+    await $.command.run({ ...RUN, args: "once more" });
+    await w.clock.settle();
+    expect(w.prompts).toHaveLength(3);
+  });
+
+  test(`${surface}: the pane picks a team and says when the description is taller than its box`, async ($, on) => {
+    const w = world(on);
+    w.draft = {
+      ...DRAFT,
+      description: Array.from({ length: 60 }, (_, i) => `Line ${i}`).join("\n"),
+    };
+    await startSession($, on, surface);
+    await $.command.run({ ...RUN, args: "rates" });
+    await w.clock.settle();
+
+    const pane = await $.ui.mount({ ...PANE, surface });
+    expect(await pane.find({ type: "Text", text: /Description continues/ })).toBeDefined();
+    await pane.select({ key: "team", value: "SHP" });
+    await w.clock.settle();
+    expect((await pane.find({ key: "status" }))?.props.value).toBe("SHP-todo");
+    await pane.press({ key: "create" });
+    await w.clock.settle();
+    expect(saved(w, "save_issue")).toMatchObject({ team: "SHP", state: "SHP-todo" });
+    expect(String(saved(w, "save_issue")?.description)).toContain("Line 59");
+    await pane.unmount();
+  });
+}

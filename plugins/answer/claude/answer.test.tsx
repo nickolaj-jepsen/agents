@@ -115,13 +115,15 @@ function world(on: On, draft = ""): World {
   return w;
 }
 
-const start = ($: Engine) =>
-  $.session.start({ cwd: "/", surface: "terminal", isInteractive: true });
+type Surface = "terminal" | "desktop" | "vscode";
+
+const start = ($: Engine, surface: Surface = "terminal") =>
+  $.session.start({ cwd: "/", surface, isInteractive: true });
 
 const ends = ($: Engine, answer: string) =>
   $.turn.complete({ answer, reason: "answer", turnId: "t", durationMs: 1, isAborted: false });
 
-const band = ($: Engine) => $.ui.mount({ ...BAND, surface: "terminal" });
+const band = ($: Engine, surface: Surface = "terminal") => $.ui.mount({ ...BAND, surface });
 
 /** A press on an answer: it answers and the form goes on. */
 const pick = (
@@ -131,17 +133,17 @@ const pick = (
 ) => drawn.press({ key });
 
 /** The form's one row, while it is folded. */
-const hint = async ($: Engine) => {
-  const drawn = await band($);
+const hint = async ($: Engine, surface: Surface = "terminal") => {
+  const drawn = await band($, surface);
   const found = await drawn.find({ key: "answer" });
   await drawn.unmount();
   return found?.text;
 };
 
 /** The band with the form open in it, as `/answer` opens it. */
-const form = async ($: Engine) => {
+const form = async ($: Engine, surface: Surface = "terminal") => {
   await $.command.run(RUN);
-  return band($);
+  return band($, surface);
 };
 
 test("a turn that ends on questions offers the form; the person's next send drops it", async ($, on) => {
@@ -622,3 +624,87 @@ test("nothing runs or is read outside the session: the form needs no hub", async
   expect(await hint($)).toContain("1 of 3");
   expect(reached).toEqual([]);
 });
+
+// The mod was drawn for the terminal; what it draws on the GUI surfaces is pinned here only as far
+// as it mounts, shows its content and answers a press. Its terminal-only drawing there (rules,
+// glyph checkboxes, clamped or padded text, key hints, row hotkeys) is not asserted either way.
+for (const surface of ["desktop", "vscode"] as const) {
+  test(`${surface}: the offer is a row whose button opens the form`, async ($, on) => {
+    world(on);
+    await start($, surface);
+    await ends($, GRILLING);
+    const offer = await band($, surface);
+    expect((await offer.find({ key: "answer" }))?.text).toContain("Answer 3 questions");
+    await offer.press({ key: "answer" });
+    expect(await offer.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
+    await offer.unmount();
+  });
+
+  test(`${surface}: the form shows every answer as a button, and a press answers and goes on`, async ($, on) => {
+    const w = world(on);
+    await start($, surface);
+    await ends($, GRILLING);
+    const drawn = await form($, surface);
+    expect(await drawn.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
+    for (const [key, label] of [
+      ["e0", "Yes, one default"],
+      ["e1", "Default by kind"],
+      ["e2", "Add the bar as a second pick"],
+    ] as const)
+      expect((await drawn.find({ type: "Button", key }))?.text).toContain(label);
+    expect(
+      await drawn.find({ type: "Markdown", text: /Recommended:.*A\. A per-kind table/ }),
+    ).toBeDefined();
+    // The recommendation, the question tabs and the way out are Buttons too.
+    for (const key of ["accept", "q1", "q2", "next", "skip", "quit"])
+      expect(await drawn.find({ type: "Button", key })).toBeDefined();
+
+    await pick(w, drawn, "e1");
+    expect(await drawn.find({ key: "note-field" })).toBeDefined();
+    await drawn.press({ key: "next" });
+    expect(await drawn.find({ type: "Text", text: /^Lower the per-generator/ })).toBeDefined();
+    await drawn.press({ key: "accept" });
+    await drawn.press({ key: "review" });
+    expect(await drawn.find({ type: "Text", text: /^The reply:$/ })).toBeDefined();
+    expect((await drawn.find({ key: "item0" }))?.text).toContain("→ B: Default by kind.");
+    await drawn.press({ key: "fill" });
+    await drawn.unmount();
+    expect(w.box).toBe("Q1: B\nQ2: yes");
+  });
+
+  test(`${surface}: the review's send submits the reply, and the way out folds the form`, async ($, on) => {
+    const w = world(on);
+    await start($, surface);
+    await ends($, GRILLING);
+    const drawn = await form($, surface);
+    await pick(w, drawn, "e1");
+    await drawn.press({ key: "review" });
+    await drawn.press({ key: "send" });
+    await drawn.unmount();
+    expect(w.submitted).toEqual(["Q1: B"]);
+
+    await ends($, GRILLING);
+    const again = await form($, surface);
+    await again.press({ key: "quit" });
+    expect((await again.find({ key: "answer" }))?.text).toContain("click to answer");
+    await again.unmount();
+  });
+
+  test(`${surface}: a pick list and the long body mount with every entry`, async ($, on) => {
+    const w = world(on);
+    await start($, surface);
+    await ends($, MINE);
+    expect(await hint($, surface)).toContain("Pick from 2 items");
+    const list = await form($, surface);
+    await pick(w, list, "e0");
+    await list.unmount();
+
+    await ends($, LONG);
+    const long = await form($, surface);
+    expect(
+      await long.find({ type: "Markdown", text: /Line 12 of what it hangs on/ }),
+    ).toBeDefined();
+    expect(await long.find({ type: "Button", key: "e1" })).toBeDefined();
+    await long.unmount();
+  });
+}

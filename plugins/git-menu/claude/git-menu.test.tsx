@@ -136,10 +136,12 @@ function world(
   return w;
 }
 
-async function start($: Engine, on: On) {
+type Surface = "terminal" | "desktop" | "vscode";
+
+async function start($: Engine, on: On, surface: Surface = "terminal") {
   on("command.register", (_, e) => ({ value: { command: e.name } }));
   on("session.start", (_, e) => ({ cwd: e.cwd }));
-  await $.session.start({ cwd: "/repo", surface: "terminal", isInteractive: true });
+  await $.session.start({ cwd: "/repo", surface, isInteractive: true });
 }
 
 test("/git opens the branch's pull request on the forge", async ($, on) => {
@@ -206,8 +208,8 @@ test("/open hands the checkout to an installed app and not to a missing one", as
 });
 
 /** The pane's rows, top to bottom, as `label description`. */
-async function shownRows($: Engine) {
-  const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
+async function shownRows($: Engine, surface: Surface = "terminal") {
+  const pane = await $.ui.mount({ ...PANE, surface });
   const buttons = await pane.findAll({ type: "Button" });
   await pane.unmount();
   return buttons.map((b) => b.text.replace(/\s+/g, " ").trim());
@@ -216,8 +218,8 @@ async function shownRows($: Engine) {
 const openPlan = ($: Engine) => $.command.run({ ...RUN, command: "open", args: "plan" });
 
 /** Everything the pane says. */
-async function paneText($: Engine) {
-  const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
+async function paneText($: Engine, surface: Surface = "terminal") {
+  const pane = await $.ui.mount({ ...PANE, surface });
   const texts = await pane.findAll({ type: "Text" });
   await pane.unmount();
   return texts.map((t) => t.text).join(" ");
@@ -326,3 +328,69 @@ test("/open diff without tuicr starts nothing", async ($, on) => {
   expect(w.launched).toEqual([]);
   expect(result.context).toBeUndefined();
 });
+
+// The mod was drawn for the terminal; its menus on the GUI surfaces are pinned here only as far as
+// they mount, show their rows and answer a press. Their terminal-only drawing there is not asserted.
+for (const surface of ["desktop", "vscode"] as const) {
+  test(`${surface}: /git draws a row per action, and a press runs it`, async ($, on) => {
+    const w = world(on);
+    await start($, on, surface);
+    await $.command.run({ ...RUN, command: "git" });
+    const pane = await $.ui.mount({ ...PANE, surface });
+    expect(await pane.find({ type: "Text", text: /Git|feat\/x/ })).toBeDefined();
+    for (const key of ["pr", "create"])
+      expect(await pane.find({ type: "Button", key })).toBeDefined();
+    await pane.press({ key: "pr" });
+    await pane.unmount();
+    expect(w.launched).toEqual([["xdg-open", "https://github.com/me/repo/pull/12"]]);
+    // The branch has a pull request already, so a press on create starts nothing; copy does run.
+    await $.command.run({ ...RUN, command: "git" });
+    const again = await $.ui.mount({ ...PANE, surface });
+    await again.press({ key: "create" });
+    await again.press({ key: "copy" });
+    await again.unmount();
+    expect(w.launched).toHaveLength(1);
+    expect(w.copied).toEqual(["feat/x"]);
+  });
+
+  test(`${surface}: /open draws the folder menu, and a press hands the checkout to an app`, async ($, on) => {
+    const w = world(on);
+    await start($, on, surface);
+    await $.command.run({ ...RUN, command: "open" });
+    const pane = await $.ui.mount({ ...PANE, surface });
+    expect(await pane.find({ type: "Text", text: /Open folder/ })).toBeDefined();
+    const keys = (await pane.findAll({ type: "Button" })).map((b) => b.key);
+    expect(keys).toEqual(expect.arrayContaining(["code", "copy", "notes"]));
+    await pane.press({ key: "smerge" });
+    expect(w.launched).toEqual([]);
+    await pane.press({ key: "code" });
+    await pane.unmount();
+    expect(w.launched).toEqual([["code", "/repo"]]);
+  });
+
+  test(`${surface}: /open plan lists the notes newest first, and a press opens one`, async ($, on) => {
+    const w = world(on, {
+      notes: {
+        files: { "research/old/REPORT.md": 48, "plans/hub/PLAN.md": 1, "plans/hub/HANDOFF.md": 3 },
+      },
+    });
+    await start($, on, surface);
+    await openPlan($);
+    expect(await shownRows($, surface)).toEqual([
+      "plans/hub/PLAN.md 1h",
+      "plans/hub/HANDOFF.md 3h",
+      "research/old/REPORT.md 2d",
+    ]);
+    const pane = await $.ui.mount({ ...PANE, surface });
+    await pane.press({ key: NOTE });
+    await pane.unmount();
+    expect(w.launched).toEqual([[OPENER, NOTE]]);
+  });
+
+  test(`${surface}: with no notes the pane says so`, async ($, on) => {
+    world(on);
+    await start($, on, surface);
+    await openPlan($);
+    expect(await paneText($, surface)).toContain("No notes yet.");
+  });
+}

@@ -125,8 +125,8 @@ const BAND = {
 } as const;
 
 /** The count the band above the prompt shows, or undefined when it draws none. */
-async function bandCount($: Engine) {
-  const band = await $.ui.mount({ ...BAND, surface: "terminal" });
+async function bandCount($: Engine, surface: "terminal" | "desktop" | "vscode" = "terminal") {
+  const band = await $.ui.mount({ ...BAND, surface });
   const shown = await band.find({ type: "Button", text: /docfix: docs \d+/ });
   await band.unmount();
   return shown?.text.match(/docs (\d+)/)?.[1];
@@ -279,3 +279,64 @@ test("the first read of a tracked doc in a session names the tool after it", asy
   const code = await $.tool.call({ tool: "Read", file_path: `${ROOT}/src/a.ts` });
   expect(code.context ?? []).toEqual([]);
 });
+
+// The mod was drawn for the terminal; here its tree on the GUI surfaces is pinned only as far as it
+// mounts, shows its content and answers a press. Its terminal-only drawing there is not asserted.
+for (const surface of ["desktop", "vscode"] as const) {
+  test(`${surface}: the band counts the docs and its button opens the pane`, async ($, on) => {
+    engine(on);
+    await $.session.start({ cwd: ROOT, surface, isInteractive: true });
+    await $.tool.call(SUGGEST);
+    await $.tool.call({ ...SUGGEST, claim: "A second gap", same_as: "none" });
+    expect(await bandCount($, surface)).toBe("2");
+    await $.command.run(COMMAND);
+    expect(await bandCount($, surface)).toBeUndefined();
+  });
+
+  test(`${surface}: the pane shows the doc and its rows, and a press sets a row`, async ($, on) => {
+    const world = engine(on);
+    await $.session.start({ cwd: ROOT, surface, isInteractive: true });
+    await $.tool.call(SUGGEST);
+    await $.tool.call({ ...SUGGEST, claim: "A second gap", same_as: "none" });
+    await $.command.run(COMMAND);
+    const ui = await $.ui.mount({ ...PANE, surface });
+    expect(await ui.find({ type: "Text", text: /AGENTS\.md/ })).toBeDefined();
+    expect(await ui.find({ type: "Button", text: /sjusk/ })).toBeDefined();
+    expect(await ui.find({ type: "Button", text: /A second gap/ })).toBeDefined();
+    for (const key of [
+      `apply:row:${ID}`,
+      `dismiss:row:${ID}`,
+      `skip:row:${ID}`,
+      "apply:grp:AGENTS.md",
+    ])
+      expect(await ui.find({ type: "Button", key })).toBeDefined();
+
+    await ui.press({ key: `apply:row:${ID}` });
+    expect(await ui.find({ type: "Text", text: /On close: apply 1/ })).toBeDefined();
+    await ui.press({ key: `skip:row:${ID}` });
+    expect(await ui.find({ type: "Text", text: /carry out apply and dismiss/ })).toBeDefined();
+    // A doc's header sets every row of the doc; setting a row does nothing until the pane closes.
+    await ui.press({ key: "dismiss:grp:AGENTS.md" });
+    expect(await ui.find({ type: "Text", text: /On close: dismiss 2/ })).toBeDefined();
+    expect(world.fills).toHaveLength(0);
+    await ui.unmount();
+  });
+
+  test(`${surface}: a row opens to its whole claim and evidence`, async ($, on) => {
+    engine(on);
+    await $.session.start({ cwd: ROOT, surface, isInteractive: true });
+    const claim = "A claim that runs well past one line of the pane and must not be cut. ".repeat(
+      4,
+    );
+    const evidence = `${"x ".repeat(300)}END-OF-EVIDENCE`;
+    await $.tool.call({ ...SUGGEST, claim: claim.slice(0, 270) + " END-OF-CLAIM", evidence });
+    await $.command.run(COMMAND);
+    const ui = await $.ui.mount({ ...PANE, props: { ...PANE.props, bodyColumns: 48 }, surface });
+    const row = await ui.find({ type: "Button", text: /A claim that runs/ });
+    expect(row?.key).toMatch(/^row:/);
+    await ui.press({ key: String(row?.key) });
+    expect(await ui.find({ type: "Text", text: /END-OF-CLAIM/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /END-OF-EVIDENCE/ })).toBeDefined();
+    await ui.unmount();
+  });
+}

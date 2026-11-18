@@ -139,8 +139,12 @@ async function key($: Engine, w: World, k: string) {
   await w.clock.settle();
 }
 
-async function openPicker($: Engine, w: World) {
-  const band = await $.ui.mount({ ...BAND, surface: "terminal" });
+async function openPicker(
+  $: Engine,
+  w: World,
+  surface: "terminal" | "desktop" | "vscode" = "terminal",
+) {
+  const band = await $.ui.mount({ ...BAND, surface });
   await band.press({ key: "spellfix" });
   await w.clock.settle();
   return band;
@@ -152,7 +156,7 @@ async function shownCount(band: Pick<Mounted, "find">) {
   return /\d+ misspelled/.exec(text)?.[0] ?? "";
 }
 
-for (const surface of ["terminal", "desktop"] as const) {
+for (const surface of ["terminal", "desktop", "vscode"] as const) {
   test(`the band counts misspellings and shows none without them (${surface})`, async ($, on) => {
     const w = world(on);
 
@@ -413,3 +417,65 @@ test("Haiku's typos in words hunspell skips are offered, but never in code, URLs
   expect(w.box.text).toBe("dense/concise text, `consice` https://x.io/consice /consice");
   await band.unmount();
 });
+
+// The band was drawn for the terminal, where the picker is driven by keys. On the GUI surfaces it is
+// pinned only as far as it mounts, shows the word and its suggestions, and answers a press on each
+// Button. Its terminal-only drawing there (the clamped context, key hints) is not asserted.
+for (const surface of ["desktop", "vscode"] as const) {
+  test(`${surface}: the picker shows the word and a button per suggestion; a press fixes it`, async ($, on) => {
+    const w = world(on);
+
+    await paste($, w, "the qiuck fox and teh dog", 6);
+    const band = await openPicker($, w, surface);
+    expect(await band.find({ type: "Text", text: /qiuck/ })).toBeDefined();
+    expect((await band.find({ key: "ai" }))?.text).toContain("quick");
+    expect((await band.find({ key: "s0" }))?.text).toContain("quick");
+    expect((await band.find({ key: "s1" }))?.text).toContain("quack");
+    for (const key of ["skip", "all"])
+      expect(await band.find({ type: "Button", key })).toBeDefined();
+
+    // The second suggestion, then the picker moves on to `teh`, whose Haiku pick fixes it.
+    await band.press({ key: "s1" });
+    await w.clock.settle();
+    expect(w.box.text).toBe("the quack fox and teh dog");
+    expect(await band.find({ type: "Text", text: /teh/ })).toBeDefined();
+    await band.press({ key: "ai" });
+    await w.clock.settle();
+    expect(w.box.text).toBe("the quack fox and the dog");
+    await band.unmount();
+  });
+
+  test(`${surface}: skip moves on, fix all applies the rest, and undo takes it back`, async ($, on) => {
+    const w = world(on);
+
+    await paste($, w, "teh qiuck fox");
+    const band = await openPicker($, w, surface);
+    await band.press({ key: "skip" });
+    await w.clock.settle();
+    expect(await band.find({ type: "Text", text: /teh/ })).toBeDefined();
+
+    // The skipped word stays out of fix all.
+    await band.press({ key: "all" });
+    await w.clock.settle();
+    expect(w.box.text).toBe("the qiuck fox");
+    expect(await band.find({ type: "Text", text: /teh→the/ })).toBeDefined();
+    await band.press({ key: "undo" });
+    await w.clock.settle();
+    expect(w.box.text).toBe("teh qiuck fox");
+    await band.unmount();
+  });
+
+  test(`${surface}: the add button puts a word in the dictionary`, OPTIONS, async ($, on) => {
+    const w = world(on, haikuSays({ qiuck: `<word text="qiuck" verdict="unsure"/>` }));
+
+    await paste($, w, "a qiuck fox");
+    const band = await openPicker($, w, surface);
+    await band.press({ key: "add" });
+    await w.clock.settle();
+    expect(personal(w).has("qiuck")).toBe(true);
+    expect(w.box.text).toBe("a qiuck fox");
+    await paste($, w, "one more qiuck here");
+    expect(await shownCount(band)).toBe("");
+    await band.unmount();
+  });
+}
