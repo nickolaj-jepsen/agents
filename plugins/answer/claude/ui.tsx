@@ -1358,29 +1358,63 @@ export function statusBand(
     hint: string;
     status?: "warning" | "error" | "success";
     onPress: () => unknown;
-    /** `text` as a graphical surface says it, in words rather than the terminal's shorthand. */
-    gui?: { text?: string };
+    /**
+     * `text` as a graphical surface says it, in words rather than the terminal's shorthand.
+     * `icon` and `tone` replace the status's own mark; `actions` are quiet buttons after the way
+     * in: the line is then the text, with the buttons under it.
+     */
+    gui?: {
+      text?: string;
+      icon?: IconName;
+      tone?: IconTone;
+      actions?: readonly { key: string; label: string; onPress: () => unknown }[];
+    };
   },
 ): JSX.Element {
   const { Box, Button, Text } = k;
   const status = o.status ?? "warning";
   // A line of the band, not a call to arms: the way in is a quiet button, so the prompt's own
   // send stays the one filled control in view.
-  if (k.isNative)
-    return (
-      <Box
-        flexDirection="row"
-        flexWrap="nowrap"
-        columnGap={tokens.gui.across.sm}
-        alignItems="center"
-      >
-        {icon(k, status, { tone: status })}
-        <Box flexShrink={1}>
-          <Text>{o.gui?.text ?? o.text}</Text>
-        </Box>
-        <Button key={o.key} dimColor label={capital(o.hint)} onPress={() => o.onPress()} />
+  if (k.isNative) {
+    const extra = o.gui?.actions ?? [];
+    const mark = icon(k, o.gui?.icon ?? status, { tone: o.gui?.tone ?? status });
+    const text = (
+      <Box flexShrink={1}>
+        <Text>{o.gui?.text ?? o.text}</Text>
       </Box>
     );
+    const first = (
+      <Button key={o.key} dimColor label={capital(o.hint)} onPress={() => o.onPress()} />
+    );
+    if (extra.length === 0)
+      return (
+        <Box
+          flexDirection="row"
+          flexWrap="nowrap"
+          columnGap={tokens.gui.across.sm}
+          alignItems="center"
+        >
+          {mark}
+          {text}
+          {first}
+        </Box>
+      );
+    // With more than one button the line is the text, and the buttons wrap under it.
+    return (
+      <Box flexDirection="column" rowGap={tokens.gui.space.xs}>
+        <Box flexDirection="row" flexWrap="nowrap" columnGap={tokens.gui.across.sm}>
+          {mark}
+          {text}
+        </Box>
+        <Box flexDirection="row" flexWrap="wrap" columnGap={tokens.gui.across.xs}>
+          {first}
+          {extra.map((a) => (
+            <Button key={a.key} dimColor label={capital(a.label)} onPress={() => a.onPress()} />
+          ))}
+        </Box>
+      </Box>
+    );
+  }
   return (
     <Button key={o.key} plain onPress={() => o.onPress()}>
       <Text {...roleProps(status)}>{`${ICON_GLYPH[status]} ${o.text}`}</Text>
@@ -2033,6 +2067,162 @@ export function imageGallery(
           </Box>
         );
       })}
+    </Box>
+  );
+}
+
+// ---- by surface, labelled fields and folded rows
+
+/**
+ * Two drawings of one screen, for a screen the kit has no function for on the terminal: `tui` is
+ * the terminal's, `gui` every graphical surface's, and `desktop`, `vscode` or `mobile` override
+ * `gui` on that one. Only the one for this surface is called.
+ */
+export function pick<T>(
+  k: Kit,
+  o: {
+    tui: () => T;
+    gui: () => T;
+    desktop?: () => T;
+    vscode?: () => T;
+    mobile?: () => T;
+  },
+): T {
+  if (!k.isNative) return o.tui();
+  const own = (o as Record<string, (() => T) | undefined>)[k.surface];
+  return (own ?? o.gui)();
+}
+
+/** One field of a form: its name, and the control that holds or sets its value. */
+export type FieldItem = { key: string; label: string; control: JSX.Element };
+
+function fieldBox(k: Kit, f: FieldItem, isInset: boolean): JSX.Element {
+  const { Box, Text } = k;
+  if (k.isNative)
+    return (
+      <Box
+        key={`field:${f.key}`}
+        flexDirection="column"
+        rowGap={tokens.gui.space.xs}
+        paddingX={isInset ? tokens.gui.across.inset : undefined}
+      >
+        {subhead(k, f.label)}
+        {f.control}
+      </Box>
+    );
+  return (
+    <Box key={`field:${f.key}`} flexDirection="column">
+      <Text dimColor>{f.label}</Text>
+      {f.control}
+    </Box>
+  );
+}
+
+/**
+ * A control under its name: a graphical surface sets the name as a dim, semibold sub-heading at
+ * the inset, the control under it; the terminal a dim line over the control.
+ */
+export function labelled(k: Kit, f: FieldItem): JSX.Element {
+  return fieldBox(k, f, true);
+}
+
+/** Several short fields side by side, wrapping onto the next line when they do not fit. */
+export function labelledRow(k: Kit, items: readonly FieldItem[]): JSX.Element {
+  const { Box } = k;
+  return (
+    <Box
+      flexDirection="row"
+      flexWrap="wrap"
+      columnGap={k.isNative ? tokens.gui.across.md : tokens.gutter}
+      rowGap={k.isNative ? tokens.gui.space.sm : undefined}
+      paddingX={k.isNative ? tokens.gui.across.inset : undefined}
+    >
+      {items.map((f) => fieldBox(k, f, false))}
+    </Box>
+  );
+}
+
+export type FoldedRowOptions = {
+  key: string;
+  /** The row's line; whole, as prose, when opened. */
+  text: string;
+  /** The mark before it. */
+  icon: { name: IconName; tone?: IconTone; alt?: string };
+  isOpen: boolean;
+  /** The address of the Open / Close button. */
+  toggleKey: string;
+  /** Opens or folds it; a graphical surface opens one row alone. */
+  onToggle: () => unknown;
+  /** What an opened row shows under its text, set in from the icon. */
+  body?: (k: Kit) => JSX.Element | null;
+  /** The row's actions, once opened: quiet buttons in a row. */
+  actions?: readonly ChoiceOption[];
+};
+
+/**
+ * A row that opens in place, for what is not a reviewed suggestion (`card`'s kinds): a graphical
+ * surface draws the folded row, one line with a quiet `Open`, and the opened row in its well with
+ * the body set in under the text; the terminal a plain button and the body under it.
+ */
+export function foldedRow(k: Kit, o: FoldedRowOptions): JSX.Element {
+  const { Box, Button, Text } = k;
+  const { space, across } = tokens.gui;
+  if (!k.isNative)
+    return (
+      <Box key={o.key} flexDirection="column">
+        <Button key={o.toggleKey} plain onPress={() => o.onToggle()}>
+          <Text weight="semibold">{o.text}</Text>
+        </Button>
+        {o.isOpen ? (
+          <Box flexDirection="column" paddingLeft={INDENT}>
+            {o.body?.(withColumns(k, Math.max(1, k.columns - INDENT)))}
+            {o.actions ? choice(k, o.actions) : null}
+          </Box>
+        ) : null}
+      </Box>
+    );
+  return (
+    <Box
+      key={o.key}
+      flexDirection="row"
+      flexWrap="nowrap"
+      columnGap={across.sm}
+      paddingX={across.inset}
+      paddingY={o.isOpen ? space.sm : space.xs}
+      backgroundColor={o.isOpen ? tokens.gui.fill : undefined}
+      borderStyle="round"
+      borderColor="#00000000"
+    >
+      <Box flexDirection="column" alignItems="center" flexShrink={0} rowGap={space.xs}>
+        <Box height={1} alignItems="center">
+          {icon(k, o.icon.name, { tone: o.icon.tone, alt: o.icon.alt })}
+        </Box>
+        {o.isOpen ? <Box flexGrow={1}>{sideRule(k, "thread")}</Box> : null}
+      </Box>
+      <Box flexDirection="column" flexGrow={1} flexShrink={1} rowGap={space.sm}>
+        <Box
+          flexDirection="row"
+          flexWrap="nowrap"
+          alignItems={o.isOpen ? "flex-start" : "center"}
+          columnGap={across.md}
+        >
+          <Box flexGrow={1} flexShrink={1}>
+            {o.isOpen ? (
+              prose(k, o.text)
+            ) : (
+              <Text wrap="truncate-end">{inlineCode(k, linesOf(o.text).join(" "))}</Text>
+            )}
+          </Box>
+          <Button
+            key={o.toggleKey}
+            dimColor
+            label={o.isOpen ? "Close" : "Open"}
+            onPress={() => o.onToggle()}
+          />
+        </Box>
+        {o.isOpen ? (o.body?.(k) ?? null) : null}
+        {o.isOpen && o.actions ? choice(k, o.actions, { gui: { layout: "row" } }) : null}
+      </Box>
     </Box>
   );
 }
