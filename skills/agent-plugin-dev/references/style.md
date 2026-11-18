@@ -2,6 +2,8 @@
 
 One style for every plugin UI, in Claude Code and pi. Each rule is a default: depart from it when a screen reads better another way, and say why in the hand-back. The numbers and glyphs live in the kit's tokens, so a change there restyles every plugin.
 
+Every section up to "Graphical surfaces" is the terminal's style: pi, and Claude Code in a terminal. The Claude Code desktop app and VS Code extension draw real controls in a proportional font, and have their own section at the end.
+
 ## What comes out by default, and is wrong
 
 An agent left alone draws these. Each is a defect here:
@@ -150,3 +152,119 @@ A log, a history, evidence: several entries, each with a date. From 50 columns t
 Design each of these, not only the full one: empty; one item; more items than fit; text far longer than expected, in every field; wide characters; an error or notice; the narrowest size it supports.
 
 Say what happens at the narrowest size. A review that does not name it has not finished.
+
+## Graphical surfaces
+
+The desktop app and the VS Code extension draw a mod's tree with their own controls, in a proportional font. Cells, glyphs and the terminal's rules above do not apply there. The kit draws both from one call (`claude.md`, "Graphical surfaces"), and docfix's pane is the reference screen.
+
+### The idea
+
+- A calm list where things open in place. A row is one line; opening it shows its detail under it, in the same pane.
+- The host already frames the pane and draws its title and close mark. Draw no box, border or card inside it.
+- Only the control worth pressing now is filled. Every other button is quiet.
+- Design for the inline pane: about 234 pixels tall (13 lines of text) in a 420-pixel-wide editor. A docked pane is about 350 pixels wide and draws the same; it needs no layout of its own.
+
+### Spacing
+
+Use the kit's numbers, never a step name such as `"md"`. VS Code draws a step as a whole line or none down the page, so a step gives either rows that touch or a blank line between every part.
+
+Down the page, `tokens.gui.space`, in lines of body text (a line is about 18 pixels in VS Code):
+
+| Step | Lines | Between                                                                                |
+| ---- | ----- | -------------------------------------------------------------------------------------- |
+| `xs` | 0.2   | the lines of one part: a heading and its rows, a label and its text, wrapped buttons   |
+| `sm` | 0.5   | the parts of one item: its text, meta line, detail and keys; the paragraphs of detail  |
+| `md` | 0.9   | things that stand alone: groups, and the pane's regions (toolbar, list, `Show N more`) |
+
+Rows space themselves with padding, 0.2 folded and 0.5 opened, and have no gap between them.
+
+Across, `tokens.gui.across`, in cells:
+
+| Step    | Cells | Between                                                                                |
+| ------- | ----- | -------------------------------------------------------------------------------------- |
+| `xs`    | 0.6   | the buttons of one row                                                                 |
+| `sm`    | 0.8   | an icon and its text                                                                   |
+| `md`    | 1.2   | a line's text and its control; a label and its value                                   |
+| `inset` | 1     | each side of every block: toolbar, headings, rows, notices, empty state, `Show N more` |
+
+Every block shares the inset, so their left edges line up. An opened row's fill spans the pane's width, and its content keeps the inset.
+
+### Hierarchy
+
+There are no type sizes: VS Code draws every `size` alike. Hierarchy is weight, dim and colour.
+
+| What                                   | Drawn                                              |
+| -------------------------------------- | -------------------------------------------------- |
+| A group heading (a doc's path)         | semibold                                           |
+| A row                                  | regular, its icon before it                        |
+| A row's meta line                      | the kind's word in its status colour, the rest dim |
+| A heading inside an item ("Details")   | semibold and dim (`subhead`)                       |
+| A label: a date and who, a fact's name | dim                                                |
+| Body text: a claim, evidence           | regular                                            |
+| A count, the empty state               | dim                                                |
+
+The colour roles are the terminal's. Colour marks a state only: a kind's icon and word, a row set to apply. Most rows carry one coloured icon and nothing else in colour.
+
+### Patterns
+
+Each names the kit function that draws it; `claude.md` says how to call them.
+
+**A folded row** (`card`). One line: the icon, the text cut at the edge by the surface, and a quiet `Open` at the far edge.
+
+- Do keep it to one line, with code spans in chips.
+- Don't wrap a folded row to two or three lines: the inline pane then holds three rows.
+
+**An opened row** (`card`, opened).
+
+- The row sits in a well: the theme's second background, with rounded corners.
+- Its text is shown whole, and its button says `Close`.
+- Everything under the text (the meta line, the detail, the keys) is set in under the text, not under the icon or at the pane's edge.
+- A thin rule runs down from the icon to the end of the body. It says the body belongs to that line.
+- One row is open at a time: opening a row folds the one that was open.
+- Don't put a whole blank line between the parts, set the body at the pane's edge, or leave several rows open.
+
+**Groups** (`section`). A semibold heading at the inset, its rows `xs` under it, groups `md` apart. Nothing at the heading's right: no keys that act on a whole group, and no press that opens every row of it.
+
+**The toolbar** (`paneTitle` with `gui.actions`). The pane's first line. On the left, the count, dim (`3 open`), or what closing will do once something is set (`On close: apply 1, dismiss 1`). At the far edge, the pane's actions. The main one (Submit) is quiet until there is something to submit, then filled. The terminal's action row at the foot is not drawn here.
+
+**Choices** (`choice`, `gui.layout: "row"`). One button per option in a row, the chosen one filled and the rest quiet. An option that means "nothing" (skip) is never filled.
+
+**An action row** (`actionBar`). A word or two per button, labels capitalised, the main one filled. These are the only buttons that may carry a hotkey.
+
+**Prose and labels.** Text a person or an agent wrote (a claim, evidence) is `Markdown` (`prose`), so code spans and links draw. Headings, labels, meta and anything cut to one line are `Text`. A Markdown block can't be cut, so a folded row is a `Text`.
+
+**Facts** (`facts`). A dim label, then its value beside it, wrapping under itself. Several entries of evidence each get a dim label line (`2026-11-16  claude`) over their text; there is no date column.
+
+**The band above the prompt** (`statusBand`). The status icon, the count in words (`3 doc suggestions to review`) and a quiet button with a verb (`Review`). The prompt's send button stays the one filled control in view.
+
+**The empty state** (`emptyState`). One dim paragraph at the inset: what is missing, and what makes rows appear.
+
+**A long list** (`capped`). The first 12 rows (`tokens.gui.maxItems`), then a quiet `Show N more` at the inset. The terminal shows every row, as its pane scrolls.
+
+**A notice** (`notice`). One line at the inset in its status colour.
+
+**Icons** (`icon`). Stroked drawings on a 16-pixel grid, drawn 16 pixels square.
+
+- The set: `wrong`, `stale`, `missing`, `warning`, `success`, `error`.
+- An icon is an image and can't follow the theme, so its colours are fixed in `tokens.gui.tone`: neutral `#8b8f98`, error `#e5534b`, warning `#d4962a`, success `#3fa65b`.
+- An icon is neutral unless it marks a state.
+- A new icon goes into the kit's set, on the same grid with the same 1.5 stroke.
+
+### Rules
+
+- No rule made of repeated characters.
+- No glyph standing in for a control (`▸`, `□`, `❯`): a control is a `Button`.
+- No key hints in text.
+- No text cut or padded by the mod: the surface cuts a line (`truncate-end`).
+- Nothing sized to the viewport or counted in cells by the mod: no width, height or minimum height but the kit's.
+- Hotkeys only on the buttons of an action row; never on a row's buttons.
+- No horizontal overflow at 420 pixels. A button never wraps, so a label is a word or two.
+- No frame inside the pane; a fill only under an opened row.
+
+`expectNative` checks most of these in a mod's tests (`claude.md`).
+
+### Where it departs from the terminal
+
+- The meta line joins its fields with `·`. Proportional text has no columns to line up, and two spaces read as one narrow gap. The terminal keeps its rule against the centre dot.
+- An opened row has a background fill.
+- There is no width class: the surface sizes the pane, and the kit draws to whatever it gives.

@@ -5,7 +5,8 @@
  */
 import type { On } from "claude-code";
 import { expect, test } from "claude-code/testing";
-import type { Engine, Mounted } from "claude-code/testing";
+import type { Engine } from "claude-code/testing";
+import { expectNative } from "./checks";
 
 const ROOT = "/repo";
 const DIR = `${ROOT}/.agents/store/docfix`;
@@ -292,43 +293,6 @@ test("the first read of a tracked doc in a session names the tool after it", asy
   const code = await $.tool.call({ tool: "Read", file_path: `${ROOT}/src/a.ts` });
   expect(code.context ?? []).toEqual([]);
 });
-
-/** The glyphs a graphical surface draws no controls with. */
-const GLYPHS = /[□■☐☑○●✎▸▾❯↑↓╰│]/;
-
-type Tree = Pick<Mounted, "findAll">;
-
-/** What a mounted pane shows, one string per element that shows text. */
-async function shown(ui: Tree) {
-  return (await ui.findAll({})).map((e) => e.text).filter(Boolean);
-}
-
-/**
- * The graphical drawing's rules: its own idioms, none of the terminal's. No rule of repeated
- * characters, no glyph standing in for a control, no text cut by hand, no key hints, no hotkey on
- * a button of a row and nothing sized to the viewport: no frame drawn in a colour, no width but a
- * side rule's fraction of a cell, no height but an icon's line, and only the surface cuts a line.
- */
-async function expectNative(ui: Tree) {
-  const all = await ui.findAll({});
-  for (const text of await shown(ui)) {
-    expect(text).not.toMatch(/[─-]{3,}/);
-    expect(text).not.toMatch(GLYPHS);
-    expect(text).not.toMatch(/…$/m);
-    expect(text).not.toMatch(/\b(?:ctrl\+|Enter\b|Esc\b)|\b[a-z]: /);
-  }
-  for (const e of all) {
-    if (e.type === "Button") expect(e.props.hotkey).toBeUndefined();
-    if (e.type === "Box") {
-      // Flat: a round border only for its corner, in no colour.
-      if (e.props.borderStyle !== undefined) expect(e.props.borderColor).toBe("#00000000");
-      expect(e.props.minHeight).toBeUndefined();
-      if (e.props.width !== undefined) expect(e.props.width).toBeLessThan(1);
-      if (e.props.height !== undefined) expect(e.props.height).toBe(1);
-    }
-    if (e.type === "Text") expect([undefined, "truncate-end"]).toContain(e.props.wrap);
-  }
-}
 
 // The graphical drawing is the kit's own: the same content on desktop and vscode in the elements
 // those surfaces draw (Markdown claims, Svg icons, real Buttons, no cells).

@@ -30,6 +30,10 @@ Never edit a copy. `kit/claude/ui.spec.ts` (in `npm test`, so in `nix build .#ag
 while any copy differs. A mod is on the list by having `plugins/<name>/claude/ui.tsx`; the
 catalogue mod's copy is always there (`kit/claude/copies.ts`).
 
+`kit/claude/checks.tsx` is copied the same way, as `claude/checks.tsx` beside each plugin's
+`ui.tsx`: `expectNative`, the graphical style's rules as test assertions, which a mod's tests
+import from `./checks`. It is a `.tsx` file so `tsc -b`, which has no Claude types, leaves it out.
+
 `ui.tsx` and the spec stay out of `tsc -b`, because the Claude types are only laid when a mod
 loads. Check a mod with `tsc -p plugins/<name>/claude`.
 

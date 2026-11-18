@@ -21,6 +21,86 @@ Load `plugin-authoring` for the API. This file holds what it does not: where the
 - `Markdown` sizes tables and fences to the terminal, not the pane.
 - `Input` takes a newline, as the prompt box does (shift+enter, alt+enter, ctrl+j), and `onSubmit` returns the text with newlines kept. Anything that draws or sends that text must expect several lines.
 
+## Graphical surfaces
+
+The desktop app and the VS Code extension draw the same tree with their own controls. `e.surface` is `terminal`, `desktop`, `vscode` or `mobile`; `kitOf(els, e)` reads it into `k.isNative`. The style is `style.md`, "Graphical surfaces".
+
+### Drawing with the kit
+
+- A mod never reads the surface. Each kit function has a terminal drawing and a graphical one, and picks by `k.isNative`.
+- What differs by surface is said in options: `{ tui, gui }`, with `desktop`, `vscode` or `mobile` to override `gui` on one surface. The kit merges them with `surfaceOf`. Examples in the kit today:
+  - `paneTitle(k, title, count, { gui: { count, summary, actions } })`: the toolbar.
+  - `actionBar(k, actions, { gui: { isHidden: true } })`: the terminal's action row, not drawn where the toolbar holds the actions.
+  - `notice(k, text, status, { gui: { isHidden: true } })`: a terminal-only line.
+  - `statusBand(k, { ..., gui: { text } })`: the count in words.
+  - `choice(k, options, { gui: { layout: "row" } })`, `capped(k, items, { gui: { maxItems } })`, `stack(k, blocks, { gui: { gap: "sm" } })`.
+  - `card(k, { ..., onToggle })`: the graphical drawing calls `onToggle({ isAlone: true })`, and the mod opens that row alone.
+- An option when the same content is said or placed differently: a shorter word, a part one surface leaves out, a layout. A new kit function when a screen needs a pattern the kit lacks; it gets both drawings, and its stories (`kit/README.md`).
+- A plugin never draws a graphical pattern itself. If the kit's drawing is wrong for a screen, change the kit, run `just kit-sync`, and check every mod that uses it.
+- Spacing is `tokens.gui.space` (down) and `tokens.gui.across` (across), as numbers. A step name is a whole line or none in VS Code.
+
+These functions follow the style: `pane`, `paneTitle`, `section`, `card`, `choice`, `actionBar`, `statusBand`, `capped`, `stack`, `facts`, `subhead`, `rule`, `indent`, `prose`, `notice`, `emptyState`, `icon`. These still draw the older look, with step names: `list`, `listRow`, `entries`, `note`, `bandShell`, `buttonRow`, `gapOf`, `imageGallery`. Converting a mod starts with the kit functions it calls: bring their graphical drawing to the style, then the mod.
+
+### Tests
+
+`claude plugin test` mounts a pane or band on any surface: `$.ui.mount({ ...PANE, surface: "vscode" })`. For each graphical surface (`desktop` and `vscode`):
+
+- mount every state the terminal tests mount;
+- press every keyed action with `ui.press({ key })`, and check what it did;
+- call `expectNative(ui)` on each state. It is the kit's `kit/claude/checks.tsx`, which `just kit-sync` copies beside each mod's `ui.tsx`: import it from `./checks`. Pass `{ hotkeys: ["submit"] }` for the action-row buttons that may carry a hotkey.
+
+When `claude` on your PATH is a wrapper that adds `--plugin-dir` (a system config's), `plugin test` fails through it. Run the binary it wraps, with a throwaway home:
+
+```bash
+(export HOME=$(mktemp -d); cd plugins/<mod>; "$(dirname "$(command -v claude)")/.claude-wrapped" plugin test .)
+```
+
+### VS Code, as the extension draws it
+
+Read from the extension's webview (2.1.327) and checked by screenshot:
+
+- **Button.** Its look comes from `dimColor` alone: without it, a filled button in the theme's button colour; with it, a quiet outlined one. `variant` is ignored, so the kit sets `dimColor` on every button that is not the main one. A label never wraps and the button never shrinks, so a long one runs off the pane. Its children are strings and `Text` only: no `Svg`, no `Box`.
+- **Link** is a plain link that opens its URL. It can't raise a press, so it can't be a mod's control.
+- **Markdown links** with `onLinkPress` raise a press, but draw in the link colour, underlined: too loud for a row.
+- **Box.**
+  - `backgroundColor` takes a theme key, a hex colour (eight digits for alpha) or `rgb()`. The keys that paint: `text`, `secondaryText`, `subtle`, `background`, `error`, `success`, `warning`, `claude`, `suggestion`, `userMessageBackground` (the theme's second background), `bashMessageBackgroundColor` (the code background), `diffAdded`, `diffRemoved`.
+  - Gaps, padding and `width` take fractions: a row gap is in lines, a column gap and a width in cells. A Box `width={0.2}` with a fill is a thin rule as tall as its row.
+  - Any `borderStyle` is a 1-pixel border on all four sides; `round` also rounds the corners (6 pixels). There is no border on one side. For rounded corners with no border, set `borderColor="#00000000"`.
+  - `hover` does nothing.
+- **Text.**
+  - `weight` `semibold` and `bold` draw bold; `medium` draws regular.
+  - `size` and `mono` do nothing. A code span needs `Markdown`, or a `Text` with the code background (`tokens.gui.chip`).
+  - `dimColor` is 65% opacity, so dim text inside a dim block fades twice.
+  - `wrap="truncate-end"` keeps one line and cuts it at the edge with `…`. `maxLines` cuts at a word and can leave the line short.
+- **Svg** is an image of fixed size in CSS pixels, with a required `alt`. It can't read the theme or `currentColor`, so its colours are fixed.
+- The inline pane's body is at most about 234 pixels tall in a 420 by 800 window, and scrolls.
+
+The desktop app is not checked: no driver reaches it. It reads the same props, and the kit's numbers are cells, which every surface sizes; confirm fractional spacing, the transparent round border and the theme keys there before relying on them.
+
+### Looking at a graphical screen
+
+The VS Code driver is `e2e/vscode.ts` (`e2e/README.md`, "VS Code"). Scenarios are `e2e/<plugin>/vscode.scenarios.ts`.
+
+```bash
+out=$(mktemp -d)
+node e2e/vscode.ts goto docfix queue --size 420x800   # the real inline pane
+node e2e/vscode.ts click Open                         # also: cap, hover, type, keys, wait, eval
+node e2e/vscode.ts shot "$out"/queue-420.png
+node e2e/vscode.ts stop
+```
+
+- Unset every inherited `CLAUDE*` and `ANTHROPIC*` variable first. Starting takes 20 to 30 seconds, and a change to the mod needs `stop` and `goto` again.
+- Shoot each state at 420 by 800 (the real pane), at 420 "full", and at 1280 by 720 (docked). Open every PNG.
+- For a full photograph, lift the inline pane's height cap in the page, then shoot at a taller size. This is for the photograph only, never the mod:
+
+  ```bash
+  node e2e/vscode.ts resize 420 1500
+  node e2e/vscode.ts eval '(() => { const s = document.createElement("style"); s.textContent = "[class*=paneBody_],[class*=abovePrompt_]{max-height:none!important}"; document.head.appendChild(s); })()'
+  node e2e/vscode.ts shot "$out"/queue-420-full.png
+  ```
+
+- A click leaves the pointer where it landed, so a button under it shows its hover fill in the shot.
+
 ## Traps
 
 Checked live on 2.1.319 to 2.1.325:

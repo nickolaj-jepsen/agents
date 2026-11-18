@@ -1,6 +1,6 @@
 ---
 name: agent-plugin-dev
-description: Design, build and check the UI of a plugin in this repo, for Claude Code (a mod's pane, band, status) and pi (an extension's overlay, form, widget) — the house style, the shared UI kit, and a driver that parks a real session on any screen and photographs it at four sizes. Use when developing, fixing or reviewing what a mod or pi extension draws, its keys, mouse or focus; before handing any plugin UI change back; when a plugin seems to do nothing; or when asking how one renders.
+description: Design, build and check the UI of a plugin in this repo, for Claude Code (a mod's pane, band, status, in the terminal, the desktop app and VS Code) and pi (an extension's overlay, form, widget): the house style, the shared UI kit, and drivers that park a real session (terminal or VS Code) on any screen and photograph it. Use when developing, fixing or reviewing what a mod or pi extension draws, its keys, mouse or focus; before handing any plugin UI change back; when a plugin seems to do nothing; or when asking how one renders.
 compatibility: Works in a checkout of nickolaj-jepsen/agents, with nix, Claude Code signed in and pi.
 metadata:
   summary: "the UI of a Claude Code mod or pi extension, with a house style, a shared kit and a driver that parks a real session on any screen."
@@ -11,8 +11,8 @@ A plugin's logic can be right while its screen is unusable: a title cut to nothi
 
 Most plugins have a Claude half and a pi half. Design both together: the harnesses can draw different things, and a layout that suits one may not exist in the other.
 
-- `references/style.md`: the house style. Read it before any layout.
-- `references/claude.md`: what a mod can draw, the engine's limits and traps. Load `plugin-authoring` too; it holds the API.
+- `references/style.md`: the house style, for the terminal and for the graphical surfaces (the desktop app and VS Code). Read it before any layout.
+- `references/claude.md`: what a mod can draw, the engine's limits and traps, how the kit draws for the graphical surfaces, what VS Code does with each element, and how to look at a VS Code screen. Load `plugin-authoring` too; it holds the API.
 - `references/pi.md`: what a pi extension can draw, pi-tui's components, traps, and reading a session file.
 - `references/sources.md`: where to look for how others solved a component.
 - `e2e/README.md`: writing scenarios and reading snapshots.
@@ -65,6 +65,8 @@ A screen you need more than once gets a scenario, so the next agent reaches it i
 
 A Claude dev session watches the mod's folder: save, and it reloads. Check `references/pi.md` for pi.
 
+A Claude mod also draws in the desktop app and VS Code. The VS Code driver, `node e2e/vscode.ts`, has the same verbs; how to photograph the real inline pane and a full one is in `references/claude.md`, "Looking at a graphical screen". The desktop app has no driver.
+
 When a plugin does nothing, look before guessing: `cap` at startup shows pi's `[Extension issues]`, and the Claude debug log in the run folder says whether the module loaded, a hook was skipped or a tree was refused.
 
 ## Before handing back
@@ -82,6 +84,13 @@ A change to what a plugin draws, or to its keys, is not done until all of this i
 4. **Check it against `style.md`'s list of defaults that are wrong.**
 5. **Press every key shown and click every target**, from the prompt with a draft typed and with it empty.
 6. **Run the plugin's scenarios** (`npm run e2e <plugin>`). Read the diff of any snapshot you update, and say what changed and why. Only `.snap` files are committed; PNGs are generated (`E2E_PNG=1 npm run e2e <plugin>`, or `sweep`) and git-ignored.
+
+For a Claude mod, the graphical surfaces too:
+
+1. **Tests on `desktop` and `vscode`** mount every state, press every keyed action, and call `expectNative` on each (`references/claude.md`, "Tests").
+2. **Screenshots in VS Code** of every state (empty, one, opened, set, many, extreme, the band) at 420×800, at 420 full, and at 1280×720. Open each.
+3. **Click every keyed action** in VS Code.
+4. **Check it against `style.md`'s "Graphical surfaces" rules**, and name what you could not check in the desktop app.
 
 If a session could not be run, say that instead of calling the work tested.
 
