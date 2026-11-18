@@ -3,7 +3,9 @@
  */
 import type { On } from "claude-code";
 import { expect, mock, test } from "claude-code/testing";
-import type { Engine } from "claude-code/testing";
+import type { Engine, Mounted } from "claude-code/testing";
+
+import { expectNative } from "./checks";
 
 const GRILLING = `The bar and the funnel are independent, so this round asks both.
 
@@ -442,30 +444,6 @@ test("send on the review submits the reply as a message and drops the round, kee
   expect(await hint($)).toBeUndefined();
 });
 
-test("off the terminal the form draws native controls: no rules, a close control, the whole body", async ($, on) => {
-  world(on);
-  await start($);
-  await ends($, `${LONG}\n  It is cheap to keep.`);
-  await $.command.run(RUN);
-  // A band this short cuts the body on the terminal.
-  const drawn = await $.ui.mount({
-    ...BAND,
-    props: { ...BAND.props, maxRows: 16 },
-    surface: "desktop",
-  });
-  expect(await drawn.find({ type: "Text", text: /─/ })).toBeUndefined();
-  expect(await drawn.find({ type: "Text", text: /^… more above$/ })).toBeUndefined();
-  expect(await drawn.find({ type: "Markdown", text: /Line 12 of what it hangs on/ })).toBeDefined();
-  expect((await drawn.find({ key: "quit" }))?.props.role).toBe("dismiss");
-  expect((await drawn.find({ key: "next" }))?.props.label).toBe("Next");
-  // An option's detail is its own line under the button, not part of its label.
-  expect((await drawn.find({ key: "e1" }))?.text).not.toContain("It is cheap to keep.");
-  expect(await drawn.find({ type: "Text", text: /^It is cheap to keep\.$/ })).toBeDefined();
-  await drawn.press({ key: "quit" });
-  expect((await drawn.find({ key: "answer" }))?.text).toContain("click to answer");
-  await drawn.unmount();
-});
-
 test("a pick list routes each item to its own next step", async ($, on) => {
   const w = world(on);
   await start($);
@@ -625,22 +603,33 @@ test("nothing runs or is read outside the session: the form needs no hub", async
   expect(reached).toEqual([]);
 });
 
-// The mod was drawn for the terminal; what it draws on the GUI surfaces is pinned here only as far
-// as it mounts, shows its content and answers a press. Its terminal-only drawing there (rules,
-// glyph checkboxes, clamped or padded text, key hints, row hotkeys) is not asserted either way.
+/** The offer's words, which a graphical surface sets beside its button rather than in it. */
+const offerSays = async (drawn: Pick<Mounted, "findAll">) =>
+  (await drawn.findAll({ type: "Text" }))
+    .map((e) => e.text)
+    .find((t) => /^(Answer|Pick from) /.test(t));
+
+/** What an action row may carry hotkeys on: nothing else on a graphical surface does. */
+const ACTIONS = ["back", "skip", "note", "several", "accept", "next", "send"];
+
+// A graphical surface draws the form from the kit's patterns, not the terminal's rows: the offer
+// is a status band, the tabs a row of buttons, the answers a stack of buttons with their detail
+// under them, the keys an action row. Every state is held to the style's rules (`expectNative`).
 for (const surface of ["desktop", "vscode"] as const) {
-  test(`${surface}: the offer is a row whose button opens the form`, async ($, on) => {
+  test(`${surface}: the offer is a status band whose button opens the form`, async ($, on) => {
     world(on);
     await start($, surface);
     await ends($, GRILLING);
     const offer = await band($, surface);
-    expect((await offer.find({ key: "answer" }))?.text).toContain("Answer 3 questions");
+    expect(await offerSays(offer)).toBe("Answer 3 questions");
+    expect((await offer.find({ key: "answer" }))?.props.label).toBe("Answer");
+    await expectNative(offer);
     await offer.press({ key: "answer" });
     expect(await offer.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
     await offer.unmount();
   });
 
-  test(`${surface}: the form shows every answer as a button, and a press answers and goes on`, async ($, on) => {
+  test(`${surface}: the form shows every answer as a button, the chosen one filled`, async ($, on) => {
     const w = world(on);
     await start($, surface);
     await ends($, GRILLING);
@@ -651,25 +640,103 @@ for (const surface of ["desktop", "vscode"] as const) {
       ["e1", "Default by kind"],
       ["e2", "Add the bar as a second pick"],
     ] as const)
-      expect((await drawn.find({ type: "Button", key }))?.text).toContain(label);
+      expect((await drawn.find({ type: "Button", key }))?.props.label).toContain(label);
+    // The recommendation is marked on its answer and said once, as prose.
+    expect(await drawn.find({ type: "Text", text: /^Recommended$/ })).toBeDefined();
     expect(
       await drawn.find({ type: "Markdown", text: /Recommended:.*A\. A per-kind table/ }),
     ).toBeDefined();
-    // The recommendation, the question tabs and the way out are Buttons too.
-    for (const key of ["accept", "q1", "q2", "next", "skip", "quit"])
+    // One tab per question and the review, the current one filled; the rest quiet.
+    for (const key of ["q0", "q1", "q2", "review"])
       expect(await drawn.find({ type: "Button", key })).toBeDefined();
+    expect((await drawn.find({ key: "q0" }))?.props.variant).toBe("primary");
+    expect((await drawn.find({ key: "q1" }))?.props.dimColor).toBe(true);
+    // No answer is chosen, so the way on is the take; Next waits, quiet.
+    expect((await drawn.find({ key: "accept" }))?.props.variant).toBe("primary");
+    expect((await drawn.find({ key: "next" }))?.props.variant).toBeUndefined();
+    // The first question has nothing to go back to.
+    expect(await drawn.find({ key: "back" })).toBeUndefined();
+    await expectNative(drawn, { hotkeys: ACTIONS });
 
     await pick(w, drawn, "e1");
+    expect((await drawn.find({ key: "e1" }))?.props.variant).toBe("primary");
+    expect((await drawn.find({ key: "e0" }))?.props.variant).not.toBe("primary");
+    expect((await drawn.find({ key: "next" }))?.props.variant).toBe("primary");
+    expect((await drawn.find({ key: "accept" }))?.props.variant).toBeUndefined();
+    // The note field opens under the answers.
     expect(await drawn.find({ key: "note-field" })).toBeDefined();
+    await expectNative(drawn, { hotkeys: ACTIONS });
+    await drawn.unmount();
+  });
+
+  test(`${surface}: a press on an answer, next, a take and the review fill the prompt`, async ($, on) => {
+    const w = world(on);
+    await start($, surface);
+    await ends($, GRILLING);
+    const drawn = await form($, surface);
+    await pick(w, drawn, "e1");
     await drawn.press({ key: "next" });
     expect(await drawn.find({ type: "Text", text: /^Lower the per-generator/ })).toBeDefined();
+    expect(await drawn.find({ key: "back" })).toBeDefined();
+    await expectNative(drawn, { hotkeys: ACTIONS });
     await drawn.press({ key: "accept" });
+    expect(await drawn.find({ type: "Text", text: /^What should happen to/ })).toBeDefined();
     await drawn.press({ key: "review" });
-    expect(await drawn.find({ type: "Text", text: /^The reply:$/ })).toBeDefined();
-    expect((await drawn.find({ key: "item0" }))?.text).toContain("→ B: Default by kind.");
+    // The review: a question and its answer on rows, the reply, the send worth pressing.
+    expect(await drawn.find({ type: "Text", text: /^Not answered$/ })).toBeDefined();
+    expect(await drawn.find({ type: "Text", text: /^B: Default by kind\.$/ })).toBeDefined();
+    expect(await drawn.find({ type: "Text", text: /^Reply$/ })).toBeDefined();
+    expect((await drawn.find({ key: "send" }))?.props.variant).toBe("primary");
+    expect((await drawn.find({ key: "fill" }))?.props.variant).toBeUndefined();
+    await expectNative(drawn, { hotkeys: ACTIONS });
     await drawn.press({ key: "fill" });
     await drawn.unmount();
     expect(w.box).toBe("Q1: B\nQ2: yes");
+  });
+
+  test(`${surface}: the tabs, back, skip, the note and several are clicks too`, async ($, on) => {
+    const w = world(on);
+    await start($, surface);
+    await ends($, GRILLING);
+    const drawn = await form($, surface);
+    await drawn.press({ key: "q2" });
+    expect(await drawn.find({ type: "Text", text: /^What should happen to/ })).toBeDefined();
+    await drawn.press({ key: "back" });
+    expect(await drawn.find({ type: "Text", text: /^Lower the per-generator/ })).toBeDefined();
+    await drawn.press({ key: "skip" });
+    expect(await drawn.find({ type: "Text", text: /^What should happen to/ })).toBeDefined();
+    // Several is the Q3 pair's: A and B both taken, both filled.
+    await drawn.press({ key: "several" });
+    expect((await drawn.find({ key: "several" }))?.props.label).toBe("Pick one");
+    await drawn.press({ key: "e0" });
+    await drawn.press({ key: "e1" });
+    expect((await drawn.find({ key: "e0" }))?.props.variant).toBe("primary");
+    expect((await drawn.find({ key: "e1" }))?.props.variant).toBe("primary");
+    await expectNative(drawn, { hotkeys: ACTIONS });
+    await drawn.press({ key: "note" });
+    expect(await drawn.find({ key: "note-field" })).toBeDefined();
+    await drawn.input({ key: "note-field", text: "both" });
+    await drawn.press({ key: "review" });
+    expect(await drawn.find({ type: "Text", text: /^A, B: / })).toBeDefined();
+    await drawn.press({ key: "send" });
+    await drawn.unmount();
+    expect(w.submitted).toHaveLength(1);
+    expect(w.submitted[0]).toContain("Q3: A, B");
+  });
+
+  test(`${surface}: the write-in is a field, and what is written shows under its button`, async ($, on) => {
+    const w = world(on);
+    await start($, surface);
+    await ends($, GRILLING);
+    const drawn = await form($, surface);
+    await pick(w, drawn, "e3");
+    expect(await drawn.find({ key: "write-field" })).toBeDefined();
+    await expectNative(drawn, { hotkeys: ACTIONS });
+    await drawn.input({ key: "write-field", text: "A per-kind table, but generated." });
+    await drawn.unmount();
+    const again = await $.ui.mount({ ...BAND, surface });
+    expect(await again.find({ key: "write-field" })).toBeUndefined();
+    await again.unmount();
   });
 
   test(`${surface}: the review's send submits the reply, and the way out folds the form`, async ($, on) => {
@@ -686,25 +753,55 @@ for (const surface of ["desktop", "vscode"] as const) {
     await ends($, GRILLING);
     const again = await form($, surface);
     await again.press({ key: "quit" });
-    expect((await again.find({ key: "answer" }))?.text).toContain("click to answer");
+    expect(await offerSays(again)).toBe("Answer 3 questions");
+    await expectNative(again);
     await again.unmount();
   });
 
-  test(`${surface}: a pick list and the long body mount with every entry`, async ($, on) => {
+  test(`${surface}: an option too long for a button is text under a short one`, async ($, on) => {
+    const w = world(on);
+    await start($, surface);
+    const words = "an option that runs on well past what one button holds";
+    await ends($, `**Q1. Which one?**\n\n- **A.** ${words}\n- **B.** Short`);
+    const drawn = await form($, surface);
+    expect((await drawn.find({ key: "e0" }))?.props.label).toBe("Option A");
+    expect(await drawn.find({ type: "Text", text: words })).toBeDefined();
+    expect((await drawn.find({ key: "e1" }))?.props.label).toBe("Short");
+    await expectNative(drawn, { hotkeys: ACTIONS });
+    await pick(w, drawn, "e0");
+    expect((await drawn.find({ key: "e0" }))?.props.variant).toBe("primary");
+    await drawn.unmount();
+  });
+
+  test(`${surface}: a pick list and a long body keep every entry, the whole body and the style`, async ($, on) => {
     const w = world(on);
     await start($, surface);
     await ends($, MINE);
-    expect(await hint($, surface)).toContain("Pick from 2 items");
+    expect(await offerSays(await band($, surface))).toBe("Pick from 2 items");
     const list = await form($, surface);
+    await expectNative(list, { hotkeys: ACTIONS });
     await pick(w, list, "e0");
+    await list.press({ key: "review" });
+    await expectNative(list, { hotkeys: ACTIONS });
     await list.unmount();
 
-    await ends($, LONG);
-    const long = await form($, surface);
+    // The terminal cuts a body a short band cannot hold; here it is whole, and its options follow.
+    await ends($, `${LONG}\n  It is cheap to keep.`);
+    await $.command.run(RUN);
+    const long = await $.ui.mount({
+      ...BAND,
+      props: { ...BAND.props, maxRows: 16 },
+      surface,
+    });
     expect(
       await long.find({ type: "Markdown", text: /Line 12 of what it hangs on/ }),
     ).toBeDefined();
-    expect(await long.find({ type: "Button", key: "e1" })).toBeDefined();
+    expect(await long.find({ type: "Text", text: /^… more above$/ })).toBeUndefined();
+    // An option's detail is its own line under the button, not part of its label.
+    expect((await long.find({ key: "e1" }))?.text).not.toContain("It is cheap to keep.");
+    expect(await long.find({ type: "Text", text: /^It is cheap to keep\.$/ })).toBeDefined();
+    expect((await long.find({ key: "quit" }))?.props.label).toBe("Close");
+    await expectNative(long, { hotkeys: ACTIONS });
     await long.unmount();
   });
 }
