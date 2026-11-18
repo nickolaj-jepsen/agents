@@ -1,10 +1,15 @@
-import { execFileSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
 import type { Turn } from "../lib/harness.ts";
 import { vscodeScenarios } from "../lib/vscode-scenario.ts";
 import type { VscodeStep } from "../lib/vscode-scenario.ts";
 
-/** hunspell flags `teh` and `seperate`; the real hunspell on PATH answers, with several suggestions for `teh`. */
+/**
+ * Each scenario ends with the draft typed. VS Code raises no prompt events; the mod reads the draft
+ * on each redraw, and (observed on 2.1.327) the redraws for a draft typed by the process that started
+ * the window arrive only once that process has exited, so nothing here waits for the band. Look at
+ * the state with the driver's verbs afterwards: `wait "2 misspelled"`, `click Review`, `shot`.
+ */
+
+/** hunspell flags `teh` and `seperate`; the real hunspell on PATH answers, with five suggestions for `teh`. */
 const ONE = "Please fix teh handler before it breaks";
 const TWO = "Please fix teh handler, it should seperate the orders";
 const LONG =
@@ -14,6 +19,7 @@ const LONG =
 
 /** One stubbed reply, so the session starts: it starts on the first prompt or slash command. */
 const reply: Turn = { text: "Hello from the stub." };
+/** Haiku's answer to the batch call, whichever request it comes with. */
 const haiku = (...words: string[]): Turn => ({
   match: "You check spelling",
   text: words.join("\n"),
@@ -22,29 +28,11 @@ const haiku = (...words: string[]): Turn => ({
 const FIX_TEH = '<word text="teh" verdict="fix">the</word>';
 const FIX_SEPARATE = '<word text="seperate" verdict="fix">separate</word>';
 
-/** One of the driver's verbs in a process of its own, on this run's session. */
-const cli = (...args: string[]) =>
-  execFileSync(
-    process.execPath,
-    [fileURLToPath(new URL("../vscode.ts", import.meta.url)), ...args],
-    {
-      encoding: "utf8",
-    },
-  );
-
-/** A step that runs a verb of the driver in a process of its own (see `draft`). */
-const via = (...args: string[]): VscodeStep => ({ run: async () => void cli(...args) });
-const wait = (text: string): VscodeStep => via("wait", text, "30");
-const click = (text: string): VscodeStep => via("click", text);
-
-/** The first prompt starts the session; the draft is typed after its reply. */
 const draft = (text: string): VscodeStep[] => [
   { type: "hello" },
   { press: "Enter" },
-  wait("Hello from the stub"),
-  // A draft typed in the process that started the window reaches the extension only once that
-  // process has exited, so it is typed by a process of its own, as the CLI's verbs are.
-  { run: async () => void cli("type", text) },
+  { wait: "Hello from the stub", timeout: 30_000 },
+  { type: text },
 ];
 
 /** The mod's options: a personal dictionary in the run's folder (a relative path). */
@@ -64,53 +52,42 @@ export default vscodeScenarios({
     band: {
       about: "the count above the prompt: two words flagged in the draft",
       start: { turns: [reply], plugins: ["spellfix"] },
-      steps: [...draft(TWO), wait("2 misspelled")],
+      steps: draft(TWO),
     },
     clean: {
       about: "a draft with nothing flagged: the quiet line that offers Haiku",
       start: { turns: [reply], plugins: ["spellfix"] },
-      steps: [...draft("Please fix the handler"), wait("No misspellings")],
+      steps: draft("Please fix the handler"),
     },
     picker: {
-      about: "the picker on `teh`: hunspell's suggestions and Haiku's",
+      about: "the picker on `teh`, once `click Review`: hunspell's suggestions and Haiku's",
       start: { turns: [reply, haiku(FIX_TEH)], plugins: ["spellfix"] },
-      steps: [...draft(ONE), wait("1 misspelled"), click("Review"), wait("Haiku")],
+      steps: draft(ONE),
     },
     nomodel: {
-      about: "the picker when Haiku has no suggestion for the word",
+      about: "after `click Review`, the picker when Haiku has no suggestion for the word",
       start: {
         turns: [reply, haiku('<word text="teh" verdict="unsure"/>')],
         plugins: ["spellfix"],
       },
-      steps: [
-        ...draft(ONE),
-        wait("1 misspelled"),
-        click("Review"),
-        wait("Haiku has no suggestion"),
-      ],
+      steps: draft(ONE),
     },
     add: {
-      about: "the picker with a personal dictionary set: Add word joins the actions",
+      about:
+        "after `click Review`, the picker with a personal dictionary: Add word joins the actions",
       start: { turns: [reply, haiku(FIX_TEH)], plugins: ["spellfix"], ...personal },
       setup: (ctx) => ctx.write("personal.dic", "1\nkeepme\n"),
-      steps: [...draft(ONE), wait("1 misspelled"), click("Review"), wait("Add word")],
+      steps: draft(ONE),
     },
     fixed: {
-      about: "after Fix all: the report with Undo and Dismiss",
+      about: 'after `click Review` and `click "Fix all"`: the report with Undo and Dismiss',
       start: { turns: [reply, haiku(FIX_TEH, FIX_SEPARATE)], plugins: ["spellfix"] },
-      steps: [
-        ...draft(TWO),
-        wait("2 misspelled"),
-        click("Review"),
-        wait("Fix all changes"),
-        click("Fix all"),
-        wait("Dismiss"),
-      ],
+      steps: draft(TWO),
     },
     long: {
-      about: "a long context line round the word, in a narrow pane",
+      about: "after `click Review`, a long context line round the word in a narrow pane",
       start: { turns: [reply, haiku(FIX_TEH)], plugins: ["spellfix"] },
-      steps: [...draft(LONG), wait("1 misspelled"), click("Review"), wait("Haiku")],
+      steps: draft(LONG),
     },
   },
 });
