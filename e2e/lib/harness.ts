@@ -10,6 +10,7 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { notesEnv } from "./setup.ts";
 import type { LaunchSpec } from "./term.ts";
 
 export type HarnessName = "claude" | "pi";
@@ -229,6 +230,7 @@ export const claude: Harness = {
       // two, starts every session in the classic renderer; this overrides that.
       env: {
         ...COMMON_ENV,
+        ...notesEnv(run.runDir),
         CLAUDE_CODE_NO_FLICKER: "1",
         ...(hermetic ? { ...hermetic, ...HERMETIC_ENV, CLAUDE_CODE_PLUGIN_DIRS: "" } : {}),
         ...path,
@@ -249,7 +251,12 @@ export const pi: Harness = {
   launch(run, start, size) {
     mkdirSync(join(run.runDir, "sessions"), { recursive: true });
     const args = ["--session-dir", join(run.runDir, "sessions")];
-    const env: Record<string, string> = { ...COMMON_ENV, PI_OFFLINE: "1", ...start.env };
+    const env: Record<string, string> = {
+      ...COMMON_ENV,
+      ...notesEnv(run.runDir),
+      PI_OFFLINE: "1",
+      ...start.env,
+    };
     if (start.bin) env.PATH = withBin(run, start.bin);
     if (start.turns) {
       const file = join(run.runDir, "turns.json");

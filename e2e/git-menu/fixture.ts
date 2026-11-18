@@ -37,15 +37,14 @@ export const checkout = (ctx: SetupContext, branch = BRANCH, mergeBase?: string)
 export const withNotes =
   (notes: readonly (readonly [string, number])[], branch?: string, mergeBase?: string) =>
   (ctx: SetupContext) => {
-    // Before `git init`: a commit's hook links `.agents/store` into the person's own store, and
-    // that link must never be written through.
+    checkout(ctx, branch, mergeBase);
+    // The checkout's own store, a real folder even with no notes in it.
     ctx.write(".agents/store/.keep", "");
     for (const [path, hours] of notes) {
       ctx.write(`.agents/store/${path}`, `# ${path}\n`);
       const at = new Date(Date.now() - hours * HOUR);
       utimesSync(join(ctx.cwd, ".agents/store", path), at, at);
     }
-    checkout(ctx, branch, mergeBase);
   };
 
 export const NOTES = [

@@ -17,9 +17,39 @@ export type SetupContext = {
   initRepo(): void;
 };
 
+/**
+ * Git for a fixture, deaf to the person's own configuration: their global and system config can
+ * hold hooks (a `post-checkout` that links `.agents/store` into their real notes), templates and
+ * signing, none of which a fixture may run.
+ */
+export const FIXTURE_GIT_ENV = {
+  GIT_CONFIG_GLOBAL: "/dev/null",
+  GIT_CONFIG_NOSYSTEM: "1",
+  GIT_AUTHOR_NAME: "e2e",
+  GIT_AUTHOR_EMAIL: "e2e@example.invalid",
+  GIT_COMMITTER_NAME: "e2e",
+  GIT_COMMITTER_EMAIL: "e2e@example.invalid",
+};
+
+/**
+ * Where `agent-notes` keeps its store and scratch for a session the drivers start: in the run's
+ * own folder, so a hook or a mod that runs `agent-notes root --ensure` in a fixture never makes a
+ * folder in the person's real store.
+ */
+export const notesEnv = (runDir: string) => ({
+  AGENT_NOTES_DATA: join(runDir, "agent-notes", "data"),
+  AGENT_NOTES_STATE: join(runDir, "agent-notes", "state"),
+});
+
 /** The `SetupContext` of a run: its folder for the agent and the scratch beside it. */
 export function setupContext(runDir: string, cwd: string): SetupContext {
-  const git = (...args: string[]) => void execFileSync("git", args, { cwd, stdio: "ignore" });
+  const env = { ...process.env, ...FIXTURE_GIT_ENV, ...notesEnv(runDir) };
+  const git = (...args: string[]) =>
+    void execFileSync("git", ["-c", "core.hooksPath=/dev/null", ...args], {
+      cwd,
+      env,
+      stdio: "ignore",
+    });
   return {
     cwd,
     runDir,
