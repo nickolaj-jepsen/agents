@@ -38,6 +38,8 @@ export type VscodeStart = {
   bin?: Record<string, string>;
   /** Commands the session must not find at all, as a machine without them. */
   hide?: string[];
+  /** MCP servers the session starts with, as a terminal scenario's `start.mcp`. */
+  mcp?: Record<string, { command: string; args?: string[]; env?: Record<string, string> }>;
 };
 
 /** What `launchVscode` leaves in the run folder for the next process to find. */
@@ -121,9 +123,27 @@ export async function launchVscode(
           [folder]: { hasTrustDialogAccepted: true, hasCompletedProjectOnboarding: true },
         },
       },
-      settings: { model: "sonnet", skipAutoPermissionPrompt: true },
+      settings: {
+        model: "sonnet",
+        skipAutoPermissionPrompt: true,
+        ...(start.mcp && { enableAllProjectMcpServers: true }),
+      },
     },
   );
+  // The extension takes no --mcp-config, so a project's own `.mcp.json` carries the servers, each
+  // told where the run's scratch is, as the terminal driver does.
+  if (start.mcp)
+    writeFileSync(
+      join(folder, ".mcp.json"),
+      JSON.stringify({
+        mcpServers: Object.fromEntries(
+          Object.entries(start.mcp).map(([name, spec]) => [
+            name,
+            { ...spec, env: { E2E_RUN_DIR: runDir, ...spec.env } },
+          ]),
+        ),
+      }),
+    );
   const env: Record<string, string> = {};
   for (const [k, v] of Object.entries(process.env))
     if (v !== undefined && !inherited(k)) env[k] = v;
