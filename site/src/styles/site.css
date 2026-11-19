@@ -1118,7 +1118,38 @@ pre {
 }
 .gallery.js .g-bar {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--u) calc(1.5 * var(--u));
   margin-bottom: calc(2 * var(--u));
+}
+/* Claude Code's surface: a choice within the harness, so it reads on from it ("Claude Code in
+   Terminal"), and goes while pi is shown. Without a harness switch the harness is named. */
+.g-surface {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(1.5 * var(--u));
+}
+.g-surface[hidden] {
+  display: none;
+}
+.g-in,
+.g-of {
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  line-height: calc(4 * var(--u));
+  color: var(--text-2);
+}
+.g-of {
+  display: inline-flex;
+  align-items: center;
+}
+.g-of .k {
+  display: inline-flex;
+  margin-right: 0.45em;
+}
+.g-of .gl {
+  --gl: 1.25em;
 }
 .g-cap .k {
   display: inline-flex;

@@ -1,13 +1,14 @@
 ---
 /**
  * A plugin's media as one stage: the item shown full width with its caption, a strip of thumbnails
- * under it, and, when both harnesses have media, a switch between them. Without script every
- * item is shown, one under another. gallery.ts does the switching and the full-size view.
+ * under it, and, when both harnesses have media, a switch between them. When Claude Code has
+ * pictures in VS Code too, a second switch, Terminal or VS Code, follows as a choice within Claude
+ * Code. Without script every item is shown, one under another. gallery.ts does the switching.
  */
 import Glyph from './Glyph.astro';
 import HarnessSwitch from './HarnessSwitch.astro';
 import Plate from './Plate.astro';
-import { HARNESS, mediaUrl, type Harness, type Plugin } from '../lib/content.ts';
+import { HARNESS, SURFACE, mediaUrl, type Harness, type Plugin, type Surface } from '../lib/content.ts';
 
 interface Props {
   plugin: Plugin;
@@ -22,6 +23,7 @@ type Item = {
   height: number;
   caption: string;
   harness: Harness;
+  surface: Surface;
 };
 const media = plugin.media;
 const items: Item[] = [
@@ -34,6 +36,7 @@ const items: Item[] = [
     height: v.height,
     caption: v.caption,
     harness: v.harness,
+    surface: 'terminal' as const,
   })),
   ...(media?.stills ?? []).map((s) => ({
     kind: 'image' as const,
@@ -43,22 +46,48 @@ const items: Item[] = [
     height: s.height,
     caption: s.caption,
     harness: s.harness,
+    surface: s.surface,
   })),
 ];
 const harnesses = (['claude', 'pi'] as const).filter((h) => items.some((i) => i.harness === h));
+// Claude Code's surfaces: a switch only when it has pictures in both.
+const surfaces = (['terminal', 'vscode'] as const).filter((s) => items.some((i) => i.harness === 'claude' && i.surface === s));
 ---
 
 {
   items.length > 0 && (
     <section class="gallery" aria-label={`${plugin.name} in use`} data-gallery data-default={harnesses[0]}>
-      {harnesses.length > 1 && (
+      {(harnesses.length > 1 || surfaces.length > 1) && (
         <div class="g-bar">
-          <HarnessSwitch options={harnesses} />
+          {harnesses.length > 1 ? (
+            <HarnessSwitch options={harnesses} />
+          ) : (
+            <span class="g-of">
+              <span class="k claude">
+                <Glyph h="claude" />
+              </span>
+              {HARNESS.claude}
+            </span>
+          )}
+          {surfaces.length > 1 && (
+            <div class="g-surface" data-surfaces data-js hidden>
+              <span class="g-in" aria-hidden="true">
+                in
+              </span>
+              <div class="seg box" role="group" aria-label={`${HARNESS.claude} in`}>
+                {surfaces.map((s, i) => (
+                  <button type="button" data-set-s={s} aria-pressed={i === 0 ? 'true' : 'false'}>
+                    {SURFACE[s]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
       <div class="g-stage">
         {items.map((it, i) => (
-          <div class="g-item" data-i={i} data-h={it.harness}>
+          <div class="g-item" data-i={i} data-h={it.harness} data-s={it.surface}>
             {it.kind === 'video' ? (
               <Plate src={it.src} poster={it.poster} width={it.width} height={it.height} alt={it.caption} />
             ) : (

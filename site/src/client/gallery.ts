@@ -1,8 +1,9 @@
 /**
  * A plugin's gallery: one item on the stage, the thumbnails choosing it, the harness switch
- * narrowing both to one harness.
+ * narrowing both to one harness, and within Claude Code the surface switch to its terminal or its
+ * VS Code pictures.
  */
-import { readHarness, writeHarness } from "./prefs.ts";
+import { readHarness, readSurface, writeHarness, writeSurface } from "./prefs.ts";
 
 for (const g of document.querySelectorAll<HTMLElement>("[data-gallery]")) gallery(g);
 
@@ -13,12 +14,20 @@ function gallery(root: HTMLElement): void {
   const items = [...root.querySelectorAll<HTMLElement>(".g-item")];
   const thumbs = [...root.querySelectorAll<HTMLButtonElement>("[data-show]")];
   const switches = [...root.querySelectorAll<HTMLButtonElement>("[data-set-h]")];
+  const surfaces = [...root.querySelectorAll<HTMLButtonElement>("[data-set-s]")];
+  const surfaceBar = root.querySelector<HTMLElement>("[data-surfaces]");
   const has = new Set(items.map((i) => i.dataset.h));
   const pref = readHarness();
   let h = pref && has.has(pref) ? pref : (root.dataset.default ?? "claude");
+  // The terminal first, as the demo is, unless the visitor chose VS Code before.
+  let s = (surfaces.length > 0 && readSurface()) || "terminal";
   let current = -1;
 
-  const shown = () => items.filter((i) => switches.length === 0 || i.dataset.h === h);
+  // The surface narrows Claude Code's items only; pi's are all its terminal's.
+  const isShown = (i: HTMLElement) =>
+    (switches.length === 0 || i.dataset.h === h) &&
+    (surfaces.length === 0 || i.dataset.h !== "claude" || i.dataset.s === s);
+  const shown = () => items.filter(isShown);
 
   function show(i: number): void {
     if (i === current) return;
@@ -32,11 +41,13 @@ function gallery(root: HTMLElement): void {
     for (const t of thumbs) t.setAttribute("aria-pressed", String(Number(t.dataset.show) === i));
   }
 
-  function setHarness(next: string): void {
-    h = next;
+  /** Narrows the stage and the thumbnails to the harness and surface chosen, and shows the first. */
+  function narrow(): void {
     for (const b of switches) b.setAttribute("aria-pressed", String(b.dataset.setH === h));
-    for (const t of thumbs)
-      t.closest("li")!.hidden = switches.length > 0 && t.closest("li")!.dataset.h !== h;
+    for (const b of surfaces) b.setAttribute("aria-pressed", String(b.dataset.setS === s));
+    // A choice within Claude Code: gone while pi is shown.
+    if (surfaceBar) surfaceBar.hidden = h !== "claude";
+    for (const t of thumbs) t.closest("li")!.hidden = !isShown(items[Number(t.dataset.show)]!);
     const first = shown()[0];
     current = -1;
     if (first) show(items.indexOf(first));
@@ -45,10 +56,17 @@ function gallery(root: HTMLElement): void {
   for (const t of thumbs) t.addEventListener("click", () => show(Number(t.dataset.show)));
   for (const b of switches)
     b.addEventListener("click", () => {
-      setHarness(b.dataset.setH!);
+      h = b.dataset.setH!;
       writeHarness(h);
+      narrow();
     });
-  setHarness(h);
+  for (const b of surfaces)
+    b.addEventListener("click", () => {
+      s = b.dataset.setS!;
+      writeSurface(s);
+      narrow();
+    });
+  narrow();
 
   // Swipe on the stage steps through what is shown.
   let x0: number | null = null;

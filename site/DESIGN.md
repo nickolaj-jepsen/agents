@@ -93,6 +93,12 @@ listings and commands. Each sits on a line of `--u`, and phones get their own st
   edge. A demo has the site's own control bar (play or pause, its time, a seek slider) instead of the
   browser's: shown on hover, on focus and while paused, always on touch. Without script the browser's
   controls remain, and every item shows, one under another.
+- Where Claude Code has pictures in VS Code too, the gallery's bar adds a second switch, Terminal or
+  VS Code, as a choice within Claude Code rather than a third harness. It reads on from the harness:
+  `[Claude Code | pi] in [Terminal | VS Code]`, or `Claude Code in [Terminal | VS Code]` where there
+  is no harness switch. It goes while pi is shown, starts on Terminal and is remembered like the
+  harness. Terminal shows the demo and the stills, VS Code the panel pictures. A home page poster is
+  always a terminal one.
 - Commands wrap inside their frame rather than scroll, so the copy button and the whole command stay in
   view; listings scroll sideways inside themselves. Nothing scrolls the page sideways at 320px.
 - A skill's header is followed by the facts a person looks for, from the skill's own data: how to

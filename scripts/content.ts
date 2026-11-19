@@ -17,16 +17,20 @@ export type Video = {
   width: number;
   height: number;
 };
+/** Where a picture was taken: the harness in a terminal, or Claude Code's VS Code extension. */
+export type Surface = "terminal" | "vscode";
 export type Still = {
   png: string;
   caption: string;
   harness: Harness;
+  surface: Surface;
   width: number;
   height: number;
 };
 /**
- * A plugin's demos (one per harness, the first shown first) and stills, from the `media.json`
- * `just site-shots` writes. Not committed: the Pages workflow records it before it builds.
+ * A plugin's demos (one per harness, the first shown first) and stills: the terminal's from the
+ * `media.json` `just site-shots` writes, then VS Code's from the `media-vscode.json` of
+ * `just site-vscode`. Not committed: the Pages workflow records them before it builds.
  */
 export type Media = { videos: Video[]; stills: Still[] };
 
@@ -134,10 +138,27 @@ function str(file: string, data: Record<string, any>, key: string): string {
 }
 
 function readMedia(root: string, name: string): Media | undefined {
-  const file = join(root, "site/media", name, "media.json");
-  if (!existsSync(file)) return undefined;
-  const m = JSON.parse(readFileSync(file, "utf8")) as Partial<Media>;
-  return { videos: m.videos ?? [], stills: m.stills ?? [] };
+  const read = (file: string) => {
+    const path = join(root, "site/media", name, file);
+    return existsSync(path)
+      ? (JSON.parse(readFileSync(path, "utf8")) as Partial<Media>)
+      : undefined;
+  };
+  // Two recorders, each in a derivation of its own, so each writes a manifest of its own.
+  const terminal = read("media.json");
+  const vscode = read("media-vscode.json");
+  if (!terminal && !vscode) return undefined;
+  return {
+    videos: terminal?.videos ?? [],
+    stills: [
+      ...(terminal?.stills ?? []).map((s) => ({ ...s, surface: "terminal" as const })),
+      ...(vscode?.stills ?? []).map((s) => ({
+        ...s,
+        harness: "claude" as const,
+        surface: "vscode" as const,
+      })),
+    ],
+  };
 }
 
 function loadPlugins(root: string): Plugin[] {

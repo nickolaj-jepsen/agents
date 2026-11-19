@@ -37,6 +37,10 @@ export function github(path: string, folder = path.endsWith("/")): string {
 export const HARNESS = { claude: "Claude Code", pi: "pi" } as const;
 export type Harness = keyof typeof HARNESS;
 
+/** Where Claude Code is shown: its terminal, or its VS Code extension. */
+export const SURFACE = { terminal: "Terminal", vscode: "VS Code" } as const;
+export type Surface = keyof typeof SURFACE;
+
 export function harnesses(p: Plugin): Harness[] {
   return (["claude", "pi"] as const).filter((h) => p.harness[h]);
 }
@@ -48,11 +52,14 @@ export function bodyAfterTagline(p: Plugin): string {
   return first !== undefined && squash(first) === squash(p.tagline) ? rest.join("\n\n") : p.body;
 }
 
-/** The picture a plugin is known by: its first demo's poster, else its first still. */
+/** A plugin's stills in a terminal: what it is known by, never a VS Code one. */
+const terminalStills = (p: Plugin) => p.media?.stills.filter((s) => s.surface === "terminal") ?? [];
+
+/** The picture a plugin is known by: its first demo's poster, else its first terminal still. */
 export function posterOf(p: Plugin): { src: string; width: number; height: number } | undefined {
   const v = p.media?.videos[0];
   if (v) return { src: mediaUrl(v.poster), width: v.width, height: v.height };
-  const s = p.media?.stills[0];
+  const s = terminalStills(p)[0];
   return s && { src: mediaUrl(s.png), width: s.width, height: s.height };
 }
 
@@ -63,11 +70,11 @@ export function posterOf(p: Plugin): { src: string; width: number; height: numbe
 export function postersOf(p: Plugin): { h: Harness; src: string; width: number; height: number }[] {
   const out = harnesses(p).flatMap((h) => {
     const v = p.media?.videos.find((m) => m.harness === h);
-    const s = p.media?.stills.find((m) => m.harness === h);
+    const s = terminalStills(p).find((m) => m.harness === h);
     const m = v ? { src: v.poster, ...v } : s && { src: s.png, ...s };
     return m ? [{ h, src: mediaUrl(m.src), width: m.width, height: m.height }] : [];
   });
-  const first = p.media?.videos[0]?.harness ?? p.media?.stills[0]?.harness;
+  const first = p.media?.videos[0]?.harness ?? terminalStills(p)[0]?.harness;
   return out.sort((a, b) => Number(b.h === first) - Number(a.h === first));
 }
 

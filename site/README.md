@@ -57,6 +57,9 @@ site build needs the root only to make the model: `cd site && npm run build` rea
   harness a visitor picks there, on the home page (`src/client/home.ts`) or in the catalogue is
   remembered for all of them (`src/client/prefs.ts`). All three share `HarnessSwitch.astro`. A
   harness's logo is `Glyph.astro`, drawn from the sprite in `Sprite.astro`.
+  - Where Claude Code has VS Code pictures, the gallery adds a Terminal / VS Code switch for Claude
+    Code, remembered the same way. `scripts/content.ts` merges the two manifests, giving each
+    still its `surface`; the home page's posters are terminal ones only.
 - `scripts/fonts.sh` remakes the Hack subsets in `src/assets/fonts/`.
 
 ## Deploy
