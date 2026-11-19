@@ -131,4 +131,15 @@ export default site({
       ],
     },
   },
+  vscode: {
+    form: {
+      caption:
+        "In VS Code the form sits above the prompt, one question at a time, each option with its detail.",
+      scenario: "form",
+    },
+    chosen: {
+      caption: "A chosen option opens in place, with a field for a note and Next.",
+      scenario: "chosen",
+    },
+  },
 });

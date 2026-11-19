@@ -1,11 +1,11 @@
-# The site's recorded pictures and the catalogue's model, as two derivations. Nix keys each on the
+# The site's recorded pictures and the catalogue's model, as three derivations. Nix keys each on the
 # files it reads and on the agent versions it runs, so an unchanged recording is substituted from the
 # store (or a binary cache) instead of replayed, and a changed one is the only thing rebuilt.
 #
-# Why two and not one per plugin: a site scenario that names no `plugins` loads every mod in
-# `plugins/`, so every plugin's recording reads the whole plugin tree. A change under `plugins/`
-# therefore invalidates all of them; only the kit's stories are separable, and they read no plugin,
-# so `site-kit` has a source of its own.
+# Why not one per plugin: a site scenario that names no `plugins` loads every mod in `plugins/`, so
+# every plugin's recording reads the whole plugin tree. A change under `plugins/` therefore
+# invalidates all of them. What does separate is the kit's stories, which read no plugin, and the
+# VS Code pictures, which read VS Code and its driver; each has a source of its own.
 {
   lib,
   buildNpmPackage,
@@ -30,18 +30,17 @@
   # A build's source is the files its recording reads and nothing else, so an edit elsewhere leaves
   # its store path, and so the derivation, as it was. Not `site/`, `docs/` or the skills: none
   # reaches a screenshot.
-  withSource = fileset: let
+  sourceOf = fileset: let
     src = lib.fileset.toSource {
       inherit root;
       fileset = lib.fileset.unions ([(root + "/package.json") (root + "/package-lock.json")] ++ fileset);
     };
-  in
-    common
-    // {
-      inherit src;
-      npmDeps = importNpmLock {npmRoot = src;};
-      inherit (importNpmLock) npmConfigHook;
-    };
+  in {
+    inherit src;
+    npmDeps = importNpmLock {npmRoot = src;};
+    inherit (importNpmLock) npmConfigHook;
+  };
+  withSource = fileset: common // sourceOf fileset;
 
   # The e2e harness without any plugin's scenarios and snapshots: a folder per plugin beside
   # `lib/`, `assets/` and `kit/`.
@@ -50,11 +49,41 @@
     lib.attrNames (lib.filterAttrs (name: type: type == "directory" && !(lib.elem name sharedHarness)) (builtins.readDir (root + "/e2e")))
   );
   harnessOnly = lib.fileset.difference (root + "/e2e") (lib.fileset.unions pluginScenarios);
+  # What the terminal's recordings leave out of `e2e/`: its README, which reaches no screenshot,
+  # and the VS Code files below.
+  notTerminal = lib.fileset.unions [(root + "/e2e/README.md") vscodeOnly];
+
+  # The VS Code driver and its scenarios, which only `site-vscode` reads: the terminal's recordings
+  # leave them out, so an edit to one leaves their media cached. (`lib/site.ts` names a type of
+  # `vscode-scenario.ts`, which node erases.)
+  vscodeOnly = lib.fileset.unions (
+    [
+      (root + "/e2e/site-vscode.ts")
+      (root + "/e2e/vscode.ts")
+      (root + "/e2e/lib/vscode.ts")
+      (root + "/e2e/lib/vscode-scenario.ts")
+    ]
+    ++ lib.filter lib.pathExists (map (dir: dir + "/vscode.scenarios.ts") pluginScenarios)
+  );
+  # What the VS Code pictures read: the mods, the harness, and the folders of the plugins with VS
+  # Code scenarios, less their snapshots and terminal scenarios, which no picture reads.
+  vscodeSource =
+    [
+      (root + "/plugins")
+      (root + "/e2e/lib")
+      (root + "/e2e/site-vscode.ts")
+      (root + "/e2e/tui-test.toml")
+    ]
+    ++ map (dir:
+      lib.fileset.difference
+      (lib.fileset.fileFilter (f: !(lib.elem f.name ["claude.scenarios.ts" "pi.scenarios.ts"])) dir)
+      (lib.fileset.maybeMissing (dir + "/__snapshots__")))
+    (lib.filter (dir: lib.pathExists (dir + "/vscode.scenarios.ts")) pluginScenarios);
 in {
   /**
   `site/media/<plugin>/`: the demos and stills of every plugin that has scenarios.
   */
-  media = buildNpmPackage (withSource [(root + "/plugins") (root + "/kit") (root + "/e2e")]
+  media = buildNpmPackage (withSource [(root + "/plugins") (root + "/kit") (lib.fileset.difference (root + "/e2e") notTerminal)]
     // media.graphicsEnv
     // {
       nativeBuildInputs = common.nativeBuildInputs ++ media.graphicsPackages;
@@ -80,7 +109,7 @@ in {
   */
   # No plugin: the kit's scenarios load the catalogue mods and nothing else, so a plugin edit
   # leaves it cached.
-  kit = buildNpmPackage (withSource [(root + "/kit") harnessOnly]
+  kit = buildNpmPackage (withSource [(root + "/kit") (lib.fileset.difference harnessOnly notTerminal)]
     // {
       pname = "agents-site-kit";
       version = "0";
@@ -97,6 +126,39 @@ in {
         mkdir -p $out
         cp -r site/media/kit $out/kit
         cp site/data/kit.json $out/kit.json
+        runHook postInstall
+      '';
+    });
+
+  /**
+  `site/media/<plugin>/vscode-*.png` and `media-vscode.json`: the Claude panel in VS Code, for the
+  plugins whose `site.scenarios.ts` names `vscode` pictures. Linux only: cage is a Wayland
+  compositor.
+  */
+  # A derivation of its own: VS Code, its extension and its driver are inputs the terminal's
+  # recording does not read, so a bump of one, or a failure here, leaves `site-media` cached.
+  vscode = buildNpmPackage (sourceOf vscodeSource
+    // media.vscodeEnv
+    // {
+      pname = "agents-site-vscode";
+      version = "0";
+      dontNpmBuild = true;
+      doCheck = false;
+      nativeBuildInputs = media.vscodePackages;
+      buildPhase = ''
+        runHook preBuild
+        # cage puts its socket in the runtime folder, and VS Code writes under the home: a build has
+        # neither.
+        export HOME=$(mktemp -d) XDG_RUNTIME_DIR=$(mktemp -d)
+        chmod 700 "$XDG_RUNTIME_DIR"
+        mkdir -p site/media
+        node e2e/site-vscode.ts
+        runHook postBuild
+      '';
+      installPhase = ''
+        runHook preInstall
+        mkdir -p $out
+        cp -r site/media/. $out/
         runHook postInstall
       '';
     });

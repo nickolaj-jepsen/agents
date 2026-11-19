@@ -117,15 +117,28 @@ function sessionPath(runDir: string, bin: Record<string, string>, hide: string[]
 
 const quote = (s: string) => `'${s.replaceAll("'", `'\\''`)}'`;
 
+/**
+ * Where VS Code, its extensions, the compositor and the fonts come from. The site's derivation
+ * names its own (`E2E_VSCODE_CODE`, `E2E_VSCODE_EXTENSIONS`, `E2E_VSCODE_CAGE`,
+ * `E2E_VSCODE_FONTCONFIG_FILE`): a build has no `code` on PATH, no home, no `nix run` and no
+ * /etc/fonts. A person's run takes the machine's `code`, its installed extensions, nixpkgs' cage
+ * and the machine's fonts.
+ */
+function machine() {
+  const env = process.env;
+  return {
+    code: env.E2E_VSCODE_CODE || execFileSync("which", ["code"], { encoding: "utf8" }).trim(),
+    extensions: env.E2E_VSCODE_EXTENSIONS || join(env.HOME ?? "", ".vscode", "extensions"),
+    cage: env.E2E_VSCODE_CAGE ? [env.E2E_VSCODE_CAGE] : ["nix", "run", "nixpkgs#cage", "--"],
+    fonts: env.E2E_VSCODE_FONTCONFIG_FILE,
+  };
+}
+
 /** What of this process's environment VS Code and the claude it spawns must not inherit. */
 const inherited = (name: string) =>
   /^(CLAUDE|ANTHROPIC|VSCODE_|ELECTRON_)/.test(name) ||
   ["DISPLAY", "WAYLAND_DISPLAY", "NIXOS_OZONE_WL"].includes(name);
 
-/**
- * Starts VS Code on a folder of the run and returns once its workbench answers over CDP. `cwd`
- * is the folder it opens, already filled by the scenario's setup.
- */
 /**
  * The config folder and the project's `.mcp.json` the extension's `claude` reads when it starts:
  * written at launch, and again by a reload, since each new tab's `claude` reads them afresh.
@@ -166,6 +179,10 @@ function writeSessionConfig(runDir: string, folder: string, start: VscodeStart) 
   return config;
 }
 
+/**
+ * Starts VS Code on a folder of the run and returns once its workbench answers over CDP. `cwd`
+ * is the folder it opens, already filled by the scenario's setup.
+ */
 export async function launchVscode(
   runDir: string,
   cwd: string,
@@ -180,7 +197,7 @@ export async function launchVscode(
   for (const [k, v] of Object.entries(process.env))
     if (v !== undefined && !inherited(k)) env[k] = v;
   // VS Code itself starts by the real `code`, found before the session's PATH can shadow it.
-  const codeBin = execFileSync("which", ["code"], { encoding: "utf8" }).trim();
+  const { code: codeBin, extensions: extensionsDir, cage, fonts } = machine();
   if (start.bin || start.hide) env.PATH = sessionPath(runDir, start.bin ?? {}, start.hide ?? []);
   Object.assign(env, config, {
     ANTHROPIC_API_KEY: STUB_KEY,
@@ -194,6 +211,7 @@ export async function launchVscode(
     WLR_LIBINPUT_NO_DEVICES: "1",
     WLR_RENDERER: "pixman",
     WLR_HEADLESS_OUTPUTS: "1",
+    ...(fonts && { FONTCONFIG_FILE: fonts }),
     ...start.env,
   });
   // The window's own furniture is out of the way: no Copilot chat beside the Claude tab, no
@@ -219,7 +237,6 @@ export async function launchVscode(
   );
   // A reused profile restores the old Claude tab and the new one hangs: always a fresh one.
   // Only the Claude extension runs: another one's toast (direnv's) lands on the panel.
-  const extensionsDir = join(process.env.HOME ?? "", ".vscode", "extensions");
   mark("launch: config written");
   const others = execFileSync(codeBin, ["--list-extensions", "--extensions-dir", extensionsDir], {
     encoding: "utf8",
@@ -233,7 +250,7 @@ export async function launchVscode(
     `${quote(codeBin)} --ozone-platform=wayland --disable-gpu --password-store=basic`,
     `--user-data-dir ${quote(join(runDir, "ud"))}`,
     // The person's installed extensions, read only; the profile is the run's own.
-    '--extensions-dir "$HOME/.vscode/extensions"',
+    `--extensions-dir ${quote(extensionsDir)}`,
     ...others.map((e) => `--disable-extension ${quote(e)}`),
     `--remote-debugging-port=${port}`,
     "--disable-workspace-trust --skip-welcome --skip-release-notes --new-window",
@@ -241,11 +258,11 @@ export async function launchVscode(
   ].join(" ");
   const log = join(runDir, "vscode.log");
   const log_ = openSync(log, "a");
-  const child = spawn(
-    "setsid",
-    ["nix", "run", "nixpkgs#cage", "--", "--", "sh", "-c", `${code}; sleep infinity`],
-    { env, detached: true, stdio: ["ignore", log_, log_] },
-  );
+  const child = spawn("setsid", [...cage, "--", "sh", "-c", `${code}; sleep infinity`], {
+    env,
+    detached: true,
+    stdio: ["ignore", log_, log_],
+  });
   child.unref();
   const state: VscodeState = { port, stubPort, cwd: folder, fixed: fixedOf(start) };
   writeFileSync(join(runDir, STATE), JSON.stringify(state));

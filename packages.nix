@@ -28,7 +28,9 @@
       # The site's pictures and the catalogue's model, cached by the store: `just media` builds
       # these. Two units, so a change to one recording does not replay the other.
       # Select the outputs explicitly: callPackage also adds an `override` function to the set.
-      // lib.mapAttrs' (name: value: lib.nameValuePair "site-${name}" value) {inherit (site-media) media kit;};
+      // lib.mapAttrs' (name: value: lib.nameValuePair "site-${name}" value) ({inherit (site-media) media kit;}
+        # VS Code's pictures: cage, its display, is Linux only.
+        // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {inherit (site-media) vscode;});
 
     checks =
       {

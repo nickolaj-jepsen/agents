@@ -116,12 +116,23 @@ then builds `.#tui-test` from this flake.
 
 A mod can also be seen in the Claude Code extension for VS Code, which draws the same mod in a
 webview. `e2e/vscode.ts` parks a real, headless VS Code on a scenario's screen so you can read,
-click and photograph it. It is local only, for a person or an agent that is developing a mod: no
-test and no check runs it, and it has no snapshots.
+click and photograph it. It is for a person or an agent that is developing a mod: no test and no
+check runs it, and it has no snapshots. The site's VS Code pictures are taken with the same driver
+(see [Site media](#site-media)).
 
 It needs `code` on PATH with the `anthropic.claude-code` extension installed, and nix (it runs
 `cage`, a Wayland compositor with a headless output, from nixpkgs). Nothing else of the machine
 is used, but the extensions folder, read only.
+
+These variables replace the machine's parts, as the site's derivation, which has none of them, sets
+them (`pkgs/media-environment.nix`):
+
+| Variable                     | Instead of                                                 |
+| ---------------------------- | ---------------------------------------------------------- |
+| `E2E_VSCODE_CODE`            | `code` on PATH                                             |
+| `E2E_VSCODE_EXTENSIONS`      | `~/.vscode/extensions`; the folder needs `extensions.json` |
+| `E2E_VSCODE_CAGE`            | `nix run nixpkgs#cage`                                     |
+| `E2E_VSCODE_FONTCONFIG_FILE` | the machine's fonts, for VS Code alone                     |
 
 ```bash
 npm run e2e:vscode -- ls docfix            # or: node e2e/cli.ts vscode ls docfix
@@ -262,7 +273,8 @@ reads, relative to the repo root.
 
 The files are not committed. `just media` builds `.#site-media` and `.#site-kit`, which record in the
 same hermetic shell: the agents from this flake's nixpkgs, the fonts, ffmpeg and hunspell, and nothing
-of the machine's. The Pages workflow builds the same two.
+of the machine's. It builds `.#site-vscode` too, the pictures in VS Code (below). The Pages workflow
+builds the same three.
 
 A plugin whose run fails keeps its old files, and the failed screens are left in the temp folder it
 names. `E2E_KEEP=1` and `SITE_JOBS=<n>` (scenarios side by side) work as in the regression run.
@@ -288,6 +300,35 @@ It writes `image-preview.mp4` and `image-preview.png` (the final screen), replac
 present. The output directory must exist. It accepts fixed-size asciicast v2 recordings only.
 Use casts you trust: the replay sends their terminal escape sequences to Kitty. The command does
 not rerun the scenario or update the site's media manifest.
+
+### Pictures in VS Code
+
+A plugin's `site.scenarios.ts` can name pictures of its mod in VS Code's Claude panel, under
+`vscode` (`SiteVscode` in `lib/site.ts`). Each is a scenario of the plugin's `vscode.scenarios.ts`
+and, optionally, `steps` played after it, with a caption. The site shows them under Claude Code's
+Terminal / VS Code switch.
+
+```bash
+just site-vscode                 # every plugin whose site.scenarios.ts names vscode pictures
+just site-vscode docfix          # only those plugins
+```
+
+- `e2e/site-vscode.ts` plays them with the VS Code driver: `goto` for a plugin's first picture,
+  then `reload` for each picture whose scenario starts the same way, about twice as fast. A
+  reloaded picture with a mod's picture left undrawn is taken again in a new window (Traps, above).
+  A picture still undrawn there fails the plugin.
+- Each is the panel at a 1280x720 window (`VSCODE_SIZE`), where a mod's pane docks beside the chat.
+- It writes `site/media/<plugin>/vscode-<name>.png` and `media-vscode.json`, and leaves the
+  terminal's files alone, as `just site-shots` leaves its own. `scripts/content.ts` merges the two
+  manifests, marking each still's `surface`.
+- `.#site-vscode` records them in a build: VS Code and the Claude extension from this flake's
+  nixpkgs, cage, and fonts of its own (Inter for the interface, Hack for code). The extension runs
+  the `claude` it bundles, so the Claude Code version is the extension's, not `claude-code`'s.
+- In the build, VS Code runs with Chromium's sandbox off (`--no-sandbox`): it needs user
+  namespaces, which a build may not get, and the build's own sandbox holds VS Code in.
+- Its source is the mods, `e2e/lib` and the e2e folders of plugins with VS Code scenarios, less
+  their snapshots and terminal scenarios. The terminal's derivations leave the VS Code driver and
+  scenarios out, and this README, so an edit to the driver re-records only VS Code.
 
 ### Add a site scenario
 

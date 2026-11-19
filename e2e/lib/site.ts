@@ -5,13 +5,16 @@
  * A plugin has a `demo` per harness at most, recorded as a video with its last screen as the
  * poster, and any number of `stills`, captured and captioned. The agent is the same real Claude
  * Code or pi the regression scenarios drive, on the model stub or pi's replayed turns, so a run
- * needs no model call and comes out the same each time.
+ * needs no model call and comes out the same each time. Its `vscode` pictures are the Claude Code
+ * extension's panel, played from its VS Code scenarios by `e2e/site-vscode.ts`.
  */
-import { existsSync, readdirSync } from "node:fs";
-import { join } from "node:path";
-import type { HarnessName } from "./harness.ts";
+import { execFileSync } from "node:child_process";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
+import { checkoutRoot, type HarnessName } from "./harness.ts";
 import { e2eRoot, type Scenario, type ScenarioSet, type Step } from "./scenario.ts";
 import type { Size } from "./session.ts";
+import type { VscodeStep } from "./vscode-scenario.ts";
 
 /** The terminal a site scenario runs in unless it sets `size`: wide enough for a ~1000px column. */
 export const SITE_SIZE: Size = [120, 34];
@@ -27,6 +30,14 @@ export const IDLE = 6;
 
 /** What the site's check allows a file. */
 export const BUDGET = { mp4: 1024 * 1024, png: 300 * 1024 };
+
+/** The VS Code window a `vscode` picture is taken in: cage's output, wide enough that a pane docks beside the chat. */
+export const VSCODE_SIZE: Size = [1280, 720];
+/** The VS Code recorder's manifest beside `media.json`, which the terminal's recorder writes. */
+export const VSCODE_MANIFEST = "media-vscode.json";
+/** A file of `site/media/<plugin>/` that the VS Code recorder writes, and the terminal's leaves alone. */
+export const isVscodeFile = (name: string) =>
+  name === VSCODE_MANIFEST || name.startsWith("vscode-");
 
 export type SiteScenario = Scenario & {
   /** One sentence under the picture. */
@@ -44,6 +55,16 @@ export type SiteDemo = SiteScenario & {
   prepare?: Scenario["steps"];
 };
 
+/** A picture of the mod in VS Code's Claude Code extension: the panel at `VSCODE_SIZE`. */
+export type SiteVscode = {
+  /** One sentence under the picture. */
+  caption: string;
+  /** The scenario of `e2e/<plugin>/vscode.scenarios.ts` that reaches the screen. */
+  scenario: string;
+  /** Played after the scenario's own steps, for a screen it stops short of. */
+  steps?: VscodeStep[];
+};
+
 export type SiteSet = {
   plugin: string;
   /**
@@ -53,6 +74,8 @@ export type SiteSet = {
   demo?: SiteDemo | SiteDemo[];
   /** Named screens in display order. */
   stills: Record<string, SiteScenario>;
+  /** Named pictures of the Claude panel in VS Code, in display order, as `vscode-<name>.png`. */
+  vscode?: Record<string, SiteVscode>;
 };
 
 /** Identity, for the types. */
@@ -171,3 +194,38 @@ export const slowPress = (key: string, n: number, ms = 70): Step => ({
     }
   },
 });
+
+/** A PNG's pixel size, from its header. */
+export function pngSize(path: string) {
+  const head = readFileSync(path).subarray(16, 24);
+  return { width: head.readUInt32BE(0), height: head.readUInt32BE(4) };
+}
+
+export const kb = (path: string) => `${(statSync(path).size / 1024).toFixed(0)} KB`;
+
+export const onPath = (tool: string) => {
+  try {
+    execFileSync("sh", ["-c", `command -v ${tool}`], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/** `file` brought under `budget` bytes by a pass of a tool that is not part of the repo's shell, or left as is. */
+export function squeeze(file: string, budget: number) {
+  // A PNG within 15% of its budget is squeezed too, so a run that comes out a little larger still fits.
+  if (statSync(file).size <= (file.endsWith(".png") ? budget * 0.85 : budget)) return;
+  if (file.endsWith(".png")) {
+    const args = ["-o", "4", "--strip", "all", "-q", file];
+    if (onPath("oxipng")) execFileSync("oxipng", args, { stdio: "inherit" });
+    else
+      execFileSync("nix", ["run", "--inputs-from", checkoutRoot, "nixpkgs#oxipng", "--", ...args], {
+        stdio: "inherit",
+      });
+  }
+  if (statSync(file).size > budget)
+    throw new Error(
+      `${relative(checkoutRoot, file)} is ${kb(file)}, over its ${budget / 1024} KB budget`,
+    );
+}

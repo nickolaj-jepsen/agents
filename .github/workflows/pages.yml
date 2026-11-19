@@ -47,12 +47,12 @@ jobs:
         with:
           name: ${{ vars.CACHIX_CACHE }}
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-      # `.#site-media` and `.#site-kit` record on a stubbed model in a config folder of their own, so
-      # the same inputs give the same pictures. A derivation's path is a hash of every input it
-      # reads (files, agents, fonts, tools), so the two paths are the exact cache key: an edit
-      # that reaches neither (a doc, the workflow) still hits.
+      # `.#site-media`, `.#site-kit` and `.#site-vscode` record on a stubbed model in a config folder
+      # of their own, so the same inputs give the same pictures. A derivation's path is a hash of
+      # every input it reads (files, agents, VS Code, fonts, tools), so the three paths are the
+      # exact cache key: an edit that reaches none (a doc, the workflow) still hits.
       - id: key
-        run: echo "media=media-$(nix path-info --derivation .#site-media .#site-kit | sha256sum | cut -c1-32)" >> "$GITHUB_OUTPUT"
+        run: echo "media=media-$(nix path-info --derivation .#site-media .#site-kit .#site-vscode | sha256sum | cut -c1-32)" >> "$GITHUB_OUTPUT"
         env:
           NIX_CONFIG: access-tokens = github.com=${{ github.token }}
       # The recordings as files, for when no binary cache is configured: a runner starts with an

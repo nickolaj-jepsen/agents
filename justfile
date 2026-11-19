@@ -96,6 +96,11 @@ site-build:
 site-shots *PLUGINS:
     npm run site-shots -- {{ PLUGINS }}
 
+[doc("Photograph the mods in VS Code's Claude panel for the site into site/media/ (no sign-in, no model); name plugins to redo only those")]
+[group('dev')]
+site-vscode *PLUGINS:
+    npm run site-vscode -- {{ PLUGINS }}
+
 [doc('Export a trusted asciicast to PNG and MP4 using Kitty on a private X11 display (Linux)')]
 [group('dev')]
 capture-cast CAST OUT:
@@ -105,17 +110,22 @@ capture-cast CAST OUT:
 [group('site')]
 [script]
 media:
-    # `.#site-media` and `.#site-kit` read git-tracked files only: `git add` a new scenario, or use
-    # `just media-fresh` to record what is in the tree as it stands.
+    # `.#site-media`, `.#site-kit` and `.#site-vscode` read git-tracked files only: `git add` a new
+    # scenario, or use `just media-fresh` to record what is in the tree as it stands.
     out=$({{ nixcmd }} build --no-link --print-out-paths .#site-media)
     kit=$({{ nixcmd }} build --no-link --print-out-paths .#site-kit)
+    # VS Code's pictures need cage, a Linux compositor.
+    vscode=""
+    if [ "$(uname -s)" = Linux ]; then vscode=$({{ nixcmd }} build --no-link --print-out-paths .#site-vscode); fi
     rm -rf site/media
     mkdir -p site/media site/data
     cp -r "$out"/. site/media/
     cp -r "$kit"/kit site/media/kit
     cp "$kit"/kit.json site/data/kit.json
-    # The store's files are read-only: the next run has to replace them.
+    # The store's files are read-only: the next copy, and the next run, have to write beside them.
     chmod -R u+w site/media site/data
+    # Into the terminal's plugin folders: its own files are `vscode-*.png` and `media-vscode.json`.
+    if [ -n "$vscode" ]; then cp -r "$vscode"/. site/media/ && chmod -R u+w site/media; fi
     echo "media: site/media/ and site/data/kit.json written from the store"
 
 [doc("Record everything into the tree, ignoring the store: the escape hatch when a recording looks wrong")]
@@ -125,9 +135,11 @@ media-fresh:
 
 # Inside the media shell: a pi half imports pi's packages, which _dev-setup-pi links.
 [private]
+[script]
 _media: _dev-setup-pi
     npm run catalog
     npm run site-shots
+    if [ "$(uname -s)" = Linux ]; then npm run site-vscode; fi
 
 [doc('Build the checked plugin sources')]
 [group('maintenance')]

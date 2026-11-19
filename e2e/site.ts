@@ -10,14 +10,12 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   readdirSync,
   rmSync,
-  statSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, relative } from "node:path";
+import { join } from "node:path";
 import { execFile, execFileSync } from "node:child_process";
 import { promisify } from "node:util";
 import { checkoutRoot } from "./lib/harness.ts";
@@ -28,8 +26,12 @@ import {
   demosOf,
   FPS,
   IDLE,
+  isVscodeFile,
+  kb,
   pace,
+  pngSize,
   siteFiles,
+  squeeze,
   VIDEO_ZOOM,
   ZOOM,
   type SiteSet,
@@ -89,14 +91,6 @@ type Video = {
   height: number;
 };
 type Media = { videos: Video[]; stills: Still[] };
-
-/** A PNG's pixel size, from its header. */
-function pngSize(path: string) {
-  const head = readFileSync(path).subarray(16, 24);
-  return { width: head.readUInt32BE(0), height: head.readUInt32BE(4) };
-}
-
-const kb = (path: string) => `${(statSync(path).size / 1024).toFixed(0)} KB`;
 
 /**
  * Plays one scenario's agent to its steps and shoots its last screen as `<file>.png`; a demo
@@ -206,33 +200,6 @@ async function pool<T>(jobs: (() => Promise<T>)[], n: number): Promise<PromiseSe
   return results;
 }
 
-const onPath = (tool: string) => {
-  try {
-    execFileSync("sh", ["-c", `command -v ${tool}`], { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-/** `file` brought under `budget` bytes by a pass of a tool that is not part of the repo's shell, or left as is. */
-function squeeze(file: string, budget: number) {
-  // A PNG within 15% of its budget is squeezed too, so a run that comes out a little larger still fits.
-  if (statSync(file).size <= (file.endsWith(".png") ? budget * 0.85 : budget)) return;
-  if (file.endsWith(".png")) {
-    const args = ["-o", "4", "--strip", "all", "-q", file];
-    if (onPath("oxipng")) execFileSync("oxipng", args, { stdio: "inherit" });
-    else
-      execFileSync("nix", ["run", "--inputs-from", checkoutRoot, "nixpkgs#oxipng", "--", ...args], {
-        stdio: "inherit",
-      });
-  }
-  if (statSync(file).size > budget)
-    throw new Error(
-      `${relative(checkoutRoot, file)} is ${kb(file)}, over its ${budget / 1024} KB budget`,
-    );
-}
-
 async function runPlugin(plugin: string, file: string) {
   const set = (await loadSet(file)) as unknown as SiteSet;
   const supported = (scenario: { capture?: "kitty" }) =>
@@ -298,8 +265,10 @@ async function runPlugin(plugin: string, file: string) {
   writeFileSync(join(stage, "media.json"), `${JSON.stringify(media, null, 2)}\n`);
 
   const dest = join(mediaRoot, plugin);
-  rmSync(dest, { recursive: true, force: true });
   mkdirSync(dest, { recursive: true });
+  // The VS Code recorder's pictures share the folder (e2e/site-vscode.ts) and stay.
+  for (const f of readdirSync(dest))
+    if (!isVscodeFile(f)) rmSync(join(dest, f), { recursive: true, force: true });
   for (const f of readdirSync(stage)) {
     copyFileSync(join(stage, f), join(dest, f));
     console.error(`site: ${rel(f)} ${kb(join(dest, f))}`);

@@ -139,4 +139,16 @@ export default site({
       ],
     },
   },
+  vscode: {
+    draft: {
+      caption:
+        "In VS Code the draft is a pane beside the chat: title, status, priority, labels and description, ready to create.",
+      scenario: "draft",
+    },
+    duplicate: {
+      caption:
+        "When an open issue may already cover it, a warning leads the draft, with the issue to open.",
+      scenario: "duplicate",
+    },
+  },
 });

@@ -31,13 +31,22 @@ site build needs the root only to make the model: `cd site && npm run build` rea
   reads that file and nothing else.
 - A relative link in a source resolves against its file: one to a plugin, skill or doc lands on its page,
   anything else in the repo on GitHub (`src/lib/markdown.ts`).
-- `site/media/` is recorded, not committed. `just media` builds `.#site-media` and `.#site-kit`:
-  derivations that play `e2e/<plugin>/site.scenarios.ts` and the kit's stories, signed out and on a
-  stubbed model. Nix keys them on the files and agent versions they read, so an unchanged recording
-  comes back from the store instead of being replayed, and the Pages workflow builds the same two. Without it the pages build with no pictures. It is served at
-  `/agents/media/` (the `media.json` files stay out); `astro.config.mjs` copies it into the build and
-  serves it in dev. Nothing here names a folder above `site/`: the recorded pictures are `media/`,
-  and the models are `data/content.json` and `data/kit.json`.
+- `site/media/` is recorded, not committed. `just media` builds three derivations, each signed out
+  and on a stubbed model:
+  - `.#site-media` plays `e2e/<plugin>/site.scenarios.ts` in the terminal: each plugin's
+    `media.json`, its demos and stills.
+  - `.#site-vscode` photographs the `vscode` pictures those files name in VS Code's Claude panel:
+    each plugin's `media-vscode.json` and `vscode-*.png` (Linux only).
+  - `.#site-kit` plays the kit's stories.
+
+  Nix keys them on the files and agent versions they read, so an unchanged recording comes back
+  from the store instead of being replayed, and the Pages workflow builds the same three. Without
+  them the pages build with no pictures.
+
+  `site/media/` is served at `/agents/media/` (its `.json` manifests stay out); `astro.config.mjs`
+  copies it into the build and serves it in dev. Nothing here names a folder above `site/`: the
+  recorded pictures are `media/`, and the models are `data/content.json` and `data/kit.json`.
+
 - The UI kit's catalogue is `/dev/` (the overview) plus a page per component. A component's page
   holds its stories inline, each with what each harness does of its features, and the props. Its data
   is generated (`kit/README.md`, The catalogue). The behaviour lives in `src/client/catalog.ts`: the

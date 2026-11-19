@@ -77,4 +77,20 @@ export default site({
       ],
     },
   },
+  vscode: {
+    picker: {
+      caption:
+        "In VS Code the count sits above the prompt, and Review opens the picker with hunspell's suggestions and Haiku's fix.",
+      scenario: "picker",
+      // The scenario ends at the typed draft. VS Code raises no prompt event, so the band reads the
+      // draft only when it is drawn again, which a change to the prompt box's width brings about.
+      steps: [
+        { resize: [560, 720] },
+        { resize: [1280, 720] },
+        { wait: "1 misspelled", timeout: 30_000 },
+        { click: "Review" },
+        { wait: "Fix all" },
+      ],
+    },
+  },
 });

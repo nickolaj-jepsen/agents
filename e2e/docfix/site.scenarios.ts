@@ -164,4 +164,15 @@ export default site({
       ],
     },
   },
+  vscode: {
+    queue: {
+      caption: "In VS Code, /docfix opens the same queue as a pane beside the chat.",
+      scenario: "queue",
+    },
+    open: {
+      caption:
+        "A row opens in place: the claim, its kind, how often it was hit and the evidence, then Apply, Dismiss or Skip.",
+      scenario: "open",
+    },
+  },
 });

@@ -24,12 +24,13 @@
       ];
     };
 
-    # What `just media` needs and nothing of the machine's: the agents, the fonts, the tools the
-    # scenarios call. The Pages workflow records in it; so can anyone, signed out.
+    # What `just media` needs and nothing of the machine's: the agents, VS Code and its Claude
+    # extension, the fonts, the tools the scenarios call. The Pages workflow records in it; so can anyone, signed out.
     devShells.media = pkgs.mkShell (media.graphicsEnv
+      // media.vscodeEnv
       // {
         name = "agents-media";
-        packages = media.packages ++ media.graphicsPackages ++ [pkgs.just];
+        packages = media.packages ++ media.graphicsPackages ++ media.vscodePackages ++ [pkgs.just];
         inherit (media) PI_MONOREPO FONTCONFIG_FILE;
       });
   };

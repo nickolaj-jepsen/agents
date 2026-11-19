@@ -104,4 +104,11 @@ export default site({
       steps: [...EXCHANGE, { type: "/open plan" }, { press: "Enter" }, { wait: "retry-after.md" }],
     },
   },
+  vscode: {
+    git: {
+      caption:
+        "In VS Code, /git is a pane beside the chat: the repository, the branch and its pull request.",
+      scenario: "git",
+    },
+  },
 });
