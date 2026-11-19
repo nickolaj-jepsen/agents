@@ -62,6 +62,11 @@ catalog:
 e2e *ARGS:
     npm run e2e -- {{ ARGS }}
 
+[doc('Open a canned answer session in Claude Desktop on Linux, or draft a prompt in live mode')]
+[group('dev')]
+claude-desktop-dev FIXTURE="recommended" MODE="seed":
+    node e2e/desktop.ts {{ quote(FIXTURE) }} {{ quote(MODE) }}
+
 [doc("Regenerate README.md from the plugins', skills' and docs' sources")]
 [group('dev')]
 readme:

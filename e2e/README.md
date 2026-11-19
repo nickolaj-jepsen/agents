@@ -112,6 +112,24 @@ npm run e2e:cli -- snap                   # the scenario's snapshot, as it is no
 Each verb prints the screen after it. The CLI finds `tui-test` through `TUI_TEST_BIN`, then `PATH`,
 then builds `.#tui-test` from this flake.
 
+## Claude Desktop
+
+On Linux, run `just claude-desktop-dev` with `claude` and `claude-desktop` on `PATH`. Claude Code
+saves a session containing the `recommended` answer fixture using the localhost model stub. The
+launcher asks Desktop to open that session. Sign in to the test profile on first use and run the
+recipe again if Desktop opened on the sign-in screen.
+
+Pass another name from `e2e/answer/fixtures/`, such as `just claude-desktop-dev long-body`. For a
+live turn, use `just claude-desktop-dev recommended live`. Select Haiku in the Code tab and send
+the prefilled draft.
+
+Each checkout or worktree gets its own Desktop profile and Claude Code config under
+`${XDG_STATE_HOME:-$HOME/.local/state}/agent-tools-e2e/`. The config loads mods directly from the
+checkout. Each launch keeps its scratch folder alongside the profile so you can reopen the session.
+
+For a scripted replay that drives the UI through a live turn, use the VS Code driver below, for example
+`npm run e2e:vscode -- goto answer form`.
+
 ## VS Code
 
 A mod can also be seen in the Claude Code extension for VS Code, which draws the same mod in a
