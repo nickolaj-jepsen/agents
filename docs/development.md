@@ -38,10 +38,10 @@ and the `CACHIX_AUTH_TOKEN` secret lets a run on `main` push to it; without them
 before, and a pull request or Dependabot run (which gets no Actions secrets) only reads. The Pages
 workflow also keys its file cache on the two media derivation paths, which hash every input.
 
-## End-to-end tests
+## Testing plugins
 
-`e2e/` plays each plugin's screens in a real Claude Code and a real pi, local only: neither `npm test`,
-the nix build nor `just check` starts an agent. See `e2e/README.md`.
+To try a plugin in a client, see [Testing plugins](testing-plugins.md).
+To write scenarios or update snapshots, see the [end-to-end test reference](../e2e/README.md).
 
 ## Content
 
