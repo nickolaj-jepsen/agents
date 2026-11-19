@@ -10,7 +10,13 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { loadVscodeSet, reachVscode, resolveVscode, vscodeFiles } from "./lib/vscode-scenario.ts";
+import {
+  loadVscodeSet,
+  reachVscode,
+  reloadVscode,
+  resolveVscode,
+  vscodeFiles,
+} from "./lib/vscode-scenario.ts";
 import { stopVscode, VscodeSession } from "./lib/vscode.ts";
 
 const stateDir = join(
@@ -34,6 +40,8 @@ const die = (msg: string): never => {
 export const USAGE = `usage: node e2e/cli.ts vscode <verb>
   ls [plugin]                              scenarios
   goto <plugin> <scenario> [--size WxH]    start VS Code on that screen and leave it there
+  reload [scenario] [--size WxH]           play it (or another of the plugin's) again in the same
+                                           window, in a new Claude tab: picks up an edited mod
   cap                                      the Claude panel as text
   click <text> [--nth N] [--double]        click the visible element whose own text matches
   hover <text> [--nth N]                   move the pointer onto it
@@ -128,6 +136,29 @@ export async function main(argv: string[]) {
         if (!process.env.E2E_KEEP) await stop();
         throw err;
       }
+      return;
+    }
+    case "reload": {
+      const cur = readCurrent();
+      if (!cur) return die("no VS Code session: run `vscode goto <plugin> <scenario>` first");
+      const scenario = args[0] && !args[0].startsWith("--") ? args[0] : cur.scenario;
+      const set = await loadVscodeSet(cur.file);
+      if (!set.scenarios[scenario])
+        return die(
+          `no scenario ${cur.plugin} ${scenario}; has ${Object.keys(set.scenarios).join(", ")}`,
+        );
+      const r = resolveVscode(set, scenario);
+      const size = option(args, "--size");
+      if (size) {
+        const m = /^(\d+)x(\d+)$/.exec(size);
+        if (!m) return die("--size is WIDTHxHEIGHT");
+        r.size = [Number(m[1]), Number(m[2])];
+      }
+      const session = await reloadVscode(r, cur.runDir);
+      writeFileSync(currentFile, JSON.stringify({ ...cur, scenario }));
+      console.log(`on ${cur.plugin}/vscode/${scenario}; folder ${session.state.cwd}`);
+      console.log(await session.text());
+      session.close();
       return;
     }
     case "stop": {

@@ -5,13 +5,21 @@
  * A file `e2e/<plugin>/vscode.scenarios.ts` default-exports `vscodeScenarios({...})`. Nothing
  * here is a regression test: there are no snapshots, and `npm run e2e` does not read these files.
  */
-import { existsSync, mkdirSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { Pattern } from "./screen.ts";
 import { setupContext, type SetupContext } from "./setup.ts";
 import type { Size, Target } from "./session.ts";
-import { launchVscode, VscodeSession, type VscodeStart, type VscodeState } from "./vscode.ts";
+import {
+  closeClaudeTab,
+  launchVscode,
+  mark,
+  restartSession,
+  VscodeSession,
+  type VscodeStart,
+  type VscodeState,
+} from "./vscode.ts";
 
 export type VscodeStep =
   /** Literal characters into the focused field, the message input when none is. */
@@ -124,6 +132,28 @@ export async function playVscode(session: VscodeSession, steps: VscodeStep[]) {
 }
 
 /** Starts VS Code on the scenario and plays its steps; the window is left on the screen. */
+/**
+ * Plays a scenario again in the window `reachVscode` left in `runDir`, without a new window: a
+ * new Claude tab (so its `claude` reads the mods from disk again), the stub's turns from the
+ * first, and the fixture rebuilt in the same folder. The scenario may be another of the plugin's,
+ * if its window would be started the same way.
+ */
+export async function reloadVscode(r: VscodeResolved, runDir: string): Promise<VscodeSession> {
+  await closeClaudeTab(runDir, r.start);
+  mark("reload: tab closed");
+  const cwd = join(runDir, "cwd");
+  for (const entry of readdirSync(cwd)) rmSync(join(cwd, entry), { recursive: true, force: true });
+  const ctx = setupContext(runDir, cwd);
+  for (const setup of r.setup) await setup(ctx);
+  await restartSession(runDir, r.start);
+  mark("reload: fixture and stub reset");
+  const session = await VscodeSession.attach(runDir);
+  if (r.size) await session.resize(r.size[0], r.size[1]);
+  await playVscode(session, r.steps);
+  mark("reload: steps played");
+  return session;
+}
+
 export async function reachVscode(
   r: VscodeResolved,
   runDir: string,
@@ -132,9 +162,12 @@ export async function reachVscode(
   mkdirSync(cwd, { recursive: true });
   const ctx = setupContext(runDir, cwd);
   for (const setup of r.setup) await setup(ctx);
+  mark("reach: fixture set up");
   const state = await launchVscode(runDir, cwd, r.start);
   const session = await VscodeSession.attach(runDir);
   if (r.size) await session.resize(r.size[0], r.size[1]);
+  mark("reach: sized");
   await playVscode(session, r.steps);
+  mark("reach: steps played");
   return { session, state };
 }

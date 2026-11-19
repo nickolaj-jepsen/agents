@@ -108,10 +108,11 @@ out=$(mktemp -d)
 node e2e/vscode.ts goto docfix queue --size 420x800   # the real inline pane
 node e2e/vscode.ts click Open                         # also: cap, hover, type, keys, wait, eval
 node e2e/vscode.ts shot "$out"/queue-420.png
+node e2e/vscode.ts reload                             # after an edit to the mod; or: reload set
 node e2e/vscode.ts stop
 ```
 
-- Unset every inherited `CLAUDE*` and `ANTHROPIC*` variable first. Starting takes 20 to 30 seconds, and a change to the mod needs `stop` and `goto` again.
+- Unset every inherited `CLAUDE*` and `ANTHROPIC*` variable first. `goto` takes about 9 seconds. After a change to the mod, `reload` (about 4 seconds) plays the scenario again in a new Claude tab, which reads the mod from disk; it can also switch to another scenario of the same plugin. The extension never reloads a mod in a running session, and its New session keeps the old code.
 - Shoot each state at 420 by 800 (the real pane), at 420 "full", and at 1280 by 720 (docked). Open every PNG.
 - For a full photograph, lift the inline pane's and the band's height caps in the page, then shoot at a taller size. The band's cap is on `[class*=band_]`, inside `[class*=abovePrompt_]`. This is for the photograph only, never the mod:
 

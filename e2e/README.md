@@ -126,6 +126,7 @@ is used, but the extensions folder, read only.
 ```bash
 npm run e2e:vscode -- ls docfix            # or: node e2e/cli.ts vscode ls docfix
 npm run e2e:vscode -- goto docfix queue
+npm run e2e:vscode -- reload [set]         # again, or another scenario, in the same window
 npm run e2e:vscode -- cap                  # the Claude panel as text
 npm run e2e:vscode -- click apply [--nth 1]
 npm run e2e:vscode -- type "hello"         # then: keys Enter
@@ -134,6 +135,11 @@ npm run e2e:vscode -- shot [file] [--window]   # the panel; --window is the whol
 npm run e2e:vscode -- sweep                # panel PNGs at 420x800 and 1280x720
 npm run e2e:vscode -- stop
 ```
+
+`goto` takes about 9 seconds. `reload` takes about 4: it plays the scenario again, or another of
+the same plugin's, in the window already up, in a new Claude tab whose `claude` reads the mods
+from disk, so it is how an edit to a mod is seen. A scenario started another way (other `env`,
+`bin`, `hide` or `plugins`) needs `goto`. `E2E_TIMING=1` prints how long each phase took.
 
 `resize <width> <height>` sets the window's size. Each verb prints the panel's text after it. One
 VS Code lives at a time, in its own state file, so a terminal `goto` can be parked beside it. Set
@@ -152,7 +158,8 @@ text before a partial one; `{ text, nth }` picks a later one.
 - `goto` starts VS Code detached (`setsid`, under `cage`) with a fresh profile, so it outlives the
   command. Each verb reconnects over the saved Chrome DevTools port (`lib/vscode.ts`).
 - The workbench is the `page` target. Ctrl+Shift+Escape opens the Claude tab, whose webview is an
-  `iframe` target; the UI is the document of `#active-frame` inside it. Text, clicks, keys and
+  `iframe` target. A press before the extension has activated is lost, so the key is sent again
+  every 1.5 seconds until a Claude tab is in the workbench, and not after, or a second tab opens; the UI is the document of `#active-frame` inside it. Text, clicks, keys and
   typing are sent to that target, and a screenshot is taken from the page, clipped to the webview
   for a panel shot.
 - The extension's `claude` inherits VS Code's environment, so that is where the hermetic setup
@@ -163,6 +170,9 @@ text before a partial one; `{ text, nth }` picks a later one.
   has the window's width and nothing lands on it.
 - `stop` ends every process whose command line or environment names the run folder, and the stub.
   It touches nothing else.
+- `reload` closes the Claude tab (its `claude` goes with it), puts the stub back on the port VS
+  Code's environment names, with its turns from the first, rebuilds the fixture in the same folder,
+  rewrites the config folder and `.mcp.json`, then opens a new tab and plays the steps.
 - A session starts on the first prompt or slash command: the panel is empty until then, and a mod's
   band shows only after a turn.
 
@@ -180,6 +190,9 @@ again.
   shows "Waiting for your plugins…", then "stopped responding". `goto` writes the record.
 - Start from a fresh `--user-data-dir`. A reused one restores the old Claude tab, and the new one
   hangs. The run's profile is always new.
+- The extension's session does not reload an edited mod, after a turn or otherwise, and the panel's
+  New session starts the next session in the same `claude`, with the old code. Only a new tab
+  starts a new `claude`: that is what `reload` does.
 - `code` returns at once, so cage runs `sh -c 'code …; sleep infinity'` to stay alive.
 - A leftover `VSCODE_IPC_HOOK_CLI` makes `code` hand the folder to a VS Code that is already
   running, which is why those variables are dropped.

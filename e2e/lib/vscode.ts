@@ -46,10 +46,28 @@ export type VscodeStart = {
 };
 
 /** What `launchVscode` leaves in the run folder for the next process to find. */
-export type VscodeState = { port: number; stubPort: number; cwd: string; size?: [number, number] };
+export type VscodeState = {
+  port: number;
+  stubPort: number;
+  cwd: string;
+  size?: [number, number];
+  /** The start options a window's environment fixed at launch; a reload must match them. */
+  fixed?: string;
+};
+
+/** The part of a start that is in the window's environment, which only a new window changes. */
+export const fixedOf = (start: VscodeStart) =>
+  JSON.stringify({ env: start.env, bin: start.bin, hide: start.hide, plugins: start.plugins });
 
 const STATE = "vscode.json";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** With E2E_TIMING=1, how long each phase of a start took, on stderr. */
+const born = Date.now();
+export const mark = (what: string) => {
+  if (process.env.E2E_TIMING)
+    console.error(`[timing] ${((Date.now() - born) / 1000).toFixed(1)}s ${what}`);
+};
 
 const freePort = () =>
   new Promise<number>((resolve, reject) => {
@@ -108,14 +126,11 @@ const inherited = (name: string) =>
  * Starts VS Code on a folder of the run and returns once its workbench answers over CDP. `cwd`
  * is the folder it opens, already filled by the scenario's setup.
  */
-export async function launchVscode(
-  runDir: string,
-  cwd: string,
-  start: VscodeStart,
-): Promise<VscodeState> {
-  const folder = realpathSync(cwd);
-  const stubPort = await startStub(runDir, start.turns ?? []);
-  const port = await freePort();
+/**
+ * The config folder and the project's `.mcp.json` the extension's `claude` reads when it starts:
+ * written at launch, and again by a reload, since each new tab's `claude` reads them afresh.
+ */
+function writeSessionConfig(runDir: string, folder: string, start: VscodeStart) {
   // The extension's `claude` inherits this environment. Without a trust record for the folder it
   // logs "Launching Claude on channel" and never spawns.
   const config = hermeticClaude(
@@ -148,6 +163,19 @@ export async function launchVscode(
         ),
       }),
     );
+  return config;
+}
+
+export async function launchVscode(
+  runDir: string,
+  cwd: string,
+  start: VscodeStart,
+): Promise<VscodeState> {
+  const folder = realpathSync(cwd);
+  mark("launch: start");
+  const stubPort = await startStub(runDir, start.turns ?? []);
+  const port = await freePort();
+  const config = writeSessionConfig(runDir, folder, start);
   const env: Record<string, string> = {};
   for (const [k, v] of Object.entries(process.env))
     if (v !== undefined && !inherited(k)) env[k] = v;
@@ -187,6 +215,7 @@ export async function launchVscode(
   // A reused profile restores the old Claude tab and the new one hangs: always a fresh one.
   // Only the Claude extension runs: another one's toast (direnv's) lands on the panel.
   const extensionsDir = join(process.env.HOME ?? "", ".vscode", "extensions");
+  mark("launch: config written");
   const others = execFileSync(codeBin, ["--list-extensions", "--extensions-dir", extensionsDir], {
     encoding: "utf8",
     env,
@@ -194,6 +223,7 @@ export async function launchVscode(
     .split("\n")
     .map((e) => e.trim())
     .filter((e) => e && e !== "anthropic.claude-code");
+  mark("launch: extensions listed");
   const code = [
     `${quote(codeBin)} --ozone-platform=wayland --disable-gpu --password-store=basic`,
     `--user-data-dir ${quote(join(runDir, "ud"))}`,
@@ -212,13 +242,17 @@ export async function launchVscode(
     { env, detached: true, stdio: ["ignore", log_, log_] },
   );
   child.unref();
-  const state: VscodeState = { port, stubPort, cwd: folder };
+  const state: VscodeState = { port, stubPort, cwd: folder, fixed: fixedOf(start) };
   writeFileSync(join(runDir, STATE), JSON.stringify(state));
+  mark("launch: cage spawned");
   const until = Date.now() + 120_000;
   for (;;) {
     try {
       const targets = await listTargets(port);
-      if (targets.some((t) => t.type === "page" && t.url.includes("workbench"))) return state;
+      if (targets.some((t) => t.type === "page" && t.url.includes("workbench"))) {
+        mark("launch: workbench target up");
+        return state;
+      }
     } catch {
       /* not listening yet */
     }
@@ -246,6 +280,54 @@ function ofRun(runDir: string): number[] {
     }
   }
   return pids;
+}
+
+/**
+ * Closes the Claude tab of the window a `launchVscode` left in `runDir`, and with it the tab's
+ * `claude`. The next `attach` opens a new tab, whose `claude` reads the mods from disk again: the
+ * extension's session neither reloads an edited mod nor starts a new process for a new session.
+ */
+export async function closeClaudeTab(runDir: string, start: VscodeStart) {
+  const state = JSON.parse(readFileSync(join(runDir, STATE), "utf8")) as VscodeState;
+  if (state.fixed !== undefined && state.fixed !== fixedOf(start))
+    throw new Error(
+      "this scenario starts with other env, bin, hide or plugins than the window was given: use `goto`",
+    );
+  const webview = (t: Target_) => t.type === "iframe" && t.url.startsWith("vscode-webview://");
+  const page = (await listTargets(state.port)).find(
+    (t) => t.type === "page" && t.url.includes("workbench"),
+  );
+  if (!page) throw new Error("VS Code is not answering: run `goto` again");
+  const cdp = await Cdp.connect(page.webSocketDebuggerUrl);
+  try {
+    // The Claude tab is the window's only editor.
+    await cdp.eval<void>(
+      "[...document.querySelectorAll('.part.editor .tab .tab-actions .action-label')].forEach((a) => a.click())",
+    );
+    for (let i = 0; i < 50 && (await listTargets(state.port)).some(webview); i++) await sleep(100);
+  } finally {
+    cdp.close();
+  }
+}
+
+/**
+ * What a new tab's `claude` reads when it starts: the stub, back on the port the window's
+ * environment names and serving `start.turns` from the first, and the config folder.
+ */
+export async function restartSession(runDir: string, start: VscodeStart) {
+  const state = JSON.parse(readFileSync(join(runDir, STATE), "utf8")) as VscodeState;
+  stopStub(runDir);
+  // The old stub lets go of the port a moment after the signal.
+  for (let i = 0; ; i++) {
+    try {
+      await startStub(runDir, start.turns ?? [], undefined, state.stubPort);
+      break;
+    } catch (err) {
+      if (i >= 20) throw err;
+      await sleep(150);
+    }
+  }
+  writeSessionConfig(runDir, state.cwd, start);
 }
 
 /** Ends VS Code, cage, the claude the extension started and the stub of one run, and nothing else. */
@@ -410,24 +492,36 @@ export class VscodeSession {
           break;
         await sleep(500);
       }
-      // Ctrl+Shift+Escape opens the Claude tab; the extension may not have activated for the
-      // first one, so it is sent again while nothing has appeared.
-      for (let attempt = 0; attempt < 4 && !view; attempt++) {
-        await key(pageCdp, parseKey("Ctrl+Shift+Escape"));
-        for (let i = 0; i < 20 && !view; i++) {
-          await sleep(500);
-          view = (await find()).view;
+      mark("attach: workbench DOM ready");
+      // Ctrl+Shift+Escape opens the Claude tab. A press before the extension has activated is
+      // lost, so it is sent again every 1.5s until a Claude tab is in the workbench (then not
+      // again, or a second tab would open), and the webview is looked for in between.
+      const hasTab = () =>
+        pageCdp.eval<boolean>(
+          "[...document.querySelectorAll('.tab')].some((t) => /Claude/.test(t.getAttribute('aria-label') ?? ''))",
+        );
+      const until = Date.now() + 60_000;
+      let sent = 0;
+      while (!view && Date.now() < until) {
+        if (Date.now() - sent > 1500 && !(await hasTab())) {
+          await key(pageCdp, parseKey("Ctrl+Shift+Escape"));
+          sent = Date.now();
         }
+        await sleep(200);
+        view = (await find()).view;
       }
+      mark("attach: Claude tab open");
       if (!view) throw new Error("the Claude tab did not open (is the extension installed?)");
       // Ctrl+B hides the explorer, so the tab has the whole width and a resize reflows it the same way.
       await key(pageCdp, parseKey("Ctrl+b"));
       await sleep(500);
     }
+    mark("attach: explorer hidden");
     const viewCdp = await Cdp.connect(view.webSocketDebuggerUrl);
     const session = new VscodeSession(runDir, state, pageCdp, viewCdp);
     // The webview is ready once its document holds the prompt.
     await session.wait(/\S/, { timeout: 60_000 });
+    mark("attach: webview has text");
     if (state.size) await session.applySize(state.size);
     return session;
   }
