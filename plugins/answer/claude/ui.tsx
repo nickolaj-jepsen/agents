@@ -1406,7 +1406,11 @@ export type CardOptions = {
   };
 };
 
-/** Words between backticks, as a Text can set them: in a chip, since a Text has no code face. */
+/**
+ * Words between backticks, as a Text can set them: in a chip, since a Text has no code face. The
+ * chip takes the line's own `truncate-end`: a nested Text without a `wrap` is drawn `pre-wrap`,
+ * and VS Code's extension before 2.1.327 breaks a one-line row after it.
+ */
 function inlineCode(k: Kit, text: string): RenderNode[] {
   const { Text } = k;
   return text
@@ -1414,7 +1418,9 @@ function inlineCode(k: Kit, text: string): RenderNode[] {
     .filter(Boolean)
     .map((part, i) =>
       part.startsWith("`") && part.endsWith("`") && part.length > 2 ? (
-        <Text key={`c${i}`} backgroundColor={tokens.gui.chip}>{` ${part.slice(1, -1)} `}</Text>
+        <Text key={`c${i}`} backgroundColor={tokens.gui.chip} wrap="truncate-end">
+          {` ${part.slice(1, -1)} `}
+        </Text>
       ) : (
         part.replace(/\*\*|__/g, "")
       ),
