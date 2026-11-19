@@ -158,21 +158,30 @@ text before a partial one; `{ text, nth }` picks a later one.
 - `goto` starts VS Code detached (`setsid`, under `cage`) with a fresh profile, so it outlives the
   command. Each verb reconnects over the saved Chrome DevTools port (`lib/vscode.ts`).
 - The workbench is the `page` target. Ctrl+Shift+Escape opens the Claude tab, whose webview is an
-  `iframe` target. A press before the extension has activated is lost, so the key is sent again
-  every 1.5 seconds until a Claude tab is in the workbench, and not after, or a second tab opens; the UI is the document of `#active-frame` inside it. Text, clicks, keys and
+  `iframe` target; the UI is the document of `#active-frame` inside it. Text, clicks, keys and
   typing are sent to that target, and a screenshot is taken from the page, clipped to the webview
   for a panel shot.
+- A press before the extension has activated is lost, and a second press opens a second tab. So
+  the driver presses once the extension's status bar entry is up, and again only after 5 seconds
+  with no Claude tab in the workbench.
+- The webview it drives is the one on screen: the largest visible `iframe.webview`, matched to its
+  target by the id in the target's URL. A window can hold a hidden one too, a second tab or one a
+  reload closed, which draws no frames.
 - The extension's `claude` inherits VS Code's environment, so that is where the hermetic setup
   goes: a config folder of the run's own (`hermeticClaude` in `lib/harness.ts`), the model stub for
   `ANTHROPIC_BASE_URL`, and the checkout's mods as `CLAUDE_CODE_PLUGIN_DIRS`. Every inherited
   `CLAUDE*`, `ANTHROPIC*` and `VSCODE_*` variable is dropped first.
 - Only the Claude extension runs, and the explorer and the chat sidebar are hidden, so the panel
-  has the window's width and nothing lands on it.
+  has the window's width and nothing lands on it. The chat shows no clock or date line
+  (`claudeCode.showMessageTimestamps`), so a picture is the same on every run.
 - `stop` ends every process whose command line or environment names the run folder, and the stub.
   It touches nothing else.
 - `reload` closes the Claude tab (its `claude` goes with it), puts the stub back on the port VS
   Code's environment names, with its turns from the first, rebuilds the fixture in the same folder,
   rewrites the config folder and `.mcp.json`, then opens a new tab and plays the steps.
+- A shot waits up to 10 seconds for the panel's pictures to be drawn (`undrawn()` in
+  `lib/vscode.ts`), then is kept once two captures 400 ms apart agree, with the prompt's caret
+  hidden.
 - A session starts on the first prompt or slash command: the panel is empty until then, and a mod's
   band shows only after a turn.
 
@@ -194,14 +203,26 @@ again.
   New session starts the next session in the same `claude`, with the old code. Only a new tab
   starts a new `claude`: that is what `reload` does.
 - `code` returns at once, so cage runs `sh -c 'code …; sleep infinity'` to stay alive.
+- The extension locks the editor group it opens a tab in. A locked group stays when its tab
+  closes, and the next tab opens in a new group beside it, half as wide. The run's settings turn
+  the lock off (`claudeCode.lockEditorGroups`), so a `reload`'s tab takes the old one's place.
+- Ctrl+B toggles the explorer, so the driver presses it only while the explorer is shown.
 - A leftover `VSCODE_IPC_HOOK_CLI` makes `code` hand the folder to a VS Code that is already
   running, which is why those variables are dropped.
 - `E2E_KEEP=1` leaves a VS Code that failed to start, with its `vscode.log`, for a look.
-- A band that reads the draft on render (spellfix) can lag what `type` typed. VS Code raises no
-  prompt event, and the band redraws only now and then: in a test on 2.1.327 it showed one word
-  fewer than the draft held, in the process that typed and after it exited alike, and a resize did
-  not redraw it. This is the host, not the driver's connection. Don't wait for such a band inside
-  `goto`; end the scenario at the typed draft and go on with verbs (`wait`, `click`) in later calls.
+- A mod's picture (an `Svg`, such as an icon) is drawn by the host in a frame of its own, and its
+  alt text stands in until it is: "Wrong" where docfix's icon goes. A new tab can take seconds. A
+  `reload`'s tab can refuse them for good: in the site's build, about half the reloaded pictures
+  kept their alt text after 15 seconds, and the same scenario in a new window drew them. A shot
+  prints a line when pictures are still undrawn, and `e2e/site-vscode.ts` takes such a picture
+  again in a new window.
+- A band that reads the draft on render (spellfix) can lag what `type` typed, or not show at all.
+  VS Code raises no prompt event, and the band is drawn again only when its props change: a turn
+  starting or ending, or the prompt box changing width.
+  - On 2.1.325 and 2.1.327, typing, keys and resizes to 1200 and 900 wide drew nothing in 100
+    seconds. The prompt box is at most about 680 px wide, so those sizes leave its width alone.
+  - On 2.1.325, `resize 560 720` then `resize 1280 720` after the draft draws the band
+    (`e2e/spellfix/site.scenarios.ts` does this).
 - `wait` reads the webview's text, which holds no `Input`'s placeholder. `Escape` leaves a field
   but does not hide a pane.
 - The setup's git reads no global or system config, and the session keeps `agent-notes` data in

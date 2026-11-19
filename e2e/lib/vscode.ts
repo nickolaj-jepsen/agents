@@ -210,6 +210,11 @@ export async function launchVscode(
       "update.mode": "none",
       "telemetry.telemetryLevel": "off",
       "window.titleBarStyle": "custom",
+      // A tab's group is not locked, so the tab a reload opens takes the closed one's place
+      // instead of a new group beside it.
+      "claudeCode.lockEditorGroups": false,
+      // No clock or date line in the chat: a picture of a screen is the same on every run.
+      "claudeCode.showMessageTimestamps": false,
     }),
   );
   // A reused profile restores the old Claude tab and the new one hangs: always a fresh one.
@@ -473,16 +478,32 @@ export class VscodeSession {
   /** Connects to the window a `launchVscode` left in `runDir`, opening the Claude tab if needed. */
   static async attach(runDir: string): Promise<VscodeSession> {
     const state = JSON.parse(readFileSync(join(runDir, STATE), "utf8")) as VscodeState;
-    const find = async () => {
-      const targets = await listTargets(state.port);
-      return {
-        page: targets.find((t) => t.type === "page" && t.url.includes("workbench")),
-        view: targets.find((t) => t.type === "iframe" && t.url.startsWith("vscode-webview://")),
-      };
-    };
-    let { page, view } = await find();
+    const page = (await listTargets(state.port)).find(
+      (t) => t.type === "page" && t.url.includes("workbench"),
+    );
     if (!page) throw new Error("VS Code is not answering: run `goto` again");
     const pageCdp = await Cdp.connect(page.webSocketDebuggerUrl);
+    // The Claude tab's webview is the one on screen, the target whose URL names its frame. A window
+    // can hold another, hidden: a second Claude tab, or the one a reload closed, still going.
+    const shownView = async () => {
+      const id = await pageCdp.eval<string | null>(`(() => {
+        let best = null;
+        for (const f of document.querySelectorAll('iframe.webview')) {
+          const r = f.getBoundingClientRect();
+          if (r.width < 50 || r.height < 50 || getComputedStyle(f).visibility === 'hidden') continue;
+          if (!best || r.width * r.height > best.area) best = { area: r.width * r.height, id: f.name || f.id };
+        }
+        return best && best.id;
+      })()`);
+      if (!id) return undefined;
+      return (await listTargets(state.port)).find(
+        (t) =>
+          t.type === "iframe" &&
+          t.url.startsWith("vscode-webview://") &&
+          t.url.includes(`id=${id}`),
+      );
+    };
+    let view = await shownView();
     if (!view) {
       // A key sent before the workbench is up goes nowhere.
       for (let i = 0; i < 120; i++) {
@@ -493,9 +514,16 @@ export class VscodeSession {
         await sleep(500);
       }
       mark("attach: workbench DOM ready");
-      // Ctrl+Shift+Escape opens the Claude tab. A press before the extension has activated is
-      // lost, so it is sent again every 1.5s until a Claude tab is in the workbench (then not
-      // again, or a second tab would open), and the webview is looked for in between.
+      // A press before the extension has activated is lost; its status bar entry says it has.
+      for (let i = 0; i < 120; i++) {
+        if (await pageCdp.eval<boolean>("!!document.getElementById('Anthropic.claude-code')"))
+          break;
+        await sleep(250);
+      }
+      mark("attach: extension active");
+      // Ctrl+Shift+Escape opens the Claude tab. A slow start can still lose the press, so it is
+      // sent again after 5 s with no Claude tab in the workbench (and not once there is one, or a
+      // second tab opens), and the webview is looked for in between.
       const hasTab = () =>
         pageCdp.eval<boolean>(
           "[...document.querySelectorAll('.tab')].some((t) => /Claude/.test(t.getAttribute('aria-label') ?? ''))",
@@ -503,18 +531,25 @@ export class VscodeSession {
       const until = Date.now() + 60_000;
       let sent = 0;
       while (!view && Date.now() < until) {
-        if (Date.now() - sent > 1500 && !(await hasTab())) {
+        if (Date.now() - sent > 5000 && !(await hasTab())) {
           await key(pageCdp, parseKey("Ctrl+Shift+Escape"));
           sent = Date.now();
         }
         await sleep(200);
-        view = (await find()).view;
+        view = await shownView();
       }
       mark("attach: Claude tab open");
       if (!view) throw new Error("the Claude tab did not open (is the extension installed?)");
-      // Ctrl+B hides the explorer, so the tab has the whole width and a resize reflows it the same way.
-      await key(pageCdp, parseKey("Ctrl+b"));
-      await sleep(500);
+      // Ctrl+B hides the explorer, so the tab has the whole width and a resize reflows it the same
+      // way. It toggles: a reload's new tab finds it hidden already.
+      const sidebar = () =>
+        pageCdp.eval<boolean>(
+          "(document.getElementById('workbench.parts.sidebar')?.getBoundingClientRect().width ?? 0) > 0",
+        );
+      if (await sidebar()) {
+        await key(pageCdp, parseKey("Ctrl+b"));
+        await sleep(500);
+      }
     }
     mark("attach: explorer hidden");
     const viewCdp = await Cdp.connect(view.webSocketDebuggerUrl);
@@ -664,12 +699,17 @@ export class VscodeSession {
       return !!a && (a.isContentEditable || ['INPUT', 'TEXTAREA'].includes(a.tagName));
     })()`);
     if (!editable) {
-      const r = await this.view.eval<{ x: number; y: number } | null>(`(() => {
-        const b = ${this.doc}.querySelector('[aria-label="Message input"]');
-        if (!b) return null;
-        const r = b.getBoundingClientRect();
-        return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
-      })()`);
+      // A new tab's input can draw a moment after the rest of its page: look for a few seconds.
+      let r: { x: number; y: number } | null = null;
+      for (let i = 0; i < 30 && !r; i++) {
+        r = await this.view.eval<{ x: number; y: number } | null>(`(() => {
+          const b = ${this.doc}.querySelector('[aria-label="Message input"]');
+          if (!b) return null;
+          const r = b.getBoundingClientRect();
+          return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+        })()`);
+        if (!r) await sleep(150);
+      }
       if (!r) throw new Error("the message input is not on screen");
       await this.mouse(r.x, r.y, 1);
       await sleep(250);
@@ -701,18 +741,52 @@ export class VscodeSession {
     })()`);
   }
 
+  /**
+   * How many of a mod's pictures (its `Svg`, such as an icon) the panel shows as their alt text.
+   * The host draws them off the page, in a frame of its own; until it has, or when it refuses, the
+   * alt text stands in, beside the hidden `img` or marked `svgWaiting`.
+   */
+  async undrawn(): Promise<number> {
+    return this.evalInView<number>(`[...document.images].filter((i) =>
+      i.src.startsWith('data:image/svg+xml') && getComputedStyle(i).display === 'none').length +
+      document.querySelectorAll('[class*="svgWaiting"]').length`).catch(() => 0);
+  }
+
   /** A PNG of the window, or with `panel` of the Claude panel alone. */
   async shot(file: string, o: Shot = {}): Promise<string> {
     // Attaching re-applies the viewport, which redraws the panel; a shot taken at once catches
     // it blank.
     await this.settle(1000, 8000);
+    // A new tab can take seconds to draw a mod's pictures, and a reload's tab may not draw them
+    // at all (e2e README, VS Code, Traps).
+    const until = Date.now() + 10_000;
+    let left = 0;
+    while ((left = await this.undrawn()) > 0 && Date.now() < until) await sleep(200);
+    if (left > 0) console.error(`shot: ${left} picture(s) of the panel not drawn after 10 s`);
+    await this.evalInView(`(() => {
+      if (document.getElementById('e2e-no-caret')) return;
+      const style = document.createElement('style');
+      style.id = 'e2e-no-caret';
+      style.textContent = '* { caret-color: transparent !important; }';
+      document.head.append(style);
+    })()`).catch(() => undefined);
     const clip = o.panel ? await this.panelRect() : null;
-    const r = await this.page.send<{ data: string }>("Page.captureScreenshot", {
-      format: "png",
-      ...(clip ? { clip: { ...clip, scale: 1 } } : {}),
-    });
+    const capture = async () =>
+      (
+        await this.page.send<{ data: string }>("Page.captureScreenshot", {
+          format: "png",
+          ...(clip ? { clip: { ...clip, scale: 1 } } : {}),
+        })
+      ).data;
+    let data = await capture();
+    for (let i = 0; i < 10; i++) {
+      await sleep(400);
+      const next = await capture();
+      if (next === data) break;
+      data = next;
+    }
     mkdirSync(dirname(file), { recursive: true });
-    writeFileSync(file, Buffer.from(r.data, "base64"));
+    writeFileSync(file, Buffer.from(data, "base64"));
     return file;
   }
 

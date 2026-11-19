@@ -4,9 +4,10 @@ import type { VscodeStep } from "../lib/vscode-scenario.ts";
 
 /**
  * Each scenario ends with the draft typed. VS Code raises no prompt events; the mod reads the draft
- * on each redraw, and the host redraws the band only now and then, so it can lag the draft (e2e
- * README, "VS Code", Traps) and nothing here waits for it. Look at the state with the driver's verbs
- * afterwards: `wait "2 misspelled"`, `click Review`, `shot`.
+ * on each redraw, and the host redraws the band only when its props change, which typing does not
+ * (e2e README, "VS Code", Traps), so nothing here waits for it. Look at the state with the driver's
+ * verbs afterwards: `resize 560 720` and `resize 1280 720` to redraw it, then `wait "2 misspelled"`,
+ * `click Review`, `shot`.
  */
 
 /** hunspell flags `teh` and `seperate`; the real hunspell on PATH answers, with five suggestions for `teh`. */
