@@ -345,6 +345,11 @@ its server by a tool name like `mcp__linear__save_issue`. A write is answered wi
 and recorded to `linear-writes.jsonl` in the run's folder, and the site runner fails a scenario that
 made one.
 
+The server starts with the session, and a `/linear` typed before Claude Code has its tools answers
+"No Linear MCP server is configured in this session". So the server writes `linear-listed` in the
+run's folder once it has listed them, and linear-issue's site stills wait for that file
+(`LINEAR_UP`) before they type.
+
 ### Budgets
 
 Each `.mp4` and each `.png` has a budget, which the site's check enforces (`BUDGET` in

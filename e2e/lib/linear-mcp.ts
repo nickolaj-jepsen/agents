@@ -7,7 +7,7 @@
  * Name it `linear` in a scenario's `start.mcp`: linear-issue finds its server by a tool name
  * like `mcp__linear__save_issue`.
  */
-import { appendFileSync } from "node:fs";
+import { appendFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 
 export const TEAMS = [
@@ -82,6 +82,8 @@ const TOOLS = [
 
 /** The file a run's writes go to. */
 export const WRITES = "linear-writes.jsonl";
+/** The file the server leaves once it has listed its tools, so a session can know they are there. */
+export const LISTED = "linear-listed";
 
 const record = (tool: string, args: unknown) => {
   const file = process.env.E2E_RUN_DIR ? `${process.env.E2E_RUN_DIR}/${WRITES}` : undefined;
@@ -139,6 +141,7 @@ export function handle(msg: { id?: number | string; method?: string; params?: an
         serverInfo: { name: "fake-linear", version: "0.0.0" },
       });
     case "tools/list":
+      if (process.env.E2E_RUN_DIR) writeFileSync(`${process.env.E2E_RUN_DIR}/${LISTED}`, "");
       return ok({ tools: TOOLS });
     case "ping":
       return ok({});

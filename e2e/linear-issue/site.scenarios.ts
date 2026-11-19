@@ -1,5 +1,7 @@
 import type { Turn } from "../lib/harness.ts";
-import { linearMcp } from "../lib/linear-mcp.ts";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { LISTED, linearMcp } from "../lib/linear-mcp.ts";
 import type { Step } from "../lib/scenario.ts";
 import type { SetupContext } from "../lib/session.ts";
 import { poster, site, slow, slowPress } from "../lib/site.ts";
@@ -55,8 +57,22 @@ const repo = (ctx: SetupContext) => {
 
 const start = (verdict: string) => ({ hermetic: true, mcp: linearMcp, turns: drafting(verdict) });
 
+/**
+ * Until the fake Linear server has listed its tools. It starts with the session, and a /linear
+ * typed before Claude Code has its tools answers that no Linear server is configured.
+ */
+const LINEAR_UP: Step = {
+  run: async (s) => {
+    for (let i = 0; i < 150 && !existsSync(join(s.runDir, LISTED)); i++)
+      await new Promise((r) => setTimeout(r, 100));
+    // The list reaches the session a moment after the server answers it.
+    await new Promise((r) => setTimeout(r, 300));
+  },
+};
+
 /** /linear with a note, until the draft is on screen. */
 const DRAFTED: Step[] = [
+  LINEAR_UP,
   { type: `/linear ${NOTE}` },
   { press: "Enter" },
   { wait: "Create & open", timeout: 60_000 },
