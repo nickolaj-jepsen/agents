@@ -37,7 +37,7 @@ h: back   l: next   s: skip   n: note   m: several   q: quit
 2 bold
 3 fg=#d77757
 4 fg=#b1b9f9
-5 fg=p4
+5 fg=p12
 6 fg=p3
 7 fg=p1
 8 fg=#b1b9f9 inverse

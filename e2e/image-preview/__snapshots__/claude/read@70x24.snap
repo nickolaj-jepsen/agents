@@ -2,7 +2,7 @@
 
  ▐▛███▛█   Claude Code <ver>
 ▝▜██████▀  Sonnet 5.5 · API Usage Billing
- ▝▝   ▝▝   ~/…/agents<tmp>
+ ▝▝   ▝▝   ~/…/state/agents<tmp>
 
 
 ❯ show the preview
@@ -11,16 +11,16 @@
 
   [image] picture#1-日本語.png
 
-  /home/nickolaj/.local/state/agents<tmp>
-  <run>/cwd/a-very-long-directory-name/with-several-levels/picture#1-
-  日本語.png
+  <tmp>
+  d/a-very-long-directory-name/with-several-levels/picture#1-日本語.pn
+  g
 
 ● preview ready
 --- styles
 -
 1x2 2x6 .x3 3x11 . 4x8
 1x2 2x5 1x2 .x2 4x30
-1x9 .x2 4x53
+1x9 .x2 4x51
 -
 -
 5x2 6x16 7x52
@@ -30,8 +30,8 @@
 .x2 4x28
 -
 .x2 4x68
-.x2 4x67
-.x2 4x10
+.x2 4x68
+.x2 4
 -
 9
 --- legend

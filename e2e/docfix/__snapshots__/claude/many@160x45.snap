@@ -4,7 +4,7 @@
 │
 │ Submit or close to carry out apply and dismiss
 │
-│ AGENTS.md ────────────────────────── apply all  dismiss all  skip all
+│ AGENTS.md ───────────────────────────────────────────────────────────
 │
 │ Claim number 4 about AGENTS.md: the page no longer matches what the
 │ code does.
@@ -22,7 +22,7 @@
 │ code does.
 │ ! wrong  ••  ▸ evidence                          apply  dismiss  skip
 │
-│ docs/agents.md ───────────────────── apply all  dismiss all  skip all
+│ docs/agents.md ──────────────────────────────────────────────────────
 │
 │ Claim number 8 about docs/agents.md: the page no longer matches what
 │ the code does.
@@ -45,7 +45,7 @@
 1
 1 . 2x46
 1
-1 . 3x9 . 2x26 . 2x9 .x2 2x11
+1 . 3x9 2x60
 1
 1 . 3x67
 1 . 3x10
@@ -63,7 +63,7 @@
 1 . 3x10
 1 . 4x7 .x2 2x2 .x2 2x10 .x26 2x5 .x2 2x7
 1
-1 . 3x14 . 2x21 . 2x9 .x2 2x11
+1 . 3x14 2x55
 1
 1 . 3x68
 1 . 3x14

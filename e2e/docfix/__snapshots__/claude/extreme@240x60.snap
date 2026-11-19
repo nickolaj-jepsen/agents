@@ -1,89 +1,81 @@
-# docfix/claude/extreme 240x60 @159,0 (81x55)
-│                                                                              ✕
-│ ─ Doc suggestions  5 ─────────────────────────────────────────────────────────
+# docfix/claude/extreme 240x60 @164,0 (76x55)
+│                                                                         ✕
+│ ─ Doc suggestions  5 ────────────────────────────────────────────────────
 │
 │ Submit or close to carry out apply and dismiss
 │
-│ AGENTS.md ─────────────────────────────────── apply all  dismiss all  skip all
+│ AGENTS.md ───────────────────────────────────────────────────────────────
 │
 │ The section says the build verifies a pi change, but the build only
-│ type-checks the cores and the pi halves and never starts an agent, so a panel
-│ that renders wrong still passes it. The section says the build verifies a pi
-│ change, but the build only type-checks the cores and the pi halves and never
-│ starts an agent, so a panel that renders wrong still passes it. The section
-│ says the build verifies a pi change, but the build only type-checks the cores
-│ and the pi halves and never starts an agent, so a panel that renders wrong
-│ still passes it. The section says the build verifies a pi change, but the
-│ build only type-checks the cores and the pi halves and never starts an agent,
-│ so a panel that renders wrong still passes it.
-│ ! wrong  12×  ••  ▾ evidence 2                   a: apply  d: dismiss  s: skip
+│ type-checks the cores and the pi halves and never starts an agent, so a
+│ panel that renders wrong still passes it. The section says the build
+│ verifies a pi change, but the build only type-checks the cores and the pi
+│ halves and never starts an agent, so a panel that renders wrong still
+│ passes it. The section says the build verifies a pi change, but the build
+│ only type-checks the cores and the pi halves and never starts an agent,
+│ so a panel that renders wrong still passes it. The section says the build
+│ verifies a pi change, but the build only type-checks the cores and the pi
+│ halves and never starts an agent, so a panel that renders wrong still
+│ passes it.
+│ ! wrong  12×  ••  ▾ evidence 2              a: apply  d: dismiss  s: skip
 │
-│   <date>      pi ─────────────────────────────────────────────────────────────
+│   <date>      pi ────────────────────────────────────────────────────────
 │     `just build` printed error: derivation failed while evaluating the
-│     attribute and its dependencies, error: derivation failed while evaluating
-│     the attribute and its dependencies, error: derivation failed while
-│     evaluating the attribute and its dependencies, error: derivation failed
-│     while evaluating the attribute and its dependencies, error: derivation
+│     attribute and its dependencies, error: derivation failed while
+│     evaluating the attribute and its dependencies, error: derivation
 │     failed while evaluating the attribute and its dependencies, error:
-│     derivation failed while evaluating the attribute and its dependencies,
+│     derivation failed while evaluating the attribute and its
+│     dependencies, error: derivation failed while evaluating the attribute
+│     and its dependencies, error: derivation failed while evaluating the
+│     attribute and its dependencies,
 │
-│   <date>      pi ─────────────────────────────────────────────────────────────
+│   <date>      pi ────────────────────────────────────────────────────────
 │     The section says the build verifies a pi change, but the build only
-│     type-checks the cores and the pi halves and never starts an agent, so a
-│     panel that renders wrong still passes it; The section says the build
-│     verifies a pi change, but the build only type-checks the cores and the pi
-│     halves and never starts an agent, so a panel that renders wrong still
-│     passes it; The section says the build verifies a pi change, but the build
-│     only type-checks the cores and the pi halves and never starts an agent, so
-│     a panel that renders wrong still passes it.
+│     type-checks the cores and the pi halves and never starts an agent, so
+│     a panel that renders wrong still passes it; The section says the
+│     build verifies a pi change, but the build only type-checks the cores
+│     and the pi halves and never starts an agent, so a panel that renders
+│     wrong still passes it; The section says the build verifies a pi
+│     change, but the build only type-checks the cores and the pi halves
+│     and never starts an agent, so a panel that renders wrong still passes
+│     it.
 │
-│ UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrok
-│ enUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbr
-│ okenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenU…
-│ + missing  3×  ••  ▸ evidence                             apply  dismiss  skip
+│ UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenU
+│ nbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUn
+│ brokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUn…
+│ + missing  3×  ••  ▸ evidence                        apply  dismiss  skip
 │
-│ docs/a-very-long-directory-name/with/several/nested/levels/and-an-equally-long
-│ -file-name-for-the-guide.md
-│ ───────────────── apply all  dismiss all  skip all
+│ docs/a-very-long-directory-name/with/several/nested/levels/and-an-equally
+│ -long-file-name-for-the-guide.md ────────────────────────────────────────
 │
 │ A claim under a very long target path, so the group header must be cut.
-│ ↻ stale  age   ▸ evidence                                 apply  dismiss  skip
+│ ↻ stale  age   ▸ evidence                            apply  dismiss  skip
 │
-│ docs/hosts.md ─────────────────────────────── apply all  dismiss all  skip all
+│ docs/hosts.md ───────────────────────────────────────────────────────────
 │
-│ Short.
-│ ↻ stale  ••  ▸ evidence                                   apply  dismiss  skip
 │
 --- styles
-1 .x78 2
-1 . 2x2 3x15 2x61
+1 .x73 2
+1 . 2x2 3x15 2x56
 1
 1 . 2x46
 1
-1 . 3x9 . 2x35 . 2x9 .x2 2x11
+1 . 3x9 2x64
 1
 1 . 3x67
-1 . 3x77
-1 . 3x76
-1 . 3x76
-1 . 3x75
-1 . 3x77
-1 . 3x74
+1 . 3x71
+1 . 3x68
 1 . 3x73
-1 . 3x77
-1 . 3x46
-1 . 4x7 .x2 2x7 .x2 2x12 .x19 5 2x7 .x2 5 2x9 .x2 5
+1 . 3x69
+1 . 3x73
+1 . 3x71
+1 . 3x73
+1 . 3x73
+1 . 3x69
+1 . 3x10
+1 . 4x7 .x2 2x7 .x2 2x12 .x14 5 2x7 .x2 5 2x9 .x2 5
 1
-1 .x3 2x76
-1
-1
-1
-1
-1
-1
-1
-1
-1 .x3 2x76
+1 .x3 2x71
 1
 1
 1
@@ -93,22 +85,30 @@
 1
 1
 1
-1 . 3x78
-1 . 3x78
-1 . 3x78
-1 . 3x9 .x2 2x6 .x2 2x10 .x29 2x5 .x2 2x7
+1 .x3 2x71
 1
-1 . 3x78
-1 . 3x27
-1 . 2x17 . 2x9 .x2 2x11
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1 . 3x73
+1 . 3x73
+1 . 3x73
+1 . 3x9 .x2 2x6 .x2 2x10 .x24 2x5 .x2 2x7
+1
+1 . 3x73
+1 . 3x32 2x41
 1
 1 . 3x71
-1 . 6x7 .x2 2x4 .x2 2x10 .x33 2x5 .x2 2x7
+1 . 6x7 .x2 2x4 .x2 2x10 .x28 2x5 .x2 2x7
 1
-1 . 3x13 . 2x31 . 2x9 .x2 2x11
+1 . 3x13 2x60
 1
-1 . 3x6
-1 . 6x7 .x2 2x2 .x2 2x10 .x35 2x5 .x2 2x7
 1
 --- legend
 1 dim

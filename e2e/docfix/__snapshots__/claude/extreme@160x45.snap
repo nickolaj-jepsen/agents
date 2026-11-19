@@ -4,7 +4,7 @@
 │
 │ Submit or close to carry out apply and dismiss
 │
-│ AGENTS.md ────────────────────────── apply all  dismiss all  skip all
+│ AGENTS.md ───────────────────────────────────────────────────────────
 │
 │ The section says the build verifies a pi change, but the build only
 │ type-checks the cores and the pi halves and never starts an agent, so
@@ -45,7 +45,7 @@
 1
 1 . 2x46
 1
-1 . 3x9 . 2x26 . 2x9 .x2 2x11
+1 . 3x9 2x60
 1
 1 . 3x67
 1 . 3x69

@@ -4,7 +4,7 @@
 │
 │ Submit or close to carry out apply and dismiss
 │
-│ AGENTS.md ────────────────────────── apply all  dismiss all  skip all
+│ AGENTS.md ───────────────────────────────────────────────────────────
 │
 │ `just build` is not enough to verify a pi change; the docs say it is.
 │ ! wrong  3×  ••  ▸ evidence             a: apply  d: dismiss  s: skip
@@ -45,7 +45,7 @@
 1
 1 . 2x46
 1
-1 . 3x9 . 2x26 . 2x9 .x2 2x11
+1 . 3x9 2x60
 1
 1 . 3x69
 1 . 4x7 .x2 2x6 .x2 2x10 .x13 5 2x7 .x2 5 2x9 .x2 5

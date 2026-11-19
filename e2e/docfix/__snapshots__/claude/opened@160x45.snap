@@ -4,19 +4,19 @@
 │
 │ Submit or close to carry out apply and dismiss
 │
-│ AGENTS.md ────────────────────────── apply all  dismiss all  skip all
+│ AGENTS.md ───────────────────────────────────────────────────────────
 │
 │ `just build` is not enough to verify a pi change; the docs say it is.
 │ ! wrong  3×  ••  ▸ evidence             a: apply  d: dismiss  s: skip
 │
-│ docs/hosts.md ────────────────────── apply all  dismiss all  skip all
+│ docs/hosts.md ───────────────────────────────────────────────────────
 │
 │ The `legacy` card was removed; the section still describes it.
 │ ↻ stale  2×  age  ▾ evidence                     apply  dismiss  skip
 │
 │   docs/hosts.md: the line contradicts what the code does now.
 │
-│ docs/modules.md ──────────────────── apply all  dismiss all  skip all
+│ docs/modules.md ─────────────────────────────────────────────────────
 │
 │ A leaf that imports a third-party module imports it on every host;
 │ the page should say that module must be inert when the feature is
@@ -45,19 +45,19 @@
 1
 1 . 2x46
 1
-1 . 3x9 . 2x26 . 2x9 .x2 2x11
+1 . 3x9 2x60
 1
 1 . 3x69
 1 . 4x7 .x2 2x6 .x2 2x10 .x13 5 2x7 .x2 5 2x9 .x2 5
 1
-1 . 3x13 . 2x22 . 2x9 .x2 2x11
+1 . 3x13 2x56
 1
 1 . 3x62
 1 . 6x7 .x2 2x7 .x2 2x10 .x21 2x5 .x2 2x7
 1
 1
 1
-1 . 3x15 . 2x20 . 2x9 .x2 2x11
+1 . 3x15 2x54
 1
 1 . 3x66
 1 . 3x65

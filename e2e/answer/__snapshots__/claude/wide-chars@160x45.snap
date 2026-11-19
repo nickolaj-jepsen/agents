@@ -5,7 +5,7 @@
 
 a: ○ 是的，使用 SQLite 🗃️
 b: ○ いいえ、Postgres 🐘
-c: ○ 👨‍👩‍👧‍👦 family
+c: ○ 👨‍ family ＡＢＣ
 w: ○ ✎ Write your own answer
 
 h: back   l: next   s: skip   n: note   m: several   q: quit
@@ -17,7 +17,7 @@ h: back   l: next   s: skip   n: note   m: several   q: quit
 5 6x24
 4
 4
-4 1x27
+4 1 . 1 . 1 . 1x5 . 1x4 . 1x3 . 1x6
 -
 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x9 .x3 4 1x6
 --- legend

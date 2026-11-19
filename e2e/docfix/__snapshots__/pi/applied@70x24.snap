@@ -13,7 +13,7 @@
 
  The apply prompt is in the editor: read it, then Enter to send
 
-──  ↑21─────────────────────────────────  ──  ── 0% / 1M ── ••••• ──
+──  ↑21──────────────────────────────────────────  ──  ── 0% / 1M ──
 suggestion. Change only that fact, and leave records of the past,
 such as a changelog, as they are.
 4. Call docfix with action "resolve" and the id (the file's name
@@ -22,7 +22,7 @@ without .md), whether you applied it or found it no longer true.
 Name every doc you changed beyond the ones above. Anything else you
 notice gets filed with docfix as usual. Don't commit.
 ──────────────────────────────────────────────────────────────────────
-  Go  DeepSeek V4.1 Flash 1017   high                         main
+  auto  DeepSeek V4.1 Flash   high                            main
 --- styles
 . 1 2x2 .x2 3x6
 . 4x2 . 5 . 3x6 6x13 3x13 6x14 3 6x12 3 6x4
@@ -38,7 +38,7 @@ notice gets filed with docfix as usual. Don't commit.
 -
 . 3x62
 -
-8x3 3x4 8x33 . 3 8x4 9 8x4 3x7 8x4 3x5 8x3
+8x3 3x4 8x42 . 3 8x4 9 8x4 3x7 8x3
 -
 .x10 ax9
 .x8 ax6
@@ -47,7 +47,7 @@ notice gets filed with docfix as usual. Don't commit.
 -
 .x23 ax6
 8x70
-.x2 3x2 .x2 bx24 .x2 8x6 .x24 c . 6x4
+.x2 3x4 .x2 bx19 .x2 8x6 .x27 c . 6x4
 --- legend
 1 fg=#e48a7a bg=#4f8eb3
 2 fg=#e48a7a

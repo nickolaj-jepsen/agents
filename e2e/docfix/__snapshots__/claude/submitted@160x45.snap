@@ -1,13 +1,13 @@
 # docfix/claude/submitted 160x45 @0,0 (160x43)
 
  ▐▛███▛█   Claude Code <ver>
-▝▜██████▀  Opus 5.5 with high effort · Claude Team
+▝▜██████▀  Opus 5.5 with high effort · Claude Ultra
  ▝▝   ▝▝   ~/.local/state/agents<tmp>
 
 ▎ Debug mode enabled · logging to <tmp>
 
 ❯ /docfix
-  ⎿  docfix: Opened the doc suggestions pane.
+  ⎿  docfix: Opened the doc suggestions pane.
 
 
 
@@ -45,7 +45,7 @@
 --- styles
 -
 1x2 2x6 .x3 3x11 . 4x8
-1x2 2x5 1x2 .x2 4x39
+1x2 2x5 1x2 .x2 4x40
 1x9 .x2 4x56
 -
 5 . 4x107

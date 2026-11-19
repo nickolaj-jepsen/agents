@@ -12,14 +12,14 @@
   [image] picture#1-日本語.png
 
   <tmp>
-  several-levels/picture#1-日本語.png
+  levels/picture#1-日本語.png
 
 ● preview ready
 --- styles
 -
 1x2 2x6 .x3 3x11 . 4x8
 1x2 2x5 1x2 .x2 4x30
-1x9 .x2 4x64
+1x9 .x2 4x56
 -
 -
 5x2 6x16 7x94
@@ -29,7 +29,7 @@
 .x2 4x28
 -
 .x2 4x110
-.x2 4x35
+.x2 4x27
 -
 9
 --- legend

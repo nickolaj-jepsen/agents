@@ -8,12 +8,12 @@
 ▎ mp/agents-d9c3580c/e2e-run   /debug.log
 
 ❯ /docfix
-  ⎿  docfix: Opened the doc suggestions pane.
+  ⎿  docfix: Opened the doc suggestions pane.
 
 
                                               ctrl+g to edit in Nvim
-──────────────────────────────────────────────────────────────────────
-❯ suggestion. Change only that fact, and leave records of the past,
+─── ↑ 21 more ────────────────────────────────────────────────────────
+  suggestion. Change only that fact, and leave records of the past,
   such as a changelog, as they are.
   4. Call docfix with action "resolve" and the id (the file's name
   without .md), whether you applied it or found it no longer true.
@@ -35,7 +35,7 @@
 -
 -
 .x46 5x22
-9x70
+9x3 . 1x9 . 9x56
 -
 .x12 ax9
 .x10 ax6

@@ -4,7 +4,7 @@
 │
 │ Submit or close to carry out apply and dismiss
 │
-│ docs/agent-hub.md ──────── apply  dismiss  skip
+│ docs/agent-hub.md ─────────────────────────────
 │
 │ agent-hub's unittest suite needs a short TMPDIR
 │ and markdown-it-py on PYTHONPATH; run it with
@@ -32,7 +32,7 @@
 1
 1 . 2x46
 1
-1 . 3x17 . 2x8 . 2x5 .x2 2x7
+1 . 3x17 2x30
 1
 1 . 3x47
 1 . 3x45

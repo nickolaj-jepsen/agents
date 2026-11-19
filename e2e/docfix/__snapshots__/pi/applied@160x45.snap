@@ -28,7 +28,7 @@
 
 
 
-──  ↑5────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  ──  ── 0% / 1M ── ••••• ──
+──  ↑5─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  ──  ── 0% / 1M ──
 
 docs/hosts.md
 - stale: The `legacy` card was removed; the section still describes it. (seen 2×)
@@ -43,7 +43,7 @@ it there too instead of filing a suggestion. Change only that fact, and leave re
 
 Name every doc you changed beyond the ones above. Anything else you notice gets filed with docfix as usual. Don't commit.
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  OpenCode Go  DeepSeek V4.1 Flash 1017   high  docs 3                                        ~/.local/state/agents<tmp>                                main
+  auto  DeepSeek V4.1 Flash   high  docs 3                                                    ~/.local/state/agents<tmp>                                main
 --- styles
 -
 . 1 2x2 .x2 3x6
@@ -74,7 +74,7 @@ Name every doc you changed beyond the ones above. Anything else you notice gets 
 -
 -
 -
-8x3 3x3 8x124 . 3 8x4 9 8x4 3x7 8x4 3x5 8x3
+8x3 3x3 8x133 . 3 8x4 9 8x4 3x7 8x3
 -
 -
 -
@@ -89,7 +89,7 @@ Name every doc you changed beyond the ones above. Anything else you notice gets 
 -
 .x91 ax6
 8x160
-.x2 3x11 .x2 bx24 .x2 8x6 .x2 3x6 .x40 3x53 cx3 . d . 6x4
+.x2 3x4 .x2 bx19 .x2 8x6 .x2 3x6 .x52 3x53 cx3 . d . 6x4
 --- legend
 1 fg=#e48a7a bg=#4f8eb3
 2 fg=#e48a7a
