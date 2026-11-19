@@ -105,7 +105,8 @@ export default site({
         { sleep: 2400 },
         poster,
         { press: "Enter" },
-        { wait: "For each one:" },
+        // pi's editor shows the draft's end, so its first lines have scrolled away.
+        { wait: "Name every doc you changed" },
         { sleep: 3200 },
         { press: "Enter" },
         { wait: "claim checked against the code", timeout: 30_000 },
