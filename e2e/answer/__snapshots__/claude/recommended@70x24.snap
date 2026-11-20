@@ -14,7 +14,7 @@
 
 ▎   Q2  Lower the per-generator target to 5-6?
 ▎
-▎  ○ Yes: Yes. Four generators still give 20-24.
+▎  A ○ Yes: Yes. Four generators still give 20-24.
 Q1/3   alt+a for the keys                                         [-]
 --- styles
 1 . 2x49 .x18 1
@@ -32,12 +32,13 @@ Q1/3   alt+a for the keys                                         [-]
 4x70
 4 . 5x44 .x23 4
 4 .x68 4
-4 .x2 3x2 .x64 4
-2x6 . 6x5 3x13 .x41 3x3
+4 .x2 6x2 3x2 .x62 4
+2x6 . 7x5 3x13 .x41 3x3
 --- legend
 1 fg=#d77757
 2 fg=#d77757 bold
 3 fg=#999999
 4 dim
 5 bold
-6 fg=#b1b9f9
+6 fg=#999999 bold
+7 fg=#b1b9f9

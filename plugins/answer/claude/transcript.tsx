@@ -29,10 +29,20 @@ export type RoundActions = {
 
 const labelOf = (text: string) => text.replace(/^[A-H][.)]\s*/, "");
 
+type Entry = NonNullable<View["item"]>["entries"][number];
+
+/**
+ * The key a terminal card draws and binds for an entry: its own letter, or `A` for a yes, which
+ * never sits beside options.
+ */
+export const entryLetter = (entry: Entry) => (entry.kind === "accept" ? "A" : entry.key);
+
 export function writeLetter(item: NonNullable<View["item"]>) {
   const last = Math.max(
     64,
-    ...item.entries.map((entry) => (/^[A-H]$/.test(entry.key) ? entry.key.charCodeAt(0) : 64)),
+    ...item.entries.map((entry) =>
+      /^[A-H]$/.test(entryLetter(entry)) ? entryLetter(entry).charCodeAt(0) : 64,
+    ),
   );
   return String.fromCharCode(last + 1);
 }
@@ -208,7 +218,7 @@ export function questionCard(
                 if (entry.kind === "write") return null;
                 const mark = entry.isChosen ? marker.on : marker.off;
                 const words = labelOf(entry.text);
-                const tag = entry.key ? `${entry.key} ` : "";
+                const tag = entryLetter(entry) ? `${entryLetter(entry)} ` : "";
                 const recommendation = entry.isRecommended ? "  Recommended" : "";
                 const label = `${tag}${mark} ${words}${recommendation}`;
                 const weight = entry.isChosen ? "semibold" : undefined;
@@ -1042,7 +1052,11 @@ export function controlBar(
   const item = view.item;
   const letters =
     item?.entries
-      .flatMap((entry) => (entry.kind === "option" && /^[A-H]$/.test(entry.key) ? [entry.key] : []))
+      .flatMap((entry) =>
+        entry.kind === "accept" || (entry.kind === "option" && /^[A-H]$/.test(entry.key))
+          ? [entryLetter(entry)]
+          : [],
+      )
       .sort() ?? [];
   const write = item ? writeLetter(item) : "";
   const first = letters[0]?.charCodeAt(0) ?? 0;

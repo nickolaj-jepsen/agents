@@ -17,6 +17,7 @@ import {
   reviewTarget,
   ROUND_FOCUS,
   terminalReview,
+  entryLetter,
   writeLetter,
   type RoundActions,
 } from "./transcript";
@@ -560,7 +561,7 @@ async function changeRound(
     );
     if (action && typeof action === "object" && "letter" in action) {
       const entry = here.view.item?.entries.findIndex(
-        (row) => row.kind === "option" && row.key === action.letter,
+        (row) => row.kind !== "write" && entryLetter(row) === action.letter,
       );
       return entry === undefined || entry < 0
         ? here
@@ -831,7 +832,9 @@ async function pressRoundKey($: EngineInterface, id: string, key: string) {
   if (c.view.item && key.toUpperCase() === writeLetter(c.view.item))
     return writeRound($, id, c.view.step, WRITE, "terminal");
   if (
-    c.view.item?.entries.some((entry) => entry.kind === "option" && entry.key === key.toUpperCase())
+    c.view.item?.entries.some(
+      (entry) => entry.kind !== "write" && entryLetter(entry) === key.toUpperCase(),
+    )
   )
     return changeRound($, id, (view) => view.step, {
       letter: key.toUpperCase(),
