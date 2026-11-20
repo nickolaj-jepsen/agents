@@ -12,28 +12,29 @@ import {
   visibleWidth,
 } from "@earendil-works/pi-tui";
 import {
+  bodyOrigin,
+  CARD_NOTE_LABEL,
   cardChoice,
   cardHeading,
-  cardRail,
+  cardNote,
+  cardSections,
   chipRow,
   clamp,
   digitChoice,
+  fit,
+  type Hint,
   markdownLines,
+  modalFrame,
   paint,
   tokens,
   widthCap,
 } from "../../../kit/pi/ui.ts";
-import {
-  type Question,
-  type QuestionsResult,
-  TYPE_SOMETHING,
-  type QuestionAnswer,
-} from "./types.ts";
+import { type Question, type QuestionsResult, type QuestionAnswer } from "./types.ts";
 
 const MIN_WIDTH = 28;
 const RESERVED_ROWS = 10;
 const MAX_ROWS = 24;
-const RAIL = 1 + tokens.gutter;
+const FRAME_ROWS = 2 * bodyOrigin.y;
 const GAP = " ".repeat(tokens.gutter);
 
 type Item =
@@ -71,11 +72,6 @@ const isAnswered = (draft: Draft) => draft.picked.length > 0 || draft.text.trim(
 function target(text: string, item: Item): BodyRow {
   return { text, hit: item, hitTo: visibleWidth(text.replace(/\s+$/, "")) };
 }
-
-const pad = (text: string, width: number) =>
-  text + " ".repeat(Math.max(0, width - visibleWidth(text)));
-
-const column = (text: string, width: number) => pad(truncateToWidth(text, width, "…"), width);
 
 /**
  * A previous round's answer as a draft: options it names are picked, anything
@@ -563,9 +559,9 @@ export class QuestionsDialog implements Component, Focusable {
   }
 
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
-    const row = event.y;
-    const x = event.x - RAIL;
-    if (x < 0 || this.confirming) return undefined;
+    const row = event.y - bodyOrigin.y;
+    const x = event.x - bodyOrigin.x;
+    if (x < 0 || row < 0 || this.confirming) return undefined;
     if (event.type === "wheel" && event.wheelDelta) {
       const step = event.wheelDelta < 0 ? -1 : 1;
       const pane = this.previewCells;
@@ -623,7 +619,7 @@ export class QuestionsDialog implements Component, Focusable {
         this.startEditing(field);
         return { handled: true };
       }
-      const prefix = field === "note" ? 8 : 6;
+      const prefix = field === "note" ? visibleWidth(CARD_NOTE_LABEL) : 4;
       return (
         this.editingInput.handleMouse?.({ ...event, x: Math.max(0, x - prefix), y: 0 }) ?? {
           handled: true,
@@ -654,18 +650,19 @@ export class QuestionsDialog implements Component, Focusable {
     const { theme, question } = this;
     const hasPreview = question?.options.some((option) => option.preview !== undefined) ?? false;
     const split = hasPreview && width >= tokens.splitFrom;
-    const inner = Math.min(
-      split ? Infinity : tokens.prose,
-      widthCap(split ? "split" : "reading", width - 1) - RAIL,
-    );
+    const frameWidth = widthCap(split ? "split" : "reading", width);
+    const inner = Math.min(split ? Infinity : tokens.prose, frameWidth - 2 * bodyOrigin.x);
     const choiceWidth = split ? Math.floor((inner - GAP.length) * tokens.splitRatio) : inner;
-    const budget = Math.max(10, Math.min(MAX_ROWS, this.tui.terminal.rows - RESERVED_ROWS));
+    const budget = Math.max(
+      9,
+      Math.min(MAX_ROWS, this.tui.terminal.rows - RESERVED_ROWS) - FRAME_ROWS,
+    );
     const rows: BodyRow[] = [];
     const answered =
       this.questionIndex !== undefined && isAnswered(this.drafts[this.questionIndex]!);
     const dim = (line: string) => paint(theme, "dim", line);
     const title = question
-      ? cardHeading(theme, inner, question.question, question.header, true, answered)
+      ? cardHeading(theme, inner, question.question, `Q${this.tab + 1}`, true, answered)
       : cardHeading(theme, inner, "Review your answers", "Answers", true, false);
     const titleRoom = Math.max(2, Math.floor(budget / 4));
     this.questionMaxOffset = Math.max(0, title.length - titleRoom);
@@ -697,10 +694,10 @@ export class QuestionsDialog implements Component, Focusable {
       }
     }
     this.questionRows = { start: rows.length, end: rows.length + shown.length };
-    rows.push(...shown.map((text) => ({ text })), { text: "" });
+    const heading = shown.map((text) => ({ text }));
 
     const stackedRows = hasPreview && !split ? Math.max(2, Math.min(7, Math.floor(budget / 3))) : 0;
-    const room = Math.max(2, budget - rows.length - (this.warning ? 2 : 1));
+    const room = Math.max(2, budget - rows.length - heading.length - 1);
     const listRoom = Math.max(2, room - stackedRows);
     const items = this.items();
     const blocks = items.map((item, i) => this.itemBlock(item, i, choiceWidth, Infinity));
@@ -711,57 +708,50 @@ export class QuestionsDialog implements Component, Focusable {
     if (hasPreview) {
       const left = split ? choiceWidth + GAP.length : 0;
       const preview = this.preview(inner - left, split ? room : stackedRows);
-      const top = rows.length + (split ? 0 : list.length);
+      const top = rows.length + heading.length + 1 + (split ? 0 : list.length);
       this.previewCells = { top, bottom: top + preview.length, left };
       if (split) {
         list = Array.from({ length: Math.max(list.length, preview.length) }, (_, i) => {
           const row = list[i];
           return {
             ...row,
-            text: column(row?.text ?? "", choiceWidth) + GAP + (preview[i] ?? ""),
+            text: fit(row?.text ?? "", choiceWidth) + GAP + (preview[i] ?? ""),
           };
         });
       } else {
         list.push(...preview.map((text) => ({ text })));
       }
     }
-    rows.push(...list);
-    if (this.warning) rows.push({ text: paint(theme, "warning", this.warning) });
-    rows.push({ text: this.hints(inner) });
+    rows.push(...cardSections<BodyRow>({ text: "" }, heading, list));
     rows.forEach((row, index) => {
       if (row.hit) this.hits.set(index, { item: row.hit, to: row.hitTo ?? inner });
     });
-    return rows.map(({ text }) =>
-      cardRail(theme, true, answered, truncateToWidth(text, inner, "…")),
-    );
+    const titleLabel = question?.header ?? "Questions";
+    return modalFrame(theme, {
+      width: frameWidth,
+      title: titleLabel,
+      body: rows.map(({ text }) => text),
+      hints: this.hints(),
+      notice: this.warning ? paint(theme, "warning", this.warning) : undefined,
+    });
   }
 
-  private hints(width: number): string {
-    const hint = (key: string, label: string) => ({ key, label, act: 0 });
+  private hints(): Hint[] {
+    const hint = (key: string, label: string, essential = false) => ({ key, label, essential });
+    if (this.confirming) return [hint("enter", "yes", true), hint("esc", "no", true)];
+    if (this.editing) return [hint("enter", "save", true), hint("esc", "back", true)];
     const choices = this.question ? this.question.options.length + 1 : 0;
-    const controls = this.confirming
-      ? [hint("enter", "yes"), hint("esc", "no")]
-      : this.editing
-        ? [hint("enter", "save"), hint("esc", "back")]
-        : [
-            hint("esc", "cancel"),
-            ...(choices ? [hint(`A–${this.letter(choices - 1)}/1–${choices}`, "pick")] : []),
-            hint("↑↓", "move"),
-            ...(this.previewMax > 0 ? [hint("⇧↑↓", "preview")] : []),
-            ...(this.questionMaxOffset > 0 ? [hint("⇧←→", "question")] : []),
-            hint("enter", this.items()[this.row]?.kind === "send" ? "send" : "select"),
-            ...(this.question?.multiSelect ? [hint("space", "toggle")] : []),
-            ...(this.tabs.length > 1 ? [hint("tab/←→", "tabs")] : []),
-            ...(choices ? [hint("n", "note")] : []),
-          ];
-    // Drop whole hints rather than cutting a key in half.
-    const first = chipRow(this.theme, controls);
-    if (visibleWidth(first.text) <= width) return first.text;
-    const kept: typeof controls = [];
-    for (const control of controls) {
-      if (visibleWidth(chipRow(this.theme, [...kept, control]).text) <= width) kept.push(control);
-    }
-    return chipRow(this.theme, kept).text;
+    return [
+      hint("esc", "cancel", true),
+      ...(choices ? [hint(`A–${this.letter(choices - 1)}/1–${choices}`, "pick")] : []),
+      hint("↑↓", "move"),
+      ...(this.previewMax > 0 ? [hint("⇧↑↓", "preview")] : []),
+      ...(this.questionMaxOffset > 0 ? [hint("⇧←→", "text")] : []),
+      hint("enter", this.items()[this.row]?.kind === "send" ? "send" : "select"),
+      ...(this.question?.multiSelect ? [hint("space", "toggle")] : []),
+      ...(this.tabs.length > 1 ? [hint("tab/←→", "tabs")] : []),
+      ...(choices ? [hint("n", "note")] : []),
+    ];
   }
 
   private letter(i: number): string {
@@ -777,18 +767,20 @@ export class QuestionsDialog implements Component, Focusable {
     const action = (text: string) =>
       target(pointer + (at ? theme.bold(paint(theme, "accent", text)) : text), item);
     const lines = (text: string, max: number) => clamp(text, width - GAP.length, { max });
-    const prefix = (line: string, index: number) => (index ? GAP : pointer) + line;
+    const answered = isAnswered(draft);
     const choice = (key: string, text: string, chosen: boolean, literal = false, detail?: string) =>
-      cardChoice(theme, width - GAP.length, {
+      cardChoice(theme, width, {
         key,
         text,
         chosen,
-        active: at,
+        active: true,
+        focused: at,
+        answered,
         literal,
         multiple: question?.multiSelect,
         detail,
         detailLines,
-      }).map((line, index) => target(prefix(line, index), item));
+      }).map((line) => target(line, item));
     switch (item.kind) {
       case "option": {
         const option = question!.options[item.index]!;
@@ -802,25 +794,34 @@ export class QuestionsDialog implements Component, Focusable {
       }
       case "custom": {
         if (this.editing === "answer") {
-          const field = this.input.render(width - 6)[0] ?? "";
-          return [{ ...target(pointer + `${this.letter(i)} › ${field}`, item), hitTo: width }];
+          const field = this.input.render(width - 4)[0] ?? "";
+          return [{ ...target(dim(`${this.letter(i)} › `) + field, item), hitTo: width }];
         }
         return choice(
           this.letter(i),
-          draft.text.trim() || TYPE_SOMETHING,
+          draft.text.trim() || "Write your own answer",
           Boolean(draft.text.trim()),
           true,
         );
       }
       case "note": {
-        if (this.editing === "note") {
-          const field = this.noteInput.render(width - 8)[0] ?? "";
-          return [{ ...target(pointer + dim("Note: ") + field, item), hitTo: width }];
-        }
-        const note = this.notes[this.questionIndex ?? 0]?.trim();
-        return lines(note ? `Note: ${note}` : "Note: Add a note", 3).map((line, index) =>
-          target(prefix(dim(line), index), item),
-        );
+        const note = this.notes[this.questionIndex ?? 0]?.trim() ?? "";
+        const content =
+          this.editing === "note"
+            ? [
+                {
+                  ...target(
+                    dim(CARD_NOTE_LABEL) +
+                      (this.noteInput.render(width - visibleWidth(CARD_NOTE_LABEL))[0] ?? ""),
+                    item,
+                  ),
+                  hitTo: width,
+                },
+              ]
+            : cardNote(theme, width, note, true, answered, 3).map((line, index) =>
+                target(at && index === 0 ? theme.underline(line) : line, item),
+              );
+        return detailLines === Infinity ? [{ text: "" }, ...content] : content;
       }
       case "done":
         return [action("Done")];

@@ -1,32 +1,41 @@
-# questions/pi/cancelled 160x45 @0,28 (160x12)
-│  ❯ Storage  Where should the session store live?
-│
-│  ❯ A ○ SQLite in the checkout
-│        One file, no service to run, and it can be deleted with the checkout.
-│    B ○ Postgres beside the app
-│        Shared between machines, and one more service to keep running.
-│    C ○ The OS keyring
-│        Nothing to back up, where the host has one.
-│    D ○ Type something.
-│    Note: Add a note
-│  Cancel without answering?
-│  enter yes  esc no
+# questions/pi/cancelled 160x45 @0,28 (96x15)
+╭─ Storage ────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                              │
+│ ❯ Q1  Where should the session store live?                                                   │
+│                                                                                              │
+│ A ○ SQLite in the checkout                                                                   │
+│     One file, no service to run, and it can be deleted with the checkout.                    │
+│ B ○ Postgres beside the app                                                                  │
+│     Shared between machines, and one more service to keep running.                           │
+│ C ○ The OS keyring                                                                           │
+│     Nothing to back up, where the host has one.                                              │
+│ D ○ Write your own answer                                                                    │
+│                                                                                              │
+│ Note: Add a note                                                                             │
+│ Cancel without answering?                                                                    │
+╰─ enter yes ── esc no ────────────────────────────────────────────────────────────────────────╯
 --- styles
-1 .x2 2x47
-1
-1 .x2 3 . 1 . 4
-1 .x8 4x69
-1 .x4 4 . 4
-1 .x8 4x62
-1 .x4 4 . 4
-1 .x8 4x43
-1 .x4 4 . 4 . 4x15
-1 .x4 4x16
-1 .x2 5x25
-1 .x2 3x5 .x6 3x3
+1x3 2x7 . 1x85
+1 .x94 1
+1 . 3x42 .x51 1
+1 .x94 1
+1 . 4 . 3 .x90 1
+1 .x5 5x69 .x20 1
+1 . 6 . 5 .x90 1
+1 .x5 5x62 .x27 1
+1 . 6 . 5 .x90 1
+1 .x5 5x43 .x46 1
+1 . 6 . 5 . 5x21 .x68 1
+1 .x94 1
+1 . 5x16 .x77 1
+1 . 7x25 .x68 1
+1x3 8x5 . 5x3 . 1x2 . 8x3 . 5x2 . 1x73
 --- legend
-1 fg=#a08ed5
-2 fg=#a08ed5 bold
-3 fg=#a798d7
-4 fg=#7e888e
-5 fg=#cd9a22
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#a08ed5 bold
+4 fg=#a08ed5 underline=single
+5 fg=#7e888e
+6 fg=#a08ed5
+7 fg=#cd9a22
+8 fg=#dee0e1

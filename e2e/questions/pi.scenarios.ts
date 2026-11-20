@@ -63,7 +63,7 @@ export default scenarios({
   harness: "pi",
   // Hermetic: its own config with this plugin alone, so nothing of the person's setup shows.
   start: { hermetic: true, plugins: ["questions"], turns: [] },
-  region: region.rows(/^│/, /^│.*(?:esc cancel|enter yes|enter save)/),
+  region: region.box(/esc cancel|enter yes|enter save/),
   scenarios: {
     single: {
       about: "one question with three described options",
@@ -91,7 +91,7 @@ export default scenarios({
       sizes: [[70, 24]],
     },
     "draft-submit": {
-      about: "letters, clicks and review return data without giving the composer the keys early",
+      about: "the form replaces the composer and restores its draft after submit",
       start: {
         args: ["-e", fileURLToPath(new URL("./draft.ts", import.meta.url))],
         turns: turns([STORAGE, RECORDING]),
@@ -99,8 +99,7 @@ export default scenarios({
       region: region.rows(/The user answered:/, /Composer draft!/),
       steps: [
         ...open("Where should the session store live?"),
-        { wait: "Composer draft" },
-        { click: "Composer draft" },
+        { wait: "Composer draft", gone: true },
         { press: "b" },
         { wait: "How much of each session" },
         { click: "Add a note" },

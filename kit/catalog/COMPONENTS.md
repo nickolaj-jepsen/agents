@@ -156,12 +156,12 @@ Features:
 
 A question and its choices on a left rail, with wrapped Markdown and selection marks.
 
-- pi: exists: `cardHeading`, `cardChoice`, `cardRail`
+- pi: exists: `cardHeading`, `cardChoice`, `cardNote`, `cardSections`, `cardRail`
 - claude: not possible: The Claude terminal Answer cards have their own renderer.
 
 Features:
 
-- Markdown headings and choices with wrapped details, selection marks and literal write-ins: pi yes; claude planned (Reuse the native Answer card drawing when migrating the Claude kit.)
+- Markdown headings, choices with focus and selection marks, literal write-ins, and notes: pi yes; claude planned (Reuse the native Answer card drawing when migrating the Claude kit.)
 
 ## Split
 

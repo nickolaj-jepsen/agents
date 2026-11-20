@@ -10,8 +10,8 @@ model cannot make alone to you as a form: one to four questions, each with two
 to four options, and the answers come back to it as data instead of a
 conversation.
 
-The form opens above the composer and takes the keys until you submit or
-cancel. The composer stays visible, and any draft stays in place.
+The framed form replaces the composer until you submit or cancel. When the
+composer returns, its draft is still there.
 
 - Press the printed letter or its row number to pick a choice or open the
   write-in. Use `↑` / `↓` or `j` / `k` to move and `Enter` to select.

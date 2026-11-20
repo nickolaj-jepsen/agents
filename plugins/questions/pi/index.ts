@@ -6,12 +6,11 @@
  * The dialog lives in `./dialog.ts`. This file owns the contract: the schema the
  * model fills in, with its limits, and the non-TUI path.
  *
- * Sequential on purpose. Two questionnaires in the prompt widget would replace
+ * Sequential on purpose. Two questionnaires in the editor slot would replace
  * each other, and pi resolves that by running this tool's calls one at a time.
  */
 import { Type } from "typebox";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import type { Component } from "@earendil-works/pi-tui";
 import { QuestionsDialog } from "./dialog.ts";
 import {
   HEADER_MAX,
@@ -84,40 +83,27 @@ export async function askQuestions(
   const cancelled: QuestionsResult = { answers: [], cancelled: true };
   if (signal?.aborted) return cancelled;
 
-  return new Promise<QuestionsResult>((resolve) => {
-    ctx.ui.setWidget(TOOL_NAME, (tui, theme) => {
-      // The concrete TUI exposes focus; the extension-facing interface omits the getter.
-      const focused = () =>
-        "getFocusedComponent" in tui && typeof tui.getFocusedComponent === "function"
-          ? (tui.getFocusedComponent() as Component | null)
-          : null;
-      const prompt = focused();
-      let settled = false;
-      const settle = (result: QuestionsResult) => {
-        if (settled) return;
-        settled = true;
-        signal?.removeEventListener("abort", abort);
-        unlisten();
-        if (focused() === dialog) tui.setFocus(prompt);
-        resolve(result);
-      };
-      const done = (result: QuestionsResult) => {
-        settle(result);
-        ctx.ui.setWidget(TOOL_NAME, undefined);
-      };
+  return ctx.ui.custom<QuestionsResult>(
+    (tui, theme, _keys, done) => {
       const abort = () => done(cancelled);
-      const dialog = new QuestionsDialog(tui, theme, questions, done, previous);
-      // A composer click can move the host's focus. Take it back before a key
-      // reaches the composer, without intercepting mouse or transcript scrolling.
-      const unlisten = ctx.ui.onTerminalInput(() => {
-        if (!dialog.focused) tui.setFocus(dialog);
-        return undefined;
-      });
       signal?.addEventListener("abort", abort, { once: true });
-      tui.setFocus(dialog);
-      return Object.assign(dialog, { dispose: () => settle(cancelled) });
-    });
-  });
+      const dispose = () => signal?.removeEventListener("abort", abort);
+      const dialog = new QuestionsDialog(
+        tui,
+        theme,
+        questions,
+        (result) => {
+          dispose();
+          done(result);
+        },
+        previous,
+      );
+      // The factory can run after the initial check, as the turn is interrupted.
+      if (signal?.aborted) queueMicrotask(abort);
+      return Object.assign(dialog, { dispose });
+    },
+    { overlay: false },
+  );
 }
 
 /**
@@ -188,7 +174,7 @@ export default function (pi: ExtensionAPI) {
     parameters: Type.Object({
       questions: Type.Array(QuestionSchema, { minItems: 1, maxItems: MAX_QUESTIONS }),
     }),
-    // One dialog at a time: two would fight over the prompt widget.
+    // One dialog at a time: two would fight over the editor slot.
     executionMode: "sequential",
     async execute(_toolCallId, params, signal, _onUpdate, ctx) {
       const invalid = validateQuestions(params.questions);

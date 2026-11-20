@@ -19,9 +19,12 @@ import {
 } from "@earendil-works/pi-tui";
 import {
   bandAct,
+  CARD_NOTE_LABEL,
   cardChoice,
   cardHeading,
+  cardNote,
   cardRail,
+  cardSections,
   cardTone as questionTone,
   clamp,
   digitChoice,
@@ -153,9 +156,7 @@ export class Transcript implements Component {
         }
         out.push(text);
       };
-      heading.forEach(append);
-      if (body.length) append({ text: "" });
-      body.forEach(append);
+      cardSections<Row>({ text: "" }, heading, body).forEach(append);
       this.ends[step] = out.length;
     };
     const current = view(round.form, round.draft);
@@ -225,21 +226,16 @@ export class Transcript implements Component {
       if (answered && active)
         rows.push({ text: dim("Clear answer"), act: { kind: "clear", step } });
       if (active || item.note) {
-        const label = "Note: ";
-        rows.push(
-          { text: "" },
-          ...(editRows(step, "note", label) ??
-            asRows(
-              clamp(item.note || "Add a note", inner - visibleWidth(label)).map(
-                (line, i) =>
-                  (i ? " ".repeat(visibleWidth(label)) : dim(label)) +
-                  (item.note ? tone(line) : dim(line)),
-              ),
-              active ? { kind: "note", step } : undefined,
-            )),
-        );
+        const note =
+          editRows(step, "note", CARD_NOTE_LABEL) ??
+          asRows(
+            cardNote(theme, inner, item.note, here, answered),
+            active ? { kind: "note", step } : undefined,
+          );
+        section(step, heading, cardSections<Row>({ text: "" }, rows, note), { here, answered });
+      } else {
+        section(step, heading, rows, { here, answered });
       }
-      section(step, heading, rows, { here, answered });
     }
 
     const open = active && current.isReview;

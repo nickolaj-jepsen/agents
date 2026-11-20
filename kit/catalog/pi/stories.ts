@@ -8,7 +8,9 @@ import {
   bandShell,
   cardChoice,
   cardHeading,
+  cardNote,
   cardRail,
+  cardSections,
   chipRow,
   clamp,
   emptyState,
@@ -384,15 +386,15 @@ export const stories: Story[] = [
     make: () =>
       pure((theme, width) => {
         const inner = Math.min(width - 3, tokens.prose);
-        return [
-          ...cardHeading(theme, inner, SENTENCE, "Q1", true, true),
-          "",
+        const heading = cardHeading(theme, inner, SENTENCE, "Q1", true, true);
+        const choices = [
           ...cardChoice(theme, inner, {
             key: "A",
             text: GROUPED[0]!.title,
             detail: CJK,
             chosen: true,
             active: true,
+            focused: true,
           }),
           ...cardChoice(theme, inner, { key: "B", text: GROUPED[1]!.title, multiple: true }),
           ...cardChoice(theme, inner, {
@@ -402,7 +404,10 @@ export const stories: Story[] = [
             chosen: true,
           }),
           ...cardChoice(theme, inner, { key: "D", text: GROUPED[0]!.title, literal: true }),
-        ].map((line) => cardRail(theme, true, true, line));
+        ];
+        return cardSections("", heading, choices, cardNote(theme, inner, "", true, true)).map(
+          (line) => cardRail(theme, true, true, line),
+        );
       }),
   },
   classStory("reading", "96 columns, prose wrapped at 80"),

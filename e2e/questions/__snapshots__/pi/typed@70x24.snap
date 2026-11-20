@@ -1,24 +1,34 @@
-# questions/pi/typed 70x24 @0,11 (70x8)
-│  ❯ Retention  How much of each session should be kept?
-│
-│    A ○ The whole transcript
-│    B ○ The last turn only
-│    C ○ A summary of each run
-│  ❯ D › Until the disk fills
-│    Note: Add a note
-│  enter save  esc back
+# questions/pi/typed 70x24 @0,10 (70x12)
+╭─ Retention ────────────────────────────────────────────────────────╮
+│                                                                    │
+│ ❯ Q1  How much of each session should be kept?                     │
+│                                                                    │
+│ A ○ The whole transcript                                           │
+│ B ○ The last turn only                                             │
+│ C ○ A summary of each run                                          │
+│ D › Until the disk fills                                           │
+│                                                                    │
+│ Note: Add a note                                                   │
+│                                                                    │
+╰─ enter save ── esc back ───────────────────────────────────────────╯
 --- styles
-1 .x2 2x53
-1
-1 .x4 3 . 3
-1 .x4 3 . 3
-1 .x4 3 . 3
-1 .x2 4 .x25 5
-1 .x4 3x16
-1 .x2 4x5 .x7 4x3
+1x3 2x9 . 1x57
+1 .x68 1
+1 . 3x46 .x21 1
+1 .x68 1
+1 . 4 . 5 .x64 1
+1 . 4 . 5 .x64 1
+1 . 4 . 5 .x64 1
+1 . 5x4 .x20 6 .x42 1
+1 .x68 1
+1 . 5x16 .x51 1
+1 .x68 1
+1x3 7x5 . 5x4 . 1x2 . 7x3 . 5x4 . 1x44
 --- legend
-1 fg=#a08ed5
-2 fg=#a08ed5 bold
-3 fg=#7e888e
-4 fg=#a798d7
-5 inverse
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#a08ed5 bold
+4 fg=#a08ed5
+5 fg=#7e888e
+6 inverse
+7 fg=#dee0e1

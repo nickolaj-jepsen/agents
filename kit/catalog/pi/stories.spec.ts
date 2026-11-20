@@ -3,7 +3,11 @@ import { visibleWidth } from "@earendil-works/pi-tui";
 import { describe, expect, it } from "vitest";
 import { stories, storyId } from "./stories.ts";
 
-const theme = { fg: (_c: string, t: string) => t, bold: (t: string) => t } as unknown as Theme;
+const theme = {
+  fg: (_c: string, t: string) => t,
+  bold: (t: string) => t,
+  underline: (t: string) => t,
+} as unknown as Theme;
 
 describe("catalogue stories", () => {
   it("have unique component/state ids and a caption", () => {

@@ -1,4 +1,4 @@
-# kit/pi/question-card/choices 70x60 @2,2 (66x13)
+# kit/pi/question-card/choices 70x60 @2,2 (66x15)
 │  ❯ Q1  The section says the build verifies a pi change, but the
 │        build only type-checks the cores and the pi halves and
 │        never starts an agent. ✓
@@ -12,23 +12,28 @@
 │  C ■ Darwin hosts need the app leaf to work on both halves.
 │  D ○ `just build` is not enough to verify a pi change; the docs
 │      say it is.
+│
+│  Note: Add a note
 --- styles
 1 .x2 2x62
 1 .x8 2x54
 1 .x8 2x24
 1
-1 .x2 2 . 2 . 3x10 2x46
+1 .x2 3 . 2 . 4x10 2x46
 1 .x6 2x10
-1 .x6 4x58
-1 .x6 4x52
-1 .x2 4 . 4 .x5 3x6
+1 .x6 5x58
+1 .x6 5x52
+1 .x2 5 . 5 .x5 4x6
 1
-1 .x2 5 . 5 . 5x54
-1 .x2 4 . 4 . 4x58
-1 .x6 4x10
+1 .x2 6 . 6 . 6x54
+1 .x2 5 . 5 . 5x58
+1 .x6 5x10
+1
+1 .x2 5x16
 --- legend
 1 fg=#a08ed5
 2 fg=#a08ed5 bold
-3 fg=#a798d7
-4 fg=#7e888e
-5 fg=#dee0e1 bold
+3 fg=#a08ed5 underline=single
+4 fg=#a798d7
+5 fg=#7e888e
+6 fg=#dee0e1 bold

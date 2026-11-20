@@ -12,7 +12,11 @@ import type { Region } from "../lib/screen.ts";
 
 const catalog = fileURLToPath(new URL("../../kit/catalog/pi/index.ts", import.meta.url));
 
-const plain = { fg: (_c: string, t: string) => t, bold: (t: string) => t } as never;
+const plain = {
+  fg: (_c: string, t: string) => t,
+  bold: (t: string) => t,
+  underline: (t: string) => t,
+} as never;
 
 /**
  * A frame story is the frame itself: its box. Any other is drawn on the stage, a known
