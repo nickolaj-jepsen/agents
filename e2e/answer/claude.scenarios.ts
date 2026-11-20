@@ -197,6 +197,10 @@ export default scenarios({
         { wait: "B ○ Postgres" },
         { wait: "Q1/2" },
         { wait: "Rotate its credentials first." },
+        // `note-kept`'s snapshots leave the transcript at its end, where a narrow screen has no
+        // room for Q1's top; the bar's position brings the question into view.
+        { click: "Q1/2" },
+        { wait: /❯\s+Q1/ },
       ],
     },
     "long-title": {
