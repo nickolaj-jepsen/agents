@@ -81,13 +81,13 @@ a draft for later
 6 .x2 4x20
 6 .x8 4x6
 -
-. 5x5 8x7 .x2 5x20
-9x159
+. 2x5 .x9 5x20
+8x159
 -
 -
 -
-.x17 a
-9x159
+.x17 9
+8x159
 5x5
 5x159
 --- legend
@@ -98,6 +98,5 @@ a draft for later
 5 fg=#7e888e
 6 fg=#a08ed5
 7 fg=#a08ed5 bold
-8 fg=#9da5a9
-9 fg=#6c767b
-a inverse
+8 fg=#6c767b
+9 inverse

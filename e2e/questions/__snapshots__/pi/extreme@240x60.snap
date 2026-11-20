@@ -1,5 +1,5 @@
-# questions/pi/extreme 240x60 @0,35 (124x23)
-  ─ Where stored? ────────────────────────────────────────────────────────────────────────────────────────────────────────
+# questions/pi/extreme 240x60 @0,34 (240x24)
+─ Where stored? ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
   Q1  Where should a session's full transcript, every tool result and each compaction summary be kept once a run ends?
       Include the archived sessions, the tool_result records and the full 日本語 transcript, not just the latest entry.
@@ -18,18 +18,19 @@
       The archive stores every event and preserves links to the     A row per event, so the history is the table and a
       original run.                                                 reader can replay it.
   E ○ Write your own answer
+
   Note: Add a note
 
   esc cancel  A–E/1–5 pick  ↑↓ move  enter select  n note
-  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-.x2 1 . 2x13 . 1x104
+1 . 2x13 . 1x224
 -
 .x2 3x4 4x112
 .x6 4x35 5x11 4x67
 .x6 4x115
 -
-.x2 6 . 7 .x63 8x7
+.x2 6 . 7 . 2x46 .x16 8x7
 .x6 8x8 3x48 .x6 9x6
 .x6 3x59 .x5 ax6 . ax5 .x4 ax3 . ax6
 .x2 b . 3 .x70 5x7 . ax7
@@ -42,10 +43,11 @@
 .x6 3x57
 .x6 3x13
 .x2 b . 3 . 3x21
+-
 .x2 3x16
 -
-.x2 dx3 . 3x6 .x2 dx7 . 3x4 .x2 dx2 . 3x4 .x2 dx5 . 3x6 .x2 d . 3x4
-.x2 1x120
+.x2 5x3 .x9 3x12 .x2 3x7 .x2 5x5 .x9 5
+1x240
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
@@ -59,4 +61,3 @@
 a fg=#69add0
 b fg=#a08ed5
 c bold
-d fg=#dee0e1

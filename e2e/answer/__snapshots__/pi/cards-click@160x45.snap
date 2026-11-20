@@ -1,4 +1,4 @@
-# answer/pi/cards-click 160x45 @0,16 (159x25)
+# answer/pi/cards-click 160x45 @0,14 (159x27)
 │  ❯ Q1  Use SQLite? ✓
 │
 │  A ○ SQLite
@@ -21,6 +21,8 @@
 
 │    Answers  1 of 2 answered
 │   [ Fill prompt ]  ▸ Show all 2 questions
+
+
 
  alt+a answer  Q1  1/2 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -48,7 +50,9 @@
 6 .x4 7x24
 6 .x3 7x15 .x2 3x22
 -
-. 3x5 8x7 .x2 3x16
+-
+-
+. 8x5 .x9 3x16
 9x159
 --- legend
 1 fg=#a08ed5
@@ -58,5 +62,5 @@
 5 fg=#dee0e1 bold
 6 fg=#5fa8cc
 7 fg=#5fa8cc bold
-8 fg=#9da5a9
+8 fg=#a798d7
 9 fg=#6c767b

@@ -16,13 +16,13 @@ import {
 import {
   bandAct,
   bandShell,
-  chipRow,
+  buttonRow,
   digitChoice,
   markdownLines,
   tokens,
   type Band,
   type BandRow,
-  type Chip,
+  type KeyChip,
 } from "../../../kit/pi/ui.ts";
 import type { Action, View } from "../core/forms.ts";
 
@@ -441,9 +441,14 @@ export class AnswerForm implements Component, Focusable {
     const w = Math.max(MIN_WIDTH, width);
     const textWidth = w - 4;
     const { item, isReview: review, step, count } = this.view;
-    const chip = (key: string, label: string, act: Act): Chip<Act> => ({ key, label, act });
-    const footer = chipRow(
+    const chip = (hotkey: string, label: string, act: Act): KeyChip<Act> => ({
+      hotkey,
+      label,
+      act,
+    });
+    const [footer] = buttonRow(
       t,
+      textWidth,
       review
         ? [
             chip("enter", "fill the prompt", { kind: "fill" }),

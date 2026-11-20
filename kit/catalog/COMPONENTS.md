@@ -21,15 +21,15 @@ Features:
 
 ## Button row
 
-The keys of a screen in one row, each showing its key, the one worth pressing lit.
+Clickable actions and keyboard-only labels, with the suggested action emphasised.
 
-- pi: not possible: pi sets the keys into the frame's bottom border as hints (see frame)
+- pi: exists: `buttonRow`
 - claude: exists: `buttonRow`
 
 Features:
 
-- Key chips in one row, dim but for the lit one: pi no (hints in the border instead); claude yes (plain Buttons: the engine draws the key and the click and hotkey come free)
-- A row wider than its room wraps: pi no (pi drops the lowest priority hint instead); claude yes (nothing drops, as every key must stay pressable)
+- Clickable actions and dim, non-interactive keyboard hints: pi yes (returns click ranges only for actions); claude yes (actions use native buttons; keyboard-only hints use plain text)
+- A row wider than its room wraps: pi yes (optional; a fixed-height row drops lower-priority entries instead); claude yes (nothing drops, as every key must stay pressable)
 
 ## Clamp
 

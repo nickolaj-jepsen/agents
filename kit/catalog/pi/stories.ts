@@ -6,6 +6,7 @@ import type { Theme } from "@earendil-works/pi-coding-agent";
 import type { TuiMouseEvent, TuiMouseEventResult } from "@earendil-works/pi-tui";
 import {
   bandShell,
+  buttonRow,
   captionFrame,
   captionFrameLayout,
   cardChoice,
@@ -412,6 +413,46 @@ export const stories: Story[] = [
         );
       }),
   },
+  {
+    component: "buttons",
+    state: "row",
+    about: "Clickable actions with a dim keyboard-only navigation label.",
+    width: "dialog",
+    make: () =>
+      pure((theme, width) =>
+        buttonRow(theme, width, [
+          { hotkey: "a", label: "apply", act: true, isLit: true },
+          { hotkey: "d", label: "dismiss", act: true },
+          { hotkey: "↑↓", label: "move" },
+          { hotkey: "q", label: "later", act: true, essential: true },
+        ]).map(({ text }) => text),
+      ),
+  },
+  {
+    component: "buttons",
+    state: "wrap",
+    about: "Actions and labels wrap at chip boundaries rather than cutting across a key.",
+    width: "dialog",
+    extreme: true,
+    make: () =>
+      pure((theme, width) =>
+        buttonRow(
+          theme,
+          Math.min(width, 40),
+          [
+            { hotkey: "b", label: "back", act: true },
+            { hotkey: "n", label: "next", act: true },
+            { hotkey: "s", label: "skip", act: true },
+            { hotkey: "↑↓", label: "move" },
+            { hotkey: "q", label: "quit", act: true },
+            { hotkey: "r", label: "review", act: true },
+            { hotkey: "y", label: "yes", act: true },
+            { hotkey: "m", label: "more", act: true },
+          ],
+          { wrap: true },
+        ).map(({ text }) => text),
+      ),
+  },
   classStory("reading", "96 columns, prose wrapped at 80"),
   classStory("split", "124 columns"),
   classStory("dialog", "72 columns"),
@@ -420,7 +461,7 @@ export const stories: Story[] = [
     component: "frame",
     state: "caption",
     about: "A composer form between two rules, with a bold question and hints inside.",
-    settings: "captionFrame(theme, { title, body, hints, width })",
+    settings: "captionFrame(theme, { title, body, footer, width })",
     width: "reading",
     make: () =>
       pure((theme, width) => {
@@ -438,7 +479,11 @@ export const stories: Story[] = [
           width,
           title: "Question",
           body: cardSections("", heading, choices),
-          hints: [...CLOSE, { key: "↑↓", label: "move" }, { key: "enter", label: "select" }],
+          footer: buttonRow(theme, inner, [
+            { hotkey: "esc", label: "close", act: true, essential: true },
+            { hotkey: "↑↓", label: "move" },
+            { hotkey: "enter", label: "select", act: true },
+          ])[0]?.text,
         });
       }),
   },

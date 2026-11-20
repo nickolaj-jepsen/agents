@@ -31,7 +31,7 @@
  Error: fixture-provider: turn 1 requested but 1 exist
  If this looks like a pi bug, /bug sends a report to the developers.
 
- 1/2   jk move  A–B pick  C write  n note  r review  esc prompt  x clear
+  1/2   jk move  A–B pick  C write  n note  r review  esc prompt  x clear
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
 1 .x2 2x19
@@ -66,8 +66,8 @@
 . ax53
 . bx67
 -
-cx5 .x2 6x2 3x5 .x2 6x3 3x5 .x2 6 3x6 .x2 6 3x5 .x2 6 3x7 .x2 6x3 3x7 .x2 6 3x6
-dx159
+. cx5 .x2 3x7 .x2 3x8 .x2 d .x8 d .x7 d .x9 dx3 .x9 d
+ex159
 --- legend
 1 fg=#a08ed5
 2 fg=#a08ed5 bold
@@ -81,4 +81,5 @@ dx159
 a fg=#ea7f81
 b fg=#9da5a9
 c fg=#a08ed5 inverse
-d fg=#6c767b
+d fg=#a798d7
+e fg=#6c767b

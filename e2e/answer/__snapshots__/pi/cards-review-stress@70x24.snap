@@ -14,7 +14,7 @@
 │    Q2   Question number 2: pick a strategy?
 │         Unanswered
 
-Review  1/12 answered  jk move  enter open  f fill  s send  n note
+ Review  1/12 answered  jk move  enter open  f fill  s send  n note
  r back  esc prompt
 ─────────────────────────────────────────────────────────────────────
 --- styles
@@ -33,8 +33,8 @@ Review  1/12 answered  jk move  enter open  f fill  s send  n note
 1 .x2 5x42
 1 .x9 4x10
 -
-2x21 .x2 6x2 4x5 .x2 4x5 7x5 .x2 6 4x5 .x2 6 4x5 .x2 6 4x5
-. 6 4x5 .x2 6x3 4x7
+. 2x21 .x2 4x7 .x2 6x5 . 7x4 .x2 6 .x7 6 .x7 6
+. 6 .x7 6x3
 8x69
 --- legend
 1 fg=#a08ed5
@@ -42,6 +42,6 @@ Review  1/12 answered  jk move  enter open  f fill  s send  n note
 3 fg=#5fa8cc bold
 4 fg=#7e888e
 5 fg=#dee0e1 bold
-6 fg=#5fa8cc
-7 fg=#9da5a9
+6 fg=#a798d7
+7 bold
 8 fg=#6c767b

@@ -39,7 +39,7 @@ a draft for later
 3 .x2 5x20
 3 .x8 5x6
 -
-. 2x5 6x7 .x2 2x20
+. 6x5 .x9 2x20
 7x69
 -
 -
@@ -54,6 +54,6 @@ a draft for later
 3 fg=#a08ed5
 4 fg=#a08ed5 bold
 5 fg=#5fa8cc bold
-6 fg=#9da5a9
+6 fg=#a798d7
 7 fg=#6c767b
 8 inverse

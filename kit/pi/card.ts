@@ -66,9 +66,19 @@ export function cardChoice(theme: Theme, width: number, choice: CardChoice): str
   const key = choice.key || " ";
   const pad = " ".repeat(visibleWidth(`${key} ${marker} `));
   const inner = width - pad.length;
+  const focus = (text: string) => theme.bold(paint(theme, "accent", text));
   const lines = literal
-    ? clamp(choice.text, inner).map((line) => (chosen ? ink(line) : dim(line)))
-    : markdownLines(theme, choice.text, inner, chosen ? { color: tone, bold: true } : undefined);
+    ? clamp(choice.text, inner).map((line) =>
+        choice.focused ? focus(line) : chosen ? ink(line) : dim(line),
+      )
+    : markdownLines(
+        theme,
+        choice.text,
+        inner,
+        choice.focused || chosen
+          ? { color: choice.focused ? (text) => paint(theme, "accent", text) : tone, bold: true }
+          : undefined,
+      );
   const first =
     (choice.focused ? theme.underline(tone(key)) : active || chosen ? ink(key) : dim(key)) +
     ` ${choice.focused ? theme.bold(tone(marker)) : chosen && !literal ? ink(marker) : dim(marker)} `;
@@ -92,13 +102,19 @@ export function cardNote(
   active: boolean,
   answered: boolean,
   max?: number,
+  focused = false,
 ): string[] {
   const dim = (text: string) => paint(theme, "dim", text);
+  const emphasis = (text: string) => theme.bold(paint(theme, "accent", text));
   const labelWidth = visibleWidth(CARD_NOTE_LABEL);
   return clamp(value || "Add a note", width - labelWidth, { max }).map(
     (line, i) =>
-      (i ? " ".repeat(labelWidth) : dim(CARD_NOTE_LABEL)) +
-      (value ? cardTone(theme, active, answered, line) : dim(line)),
+      (i
+        ? " ".repeat(labelWidth)
+        : focused
+          ? theme.underline(emphasis(CARD_NOTE_LABEL.trimEnd())) + " "
+          : dim(CARD_NOTE_LABEL)) +
+      (focused ? emphasis(line) : value ? cardTone(theme, active, answered, line) : dim(line)),
   );
 }
 

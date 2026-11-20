@@ -15,6 +15,8 @@ just test                # check copies, component manifests, and unit tests
 
 Claude types are only available after `just dev-setup`; check changes in a mod with `npx tsc -p plugins/<name>/claude` as well.
 
+Use `buttonRow` for a pi footer that mixes clickable actions and keyboard-only hints. It returns the rendered rows and the hit ranges of the buttons. Keep a single row by dropping lower-priority hints, or let the row wrap.
+
 ## Add a component or story
 
 1. Export the component from the applicable kit. Document props and non-obvious defaults on the exported types or parameters: the catalogue reads their JSDoc.

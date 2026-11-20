@@ -38,8 +38,8 @@
 1 .x2 4x11 3x12 4x29
 1x16 9x37
 -
-. 4x5 ax7 .x2 4x16
-bx69
+. 3x5 .x9 4x16
+ax69
 --- legend
 1 fg=#a08ed5
 2 fg=#a08ed5 bold
@@ -50,5 +50,4 @@ bx69
 7 fg=#69add0 underline=single
 8 fg=#7e888e bold
 9 fg=#dee0e1 bg=#213b49
-a fg=#9da5a9
-b fg=#6c767b
+a fg=#6c767b

@@ -1,0 +1,7 @@
+# questions/pi/footer-buttons 160x45 @0,6 (160x1)
+ The user cancelled the questions without answering. Do not treat this as a decision.
+--- styles
+1 2x84 1x75
+--- legend
+1 bg=#254131
+2 fg=#9da5a9 bg=#254131

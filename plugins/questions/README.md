@@ -11,7 +11,8 @@ to four options, and the answers come back to it as data instead of a
 conversation.
 
 The framed form replaces the composer until you submit or cancel. When the
-composer returns, its draft is still there.
+composer returns, its draft is still there. The footer’s colored shortcuts
+are clickable; dim shortcuts are keyboard-only.
 
 - Press the printed letter or its row number to pick a choice or open the
   write-in. Use `↑` / `↓` or `j` / `k` to move and `Enter` to select.

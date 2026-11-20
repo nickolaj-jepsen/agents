@@ -1,9 +1,4 @@
-import {
-  getMarkdownTheme,
-  getSelectListTheme,
-  rawKeyHint,
-  type Theme,
-} from "@earendil-works/pi-coding-agent";
+import { getMarkdownTheme, getSelectListTheme, type Theme } from "@earendil-works/pi-coding-agent";
 import {
   type Component,
   Container,
@@ -19,6 +14,8 @@ import {
 } from "@earendil-works/pi-tui";
 import {
   bandAct,
+  buttonRow,
+  type KeyChip,
   CARD_NOTE_LABEL,
   cardChoice,
   cardHeading,
@@ -415,7 +412,7 @@ export class Transcript implements Component {
 
 /** The prompt normally owns the keyboard. Alt+a hands it to the guide until Esc or a prompt click. */
 export class AnswerGuide implements Component, Focusable {
-  private hits = new Map<number, Row>();
+  private hits = new Map<number, BandRow<() => void>>();
   private isFocused = false;
   private size: string | undefined;
   private field?: Field & { done: (text?: string) => void };
@@ -514,23 +511,28 @@ export class AnswerGuide implements Component, Focusable {
     this.size = size;
     const gap = " ".repeat(tokens.gutter);
     if (this.field) {
-      if (!this.focused) return this.offer("resume editing", "");
-      return clamp(
-        ` ${[
-          rawKeyHint("enter", "save"),
-          rawKeyHint("shift+enter", "newline"),
-          rawKeyHint("esc", "cancel"),
-        ].join(gap)}`,
-        columns,
-      );
+      if (!this.focused) return this.offer(columns, "resume editing", "");
+      return this.shortcuts(columns, [
+        {
+          hotkey: "enter",
+          label: "save",
+          act: () => this.handleInput("\r"),
+          isLit: true,
+        },
+        { hotkey: "shift+enter", label: "newline" },
+        { hotkey: "esc", label: "cancel", act: () => this.finishEdit() },
+      ]);
     }
     const progressText = `${label}  ${v.answered}/${v.count} answered`;
     const progress = dim(progressText);
-    if (!this.focused)
-      return clamp(this.offer("answer", `${gap}${progress}`)[0]!, columns, { max: 1 });
-    const keyHint = (key: string, description: string) =>
-      questionTone(this.theme, false, true, key) + dim(` ${description}`);
-    const hints = [keyHint("jk", "move")];
+    if (!this.focused) return this.offer(columns, "answer", `${gap}${progress}`);
+    const hint = (hotkey: string, label: string): KeyChip<() => void> => ({ hotkey, label });
+    const action = (hotkey: string, label: string, act: RoundAction): KeyChip<() => void> => ({
+      hotkey,
+      label,
+      act: () => this.onAction(act),
+    });
+    const hints = [hint("jk", "move")];
     if (v.item) {
       const item = v.item;
       const letters = choiceLetters(item);
@@ -541,27 +543,35 @@ export class AnswerGuide implements Component, Focusable {
       );
       if (picks.length)
         hints.push(
-          keyHint(
+          hint(
             picks.length > 1 && consecutive ? `${picks[0]}–${picks.at(-1)}` : picks.join("/"),
             "pick",
           ),
         );
-      if (write) hints.push(keyHint(write, "write"));
+      if (write)
+        hints.push(
+          action(write, "write", { kind: "pick", step: v.step, entry: letters.indexOf(write) }),
+        );
     } else {
       const cursor = this.reviewCursor() ?? firstReviewStop(v);
-      hints.push(rawKeyHint("enter", cursor < 0 ? "fill" : "open"));
+      hints.push({
+        ...action("enter", cursor < 0 ? "fill" : "open", { kind: "review-open" }),
+        isLit: true,
+      });
       if (v.reply) {
-        if (cursor >= 0) hints.push(keyHint("f", "fill"));
-        hints.push(keyHint("s", "send"));
+        if (cursor >= 0) hints.push(action("f", "fill", { kind: "fill" }));
+        hints.push(action("s", "send", { kind: "send" }));
       }
     }
     hints.push(
-      keyHint("n", "note"),
-      keyHint("r", v.isReview ? "back" : "review"),
-      keyHint("esc", "prompt"),
+      action("n", "note", { kind: "note", step: v.step }),
+      action("r", v.isReview ? "back" : "review", { kind: "review" }),
+      action("esc", "prompt", { kind: "release" }),
     );
-    if (v.item && v.review[v.step]?.isAnswered) hints.push(keyHint("x", "clear"));
-    if (v.item?.accepts.includes(",")) hints.push(keyHint("y", "take recommendation"));
+    if (v.item && v.review[v.step]?.isAnswered)
+      hints.push(action("x", "clear", { kind: "clear", step: v.step }));
+    if (v.item?.accepts.includes(","))
+      hints.push(action("y", "take recommendation", { kind: "accept", step: v.step }));
     const digits = String(v.count).length;
     const stop = `${String(v.step + 1).padStart(digits, "0")}/${v.count}`;
     const badge = questionTone(
@@ -570,28 +580,28 @@ export class AnswerGuide implements Component, Focusable {
       false,
       v.isReview ? this.theme.bold(progressText) : this.theme.inverse(` ${stop} `),
     );
-    const lines = [badge];
-    for (const hint of hints) {
-      const previous = lines.at(-1)!;
-      if (visibleWidth(previous + gap + hint) <= columns) lines[lines.length - 1] += gap + hint;
-      else lines.push(` ${hint}`);
-    }
-    return lines.map((line) => clamp(line, columns, { max: 1 })[0] ?? "");
+    return this.shortcuts(columns, hints, badge);
   }
 
-  private offer(label: string, suffix: string): [string] {
-    const shortcut = rawKeyHint("alt+a", label);
-    this.hits.set(0, {
-      text: shortcut,
-      cells: [{ start: 0, end: visibleWidth(shortcut), act: { kind: "focus" } }],
+  private shortcuts(columns: number, keys: KeyChip<() => void>[], lead?: string): string[] {
+    return buttonRow(this.theme, columns - 1, keys, { wrap: true, lead }).map((row, y) => {
+      this.hits.set(y, row);
+      return ` ${row.text}`;
     });
-    return [` ${shortcut}${suffix}`];
+  }
+
+  private offer(columns: number, label: string, suffix: string): string[] {
+    const [row] = buttonRow(this.theme, columns - 1, [
+      { hotkey: "alt+a", label, act: () => this.onAction({ kind: "focus" }), essential: true },
+    ]);
+    this.hits.set(0, row!);
+    return clamp(` ${row!.text}${suffix}`, columns, { max: 1 });
   }
 
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
     const action = bandAct({ hits: this.hits }, event.x, event.y);
     if (!action || event.button !== "left") return undefined;
-    if (event.type === "click") this.onAction(action);
+    if (event.type === "click") action();
     return event.type === "press" || event.type === "click" ? { handled: true } : undefined;
   }
 }

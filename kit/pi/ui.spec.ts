@@ -5,6 +5,7 @@ import {
   bandAct,
   bandRows,
   bandShell,
+  buttonRow,
   captionFrame,
   captionFrameLayout,
   cardHeading,
@@ -122,19 +123,43 @@ describe("captionFrame", () => {
         width,
         title: "日本語 " + "long header ".repeat(20),
         body: ["A ○ 選択肢"],
-        hints,
+        footer: "esc later",
         notice: "Check the answers",
       });
       expect(widths(lines)).toEqual(Array<number>(1 + chrome).fill(width));
       expect(strip(lines[0]!).trim()).toMatch(/^─ 日本語 .+… ─{2,}$/);
       expect(lines[y]?.indexOf("A ○ 選択肢")).toBe(x);
       expect(lines[y + 1]).toContain("Check the answers");
-      expect(lines.at(-2)?.trim()).toBe(
-        width === 28 ? "↑↓ move  esc later" : "↑↓ move  space mark  a apply  d dismiss  esc later",
-      );
-      expect(lines.at(-1)?.trim()).toBe("─".repeat(width - 2 * x));
+      expect(lines.at(-2)?.trim()).toBe("esc later");
+      expect(lines[0]?.startsWith("─ ")).toBe(true);
+      expect(lines.at(-1)).toBe("─".repeat(width));
     },
   );
+});
+
+describe("buttonRow", () => {
+  const keys = [
+    { hotkey: "↑↓", label: "move" },
+    { hotkey: "a", label: "選択", act: 0 },
+    { hotkey: "esc", label: "back", act: 1, essential: true },
+  ];
+  it("paints keyboard-only labels dim and only assigns hits to actions", () => {
+    expect(buttonRow(tagged, 200, keys)[0]?.text).toContain("<dim>↑↓ move</>");
+    const [row] = buttonRow(plain, 40, keys);
+    expect(row?.text).toBe("↑↓ move  a 選択  esc back");
+    expect(row?.cells).toEqual([
+      { start: 9, end: 15, act: 0 },
+      { start: 17, end: 25, act: 1 },
+    ]);
+  });
+  it("drops whole entries on one line, keeping the way out", () => {
+    expect(buttonRow(plain, 10, keys)[0]?.text).toBe("esc back");
+  });
+  it("wraps whole entries and measures hits from each row's own start", () => {
+    const rows = buttonRow(plain, 14, keys, { wrap: true, lead: "3/5" });
+    expect(rows.map((row) => row.text)).toEqual(["3/5  ↑↓ move", "a 選択", "esc back"]);
+    expect(rows[1]?.cells?.[0]).toEqual({ start: 0, end: 6, act: 0 });
+  });
 });
 
 describe("cardHeading", () => {

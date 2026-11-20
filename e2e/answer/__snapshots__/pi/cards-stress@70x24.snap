@@ -16,7 +16,7 @@
 │  Note: Keep 東京 on the old routing until the replicas catch up and
 │        the das ↓ Jump to latest message · Ctrl+End
 
- 01/12   jk move  A–B pick  C write  n note  r review  esc prompt
+  01/12   jk move  A–B pick  C write  n note  r review  esc prompt
  x clear
 ─────────────────────────────────────────────────────────────────────
 --- styles
@@ -37,8 +37,8 @@
 1 .x2 3x6 1x60
 1 .x8 1x7 4x37
 -
-5x7 .x2 6x2 3x5 .x2 6x3 3x5 .x2 6 3x6 .x2 6 3x5 .x2 6 3x7 .x2 6x3 3x7
-. 6 3x6
+. 5x7 .x2 3x7 .x2 3x8 .x2 6 .x8 6 .x7 6 .x9 6x3
+. 6
 7x69
 --- legend
 1 fg=#a08ed5
@@ -46,5 +46,5 @@
 3 fg=#7e888e
 4 fg=#dee0e1 bg=#213b49
 5 fg=#a08ed5 inverse
-6 fg=#5fa8cc
+6 fg=#a798d7
 7 fg=#6c767b

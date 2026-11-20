@@ -31,13 +31,11 @@ Review  1/12 answered jk move enter fill r back keys here         [-]
 1 . 5x42 .x25 1
 1 .x8 4x10 .x50 1
 1x70
-2x21 . 6x2 4x5 . 7x5 8x5 . 6 4x5 . 4x9 .x9 4x3
+2x21 . 4x7 . 6x10 . 4x6 . 4x9 .x9 4x3
 --- legend
 1 fg=#d77757
 2 fg=#d77757 bold
 3 fg=#b1b9f9 bold
 4 fg=#999999
 5 bold
-6 fg=#b1b9f9
-7 fg=#b1b9f9 inverse
-8 fg=#999999 inverse
+6 inverse

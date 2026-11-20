@@ -14,18 +14,19 @@
 1 .x2 2x73
 1 .x8 2x68
 1
-1 .x2 3 . 2 . 4x10 2x57
-1 .x6 5x76
-1 .x6 5x34
-1 .x2 5 . 5 .x5 4x6
-1 .x2 6 . 6 . 6x54
-1 .x2 5 . 5 . 5x69
+1 .x2 3 . 2 . 4x10 5x57
+1 .x6 6x76
+1 .x6 6x34
+1 .x2 6 . 6 .x5 4x6
+1 .x2 7 . 7 . 7x54
+1 .x2 6 . 6 . 6x69
 1
-1 .x2 5x16
+1 .x2 6x16
 --- legend
 1 fg=#a08ed5
 2 fg=#a08ed5 bold
 3 fg=#a08ed5 underline=single
 4 fg=#a798d7
-5 fg=#7e888e
-6 fg=#dee0e1 bold
+5 fg=#a798d7 bold
+6 fg=#7e888e
+7 fg=#dee0e1 bold

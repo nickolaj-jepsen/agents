@@ -77,7 +77,7 @@ Review  1/12 answered jk move enter fill r back keys here                       
 5 . 3x42 .x51 5
 5 .x8 2x10 .x76 5
 5x96
-6x21 . 8x2 2x5 . 9x5 ax5 . 8 2x5 . 2x9 .x99 2x3
+6x21 . 2x7 . 8x10 . 2x6 . 2x9 .x99 2x3
 --- legend
 1 dim
 2 fg=#999999
@@ -86,6 +86,4 @@ Review  1/12 answered jk move enter fill r back keys here                       
 5 fg=#d77757
 6 fg=#d77757 bold
 7 fg=#b1b9f9 bold
-8 fg=#b1b9f9
-9 fg=#b1b9f9 inverse
-a fg=#999999 inverse
+8 inverse

@@ -24,6 +24,8 @@ Focus the fullscreen card controls before using the keys below: in Claude Code p
 | `f`               | Fill the prompt without sending                        |
 | `s` in pi         | Send the answers you have                              |
 
+In pi, colored shortcuts in the key guide are clickable. Dim hints such as `jk move` are keyboard-only.
+
 Open the review with **Show all questions** in Claude Code or **Show questions** in pi. **Clear answer** removes a choice without clearing its note. In the editor, `Shift+Enter` adds a line and `Enter` saves. In Claude Code, click the field or focus the band before typing. In pi, `Esc` cancels editing; a click on the prompt gives it focus.
 
 To add the optional Claude Code binding, merge this entry into `~/.claude/keybindings.json`:

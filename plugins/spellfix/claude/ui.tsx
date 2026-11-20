@@ -2404,34 +2404,53 @@ export function onlyOwnRows<E extends { props: { rows: readonly { plugin: string
 export type KeyChip = {
   /** The Button's address; the label when left out. Give one when the label changes with the screen. */
   id?: string;
+  /** A letter or digit binds a hotkey. Other key names are printed, not bound by the row. */
   hotkey: string;
   label: string;
-  press: () => unknown;
-  /** The one worth pressing next: the others are dim. */
+  /** Omit for a keyboard-only label: it is text, not a button or a hotkey binding. */
+  press?: () => unknown;
+  /** The one worth pressing next. */
   isLit?: boolean;
+  /** Ask for focus when the button mounts. */
+  autoFocus?: true;
 };
 
 /**
- * The keys in one row, `tokens.keyGap` apart and wrapping when narrow: each a plain `Button`
- * that shows its key, dim but for the lit one. A native surface marks the lit one as its
- * primary button and capitalises the labels.
+ * Actions and keyboard-only labels in one wrapping row. Labels without a press handler are
+ * dim text in the terminal and hidden on native surfaces. A native surface marks the lit
+ * action as primary and capitalises button labels.
  */
-export function buttonRow(k: Kit, keys: KeyChip[]): JSX.Element {
-  const { Box, Button } = k;
+export function buttonRow(k: Kit, keys: KeyChip[], compact = false): JSX.Element {
+  const { Box, Button, Text } = k;
   const { isNative } = k;
   return (
-    <Box columnGap={isNative ? "sm" : tokens.keyGap} flexWrap="wrap">
-      {keys.map(({ id, hotkey, label, press, isLit }) => (
-        <Button
-          key={id ?? label}
-          plain={isNative ? undefined : true}
-          dimColor={!isNative && !isLit}
-          variant={isNative && isLit ? "primary" : undefined}
-          hotkey={hotkey}
-          label={isNative ? `${label.charAt(0).toUpperCase()}${label.slice(1)}` : label}
-          onPress={() => press()}
-        />
-      ))}
+    <Box
+      columnGap={isNative ? tokens.gui.across.sm : compact ? 1 : tokens.keyGap}
+      flexWrap="wrap"
+      alignItems="center"
+    >
+      {keys.map(({ id, hotkey, label, press, isLit, autoFocus }) =>
+        press ? (
+          <Button
+            key={id ?? label}
+            plain={isNative ? undefined : true}
+            dimColor={!isNative && !isLit}
+            variant={isNative && isLit ? "primary" : undefined}
+            hotkey={/^[a-z0-9]$/.test(hotkey) ? hotkey : undefined}
+            label={
+              isNative
+                ? `${label.charAt(0).toUpperCase()}${label.slice(1)}`
+                : /^[a-z0-9]$/.test(hotkey)
+                  ? label
+                  : `${hotkey} ${label}`
+            }
+            autoFocus={autoFocus}
+            onPress={() => press()}
+          />
+        ) : isNative ? null : (
+          <Text key={id ?? label} dimColor>{`${hotkey} ${label}`}</Text>
+        ),
+      )}
     </Box>
   );
 }

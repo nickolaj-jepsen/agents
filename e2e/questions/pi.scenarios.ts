@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import type { Turn } from "../lib/harness.ts";
-import { gridLines, region, type Region } from "../lib/screen.ts";
+import { region } from "../lib/screen.ts";
 import { scenarios } from "../lib/scenario.ts";
 
 /** The turn that asks: the model calls the tool, and the dialog takes the screen. */
@@ -58,14 +58,8 @@ const LAYOUT = {
   ],
 };
 
-// The open frame has no corners; its lower rule marks the width as well as the last row.
-const captionRows = region.rows(/^  ─ .+ ─{2,}$/, /^  ─{10,}$/);
-const frameRegion: Region = (grid) => {
-  const rect = captionRows(grid);
-  if (!rect) return undefined;
-  const bottom = gridLines(grid)[rect.y + rect.h - 1]!;
-  return { ...rect, w: bottom.length + 2 };
-};
+// The open frame has no corners; both rules span the composer.
+const frameRegion = region.rows(/^─ .+ ─{2,}$/, /^─{10,}$/);
 
 export default scenarios({
   plugin: "questions",
@@ -78,6 +72,32 @@ export default scenarios({
       about: "one question with three described options",
       start: { turns: turns([STORAGE]) },
       steps: open("Where should the session store live?"),
+    },
+    "hover-note": {
+      from: "single",
+      about: "hover highlights a choice and then the separated Note row",
+      steps: [{ hover: "Postgres beside the app" }, { hover: "Add a note" }],
+    },
+    "footer-buttons": {
+      from: "single",
+      about: "keyboard-only labels do nothing on click, while footer buttons edit and cancel",
+      region: region.rows(/The user cancelled/, /cancelled the questions/),
+      steps: [
+        { click: "↑↓ move" },
+        { wait: "Where should the session store live?" },
+        { click: "n note" },
+        { wait: "enter save" },
+        { type: "A clicked note" },
+        { click: "enter save" },
+        { wait: "Note: A clicked note" },
+        { click: "esc cancel" },
+        { wait: "enter yes" },
+        { click: "esc no" },
+        { wait: "enter yes", gone: true },
+        { click: "esc cancel" },
+        { click: "enter yes" },
+        { wait: "The user cancelled" },
+      ],
     },
     preview: {
       about: "an option's markdown preview beside the options or stacked at 70 columns",

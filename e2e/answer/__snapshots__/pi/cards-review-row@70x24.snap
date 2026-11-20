@@ -16,7 +16,7 @@
 │  B ○ No
 │  C ○ Write you ↓ Jump to latest message · Ctrl+End
 
- 1/2   jk move  A–B pick  C write  n note  r review  esc prompt
+  1/2   jk move  A–B pick  C write  n note  r review  esc prompt
  x clear
 ─────────────────────────────────────────────────────────────────────
 --- styles
@@ -37,9 +37,9 @@
 4 .x2 3 . 3
 4 .x2 3 . 3 . 3x9 6x37
 -
-7x5 .x2 4x2 3x5 .x2 4x3 3x5 .x2 4 3x6 .x2 4 3x5 .x2 4 3x7 .x2 4x3 3x7
-. 4 3x6
-8x69
+. 7x5 .x2 3x7 .x2 3x8 .x2 8 .x8 8 .x7 8 .x9 8x3
+. 8
+9x69
 --- legend
 1 fg=#a08ed5
 2 fg=#a08ed5 bold
@@ -48,4 +48,5 @@
 5 fg=#5fa8cc bold
 6 fg=#dee0e1 bg=#213b49
 7 fg=#a08ed5 inverse
-8 fg=#6c767b
+8 fg=#a798d7
+9 fg=#6c767b

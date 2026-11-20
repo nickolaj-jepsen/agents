@@ -42,10 +42,10 @@ a draft for later
 6 .x4 7x24
 6 .x3 7x15 .x2 2x22
 -
-. 2x5 8x5 .x2 2x11 8x8 .x2 2x3 8x7
-9x69
+. 8x5 . 9x4 .x2 2x19 .x2 8x3
+ax69
 .x8 3
-9x69
+ax69
 2x5
 2x69
 --- legend
@@ -56,5 +56,6 @@ a draft for later
 5 fg=#dee0e1 bold
 6 fg=#5fa8cc
 7 fg=#5fa8cc bold
-8 fg=#9da5a9
-9 fg=#6c767b
+8 fg=#a798d7
+9 bold
+a fg=#6c767b

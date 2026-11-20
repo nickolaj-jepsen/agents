@@ -48,7 +48,7 @@
 4 .x4 5x24
 4 .x3 3x15
 -
-. 3x5 6x7 .x2 3x16
+. 6x5 .x9 3x16
 7x159
 --- legend
 1 fg=#a08ed5
@@ -56,5 +56,5 @@
 3 fg=#7e888e
 4 fg=#dee0e1
 5 fg=#dee0e1 bold
-6 fg=#9da5a9
+6 fg=#a798d7
 7 fg=#6c767b

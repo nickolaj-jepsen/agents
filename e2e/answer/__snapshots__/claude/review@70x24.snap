@@ -21,7 +21,7 @@ Review  1/2 answered jk move enter fill r back keys here          [-]
 1 . 6x18 .x49 1
 1 .x7 4x10 .x51 1
 1x70
-2x20 . 5x2 4x5 . 7x5 8x5 . 5 4x5 . 4x9 .x10 4x3
+2x20 . 4x7 . 7x10 . 4x6 . 4x9 .x10 4x3
 --- legend
 1 fg=#d77757
 2 fg=#d77757 bold
@@ -29,5 +29,4 @@ Review  1/2 answered jk move enter fill r back keys here          [-]
 4 fg=#999999
 5 fg=#b1b9f9
 6 bold
-7 fg=#b1b9f9 inverse
-8 fg=#999999 inverse
+7 inverse

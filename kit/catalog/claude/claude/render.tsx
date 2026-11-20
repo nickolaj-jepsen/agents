@@ -376,16 +376,18 @@ export const renders: Record<string, Render> = {
     buttonRow(k, [
       { hotkey: "a", label: "apply", press: none, isLit: true },
       { hotkey: "d", label: "dismiss", press: none },
+      { hotkey: "↑↓", label: "move" },
       { hotkey: "q", label: "later", press: none },
     ]),
   "buttons/wrap": (k, width) => {
     const { Box } = k;
     return (
       <Box flexDirection="column" width={Math.min(width, 40)}>
-        {buttonRow(
-          k,
-          KEYS(["back", "next", "skip", "note", "multi", "quit", "review", "yes", "more"]),
-        )}
+        {buttonRow(k, [
+          ...KEYS(["back", "next", "skip"]),
+          { hotkey: "↑↓", label: "move" },
+          ...KEYS(["quit", "review", "yes", "more"]),
+        ])}
       </Box>
     );
   },

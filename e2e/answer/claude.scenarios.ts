@@ -110,7 +110,7 @@ export default scenarios({
     },
     "fill-click": {
       from: "note-kept",
-      about: "j reaches Fill prompt from the last question and Enter preserves the draft",
+      about: "j reaches Fill prompt; clicking its shortcut preserves the composer draft",
       region: region.rows(/^❯\s*Q1: B$/, /^─+$/),
       steps: [
         { click: /^❯\s*$/ },
@@ -123,7 +123,9 @@ export default scenarios({
         { wait: "Q2/2" },
         { press: "j" },
         { wait: "❯ Fill prompt" },
-        { press: "Enter" },
+        { click: "jk move" },
+        { wait: "❯ Fill prompt" },
+        { click: "enter fill" },
         { wait: /^❯\s*Q1: B$/m },
         {
           run: expectPrompt(

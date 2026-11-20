@@ -3,6 +3,7 @@ import { POSITIONS } from "./terminal";
 import type { Current, Editing, Held, View } from "./types.d.ts";
 import {
   actionBar,
+  buttonRow,
   cellWidth,
   clamp,
   choice,
@@ -1074,19 +1075,10 @@ export function controlBar(
     letters.length > 1 && letters.every((c, i) => c.charCodeAt(0) === first + i)
       ? `${letters[0]}–${letters.at(-1)}`
       : letters.join("");
-  const pickWidth = 9;
   const position = view.isReview
     ? `Review  ${view.answered}/${view.count} answered`
     : `${view.item?.label}/${view.count}`;
-  const hint = (keys: string, label: string, enabled = true) =>
-    enabled ? (
-      <Text>
-        <Text {...roleProps("note")}>{keys}</Text>
-        <Text dimColor>{` ${label}`}</Text>
-      </Text>
-    ) : (
-      <Text dimColor>{`${keys} ${label}`}</Text>
-    );
+  const hint = (hotkey: string, label: string) => ({ hotkey, label });
   // The guide's keys reach the band only while it has them. A click in the transcript hands them
   // back to the prompt and the host does not say so, and the band takes the keys from `Alt+a` or
   // `ctrl+x tab`, not from a click: until a move into the band proves otherwise, the row names
@@ -1099,10 +1091,7 @@ export function controlBar(
             {position.padEnd(Math.max(6, cellWidth(`Q${view.count}/${view.count}`)))}
           </Text>
         </Button>
-        <Text>
-          <Text {...roleProps("note")}>alt+a</Text>
-          <Text dimColor> for the keys</Text>
-        </Text>
+        {buttonRow(kit, [hint("alt+a", "for the keys")])}
         {absorb(kit, press)}
       </Box>
     );
@@ -1113,12 +1102,23 @@ export function controlBar(
         <Text {...roleProps("accent")} weight="semibold">
           {position}
         </Text>
-        <Text>{hint("jk", "move")}</Text>
-        <Button key={ROUND_FOCUS} plain autoFocus label={`Enter to ${action}`} onPress={home}>
-          <Text>{hint("enter", action)}</Text>
-        </Button>
-        {view.reply && action !== "fill" ? <Text>{hint("f", "fill")}</Text> : null}
-        <Text>{hint("r", "back")}</Text>
+        {buttonRow(
+          kit,
+          [
+            hint("jk", "move"),
+            {
+              id: ROUND_FOCUS,
+              hotkey: "enter",
+              label: action,
+              press: home,
+              isLit: true,
+              autoFocus: true,
+            },
+            ...(view.reply && action !== "fill" ? [hint("f", "fill")] : []),
+            hint("r", "back"),
+          ],
+          true,
+        )}
         <Text dimColor>keys here</Text>
         {absorb(kit, press)}
       </Box>
@@ -1131,16 +1131,17 @@ export function controlBar(
           {position.padEnd(Math.max(6, cellWidth(`Q${view.count}/${view.count}`)))}
         </Text>
       </Button>
-      <Text>{hint("jk", "move")}</Text>
-      <Text>
-        {picks ? hint(picks, "pick") : null}
-        {" ".repeat(Math.max(1, pickWidth - (picks ? cellWidth(picks) + 5 : 0)))}
-        {hint(write, "write")}
-        {"  "}
-        {hint("n", "note")}
-        {"  "}
-        {hint("r", "review")}
-      </Text>
+      {buttonRow(
+        kit,
+        [
+          hint("jk", "move"),
+          ...(picks ? [hint(picks, "pick")] : []),
+          hint(write, "write"),
+          hint("n", "note"),
+          hint("r", "review"),
+        ],
+        true,
+      )}
       <Text dimColor>keys here</Text>
       {absorb(kit, press)}
     </Box>

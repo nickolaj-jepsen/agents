@@ -15,6 +15,8 @@ export { markdownLines } from "./markdown.ts";
 export { entries } from "./entries.ts";
 export type { Entry, EntriesOptions } from "./entries.ts";
 export { bandAct, bandRows, bandShell, chipRow } from "./band.ts";
+export { buttonRow } from "./buttons.ts";
+export type { ButtonRowOptions, KeyChip } from "./buttons.ts";
 export type { Band, BandCell, BandOptions, BandRow, Chip } from "./band.ts";
 export {
   bodyOrigin,

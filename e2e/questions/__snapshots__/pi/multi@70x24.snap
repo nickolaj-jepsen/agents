@@ -1,5 +1,5 @@
 # questions/pi/multi 70x24 @0,8 (70x14)
-  ─ Retention ──────────────────────────────────────────────────────
+─ Retention ──────────────────────────────────────────────────────────
 
   Q1  How much of each session should be kept? ✓
 
@@ -12,22 +12,22 @@
     Done
 
   esc cancel  A–D/1–4 pick  ↑↓ move  enter select  space toggle
-  ──────────────────────────────────────────────────────────────────
+──────────────────────────────────────────────────────────────────────
 --- styles
-.x2 1 . 2x9 . 1x54
+1 . 2x9 . 1x58
 -
 .x2 3x4 4x42
 -
 .x2 5 . 5 . 5x20
-.x2 6 . 5 . 5x18
+.x2 6 . 5 . 2x18
 .x2 7 . 3
 .x2 7 . 3 . 3x21
 -
 .x2 3x16
 -
 -
-.x2 8x3 . 3x6 .x2 8x7 . 3x4 .x2 8x2 . 3x4 .x2 8x5 . 3x6 .x2 8x5 . 3x6
-.x2 1x66
+.x2 8x3 .x9 3x12 .x2 3x7 .x2 8x5 .x9 3x12
+1x70
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
@@ -36,4 +36,4 @@
 5 fg=#a08ed5 bold
 6 fg=#a08ed5 underline=single
 7 fg=#a08ed5
-8 fg=#dee0e1
+8 fg=#a798d7

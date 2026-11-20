@@ -24,7 +24,7 @@
 
  Reloaded keybindings, extensions, skills, prompts, themes, and context files
 
- 1/2   jk move  A–B pick  C write  n note  r review  esc prompt  x clear
+  1/2   jk move  A–B pick  C write  n note  r review  esc prompt  x clear
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
 1 .x2 2x19
@@ -52,8 +52,8 @@
 -
 . 3x76
 -
-8x5 .x2 6x2 3x5 .x2 6x3 3x5 .x2 6 3x6 .x2 6 3x5 .x2 6 3x7 .x2 6x3 3x7 .x2 6 3x6
-9x159
+. 8x5 .x2 3x7 .x2 3x8 .x2 9 .x8 9 .x7 9 .x9 9x3 .x9 9
+ax159
 --- legend
 1 fg=#a08ed5
 2 fg=#a08ed5 bold
@@ -63,4 +63,5 @@
 6 fg=#5fa8cc
 7 fg=#5fa8cc bold
 8 fg=#a08ed5 inverse
-9 fg=#6c767b
+9 fg=#a798d7
+a fg=#6c767b

@@ -15,7 +15,7 @@
 ▎  A ○ Yes
 ▎  B ○ No
 ▎  C ○ Write your own answer
-Q1/2   jk move A–B pick C write  n note  r review keys here       [-]
+Q1/2   jk move A–B pick C write n note r review keys here         [-]
 --- styles
 1 . 2x19 .x48 1
 1 .x68 1
@@ -33,7 +33,7 @@ Q1/2   jk move A–B pick C write  n note  r review keys here       [-]
 4 .x2 6x2 3x2 .x62 4
 4 .x2 6x2 3x2 .x62 4
 4 .x2 3x3 . 3x21 .x41 4
-7x6 . 8x2 3x5 . 8x3 3x5 . 8 3x6 .x2 8 3x5 .x2 8 3x7 . 3x9 .x7 3x3
+7x6 . 3x7 . 3x8 . 3x7 . 3x6 . 3x8 . 3x9 .x9 3x3
 --- legend
 1 fg=#d77757
 2 fg=#d77757 bold
@@ -42,4 +42,3 @@ Q1/2   jk move A–B pick C write  n note  r review keys here       [-]
 5 bold
 6 fg=#999999 bold
 7 fg=#d77757 bold inverse
-8 fg=#b1b9f9

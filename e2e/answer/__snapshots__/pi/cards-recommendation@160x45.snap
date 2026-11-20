@@ -1,4 +1,4 @@
-# answer/pi/cards-recommendation 160x45 @0,19 (159x22)
+# answer/pi/cards-recommendation 160x45 @0,12 (159x29)
 │  ❯ Q1  Which checks should run? ✓
 │
 │  A ● lint
@@ -19,7 +19,14 @@
 
 
 
- 1/1   jk move  A–C pick  D write  n note  r review  esc prompt  x clear  y take recommendation
+
+
+
+
+
+
+
+  1/1   jk move  A–C pick  D write  n note  r review  esc prompt  x clear  y take recommendation
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
 1 .x2 2x32
@@ -42,8 +49,15 @@
 -
 -
 -
-6x5 .x2 4x2 3x5 .x2 4x3 3x5 .x2 4 3x6 .x2 4 3x5 .x2 4 3x7 .x2 4x3 3x7 .x2 4 3x6 .x2 4 3x20
-7x159
+-
+-
+-
+-
+-
+-
+-
+. 6x5 .x2 3x7 .x2 3x8 .x2 7 .x8 7 .x7 7 .x9 7x3 .x9 7 .x8 7
+8x159
 --- legend
 1 fg=#a08ed5
 2 fg=#a08ed5 bold
@@ -51,4 +65,5 @@
 4 fg=#5fa8cc
 5 fg=#5fa8cc bold
 6 fg=#a08ed5 inverse
-7 fg=#6c767b
+7 fg=#a798d7
+8 fg=#6c767b

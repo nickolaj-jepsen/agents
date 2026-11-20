@@ -12,6 +12,8 @@ import {
   visibleWidth,
 } from "@earendil-works/pi-tui";
 import {
+  buttonRow,
+  type BandRow,
   captionFrame,
   captionFrameLayout,
   CARD_NOTE_LABEL,
@@ -23,7 +25,7 @@ import {
   clamp,
   digitChoice,
   fit,
-  type Hint,
+  type KeyChip,
   markdownLines,
   paint,
   tokens,
@@ -124,6 +126,7 @@ export class QuestionsDialog implements Component, Focusable {
   private hits = new Map<number, { item: Item; to: number }>();
   private tabCells: { start: number; end: number; tab: number }[] = [];
   private tabRow = -1;
+  private footer?: { row: number; buttons: BandRow<() => void> };
 
   constructor(
     private readonly tui: TUI,
@@ -560,7 +563,16 @@ export class QuestionsDialog implements Component, Focusable {
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
     const row = event.y - captionFrameLayout.y;
     const x = event.x - captionFrameLayout.x;
-    if (x < 0 || row < 0 || this.confirming) return undefined;
+    if (x < 0 || row < 0) return undefined;
+    if (this.footer?.row === row && event.button === "left") {
+      const hit = this.footer.buttons.cells?.find((cell) => x >= cell.start && x < cell.end);
+      if (hit && event.type === "press") return { handled: true, focus: true };
+      if (hit && event.type === "click") {
+        hit.act();
+        return { handled: true };
+      }
+    }
+    if (this.confirming) return undefined;
     if (event.type === "wheel" && event.wheelDelta) {
       const step = event.wheelDelta < 0 ? -1 : 1;
       const pane = this.previewCells;
@@ -641,6 +653,7 @@ export class QuestionsDialog implements Component, Focusable {
     this.hits.clear();
     this.tabCells = [];
     this.tabRow = -1;
+    this.footer = undefined;
     this.previewCells = undefined;
     this.previewMax = 0;
     this.questionRows = { start: 0, end: 0 };
@@ -650,8 +663,8 @@ export class QuestionsDialog implements Component, Focusable {
     const hasPreview = question?.options.some((option) => option.preview !== undefined) ?? false;
     const split = hasPreview && width >= tokens.splitFrom;
     const inset = 2 * captionFrameLayout.x;
-    const frameWidth = split ? widthCap("split", width) : Math.min(width, tokens.prose + inset);
-    const inner = frameWidth - inset;
+    const contentWidth = split ? widthCap("split", width) : Math.min(width, tokens.prose + inset);
+    const inner = contentWidth - inset;
     const choiceWidth = split ? Math.floor((inner - GAP.length) * tokens.splitRatio) : inner;
     const budget = Math.max(
       9,
@@ -726,30 +739,46 @@ export class QuestionsDialog implements Component, Focusable {
     rows.forEach((row, index) => {
       if (row.hit) this.hits.set(index, { item: row.hit, to: row.hitTo ?? inner });
     });
+    const buttons = buttonRow(theme, inner, this.keys())[0]!;
+    this.footer = { row: rows.length + 1, buttons };
     return captionFrame(theme, {
-      width: frameWidth,
+      width,
       title: question?.header.trim() || "Questions",
       body: rows.map(({ text }) => text),
-      hints: this.hints(),
+      footer: buttons.text,
       notice: this.warning ? paint(theme, "warning", this.warning) : undefined,
     });
   }
 
-  private hints(): Hint[] {
-    const hint = (key: string, label: string, essential = false) => ({ key, label, essential });
-    if (this.confirming) return [hint("enter", "yes", true), hint("esc", "no", true)];
-    if (this.editing) return [hint("enter", "save", true), hint("esc", "back", true)];
+  private keys(): KeyChip<() => void>[] {
+    const hint = (hotkey: string, label: string) => ({ hotkey, label });
+    const enter = (label: string, isLit = false) => ({
+      hotkey: "enter",
+      label,
+      act: () => this.handleInput("\r"),
+      essential: true,
+      isLit,
+    });
+    const escape = (label: string) => ({
+      hotkey: "esc",
+      label,
+      act: () => this.handleInput("\x1b"),
+      essential: true,
+    });
+    if (this.confirming) return [enter("yes"), escape("no")];
+    if (this.editing) return [enter("save", true), escape("back")];
     const choices = this.question ? this.question.options.length + 1 : 0;
+    const send = this.items()[this.row]?.kind === "send";
     return [
-      hint("esc", "cancel", true),
+      escape("cancel"),
       ...(choices ? [hint(`A–${this.letter(choices - 1)}/1–${choices}`, "pick")] : []),
-      hint("↑↓", "move"),
       ...(this.previewMax > 0 ? [hint("⇧↑↓", "preview")] : []),
       ...(this.questionMaxOffset > 0 ? [hint("⇧←→", "text")] : []),
-      hint("enter", this.items()[this.row]?.kind === "send" ? "send" : "select"),
+      hint("↑↓", "move"),
+      enter(send ? "send" : "select", send),
       ...(this.question?.multiSelect ? [hint("space", "toggle")] : []),
       ...(this.tabs.length > 1 ? [hint("tab/←→", "tabs")] : []),
-      ...(choices ? [hint("n", "note")] : []),
+      ...(choices ? [{ ...hint("n", "note"), act: () => this.startEditing("note") }] : []),
     ];
   }
 
@@ -817,10 +846,8 @@ export class QuestionsDialog implements Component, Focusable {
                   hitTo: width,
                 },
               ]
-            : cardNote(theme, width, note, true, answered, 3).map((line, index) =>
-                target(at && index === 0 ? theme.underline(line) : line, item),
-              );
-        return detailLines === Infinity ? [{ text: "" }, ...content] : content;
+            : cardNote(theme, width, note, true, answered, 3, at).map((line) => target(line, item));
+        return [{ text: "" }, ...content];
       }
       case "done":
         return [action("Done")];
@@ -856,12 +883,15 @@ export class QuestionsDialog implements Component, Focusable {
     let used = 0;
     while (end <= this.row) {
       start = end;
-      used = blocks[end++]!.length;
+      const first = blocks[end++]!;
+      used = first.length - (first[0]?.text === "" ? 1 : 0);
       while (end < blocks.length && used + blocks[end]!.length <= limit) {
         used += blocks[end++]!.length;
       }
     }
-    const rows = blocks.slice(start, end).flat().slice(0, limit);
+    const page = blocks.slice(start, end).flat();
+    if (page[0]?.text === "") page.shift();
+    const rows = page.slice(0, limit);
     if (used > limit) {
       const last = rows.at(-1)!;
       rows[rows.length - 1] = { ...last, text: last.text + paint(this.theme, "dim", " …") };
