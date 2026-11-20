@@ -269,6 +269,17 @@ describe("parse", () => {
       expect(formOf(text).items[0]?.recommendedOption).toBe(0);
   });
 
+  test("a bold in an option's words leaves the option whole", () => {
+    const item = formOf(
+      "**Q1. Which?**\n\n- **A.** Read the `Location` header: **simpler** for callers.\n- **B. Keep it.** It works.\n",
+    ).items[0];
+    expect(item?.options[0]).toMatchObject({
+      text: "Read the `Location` header: simpler for callers.",
+      detail: "",
+    });
+    expect(item?.options[1]).toMatchObject({ text: "Keep it.", detail: "It works." });
+  });
+
   test("line endings from another system parse the same", () => {
     expect(shape(parse(GRILLING_ROUND.replaceAll("\n", "\r\n")))).toBe(
       shape(parse(GRILLING_ROUND)),

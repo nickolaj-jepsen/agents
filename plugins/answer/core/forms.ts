@@ -101,7 +101,7 @@ const HEADING = /^#{1,6}\s/;
 // `**Q1. …**`, `### Q2: …`, `1. **…?** …`, `**3.** …`, `Q4) …`; unindented only.
 const START = /^(?:#{1,6}\s+)?(\*\*)?(Q)?([0-9]{1,3})[.:)](\*\*)?(?:\s+|$)(.*)$/;
 // `- **A.** …`, `- **A. …**`, `A) …`, `**B.** …`.
-const OPTION = /^(\s*)(?:[-*+]\s+)?(?:\*\*)?([A-H])[.)](?:\*\*)?\s+(.+)$/;
+const OPTION = /^(\s*)(?:[-*+]\s+)?(\*\*)?([A-H])[.)](\*\*)?\s+(.+)$/;
 const RECOMMENDED = /^\s*(?:>\s*)?\**(?:Recommended|(?:My )?recommendation)\**\s*:\s*\**\s*(.*)$/i;
 const OWN_RECOMMENDATION = /\((?:(?:my )?recommend(?:ed|ation)|my pick)\b[^)]*\)/i;
 // A letter, then punctuation or the end: "A. The format", "B, because", "**C**"; never "A small".
@@ -241,8 +241,8 @@ function parseItem(start: Start, block: string[]): FormItem {
       continue;
     }
     const opt = OPTION.exec(line);
-    if (opt && opt[2] === String.fromCharCode(65 + options.length)) {
-      const [, lead = "", letter = "", words = ""] = opt;
+    if (opt && opt[3] === String.fromCharCode(65 + options.length)) {
+      const [, lead = "", opened, letter = "", closed, words = ""] = opt;
       const detail: string[] = [];
       for (
         let next = block[i + 1];
@@ -252,8 +252,9 @@ function parseItem(start: Start, block: string[]): FormItem {
         i++;
         detail.push(next.trim());
       }
-      // `- **A. Title.** More words`: the bold part is the option, the rest its detail.
-      const close = words.indexOf("**");
+      // `- **A. Title.** More words`: the bold part is the option, the rest its detail. A bold
+      // closed after the letter (`**A.** More **words**`) leaves the words whole.
+      const close = opened && !closed ? words.indexOf("**") : -1;
       if (close > 0) detail.unshift(words.slice(close + 2).trim());
       const text = unbold(close > 0 ? words.slice(0, close) : words);
       if (OWN_RECOMMENDATION.test(text)) ownPick = options.length;
