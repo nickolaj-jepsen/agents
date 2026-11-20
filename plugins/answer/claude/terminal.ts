@@ -4,7 +4,6 @@
  * graphical surface has no rows to count, so none of this runs there.
  */
 import { view as viewOf } from "../core/forms";
-import { isSeveral } from "./current";
 import type { Current, Item } from "./types.d.ts";
 import { cellWidth, rowsOf, tokens } from "./ui";
 
@@ -40,9 +39,6 @@ export function keysOf(c: Current): KeySpec[] {
       : []),
     { hotkey: "s", label: "skip", kind: "skip" },
     { hotkey: "n", label: "note", kind: "note" },
-    ...(item.canSeveral
-      ? [{ hotkey: "m", label: "several", kind: "several", isLit: isSeveral(c) }]
-      : []),
     ...fold,
   ];
 }

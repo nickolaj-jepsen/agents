@@ -5,9 +5,9 @@
 ▎  B ○ Postgres
 ▎  C ● An embedded store
 ▎
-▎  Note: Add a note
+▎  Clear answer
 ▎
-▎  Pick several  Clear
+▎  Note: Add a note
 
 
 ▎ ❯ Q2  Add caching?
@@ -17,11 +17,11 @@
 ▎  C ○ Write your own answer
 ▎
 ▎  Note: Add a note
-▎
-▎  Pick several
 
 
 ▎  + Review answers  1/2
+
+
 
 
 
@@ -36,9 +36,9 @@ Q2/2   jk move A–B pick C write  n note  r review keys here                   
 1 .x2 3x2 4x2 .x88 1
 1 .x2 4x3 . 1x17 .x71 1
 1 .x94 1
-1 .x2 4x5 . 4x10 .x76 1
+1 .x2 4x12 .x80 1
 1 .x94 1
-1 .x2 4x12 .x2 4x5 .x73 1
+1 .x2 4x5 . 4x10 .x76 1
 1x96
 5x96
 5 . 6x18 .x75 5
@@ -48,12 +48,12 @@ Q2/2   jk move A–B pick C write  n note  r review keys here                   
 5 .x2 1x3 . 4x21 .x67 5
 5 .x94 5
 5 .x2 4x5 . 4x10 .x76 5
-5 .x94 5
-5 .x2 4x12 .x80 5
 5x96
 7x96
 7 . 8 9x21 8x71 7
 7x96
+-
+-
 -
 -
 -

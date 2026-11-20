@@ -1,5 +1,7 @@
 # answer/claude/table-code 70x24 @0,0 (70x19)
 ▎ ├──────────┼─────────┼────────────────┤
+▎ │ SQLite   │ •••     │ embedded       │
+▎ ├──────────┼─────────┼────────────────┤
 ▎ │ Postgres │ •••     │ needs a server │
 ▎ └──────────┴─────────┴────────────────┘
 ▎
@@ -11,14 +13,14 @@
 ▎  C ○ Write your own answer
 ▎
 ▎  Note: Add a note
-▎
-▎  Pick several
 
 
 ▎  + Review answers  0/1
 
 Q1/1   alt+a for the keys                                         [-]
 --- styles
+1 .x68 1
+1 .x68 1
 1 .x68 1
 1 .x68 1
 1 .x68 1
@@ -31,8 +33,6 @@ Q1/1   alt+a for the keys                                         [-]
 1 .x2 7x3 . 6x21 .x41 1
 1 .x68 1
 1 .x2 6x5 . 6x10 .x50 1
-1 .x68 1
-1 .x2 6x12 .x54 1
 1x70
 8x70
 8 . 9 ax21 9x45 8

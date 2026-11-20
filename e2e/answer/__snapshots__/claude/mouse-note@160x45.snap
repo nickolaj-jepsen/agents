@@ -7,8 +7,6 @@
 ▎
 ▎  Note: First line
 ▎        Second line
-▎
-▎  Pick several
 
 
 ▎   Q2  Add caching?
@@ -18,14 +16,16 @@
 ▎  C ○ Write your own answer
 ▎
 ▎  Note: Add a note
-▎
-▎  Pick several
 
 
 ▎  + Review answers  0/2
 
 
 ● Prompt dropped by a hook: The note is still waiting
+
+
+
+
 
 
 Q1/2   jk move A–B pick C write  n note  r review keys here                                                                                                 [-]
@@ -38,8 +38,6 @@ Q1/2   jk move A–B pick C write  n note  r review keys here                   
 1 .x94 1
 1 .x2 4x5 . 5x10 .x76 1
 1 .x8 5x11 .x75 1
-1 .x94 1
-1 .x2 4x12 .x80 1
 1x96
 6x96
 6 . 7x18 .x75 6
@@ -49,14 +47,16 @@ Q1/2   jk move A–B pick C write  n note  r review keys here                   
 6 .x2 4x3 . 4x21 .x67 6
 6 .x94 6
 6 .x2 4x5 . 4x10 .x76 6
-6 .x94 6
-6 .x2 4x12 .x80 6
 6x96
 6x96
 6 . 9 ax21 9x71 6
 6x96
 -
 b . bx51
+-
+-
+-
+-
 -
 -
 cx6 . 5x2 4x5 . 5x3 4x5 . 5 4x6 .x2 5 4x5 .x2 5 4x7 . 4x9 .x97 4x3

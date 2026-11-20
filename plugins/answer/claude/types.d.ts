@@ -2,7 +2,7 @@
 // `core/forms.ts` owns; the module assigns the core's values to these, so `tsc` flags a drift.
 
 export type Action =
-  | { do: "pick" | "toggle"; entry: number }
+  | { do: "pick"; entry: number }
   | { do: "write" | "note"; text: string }
   | { do: "go"; step: number }
   | {
@@ -31,8 +31,7 @@ export type Item = {
   start: number;
   /** What it recommends among its options and why, "" with none. */
   recommended: string;
-  /** Whether several of its options can be one answer, and whether its answer is several. */
-  canSeveral: boolean;
+  /** Whether the recommendation or answer is a bundle of options. */
   isSeveral: boolean;
   /** Whether it recommends something a yes can take. */
   canAccept: boolean;
@@ -122,8 +121,6 @@ export type Current = {
   /** What `held` draws as. */
   view: View;
   editing: Editing;
-  /** Whether picks toggle on the shown item; null follows its answer. */
-  several: boolean | null;
   /** The shown item's body opened whole on a graphical surface; it folds to a line otherwise. */
   isBodyOpen: boolean;
   /**

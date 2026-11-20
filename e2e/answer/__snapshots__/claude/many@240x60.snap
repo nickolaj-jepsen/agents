@@ -1,26 +1,4 @@
-# answer/claude/many 240x60 @0,4 (240x51)
-▎   Q1  Question number 1: pick a strategy?
-▎
-▎  A ○ Option A for 1
-▎  B ○ Option B for 1
-▎  C ○ Write your own answer
-▎
-▎  Note: Add a note
-▎
-▎  Pick several
-
-
-▎   Q2  Question number 2: pick a strategy?
-▎
-▎  A ○ Option A for 2
-▎  B ○ Option B for 2
-▎  C ○ Write your own answer
-▎
-▎  Note: Add a note
-▎
-▎  Pick several
-
-
+# answer/claude/many 240x60 @0,2 (240x53)
 ▎ ❯ Q3  Question number 3: pick a strategy? ✓
 ▎
 ▎  A ○ Option A for 3
@@ -33,9 +11,9 @@
 ▎  H ● Option H for 3
 ▎  I ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎  Clear answer
 ▎
-▎  Pick several  Clear
+▎  Note: Add a note
 
 
 ▎   Q4  Question number 4: pick a strategy?
@@ -45,70 +23,96 @@
 ▎  C ○ Write your own answer
 ▎
 ▎  Note: Add a note
-▎
-▎  Pick several
 
+
+▎   Q5  Question number 5: pick a strategy?
+▎
+▎  A ○ Option A for 5
+▎  B ○ Option B for 5
+▎  C ○ Write your own answer
+▎
+▎  Note: Add a note
+
+
+▎   Q6  Question number 6: pick a strategy?
+▎
+▎  A ○ Option A for 6
+▎  B ○ Option B for 6
+▎  C ○ Write your own answer
+▎
+▎  Note: Add a note
+
+
+▎   Q7  Question number 7: pick a strategy?
+▎
+▎  A ○ Option A for 7
+▎  B ○ Option B for 7
+▎  C ○ Write your own answer
+▎
+▎  Note: Add a note
 
 Q3/12  jk move A–H pick I write  n note  r review keys here                                                                                                                                                                                 [-]
 --- styles
-1 . 2x41 .x52 1
+1 . 2x41 3x2 .x50 1
 1 .x94 1
 1 .x2 3x2 4x2 .x88 1
 1 .x2 3x2 4x2 .x88 1
-1 .x2 4x3 . 4x21 .x67 1
-1 .x94 1
-1 .x2 4x5 . 4x10 .x76 1
+1 .x2 3x2 4x2 .x88 1
+1 .x2 3x2 4x2 .x88 1
+1 .x2 3x2 4x2 .x88 1
+1 .x2 3x2 4x2 .x88 1
+1 .x2 3x2 4x2 .x88 1
+1 .x2 3x4 5x14 .x74 1
+1 .x2 6x3 . 4x21 .x67 1
 1 .x94 1
 1 .x2 4x12 .x80 1
-1x96
-1x96
-1 . 2x41 .x52 1
-1 .x94 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 4x3 . 4x21 .x67 1
 1 .x94 1
 1 .x2 4x5 . 4x10 .x76 1
-1 .x94 1
-1 .x2 4x12 .x80 1
 1x96
-5x96
-5 . 6x41 7x2 .x50 5
-5 .x94 5
-5 .x2 7x2 4x2 .x88 5
-5 .x2 7x2 4x2 .x88 5
-5 .x2 7x2 4x2 .x88 5
-5 .x2 7x2 4x2 .x88 5
-5 .x2 7x2 4x2 .x88 5
-5 .x2 7x2 4x2 .x88 5
-5 .x2 7x2 4x2 .x88 5
-5 .x2 7x4 2x14 .x74 5
-5 .x2 8x3 . 4x21 .x67 5
-5 .x94 5
-5 .x2 4x5 . 4x10 .x76 5
-5 .x94 5
-5 .x2 4x12 .x2 4x5 .x73 5
-5x96
-1x96
-1 . 2x41 .x52 1
-1 .x94 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 4x3 . 4x21 .x67 1
-1 .x94 1
-1 .x2 4x5 . 4x10 .x76 1
-1 .x94 1
-1 .x2 4x12 .x80 1
-1x96
-1x96
-9x6 . 8x2 4x5 . 8x3 4x5 . 8 4x6 .x2 8 4x5 .x2 8 4x7 . 4x9 .x177 4x3
+7x96
+7 . 5x41 .x52 7
+7 .x94 7
+7 .x2 8x2 4x2 .x88 7
+7 .x2 8x2 4x2 .x88 7
+7 .x2 4x3 . 4x21 .x67 7
+7 .x94 7
+7 .x2 4x5 . 4x10 .x76 7
+7x96
+7x96
+7 . 5x41 .x52 7
+7 .x94 7
+7 .x2 8x2 4x2 .x88 7
+7 .x2 8x2 4x2 .x88 7
+7 .x2 4x3 . 4x21 .x67 7
+7 .x94 7
+7 .x2 4x5 . 4x10 .x76 7
+7x96
+7x96
+7 . 5x41 .x52 7
+7 .x94 7
+7 .x2 8x2 4x2 .x88 7
+7 .x2 8x2 4x2 .x88 7
+7 .x2 4x3 . 4x21 .x67 7
+7 .x94 7
+7 .x2 4x5 . 4x10 .x76 7
+7x96
+7x96
+7 . 5x41 .x52 7
+7 .x94 7
+7 .x2 8x2 4x2 .x88 7
+7 .x2 8x2 4x2 .x88 7
+7 .x2 4x3 . 4x21 .x67 7
+7 .x94 7
+7 .x2 4x5 . 4x10 .x76 7
+7x96
+9x6 . 6x2 4x5 . 6x3 4x5 . 6 4x6 .x2 6 4x5 .x2 6 4x7 . 4x9 .x177 4x3
 --- legend
-1 dim
-2 bold
-3 fg=#999999 bold
+1 fg=#d77757
+2 fg=#d77757 bold
+3 fg=#b1b9f9 bold
 4 fg=#999999
-5 fg=#d77757
-6 fg=#d77757 bold
-7 fg=#b1b9f9 bold
-8 fg=#b1b9f9
+5 bold
+6 fg=#b1b9f9
+7 dim
+8 fg=#999999 bold
 9 fg=#d77757 bold inverse

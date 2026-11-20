@@ -185,7 +185,6 @@ const steps = (form: Form, actions: Action[], start?: Draft) =>
   actions.reduce((draft, action) => apply(form, draft, action), start ?? newDraft(form));
 
 const pick = (entry: number): Action => ({ do: "pick", entry });
-const toggle = (entry: number): Action => ({ do: "toggle", entry });
 const note = (text: string): Action => ({ do: "note", text });
 const write = (text: string): Action => ({ do: "write", text });
 const FORWARD: Action = { do: "forward" };
@@ -366,22 +365,6 @@ describe("apply", () => {
     expect(steps(form, [write(" ")]).step).toBe(0);
   });
 
-  test("several options toggle into one answer", () => {
-    const form = formOf(GRILLING_ROUND);
-    const draft = steps(form, [pick(2), toggle(0)]);
-    expect(draft.step).toBe(0);
-    const shown = view(form, draft);
-    expect(shown.item?.entries.map((entry) => entry.isChosen)).toEqual([true, false, true, false]);
-    expect(shown.item?.isSeveral).toBe(true);
-    expect(reply(form, draft)).toBe("Q1: A, C");
-    expect(shown.review[0]?.shown.startsWith("A, C: ")).toBe(true);
-    expect(reply(form, steps(form, [toggle(0), toggle(0)]))).toBe("");
-    // A write-in, or a pick list's routes, are not for toggling.
-    expect(steps(form, [toggle(3)])).toEqual(newDraft(form));
-    const picks = formOf(IDEATE_SUMMARY);
-    expect(steps(picks, [FORWARD, toggle(0)])).toEqual(steps(picks, [FORWARD]));
-  });
-
   test("a recommendation naming several letters is accepted as all of them", () => {
     const options = [..."ABCDEF"].map((letter) => `- **${letter}.** Item ${letter}.\n`).join("");
     for (const [saying, keys] of [
@@ -398,9 +381,9 @@ describe("apply", () => {
           .map((entry) => entry.key)
           .join(", "),
       ).toBe(keys);
-      expect(reply(form, steps(form, [toggle(0)]))).toBe("Q1: A");
+      expect(reply(form, steps(form, [pick(0)]))).toBe("Q1: A");
       expect(reply(form, steps(form, [ACCEPT]))).toBe("yes");
-      expect(reply(form, steps(form, [ACCEPT, toggle(5)]))).toBe(`Q1: ${keys}, F`);
+      expect(reply(form, steps(form, [ACCEPT, pick(5)]))).toBe("Q1: F");
     }
     // One letter is still one pick, and a sentence that starts on "A" names none.
     const single = formOf(GRILLING_ROUND);
@@ -494,7 +477,6 @@ describe("view", () => {
       "write",
     ]);
     expect(item.recommended).toBe("A and B now, C later.");
-    expect(item.canSeveral).toBe(true);
   });
 
   test("is plain data a harness can keep between turns", () => {

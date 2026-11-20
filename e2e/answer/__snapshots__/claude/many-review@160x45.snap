@@ -1,6 +1,8 @@
 # answer/claude/many-review 160x45 @0,0 (160x40)
+▎  B ○ Option B for 11
+▎  C ○ Write your own answer
 ▎
-▎  Pick several
+▎  Note: Add a note
 
 
 ▎   Q12  Question number 12: pick a strategy?
@@ -10,8 +12,6 @@
 ▎  C ○ Write your own answer
 ▎
 ▎  Note: Add a note
-▎
-▎  Pick several
 
 
 ▎  − Review answers  1/12
@@ -40,51 +40,51 @@
 
 Review  1/12 answered jk move enter fill r back keys here                                                                                                   [-]
 --- styles
+1 .x2 2x2 3x2 .x88 1
+1 .x2 3x3 . 3x21 .x67 1
 1 .x94 1
-1 .x2 2x12 .x80 1
+1 .x2 3x5 . 3x10 .x76 1
 1x96
 1x96
-1 . 3x43 .x50 1
+1 . 4x43 .x50 1
 1 .x94 1
-1 .x2 4x2 2x2 .x88 1
-1 .x2 4x2 2x2 .x88 1
-1 .x2 2x3 . 2x21 .x67 1
+1 .x2 2x2 3x2 .x88 1
+1 .x2 2x2 3x2 .x88 1
+1 .x2 3x3 . 3x21 .x67 1
 1 .x94 1
-1 .x2 2x5 . 2x10 .x76 1
-1 .x94 1
-1 .x2 2x12 .x80 1
+1 .x2 3x5 . 3x10 .x76 1
 1x96
 1x96
 1 . 5 6x22 5x70 1
 1x96
 1x96
-1 .x2 2x7 .x35 2x12 .x38 1
-1 .x2 2x7 .x35 2x12 .x38 1
-1 .x2 2x7 .x35 7x19 .x31 1
-1 .x2 2x7 .x35 2x12 .x38 1
+1 .x2 3x7 .x35 3x12 .x38 1
+1 .x2 3x7 .x35 3x12 .x38 1
+1 .x2 3x7 .x35 7x19 .x31 1
+1 .x2 3x7 .x35 3x12 .x38 1
 1x96
 1x96
-1 .x2 2x7 .x35 2x12 .x38 1
-1 .x2 2x7 .x35 2x12 .x38 1
-1 .x2 2x7 .x35 2x12 .x38 1
-1 .x2 2x7 .x35 2x12 .x38 1
+1 .x2 3x7 .x35 3x12 .x38 1
+1 .x2 3x7 .x35 3x12 .x38 1
+1 .x2 3x7 .x35 3x12 .x38 1
+1 .x2 3x7 .x35 3x12 .x38 1
 1x96
 1x96
-1 .x2 2x7 .x35 2x12 .x38 1
-1 .x2 2x7 .x36 2x12 .x37 1
-1 .x2 2x7 .x36 2x12 .x37 1
-1 .x2 2x7 .x36 2x12 .x37 1
+1 .x2 3x7 .x35 3x12 .x38 1
+1 .x2 3x7 .x36 3x12 .x37 1
+1 .x2 3x7 .x36 3x12 .x37 1
+1 .x2 3x7 .x36 3x12 .x37 1
 1x96
 1x96
 1 .x94 1
-1 .x2 2x16 .x2 8x13 .x2 2x12 .x47 1
+1 .x2 3x16 .x2 8x13 .x2 3x12 .x47 1
 1x96
-8x21 . 7x2 2x5 . 9x5 ax5 . 7 2x5 . 2x9 .x99 2x3
+8x21 . 7x2 3x5 . 9x5 ax5 . 7 3x5 . 3x9 .x99 3x3
 --- legend
 1 dim
-2 fg=#999999
-3 bold
-4 fg=#999999 bold
+2 fg=#999999 bold
+3 fg=#999999
+4 bold
 5 bg=#373737
 6 fg=#d77757 bg=#373737 bold
 7 fg=#b1b9f9

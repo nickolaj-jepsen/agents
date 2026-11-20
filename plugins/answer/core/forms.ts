@@ -39,7 +39,7 @@ export type Draft = {
 };
 
 export type Action =
-  | { do: "pick" | "toggle"; entry: number }
+  | { do: "pick"; entry: number }
   | { do: "write" | "note"; text: string }
   | { do: "go"; step: number }
   | { do: "accept" | "next" | "back" | "forward" | "skip" | "clear" | "review" };
@@ -66,8 +66,7 @@ export type ItemView = {
   start: number;
   /** What it recommends among its options and why, "" with none. */
   recommended: string;
-  /** Whether several of its options can be one answer, and whether its answer is several. */
-  canSeveral: boolean;
+  /** Whether the recommendation or answer is a bundle of options. */
   isSeveral: boolean;
   /** Whether it recommends something a yes can take. */
   canAccept: boolean;
@@ -459,21 +458,6 @@ function record(form: Form, draft: Draft, value: Answer): Draft {
   return withAnswer(draft, value);
 }
 
-const canTakeSeveral = (form: Form, item: FormItem) =>
-  form.kind === "round" && item.options.length >= 2;
-
-/** Adds an option to the shown item's answer, or takes it out; a single pick starts the set. */
-function toggle(form: Form, draft: Draft, index: number): Draft {
-  const item = form.items[draft.step];
-  if (!item || !canTakeSeveral(form, item) || !(index >= 0 && index < item.options.length))
-    return draft;
-  const answer = draft.answers[draft.step];
-  const held =
-    answer?.kind === "options" ? answer.indices : answer?.kind === "option" ? [answer.index] : [];
-  const indices = held.includes(index) ? held.filter((i) => i !== index) : [...held, index];
-  return record(form, draft, { kind: "options", indices: indices.sort((a, b) => a - b) });
-}
-
 /**
  * After an answer: the next item still unanswered, looking on and then from the top, or the
  * review when every item has one.
@@ -498,7 +482,7 @@ function setNote(form: Form, draft: Draft, text: string): Draft {
  * The draft after one thing a person did; what can't apply changes nothing.
  *
  * `pick` takes `entry`, an index into the shown item's entries (a write-in has nothing to
- * record until `write`); `toggle` one of several options; `write` records text and goes on;
+ * record until `write`); `write` records text and goes on;
  * `accept` takes the item's recommendation, whatever it names; `next` goes on to the next item
  * unanswered. Throws for a word it doesn't know.
  */
@@ -506,12 +490,10 @@ export function apply(form: Form, draft: Draft, action: Action): Draft {
   const { step } = draft;
   const item = form.items[step];
   switch (action.do) {
-    case "pick":
-    case "toggle": {
+    case "pick": {
       const row = item ? entries(item)[action.entry] : undefined;
       if (!row || row.kind === "write") return draft;
-      if (action.do === "pick") return record(form, draft, row);
-      return row.kind === "option" ? toggle(form, draft, row.index) : draft;
+      return record(form, draft, row);
     }
     case "write": {
       const written = record(form, draft, { kind: "text", text: action.text ?? "" });
@@ -681,7 +663,6 @@ function itemView(form: Form, draft: Draft): ItemView | null {
     start: startEntry(item, answer),
     // What it recommends among its options and why; with no options that is the accept entry.
     recommended: item.options.length ? (item.recommended ?? "") : "",
-    canSeveral: canTakeSeveral(form, item),
     isSeveral: answer ? answer.kind === "options" : item.recommendedOptions !== undefined,
     canAccept: canAccept(item),
     accepts: canAccept(item) ? said(item, accepted(item)) : "",

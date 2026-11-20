@@ -5,9 +5,9 @@
 ▎  B ● Postgres
 ▎  C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎  Clear answer
 ▎
-▎  Pick several  Clear
+▎  Note: Add a note
 
 
 ▎   Q2  Add caching?
@@ -23,9 +23,9 @@ Q1/2   jk move A–B pick C write  n note  r review keys here       [-]
 1 .x2 3x4 5x8 .x54 1
 1 .x2 6x3 . 4x21 .x41 1
 1 .x68 1
-1 .x2 4x5 . 4x10 .x50 1
+1 .x2 4x12 .x54 1
 1 .x68 1
-1 .x2 4x12 .x2 4x5 .x47 1
+1 .x2 4x5 . 4x10 .x50 1
 1x70
 7x70
 7 . 5x18 .x49 7

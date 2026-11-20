@@ -19,7 +19,6 @@ export type RoundActions = {
   pick: (question: number, entry: number) => unknown;
   edit: (question: number, field: NonNullable<Editing>, from?: number) => unknown;
   clear: (question: number) => unknown;
-  several: (question: number) => unknown;
   accept: (question: number) => unknown;
   fill: () => unknown;
   send: () => unknown;
@@ -88,7 +87,7 @@ export function questionCard(
   // presses while the writer is open; the graphical writer takes the controls' place.
   const interactive = outer.isNative && current?.writer ? undefined : actions;
   const isActive = current?.view.step === index;
-  const several = (isActive ? current.several : null) ?? item.isSeveral;
+  const several = item.isSeveral;
   const width = widthCap("reading", outer.columns);
   const kit = withColumns(outer, Math.max(1, width - 4));
   const { single, multi, pointer } = tokens.glyph;
@@ -114,16 +113,6 @@ export function questionCard(
               },
             ]
           : []),
-        ...(item.canSeveral
-          ? [
-              {
-                key: `${prefix}-several`,
-                label: several ? "Pick one" : "Pick several",
-                icon: several ? "Pick one" : "Pick several",
-                onPress: () => interactive.several(index),
-              },
-            ]
-          : []),
         ...(item.canAccept && item.accepts.includes(",")
           ? [
               {
@@ -131,16 +120,6 @@ export function questionCard(
                 label: `Take ${item.accepts}`,
                 icon: `Take ${item.accepts}`,
                 onPress: () => interactive.accept(index),
-              },
-            ]
-          : []),
-        ...(answered
-          ? [
-              {
-                key: `${prefix}-clear`,
-                label: "Clear answer",
-                icon: "Clear",
-                onPress: () => interactive.clear(index),
               },
             ]
           : []),
@@ -328,6 +307,19 @@ export function questionCard(
               </Text>
               {item.written}
             </Text>
+          ) : null,
+          interactive && answered ? (
+            <Box paddingLeft={kit.isNative ? 0 : 1}>
+              <Button
+                key={`${prefix}-clear`}
+                plain={kit.isNative ? undefined : true}
+                dimColor
+                label="Clear answer"
+                onPress={() => interactive.clear(index)}
+              >
+                {kit.isNative ? null : <Text>Clear answer</Text>}
+              </Button>
+            </Box>
           ) : null,
           kit.isNative ? (
             item.note ? (

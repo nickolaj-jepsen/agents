@@ -5,10 +5,10 @@
 ▎  B ● Postgres
 ▎  C ○ Write your own answer
 ▎
+▎  Clear answer
+▎
 ▎  Note: Keep the hosted instance.
 ▎        Rotate its credentials first.
-▎
-▎  Pick several  Clear
 
 Q1/2   jk move A–B pick C write  n note  r review keys here       [-]
 --- styles
@@ -18,10 +18,10 @@ Q1/2   jk move A–B pick C write  n note  r review keys here       [-]
 1 .x2 3x4 5x8 .x54 1
 1 .x2 6x3 . 4x21 .x41 1
 1 .x68 1
+1 .x2 4x12 .x54 1
+1 .x68 1
 1 .x2 4x5 . 6x25 .x35 1
 1 .x8 6x29 .x31 1
-1 .x68 1
-1 .x2 4x12 .x2 4x5 .x47 1
 1x70
 7x6 . 6x2 4x5 . 6x3 4x5 . 6 4x6 .x2 6 4x5 .x2 6 4x7 . 4x9 .x7 4x3
 --- legend

@@ -6,8 +6,6 @@
 ▎  C ○ Write your own answer
 ▎
 ▎  Note: Add a note
-▎
-▎  Pick several
 
 
 ▎   Q2  Add caching?
@@ -17,11 +15,13 @@
 ▎  C ○ Write your own answer
 ▎
 ▎  Note: Add a note
-▎
-▎  Pick several
 
 
 ▎  + Review answers  0/2
+
+
+
+
 
 
 
@@ -37,8 +37,6 @@ Q1/2   alt+a for the keys                                                       
 1 .x2 5x3 . 4x21 .x67 1
 1 .x94 1
 1 .x2 4x5 . 4x10 .x76 1
-1 .x94 1
-1 .x2 4x12 .x80 1
 1x96
 6x96
 6 . 7x18 .x75 6
@@ -48,12 +46,14 @@ Q1/2   alt+a for the keys                                                       
 6 .x2 4x3 . 4x21 .x67 6
 6 .x94 6
 6 .x2 4x5 . 4x10 .x76 6
-6 .x94 6
-6 .x2 4x12 .x80 6
 6x96
 6x96
 6 . 9 ax21 9x71 6
 6x96
+-
+-
+-
+-
 -
 -
 -

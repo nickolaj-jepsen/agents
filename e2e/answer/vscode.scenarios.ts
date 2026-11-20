@@ -26,16 +26,6 @@ export default vscodeScenarios({
       about: "a selected option keeps its detail and updates the live review",
       steps: [{ click: "B" }, { wait: /Review answers\s+1\/3/ }],
     },
-    several: {
-      from: "form",
-      about: "more than one option can be chosen in the same question",
-      steps: [
-        { click: "Pick several" },
-        { click: "A" },
-        { click: "C" },
-        { wait: /Picked\s+A, C: SQLite; Flat files/ },
-      ],
-    },
     write: {
       from: "form",
       about: "a write-in answer uses the native input inside its card",

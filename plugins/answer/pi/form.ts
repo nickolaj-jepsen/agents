@@ -43,16 +43,7 @@ type Item = NonNullable<View["item"]>;
 type Act =
   | { kind: "entry"; index: number }
   | {
-      kind:
-        | "note"
-        | "several"
-        | "back"
-        | "forward"
-        | "skip"
-        | "review"
-        | "fill"
-        | "send"
-        | "accept";
+      kind: "note" | "back" | "forward" | "skip" | "review" | "fill" | "send" | "accept";
     }
   | { kind: "goto"; index: number };
 
@@ -66,8 +57,6 @@ const PROMPT_ROWS = 12;
 export class AnswerForm implements Component, Focusable {
   private cursor = 0;
   private editing: "text" | "note" | undefined;
-  /** Whether picks toggle on the shown item; unset follows its answer. */
-  private several: boolean | undefined;
   private readonly input = new Input({ prompt: "› ", placeholder: "" });
   /** First body row shown when the item is taller than the frame. */
   private offset = 0;
@@ -109,7 +98,7 @@ export class AnswerForm implements Component, Focusable {
   invalidate(): void {}
 
   private get isSeveral(): boolean {
-    return this.several ?? this.view.item?.isSeveral ?? false;
+    return this.view.item?.isSeveral ?? false;
   }
 
   private resetCursor(): void {
@@ -126,7 +115,6 @@ export class AnswerForm implements Component, Focusable {
     this.view = view;
     if (moved) {
       this.offset = 0;
-      this.several = undefined;
       this.resetCursor();
       this.stopEditing();
     }
@@ -181,7 +169,6 @@ export class AnswerForm implements Component, Focusable {
         if (!entry) return;
         this.cursor = act.index;
         if (entry.kind === "write") return this.startEditing("text");
-        if (this.isSeveral) return this.step({ do: "toggle", entry: act.index });
         return this.step({ do: "pick", entry: act.index }, () => this.step({ do: "next" }));
       }
       case "accept":
@@ -189,11 +176,6 @@ export class AnswerForm implements Component, Focusable {
         return this.step({ do: "accept" }, () => this.step({ do: "next" }));
       case "note":
         return this.startEditing("note");
-      case "several":
-        if (!this.view.item?.canSeveral) return;
-        this.several = !this.isSeveral;
-        this.tui.requestRender();
-        return;
       case "back":
       case "forward":
       case "skip":
@@ -263,7 +245,6 @@ export class AnswerForm implements Component, Focusable {
           s: "skip",
           r: "review",
           n: "note",
-          m: "several",
         };
     const kind =
       keys[data] ??
@@ -466,7 +447,6 @@ export class AnswerForm implements Component, Focusable {
             chip("s", "skip", { kind: "skip" }),
             chip("r", "review", { kind: "review" }),
             chip("n", "note", { kind: "note" }),
-            ...(item?.canSeveral ? [chip("m", "several", { kind: "several" })] : []),
           ],
     );
     const keys = !this.isFocused
@@ -475,9 +455,7 @@ export class AnswerForm implements Component, Focusable {
         ? "enter goes on · esc leaves the field"
         : review
           ? "1-9 revisits · esc closes, answers kept"
-          : this.isSeveral
-            ? "1-9 toggles, f goes on · esc closes, answers kept"
-            : "1-9 or enter answers · hjkl moves · esc closes, answers kept";
+          : "1-9 or enter answers · hjkl moves · esc closes, answers kept";
     this.band = bandShell(t, {
       width: w,
       title: item ? `${step + 1} of ${count}` : "Review",

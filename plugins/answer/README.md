@@ -31,8 +31,8 @@ classic renderer uses the guided form.
 | `Enter`  | In review, open the highlighted question or use the highlighted footer action |
 
 The write-in gets the next letter after the printed choices. Click the write-in
-or **Add a note** to ask for its editor. **Pick several** lets you select more
-than one choice. **Clear** removes the answer without clearing its note.
+or **Add a note** to open its editor. **Clear answer** appears below the choices and above the note.
+It removes the answer without clearing the note.
 
 A click in the transcript gives the keyboard back to the prompt, and Claude does
 not give the band the keys from a click. So the band does not open a field the

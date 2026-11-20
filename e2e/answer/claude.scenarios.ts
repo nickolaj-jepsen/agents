@@ -117,7 +117,7 @@ export default scenarios({
     reopened: {
       from: "note-kept",
       about: "an unrelated message sets aside the draft for /answer",
-      region: region.rows(/▎.*❯\s+Q1/, /▎.*Pick several/),
+      region: region.rows(/▎.*❯\s+Q1/, /Rotate its credentials first/),
       steps: [
         { click: /^❯\s*$/ },
         { type: "We should discuss this first." },
@@ -126,17 +126,6 @@ export default scenarios({
         ...answer,
         { wait: "B ● Postgres" },
         { wait: "Rotate its credentials first." },
-      ],
-    },
-    several: {
-      from: "open",
-      about: "multiple choices update their independent selected marks",
-      steps: [
-        { click: "Pick several" },
-        ...keys("Alt+a", "a", "b"),
-        { wait: "Q1/2" },
-        { wait: "A ■ SQLite" },
-        { wait: "B ■ Postgres" },
       ],
     },
     "write-in": {
@@ -194,7 +183,7 @@ export default scenarios({
       about: "clear removes a picked option in place and leaves its note",
       region: region.rows(/▎.*❯\s+Q1/, /Rotate its credentials first/),
       steps: [
-        { click: /(?<=Pick several  )Clear/ },
+        { click: "Clear answer" },
         { wait: "B ○ Postgres" },
         { wait: "Q1/2" },
         { wait: "Rotate its credentials first." },

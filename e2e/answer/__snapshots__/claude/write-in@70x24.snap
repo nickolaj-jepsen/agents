@@ -5,7 +5,7 @@
 ▎  B ○ Postgres
 ▎  C ● An embedded store
 ▎
-▎  Note: Add a note
+▎  Clear answer
 ▎
 Q1/2   jk move A–B pick C write  n note  r review keys here       [-]
 --- styles
@@ -15,7 +15,7 @@ Q1/2   jk move A–B pick C write  n note  r review keys here       [-]
 1 .x2 3x2 4x2 .x62 1
 1 .x2 5x3 . 5x17 .x45 1
 1 .x68 1
-1 .x2 4x5 . 4x10 .x50 1
+1 .x2 4x12 .x54 1
 1 .x68 1
 6x6 . 5x2 4x5 . 5x3 4x5 . 5 4x6 .x2 5 4x5 .x2 5 4x7 . 4x9 .x7 4x3
 --- legend

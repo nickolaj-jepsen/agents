@@ -1,11 +1,4 @@
-# answer/claude/long-title 70x24 @0,2 (70x17)
-▎ ❯ Q1  Why this matters: the quick brown fox jumps over the lazy
-▎   dog the quick brown fox jumps over the lazy dog the quick brown
-▎   fox jumps over the lazy dog the quick brown fox jumps over the
-▎   lazy dog the quick brown fox jumps over the lazy dog the quick
-▎   brown fox jumps over the lazy dog the quick brown fox jumps over
-▎   the lazy dog the quick brown fox jumps over the lazy dog the
-▎   quick brown fox jumps over the lazy dog the quick brown fox
+# answer/claude/long-title 70x24 @0,0 (70x19)
 ▎   jumps over the lazy dog the quick brown fox jumps over the lazy
 ▎   dog the quick brown fox jumps over the lazy dog the quick brown
 ▎   fox jumps over the lazy dog the quick brown fox jumps over the
@@ -13,17 +6,19 @@
 ▎   brown fox jumps over the lazy dog the quick brown fox jumps over
 ▎   the lazy dog the quick brown fox jumps over the lazy dog the
 ▎   quick brown fox jumps over the lazy dog the quick brown fox
-▎   jumps over the lazy dog the quick brown fox jumps over the lazy
-▎   dog the quick brown fox jumps over the lazy dog the quick brown
+▎   jumps over the lazy dog?
+▎
+▎  A ○ Yes
+▎  B ○ No
+▎  C ○ Write your own answer
+▎
+▎  Note: Add a note
+
+
+▎  + Review answers  0/1
+
 Q1/1   alt+a for the keys                                         [-]
 --- styles
-1 . 1x2 2x62 .x3 1
-1 .x3 2x64 . 1
-1 .x3 2x63 .x2 1
-1 .x3 2x63 .x2 1
-1 .x3 2x64 . 1
-1 .x3 2x61 .x4 1
-1 .x3 2x60 .x5 1
 1 .x3 2x64 . 1
 1 .x3 2x64 . 1
 1 .x3 2x63 .x2 1
@@ -31,11 +26,24 @@ Q1/1   alt+a for the keys                                         [-]
 1 .x3 2x64 . 1
 1 .x3 2x61 .x4 1
 1 .x3 2x60 .x5 1
-1 .x3 2x64 . 1
-1 .x3 2x64 . 1
-2x6 . 3x5 4x13 .x41 4x3
+1 .x3 2x24 .x41 1
+1 .x68 1
+1 .x2 3x2 4x2 .x62 1
+1 .x2 3x2 4x2 .x62 1
+1 .x2 5x3 . 4x21 .x41 1
+1 .x68 1
+1 .x2 4x5 . 4x10 .x50 1
+1x70
+6x70
+6 . 7 8x21 7x45 6
+6x70
+2x6 . 5x5 4x13 .x41 4x3
 --- legend
 1 fg=#d77757
 2 fg=#d77757 bold
-3 fg=#b1b9f9
+3 fg=#b1b9f9 bold
 4 fg=#999999
+5 fg=#b1b9f9
+6 dim
+7 bg=#373737
+8 bg=#373737 bold

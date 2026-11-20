@@ -22,7 +22,7 @@
 Q1: A
 Q2: B
 ──────────────────────────────────────────────────────────────────────
-  fixture  Replay (fixture)
+  fixture  Replay (fixture)                      <tmp>
 --- styles
 -
 . 1x69
@@ -47,7 +47,7 @@ Q2: B
 -
 -
 7x70
-.x2 6x7 .x2 9x16
+.x2 6x7 .x2 9x16 .x22 6x16 ax3
 --- legend
 1 fg=#d0a215
 2 bg=#282726
@@ -58,3 +58,4 @@ Q2: B
 7 fg=#343331
 8 fg=#cf6a4c bold
 9 fg=#878580 bold
+a fg=#dad8ce

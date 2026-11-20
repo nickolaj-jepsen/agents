@@ -2,7 +2,6 @@ import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register, SessionMessage } from "claude-code";
 
 import { offer, hasWork, startLines, step as stepForm, view as viewOf } from "../core/forms";
-import { isSeveral } from "./current";
 import { fitBody, GAPS, heightOf, keyRows, keysOf, KEY_CELLS, type Gaps } from "./terminal";
 import {
   controlBar,
@@ -101,7 +100,6 @@ const over = (c: Current | null, held: Held): Current => {
     held,
     view,
     editing: isSameItem ? (c?.editing ?? null) : null,
-    several: isSameItem ? (c?.several ?? null) : null,
     isBodyOpen: isSameItem ? (c?.isBodyOpen ?? false) : false,
     isOpen: isSameForm ? (c?.isOpen ?? false) : false,
     stash: isSameForm ? (c?.stash ?? null) : null,
@@ -246,7 +244,7 @@ async function keepNote($: EngineInterface, text: string) {
 /**
  * A press on an answer. A new one is taken and opens its note; a press on the answer already
  * taken goes on to the next question, so a second click is the way on and no timer is needed.
- * One of several toggles, and the write-in opens its field.
+ * The write-in opens its field.
  */
 async function choose($: EngineInterface, entry: Entry, index: number) {
   if (entry.kind === "write") return ask($, WRITE);
@@ -254,11 +252,7 @@ async function choose($: EngineInterface, entry: Entry, index: number) {
   if (!c) return;
   // A note being typed is this question's, so it is kept whichever answer is picked.
   if (typed?.field === NOTE && !(await keepTyped($))) return;
-  if (isSeveral(c)) {
-    if (await step($, { do: "toggle", entry: index })) await focus($, `e${index}`);
-    return;
-  }
-  if (entry.isChosen) return move($, { do: "next" });
+  if (entry.isChosen && !c.view.item?.isSeveral) return move($, { do: "next" });
   // Observed, not documented: the note field takes the keys only from a ring below its place, so
   // the ring goes below first.
   await focus($, `e${index + 1}`);
@@ -587,7 +581,7 @@ async function changeRound(
   $: EngineInterface,
   id: string,
   index: number | ((view: View) => number),
-  action?: Action | "several" | { letter: string },
+  action?: Action | { letter: string },
 ) {
   return update($, current, (c) => {
     if (c?.transcript !== id || c.writer) return c;
@@ -607,14 +601,11 @@ async function changeRound(
         : over(
             here,
             stepForm(here.held, {
-              do: isSeveral(here) ? "toggle" : "pick",
+              do: "pick",
               entry,
             }),
           );
     }
-    if (action === "several") return { ...here, several: !isSeveral(here) };
-    if (action?.do === "pick" && isSeveral(here))
-      return over(here, stepForm(here.held, { ...action, do: "toggle" }));
     return action ? over(here, stepForm(here.held, action)) : here;
   });
 }
@@ -812,7 +803,6 @@ function roundActions(
     pick: (question, entry) => press(() => changeRound($, id, question, { do: "pick", entry })),
     edit,
     clear: (question) => press(() => changeRound($, id, question, { do: "clear" })),
-    several: (question) => press(() => changeRound($, id, question, "several")),
     accept: (question) => press(() => changeRound($, id, question, { do: "accept" })),
     fill: () => press(() => replyToRound($, id, surface, "fill")),
     send: () => press(() => replyToRound($, id, surface, "send")),
@@ -1280,7 +1270,6 @@ export const register: Register = (on) => {
       accept: () => accept($),
       skip: () => move($, { do: "skip" }),
       note: () => ask($, NOTE),
-      several: () => edit($, (was) => ({ ...was, several: !isSeveral(was) })),
       fill: async () => {
         const held = typed;
         const kept = held ? await step($, { do: "note", text: held.text }) : view;
@@ -1500,7 +1489,7 @@ export const register: Register = (on) => {
         }
 
         const { item } = view;
-        const several = isSeveral(c);
+        const several = item.isSeveral;
         const laid = fitBody(c, item, panelRows, columns, gaps);
         // The write-in is always last.
         const writeIn = item.entries.length - 1;
@@ -1703,7 +1692,7 @@ export const register: Register = (on) => {
         }
 
         const { item } = view;
-        const several = isSeveral(c);
+        const several = item.isSeveral;
         const isChosen = item.entries.some((row) => row.isChosen);
         // With this one answered and every other too, the way on is the review.
         const onward = {
@@ -1780,13 +1769,6 @@ export const register: Register = (on) => {
               : null,
             actionBar(kit, [
               act("skip", "skip", { hotkey: "s" }),
-              ...(item.canSeveral
-                ? [
-                    act("several", several ? "pick one" : "pick several", {
-                      hotkey: "m",
-                    }),
-                  ]
-                : []),
               ...(isChosen || isNoteLoose ? [] : [act("note", "add note", { hotkey: "n" })]),
               // One press takes a recommendation of several options; one is a press on its row.
               ...(item.canAccept && item.accepts.includes(",")

@@ -9,7 +9,7 @@
 │  4 ○ Write your own answer                                         │
 │                                                                    │
 │                                                                    │
-│ b back  f forward  y take A  s skip  r review  n note  m several   │
+│ b back  f forward  y take A  s skip  r review  n note              │
 │ shift+↑↓ scrolls · 1-9 or enter answers · hjkl moves · esc closes… │
 --- styles
 1x2 . 2x6 .x2 3 . 2x2 .x2 3 . 3x2 .x2 3 . 3x2 . 1x42
@@ -22,7 +22,7 @@
 1 .x2 2 . 3x23 .x41 1
 1 .x68 1
 1 .x68 1
-1 . 2 .x7 2 .x10 2 .x9 2 .x7 2 .x9 2 .x7 2 .x11 1
+1 . 2 .x7 2 .x10 2 .x9 2 .x7 2 .x9 2 .x19 1
 1 . 3x65 .x2 1
 --- legend
 1 fg=#343331

@@ -217,21 +217,6 @@ export default scenarios({
         asserts("Add caching?"),
       ],
     },
-    "multi-key": {
-      from: "open",
-      about: "m turns the question into several answers",
-      steps: [{ press: "m" }, asserts("□")],
-    },
-    "multi-click": {
-      from: "open",
-      about: "a click on `m several`",
-      steps: [{ click: "m several" }, asserts("□")],
-    },
-    "multi-picked": {
-      from: "multi-key",
-      about: "two of the options ticked",
-      steps: [...keys("1", "2"), asserts("■")],
-    },
     several: {
       about: "a question whose recommendation names several options",
       start: turn("several"),

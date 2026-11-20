@@ -413,25 +413,6 @@ test("yes takes the recommendation and goes on", async ($, on) => {
   await drawn.unmount();
 });
 
-test("several options of one question make one answer", async ($, on) => {
-  const w = world(on);
-  await start($);
-  await ends($, GRILLING);
-  const drawn = await form($);
-  await drawn.press({ key: "several" });
-  await pick(w, drawn, "e0");
-  await pick(w, drawn, "e2");
-  expect(await drawn.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
-  expect((await drawn.find({ key: "e2" }))?.text).toContain("■");
-  expect((await drawn.find({ key: "e1" }))?.text).toContain("□");
-  await drawn.press({ key: "next" });
-  // Q2 has nothing to pick several of.
-  expect(await drawn.find({ key: "several" })).toBeUndefined();
-  await drawn.press({ key: "review" });
-  expect((await drawn.findAll({ type: "Text" })).some((t) => t.text === "Q1: A, C")).toBe(true);
-  await drawn.unmount();
-});
-
 test("the form stands as tall as its tallest question, on every one of them", async ($, on) => {
   world(on);
   await start($);
@@ -682,7 +663,7 @@ const offerSays = async (drawn: Pick<Mounted, "findAll">) =>
     .find((t) => /^(Answer|Pick from) /.test(t));
 
 /** What an action row may carry hotkeys on: nothing else on a graphical surface does. */
-const ACTIONS = ["skip", "note", "several", "accept", "next", "send"];
+const ACTIONS = ["skip", "note", "accept", "next", "send"];
 
 /** The question shown: its title, as the form's markdown heading draws it. */
 const asking = (drawn: Pick<Mounted, "find">, title: RegExp) =>
@@ -785,7 +766,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     expect(w.box).toBe("Q1: B\nQ2: yes");
   });
 
-  test(`${surface}: the tabs, skip, the note, several and the review's rows are clicks too`, async ($, on) => {
+  test(`${surface}: the tabs, skip, the note and the review's rows are clicks too`, async ($, on) => {
     const w = world(on);
     await start($, surface);
     await ends($, GRILLING);
@@ -799,19 +780,17 @@ for (const surface of ["desktop", "vscode"] as const) {
     expect(await asking(drawn, /Lower the per-generator/)).toBeDefined();
     await drawn.press({ key: "skip" });
     expect(await asking(drawn, /What should happen to/)).toBeDefined();
-    // Several is the Q3 pair's: A and B both taken, both filled, and the way on on the action row.
-    await drawn.press({ key: "several" });
-    expect((await drawn.find({ key: "several" }))?.props.label).toBe("Pick one");
+    // Picking B replaces A.
     await drawn.press({ key: "e0" });
     await drawn.press({ key: "e1" });
-    expect((await drawn.find({ key: "e0" }))?.props.variant).toBe("primary");
+    expect((await drawn.find({ key: "e0" }))?.props.variant).not.toBe("primary");
     expect((await drawn.find({ key: "e1" }))?.props.variant).toBe("primary");
     expect((await drawn.find({ key: "next" }))?.props.variant).toBe("primary");
     await expectNative(drawn, { hotkeys: ACTIONS });
-    await drawn.input({ key: "note-field", text: "both", kind: "change" });
+    await drawn.input({ key: "note-field", text: "use B", kind: "change" });
     await drawn.press({ key: "review" });
-    expect(await drawn.find({ type: "Text", text: /^A, B: / })).toBeDefined();
-    expect(await drawn.find({ type: "Text", text: "Note: both" })).toBeDefined();
+    expect(await drawn.find({ type: "Text", text: /^B: / })).toBeDefined();
+    expect(await drawn.find({ type: "Text", text: "Note: use B" })).toBeDefined();
     // A review row goes back to its question.
     await drawn.press({ key: "item0" });
     expect(await asking(drawn, /Should every focus default/)).toBeDefined();
@@ -819,7 +798,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     await drawn.press({ key: "send" });
     await drawn.unmount();
     expect(w.submitted).toHaveLength(1);
-    expect(w.submitted[0]).toContain("Q3: A, B");
+    expect(w.submitted[0]).toContain("Q3: B");
   });
 
   test(`${surface}: the write-in is a field always there; Enter keeps it and goes on`, async ($, on) => {
