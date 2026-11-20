@@ -48,7 +48,7 @@ Picks fixes for misspelled words in the prompt draft with hunspell and Haiku.
 
 ### [answer](https://nickolaj-jepsen.github.io/agents/plugins/answer/)
 
-A form for the round of questions or numbered pick list a turn ended on, which writes your reply into the prompt and keeps your answers when a send sets it aside.
+Answer a round of questions in the chat, add notes, and send the answers you have.
 
 [![answer](https://nickolaj-jepsen.github.io/agents/media/answer/demo.png)](https://nickolaj-jepsen.github.io/agents/plugins/answer/)
 

@@ -6,7 +6,7 @@
  * Both are Ghostty-backed. Everything above this file sees only `Term`, a grid of
  * cells and 0-based coordinates.
  */
-import { execFile, execFileSync } from "node:child_process";
+import { execFile, execFileSync, spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -333,6 +333,58 @@ export class DaemonTerm implements Term {
   }
   async resize(cols: number, rows: number) {
     await this.cli("resize", String(cols), String(rows));
+  }
+  async interact(signal: AbortSignal): Promise<void> {
+    const tty = process.stdout;
+    // The monitor uses one cell on each side for its frame.
+    const dimensions = () => [Math.max(1, tty.columns - 2), Math.max(1, tty.rows - 2)] as const;
+    let [cols, rows] = dimensions();
+    const before = await this.size();
+    if (before.cols !== cols || before.rows !== rows) await this.resize(cols, rows);
+
+    signal.throwIfAborted();
+    const child = spawn(tuiTestBin(), ["--session", this.session, "monitor", "--interactive"], {
+      env: cliEnv(),
+      stdio: "inherit",
+      signal,
+    });
+    let timer: NodeJS.Timeout | undefined;
+    let pending = Promise.resolve();
+    let resizeError: unknown;
+    const onResize = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        pending = pending
+          .then(async () => {
+            const [nextCols, nextRows] = dimensions();
+            if (nextCols === cols && nextRows === rows) return;
+            await this.resize(nextCols, nextRows);
+            [cols, rows] = [nextCols, nextRows];
+          })
+          .catch((error) => {
+            resizeError = error;
+            child.kill("SIGINT");
+          });
+      }, 80);
+    };
+    tty.on("resize", onResize);
+    try {
+      await new Promise<void>((resolve, reject) => {
+        child.once("error", reject);
+        child.once("exit", (code) =>
+          code === 0 || signal.aborted
+            ? resolve()
+            : reject(new Error(`Terminal monitor exited with status ${code}`)),
+        );
+      });
+    } catch (error) {
+      if (!signal.aborted && !resizeError) throw error;
+    } finally {
+      tty.off("resize", onResize);
+      clearTimeout(timer);
+      await pending;
+    }
+    if (resizeError) throw resizeError;
   }
   private imageFlags = (o: ImageOptions) => [
     ...(o.zoom ? ["--zoom", String(o.zoom)] : []),

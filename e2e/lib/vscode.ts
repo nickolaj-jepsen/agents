@@ -1,8 +1,8 @@
 /**
- * Drives a real, headless VS Code with the `anthropic.claude-code` extension: the sibling of
+ * Drives a real VS Code with the `anthropic.claude-code` extension: the sibling of
  * `lib/session.ts` for the one surface a terminal does not show. Local only.
  *
- * VS Code runs in `cage` (a Wayland compositor with a headless output) and is steered over the
+ * VS Code runs on the desktop or in headless `cage`, and is steered over the
  * Chrome DevTools Protocol: the workbench is the `page` target, the Claude tab's webview is an
  * `iframe` target whose UI lives in `#active-frame`. Nothing here is a mock: the extension's own
  * `claude` runs against the model stub (`lib/stub.ts`) in a hermetic config folder.
@@ -14,6 +14,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { createServer } from "node:net";
 import {
   chmodSync,
+  closeSync,
   mkdirSync,
   openSync,
   readFileSync,
@@ -54,6 +55,8 @@ export type VscodeState = {
   /** The start options a window's environment fixed at launch; a reload must match them. */
   fixed?: string;
 };
+
+export type VscodeLaunch = { visible?: boolean; signal?: AbortSignal };
 
 /** The part of a start that is in the window's environment, which only a new window changes. */
 export const fixedOf = (start: VscodeStart) =>
@@ -135,9 +138,7 @@ function machine() {
 }
 
 /** What of this process's environment VS Code and the claude it spawns must not inherit. */
-const inherited = (name: string) =>
-  /^(CLAUDE|ANTHROPIC|VSCODE_|ELECTRON_)/.test(name) ||
-  ["DISPLAY", "WAYLAND_DISPLAY", "NIXOS_OZONE_WL"].includes(name);
+const inherited = (name: string) => /^(CLAUDE|ANTHROPIC|VSCODE_|ELECTRON_)/.test(name);
 
 /**
  * The config folder and the project's `.mcp.json` the extension's `claude` reads when it starts:
@@ -187,7 +188,11 @@ export async function launchVscode(
   runDir: string,
   cwd: string,
   start: VscodeStart,
+  { visible = false, signal }: VscodeLaunch = {},
 ): Promise<VscodeState> {
+  if (visible && !process.env.WAYLAND_DISPLAY && !process.env.DISPLAY)
+    throw new Error("VS Code live mode needs a desktop display.");
+  signal?.throwIfAborted();
   const folder = realpathSync(cwd);
   mark("launch: start");
   const stubPort = await startStub(runDir, start.turns ?? []);
@@ -196,6 +201,9 @@ export async function launchVscode(
   const env: Record<string, string> = {};
   for (const [k, v] of Object.entries(process.env))
     if (v !== undefined && !inherited(k)) env[k] = v;
+  if (!visible) {
+    for (const key of ["DISPLAY", "WAYLAND_DISPLAY", "NIXOS_OZONE_WL"]) delete env[key];
+  }
   // VS Code itself starts by the real `code`, found before the session's PATH can shadow it.
   const { code: codeBin, extensions: extensionsDir, cage, fonts } = machine();
   if (start.bin || start.hide) env.PATH = sessionPath(runDir, start.bin ?? {}, start.hide ?? []);
@@ -207,10 +215,12 @@ export async function launchVscode(
     AGENT_HUB_HIDDEN: "1",
     WT_NO_AUTOCLOSE: "1",
     ...notesEnv(runDir),
-    WLR_BACKENDS: "headless",
-    WLR_LIBINPUT_NO_DEVICES: "1",
-    WLR_RENDERER: "pixman",
-    WLR_HEADLESS_OUTPUTS: "1",
+    ...(!visible && {
+      WLR_BACKENDS: "headless",
+      WLR_LIBINPUT_NO_DEVICES: "1",
+      WLR_RENDERER: "pixman",
+      WLR_HEADLESS_OUTPUTS: "1",
+    }),
     ...(fonts && { FONTCONFIG_FILE: fonts }),
     ...start.env,
   });
@@ -226,6 +236,8 @@ export async function launchVscode(
       "workbench.tips.enabled": false,
       "workbench.layoutControl.enabled": false,
       "update.mode": "none",
+      "extensions.autoUpdate": false,
+      "extensions.autoCheckUpdates": false,
       "telemetry.telemetryLevel": "off",
       "window.titleBarStyle": "custom",
       // A tab's group is not locked, so the tab a reload opens takes the closed one's place
@@ -246,29 +258,47 @@ export async function launchVscode(
     .map((e) => e.trim())
     .filter((e) => e && e !== "anthropic.claude-code");
   mark("launch: extensions listed");
-  const code = [
-    `${quote(codeBin)} --ozone-platform=wayland --disable-gpu --password-store=basic`,
-    `--user-data-dir ${quote(join(runDir, "ud"))}`,
+  const args = [
+    `--ozone-platform=${!visible || env.WAYLAND_DISPLAY ? "wayland" : "x11"}`,
+    "--disable-gpu",
+    "--password-store=basic",
+    "--user-data-dir",
+    join(runDir, "ud"),
     // The person's installed extensions, read only; the profile is the run's own.
-    `--extensions-dir ${quote(extensionsDir)}`,
-    ...others.map((e) => `--disable-extension ${quote(e)}`),
+    "--extensions-dir",
+    extensionsDir,
+    ...others.flatMap((e) => ["--disable-extension", e]),
     `--remote-debugging-port=${port}`,
-    "--disable-workspace-trust --skip-welcome --skip-release-notes --new-window",
-    quote(folder),
-  ].join(" ");
+    "--disable-workspace-trust",
+    "--skip-welcome",
+    "--skip-release-notes",
+    "--new-window",
+    folder,
+  ];
+  const code = [codeBin, ...args].map(quote).join(" ");
   const log = join(runDir, "vscode.log");
   const log_ = openSync(log, "a");
-  const child = spawn("setsid", [...cage, "--", "sh", "-c", `${code}; sleep infinity`], {
+  const [program, programArgs] = visible
+    ? [codeBin, args]
+    : ["setsid", [...cage, "--", "sh", "-c", `${code}; sleep infinity`]];
+  const child = spawn(program, programArgs, {
     env,
     detached: true,
     stdio: ["ignore", log_, log_],
   });
+  closeSync(log_);
+  let spawnError: Error | undefined;
+  child.once("error", (error) => {
+    spawnError = error;
+  });
   child.unref();
   const state: VscodeState = { port, stubPort, cwd: folder, fixed: fixedOf(start) };
   writeFileSync(join(runDir, STATE), JSON.stringify(state));
-  mark("launch: cage spawned");
+  mark(visible ? "launch: desktop window spawned" : "launch: cage spawned");
   const until = Date.now() + 120_000;
   for (;;) {
+    signal?.throwIfAborted();
+    if (spawnError) throw spawnError;
     try {
       const targets = await listTargets(port);
       if (targets.some((t) => t.type === "page" && t.url.includes("workbench"))) {
@@ -370,6 +400,14 @@ export async function stopVscode(runDir: string) {
 
 type Target_ = { id: string; type: string; url: string; webSocketDebuggerUrl: string };
 
+export async function waitForVscodeClose(port: number, signal: AbortSignal) {
+  while (!signal.aborted) {
+    const targets = await listTargets(port).catch(() => []);
+    if (!targets.some((t) => t.type === "page" && t.url.includes("workbench"))) return;
+    await sleep(400);
+  }
+}
+
 async function listTargets(port: number): Promise<Target_[]> {
   const res = await fetch(`http://127.0.0.1:${port}/json/list`);
   return (await res.json()) as Target_[];
@@ -390,6 +428,11 @@ class Cdp {
       if (d.error) p[1](new Error(JSON.stringify(d.error)));
       else p[0](d.result);
     };
+    ws.onclose = () => {
+      const error = new Error("VS Code closed the DevTools connection");
+      for (const [, reject] of this.pending.values()) reject(error);
+      this.pending.clear();
+    };
   }
   static async connect(url: string): Promise<Cdp> {
     const ws = new WebSocket(url);
@@ -400,6 +443,8 @@ class Cdp {
     return new Cdp(ws);
   }
   send<T = Record<string, unknown>>(method: string, params: object = {}): Promise<T> {
+    if (this.ws.readyState !== WebSocket.OPEN)
+      return Promise.reject(new Error("VS Code closed the DevTools connection"));
     return new Promise((resolve, reject) => {
       const id = ++this.id;
       this.pending.set(id, [resolve as (v: unknown) => void, reject]);
@@ -664,9 +709,9 @@ export class VscodeSession {
       const seen = new Set(); const tiers = [[], [], [], []];
       for (const el of doc.querySelectorAll('*')) {
         const ownText = el.matches('button, a, [role=button], summary') ? (el.innerText || '').trim() : own(el);
-        const aria = el.getAttribute('aria-label') || '';
-        if (!ownText && !aria) continue;
-        if (!(hit(ownText) || (!ownText && hit(aria)))) continue;
+        const label = el.getAttribute('aria-label') || '';
+        const placeholder = el.getAttribute('placeholder') || '';
+        if (!(hit(ownText) || exact(label) || hit(placeholder) || (!ownText && hit(label)))) continue;
         const target = el.closest(ACTIVE) || el;
         if (seen.has(target) || !visible(target)) continue;
         seen.add(target);
@@ -676,7 +721,12 @@ export class VscodeSession {
       const el = tiers.flat()[${spec.nth ?? 0}];
       if (!el) return undefined;
       el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-      const r = el.getBoundingClientRect();
+      let r = el.getBoundingClientRect();
+      const center = doc.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      if (!el.contains(center)) {
+        el.scrollIntoView({ block: 'center', inline: 'nearest' });
+        r = el.getBoundingClientRect();
+      }
       return { x: r.x + r.width / 2, y: r.y + r.height / 2, label: (el.innerText || own(el) || '').trim().slice(0, 40) };
     })()`);
   }
@@ -820,6 +870,13 @@ export class VscodeSession {
     );
     this.state.size = [width, height];
     await this.settle(600, 6000);
+  }
+
+  async useWindowSize() {
+    if (!this.state.size) return;
+    await this.page.send("Emulation.clearDeviceMetricsOverride");
+    delete this.state.size;
+    writeFileSync(join(this.runDir, STATE), JSON.stringify(this.state));
   }
 
   private async applySize([width, height]: [number, number]) {

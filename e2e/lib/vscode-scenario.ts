@@ -17,6 +17,7 @@ import {
   mark,
   restartSession,
   VscodeSession,
+  type VscodeLaunch,
   type VscodeStart,
   type VscodeState,
 } from "./vscode.ts";
@@ -157,17 +158,23 @@ export async function reloadVscode(r: VscodeResolved, runDir: string): Promise<V
 export async function reachVscode(
   r: VscodeResolved,
   runDir: string,
+  launch?: VscodeLaunch,
 ): Promise<{ session: VscodeSession; state: VscodeState }> {
   const cwd = join(runDir, "cwd");
   mkdirSync(cwd, { recursive: true });
   const ctx = setupContext(runDir, cwd);
   for (const setup of r.setup) await setup(ctx);
   mark("reach: fixture set up");
-  const state = await launchVscode(runDir, cwd, r.start);
+  const state = await launchVscode(runDir, cwd, r.start, launch);
   const session = await VscodeSession.attach(runDir);
-  if (r.size) await session.resize(r.size[0], r.size[1]);
-  mark("reach: sized");
-  await playVscode(session, r.steps);
-  mark("reach: steps played");
-  return { session, state };
+  try {
+    if (r.size) await session.resize(r.size[0], r.size[1]);
+    mark("reach: sized");
+    await playVscode(session, r.steps);
+    mark("reach: steps played");
+    return { session, state };
+  } catch (error) {
+    session.close();
+    throw error;
+  }
 }

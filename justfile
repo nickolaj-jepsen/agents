@@ -62,6 +62,16 @@ catalog:
 e2e *ARGS:
     npm run e2e -- {{ ARGS }}
 
+[doc('Replay a scenario and take over in your terminal or VS Code')]
+[group('dev')]
+e2e-live PLUGIN SCENARIO *OPTIONS:
+    node e2e/cli.ts live {{ quote(PLUGIN) }} {{ quote(SCENARIO) }} {{ OPTIONS }}
+
+[doc('Try the answer plugin in an interactive Claude terminal using a local replay')]
+[group('dev')]
+answer-demo FIXTURE="details":
+    node e2e/answer/live.ts {{ quote(FIXTURE) }}
+
 [doc('Open a canned answer session in Claude Desktop on Linux, or draft a prompt in live mode')]
 [group('dev')]
 claude-desktop-dev FIXTURE="recommended" MODE="seed":

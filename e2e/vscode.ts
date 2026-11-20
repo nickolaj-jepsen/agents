@@ -16,8 +16,9 @@ import {
   reloadVscode,
   resolveVscode,
   vscodeFiles,
+  type VscodeResolved,
 } from "./lib/vscode-scenario.ts";
-import { stopVscode, VscodeSession } from "./lib/vscode.ts";
+import { stopVscode, VscodeSession, waitForVscodeClose } from "./lib/vscode.ts";
 
 const stateDir = join(
   process.env.XDG_STATE_HOME ?? join(homedir(), ".local", "state"),
@@ -39,6 +40,7 @@ const die = (msg: string): never => {
 
 export const USAGE = `usage: node e2e/cli.ts vscode <verb>
   ls [plugin]                              scenarios
+  live <plugin> <scenario> [--size WxH]    replay in a visible VS Code window
   goto <plugin> <scenario> [--size WxH]    start VS Code on that screen and leave it there
   reload [scenario] [--size WxH]           play it (or another of the plugin's) again in the same
                                            window, in a new Claude tab: picks up an edited mod
@@ -73,6 +75,38 @@ async function stop() {
   return cur;
 }
 
+async function live(r: VscodeResolved) {
+  mkdirSync(stateDir, { recursive: true });
+  const runDir = mkdtempSync(join(stateDir, "vlive-"));
+  const controller = new AbortController();
+  const signals = ["SIGINT", "SIGTERM", "SIGHUP"] as const;
+  const interrupt = () => controller.abort();
+  for (const signal of signals) process.on(signal, interrupt);
+  try {
+    console.log(`Replaying ${r.plugin}/vscode/${r.name} in VS Code.`);
+    const { session, state } = await reachVscode(r, runDir, {
+      visible: true,
+      signal: controller.signal,
+    });
+    try {
+      await session.useWindowSize();
+    } finally {
+      session.close();
+    }
+    console.log("Ready. Close the VS Code window to end the replay.");
+    await waitForVscodeClose(state.port, controller.signal);
+  } catch (error) {
+    if (!controller.signal.aborted) throw error;
+  } finally {
+    try {
+      await stopVscode(runDir);
+    } finally {
+      for (const signal of signals) process.off(signal, interrupt);
+      if (!process.env.E2E_KEEP) rmSync(runDir, { recursive: true, force: true });
+    }
+  }
+}
+
 /** `--name value` out of `args`, which loses both. */
 function option(args: string[], name: string): string | undefined {
   const i = args.indexOf(name);
@@ -104,7 +138,8 @@ export async function main(argv: string[]) {
       }
       return;
     }
-    case "goto": {
+    case "goto":
+    case "live": {
       const size = option(args, "--size");
       const [plugin, scenario] = args;
       if (!plugin || !scenario) return die(USAGE);
@@ -115,13 +150,14 @@ export async function main(argv: string[]) {
         return die(
           `no scenario ${plugin} ${scenario}; has ${Object.keys(set.scenarios).join(", ")}`,
         );
-      await stop();
       const r = resolveVscode(set, scenario);
       if (size) {
         const m = /^(\d+)x(\d+)$/.exec(size);
-        if (!m) return die("--size is WIDTHxHEIGHT");
+        if (!m || !Number(m[1]) || !Number(m[2])) return die("--size is WIDTHxHEIGHT");
         r.size = [Number(m[1]), Number(m[2])];
       }
+      if (verb === "live") return live(r);
+      await stop();
       mkdirSync(stateDir, { recursive: true });
       const runDir = mkdtempSync(join(stateDir, "vrun-"));
       // Written first, so a failed start still leaves something for `stop` to clean.

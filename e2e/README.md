@@ -4,9 +4,10 @@ End-to-end tests for plugin screens, in the real Claude Code and the real pi.
 They are local only: `npm test`, the nix build and `just check` never run them.
 
 One scenario is one named screen of one plugin: the fixture, how the agent starts,
-and the steps that reach the screen. The same file feeds two things:
+and the steps that reach the screen. The same file drives these commands:
 
 - `npm run e2e` plays every scenario and compares its screen with a stored snapshot.
+- `just e2e-live` plays one scenario and hands you the controls in your terminal.
 - `goto` parks a live session on a scenario so you can keep driving it by hand.
 
 The engine is [tui-test](https://github.com/microsoft/tui-test) with its Ghostty backend, the
@@ -100,6 +101,24 @@ The scenarios of a run are played first, together, then the tests read what each
 - After a step the driver waits for the screen to stop changing (a quiet window, in
   `lib/session.ts`), unless a `wait` step follows, which says what to wait for.
 
+## Live mode
+
+```bash
+npm run e2e:cli -- ls answer
+just e2e-live answer open --harness claude
+just e2e-live answer form --harness vscode
+```
+
+Live mode plays the same steps as `goto` at the scenario’s starting size. Once
+the scenario is ready, the interactive view fits your terminal and follows window
+resizes. Click or use your keyboard to continue. Press `Ctrl+]` to exit and stop
+the terminal replay. Use `--size 96x30` to override the size used for the scripted steps.
+
+The VS Code variant opens a separate window on your desktop with the Claude Code
+extension and a localhost replay. The window follows normal resizing after the
+scripted steps. Close it to end the replay. Use `--size 900x700` to set the
+viewport in pixels during the scripted steps.
+
 ## goto
 
 ```bash
@@ -111,6 +130,16 @@ npm run e2e:cli -- snap                   # the scenario's snapshot, as it is no
 `npm run e2e:cli` alone lists the other verbs. One session lives at a time, and `goto` replaces it.
 Each verb prints the screen after it. The CLI finds `tui-test` through `TUI_TEST_BIN`, then `PATH`,
 then builds `.#tui-test` from this flake.
+
+## Try answer in your terminal
+
+Run `just answer-demo` from the checkout to start Claude Code with a canned question
+round. The replay runs on localhost and uses its own Claude config. Resize the
+terminal while it runs to see how the cards wrap.
+
+The demo opens on the first card. Click the controls or press `Alt+a` to focus
+the control bar. Run `just answer-demo long-body` to try a question with a long
+body. Fixture names come from `e2e/answer/fixtures/`.
 
 ## Claude Desktop
 

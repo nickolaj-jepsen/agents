@@ -7,6 +7,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { HarnessName } from "./lib/harness.ts";
+import { live } from "./lib/live.ts";
 import { loadSet, reach, resolveScenario, scenarioFiles, type Resolved } from "./lib/scenario.ts";
 import { EXTREME_SIZES, Session } from "./lib/session.ts";
 import { stopStub } from "./lib/stub.ts";
@@ -33,7 +34,9 @@ const die = (msg: string): never => {
 };
 
 const USAGE = `usage: node e2e/cli.ts <verb>
-  ls [plugin]                              scenarios, by plugin and agent
+  ls [plugin] [--harness claude|pi|vscode]   scenarios, by plugin and agent
+  live <plugin> <scenario> [--harness claude|pi|vscode] [--size WxH]
+                                           replay the scenario, then interact and resize
   goto <plugin> <scenario> [--harness claude|pi] [--size COLSxROWS]
                                            start the agent on that screen and leave it there
   cap                                      the screen as text
@@ -97,15 +100,25 @@ async function main() {
       process.exit(0);
     }
     case "ls": {
-      for (const f of scenarioFiles(args[0])) {
+      const harness = option(args, "--harness");
+      for (const f of scenarioFiles(args[0]).filter((f) => !harness || f.harness === harness)) {
         const set = await loadSet(f.file);
         for (const [name, s] of Object.entries(set.scenarios))
           console.log(`${f.plugin} ${name}  [${f.harness}]  ${s.about ?? ""}`);
       }
+      if (!harness || harness === "vscode") {
+        const { main: vscode } = await import("./vscode.ts");
+        await vscode(["ls", ...args]);
+      }
       return;
     }
-    case "goto": {
-      const harness = option(args, "--harness") as HarnessName | undefined;
+    case "goto":
+    case "live": {
+      const harness = option(args, "--harness");
+      if (verb === "live" && harness === "vscode") {
+        const { main: vscode } = await import("./vscode.ts");
+        return vscode(["live", ...args]);
+      }
       const size = option(args, "--size");
       const [plugin, scenario] = args;
       if (!plugin || !scenario) return die(USAGE);
@@ -121,13 +134,14 @@ async function main() {
           `${plugin} ${scenario} exists in ${owners.map((o) => o.harness).join(" and ")}: pass --harness`,
         );
       const owner = owners[0] as (typeof owners)[number];
-      await stop();
       const r = resolveScenario(await loadSet(owner.file), scenario);
       if (size) {
         const m = /^(\d+)x(\d+)$/.exec(size);
-        if (!m) return die("--size is COLSxROWS");
+        if (!m || !Number(m[1]) || !Number(m[2])) return die("--size is COLSxROWS");
         r.size = [Number(m[1]), Number(m[2])];
       }
+      if (verb === "live") return live(r);
+      await stop();
       mkdirSync(stateDir, { recursive: true });
       const runDir = mkdtempSync(join(stateDir, "run-"));
       const session = await reach(r, "daemon", SESSION, runDir);

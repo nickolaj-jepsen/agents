@@ -4,6 +4,11 @@
     "tsBuildInfoFile": "../node_modules/.cache/tsconfig.e2e.tsbuildinfo",
     "types": ["node"]
   },
-  "include": ["./**/*.ts", "../plugins/docfix/core/docfix.ts", "../kit/**/*.ts"],
+  "include": [
+    "./**/*.ts",
+    "../plugins/answer/core/forms.ts",
+    "../plugins/docfix/core/docfix.ts",
+    "../kit/**/*.ts"
+  ],
   "exclude": ["../kit/claude/ui.spec.ts", "./assets/**"]
 }
