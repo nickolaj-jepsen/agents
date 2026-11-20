@@ -1,34 +1,28 @@
-# questions/pi/review 160x45 @0,31 (160x12)
-╭─ Ask questions  2/2 answered ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ 1 Storage ✓   2 Retention ✓   3 Review                                                                                                                       │
-│                                                                                                                                                              │
-│ Review your answers                                                                                                                                          │
-│                                                                                                                                                              │
-│  Storage  Postgres beside the app                                                                                                                            │
-│  Retention  The last turn only                                                                                                                               │
-│                                                                                                                                                              │
-│▸ Send                                                                                                                                                        │
-│  Cancel                                                                                                                                                      │
-│                                                                                                                                                              │
-╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── enter send · ↑/↓ move · esc cancel ─╯
+# questions/pi/review 160x45 @0,30 (160x10)
+│    Q1✓    Q2✓  ❯ Review
+│  ❯ Answers  Review your answers
+│
+│    Storage ✓
+│    Postgres beside the app
+│    Retention ✓
+│    The last turn only
+│  ❯ Send
+│    Cancel
+│  esc cancel  ↑↓ move  enter send  tab/←→ tabs
 --- styles
-1x2 2x15 3x14 1x129
-1 4x13 . 4x15 . 5x10 .x118 1
-1 .x158 1
-1 2x20 .x138 1
-1 .x158 1
-1 .x2 4x7 .x2 3x23 .x124 1
-1 .x2 4x9 .x2 3x18 .x127 1
-1 .x158 1
-1 6x2 2x4 .x152 1
-1 .x2 4x6 .x150 1
-1 .x158 1
-1x122 7x36 1x2
+1 .x2 2 .x6 2 .x6 2
+1 .x2 3x30
+1
+1
+1 .x4 4x23
+1
+1 .x4 4x18
+1 .x2 2 . 5x4
+1
+1 .x2 2x3 .x9 2x2 .x7 2x5 .x7 2x6
 --- legend
-1 fg=#768186
-2 fg=#a798d7 bold
-3 fg=#9da5a9
-4 fg=#dee0e1
-5 fg=#a798d7 bg=#213b49 bold
-6 fg=#a798d7
-7 fg=#7e888e
+1 fg=#a08ed5
+2 fg=#a798d7
+3 fg=#a08ed5 bold
+4 fg=#7e888e
+5 fg=#a798d7 bold

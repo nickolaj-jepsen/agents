@@ -1,5 +1,8 @@
 /** The pi UI kit: what a plugin's panel is built from. See skills/agent-plugin-dev/references/style.md. */
 export { emptyState, gutterLine, note, notice, prose, section } from "./blocks.ts";
+export { cardChoice, cardHeading, cardRail, cardTone, digitChoice } from "./card.ts";
+export type { CardChoice } from "./card.ts";
+export { markdownLines } from "./markdown.ts";
 export { entries } from "./entries.ts";
 export type { Entry, EntriesOptions } from "./entries.ts";
 export { bandAct, bandRows, bandShell, chipRow } from "./band.ts";

@@ -692,6 +692,79 @@ const ACTIONS = ["skip", "note", "accept", "next", "send"];
 const asking = (drawn: Pick<Mounted, "find">, title: RegExp) =>
   drawn.find({ type: "Markdown", text: title });
 
+test("a digit answers the row at its place on screen, the write-in's place included", async ($, on) => {
+  const w = world(on);
+  await start($);
+  await ends($, GRILLING);
+  const drawn = await form($);
+  // The aliases take no cells: the card reads as it always has, and its letters still press it.
+  expect((await drawn.find({ key: "digits" }))?.props).toMatchObject({
+    width: 0,
+    height: 0,
+    overflow: "hidden",
+  });
+  expect((await drawn.find({ key: "e0" }))?.props.hotkey).toBe("a");
+  expect((await drawn.find({ key: "d0" }))?.props.hotkey).toBe("1");
+  expect((await drawn.find({ key: "d1" }))?.props.hotkey).toBe("2");
+  expect((await drawn.find({ key: "d2" }))?.props.hotkey).toBe("3");
+  // The second row's number picks what its letter does.
+  await pick(w, drawn, "d1");
+  expect((await drawn.find({ key: "e1" }))?.text).toContain("●");
+  await drawn.press({ key: "review" });
+  expect(await drawn.find({ type: "Text", text: /→ B: Default by kind\./ })).toBeDefined();
+  // Q2 has one row and the write-in: the write-in's own place opens it.
+  await drawn.press({ key: "q1" });
+  await pick(w, drawn, "d1");
+  expect(await field(drawn, "write")).toBeDefined();
+  await typeIn(drawn, "write", "no");
+  await drawn.press({ key: "review" });
+  await drawn.press({ key: "fill" });
+  await drawn.unmount();
+  expect(w.box).toBe("Q1: B\nQ2: no");
+});
+
+test("a pick list's rows keep their own digits, and its write-in takes the next", async ($, on) => {
+  const w = world(on);
+  await start($);
+  await ends($, MINE);
+  const drawn = await form($);
+  // `Build it` is already pressed by `1`, so it takes no second button on the same key.
+  expect((await drawn.find({ key: "e0" }))?.props.hotkey).toBe("1");
+  expect(await drawn.find({ key: "d0" })).toBeUndefined();
+  expect((await drawn.find({ key: "d1" }))?.props.hotkey).toBe("2");
+  await pick(w, drawn, "d1");
+  expect(await field(drawn, "write")).toBeDefined();
+  await drawn.unmount();
+});
+
+test("in the round editor a digit answers the shown card's row, as its letter does", async ($, on) => {
+  const w = world(on);
+  let messages: Array<{ role: "assistant"; text: string; toolUses: [] }> = [];
+  on("session.messages", () => ({ value: messages }));
+  on("session.surfaces", () => ({ value: ["terminal"] }));
+  on("ui.place", () => ({ value: { isPlaced: false, reason: "no surface in the test" } }));
+  await start($);
+  messages = [{ role: "assistant", text: GRILLING, toolUses: [] }];
+  await ends($, GRILLING);
+  const bar = await band($);
+  // The bar binds the digits in the same hidden box as the letters.
+  expect((await bar.find({ key: "round-key-1" }))?.props.hotkey).toBe("1");
+  expect((await bar.find({ key: "round-key-3" }))?.props.hotkey).toBe("3");
+  await bar.press({ key: "round-key-2" });
+  await bar.unmount();
+  const cards = await $.ui.mount({
+    plugin: "answer",
+    surface: "terminal",
+    component: "AssistantMessage",
+    requestId: "assistant-row",
+    props: { text: GRILLING, isFirstOfReply: true },
+  });
+  expect(await cards.find({ type: "Text", text: /Answers\s+1 of 3 answered/ })).toBeDefined();
+  await cards.press({ key: "review-fill" });
+  expect(w.box).toBe("Q1: B");
+  await cards.unmount();
+});
+
 // A graphical surface draws the form from the kit's patterns, not the terminal's rows: the offer
 // is a status band; the tabs and the way out a toolbar; each answer a one-line row led by a Button
 // of its letter, the chosen one opened in place with its note and the way on; the write-in a field

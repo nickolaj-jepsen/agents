@@ -9,12 +9,23 @@ import {
   step as stepForm,
   view as viewOf,
 } from "../core/forms";
-import { fitBody, GAPS, heightOf, keyRows, keysOf, KEY_CELLS, type Gaps } from "./terminal";
+import {
+  fitBody,
+  GAPS,
+  heightOf,
+  keyRows,
+  keysOf,
+  KEY_CELLS,
+  positionOf,
+  rowOf,
+  type Gaps,
+} from "./terminal";
 import {
   controlBar,
   questionCard,
   nativeRound,
   reviewTarget,
+  REVIEW_PAGE,
   ROUND_FOCUS,
   terminalReview,
   entryLetter,
@@ -827,10 +838,30 @@ async function pressReview($: EngineInterface, id: string, c: Current, key: stri
   if (key === "enter") return openReviewQuestion($, id, c.reviewCursor ?? 0);
 }
 
+/**
+ * What a digit presses: the row at that place on screen, counting from the top of what is drawn.
+ * On the review that is the page's row; on a question, an option or the write-in. A click on the
+ * row does the same, so a number answers wherever the letters do.
+ */
+async function pressRowAt($: EngineInterface, id: string, c: Current, at: number) {
+  const { view } = c;
+  if (view.isReview) {
+    const start = Math.floor(Math.max(0, c.reviewCursor ?? 0) / REVIEW_PAGE) * REVIEW_PAGE;
+    if (at >= REVIEW_PAGE || start + at >= view.count) return;
+    return openReviewQuestion($, id, start + at);
+  }
+  const entry = view.item?.entries[at];
+  if (!entry) return;
+  if (entry.kind === "write") return writeRound($, id, view.step, WRITE, "terminal");
+  return changeRound($, id, view.step, { do: "pick", entry: at });
+}
+
 async function pressRoundKey($: EngineInterface, id: string, key: string) {
   const c = await read($, current);
   if (c?.transcript !== id || c.writer) return;
   if (key === "r") return toggleReview($, id);
+  const at = rowOf(key);
+  if (at >= 0) return pressRowAt($, id, c, at);
   if (c.view.isReview) return pressReview($, id, c, key);
   if (key === "j" && c.view.step === c.view.count - 1) return toggleReview($, id, "terminal", true);
   if (key === "j" || key === "k")
@@ -1493,6 +1524,29 @@ export const register: Register = (on) => {
           </Button>
         );
         const option = entry;
+        /**
+         * A digit answers the row at its place on screen, as the row's own letter does: the
+         * write-in's place included. They are drawn in a box of no cells, so the card reads as it
+         * always has; a row without a letter (a pick list's, a yes) is already pressed by its
+         * digit, and takes no second one.
+         */
+        const aliases = (
+          <Box key="digits" width={0} height={0} overflow="hidden">
+            {item.entries.map((row, k) => {
+              const digit = positionOf(k);
+              if (!digit || hotkeyOf(row, k) === digit) return null;
+              return (
+                <Button
+                  key={`d${k}`}
+                  plain
+                  label={digit}
+                  hotkey={digit}
+                  onPress={() => choose($, row, k)}
+                />
+              );
+            })}
+          </Box>
+        );
         return shell(
           <Box flexDirection="column" rowGap={gap}>
             <Box flexDirection="column">
@@ -1519,6 +1573,7 @@ export const register: Register = (on) => {
                     (t) => move($, { do: "write", text: t }),
                   )
                 : item.entries.slice(writeIn).map((row) => option(row, writeIn))}
+              {aliases}
             </Box>
             {item.recommended ? (
               <Markdown key="recommended" text={`**Recommended:** ${item.recommended}`} />

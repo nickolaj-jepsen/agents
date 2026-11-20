@@ -1,37 +1,32 @@
-# questions/pi/cancelled 160x45 @0,29 (160x14)
-╭─ Storage ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│  Where should the session store live?                                                                                                                        │
-│                                                                                                                                                              │
-│▸ ○ 1  SQLite in the checkout                                                                                                                                 │
-│       One file, no service to run, and it can be deleted with the checkout.                                                                                  │
-│  ○ 2  Postgres beside the app                                                                                                                                │
-│       Shared between machines, and one more service to keep running.                                                                                         │
-│  ○ 3  The OS keyring                                                                                                                                         │
-│       Nothing to back up, where the host has one.                                                                                                            │
-│  ○ 4  Type something.                                                                                                                                        │
-│                                                                                                                                                              │
-│  ✎ Add a note (n).                                                                                                                                           │
-│                                                                                                                                                              │
-╰───────────────────────────────────────────────────────────────────────────────────────────────────────────── ⚠ Cancel without answering? enter yes · esc no ─╯
+# questions/pi/cancelled 160x45 @0,28 (160x12)
+│  ❯ Storage  Where should the session store live?
+│
+│  ❯ A ○ SQLite in the checkout
+│        One file, no service to run, and it can be deleted with the checkout.
+│    B ○ Postgres beside the app
+│        Shared between machines, and one more service to keep running.
+│    C ○ The OS keyring
+│        Nothing to back up, where the host has one.
+│    D ○ Type something.
+│    Note: Add a note
+│  Cancel without answering?
+│  enter yes  esc no
 --- styles
-1x2 2x9 1x149
-1 .x2 3x36 .x120 1
-1 .x158 1
-1 2x2 4x27 .x129 1
-1 .x7 5x69 .x82 1
-1 .x158 1
-1 .x7 5x62 .x89 1
-1 .x158 1
-1 .x7 5x43 .x108 1
-1 .x7 6x15 .x136 1
-1 .x158 1
-1 .x2 5x17 .x139 1
-1 .x158 1
-1x110 6x48 1x2
+1 .x2 2x47
+1
+1 .x2 3 . 1 . 4
+1 .x8 4x69
+1 .x4 4 . 4
+1 .x8 4x62
+1 .x4 4 . 4
+1 .x8 4x43
+1 .x4 4 . 4 . 4x15
+1 .x4 4x16
+1 .x2 5x25
+1 .x2 3x5 .x6 3x3
 --- legend
-1 fg=#768186
-2 fg=#a798d7 bold
-3 fg=#dee0e1
-4 bold
-5 fg=#9da5a9
-6 fg=#7e888e
+1 fg=#a08ed5
+2 fg=#a08ed5 bold
+3 fg=#a798d7
+4 fg=#7e888e
+5 fg=#cd9a22

@@ -116,7 +116,7 @@ export default scenarios({
       steps: [
         { press: "Alt+a" },
         { wait: "jk move" },
-        { press: "b" },
+        { press: "2" },
         { wait: "B ● Postgres" },
         { press: "j" },
         { wait: "❯ Q2  Add caching?" },

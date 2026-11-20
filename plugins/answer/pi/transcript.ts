@@ -19,8 +19,14 @@ import {
 } from "@earendil-works/pi-tui";
 import {
   bandAct,
+  cardChoice,
+  cardHeading,
+  cardRail,
+  cardTone as questionTone,
   clamp,
+  digitChoice,
   gutterLine,
+  markdownLines,
   note,
   paint,
   prose,
@@ -29,7 +35,6 @@ import {
   type BandRow,
 } from "../../../kit/pi/ui.ts";
 import { type Held, type View, view, viewOf } from "../core/forms.ts";
-import { markdownLines } from "./markdown.ts";
 
 export type Round = Held & { anchor?: string; sent?: boolean };
 export type RoundAction =
@@ -44,10 +49,6 @@ type Field = { kind: "write" | "note"; step: number; editor: Editor };
 type Item = NonNullable<View["item"]>;
 const REVIEW_PAGE = 5;
 export const firstReviewStop = (v: View) => (v.reply ? -1 : 0);
-
-// Separate the active stop from answered stops, using Pi's focus and ordinary border colors.
-const questionTone = (theme: Theme, active: boolean, answered: boolean, text: string) =>
-  theme.fg(active ? "borderAccent" : answered ? "border" : "text", text);
 
 const choiceLetters = (item: Item): string[] => {
   const unused = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].filter(
@@ -127,11 +128,10 @@ export class Transcript implements Component {
     ) => {
       if (out.length) out.push("", "");
       this.stops[step] = out.length;
-      const rail = state
-        ? questionTone(theme, state.here, state.answered, tokens.border.v)
-        : dim(tokens.border.v);
       const append = (row: Row) => {
-        const text = gutterLine(rail, row.text);
+        const text = state
+          ? cardRail(theme, state.here, state.answered, row.text)
+          : gutterLine(dim(tokens.border.v), row.text);
         if (row.editorWidth !== undefined && field) {
           if (this.input) this.input.height++;
           else
@@ -164,15 +164,7 @@ export class Transcript implements Component {
       if (!item) continue;
       const here = active && current.step === step;
       const answered = current.review[step]?.isAnswered ?? false;
-      const tone = (text: string) => questionTone(theme, here, answered, text);
-      const prefix = `${here ? tokens.glyph.pointer : " "} ${item.label}${indent}`;
-      const title = `${item.title}${answered ? ` ${tokens.glyph.done}` : ""}`;
-      // Its markdown set as the body's is, in the heading's bold and tone.
-      const heading = asRows(
-        markdownLines(title, inner - visibleWidth(prefix), { color: tone, bold: true }).map(
-          (line, i) => (i ? " ".repeat(visibleWidth(prefix)) : theme.bold(tone(prefix))) + line,
-        ),
-      );
+      const heading = asRows(cardHeading(theme, inner, item.title, item.label, here, answered));
       const rows: Row[] = [];
       if (item.body) {
         // The original assistant message stays above the cards, with all its Markdown intact.
@@ -185,17 +177,12 @@ export class Transcript implements Component {
       item.entries.forEach((entry, index) => {
         if (!active && entry.kind === "write" && !entry.isChosen) return;
         const key = letters[index];
-        const marker = entry.isChosen ? tokens.glyph.single.on : tokens.glyph.single.off;
-        const prefix = `${key || " "} ${marker} `;
         const editing =
           entry.kind === "write" ? editRows(step, "write", `${key || " "} › `) : undefined;
         if (editing) {
           rows.push(...editing);
           return;
         }
-        const pad = " ".repeat(visibleWidth(prefix));
-        const ink = (text: string) =>
-          entry.isChosen && entry.kind !== "write" ? theme.bold(tone(text)) : tone(text);
         const text =
           entry.kind === "write" && item.written
             ? item.written
@@ -205,41 +192,27 @@ export class Transcript implements Component {
         const action: RoundAction | undefined = active
           ? { kind: "pick", step, entry: index }
           : undefined;
-        const width = inner - visibleWidth(prefix);
-        // An option's markdown is set as the body's is; the chosen one's bold and tone are its
-        // default style, which the Markdown puts back after each code span. A write-in is the
-        // person's own words, kept as typed.
-        const lines =
-          entry.kind === "write"
-            ? clamp(text, width).map((line) => (entry.isChosen ? ink(line) : dim(line)))
-            : markdownLines(text, width, entry.isChosen ? { color: tone, bold: true } : undefined);
         rows.push(
           ...asRows(
-            lines.map(
-              (line, i) =>
-                (i
-                  ? pad
-                  : (here || entry.isChosen ? ink(key || " ") : dim(key || " ")) +
-                    ` ${entry.isChosen && entry.kind !== "write" ? ink(marker) : dim(marker)} `) +
-                line,
-            ),
+            cardChoice(theme, inner, {
+              key: key ?? "",
+              text,
+              detail: entry.detail,
+              chosen: entry.isChosen,
+              active: here,
+              answered,
+              literal: entry.kind === "write",
+            }),
             action,
           ),
         );
-        if (entry.detail)
-          rows.push(
-            ...asRows(
-              markdownLines(entry.detail, inner - pad.length, { color: dim }, 3).map(
-                (line) => pad + line,
-              ),
-              action,
-            ),
-          );
       });
       if (item.recommended)
         rows.push(
           { text: "" },
-          ...asRows(markdownLines(`Recommended: ${item.recommended}`, inner, { color: dim }, 3)),
+          ...asRows(
+            markdownLines(theme, `Recommended: ${item.recommended}`, inner, { color: dim }, 3),
+          ),
         );
       if (active && (answered || item.accepts.includes(","))) rows.push({ text: "" });
       if (active && item.accepts.includes(","))
@@ -513,10 +486,10 @@ export class AnswerGuide implements Component, Focusable {
     if (v.item && v.review[v.step]?.isAnswered && data === "x")
       return { kind: "clear", step: v.step };
     if (v.item?.accepts.includes(",") && data === "y") return { kind: "accept", step: v.step };
-    if (!v.item || !/^[a-z]$/i.test(data)) return undefined;
-    const item = v.item;
-    const entry = choiceLetters(item).indexOf(data.toUpperCase());
-    return entry < 0 ? undefined : { kind: "pick", step: v.step, entry };
+    if (!v.item) return undefined;
+    const digit = digitChoice(data);
+    const entry = digit >= 0 ? digit : choiceLetters(v.item).indexOf(data.toUpperCase());
+    return entry < 0 || !v.item.entries[entry] ? undefined : { kind: "pick", step: v.step, entry };
   }
 
   handleInput(data: string): void {

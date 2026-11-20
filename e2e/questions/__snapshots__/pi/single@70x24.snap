@@ -1,37 +1,33 @@
-# questions/pi/single 70x24 @0,8 (70x14)
-╭─ Storage ──────────────────────────────────────────────────────────╮
-│  Where should the session store live?                              │
-│                                                                    │
-│▸ ○ 1  SQLite in the checkout                                       │
-│       One file, no service to run, and it can be deleted with the  │
-│       checkout.                                                    │
-│  ○ 2  Postgres beside the app                                      │
-│       Shared between machines, and one more service to keep        │
-│       running.                                                     │
-│  ↓                                                                 │
-│                                                                    │
-│                                                                    │
-│                                                                    │
-╰──────────────────── ↑/↓ move · enter select · n note · esc cancel ─╯
+# questions/pi/single 70x24 @0,6 (70x13)
+│  ❯ Storage  Where should the session store live?
+│
+│  ❯ A ○ SQLite in the checkout
+│        One file, no service to run, and it can be deleted with the
+│        checkout.
+│    B ○ Postgres beside the app
+│        Shared between machines, and one more service to keep
+│        running.
+│    C ○ The OS keyring
+│        Nothing to back up, where the host has one.
+│    D ○ Type something.
+│    Note: Add a note
+│  esc cancel  A–D/1–4 pick  ↑↓ move  enter select  n note
 --- styles
-1x2 2x9 1x59
-1 .x2 3x36 .x30 1
-1 .x68 1
-1 2x2 4x27 .x39 1
-1 .x7 5x59 .x2 1
-1 .x7 5x9 .x52 1
-1 .x68 1
-1 .x7 5x53 .x8 1
-1 .x7 5x8 .x53 1
-1 6x3 .x65 1
-1 .x68 1
-1 .x68 1
-1 .x68 1
-1x21 6x47 1x2
+1 .x2 2x47
+1
+1 .x2 3 . 1 . 4
+1 .x8 4x59
+1 .x8 4x9
+1 .x4 4 . 4
+1 .x8 4x53
+1 .x8 4x8
+1 .x4 4 . 4
+1 .x8 4x43
+1 .x4 4 . 4 . 4x15
+1 .x4 4x16
+1 .x2 3x3 .x9 3x7 .x7 3x2 .x7 3x5 .x9 3
 --- legend
-1 fg=#768186
-2 fg=#a798d7 bold
-3 fg=#dee0e1
-4 bold
-5 fg=#9da5a9
-6 fg=#7e888e
+1 fg=#a08ed5
+2 fg=#a08ed5 bold
+3 fg=#a798d7
+4 fg=#7e888e

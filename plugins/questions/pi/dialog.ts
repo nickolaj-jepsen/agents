@@ -1,19 +1,28 @@
-// Keep geometry independent of focus so option rows don't jump under the pointer.
-import { getMarkdownTheme, type Theme } from "@earendil-works/pi-coding-agent";
+import type { Theme } from "@earendil-works/pi-coding-agent";
 import {
   type Component,
   type Focusable,
   Input,
   Key,
-  Markdown,
   matchesKey,
   type TUI,
   type TuiMouseEvent,
   type TuiMouseEventResult,
   truncateToWidth,
   visibleWidth,
-  wrapTextWithAnsi,
 } from "@earendil-works/pi-tui";
+import {
+  cardChoice,
+  cardHeading,
+  cardRail,
+  chipRow,
+  clamp,
+  digitChoice,
+  markdownLines,
+  paint,
+  tokens,
+  widthCap,
+} from "../../../kit/pi/ui.ts";
 import {
   type Question,
   type QuestionsResult,
@@ -21,68 +30,11 @@ import {
   type QuestionAnswer,
 } from "./types.ts";
 
-/** Below this the frame cannot lay out a question at all; above, it takes the width it is given. */
 const MIN_WIDTH = 28;
-/** Below this the preview sits under the options instead of beside them. */
-const SIDE_BY_SIDE_WIDTH = 88;
-/** Columns between the answer column and the preview box when they sit beside each other. */
-const COLUMN_GAP = 2;
-/**
- * Rows kept for the transcript and footer above and below the frame. The
- * budget is a share of the terminal rather than a constant, so a tall terminal
- * shows more of the question instead of more empty space.
- */
 const RESERVED_ROWS = 10;
-const MAX_BUDGET = 24;
-/**
- * Ceiling on the preview box's rows, borders included. A preview is a glance at
- * an option, not a document to read; the terminal's own budgets are applied on
- * top, so this only bites on a very tall window.
- */
-const MAX_BOX_ROWS_SIDE = 20;
-const MAX_BOX_ROWS_STACKED = 15;
-/** Narrowest box worth drawing: top border, one content row, bottom border. */
-const MIN_BOX_ROWS = 3;
-/** Floor for the box's content area, so a two-word preview is not a sliver. */
-const BOX_MIN_CONTENT_WIDTH = 40;
-/** One column of padding inside each border column. */
-const BOX_PADDING = 1;
-/** Two border columns plus the padding inside each of them. */
-const BOX_CHROME = 2 + 2 * BOX_PADDING;
-/** Shown in the box when the highlighted option carries no preview of its own. */
-const NO_PREVIEW_TEXT = "No preview available";
-
-/** What the frame gives up when the whole of it does not fit. */
-interface Attempt {
-  preview: boolean;
-  window: boolean;
-  /** Which rows explain themselves: all of them, or none. */
-  descriptions: "all" | "none";
-  /** Lines a description is clipped to, with an ellipsis, when even one will not fit. */
-  clip?: number;
-  /** Lines the question itself is capped to, to leave the answers their room. */
-  questionLines?: number;
-}
-
-/** Where the answer text and the preview sit in this frame. */
-interface Layout {
-  /** The frame's inside width. */
-  inner: number;
-  /** Width the answer text wraps to: the left column when a preview is beside it. */
-  textWidth: number;
-  /** The preview column, when it sits beside the options. */
-  side?: number;
-  /** The preview column, when it sits under the options. */
-  under?: number;
-  /** The markdown to preview, when the highlighted row has one. */
-  markdown?: string;
-  /**
-   * Rows the box may use in this frame, borders included. Fixed per question, so
-   * hovering from an option with a preview to one without cannot resize the
-   * frame or move the rows above it.
-   */
-  paneRows: number;
-}
+const MAX_ROWS = 24;
+const RAIL = 1 + tokens.gutter;
+const GAP = " ".repeat(tokens.gutter);
 
 type Item =
   | { kind: "option"; index: number }
@@ -171,19 +123,10 @@ export class QuestionsDialog implements Component, Focusable {
   private previewOffset = 0;
   private previewMax = 0;
   private previewFor: number | undefined;
-  /**
-   * Tallest box this question can ask for at a given content width, measured
-   * once per frame: it is the same for every layout attempt, and measuring it
-   * renders every option's markdown.
-   */
-  private tallestBox: { key: string; rows: number } | undefined;
-  /** Where this frame drew the preview, in body rows, for the wheel to hit-test. */
   private previewCells: { top: number; bottom: number; left: number } | undefined;
   private closed = false;
   private isFocused = false;
   private hits = new Map<number, { item: Item; to: number }>();
-  /** Rows the last frame drew, borders included. */
-  private renderedRows = 0;
   private tabCells: { start: number; end: number; tab: number }[] = [];
   private tabRow = -1;
 
@@ -216,7 +159,7 @@ export class QuestionsDialog implements Component, Focusable {
       : -1;
     this.row = first?.picked[0] ?? Math.max(0, typed);
     this.input = new Input({ prompt: "", placeholder: "Your answer" });
-    this.noteInput = new Input({ prompt: "✎ ", placeholder: "Your note" });
+    this.noteInput = new Input({ prompt: "", placeholder: "Your note" });
   }
 
   /** Inline rather than an overlay: the transcript stays readable behind it. */
@@ -272,14 +215,7 @@ export class QuestionsDialog implements Component, Focusable {
     if (this.editing) return;
     const items = this.items();
     if (items.length === 0) return;
-    // The note row is not a target: it is reached with `n` alone, so an arrow
-    // key never lands on a row whose only action is opening a field.
-    let next = this.row;
-    for (let attempt = 0; attempt < items.length; attempt += 1) {
-      next = (((next + step) % items.length) + items.length) % items.length;
-      if (items[next]!.kind !== "note") break;
-    }
-    this.row = next;
+    this.row = (this.row + (step % items.length) + items.length) % items.length;
     this.warning = undefined;
     this.tui.requestRender();
   }
@@ -287,6 +223,8 @@ export class QuestionsDialog implements Component, Focusable {
   private goTab(tab: number): void {
     this.keepDraft();
     this.questionOffset = 0;
+    this.previewOffset = 0;
+    this.previewFor = undefined;
     this.tab = Math.max(0, Math.min(tab, this.tabs.length - 1));
     // The review tab exists to be sent, so enter offers to send it rather than
     // to walk back into a question the user has already answered.
@@ -322,22 +260,15 @@ export class QuestionsDialog implements Component, Focusable {
     this.tui.requestRender();
   }
 
-  /**
-   * Scroll whatever the frame had to clip.
-   *
-   * One key for both regions, because in a frame this wide the question
-   * practically always fits and the preview practically never does: the pane
-   * wins when it can move, and the question text is the only thing left.
-   */
-  private scrollClipped(step: number): void {
-    if (this.previewMax > 0) this.scrollPreview(step);
-    else this.scrollQuestion(step);
-  }
-
   private startEditing(field: "answer" | "note"): void {
     const index = this.questionIndex;
     if (index === undefined) return;
+    if (this.editing === field) return;
+    this.keepDraft();
     this.editing = field;
+    this.row = this.items().findIndex(
+      (item) => item.kind === (field === "note" ? "note" : "custom"),
+    );
     this.warning = undefined;
     this.input.focused = this.isFocused && field === "answer";
     this.noteInput.focused = this.isFocused && field === "note";
@@ -350,7 +281,15 @@ export class QuestionsDialog implements Component, Focusable {
     const index = this.questionIndex;
     if (this.editing === undefined || index === undefined) return;
     if (this.editing === "note") this.notes[index] = this.noteInput.getValue();
-    else this.drafts[index]!.text = this.input.getValue();
+    else this.saveWriteIn(index, this.input.getValue());
+  }
+
+  private saveWriteIn(index: number, text: string): void {
+    const draft = this.drafts[index]!;
+    this.drafts[index] = {
+      picked: !text.trim() || this.questions[index]!.multiSelect ? draft.picked : [],
+      text,
+    };
   }
 
   private stopEditing(): void {
@@ -390,9 +329,7 @@ export class QuestionsDialog implements Component, Focusable {
     // replacing them, and does not carry the user off a tab whose answer the
     // Done row still has to confirm.
     const keepPicks = this.question?.multiSelect === true;
-    this.drafts[index] = keepPicks
-      ? { picked: this.drafts[index]!.picked, text }
-      : { picked: [], text };
+    this.saveWriteIn(index, text);
     this.editing = undefined;
     this.input.focused = false;
     if (keepPicks) {
@@ -479,14 +416,14 @@ export class QuestionsDialog implements Component, Focusable {
   /** Esc asks once: an accidental key must not throw away the answers already given. */
   private askCancel(): void {
     this.confirming = true;
-    this.warning = "Cancel without answering? enter yes · esc no";
+    this.warning = "Cancel without answering?";
     this.tui.requestRender();
   }
 
   private finish(result: QuestionsResult): void {
     if (this.closed) return;
     this.closed = true;
-    this.input.focused = false;
+    this.focused = false;
     this.done(result);
   }
 
@@ -504,8 +441,8 @@ export class QuestionsDialog implements Component, Focusable {
         this.startEditing("note");
         return;
       case "done":
-        if ((this.drafts[this.questionIndex ?? 0]?.picked.length ?? 0) === 0) {
-          this.warning = "Select at least one option";
+        if (!isAnswered(this.drafts[this.questionIndex ?? 0]!)) {
+          this.warning = "Pick an option or write an answer first";
           this.tui.requestRender();
           return;
         }
@@ -567,7 +504,13 @@ export class QuestionsDialog implements Component, Focusable {
     // Shift+arrows, not the page keys: fullscreen's own viewport listener
     // claims PageUp/PageDown before a focused inline component sees them.
     if (matchesKey(data, Key.shift("up")) || matchesKey(data, Key.shift("down"))) {
-      this.scrollClipped(matchesKey(data, Key.shift("down")) ? 3 : -3);
+      const step = matchesKey(data, Key.shift("down")) ? 3 : -3;
+      if (this.previewMax > 0) this.scrollPreview(step);
+      else this.scrollQuestion(step);
+      return;
+    }
+    if (matchesKey(data, Key.shift("left")) || matchesKey(data, Key.shift("right"))) {
+      this.scrollQuestion(matchesKey(data, Key.shift("right")) ? 3 : -3);
       return;
     }
     if (data === "n" && this.question) {
@@ -585,12 +528,10 @@ export class QuestionsDialog implements Component, Focusable {
       if (item?.kind === "option" && question?.multiSelect) this.choose(item.index);
       return;
     }
-    // A digit picks the row it numbers, the way the row prints it. The row for
-    // an answer the options do not cover is numbered last, with the rest.
-    const digit = /^[1-9]$/.test(data) ? Number(data) - 1 : -1;
-    const item = digit >= 0 ? this.items()[digit] : undefined;
+    const slot = /^[a-e]$/i.test(data) ? data.toUpperCase().charCodeAt(0) - 65 : digitChoice(data);
+    const item = this.question && slot >= 0 ? this.items()[slot] : undefined;
     if (item && (item.kind === "option" || item.kind === "custom")) {
-      this.row = digit;
+      this.row = slot;
       this.activate(item);
     }
   }
@@ -622,9 +563,9 @@ export class QuestionsDialog implements Component, Focusable {
   }
 
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
-    // Zero-based from the frame's top border, so a body row is `event.y - 1`.
-    const row = event.y - 1;
-    const x = event.x - 1;
+    const row = event.y;
+    const x = event.x - RAIL;
+    if (x < 0 || this.confirming) return undefined;
     if (event.type === "wheel" && event.wheelDelta) {
       const step = event.wheelDelta < 0 ? -1 : 1;
       const pane = this.previewCells;
@@ -654,14 +595,10 @@ export class QuestionsDialog implements Component, Focusable {
       return undefined;
     }
     const item = this.itemAt(x, row);
-    if (!item) {
-      // Inside the frame but on no row: the dialog still owns the press, so it
-      // cannot fall through to the transcript's selection underneath.
-      return event.y >= 0 && event.y < this.renderedRows ? { handled: true } : undefined;
-    }
+    if (!item) return undefined;
     const index = this.items().findIndex((candidate) => sameItem(candidate, item));
     if (event.type === "move") {
-      if (index >= 0 && index !== this.row) {
+      if (!this.editing && index >= 0 && index !== this.row) {
         this.row = index;
         this.warning = undefined;
         this.tui.requestRender();
@@ -686,7 +623,12 @@ export class QuestionsDialog implements Component, Focusable {
         this.startEditing(field);
         return { handled: true };
       }
-      return this.editingInput.handleMouse?.({ ...event, y: 0 }) ?? { handled: true };
+      const prefix = field === "note" ? 8 : 6;
+      return (
+        this.editingInput.handleMouse?.({ ...event, x: Math.max(0, x - prefix), y: 0 }) ?? {
+          handled: true,
+        }
+      );
     }
     if (index >= 0) this.row = index;
     if (event.type === "press") {
@@ -701,522 +643,265 @@ export class QuestionsDialog implements Component, Focusable {
   }
 
   render(width: number): string[] {
-    const w = Math.max(MIN_WIDTH, width);
-    this.hits = new Map();
+    this.hits.clear();
     this.tabCells = [];
     this.tabRow = -1;
-    this.tallestBox = undefined;
-    const budget = Math.max(8, Math.min(this.tui.terminal.rows - RESERVED_ROWS, MAX_BUDGET));
-
-    // What to give up, cheapest loss first: the preview, then the rows above and
-    // below the cursor (still reachable by moving it), then the descriptions.
-    // Which row is highlighted never enters into it: the geometry has to be the
-    // same whichever row the pointer is on, or the frame jumps under it.
-    const attempts: Attempt[] = [
-      { preview: true, window: false, descriptions: "all" },
-      { preview: true, window: true, descriptions: "all" },
-      { preview: false, window: false, descriptions: "all" },
-      { preview: false, window: true, descriptions: "all" },
-      { preview: false, window: true, descriptions: "all", clip: 2, questionLines: 4 },
-      { preview: false, window: true, descriptions: "none", questionLines: 4 },
-    ];
-    let rows: BodyRow[] = [];
-    for (const attempt of attempts) {
-      rows = this.buildBody(w, budget, attempt);
-      if (rows.length + 2 <= budget) break;
+    this.previewCells = undefined;
+    this.previewMax = 0;
+    this.questionRows = { start: 0, end: 0 };
+    this.questionMaxOffset = 0;
+    if (width < MIN_WIDTH) return [clamp("Question: widen terminal; esc cancel", width)[0] ?? ""];
+    const { theme, question } = this;
+    const hasPreview = question?.options.some((option) => option.preview !== undefined) ?? false;
+    const split = hasPreview && width >= tokens.splitFrom;
+    const inner = Math.min(
+      split ? Infinity : tokens.prose,
+      widthCap(split ? "split" : "reading", width - 1) - RAIL,
+    );
+    const choiceWidth = split ? Math.floor((inner - GAP.length) * tokens.splitRatio) : inner;
+    const budget = Math.max(10, Math.min(MAX_ROWS, this.tui.terminal.rows - RESERVED_ROWS));
+    const rows: BodyRow[] = [];
+    const answered =
+      this.questionIndex !== undefined && isAnswered(this.drafts[this.questionIndex]!);
+    const dim = (line: string) => paint(theme, "dim", line);
+    const title = question
+      ? cardHeading(theme, inner, question.question, question.header, true, answered)
+      : cardHeading(theme, inner, "Review your answers", "Answers", true, false);
+    const titleRoom = Math.max(2, Math.floor(budget / 4));
+    this.questionMaxOffset = Math.max(0, title.length - titleRoom);
+    this.questionOffset = Math.min(this.questionOffset, this.questionMaxOffset);
+    const shown = title.slice(this.questionOffset, this.questionOffset + titleRoom);
+    if (this.questionMaxOffset > 0) {
+      const index = this.questionOffset < this.questionMaxOffset ? shown.length - 1 : 0;
+      shown[index] = truncateToWidth(shown[index]!, inner - 2, "") + dim(" …");
     }
 
-    const inner = w - 2;
-    const border = (text: string) => this.theme.fg("borderMuted", text);
-    const cell = (text: string) =>
-      border("│") + truncateToWidth(text, inner, "…", true) + border("│");
-    const title = this.title();
-    const hint = truncateToWidth(` ${this.hint()} `, Math.max(0, inner - 1), "…");
-    const topFill = Math.max(0, inner - 1 - visibleWidth(title));
-    const bottomFill = Math.max(0, inner - 1 - visibleWidth(hint));
-    const lines = [
-      border("╭─") + title + border("─".repeat(topFill)) + border("╮"),
-      ...rows.map((row) => cell(row.text)),
-      border(`╰${"─".repeat(bottomFill)}`) + this.theme.fg("dim", hint) + border("─╯"),
-    ];
+    if (this.tabs.length > 1) {
+      const chips = this.tabs.map((tab, index) => ({
+        key: index === this.tab ? tokens.glyph.pointer : " ",
+        label:
+          tab.kind === "review"
+            ? "Review"
+            : `Q${index + 1}${isAnswered(this.drafts[index]!) ? tokens.glyph.done : ""}`,
+        act: index,
+      }));
+      const strip = chipRow(theme, chips);
+      if (visibleWidth(strip.text) <= inner) {
+        this.tabRow = rows.length;
+        this.tabCells = (strip.cells ?? []).map(({ start, end, act }) => ({
+          start,
+          end,
+          tab: act,
+        }));
+        rows.push({ text: strip.text });
+      }
+    }
+    this.questionRows = { start: rows.length, end: rows.length + shown.length };
+    rows.push(...shown.map((text) => ({ text })), { text: "" });
+
+    const stackedRows = hasPreview && !split ? Math.max(2, Math.min(7, Math.floor(budget / 3))) : 0;
+    const room = Math.max(2, budget - rows.length - (this.warning ? 2 : 1));
+    const listRoom = Math.max(2, room - stackedRows);
+    const items = this.items();
+    const blocks = items.map((item, i) => this.itemBlock(item, i, choiceWidth, Infinity));
+    const total = blocks.reduce((n, block) => n + block.length, 0);
+    const compact =
+      total > listRoom ? items.map((item, i) => this.itemBlock(item, i, choiceWidth, 2)) : blocks;
+    let list = this.window(compact, listRoom);
+    if (hasPreview) {
+      const left = split ? choiceWidth + GAP.length : 0;
+      const preview = this.preview(inner - left, split ? room : stackedRows);
+      const top = rows.length + (split ? 0 : list.length);
+      this.previewCells = { top, bottom: top + preview.length, left };
+      if (split) {
+        list = Array.from({ length: Math.max(list.length, preview.length) }, (_, i) => {
+          const row = list[i];
+          return {
+            ...row,
+            text: column(row?.text ?? "", choiceWidth) + GAP + (preview[i] ?? ""),
+          };
+        });
+      } else {
+        list.push(...preview.map((text) => ({ text })));
+      }
+    }
+    rows.push(...list);
+    if (this.warning) rows.push({ text: paint(theme, "warning", this.warning) });
+    rows.push({ text: this.hints(inner) });
     rows.forEach((row, index) => {
       if (row.hit) this.hits.set(index, { item: row.hit, to: row.hitTo ?? inner });
     });
-    if (rows.length + 2 > budget) {
-      // Nothing left to give up: one row taller than the whole frame, as a
-      // single option whose description is longer than the terminal.
-      const keep = Math.max(1, budget - 2);
-      lines.splice(1 + keep, lines.length - 2 - keep);
-    }
-    this.renderedRows = lines.length;
-    return lines;
-  }
-
-  private title(): string {
-    const answered = this.drafts.filter(isAnswered).length;
-    const label =
-      this.tabs.length > 1 ? "Ask questions" : (this.questions[0]?.header ?? "Ask questions");
-    const progress = this.tabs.length > 1 ? ` ${answered}/${this.questions.length} answered ` : "";
-    return (
-      this.theme.fg("accent", this.theme.bold(` ${label} `)) + this.theme.fg("muted", progress)
+    return rows.map(({ text }) =>
+      cardRail(theme, true, answered, truncateToWidth(text, inner, "…")),
     );
   }
 
-  private hint(): string {
-    if (this.editing !== undefined) return "enter save · esc back";
-    if (this.question) {
-      const parts = ["↑/↓ move", this.question.multiSelect ? "space toggle" : "enter select"];
-      if (this.question.multiSelect) parts.push("enter done");
-      if (this.tabs.length > 1) parts.push("tab questions");
-      parts.push("n note");
-      if (this.previewMax > 0) parts.push("shift↓ preview");
-      else if (this.questionMaxOffset > 0) parts.push("shift↓ text");
-      parts.push("esc cancel");
-      return this.warning ? `⚠ ${this.warning}` : parts.join(" · ");
+  private hints(width: number): string {
+    const hint = (key: string, label: string) => ({ key, label, act: 0 });
+    const choices = this.question ? this.question.options.length + 1 : 0;
+    const controls = this.confirming
+      ? [hint("enter", "yes"), hint("esc", "no")]
+      : this.editing
+        ? [hint("enter", "save"), hint("esc", "back")]
+        : [
+            hint("esc", "cancel"),
+            ...(choices ? [hint(`A–${this.letter(choices - 1)}/1–${choices}`, "pick")] : []),
+            hint("↑↓", "move"),
+            ...(this.previewMax > 0 ? [hint("⇧↑↓", "preview")] : []),
+            ...(this.questionMaxOffset > 0 ? [hint("⇧←→", "question")] : []),
+            hint("enter", this.items()[this.row]?.kind === "send" ? "send" : "select"),
+            ...(this.question?.multiSelect ? [hint("space", "toggle")] : []),
+            ...(this.tabs.length > 1 ? [hint("tab/←→", "tabs")] : []),
+            ...(choices ? [hint("n", "note")] : []),
+          ];
+    // Drop whole hints rather than cutting a key in half.
+    const first = chipRow(this.theme, controls);
+    if (visibleWidth(first.text) <= width) return first.text;
+    const kept: typeof controls = [];
+    for (const control of controls) {
+      if (visibleWidth(chipRow(this.theme, [...kept, control]).text) <= width) kept.push(control);
     }
-    return this.warning ? `⚠ ${this.warning}` : "enter send · ↑/↓ move · esc cancel";
+    return chipRow(this.theme, kept).text;
   }
 
-  /**
-   * Where the answer text and the preview go in this frame.
-   *
-   * The preview takes a column only when the frame is wide enough for the
-   * options to stay readable beside it; otherwise it goes under them, where it
-   * costs rows instead of columns. Once a question has a preview anywhere, the
-   * pane is on screen for every row of it — a pane that vanished under one row
-   * and reappeared under the next would reflow the list on every mousemove.
-   */
-  private layout(inner: number, preview: boolean, spare: number): Layout {
-    const options = this.question?.options ?? [];
-    const markdown = preview ? options[this.row]?.preview : undefined;
-    const anyPreview = preview && options.some((option) => option.preview !== undefined);
-    if (!anyPreview) return { inner, textWidth: inner, paneRows: 0 };
-    // Scrolling belongs to the row it was scrolled on, not to the pane.
-    const showing = markdown === undefined ? -1 : this.row;
-    if (showing !== this.previewFor) {
-      this.previewFor = showing;
+  private letter(i: number): string {
+    return String.fromCharCode(65 + i);
+  }
+
+  private itemBlock(item: Item, i: number, width: number, detailLines: number): BodyRow[] {
+    const { theme, question } = this;
+    const dim = (line: string) => paint(theme, "dim", line);
+    const at = i === this.row;
+    const pointer = at ? paint(theme, "accent", tokens.glyph.pointer) + " " : GAP;
+    const draft = this.drafts[this.questionIndex ?? 0]!;
+    const action = (text: string) =>
+      target(pointer + (at ? theme.bold(paint(theme, "accent", text)) : text), item);
+    const lines = (text: string, max: number) => clamp(text, width - GAP.length, { max });
+    const prefix = (line: string, index: number) => (index ? GAP : pointer) + line;
+    const choice = (key: string, text: string, chosen: boolean, literal = false, detail?: string) =>
+      cardChoice(theme, width - GAP.length, {
+        key,
+        text,
+        chosen,
+        active: at,
+        literal,
+        multiple: question?.multiSelect,
+        detail,
+        detailLines,
+      }).map((line, index) => target(prefix(line, index), item));
+    switch (item.kind) {
+      case "option": {
+        const option = question!.options[item.index]!;
+        return choice(
+          this.letter(item.index),
+          option.label,
+          draft.picked.includes(item.index),
+          false,
+          option.description,
+        );
+      }
+      case "custom": {
+        if (this.editing === "answer") {
+          const field = this.input.render(width - 6)[0] ?? "";
+          return [{ ...target(pointer + `${this.letter(i)} › ${field}`, item), hitTo: width }];
+        }
+        return choice(
+          this.letter(i),
+          draft.text.trim() || TYPE_SOMETHING,
+          Boolean(draft.text.trim()),
+          true,
+        );
+      }
+      case "note": {
+        if (this.editing === "note") {
+          const field = this.noteInput.render(width - 8)[0] ?? "";
+          return [{ ...target(pointer + dim("Note: ") + field, item), hitTo: width }];
+        }
+        const note = this.notes[this.questionIndex ?? 0]?.trim();
+        return lines(note ? `Note: ${note}` : "Note: Add a note", 3).map((line, index) =>
+          target(prefix(dim(line), index), item),
+        );
+      }
+      case "done":
+        return [action("Done")];
+      case "send":
+        return [action("Send")];
+      case "cancel":
+        return [action("Cancel")];
+      case "review": {
+        const values = this.valuesOf(item.question);
+        const header = this.questions[item.question]!.header;
+        const note = this.notes[item.question]?.trim();
+        return [
+          ...lines(header + (values.length ? ` ${tokens.glyph.done}` : ""), 1).map((line) =>
+            action(line),
+          ),
+          ...lines(values.join(", ") || "Unanswered", 2).map((line) =>
+            target(GAP + dim(line), item),
+          ),
+          ...(note ? lines(`Note: ${note}`, 2).map((line) => target(GAP + dim(line), item)) : []),
+        ];
+      }
+    }
+  }
+
+  /** Keep choices whole when possible and leave the focused block in view. */
+  private window(blocks: BodyRow[][], room: number): BodyRow[] {
+    const all = blocks.flat();
+    if (all.length <= room) return all;
+    const limit = Math.max(1, room - 1);
+    // Choose pages independent of the pointer so a press cannot move its click target.
+    let start = 0;
+    let end = 0;
+    let used = 0;
+    while (end <= this.row) {
+      start = end;
+      used = blocks[end++]!.length;
+      while (end < blocks.length && used + blocks[end]!.length <= limit) {
+        used += blocks[end++]!.length;
+      }
+    }
+    const rows = blocks.slice(start, end).flat().slice(0, limit);
+    if (used > limit) {
+      const last = rows.at(-1)!;
+      rows[rows.length - 1] = { ...last, text: last.text + paint(this.theme, "dim", " …") };
+    }
+    while (rows.length < limit) rows.push({ text: "" });
+    const above = start ? `↑ ${start} above` : "";
+    const below = end < blocks.length ? `↓ ${blocks.length - end} below` : "";
+    rows.push({ text: paint(this.theme, "dim", [above, below].filter(Boolean).join(GAP) || "…") });
+    return rows;
+  }
+
+  private preview(width: number, room: number): string[] {
+    const option = this.question?.options[this.row];
+    if (this.previewFor !== this.row) {
+      this.previewFor = this.row;
       this.previewOffset = 0;
     }
-    const sideBySide = inner >= SIDE_BY_SIDE_WIDTH;
-    const column = sideBySide
-      ? Math.max(BOX_CHROME + 8, inner - COLUMN_GAP - Math.floor((inner - COLUMN_GAP) * 0.52))
-      : Math.max(BOX_CHROME + 8, inner - 4);
-    // The pane is as tall as the tallest box it may have to draw, capped by the
-    // layout's ceiling and by the rows the frame has left, so hovering never
-    // changes the pane's height partway through a question.
-    const contentWidth = Math.max(8, column - BOX_CHROME);
-    const key = `${this.tab}:${contentWidth}`;
-    if (this.tallestBox?.key !== key) {
-      const rows = options.reduce(
-        (max, option) => Math.max(max, this.previewContent(option.preview, contentWidth).length),
-        0,
-      );
-      this.tallestBox = { key, rows };
-    }
-    const tallest = this.tallestBox.rows;
-    const ceiling = sideBySide ? MAX_BOX_ROWS_SIDE : MAX_BOX_ROWS_STACKED;
-    // The pane's appetite: as tall as its tallest preview asks for, within the
-    // layout's ceiling. Side by side it also has to fit the rows left in the
-    // frame; under the options the list is measured first and the box takes
-    // what is left over (see `buildBody`).
-    const room = sideBySide ? spare : spare - 1 - MIN_BOX_ROWS;
-    const paneRows = Math.max(MIN_BOX_ROWS, Math.min(ceiling, room, tallest + 2));
-    if (sideBySide) {
-      const left = Math.floor((inner - COLUMN_GAP) * 0.52);
-      return {
-        inner,
-        textWidth: left,
-        side: Math.max(BOX_CHROME + 8, inner - COLUMN_GAP - left),
-        paneRows,
-        ...(markdown === undefined ? {} : { markdown }),
-      };
-    }
-    return {
-      inner,
-      textWidth: inner,
-      under: Math.max(BOX_CHROME + 8, inner - 4),
-      paneRows,
-      ...(markdown === undefined ? {} : { markdown }),
-    };
-  }
-
-  private buildBody(w: number, budget: number, attempt: Attempt): BodyRow[] {
-    const inner = w - 2;
-    const rows: BodyRow[] = [];
-    // Each attempt starts from no pane: an attempt that draws one must not leave
-    // its scroll state behind for the attempt that fits without it.
-    this.previewCells = undefined;
-    this.previewMax = 0;
-    const tabs = this.tabBar(inner);
-    if (tabs) {
-      this.tabRow = rows.length;
-      rows.push({ text: tabs });
-      // A tab strip is chrome; the question starts a line below it.
-      rows.push({ text: "" });
-    }
-    const question = this.question;
-    if (!question) {
-      rows.push({ text: this.theme.fg("accent", this.theme.bold(" Review your answers")) });
-      rows.push({ text: "" });
-      rows.push(...this.reviewRows(inner));
-      rows.push({ text: "" });
-      return rows;
-    }
-    // The question takes its room first, but not all of it: a long one at a
-    // narrow width would otherwise leave nothing for the answers.
-    const lines = wrapTextWithAnsi(question.question, Math.max(8, inner - 4));
-    const room = Math.max(
-      2,
-      Math.min(attempt.questionLines ?? Number.MAX_SAFE_INTEGER, budget - 2 - rows.length - 2 - 5),
+    const content = option?.preview
+      ? markdownLines(this.theme, option.preview, width)
+      : [paint(this.theme, "dim", "No preview available")];
+    const limit = Math.max(1, room - 1);
+    // Hold the preview at one height across choices, even for the placeholder.
+    const count = Math.min(
+      limit,
+      Math.max(
+        1,
+        ...(this.question?.options.map(({ preview }) =>
+          preview ? markdownLines(this.theme, preview, width).length : 1,
+        ) ?? []),
+      ),
     );
-    this.questionMaxOffset = Math.max(0, lines.length - room);
-    this.questionOffset = Math.min(this.questionOffset, this.questionMaxOffset);
-    const shown = lines.slice(this.questionOffset, this.questionOffset + room);
-    this.questionRows = { start: rows.length, end: rows.length };
-    if (this.questionOffset > 0) rows.push({ text: this.theme.fg("dim", "  …") });
-    for (const line of shown) rows.push({ text: `  ${this.theme.fg("text", line)}` });
-    this.questionRows.end = rows.length;
-    if (this.questionOffset + room < lines.length) rows.push({ text: this.theme.fg("dim", "  …") });
-    rows.push({ text: "" });
-    // The pane may take the whole budget that is left; the box decides how much
-    // of it it wants, and the frame is the same whichever row is highlighted.
-    const spare = Math.max(1, budget - 2 - rows.length - 1);
-    const layout = this.layout(inner, attempt.preview, spare);
-    const blocks = this.itemBlocks(layout, attempt);
-    const listRows = blocks.reduce((sum, block) => sum + block.length, 0);
-    if (layout.under !== undefined) {
-      // Under the options the box and the list spend the same rows. It only
-      // appears when the list does not have to shrink for it: a preview that
-      // hides the options it describes is worse than no preview, so this frame
-      // falls through to an attempt without one.
-      const alone = spare - 1 - listRows;
-      if (alone < MIN_BOX_ROWS) {
-        layout.under = undefined;
-        layout.paneRows = 0;
-      } else {
-        layout.paneRows = Math.max(MIN_BOX_ROWS, Math.min(MAX_BOX_ROWS_STACKED, alone));
-      }
-    }
-    // A box under the options costs rows the answer list cannot have, so the
-    // list is windowed to what is left instead of pushing the box off the frame.
-    const paneCost = layout.under === undefined ? 0 : layout.paneRows + 1;
-    const capacity = Math.max(1, budget - 2 - rows.length - 1 - paneCost);
-    rows.push(...this.itemRows(layout, attempt, capacity, rows.length, blocks));
-    rows.push({ text: "" });
-    return rows;
-  }
-
-  /** The tab strip, when there is more than one tab; records its click cells. */
-  private tabBar(inner: number): string | undefined {
-    if (this.tabs.length < 2) return undefined;
-    // Rebuilt on every layout attempt, so the cells are cleared with the row.
-    const chip = (label: (index: number) => string): string => {
-      this.tabCells = [];
-      const chips: string[] = [];
-      let x = 1;
-      this.tabs.forEach((tab, index) => {
-        const current = index === this.tab;
-        const answered = tab.kind === "question" && isAnswered(this.drafts[tab.index]!);
-        const plain = ` ${label(index)} `;
-        const text = current
-          ? this.theme.bg("selectedBg", this.theme.fg("accent", this.theme.bold(plain)))
-          : this.theme.fg(answered ? "text" : "muted", plain);
-        chips.push(text);
-        const width = visibleWidth(plain);
-        this.tabCells.push({ start: x, end: x + width, tab: index });
-        x += width + 1;
-      });
-      return chips.join(" ");
-    };
-    const answered = (index: number) => {
-      const tab = this.tabs[index]!;
-      return tab.kind === "question" && isAnswered(this.drafts[tab.index]!) ? "✓" : "";
-    };
-    const full = chip((index) => {
-      const tab = this.tabs[index]!;
-      const label = tab.kind === "review" ? "Review" : (this.questions[tab.index]?.header ?? "?");
-      const mark = answered(index);
-      return `${index + 1} ${label}${mark ? ` ${mark}` : ""}`;
-    });
-    if (visibleWidth(full) <= inner) return full;
-    // Too many headers for the width: numbers still name every tab and stay
-    // clickable, where clipping would leave the last ones out of reach.
-    return chip((index) => `${index + 1}${answered(index)}`);
-  }
-
-  private reviewRows(inner: number): BodyRow[] {
-    const rows: BodyRow[] = [];
-    this.questions.forEach((question, index) => {
-      const item: Item = { kind: "review", question: index };
-      const values = this.valuesOf(index);
-      const answer = values.length > 0 ? values.join(", ") : "not answered";
-      const line = `${this.cursor(index)}${this.theme.fg("text", question.header)}  ${this.theme.fg(
-        values.length > 0 ? "muted" : "warning",
-        truncateToWidth(answer, Math.max(8, inner - 12), "…"),
-      )}`;
-      const note = this.notes[index]?.trim() ?? "";
-      rows.push(target(line, item));
-      if (note) {
-        rows.push({
-          text: this.theme.fg("dim", `    ${truncateToWidth(note, Math.max(8, inner - 8), "…")}`),
-        });
-      }
-    });
-    const send = this.tabs.length - 1;
-    rows.push({ text: "" });
-    rows.push(target(this.actionRow(send, "Send"), { kind: "send" }));
-    rows.push(target(this.actionRow(send + 1, "Cancel"), { kind: "cancel" }));
-    return rows;
-  }
-
-  /**
-   * The answer rows, windowed to the highlighted one when they do not all fit.
-   *
-   * Windowing rather than dropping text: a short terminal then shows fewer rows
-   * at a time, and every row stays reachable by moving the cursor, which is the
-   * access a scrollbar would have given.
-   */
-  private itemRows(
-    layout: Layout,
-    attempt: Attempt,
-    capacity: number,
-    base: number,
-    blocks: BodyRow[][],
-  ): BodyRow[] {
-    if (blocks.length === 0) return [];
-    const total = blocks.reduce((sum, block) => sum + block.length, 0);
-    if (!attempt.window || total <= capacity) {
-      return this.withPreview(blocks.flat(), layout, base);
-    }
-    // The two markers cost a row each, so the window leaves them room.
-    const limit = Math.max(1, capacity - 2);
-    let start = Math.min(this.row, blocks.length - 1);
-    let end = start;
-    let used = blocks[start]?.length ?? 0;
-    for (;;) {
-      const below = blocks[end + 1];
-      if (below && used + below.length <= limit) {
-        used += below.length;
-        end += 1;
-        continue;
-      }
-      const above = blocks[start - 1];
-      if (above && used + above.length <= limit) {
-        used += above.length;
-        start -= 1;
-        continue;
-      }
-      break;
-    }
-    const rows: BodyRow[] = [];
-    if (start > 0) rows.push({ text: this.theme.fg("dim", "  ↑") });
-    rows.push(...blocks.slice(start, end + 1).flat());
-    if (end < blocks.length - 1) rows.push({ text: this.theme.fg("dim", "  ↓") });
-    // Pad the window to the rows it was given: which blocks fit depends on where
-    // the cursor is, and a list that ends short of its allowance would move the
-    // frame every time the pointer crossed a taller row.
-    while (rows.length < capacity) rows.push({ text: "" });
-    return this.withPreview(rows, layout, base);
-  }
-
-  /** One block of rows per answer row, drawn at the width this layout allows. */
-  private itemBlocks(layout: Layout, attempt: Attempt): BodyRow[][] {
-    const question = this.question;
-    if (!question) return [];
-    const draft = this.drafts[this.questionIndex ?? 0]!;
-    const textWidth = layout.textWidth;
-    // Every row hangs its wrapped tail and its description off the same column
-    // as its label, so a row reads as one block rather than three starts.
-    const labelColumn = 4 + String(question.options.length + 1).length + 2;
-    const hang = " ".repeat(labelColumn);
-    const wrapWidth = Math.max(8, textWidth - labelColumn);
-    return this.items().map((item, index) => {
-      const at = index === this.row;
-      const cursor = at ? this.theme.fg("accent", "▸ ") : "  ";
-      switch (item.kind) {
-        case "option": {
-          const option = question.options[item.index]!;
-          const picked = draft.picked.includes(item.index);
-          const box = question.multiSelect ? (picked ? "■" : "□") : picked ? "●" : "○";
-          // Wrapped, not clipped: the label is the row, and a cut-off label is
-          // an option the user cannot recognise.
-          const label = wrapTextWithAnsi(option.label, wrapWidth);
-          const rows: BodyRow[] = label.map((line, lineIndex) => {
-            const text =
-              lineIndex === 0
-                ? `${cursor}${box} ${item.index + 1}  ${line}`
-                : `${hang}${this.theme.fg("text", line)}`;
-            return target(
-              at && lineIndex === 0 ? this.theme.bold(this.theme.fg("accent", text)) : text,
-              item,
-            );
-          });
-          if (option.description && attempt.descriptions === "all") {
-            const lines = wrapTextWithAnsi(option.description, wrapWidth);
-            // Clipping applies to every row, not just the highlighted one: a
-            // row that grows under the pointer moves everything below it.
-            const limit = attempt.clip ?? lines.length;
-            for (const line of lines.slice(0, limit)) {
-              rows.push(target(`${hang}${this.theme.fg("muted", line)}`, item));
-            }
-            if (limit < lines.length) {
-              rows.push(target(`${hang}${this.theme.fg("dim", "…")}`, item));
-            }
-          }
-          return rows;
-        }
-        case "custom": {
-          // The field stays open in place while the pointer wanders: moving the
-          // mouse off a half-typed answer is not a decision to close it.
-          const typing = this.editing === "answer";
-          const typed = draft.text.trim();
-          const number = question.options.length + 1;
-          // The same orb or checkbox as an option, filled once there is an answer
-          // in it, so the row takes part in the list it belongs to.
-          const filled = typing ? this.input.getValue().trim() !== "" : typed !== "";
-          const box = question.multiSelect ? (filled ? "■" : "□") : filled ? "●" : "○";
-          if (typing) {
-            const field = this.input.render(Math.max(8, wrapWidth))[0] ?? "";
-            return [target(`${cursor}${box} ${number}  ${field}`, item)];
-          }
-          // Only the invitation is dim: the orb is the same one an option wears,
-          // and dimming it would make the row look disabled rather than empty.
-          const tone = typed ? (at ? "accent" : "text") : "dim";
-          const label = wrapTextWithAnsi(typed || TYPE_SOMETHING, wrapWidth);
-          return label.map((line, lineIndex) =>
-            target(
-              lineIndex === 0
-                ? `${cursor}${box} ${number}  ${this.theme.fg(tone, line)}`
-                : `${hang}${this.theme.fg(tone, line)}`,
-              item,
-            ),
-          );
-        }
-        case "note": {
-          // Set apart from the answers by a blank row and reachable only with
-          // `n`: nothing here is a choice, so it is not a row the cursor lands
-          // on, and it carries no hit target for the pointer either.
-          const note = this.notes[this.questionIndex ?? 0]?.trim() ?? "";
-          const rows: BodyRow[] = [{ text: "" }];
-          if (this.editing === "note") {
-            rows.push({ text: `  ${this.noteInput.render(Math.max(8, textWidth - 4))[0] ?? ""}` });
-            return rows;
-          }
-          const lines = wrapTextWithAnsi(
-            note ? `Note: ${note}` : "Add a note (n).",
-            Math.max(8, textWidth - 4),
-          );
-          const hintLines = lines.map((line, lineIndex) => ({
-            text:
-              lineIndex === 0
-                ? `  ${this.theme.fg("muted", "✎ ")}${this.theme.fg(note ? "text" : "muted", line)}`
-                : `    ${this.theme.fg("muted", line)}`,
-          }));
-          return [...rows, ...hintLines];
-        }
-        case "done":
-          // An action rather than an answer, and set apart from the row above.
-          return [{ text: "" }, target(this.actionRow(index, "Done"), item)];
-        default:
-          return [];
-      }
-    });
-  }
-
-  /** Compose the preview box into the rows the answer list produced. */
-  private withPreview(rows: BodyRow[], layout: Layout, base: number): BodyRow[] {
-    if (layout.side === undefined && layout.under === undefined) return rows;
-    if (layout.side !== undefined) {
-      const box = this.previewBox(layout.markdown, layout.side, layout.paneRows);
-      // The pane keeps the rows it was given, not the rows the box happened to
-      // need: a short preview must not shrink the frame above it.
-      // The box needs no divider beside it: it is already a frame, and a rule
-      // down the middle of the dialog only competes with it.
-      const height = Math.max(rows.length, layout.paneRows);
-      const merged: BodyRow[] = [];
-      for (let line = 0; line < height; line += 1) {
-        const source = rows[line];
-        const text =
-          column(source?.text ?? "", layout.textWidth) +
-          " ".repeat(COLUMN_GAP) +
-          column(box[line] ?? "", layout.side);
-        merged.push(source?.hit ? { text, hit: source.hit, hitTo: source.hitTo } : { text });
-      }
-      this.previewCells = {
-        top: base,
-        bottom: base + layout.paneRows,
-        left: layout.textWidth + COLUMN_GAP,
-      };
-      return merged;
-    }
-    // Under the options, and capped: a preview that crowded the answers out
-    // would be a preview of the wrong thing. The pane keeps its rows here too,
-    // for the same reason as above.
-    const box = this.previewBox(layout.markdown, layout.under ?? layout.inner - 4, layout.paneRows);
-    rows.push({ text: "" });
-    const top = base + rows.length;
-    // One column of air, so the box lines up with the option text above it
-    // rather than with the frame's own edge.
-    for (const line of box) rows.push({ text: ` ${line}` });
-    for (let line = box.length; line < layout.paneRows; line += 1) rows.push({ text: "" });
-    this.previewCells = { top, bottom: top + box.length, left: 0 };
-    return rows;
-  }
-
-  /** A preview's markdown as rows at the given content width, or the placeholder. */
-  private previewContent(markdown: string | undefined, width: number): string[] {
-    if (markdown === undefined) return [this.theme.fg("dim", NO_PREVIEW_TEXT)];
-    return stripFenceMarkers(
-      new Markdown(markdown, 0, 0, getMarkdownTheme()).render(Math.max(8, width)),
-    );
-  }
-
-  /**
-   * The preview as a bordered box, at most `maxRows` tall.
-   *
-   * The box hugs what is inside it: its width follows the widest row, and its
-   * height the number of rows, so a two-line preview is a small box rather than
-   * a mostly empty one. What still does not fit scrolls, and the bottom border
-   * carries the position, which keeps the box closed whether it is cut or not.
-   */
-  private previewBox(markdown: string | undefined, maxWidth: number, maxRows: number): string[] {
-    const innerMax = Math.max(8, maxWidth - BOX_CHROME);
-    const rendered = this.previewContent(markdown, innerMax);
-    const contentRows = Math.max(1, Math.min(rendered.length, maxRows - 2));
-    this.previewMax = Math.max(0, rendered.length - contentRows);
+    this.previewMax = Math.max(0, content.length - count);
     this.previewOffset = Math.min(this.previewOffset, this.previewMax);
-    const content = rendered.slice(this.previewOffset, this.previewOffset + contentRows);
-    // Markdown pads every row to the width it was given, so measuring the raw
-    // rows would make every box full width; it hugs the trimmed width instead.
-    const widest = content.reduce(
-      (max, line) => Math.max(max, visibleWidth(line.replace(/\s+$/, ""))),
-      0,
-    );
-    const inner = Math.min(innerMax, Math.max(Math.min(BOX_MIN_CONTENT_WIDTH, innerMax), widest));
-    const dashSpan = inner + 2 * BOX_PADDING;
-    const paint = (text: string) => this.theme.fg("accent", text);
-    const pad = " ".repeat(BOX_PADDING);
-    const lines = [paint(`┌${"─".repeat(dashSpan)}┐`)];
-    for (const line of content) {
-      // No ellipsis: the only rows wider than `inner` are padding, never text.
-      lines.push(`${paint("│")}${pad}${truncateToWidth(line, inner, "", true)}${pad}${paint("│")}`);
-    }
-    const total = this.previewMax + contentRows;
-    const marker =
-      this.previewMax === 0
-        ? ""
-        : ` ✂ ${this.previewOffset + 1}-${this.previewOffset + contentRows} of ${total} `;
-    lines.push(paint(`└${borderRun(dashSpan, marker)}┘`));
-    return lines;
-  }
-
-  private cursor(index: number): string {
-    return index === this.row ? this.theme.fg("accent", "▸ ") : "  ";
-  }
-
-  private actionRow(index: number, label: string): string {
-    const at = index === this.row;
-    return `${this.cursor(index)}${at ? this.theme.bold(this.theme.fg("accent", label)) : this.theme.fg("text", label)}`;
+    const end = Math.min(content.length, this.previewOffset + count);
+    const suffix = this.previewMax ? `  ${this.previewOffset + 1}–${end} of ${content.length}` : "";
+    return [
+      this.theme.bold(paint(this.theme, "dim", `Preview${suffix}`)),
+      ...content.slice(this.previewOffset, end),
+      ...Array<string>(count - (end - this.previewOffset)).fill(""),
+    ];
   }
 }
 
@@ -1226,27 +911,4 @@ function sameItem(left: Item, right: Item): boolean {
   if (left.kind === "option" && right.kind === "option") return left.index === right.index;
   if (left.kind === "review" && right.kind === "review") return left.question === right.question;
   return true;
-}
-
-const ANSI_SGR_RE = /\u001b\[[0-9;]*m/g;
-const ANSI_OSC8_RE = /\u001b\]8;[^\u0007\u001b]*(?:\u0007|\u001b\\)/g;
-const FENCE_MARKER_RE = /^`{3}/;
-
-/**
- * Drop fenced-code-block marker rows, which pi-tui's markdown renders as rows
- * of their own: inside a box they read as content instead of as punctuation.
- * Inline code is unaffected — the renderer already emits it without backticks.
- */
-function stripFenceMarkers(lines: readonly string[]): string[] {
-  return lines.filter((line) => {
-    const clean = line.replace(ANSI_SGR_RE, "").replace(ANSI_OSC8_RE, "");
-    return !FENCE_MARKER_RE.test(clean);
-  });
-}
-
-/** A run of `span` dashes with `marker` centred in it, or plain dashes if it will not fit. */
-function borderRun(span: number, marker: string): string {
-  if (marker === "" || marker.length >= span) return "─".repeat(span);
-  const left = Math.floor((span - marker.length) / 2);
-  return "─".repeat(left) + marker + "─".repeat(span - marker.length - left);
 }

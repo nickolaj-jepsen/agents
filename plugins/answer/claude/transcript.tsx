@@ -1,4 +1,5 @@
 import { plain, view as viewOf } from "../core/forms";
+import { POSITIONS } from "./terminal";
 import type { Current, Editing, Held, View } from "./types.d.ts";
 import {
   actionBar,
@@ -438,7 +439,7 @@ export function terminalReview(
   const answerTone = sent ? "success" : "note";
   const cardTone = open ? "accent" : view.answered ? answerTone : "text";
   const title = `Answers  ${view.answered} of ${view.count} answered`;
-  const pageSize = 5;
+  const pageSize = REVIEW_PAGE;
   const start = open ? Math.floor(Math.max(0, cursor) / pageSize) * pageSize : 0;
   const end = Math.min(start + pageSize, view.count);
   const toggle = open
@@ -1031,18 +1032,19 @@ export function nativeRound(
 }
 
 export const ROUND_FOCUS = "round-current";
+/** The rows one page of the review holds, so a digit answers a row of the page on screen. */
+export const REVIEW_PAGE = 5;
 const binding = (key: string) => `round-key-${key}`;
 const shortcuts = "abcdefghijklmnopqrstuvwxyz";
-
 /**
  * The host sends unmatched printable keys back to the prompt. While the band has the keys, bind
- * every letter so a slip stays there.
+ * every letter so a slip stays there, and every digit so a row answers by its place on screen.
  */
 function absorb(kit: Kit, press: (key: string) => unknown) {
   const { Box, Button } = kit;
   return (
     <Box width={0} height={0} overflow="hidden">
-      {Array.from(shortcuts, (key) => (
+      {Array.from(`${shortcuts}${POSITIONS}`, (key) => (
         <Button key={binding(key)} plain hotkey={key} label={key} onPress={() => press(key)} />
       ))}
     </Box>

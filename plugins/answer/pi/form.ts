@@ -17,13 +17,14 @@ import {
   bandAct,
   bandShell,
   chipRow,
+  digitChoice,
+  markdownLines,
   tokens,
   type Band,
   type BandRow,
   type Chip,
 } from "../../../kit/pi/ui.ts";
 import type { Action, View } from "../core/forms.ts";
-import { markdownLines } from "./markdown.ts";
 
 /** `fill` writes the reply into the editor; `send` sends it as the person's message instead. */
 export type FormResult = { fill: boolean; send?: boolean };
@@ -218,7 +219,7 @@ export class AnswerForm implements Component, Focusable {
       this.tui.requestRender();
       return;
     }
-    const digit = /^[1-9]$/.test(data) ? Number(data) - 1 : -1;
+    const digit = digitChoice(data);
     if (digit >= 0 && digit < count) {
       this.act(review ? { kind: "goto", index: digit } : { kind: "entry", index: digit });
       return;
@@ -335,7 +336,9 @@ export class AnswerForm implements Component, Focusable {
   private itemRows(item: Item, width: number): Row[] {
     const t = this.theme;
     const rows: Row[] = [
-      ...markdownLines(item.title, Math.max(8, width), { bold: true }).map((text) => ({ text })),
+      ...markdownLines(this.theme, item.title, Math.max(8, width), { bold: true }).map((text) => ({
+        text,
+      })),
       { text: "" },
     ];
     if (item.body) {
@@ -368,7 +371,12 @@ export class AnswerForm implements Component, Focusable {
       const ink = tone ? (s: string) => t.fg(tone, s) : undefined;
       // The option's markdown set in its state's colour, which the Markdown puts back after
       // each code span; the box leads the first line and the rest hang under the words.
-      const lines = markdownLines(entry.text, Math.max(6, width - 6), ink && { color: ink });
+      const lines = markdownLines(
+        this.theme,
+        entry.text,
+        Math.max(6, width - 6),
+        ink && { color: ink },
+      );
       lines.forEach((line, i) => {
         const pointer = isCursor ? t.fg("accent", "›") : " ";
         const head = i === 0 ? `${pointer}${t.fg("accent", String(k + 1))} ` : "   ";
@@ -378,7 +386,7 @@ export class AnswerForm implements Component, Focusable {
       });
       if (entry.detail)
         rows.push(
-          ...markdownLines(entry.detail, Math.max(8, width - 3), {
+          ...markdownLines(this.theme, entry.detail, Math.max(8, width - 3), {
             color: (s) => t.fg("dim", s),
           }).map((line) => ({ text: `   ${line}` })),
         );
@@ -388,9 +396,11 @@ export class AnswerForm implements Component, Focusable {
     rows.push({ text: "" });
     if (item.recommended)
       rows.push(
-        ...markdownLines(`Recommended: ${item.recommended}`, Math.max(8, width)).map((line, i) => ({
-          text: i ? line : line.replace("Recommended:", t.fg("dim", "Recommended:")),
-        })),
+        ...markdownLines(this.theme, `Recommended: ${item.recommended}`, Math.max(8, width)).map(
+          (line, i) => ({
+            text: i ? line : line.replace("Recommended:", t.fg("dim", "Recommended:")),
+          }),
+        ),
         { text: "" },
       );
     if (item.written && this.editing !== "text")

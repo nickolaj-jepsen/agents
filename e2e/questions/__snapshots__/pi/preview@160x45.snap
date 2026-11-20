@@ -1,35 +1,32 @@
-# questions/pi/preview 160x45 @0,31 (160x12)
-╭─ Layout ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│  Which table layout?                                                                                                                                         │
-│                                                                                                                                                              │
-│▸ ○ 1  One row per event                                                           ┌──────────────────────────────────────────┐                               │
-│       Append-only, and the history is the table.                                  │   create table event (                   │                               │
-│  ○ 2  One row per session                                                         │     id integer primary key,              │                               │
-│       A document per session, rewritten on every turn.                            │     session text not null,               │                               │
-│  ○ 3  Type something.                                                             │     at text not null                     │                               │
-│                                                                                   │   );                                     │                               │
-│  ✎ Add a note (n).                                                                └──────────────────────────────────────────┘                               │
-│                                                                                                                                                              │
-╰────────────────────────────────────────────────────────────────────────────────────────────────────────────── ↑/↓ move · enter select · n note · esc cancel ─╯
+# questions/pi/preview 160x45 @0,29 (160x11)
+│  ❯ Layout  Which table layout?
+│
+│  ❯ A ○ One row per event                                            Preview
+│        Append-only, and the history is the table.                   ```sql
+│    B ○ One row per session                                            create table event (
+│        A document per session, rewritten on every turn.                 id integer primary key,
+│    C ○ Type something.                                                  session text not null,
+│    Note: Add a note                                                     at text not null
+│                                                                       );
+│                                                                     ```
+│  esc cancel  A–C/1–3 pick  ↑↓ move  enter select  n note
 --- styles
-1x2 2x8 1x150
-1 .x2 3x19 .x137 1
-1 .x158 1
-1 2x2 4x22 .x59 5x44 .x31 1
-1 .x7 6x42 .x34 5 .x3 7x6 . 7x5 .x27 5 .x31 1
-1 .x83 5 .x8 5x7 . 7x7 .x19 5 .x31 1
-1 .x7 6x48 .x28 5 .x18 7x3 . 7x4 .x16 5 .x31 1
-1 .x7 8x15 .x61 5 .x5 7x2 .x6 7x3 . 7x4 .x21 5 .x31 1
-1 .x83 5 .x42 5 .x31 1
-1 .x2 6x17 .x64 5x44 .x31 1
-1 .x158 1
-1x111 8x47 1x2
+1 .x2 2x29
+1
+1 .x2 3 . 1 . 4 .x62 5x7
+1 .x8 4x42 .x19 6x6
+1 .x4 4 . 4 .x64 7x6 . 7x5
+1 .x8 4x48 .x20 3x7 . 7x7
+1 .x4 4 . 4 . 4x15 .x63 7x3 . 7x4
+1 .x4 4x16 .x53 7x2 .x6 7x3 . 7x4
+1
+1 .x69 6x3
+1 .x2 3x3 .x9 3x7 .x7 3x2 .x7 3x5 .x9 3
 --- legend
-1 fg=#768186
-2 fg=#a798d7 bold
-3 fg=#dee0e1
-4 bold
-5 fg=#a798d7
+1 fg=#a08ed5
+2 fg=#a08ed5 bold
+3 fg=#a798d7
+4 fg=#7e888e
+5 fg=#7e888e bold
 6 fg=#9da5a9
 7 fg=#69add0
-8 fg=#7e888e

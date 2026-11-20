@@ -6,6 +6,9 @@ import type { Theme } from "@earendil-works/pi-coding-agent";
 import type { TuiMouseEvent, TuiMouseEventResult } from "@earendil-works/pi-tui";
 import {
   bandShell,
+  cardChoice,
+  cardHeading,
+  cardRail,
   chipRow,
   clamp,
   emptyState,
@@ -373,6 +376,35 @@ const noticeStory = (
 });
 
 export const stories: Story[] = [
+  {
+    component: "question-card",
+    state: "choices",
+    about: "A wrapped Markdown title, selected and unselected choices, and a literal write-in.",
+    width: "reading",
+    make: () =>
+      pure((theme, width) => {
+        const inner = Math.min(width - 3, tokens.prose);
+        return [
+          ...cardHeading(theme, inner, SENTENCE, "Q1", true, true),
+          "",
+          ...cardChoice(theme, inner, {
+            key: "A",
+            text: GROUPED[0]!.title,
+            detail: CJK,
+            chosen: true,
+            active: true,
+          }),
+          ...cardChoice(theme, inner, { key: "B", text: GROUPED[1]!.title, multiple: true }),
+          ...cardChoice(theme, inner, {
+            key: "C",
+            text: GROUPED[2]!.title,
+            multiple: true,
+            chosen: true,
+          }),
+          ...cardChoice(theme, inner, { key: "D", text: GROUPED[0]!.title, literal: true }),
+        ].map((line) => cardRail(theme, true, true, line));
+      }),
+  },
   classStory("reading", "96 columns, prose wrapped at 80"),
   classStory("split", "124 columns"),
   classStory("dialog", "72 columns"),

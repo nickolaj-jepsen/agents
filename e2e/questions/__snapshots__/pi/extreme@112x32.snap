@@ -1,45 +1,55 @@
-# questions/pi/extreme 112x32 @0,13 (112x17)
-╭─ Where stored? ──────────────────────────────────────────────────────────────────────────────────────────────╮
-│  Where should a session's full transcript, every tool result and each compaction summary be kept once a run  │
-│  ends?                                                                                                       │
-│                                                                                                              │
-│▸ ○ 1  SQLite in the repository, beside the worktrees     ┌──────────────────────────────────────────────────┐│
-│       One file the checkout can delete, and no service   │   create table if not exists event (             ││
-│       to keep running on any of the machines.            │     id integer primary key,                      ││
-│  ○ 2  Postgres beside the application, shared by every   │     session text not null,                       ││
-│       machine                                            │     at text not null,                            ││
-│       One more service to run, back up and keep          │     body json not null                           ││
-│       reachable from a laptop that is often offline.     │   ) strict;                                      ││
-│  ○ 3  Type something.                                    │                                                  ││
-│                                                          │ A row per event, so the history is the table and ││
-│  ✎ Add a note (n).                                       │ a reader can replay it.                          ││
-│                                                          └──────────────────────────────────────────────────┘│
-│                                                                                                              │
-╰────────────────────────────────────────────────────────────── ↑/↓ move · enter select · n note · esc cancel ─╯
+# questions/pi/extreme 112x32 @0,5 (112x22)
+│  ❯ Where stored?  Where should a session's full transcript, every tool result and each compaction summary be
+│                   kept once a run ends? Include the archived sessions, the tool_result records and the full
+│                   日本語 transcript, not just the latest entry. Assume the developer will often be offline
+│                   and needs to carry this between machines without losing any run history.
+│
+│  ❯ A ○ SQLite in the repository, beside the worktrees        Preview
+│        One file the checkout can delete, and no service to   ```sql
+│        keep running on any of the machines. Copy it…           create table if not exists event (
+│    B ○ Postgres beside the application, shared by every          id integer primary key,
+│        machine                                                   session text not null,
+│        One more service to run, back up and keep reachable       at text not null,
+│        from a laptop that is often offline.                      body json not null
+│    C ○ Keep a local log beside each checkout and merge         ) strict;
+│        later                                                 ```
+│        Works offline without setting up a server, but
+│        syncing a single run can produce duplicate records.   A row per event, so the history is the table and
+│    D ○ Mirror sessions to an append-only archive as they     a reader can replay it.
+│        finish
+│        The archive stores every event and preserves links
+│        to the original run.
+│  ↓ 2 below
+│  esc cancel  A–E/1–5 pick  ↑↓ move  enter select  n note
 --- styles
-1x2 2x15 1x95
-1 .x2 3x106 .x2 1
-1 .x2 3x5 .x103 1
-1 .x110 1
-1 2x2 4x51 .x5 5x52 1
-1 .x7 6x48 .x3 5 .x3 7x6 . 7x5 .x4 7x3 . 7x6 .x21 5 1
-1 .x7 6x39 .x12 5 .x8 5x7 . 7x7 .x27 5 1
-1 .x58 5 .x18 7x3 . 7x4 .x24 5 1
-1 .x7 3x7 .x44 5 .x5 7x2 .x6 7x3 . 7x4 .x29 5 1
-1 .x7 6x41 .x10 5 .x15 7x3 . 7x4 .x27 5 1
-1 .x7 6x46 .x5 5 .x50 5 1
-1 .x7 8x15 .x36 5 .x50 5 1
-1 .x58 5 .x50 5 1
-1 .x2 6x17 .x39 5 .x50 5 1
-1 .x58 5x52 1
-1 .x110 1
-1x63 8x47 1x2
+1 .x2 2x107
+1 .x19 2x57 3x11 2x21
+1 .x19 2x88
+1 .x19 2x72
+1
+1 .x2 3 . 1 . 4 .x55 5x7
+1 .x8 5x8 4x43 .x3 6x6
+1 .x8 4x45 .x11 7x6 . 7x5 .x4 7x3 . 7x6
+1 .x4 4 . 4 .x62 3x7 . 7x7
+1 .x79 7x3 . 7x4
+1 .x8 4x51 .x7 7x2 .x6 7x3 . 7x4
+1 .x8 4x36 .x32 7x3 . 7x4
+1 .x4 4 . 4 .x8 8x9
+1 .x62 6x3
+1 .x8 4x46
+1 .x8 4x51
+1 .x4 4 . 4 .x23 8x11
+1
+1 .x8 4x50
+1 .x8 4x20
+1 .x2 4x9
+1 .x2 3x3 .x9 3x7 .x7 3x2 .x7 3x5 .x9 3
 --- legend
-1 fg=#768186
-2 fg=#a798d7 bold
-3 fg=#dee0e1
-4 bold
-5 fg=#a798d7
+1 fg=#a08ed5
+2 fg=#a08ed5 bold
+3 fg=#a798d7
+4 fg=#7e888e
+5 fg=#7e888e bold
 6 fg=#9da5a9
 7 fg=#69add0
-8 fg=#7e888e
+8 bold

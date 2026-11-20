@@ -152,6 +152,17 @@ Features:
 - Success, warning, error and dim: pi yes (success, warning and error only for an actual state); claude yes (Text colour; `$.ui.status` is one plain line per mod, with no colour)
 - Cut to one line: pi yes; claude yes (`clamp` with {min: 1, max: 1})
 
+## Question card
+
+A question and its choices on a left rail, with wrapped Markdown and selection marks.
+
+- pi: exists: `cardHeading`, `cardChoice`, `cardRail`
+- claude: not possible: The Claude terminal Answer cards have their own renderer.
+
+Features:
+
+- Markdown headings and choices with wrapped details, selection marks and literal write-ins: pi yes; claude planned (Reuse the native Answer card drawing when migrating the Claude kit.)
+
 ## Split
 
 A list beside the selected row's detail, in one border, stacked on a narrow terminal.

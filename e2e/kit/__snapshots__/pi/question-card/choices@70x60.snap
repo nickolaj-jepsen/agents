@@ -1,0 +1,34 @@
+# kit/pi/question-card/choices 70x60 @2,2 (66x13)
+│  ❯ Q1  The section says the build verifies a pi change, but the
+│        build only type-checks the cores and the pi halves and
+│        never starts an agent. ✓
+│
+│  A ● just build is not enough to verify a pi change; the docs
+│      say it is.
+│      この節は古くなっています。ビルドが検証するのは型だけで、エ
+│      ージェントを起動しないことを書き足す必要があります。
+│  B □ The legacy card was removed; the section still describes
+│      it.
+│  C ■ Darwin hosts need the app leaf to work on both halves.
+│  D ○ `just build` is not enough to verify a pi change; the docs
+│      say it is.
+--- styles
+1 .x2 2x62
+1 .x8 2x54
+1 .x8 2x24
+1
+1 .x2 2 . 2 . 3x10 2x46
+1 .x6 2x10
+1 .x6 4x58
+1 .x6 4x52
+1 .x2 4 . 4 .x5 3x6
+1
+1 .x2 5 . 5 . 5x54
+1 .x2 4 . 4 . 4x58
+1 .x6 4x10
+--- legend
+1 fg=#a08ed5
+2 fg=#a08ed5 bold
+3 fg=#a798d7
+4 fg=#7e888e
+5 fg=#dee0e1 bold

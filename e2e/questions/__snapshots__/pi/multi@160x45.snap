@@ -1,35 +1,26 @@
-# questions/pi/multi 160x45 @0,30 (160x13)
-╭─ Retention ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│  How much of each session should be kept?                                                                                                                    │
-│                                                                                                                                                              │
-│  ■ 1  The whole transcript                                                                                                                                   │
-│▸ ■ 2  The last turn only                                                                                                                                     │
-│  □ 3  A summary of each run                                                                                                                                  │
-│  □ 4  Type something.                                                                                                                                        │
-│                                                                                                                                                              │
-│  ✎ Add a note (n).                                                                                                                                           │
-│                                                                                                                                                              │
-│  Done                                                                                                                                                        │
-│                                                                                                                                                              │
-╰───────────────────────────────────────────────────────────────────────────────────────────────── ↑/↓ move · space toggle · enter done · n note · esc cancel ─╯
+# questions/pi/multi 160x45 @0,31 (160x9)
+│  ❯ Retention  How much of each session should be kept? ✓
+│
+│    A ■ The whole transcript
+│  ❯ B ■ The last turn only
+│    C □ A summary of each run
+│    D □ Type something.
+│    Note: Add a note
+│    Done
+│  esc cancel  A–D/1–4 pick  ↑↓ move  enter select  space toggle  n note
 --- styles
-1x2 2x11 1x147
-1 .x2 3x40 .x116 1
-1 .x158 1
-1 .x158 1
-1 2x2 4x23 .x133 1
-1 .x158 1
-1 .x7 5x15 .x136 1
-1 .x158 1
-1 .x2 6x17 .x139 1
-1 .x158 1
-1 .x2 3x4 .x152 1
-1 .x158 1
-1x98 5x60 1x2
+1 .x2 2x55
+1
+1 .x4 3 . 3 . 3x20
+1 .x2 4 . 2 . 2 . 2x18
+1 .x4 5 . 5
+1 .x4 5 . 5 . 5x15
+1 .x4 5x16
+1
+1 .x2 4x3 .x9 4x7 .x7 4x2 .x7 4x5 .x9 4x5 .x9 4
 --- legend
-1 fg=#768186
-2 fg=#a798d7 bold
-3 fg=#dee0e1
-4 bold
+1 fg=#a08ed5
+2 fg=#a08ed5 bold
+3 fg=#dee0e1 bold
+4 fg=#a798d7
 5 fg=#7e888e
-6 fg=#9da5a9

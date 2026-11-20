@@ -16,7 +16,7 @@ Focus the fullscreen card controls before using the keys below: in Claude Code p
 
 | Key               | Action                                                 |
 | ----------------- | ------------------------------------------------------ |
-| Option letter     | Pick a choice or open its write-in                     |
+| Option letter     | Pick a choice or open its write-in; pi also accepts row numbers |
 | `j`, `k`          | Move between questions or review rows                  |
 | `n`               | Add or edit a note                                     |
 | `r`               | Open review or return to the question                  |

@@ -14,6 +14,17 @@ export const GAPS = [2, 1, 0] as const;
 export type Gaps = (typeof GAPS)[number];
 /** The room a review row's mark and its key take: `1: `. */
 export const KEY_CELLS = 3;
+/**
+ * The digits that answer a row by its place on screen, so a keyboard-driven client can take a
+ * number the reply never prints. The first nine rows take one each; the tenth on takes none.
+ */
+export const POSITIONS = "123456789";
+
+/** The digit a row's place on screen gives it, or "" past the ninth. */
+export const positionOf = (index: number) => POSITIONS[index] ?? "";
+
+/** The place a key names, counting the rows drawn top down; -1 for anything but a digit. */
+export const rowOf = (key: string) => (key.length === 1 ? POSITIONS.indexOf(key) : -1);
 
 /** What a key row offers, so its width is known before it is drawn. */
 export type KeySpec = { hotkey: string; label: string; kind: string; isLit?: boolean };

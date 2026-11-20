@@ -57,7 +57,7 @@ export default site({
       ...keys("Space", "Down", "Space"),
       { sleep: 1800 },
       // Past the last option and the row for a typed answer sits Done.
-      ...keys("Down", "Down", "Down", "Enter"),
+      ...keys("Up", "Up", "Enter"),
       { wait: /enter send/, timeout: 10_000 },
       { sleep: 2400 },
       poster,
@@ -79,7 +79,7 @@ export default site({
         { wait: /Where should the session store live\?/ },
         { press: "Enter" },
         { wait: /How much of each session/ },
-        ...keys("Space", "Down", "Space", "Down", "Down", "Down", "Enter"),
+        ...keys("Space", "Down", "Space", "Up", "Up", "Enter"),
         { wait: /enter send/ },
       ],
     },
