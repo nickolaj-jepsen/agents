@@ -38,20 +38,20 @@
 ▎  Note: Add a note
 
 
-▎  Answers  1 of 12 answered
+▎   Answers  1 of 12 answered
 ▎  ❯ Fill prompt  ▾ Hide questions
 ▎
 ▎  Questions 1–5 of 12  Next
-▎    Q1   Question number 1: pick a strategy?
-▎         Unanswered
-▎    Q2   Question number 2: pick a strategy?
-▎         Unanswered
-▎    Q3   Question number 3: pick a strategy?
-▎         H: Option H for 3
-▎    Q4   Question number 4: pick a strategy?
-▎         Unanswered
-▎    Q5   Question number 5: pick a strategy?
-▎         Unanswered
+▎   Q1   Question number 1: pick a strategy?
+▎        Unanswered
+▎   Q2   Question number 2: pick a strategy?
+▎        Unanswered
+▎   Q3   Question number 3: pick a strategy? ✓
+▎        H: Option H for 3
+▎   Q4   Question number 4: pick a strategy?
+▎        Unanswered
+▎   Q5   Question number 5: pick a strategy?
+▎        Unanswered
 
 Review  1/12 answered jk move enter fill r back keys here                                                                                                                                                                                   [-]
 --- styles
@@ -94,22 +94,22 @@ Review  1/12 answered jk move enter fill r back keys here                       
 1 .x2 2x5 . 2x10 .x76 1
 1x96
 5x96
-5 .x2 6x25 .x67 5
+5 . 6x27 .x66 5
 5 .x2 6x13 .x2 2x16 .x61 5
 5 .x94 5
 5 .x2 2x19 .x73 5
-5 .x2 2x7 .x85 5
-5 .x9 2x10 .x75 5
-5 .x2 2x7 .x85 5
-5 .x9 2x10 .x75 5
-5 .x2 2x7 .x85 5
-5 .x9 7x17 .x68 5
-5 .x2 2x7 .x85 5
-5 .x9 2x10 .x75 5
-5 .x2 2x7 .x85 5
-5 .x9 2x10 .x75 5
+5 . 3x42 .x51 5
+5 .x8 2x10 .x76 5
+5 . 3x42 .x51 5
+5 .x8 2x10 .x76 5
+5 . 7x44 .x49 5
+5 .x8 7x17 .x69 5
+5 . 3x42 .x51 5
+5 .x8 2x10 .x76 5
+5 . 3x42 .x51 5
+5 .x8 2x10 .x76 5
 5x96
-6x21 . 7x2 2x5 . 8x5 9x5 . 7 2x5 . 2x9 .x179 2x3
+6x21 . 8x2 2x5 . 9x5 ax5 . 8 2x5 . 2x9 .x179 2x3
 --- legend
 1 dim
 2 fg=#999999
@@ -117,6 +117,7 @@ Review  1/12 answered jk move enter fill r back keys here                       
 4 fg=#999999 bold
 5 fg=#d77757
 6 fg=#d77757 bold
-7 fg=#b1b9f9
-8 fg=#b1b9f9 inverse
-9 fg=#999999 inverse
+7 fg=#b1b9f9 bold
+8 fg=#b1b9f9
+9 fg=#b1b9f9 inverse
+a fg=#999999 inverse

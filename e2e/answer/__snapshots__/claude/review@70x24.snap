@@ -6,15 +6,15 @@
 ▎  Note: Add a note
 
 
-▎  Answers  1 of 2 answered
+▎   Answers  1 of 2 answered
 ▎  ❯ Fill prompt  ▾ Hide questions
 ▎
-▎    Q1  Use SQLite?
-▎        B: Postgres
-▎        Note: Keep the hosted instance.
-▎              Rotate its credentials first.
-▎    Q2  Add caching?
-▎        Unanswered
+▎   Q1  Use SQLite? ✓
+▎       B: Postgres
+▎       Note: Keep the hosted instance.
+▎             Rotate its credentials first.
+▎   Q2  Add caching?
+▎       Unanswered
 
 Review  1/2 answered jk move enter fill r back keys here          [-]
 --- styles
@@ -25,23 +25,25 @@ Review  1/2 answered jk move enter fill r back keys here          [-]
 1 .x2 3x5 . 3x10 .x50 1
 1x70
 4x70
-4 .x2 5x24 .x42 4
+4 . 5x26 .x41 4
 4 .x2 5x13 .x2 3x16 .x35 4
 4 .x68 4
-4 .x2 3x6 .x60 4
-4 .x8 6x11 .x49 4
-4 .x8 3x5 . 6x25 .x29 4
-4 .x14 6x29 .x25 4
-4 .x2 3x6 .x60 4
-4 .x8 3x10 .x50 4
+4 . 6x19 .x48 4
+4 .x7 6x11 .x50 4
+4 .x7 3x5 . 7x25 .x30 4
+4 .x13 7x29 .x26 4
+4 . 8x18 .x49 4
+4 .x7 3x10 .x51 4
 4x70
-5x20 . 6x2 3x5 . 7x5 8x5 . 6 3x5 . 3x9 .x10 3x3
+5x20 . 7x2 3x5 . 9x5 ax5 . 7 3x5 . 3x9 .x10 3x3
 --- legend
 1 dim
 2 fg=#999999 bold
 3 fg=#999999
 4 fg=#d77757
 5 fg=#d77757 bold
-6 fg=#b1b9f9
-7 fg=#b1b9f9 inverse
-8 fg=#999999 inverse
+6 fg=#b1b9f9 bold
+7 fg=#b1b9f9
+8 bold
+9 fg=#b1b9f9 inverse
+a fg=#999999 inverse

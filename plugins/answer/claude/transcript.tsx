@@ -398,6 +398,8 @@ export function terminalReview(
   const kit = withColumns(outer, Math.max(1, width - 4));
   const open = current?.view.isReview === true;
   const cursor = current?.reviewCursor ?? (view.reply ? -1 : 0);
+  const answerTone = sent ? "success" : "note";
+  const cardTone = open ? "accent" : view.answered ? answerTone : "text";
   const title = `Answers  ${view.answered} of ${view.count} answered`;
   const pageSize = 5;
   const start = open ? Math.floor(Math.max(0, cursor) / pageSize) * pageSize : 0;
@@ -406,13 +408,13 @@ export function terminalReview(
     ? "Hide questions"
     : `Show ${view.count === 1 ? "question" : `all ${view.count} questions`}`;
   const header = (
-    <Box key={reviewHeading} flexDirection="column" paddingLeft={1}>
-      <Text weight="semibold" {...roleProps(open ? "accent" : "text")}>
-        {title}
+    <Box key={reviewHeading} flexDirection="column">
+      <Text weight="semibold" {...roleProps(cardTone)}>
+        {`  ${title}`}
         {sent ? <Text {...roleProps("success")}> ✓ Sent</Text> : null}
       </Text>
       {actions ? (
-        <Box columnGap={tokens.gutter} flexWrap="wrap">
+        <Box columnGap={tokens.gutter} flexWrap="wrap" paddingLeft={1}>
           {view.reply ? (
             <Button key="review-fill" label="Fill prompt" plain onPress={actions.fill}>
               <Text weight="semibold" {...roleProps(open && cursor < 0 ? "accent" : "note")}>
@@ -432,11 +434,12 @@ export function terminalReview(
     const prefix = `${selected ? tokens.glyph.pointer : " "} ${row.label.padEnd(cellWidth(`Q${view.count}`))}  `;
     const indent = cellWidth(prefix);
     const textWidth = Math.max(1, kit.columns - indent);
-    const [first, ...rest] = clamp(row.title, textWidth);
+    const tone = selected ? "accent" : row.isAnswered ? answerTone : "text";
+    const [first, ...rest] = clamp(`${row.title}${row.isAnswered ? " ✓" : ""}`, textWidth);
     const heading = (
-      <Text>
-        <Text {...roleProps(selected ? "accent" : "dim")}>{prefix}</Text>
-        <Text {...roleProps(selected ? "accent" : "text")}>{first}</Text>
+      <Text weight="semibold" {...roleProps(tone)}>
+        {prefix}
+        {first}
       </Text>
     );
     return (
@@ -455,9 +458,14 @@ export function terminalReview(
         )}
         <Box flexDirection="column" paddingLeft={indent}>
           {rest.length ? (
-            <Text {...roleProps(selected ? "accent" : "text")}>{rest.join("\n")}</Text>
+            <Text weight="semibold" {...roleProps(tone)}>
+              {rest.join("\n")}
+            </Text>
           ) : null}
-          <Text {...roleProps(row.isAnswered ? "note" : "dim")}>
+          <Text
+            weight={row.isAnswered ? "semibold" : undefined}
+            {...roleProps(row.isAnswered ? tone : "dim")}
+          >
             {row.isAnswered ? clamp(row.shown, textWidth).join("\n") : "Unanswered"}
           </Text>
           {row.note
@@ -477,16 +485,16 @@ export function terminalReview(
     <Box
       width={width}
       borderStyle="quote"
-      borderColor={open ? tokens.role.accent : view.answered ? tokens.role.note : undefined}
+      borderColor={cardTone === "text" ? undefined : tokens.role[cardTone]}
       borderDimColor={!open && !view.answered}
       paddingX={1}
       flexDirection="column"
     >
       {header}
       {open || sent ? (
-        <Box paddingTop={1} paddingLeft={1} flexDirection="column">
+        <Box paddingTop={1} flexDirection="column">
           {open && view.count > pageSize ? (
-            <Box columnGap={tokens.gutter}>
+            <Box columnGap={tokens.gutter} paddingLeft={1}>
               <Text dimColor>{`Questions ${start + 1}–${end} of ${view.count}`}</Text>
               {start > 0 && actions?.focusReview ? (
                 <Button
