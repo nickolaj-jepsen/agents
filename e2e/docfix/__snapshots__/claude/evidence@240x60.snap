@@ -1,47 +1,45 @@
-# docfix/claude/evidence 240x60 @164,0 (76x55)
-│                                                                         ✕
-│ ─ Doc suggestions  2 ────────────────────────────────────────────────────
+# docfix/claude/evidence 240x60 @159,0 (81x56)
+│                                                                              ✕
+│ ─ Doc suggestions  2 ─────────────────────────────────────────────────────────
 │
 │ Submit or close to carry out apply and dismiss
 │
-│ docs/agent-hub.md ───────────────────────────────────────────────────────
+│ docs/agent-hub.md ────────────────────────────────────────────────────────────
 │
 │ agent-hub's unittest suite needs a short TMPDIR and markdown-it-py on
 │ PYTHONPATH; run it with uv, not bare python.
-│ + missing  2×  ••  ▾ evidence 2             a: apply  d: dismiss  s: skip
+│ + missing  2×  ••  ▾ evidence 2                  a: apply  d: dismiss  s: skip
 │
-│   <date>      claude ────────────────────────────────────────────────────
-│     Hit it again from a worktree: `python -m unittest` failed 20 socket
-│     tests with AF_UNIX path too long.
+│   <date>      claude ─────────────────────────────────────────────────────────
+│     Hit it again from a worktree: `python -m unittest` failed 20 socket tests
+│     with AF_UNIX path too long.
 │
-│   <date>      pi  migrated ──────────────────────────────────────────────
+│   <date>      pi  migrated ───────────────────────────────────────────────────
 │     Why the repo didn't say it
-│     Both failures look like code errors, and nothing in the repo states
-│     the TMPDIR requirement or the markdown-it-py dependency that only the
-│     nix build supplies; an agent would report 20 fake failures.
+│     Both failures look like code errors, and nothing in the repo states the
+│     TMPDIR requirement or the markdown-it-py dependency that only the nix
+│     build supplies; an agent would report 20 fake failures.
 │
 │     Details
-│     From pkgs/agent-hub: TMPDIR=<tmp>   PYTHONPATH=. uv run --quiet
-│     --with markdown-it-py python -m unittest discover -s tests -p
-│     'test_*.py'.
-│     Without a short TMPDIR the socket tests fail with "OSError: AF_UNIX
-│     path too long" inside a long worktree path; without markdown-it-py
-│     the render/features imports fail.
+│     From pkgs/agent-hub: TMPDIR=<tmp>   PYTHONPATH=. uv run --quiet --with
+│     markdown-it-py python -m unittest discover -s tests -p 'test_*.py'.
+│     Without a short TMPDIR the socket tests fail with "OSError: AF_UNIX path
+│     too long" inside a long worktree path; without markdown-it-py the
+│     render/features imports fail.
 │     Baseline: 470 tests, 1 skipped.
 │
 │     Points at
 │     path     pkgs/agent-hub/package.nix
-│     command  TMPDIR=<tmp>   PYTHONPATH=. uv run --quiet --with
-│              markdown-it-py python -m unittest discover -s tests -p
-│              'test_*.py'
+│     command  TMPDIR=<tmp>   PYTHONPATH=. uv run --quiet --with markdown-it-py
+│              python -m unittest discover -s tests -p 'test_*.py'
 │     quote    “if it happens again, just wait a bit and try again”
 │     symbol   dmsSession
 │
-│ docs/agents.md ──────────────────────────────────────────────────────────
+│ docs/agents.md ───────────────────────────────────────────────────────────────
 │
-│ pi's permission gate cannot resolve shell variables, so `cat
-│ $S/id_ed25519_ao` reads what `cat ~/.ssh/id_ed25519_ao` denies.
-│ ! wrong  age  ▸ evidence                             apply  dismiss  skip
+│ pi's permission gate cannot resolve shell variables, so `cat $S/id_ed25519_ao`
+│ reads what `cat ~/.ssh/id_ed25519_ao` denies.
+│ ! wrong  age  ▸ evidence                                  apply  dismiss  skip
 │
 │ [ submit ]
 │
@@ -54,23 +52,26 @@
 │
 │
 │
+│
+│
+│
 --- styles
-1 .x73 2
-1 . 2x2 3x15 2x56
+1 .x78 2
+1 . 2x2 3x15 2x61
 1
 1 . 2x46
 1
-1 . 3x17 2x56
+1 . 3x17 2x61
 1
 1 . 3x69
 1 . 3x44
-1 . 3x9 .x2 2x6 .x2 2x12 .x13 4 2x7 .x2 4 2x9 .x2 4
+1 . 3x9 .x2 2x6 .x2 2x12 .x18 4 2x7 .x2 4 2x9 .x2 4
 1
-1 .x3 2x71
+1 .x3 2x6 .x4 2x66
 1
 1
 1
-1 .x3 2x71
+1 .x3 2x6 .x4 2x66
 1 .x5 2x26
 1
 1
@@ -84,22 +85,23 @@
 1
 1
 1
-1
 1 .x5 2x9
 1 .x5 2x7
 1 .x5 2x7
 1
-1
 1 .x5 2x7
 1 .x5 2x7
 1
-1 . 3x14 2x59
+1 . 3x14 2x64
 1
-1 . 3x60
-1 . 3x63
-1 . 5x7 .x2 2x3 .x2 2x10 .x29 2x5 .x2 2x7
+1 . 3x78
+1 . 3x45
+1 . 5x7 .x2 2x3 .x2 2x10 .x34 2x5 .x2 2x7
 1
 1 . 6x10
+1
+1
+1
 1
 1
 1

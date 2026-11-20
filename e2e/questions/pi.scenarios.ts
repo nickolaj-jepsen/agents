@@ -60,6 +60,8 @@ const LAYOUT = {
 export default scenarios({
   plugin: "questions",
   harness: "pi",
+  // Hermetic: its own config with this plugin alone, so nothing of the person's setup shows.
+  start: { hermetic: true, plugins: ["questions"], turns: [] },
   region: region.box(/esc cancel|enter yes/),
   scenarios: {
     single: {

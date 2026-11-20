@@ -72,9 +72,10 @@ New files must be `git add`ed or the flake ignores them.
   throwaway home:
   `(export HOME=$(mktemp -d); cd plugins/<mod>; "$(dirname "$(command -v claude)")/.claude-wrapped" plugin test .)`.
 - An e2e fixture's git reads no global or system config (`e2e/lib/setup.ts`), and every session the
-  drivers start keeps `agent-notes` data in the run's folder. Without both, a fixture's checkout ran
-  the person's `post-checkout` hook and docfix's `agent-notes root --ensure`, which left folders in
-  their real notes store. A new driver or fixture helper keeps both.
+  drivers start keeps `agent-notes` data and `wt` worktrees in the run's folder (`runEnv`). Without
+  them, a fixture's checkout ran the person's `post-checkout` hook, docfix's
+  `agent-notes root --ensure` left folders in their real notes store, and worktree's `/wt` left
+  worktrees in `~/worktrees`. A new driver or fixture helper keeps them.
 - `pi.getSettings()` throws `Extension runtime not initialized` in an extension's factory. Read settings
   inside `execute()` or an event handler; a try/catch around the factory call yields empty settings.
 - A Claude Code or pi session that ends inside a worktree may close it once nothing runs there

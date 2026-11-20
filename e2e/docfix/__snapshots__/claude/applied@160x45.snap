@@ -1,10 +1,9 @@
 # docfix/claude/applied 160x45 @0,0 (160x43)
                                                                                                                      ╭─────────────────────────────────────────╮
  ▐▛███▛█   Claude Code <ver>                                                                                         │ docfix                                  │
-▝▜██████▀  Opus 5.5 with high effort · Claude Ultra                                                                  │ The apply prompt is in the prompt box:  │
- ▝▝   ▝▝   ~/.local/state/agents<tmp>                                                                                │ read it, then Enter to send.            │
+▝▜██████▀  <model>                                                                                                   │ The apply prompt is in the prompt box:  │
+ ▝▝   ▝▝   <tmp>                                                                                                     │ read it, then Enter to send.            │
                                                                                                                      ╰─────────────────────────────────────────╯
-▎ Debug mode enabled · logging to <tmp>
 
 ❯ /docfix
   ⎿  docfix: Opened the doc suggestions pane.
@@ -22,6 +21,8 @@
 
 
 
+
+⚠ docfix: docs 3 review                                                                                                                                     [-]
                                                                                                                                         ctrl+g to edit in Nvim
 ─── ↑ 1 more ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -41,14 +42,12 @@
   4. Call docfix with action "resolve" and the id (the file's name without .md), whether you applied it or found it no longer true.
 
   Name every doc you changed beyond the ones above. Anything else you notice gets filed with docfix as usual. Don't commit.
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
 .x117 1x43
-2x2 3x6 .x3 4x11 . 5x8 .x86 1 . 5x6 .x34 1
-2x2 3x5 2x2 .x2 5x40 .x66 1 .x41 1
-2x9 .x2 5x56 .x50 1 .x41 1
+2x2 3x6 .x3 4x11 . 5x5 .x89 1 . 5x6 .x34 1
+2x2 3x5 2x2 .x2 5x7 .x99 1 .x41 1
+2x9 .x2 5x5 .x101 1 .x41 1
 .x117 1x43
-1 . 5x107
 -
 6 7 8x7 7
 5x5
@@ -66,8 +65,10 @@
 -
 -
 -
+-
+9x16 5x7 .x133 5x3
 .x136 5x22
-9x3 . 1x8 . 9x147
+ax3 . 1x8 . ax147
 -
 -
 -
@@ -78,14 +79,13 @@
 -
 -
 -
-.x34 ax6
 -
 -
-.x115 ax9
-.x10 ax6
 -
-.x93 ax6
-9x160
+-
+-
+-
+.x123 b
 --- legend
 1 dim
 2 fg=#d77757
@@ -95,5 +95,6 @@
 6 fg=#999999 bg=#373737
 7 bg=#373737
 8 fg=#ffffff bg=#373737
-9 fg=#888888
-a fg=#ff6b80 underline=single
+9 fg=#ffc107
+a fg=#888888
+b inverse

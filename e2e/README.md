@@ -21,17 +21,42 @@ worked example. Every field of `scenarios({...})` and of a step, with its defaul
 `ScenarioSet`, `Scenario` and `Step` types in `lib/scenario.ts`.
 
 A click lands in the middle of the visible text. When the same text shows twice, `{ text, nth }`
-picks a later one.
+picks a later one. A click waits up to 5s for its text to show.
 
-The agent runs in its own empty folder under the temp dir, with the checkout's plugins:
-`claude-dev --strict-mcp-config` and `pi-dev`. Claude is your signed-in account, so send no prompts
-a screen does not need. Both can replay canned turns with `start.turns` (`Turn` in
-`lib/harness.ts`).
+A `wait` passes as soon as its text is anywhere on screen. Wait for what the step brings, not for
+text that was there before it: a form's title is often in the transcript above the form too.
+
+A Claude mod registers its commands a moment after the prompt shows, and a command typed before
+then is lost. `slashCommand(name, description)` in `lib/scenario.ts` types it once the slash menu
+offers it.
+
+### Hermetic sessions
+
+Start every scenario of a file hermetic, with `start` on the set:
+
+```ts
+start: { hermetic: true, plugins: ["docfix"], turns: [] },
+```
+
+The agent then runs in its own empty folder with a config of its own, the named plugins only, and no
+model but the replayed turns (`start.turns`, `Turn` in `lib/harness.ts`). Nothing of your setup
+shows in a snapshot: your account, model, effort, theme, MCP servers and pi extensions all change
+under you.
+
+Every session's folder is `/tmp/e2e-<random>`, not under `$TMPDIR`. An agent's session sets a
+`$TMPDIR` of its own, and a longer folder path moves where a path on screen wraps. `E2E_TMP`
+names another base.
+
+Without `hermetic`, a session runs `claude-dev --strict-mcp-config` or `pi-dev` with your own
+config. Claude is then your signed-in account, so send no prompts a screen does not need. `pi-dev`
+loads your system config's pi extensions from source, and when one fails to load, pi stops before
+its prompt and the run says so.
 
 For Claude those turns come from `lib/stub.ts`, a stand-in for Anthropic's Messages API on a free
 127.0.0.1 port for that session only (`ANTHROPIC_BASE_URL`,
-`CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`). It runs under your sign-in and never touches stored
-config, reads or logs headers, and is stopped with the session. A turn after the last gets
+`CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`). A hermetic session reaches it with a stub key, and
+any other under your sign-in. It never touches stored config, reads or logs headers, and is stopped
+with the session. A turn after the last gets
 "(stub: no more turns)". An `error` is a 400, since Claude retries a 5xx and that eats the next
 turn.
 
@@ -72,7 +97,7 @@ E2E_UPDATE=1 npm run e2e docfix   # accept what is on screen (or pass -u)
 
 Read the diff of the `.snap` files before you commit an update. For the pictures, run
 `E2E_UPDATE=1 E2E_PNG=1 npm run e2e <plugin>` and open the PNGs.
-`E2E_KEEP=1` keeps each run's folder under the temp dir.
+`E2E_KEEP=1` keeps each run's folder in `/tmp`.
 
 ## How a run goes
 
@@ -100,6 +125,9 @@ The scenarios of a run are played first, together, then the tests read what each
   `lib/session.ts`).
 - After a step the driver waits for the screen to stop changing (a quiet window, in
   `lib/session.ts`), unless a `wait` step follows, which says what to wait for.
+- That quiet window watches the text only, so a style can still land after it. A snapshot is read
+  again until it is the stored one or reads the same twice after 4s (`STEADY` in `lib/check.ts`).
+  A real difference costs those seconds at each size.
 
 ## Live mode
 

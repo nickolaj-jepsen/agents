@@ -1,24 +1,24 @@
-# docfix/claude/queue 240x60 @164,0 (76x55)
-│                                                                         ✕
-│ ─ Doc suggestions  3 ────────────────────────────────────────────────────
+# docfix/claude/queue 240x60 @159,0 (81x56)
+│                                                                              ✕
+│ ─ Doc suggestions  3 ─────────────────────────────────────────────────────────
 │
 │ Submit or close to carry out apply and dismiss
 │
-│ AGENTS.md ───────────────────────────────────────────────────────────────
+│ AGENTS.md ────────────────────────────────────────────────────────────────────
 │
 │ `just build` is not enough to verify a pi change; the docs say it is.
-│ ! wrong  3×  ••  ▸ evidence                 a: apply  d: dismiss  s: skip
+│ ! wrong  3×  ••  ▸ evidence                      a: apply  d: dismiss  s: skip
 │
-│ docs/hosts.md ───────────────────────────────────────────────────────────
+│ docs/hosts.md ────────────────────────────────────────────────────────────────
 │
 │ The `legacy` card was removed; the section still describes it.
-│ ↻ stale  2×  age  ▸ evidence                         apply  dismiss  skip
+│ ↻ stale  2×  age  ▸ evidence                              apply  dismiss  skip
 │
-│ docs/modules.md ─────────────────────────────────────────────────────────
+│ docs/modules.md ──────────────────────────────────────────────────────────────
 │
-│ A leaf that imports a third-party module imports it on every host; the
-│ page should say that module must be inert when the feature is off.
-│ + missing  ••  ▸ evidence                            apply  dismiss  skip
+│ A leaf that imports a third-party module imports it on every host; the page
+│ should say that module must be inert when the feature is off.
+│ + missing  ••  ▸ evidence                                 apply  dismiss  skip
 │
 │ [ submit ]
 │
@@ -54,29 +54,31 @@
 │
 │
 │
+│
 --- styles
-1 .x73 2
-1 . 2x2 3x15 2x56
+1 .x78 2
+1 . 2x2 3x15 2x61
 1
 1 . 2x46
 1
-1 . 3x9 2x64
+1 . 3x9 2x69
 1
 1 . 3x69
-1 . 4x7 .x2 2x6 .x2 2x10 .x17 5 2x7 .x2 5 2x9 .x2 5
+1 . 4x7 .x2 2x6 .x2 2x10 .x22 5 2x7 .x2 5 2x9 .x2 5
 1
-1 . 3x13 2x60
+1 . 3x13 2x65
 1
 1 . 3x62
-1 . 6x7 .x2 2x7 .x2 2x10 .x25 2x5 .x2 2x7
+1 . 6x7 .x2 2x7 .x2 2x10 .x30 2x5 .x2 2x7
 1
-1 . 3x15 2x58
+1 . 3x15 2x63
 1
-1 . 3x70
-1 . 3x66
-1 . 3x9 .x2 2x2 .x2 2x10 .x28 2x5 .x2 2x7
+1 . 3x75
+1 . 3x61
+1 . 3x9 .x2 2x2 .x2 2x10 .x33 2x5 .x2 2x7
 1
 1 . 7x10
+1
 1
 1
 1

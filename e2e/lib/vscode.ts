@@ -25,7 +25,7 @@ import {
 } from "node:fs";
 import { dirname, join } from "node:path";
 import { checkoutMods, hermeticClaude, STUB_KEY, type Turn } from "./harness.ts";
-import { notesEnv } from "./setup.ts";
+import { runEnv } from "./setup.ts";
 import type { Pattern } from "./screen.ts";
 import type { Target } from "./session.ts";
 import { startStub, stopStub } from "./stub.ts";
@@ -214,7 +214,7 @@ export async function launchVscode(
     CLAUDE_CODE_PLUGIN_DIRS: checkoutMods(start.plugins).join(":"),
     AGENT_HUB_HIDDEN: "1",
     WT_NO_AUTOCLOSE: "1",
-    ...notesEnv(runDir),
+    ...runEnv(runDir),
     ...(!visible && {
       WLR_BACKENDS: "headless",
       WLR_LIBINPUT_NO_DEVICES: "1",

@@ -5,7 +5,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { message } from "./answer/fixture.ts";
 import { checkoutMods, checkoutRoot, STUB_KEY } from "./lib/harness.ts";
-import { notesEnv, setupContext } from "./lib/setup.ts";
+import { runEnv, setupContext } from "./lib/setup.ts";
 import { startStub, stopStub } from "./lib/stub.ts";
 
 const die = (msg: string): never => {
@@ -45,7 +45,7 @@ const answer = message(fixture);
 write("answer-fixture.md", `${answer}\n`);
 write(
   ".claude/settings.json",
-  JSON.stringify({ model: "haiku", env: { ...notesEnv(runDir), WT_NO_AUTOCLOSE: "1" } }),
+  JSON.stringify({ model: "haiku", env: { ...runEnv(runDir), WT_NO_AUTOCLOSE: "1" } }),
 );
 
 // Claude Code accepts plugin directories in user settings, but ignores them in project settings.
@@ -81,7 +81,7 @@ async function seedSession(): Promise<URL> {
         ANTHROPIC_API_KEY: STUB_KEY,
         ANTHROPIC_BASE_URL: `http://127.0.0.1:${port}`,
         CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1",
-        ...notesEnv(runDir),
+        ...runEnv(runDir),
       },
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],

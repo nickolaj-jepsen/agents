@@ -1,6 +1,15 @@
 import type { Turn } from "../lib/harness.ts";
-import { region } from "../lib/screen.ts";
+import { gridLines, type Region } from "../lib/screen.ts";
 import { scenarios } from "../lib/scenario.ts";
+
+/** The editor between its two rules, and the footer under it. */
+const footer: Region = (grid) => {
+  const rules = gridLines(grid).flatMap((line, i) => (/^─{20,}$/.test(line) ? [i] : []));
+  const top = rules.at(-2);
+  return top === undefined
+    ? undefined
+    : { x: 0, y: top, w: grid[0]?.length ?? 0, h: grid.length - top };
+};
 
 /** A repository with one commit, so `wt` has a default branch to branch from. */
 const repo = (ctx: { write(rel: string, content: string): void; initRepo(): void }) => {
@@ -25,11 +34,11 @@ const moveAndSpeak = [
 export default scenarios({
   plugin: "worktree",
   harness: "pi",
-  // The notice wraps where the worktree's own path puts it, so the shot is the prompt and the
-  // footer, which names the checkout the session runs in; a `wait` above proves the notice.
-  region: region.rows(/^── /),
-  // A worktree lives under the machine's worktree root, named after the folder `wt` saw.
-  mask: [{ pattern: /[\w~./-]*worktrees\/\S+/g, with: "<worktree>" }],
+  // Hermetic: its own config with this plugin alone, so nothing of the person's setup shows.
+  start: { hermetic: true, plugins: ["worktree"], turns: [] },
+  // The notice wraps where the worktree's own path puts it, so the shot is the editor and the
+  // footer, whose branch names the checkout the session runs in; a `wait` proves the notice.
+  region: footer,
   scenarios: {
     moved: {
       about: "/wt moves the session into a new worktree, and the next turn says where from",
@@ -43,7 +52,12 @@ export default scenarios({
       about: "/back moves it to the primary checkout and closes the worktree it leaves",
       from: "moved",
       sizes: [[160, 45]],
-      steps: [{ type: "/back" }, { press: "Enter" }, { wait: /This session moved from/ }],
+      steps: [
+        { type: "/back" },
+        { press: "Enter" },
+        // The notice is on screen from `moved` already: the footer leaving the worktree is the move.
+        { wait: /\/spike \(spike\)/, gone: true, timeout: 30_000 },
+      ],
     },
   },
 });

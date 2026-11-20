@@ -1,8 +1,8 @@
 import { region, type Region } from "../lib/screen.ts";
-import { scenarios } from "../lib/scenario.ts";
+import { scenarios, slashCommand } from "../lib/scenario.ts";
 import { checkout, EXTREME, fileSuggestions, MANY, ONE, STRUCTURED } from "./fixture.ts";
 
-const open = [{ type: "/docfix" }, { press: "Enter" }];
+const open = [slashCommand("docfix", "Review the doc suggestions"), { press: "Enter" }];
 
 /** The whole screen but the footer's two rows, whose folder path shows only now and then. */
 const aboveFooter: Region = (grid) => ({
@@ -15,6 +15,8 @@ const aboveFooter: Region = (grid) => ({
 export default scenarios({
   plugin: "docfix",
   harness: "claude",
+  // Hermetic: its own config with this plugin alone, so nothing of the person's setup shows.
+  start: { hermetic: true, plugins: ["docfix"], turns: [], args: ["--model", "haiku"] },
   // Below 110 columns the pane is a box over the transcript, from 110 a column beside it.
   region: region.any(region.sidebar, region.box()),
   // The age of a suggestion, `2d`: a fixture filed a moment ago would read `0m` or `1m`.

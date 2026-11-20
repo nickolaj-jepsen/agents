@@ -1,4 +1,4 @@
-# answer/pi/long-body-wheel 70x24 @0,8 (70x12)
+# answer/pi/long-body-wheel 70x24 @0,7 (70x12)
 ╭─ 1 of 1  ○ Q1 ─────────────────────────────────────────────────────╮
 │ Line 2 of what it hangs on.                                        │
 │ Line 3 of what it hangs on.                                        │
@@ -25,6 +25,6 @@
 1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x29 1
 1 . 3x65 .x2 1
 --- legend
-1 fg=#343331
-2 fg=#cf6a4c
-3 fg=#878580
+1 fg=#768186
+2 fg=#a798d7
+3 fg=#7e888e

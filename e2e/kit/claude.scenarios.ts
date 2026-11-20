@@ -7,7 +7,7 @@ import { stageWidth, storyId, stories, type Story } from "../../kit/catalog/clau
 import { gridLines, region, rowText } from "../lib/screen.ts";
 import type { Rect, Region } from "../lib/screen.ts";
 import { catalogueSizes } from "./sizes.ts";
-import { scenarios, type Scenario, type Step } from "../lib/scenario.ts";
+import { scenarios, slashCommand, type Scenario } from "../lib/scenario.ts";
 
 const catalog = fileURLToPath(new URL("../../kit/catalog/claude", import.meta.url));
 
@@ -51,27 +51,6 @@ const band: Region = (grid) => {
   return { x: 0, y: top, w: grid[0]?.length ?? 0, h: bottom - top + 1 };
 };
 
-/**
- * The catalogue mod loads after the prompt shows, and a command typed before it is lost, so
- * wait for `/kit` to appear in the slash menu.
- */
-const modLoaded: Step = {
-  run: async (session) => {
-    for (let tries = 0; tries < 40; tries++) {
-      await session.type("/kit", { settle: false });
-      try {
-        await session.wait(/\/kit\s+\S*.*Draw a Claude/, { timeout: 750 });
-        return;
-      } catch {
-        await session.press(["Backspace", "Backspace", "Backspace", "Backspace"], {
-          settle: false,
-        });
-      }
-    }
-    throw new Error("the catalogue mod never registered /kit");
-  },
-};
-
 export default scenarios({
   plugin: "kit",
   harness: "claude",
@@ -90,7 +69,7 @@ export default scenarios({
           args: ["--model", "haiku", "--plugin-dir", catalog],
         },
         steps: [
-          modLoaded,
+          slashCommand("kit", "Draw a Claude"),
           { type: ` ${s.component} ${s.state}` },
           { press: "Enter" },
           { wait: `Drew ${storyId(s)}`, timeout: 15000 },

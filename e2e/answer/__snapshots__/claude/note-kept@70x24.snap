@@ -1,4 +1,11 @@
-# answer/claude/note-kept 70x24 @0,1 (70x18)
+# answer/claude/note-kept 70x24 @0,2 (70x17)
+▎ ❯ Q1  Use SQLite? ✓
+▎
+▎  A ○ SQLite
+▎  B ● Postgres
+▎  C ○ Write your own answer
+▎
+▎  Clear answer
 ▎
 ▎  Note: Keep the hosted instance.
 ▎        Rotate its credentials first.
@@ -8,40 +15,31 @@
 ▎
 ▎  A ○ Yes
 ▎  B ○ No
-▎  C ○ Write your own answer
-▎
-▎  Note: Add a note
-
-
-▎   Answers  1 of 2 answered
-▎  [ Fill prompt ]  ▸ Show all 2 questions
-
 Q1/2   jk move A–B pick C write  n note  r review keys here       [-]
 --- styles
+1 . 2x19 .x48 1
 1 .x68 1
-1 .x2 2x5 . 3x25 .x35 1
-1 .x8 3x29 .x31 1
+1 .x2 2x2 3x2 .x62 1
+1 .x2 2x12 .x54 1
+1 .x2 1x2 3 . 3x21 .x41 1
+1 .x68 1
+1 .x2 3x12 .x54 1
+1 .x68 1
+1 .x2 3x5 . 4x25 .x35 1
+1 .x8 4x29 .x31 1
 1x70
-4x70
-4 . 5x18 .x49 4
-4 .x68 4
-4 .x2 6x2 2x2 .x62 4
-4 .x2 6x2 2x2 .x62 4
-4 .x2 2x3 . 2x21 .x41 4
-4 .x68 4
-4 .x2 2x5 . 2x10 .x50 4
-4x70
-3x70
-3 . 7x26 .x41 3
-3 .x2 7x15 .x2 2x22 .x27 3
-3x70
-8x6 . 3x2 2x5 . 3x3 2x5 . 3 2x6 .x2 3 2x5 .x2 3 2x7 . 2x9 .x7 2x3
+5x70
+5 . 6x18 .x49 5
+5 .x68 5
+5 .x2 7x2 3x2 .x62 5
+5 .x2 7x2 3x2 .x62 5
+8x6 . 4x2 3x5 . 4x3 3x5 . 4 3x6 .x2 4 3x5 .x2 4 3x7 . 3x9 .x7 3x3
 --- legend
 1 fg=#d77757
-2 fg=#999999
-3 fg=#b1b9f9
-4 dim
-5 bold
-6 fg=#999999 bold
-7 fg=#b1b9f9 bold
+2 fg=#d77757 bold
+3 fg=#999999
+4 fg=#b1b9f9
+5 dim
+6 bold
+7 fg=#999999 bold
 8 fg=#d77757 bold inverse

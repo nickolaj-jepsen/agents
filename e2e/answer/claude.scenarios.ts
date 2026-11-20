@@ -69,6 +69,8 @@ export default scenarios({
         { press: "Shift+Enter" },
         { type: "Rotate its credentials first." },
         { press: "Enter" },
+        // The note showed as it was typed: the editor's hint going proves the save.
+        { wait: /Note:.*⏎ save/, gone: true },
         { wait: "Q1/2" },
         { wait: "Rotate its credentials first." },
       ],
@@ -173,6 +175,8 @@ export default scenarios({
         { wait: /Note:.*⏎ save/ },
         { paste: "First line\nSecond line" },
         { press: "Enter" },
+        // The note showed as it was typed: the editor's hint going proves the save.
+        { wait: /Note:.*⏎ save/, gone: true },
         { wait: "Second line" },
         { run: expectPrompt("draft to keep") },
       ],

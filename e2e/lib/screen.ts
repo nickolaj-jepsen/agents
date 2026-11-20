@@ -12,7 +12,10 @@ export type Rect = { x: number; y: number; w: number; h: number };
 /** Finds the plugin's surface on the screen, or says it is not there. */
 export type Region = (grid: Grid) => Rect | undefined;
 
-/** A volatile value. `with` is what it becomes, fitted to the cells it covered. */
+/**
+ * A volatile value. `with` is what it becomes, fitted to the cells it covered; `$1` to `$9` in it
+ * are the pattern's groups.
+ */
 export type Mask = { pattern: RegExp; with?: string };
 
 export type Row = { text: string; at: number[] };
@@ -184,6 +187,13 @@ export function builtinMasks(paths: string[] = []): Mask[] {
       .flatMap(spellings)
       .map((p) => ({ pattern: new RegExp(`${escapeRe(p)}[^\\s│]*`, "g"), with: "<tmp>" })),
     { pattern: /\/(?:tmp|var\/folders|run\/user)\/[^\s│]+/g, with: "<tmp>" },
+    // pi's footer: the branch follows the folder, so it would stand where the path's length put it.
+    { pattern: /<tmp> +(\([^\s()]+\))(?=\s*$)/g, with: "<tmp> $1" },
+    // Claude's banner, also where a box cuts it short: the version, the signed-in account's model,
+    // effort and plan, and the folder, which it shortens (`~/…/state/agents`).
+    { pattern: /(?<=▐▛███▛█ {3})Claude Code[^│]*[^\s│]/g, with: "Claude Code <ver>" },
+    { pattern: /(?<=▝▜██████▀ {2})[^│]*[^\s│]/g, with: "<model>" },
+    { pattern: /(?<=▝▝ {3}▝▝ {3})[^│]*[^\s│]/g, with: "<tmp>" },
     { pattern: /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, with: "<uuid>" },
     { pattern: /\bv?\d+\.\d+\.\d+(?:-[\w.]+)?\b/g, with: "<ver>" },
     { pattern: /\$\d+(?:\.\d+)?/g, with: "$<cost>" },
@@ -193,7 +203,24 @@ export function builtinMasks(paths: string[] = []): Mask[] {
   ];
 }
 
-/** Masks `grid` in place of its text; styles stay. Each match keeps the cells it covered. */
+const BLANK: Cell = {
+  char: " ",
+  fg: "default",
+  bg: "default",
+  bold: false,
+  dim: false,
+  italic: false,
+  inverse: false,
+  strike: false,
+  invisible: false,
+  blink: false,
+  underline_style: "none",
+};
+
+/**
+ * Masks `grid` in place of its text. Each match keeps the cells it covered: the placeholder's keep
+ * their styles, and those past it are blank.
+ */
 export function applyMasks(grid: Grid, masks: Mask[]): Grid {
   const out = grid.map((row) => row.map((c) => ({ ...c })));
   for (const row of out) {
@@ -210,9 +237,18 @@ export function applyMasks(grid: Grid, masks: Mask[]): Grid {
           (c, i) => c.char !== "" && (at[i] ?? -1) >= start && (at[i] ?? -1) < start + m[0].length,
         );
         const fill =
-          mask.with === undefined ? "•".repeat(covered.length) : fit(mask.with, covered.length);
+          mask.with === undefined
+            ? "•".repeat(covered.length)
+            : fit(
+                mask.with.replace(/\$(\d)/g, (_, n: string) => m[Number(n)] ?? ""),
+                covered.length,
+              );
+        const filled = fill.trimEnd().length;
         covered.forEach((c, i) => {
-          c.char = fill[i] ?? " ";
+          // Past the placeholder a cell is blank, or a style run keeps the masked text's length
+          // (a run folder under a longer $TMPDIR).
+          if (i >= filled) Object.assign(c, BLANK);
+          else c.char = fill[i] ?? " ";
         });
       }
     }

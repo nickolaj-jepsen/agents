@@ -10,7 +10,7 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { notesEnv } from "./setup.ts";
+import { runEnv } from "./setup.ts";
 import type { LaunchSpec } from "./term.ts";
 
 export type HarnessName = "claude" | "pi";
@@ -67,6 +67,8 @@ export interface Harness {
   ready(text: string): boolean;
   /** Keys that answer a startup dialog the driver owns, if one is showing. */
   dialog(text: string): string[] | undefined;
+  /** True when the start has failed for good, so the wait for the prompt can stop. */
+  failed?(text: string): boolean;
 }
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -230,7 +232,7 @@ export const claude: Harness = {
       // two, starts every session in the classic renderer; this overrides that.
       env: {
         ...COMMON_ENV,
-        ...notesEnv(run.runDir),
+        ...runEnv(run.runDir),
         CLAUDE_CODE_NO_FLICKER: "1",
         ...(hermetic ? { ...hermetic, ...HERMETIC_ENV, CLAUDE_CODE_PLUGIN_DIRS: "" } : {}),
         ...path,
@@ -253,7 +255,7 @@ export const pi: Harness = {
     const args = ["--session-dir", join(run.runDir, "sessions")];
     const env: Record<string, string> = {
       ...COMMON_ENV,
-      ...notesEnv(run.runDir),
+      ...runEnv(run.runDir),
       PI_OFFLINE: "1",
       ...start.env,
     };
@@ -269,6 +271,11 @@ export const pi: Harness = {
         "fixture",
         "--model",
         "replay",
+        // The model scope too: a session that switches (worktree's `/wt`) resolves it again, and
+        // from settings it is the system's `enabledModels`, which a `pi` wrapper may merge into a
+        // hermetic config, where none of them exist.
+        "--models",
+        "fixture/replay",
       );
     }
     if (start.hermetic) {
@@ -303,6 +310,9 @@ export const pi: Harness = {
   // The startup hints, or with `quietStartup` (hermetic) the footer's context meter.
   ready: (text) => /escape interrupt|commands ·|\d%\/\d+k \(/.test(text),
   dialog: () => undefined,
+  // An extension that does not load ends pi before its prompt; `pi-dev` loads the system config's
+  // own from source, whose `node_modules` that config's dev setup links.
+  failed: (text) => /^Error: Failed to load extension/m.test(text),
 };
 
 export const harnesses: Record<HarnessName, Harness> = { claude, pi };

@@ -1,5 +1,6 @@
 # answer/pi/cards-note 160x45 @0,0 (159x45)
 
+
  ask
 
 
@@ -37,7 +38,6 @@
 │    Answers  1 of 2 answered
 │   [ Fill prompt ]  ▸ Show all 2 questions
 
-
  alt+a answer  Q1  1/2 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 a draft for later
@@ -45,6 +45,7 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                                                                                                          repla
 --- styles
+-
 1x159
 1 2x3 1x155
 1x159
@@ -83,12 +84,11 @@ a draft for later
 a .x4 bx24
 a .x3 bx15 .x2 7x22
 -
--
 . 7x5 cx7 .x2 7x16
 dx159
 .x17 e
 dx159
-7x19
+7x5
 7x159
 --- legend
 1 bg=#213b49

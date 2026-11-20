@@ -1,4 +1,4 @@
-# answer/pi/long-title-review 70x24 @0,8 (70x12)
+# answer/pi/long-title-review 70x24 @0,7 (70x12)
 ╭─ Review  ✓ Q1 ─────────────────────────────────────────────────────╮
 │ 1  Q1  Why this matters: the quick brown fox jumps over…  → A: Yes │
 │                                                                    │
@@ -25,7 +25,7 @@
 1 . 2x5 .x18 2 .x7 2 .x7 2 .x27 1
 1 . 4x39 .x28 1
 --- legend
-1 fg=#343331
-2 fg=#cf6a4c
-3 fg=#879a39
-4 fg=#878580
+1 fg=#768186
+2 fg=#a798d7
+3 fg=#68b78d
+4 fg=#7e888e

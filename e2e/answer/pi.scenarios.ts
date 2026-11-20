@@ -18,6 +18,8 @@ const ASKED: Step[] = [{ type: "ask" }, { press: "Enter" }, { wait: /Answer \d+ 
 /** alt+a opens the form in the editor's place. */
 const OPEN: Step[] = [{ press: "Alt+a" }, { wait: /1-9/ }];
 const turn = (fixture: string): Scenario["start"] => ({
+  hermetic: true,
+  plugins: ["answer"],
   args: ["--answer-guided"],
   turns: says(fixture),
 });
@@ -39,7 +41,9 @@ const promptRule = /^─{20,}/;
 const CARD = withoutScrollbar(region.rows(/^│\s+(?:❯ )?Q1  /, promptRule));
 const REVIEW = withoutScrollbar(region.rows(/^│\s+Answers /, promptRule));
 const FULL_CARD = withoutScrollbar(region.full);
-const asserts = (pattern: RegExp | string): Step => ({ wait: pattern, timeout: 4000 });
+const asserts = (pattern: RegExp | string): Step => ({ wait: pattern });
+/** The guided form on Q2: its own title row, as the transcript above shows `Q2. Add caching?` too. */
+const ON_Q2 = /│ Add caching\?/;
 const SOME = (fixture: string, n: number): Step[] => [
   { type: "ask" },
   { press: "Enter" },
@@ -77,6 +81,8 @@ export default scenarios({
         { press: "Shift+Enter" },
         { type: "check the results" },
         { press: "Enter" },
+        // The editor showed the note as it was typed: its key hint going proves the save.
+        { wait: "enter save", gone: true },
         { wait: "check the results" },
         { wait: "a draft for later" },
       ],
@@ -289,6 +295,8 @@ export default scenarios({
             "Keep 東京 on the old routing until the replicas catch up and the dashboards agree.\nCheck 大阪 before widening the rollout.",
         },
         { press: "Enter" },
+        // The editor showed the note as it was typed: its key hint going proves the save.
+        { wait: "enter save", gone: true },
         { wait: "Check 大阪" },
       ],
     },
@@ -453,7 +461,7 @@ export default scenarios({
     pick: {
       from: "open",
       about: "1 picks A and goes on to the second question",
-      steps: [{ press: "1" }, asserts("Add caching?")],
+      steps: [{ press: "1" }, asserts(ON_Q2)],
     },
     "pick-click": {
       from: "open",
@@ -463,7 +471,7 @@ export default scenarios({
     "pick-again": {
       from: "pick-click",
       about: "a click on the answer just taken goes on to the next question",
-      steps: [{ click: "2 ● B. Postgres" }, asserts("Add caching?")],
+      steps: [{ click: "2 ● B. Postgres" }, asserts(ON_Q2)],
     },
     "note-open": {
       from: "pick",
@@ -478,22 +486,22 @@ export default scenarios({
     "forward-key": {
       from: "open",
       about: "f goes forward",
-      steps: [{ press: "f" }, asserts("Add caching?")],
+      steps: [{ press: "f" }, asserts(ON_Q2)],
     },
     "forward-click": {
       from: "open",
       about: "a click on the `f forward` chip",
-      steps: [{ click: "f forward" }, asserts("Add caching?")],
+      steps: [{ click: "f forward" }, asserts(ON_Q2)],
     },
     "stop-click": {
       from: "open",
       about: "a click on a question's stop in the top border goes to that question",
-      steps: [{ click: "○ Q2" }, asserts("Add caching?"), asserts("2 of 2")],
+      steps: [{ click: "○ Q2" }, asserts(ON_Q2), asserts("2 of 2")],
     },
     "forward-tab": {
       from: "open",
       about: "tab goes forward",
-      steps: [{ press: "Tab" }, asserts("Add caching?")],
+      steps: [{ press: "Tab" }, asserts(ON_Q2)],
     },
     "back-key": {
       from: "forward-key",
@@ -513,12 +521,12 @@ export default scenarios({
     skip: {
       from: "open",
       about: "s skips the question",
-      steps: [{ press: "s" }, asserts("Add caching?")],
+      steps: [{ press: "s" }, asserts(ON_Q2)],
     },
     "skip-click": {
       from: "open",
       about: "a click on the `s skip` chip",
-      steps: [{ click: "s skip" }, asserts("Add caching?")],
+      steps: [{ click: "s skip" }, asserts(ON_Q2)],
     },
     close: {
       from: "pick",
@@ -528,18 +536,18 @@ export default scenarios({
     reopen: {
       from: "close",
       about: "reopened with the answer kept",
-      steps: [{ press: "Alt+a" }, asserts("Add caching?")],
+      steps: [{ press: "Alt+a" }, asserts(ON_Q2)],
     },
     "keys-walk": {
       from: "open",
       about: "every key of the keys row, each checked on the screen, ending on the review",
       steps: [
         { press: "1" },
-        asserts("Add caching?"),
+        asserts(ON_Q2),
         { press: "b" },
         asserts("● A. SQLite"),
         { press: "s" },
-        asserts("Add caching?"),
+        asserts(ON_Q2),
         { press: "h" },
         { press: "n" },
         asserts("note ›"),
@@ -560,11 +568,11 @@ export default scenarios({
         { press: "k" },
         asserts("›1"),
         { press: "Right" },
-        asserts("Add caching?"),
+        asserts(ON_Q2),
         { press: "Left" },
         asserts("1 of 2"),
         { press: "l" },
-        asserts("Add caching?"),
+        asserts(ON_Q2),
       ],
     },
     several: {
@@ -590,7 +598,7 @@ export default scenarios({
     "write-in": {
       from: "open",
       about: "3 opens the write-in field",
-      steps: [{ press: "3" }, { wait: /enter|esc/ }],
+      steps: [{ press: "3" }, { wait: "esc leaves the field" }],
     },
     "write-typed": {
       from: "write-in",
@@ -600,12 +608,12 @@ export default scenarios({
     "write-kept": {
       from: "write-typed",
       about: "Enter keeps it and goes on",
-      steps: [{ press: "Enter" }, asserts("Add caching?")],
+      steps: [{ press: "Enter" }, asserts(ON_Q2)],
     },
     "write-click": {
       from: "open",
       about: "a click on the write-in row opens its field",
-      steps: [{ click: "3 ○ Write your own answer" }, { wait: /esc/ }],
+      steps: [{ click: "3 ○ Write your own answer" }, { wait: "esc leaves the field" }],
     },
 
     // ---- notes
@@ -629,12 +637,7 @@ export default scenarios({
     "note-kept": {
       from: "note-typed",
       about: "Enter keeps it and goes on; back shows it kept",
-      steps: [
-        { press: "Enter" },
-        asserts("Add caching?"),
-        { press: "b" },
-        asserts("Note: keep the flag"),
-      ],
+      steps: [{ press: "Enter" }, asserts(ON_Q2), { press: "b" }, asserts("Note: keep the flag")],
     },
     "note-edit": {
       from: "note-kept",
@@ -702,7 +705,7 @@ export default scenarios({
     "review-back": {
       from: "review",
       about: "b on the review goes back",
-      steps: [{ press: "b" }, asserts("Add caching?")],
+      steps: [{ press: "b" }, asserts(ON_Q2)],
     },
     "fill-key": {
       from: "review",

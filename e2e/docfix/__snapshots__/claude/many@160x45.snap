@@ -1,4 +1,4 @@
-# docfix/claude/many 160x45 @88,0 (72x40)
+# docfix/claude/many 160x45 @88,0 (72x41)
 │                                                                     ✕
 │ ─ Doc suggestions  28 ───────────────────────────────────────────────
 │
@@ -38,6 +38,7 @@
 │
 │ Claim number 5 about docs/agents.md: the page no longer matches what
 │ the code does.
+│ + missing  age  ▸ evidence                       apply  dismiss  skip
 │
 --- styles
 1 .x69 2
@@ -79,6 +80,7 @@
 1
 1 . 3x68
 1 . 3x14
+1 . 3x9 .x2 2x3 .x2 2x10 .x23 2x5 .x2 2x7
 1
 --- legend
 1 dim

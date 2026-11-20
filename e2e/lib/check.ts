@@ -24,6 +24,38 @@ const actualOf = (path: string) => path.replace(/\.(snap|png)$/, ".actual.$1");
 /** Whether a run draws a PNG beside every snapshot. */
 export const wantsPng = () => !!process.env.E2E_PNG && process.env.E2E_PNG !== "0";
 
+/** How long a snapshot that is not yet the stored one is read again, and how often. */
+export const STEADY = { timeout: 4000, poll: 150 };
+
+/**
+ * The region's snapshot once the screen has finished drawing it. The settle before it watches the
+ * text only, so a style that lands late (a focus colour, a dim) or a redraw after a quiet spell can
+ * still be caught half done. It is read again until it is the stored snapshot, or it reads the
+ * same twice in a row and `STEADY.timeout` has passed; without a stored one, two alike suffice.
+ */
+async function steadySnapshot(
+  session: Session,
+  title: string,
+  r: Resolved,
+  expected: string | undefined,
+): Promise<string> {
+  const read = () => session.snapshot(title, r.region, r.mask);
+  const start = Date.now();
+  let last = await read().catch((err: unknown) => err as Error);
+  for (;;) {
+    if (last === expected) return last;
+    await new Promise((done) => setTimeout(done, STEADY.poll));
+    const now = await read().catch((err: unknown) => err as Error);
+    const same = typeof now === "string" && now === last;
+    last = now;
+    if (same && (expected === undefined || Date.now() - start >= STEADY.timeout)) return now;
+    if (Date.now() - start >= STEADY.timeout * 2) {
+      if (typeof now === "string") return now;
+      throw now;
+    }
+  }
+}
+
 /** Resizes through the scenario's sizes and reads the screen at each. */
 export async function capture(session: Session, r: Resolved): Promise<Capture[]> {
   const out: Capture[] = [];
@@ -34,12 +66,13 @@ export async function capture(session: Session, r: Resolved): Promise<Capture[]>
     const snap = snapshotPath(r, size, "snap");
     const png = snapshotPath(r, size, "png");
     mkdirSync(dirname(snap), { recursive: true });
-    const actual = await session.snapshot(
-      `${r.plugin}/${r.harness}/${r.name} ${size[0]}x${size[1]}`,
-      r.region,
-      r.mask,
-    );
     const expected = existsSync(snap) ? readFileSync(snap, "utf8") : undefined;
+    const actual = await steadySnapshot(
+      session,
+      `${r.plugin}/${r.harness}/${r.name} ${size[0]}x${size[1]}`,
+      r,
+      updating() ? undefined : expected,
+    );
     // Review only: a glyph the rasterizer has no font for (an emoji) must not fail the text.
     if (wantsPng() || (expected !== actual && !updating()))
       await session.png(actualOf(png)).catch(() => undefined);

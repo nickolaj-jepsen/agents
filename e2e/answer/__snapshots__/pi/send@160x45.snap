@@ -7,13 +7,10 @@
  Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.
 
 
- Warning: codemode_only: not registered, declarations stay visible: subagent, get_subagent_result, steer_subagent
-
-
  ask
 
 
- ▌ Q1. Use SQLite?
+ Q1. Use SQLite?
 
  - A. SQLite
  - B. Postgres
@@ -40,41 +37,41 @@
 
 
 
-── ask ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── failed ──  ──  ── 3% / 200k ──
+
 
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  fixture  Replay (fixture)                                                                                                                <tmp>
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+<tmp>
+0.7%/200k (auto)                                                                                                                                          replay
 --- styles
 -
-. 1 2x2 .x2 3x6
+. 1 2x2 .x2 3x5
 . 4x2 . 5 . 3x6 6x13 3x13 6x14 3 6x12 3 6x8 3x6 6x5
 . 3x39
 -
 . 3x85
 -
+7x160
+7 8x3 7x156
+7x160
 -
-. 7x112
+. 9x15
 -
-8x160
-8 9x3 8x156
-8x160
+. ax2 9x2
+. ax2 9x2
 -
-.x3 ax15
+. 9x16
 -
-. bx2 ax2
-. bx2 ax2
+. ax2 9x2
+. ax2 9x2
 -
-. ax16
+7x160
+7 8x5 7x154
+7 8x5 7x154
+7x160
 -
-. bx2 ax2
-. bx2 ax2
--
-8x160
-8 9x5 8x154
-8 9x5 8x154
-8x160
--
-. cx53
+. bx53
 . 6x67
 -
 -
@@ -86,24 +83,24 @@
 -
 -
 -
-dx3 3x3 . dx120 . cx6 dx4 3 dx4 e dx4 3x9 dx3
 -
-dx160
-.x2 3x7 .x2 fx16 .x112 3x16 gx3
+-
+cx160
+d
+cx160
+3x5
+3x160
 --- legend
 1 fg=#e48a7a bg=#4f8eb3
 2 fg=#e48a7a
-3 fg=#878580
+3 fg=#7e888e
 4 fg=#4f8eb3
 5 fg=#eab65d
-6 fg=#b7b5ac
-7 fg=#d0a215
-8 bg=#282726
-9 fg=#dad8ce bg=#282726
-a bold
-b fg=#cf6a4c
-c fg=#d14d41
-d fg=#343331
-e fg=#cf6a4c bold
-f fg=#878580 bold
-g fg=#dad8ce
+6 fg=#9da5a9
+7 bg=#213b49
+8 fg=#dee0e1 bg=#213b49
+9 bold
+a fg=#a798d7
+b fg=#ea7f81
+c fg=#6c767b
+d inverse

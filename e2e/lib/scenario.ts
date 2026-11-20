@@ -78,6 +78,8 @@ export type ScenarioSet = {
   /** Default region and masks for every scenario of the file. */
   region?: Region;
   mask?: Mask[];
+  /** How every scenario of the file starts, under each one's own `start`. */
+  start?: StartOptions;
   scenarios: Record<string, Scenario>;
 };
 
@@ -130,7 +132,7 @@ export function resolveScenario(set: ScenarioSet, name: string, seen: string[] =
     name,
     about: s.about ?? base?.about ?? "",
     setup: [...(base?.setup ?? []), ...(s.setup ? [s.setup] : [])],
-    start: merge(base?.start ?? {}, s.start),
+    start: merge(base?.start ?? set.start ?? {}, s.start),
     size: s.size ?? base?.size ?? [160, 45],
     steps: [...(base?.steps ?? []), ...(s.steps ?? [])],
     region: s.region ?? (s.from ? base?.region : undefined) ?? set.region ?? fullRegion,
@@ -145,6 +147,33 @@ export function resolveScenario(set: ScenarioSet, name: string, seen: string[] =
     fresh: !!s.fresh,
   };
 }
+
+/**
+ * Types `/<name>` once the slash menu offers it, and leaves it in the prompt. A mod registers its
+ * command after Claude's prompt shows, and a command typed before then is lost; under a few
+ * sessions at once that can take seconds. `about` is the start of the command's description, which
+ * tells the menu's row from what was typed.
+ */
+export const slashCommand = (name: string, about: string): Step => ({
+  run: async (session) => {
+    const typed = `/${name}`;
+    const row = new RegExp(`${escape(typed)}\\s+.*${escape(about)}`);
+    const start = Date.now();
+    for (;;) {
+      await session.type(typed, { settle: false });
+      try {
+        await session.wait(row, { timeout: 2000 });
+        return;
+      } catch (err) {
+        if (Date.now() - start > 45_000)
+          throw new Error(`${typed} never showed in the slash menu: ${String(err)}`);
+        await session.press(Array<string>(typed.length).fill("Backspace"), { settle: false });
+      }
+    }
+  },
+});
+
+const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const fullRegion: Region = (grid) => ({ x: 0, y: 0, w: grid[0]?.length ?? 0, h: grid.length });
 

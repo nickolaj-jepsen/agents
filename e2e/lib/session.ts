@@ -2,7 +2,7 @@
  * A running agent and the verbs a scenario, a test or the CLI drives it with.
  * Mouse targets are visible text; sizes are columns by rows.
  */
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { accessSync, constants, mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { harnesses, type HarnessName, type StartOptions } from "./harness.ts";
@@ -59,6 +59,22 @@ function track(session: Session) {
     process.once(signal, () => {
       void Promise.allSettled([...live].map((s) => s.close())).finally(() => process.exit(130));
     });
+}
+
+/**
+ * Where a run's folder is made: `/tmp`, not `$TMPDIR`, so its path is as long whoever starts the
+ * run (an agent's session sets a `$TMPDIR` of its own), and a path a screen wraps wraps at the same
+ * place. `E2E_TMP` names another; without a writable `/tmp`, the temp dir. Resolved, as the agents
+ * show it (`/private/tmp` on macOS).
+ */
+function runBase(): string {
+  if (process.env.E2E_TMP) return realpathSync(process.env.E2E_TMP);
+  try {
+    accessSync("/tmp", constants.W_OK);
+    return realpathSync("/tmp");
+  } catch {
+    return realpathSync(tmpdir());
+  }
 }
 
 /** How the screen is judged still: it must hold for `quiet` ms, looked at every `poll` ms. */
@@ -132,7 +148,7 @@ export class Session {
 
   private static async openOnce(o: OpenOptions): Promise<Session> {
     const ownsRun = !o.runDir;
-    const runDir = o.runDir ?? mkdtempSync(join(tmpdir(), "e2e-"));
+    const runDir = o.runDir ?? mkdtempSync(join(runBase(), "e2e-"));
     const cwd = join(runDir, o.project ?? "cwd");
     mkdirSync(cwd, { recursive: true });
     const ctx = setupContext(runDir, cwd);
@@ -192,6 +208,7 @@ export class Session {
       text = await this.term.text().catch(() => "");
       if (this.harness === "claude" && HICCUP.test(text))
         throw new StartHiccup(`claude started in its classic renderer`);
+      if (h.failed?.(text)) throw new Error(`${this.harness} failed to start; screen:\n${text}`);
       const keys = h.dialog(text);
       if (keys) {
         await this.term.press(...keys);
@@ -270,15 +287,20 @@ export class Session {
     if (o.settle !== false) await this.settle(300, 4000);
   }
 
-  private async locate(t: Target) {
+  /** Where the target is, waiting up to `timeout` for it to be drawn: a step can outrun the screen. */
+  private async locate(t: Target, timeout = 5000) {
     const { text, nth } = target(t);
-    const grid = await this.term.grid();
-    const hit = findText(grid, text, true)[nth ?? 0];
-    if (!hit)
-      throw new Error(
-        `no visible ${String(text)}${nth ? ` #${nth}` : ""}; screen:\n${gridLines(grid).join("\n")}`,
-      );
-    return { x: hit.x + Math.floor(hit.w / 2), y: hit.y };
+    const start = Date.now();
+    for (;;) {
+      const grid = await this.term.grid();
+      const hit = findText(grid, text, true)[nth ?? 0];
+      if (hit) return { x: hit.x + Math.floor(hit.w / 2), y: hit.y };
+      if (Date.now() - start >= timeout)
+        throw new Error(
+          `no visible ${String(text)}${nth ? ` #${nth}` : ""} after ${timeout / 1000}s; screen:\n${gridLines(grid).join("\n")}`,
+        );
+      await sleep(SETTLE.poll * 2);
+    }
   }
 
   async click(t: Target, clicks = 1, o: StepOptions = {}) {

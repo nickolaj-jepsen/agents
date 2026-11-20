@@ -7,13 +7,10 @@
  Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.
 
 
- Warning: codemode_only: not registered, declarations stay visible: subagent, get_subagent_result, steer_subagent
-
-
  ask
 
 
- ▌ Done. What changed:
+ Done. What changed:
 
  1. The parser takes Q labels and numbers.
  2. The review screen fills the prompt.
@@ -40,29 +37,29 @@
 
 
 
-── ask ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  ──  ── 3% / 200k ──
+
 
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  fixture  Replay (fixture)                                                                                                                <tmp>
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+<tmp>
+0.7%/200k (auto)                                                                                                                                          replay
 --- styles
 -
-. 1 2x2 .x2 3x6
+. 1 2x2 .x2 3x5
 . 4x2 . 5 . 3x6 6x13 3x13 6x14 3 6x12 3 6x8 3x6 6x5
 . 3x39
 -
 . 3x85
 -
--
-. 7x112
--
-8x160
-8 9x3 8x156
-8x160
+7x160
+7 8x3 7x156
+7x160
 -
 -
 -
-. ax3
-. ax3
+. 9x3
+. 9x3
 -
 -
 -
@@ -86,22 +83,22 @@
 -
 -
 -
-bx3 3x3 . bx130 . 3 bx4 c bx4 3x9 bx3
 -
-bx160
-.x2 3x7 .x2 dx16 .x112 3x16 ex3
+-
+ax160
+b
+ax160
+3x5
+3x160
 --- legend
 1 fg=#e48a7a bg=#4f8eb3
 2 fg=#e48a7a
-3 fg=#878580
+3 fg=#7e888e
 4 fg=#4f8eb3
 5 fg=#eab65d
-6 fg=#b7b5ac
-7 fg=#d0a215
-8 bg=#282726
-9 fg=#dad8ce bg=#282726
-a fg=#cf6a4c
-b fg=#343331
-c fg=#cf6a4c bold
-d fg=#878580 bold
-e fg=#dad8ce
+6 fg=#9da5a9
+7 bg=#213b49
+8 fg=#dee0e1 bg=#213b49
+9 fg=#a798d7
+a fg=#6c767b
+b inverse

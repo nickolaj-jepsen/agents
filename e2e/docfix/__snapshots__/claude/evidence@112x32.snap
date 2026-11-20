@@ -1,4 +1,4 @@
-# docfix/claude/evidence 112x32 @62,0 (50x27)
+# docfix/claude/evidence 112x32 @62,0 (50x28)
 │                                               ✕
 │ ─ Doc suggestions  2 ──────────────────────────
 │
@@ -26,6 +26,7 @@
 │     supplies; an agent would report 20 fake
 │     failures.
 │
+│
 --- styles
 1 .x47 2
 1 . 2x2 3x15 2x30
@@ -40,13 +41,14 @@
 1 . 3x9 .x2 2x6 .x2 2x12
 1 . 4 2x7 .x2 4 2x9 .x2 4
 1
-1 .x3 2x45
+1 .x3 2x6 .x4 2x35
 1
 1
 1
 1
-1 .x3 2x45
+1 .x3 2x6 .x4 2x35
 1 .x5 2x26
+1
 1
 1
 1

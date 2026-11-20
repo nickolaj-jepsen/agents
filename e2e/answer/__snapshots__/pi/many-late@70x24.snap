@@ -1,4 +1,4 @@
-# answer/pi/many-late 70x24 @0,8 (70x12)
+# answer/pi/many-late 70x24 @0,7 (70x12)
 ╭─ 9 of 12  Q9 ──────────────────────────────────────────────────────╮
 │ Question number 9: pick a strategy?                                │
 │                                                                    │
@@ -25,7 +25,7 @@
 1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x29 1
 1 . 3x60 .x7 1
 --- legend
-1 fg=#343331
-2 fg=#cf6a4c
-3 fg=#878580
+1 fg=#768186
+2 fg=#a798d7
+3 fg=#7e888e
 4 bold

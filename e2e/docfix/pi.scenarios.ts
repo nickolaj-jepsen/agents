@@ -7,6 +7,8 @@ const open = [{ type: "/docfix" }, { press: "Enter" }];
 export default scenarios({
   plugin: "docfix",
   harness: "pi",
+  // Hermetic: its own config with this plugin alone, so nothing of the person's setup shows.
+  start: { hermetic: true, plugins: ["docfix"], turns: [] },
   region: region.box(/Doc suggestions/),
   // The age of a suggestion: "2d", "1mo", "today".
   mask: [{ pattern: /\b\d+(?:d|mo)\b|\btoday\b/g, with: "<age>" }],

@@ -32,18 +32,19 @@ export const FIXTURE_GIT_ENV = {
 };
 
 /**
- * Where `agent-notes` keeps its store and scratch for a session the drivers start: in the run's
- * own folder, so a hook or a mod that runs `agent-notes root --ensure` in a fixture never makes a
- * folder in the person's real store.
+ * Folders in the run's own folder for the tools a session the drivers start may write with, so a
+ * fixture never makes one in the person's home: `agent-notes` keeps its store and scratch there (a
+ * hook or a mod runs `agent-notes root --ensure`), and `wt` its worktrees.
  */
-export const notesEnv = (runDir: string) => ({
+export const runEnv = (runDir: string) => ({
   AGENT_NOTES_DATA: join(runDir, "agent-notes", "data"),
   AGENT_NOTES_STATE: join(runDir, "agent-notes", "state"),
+  WT_WORKTREE_ROOT: join(runDir, "worktrees"),
 });
 
 /** The `SetupContext` of a run: its folder for the agent and the scratch beside it. */
 export function setupContext(runDir: string, cwd: string): SetupContext {
-  const env = { ...process.env, ...FIXTURE_GIT_ENV, ...notesEnv(runDir) };
+  const env = { ...process.env, ...FIXTURE_GIT_ENV, ...runEnv(runDir) };
   const git = (...args: string[]) =>
     void execFileSync("git", ["-c", "core.hooksPath=/dev/null", ...args], {
       cwd,

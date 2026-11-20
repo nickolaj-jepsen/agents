@@ -1,4 +1,4 @@
-# questions/pi/extreme 70x24 @0,9 (70x14)
+# questions/pi/extreme 70x24 @0,8 (70x14)
 ╭─ Where stored? ────────────────────────────────────────────────────╮
 │  Where should a session's full transcript, every tool result and   │
 │  each compaction summary be kept once a run ends?                  │
@@ -29,9 +29,9 @@
 1 .x68 1
 1x21 6x47 1x2
 --- legend
-1 fg=#343331
-2 fg=#cf6a4c bold
-3 fg=#dad8ce
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#dee0e1
 4 bold
-5 fg=#b7b5ac
-6 fg=#878580
+5 fg=#9da5a9
+6 fg=#7e888e

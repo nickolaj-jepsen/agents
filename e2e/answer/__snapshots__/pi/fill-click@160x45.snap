@@ -7,13 +7,10 @@
  Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.
 
 
- Warning: codemode_only: not registered, declarations stay visible: subagent, get_subagent_result, steer_subagent
-
-
  ask
 
 
- ▌ Q1. Use SQLite?
+ Q1. Use SQLite?
 
  - A. SQLite
  - B. Postgres
@@ -38,36 +35,36 @@
 
 
 
+
+
  Answer 2 questions · 2 answered · alt+a or /answer
-── ask ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  ──  ── 3% / 200k ──
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 Q1: A
 Q2: B
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  fixture  Replay (fixture)                                                                                                                <tmp>
+<tmp>
+0.7%/200k (auto)                                                                                                                                          replay
 --- styles
 -
-. 1 2x2 .x2 3x6
+. 1 2x2 .x2 3x5
 . 4x2 . 5 . 3x6 6x13 3x13 6x14 3 6x12 3 6x8 3x6 6x5
 . 3x39
 -
 . 3x85
 -
+7x160
+7 8x3 7x156
+7x160
 -
-. 7x112
+. 9x15
 -
-8x160
-8 9x3 8x156
-8x160
+. ax2 9x2
+. ax2 9x2
 -
-.x3 ax15
+. 9x16
 -
-. bx2 ax2
-. bx2 ax2
--
-. ax16
--
-. bx2 ax2
-. bx2 ax2
+. ax2 9x2
+. ax2 9x2
 -
 -
 -
@@ -84,25 +81,25 @@ Q2: B
 -
 -
 -
-. bx18 3x32
-cx3 3x3 . cx130 . 3 cx4 d cx4 3x9 cx3
 -
 -
-cx160
-.x2 3x7 .x2 ex16 .x112 3x16 fx3
+. ax18 3x32
+bx160
+-
+.x5 c
+bx160
+3x5
+3x160
 --- legend
 1 fg=#e48a7a bg=#4f8eb3
 2 fg=#e48a7a
-3 fg=#878580
+3 fg=#7e888e
 4 fg=#4f8eb3
 5 fg=#eab65d
-6 fg=#b7b5ac
-7 fg=#d0a215
-8 bg=#282726
-9 fg=#dad8ce bg=#282726
-a bold
-b fg=#cf6a4c
-c fg=#343331
-d fg=#cf6a4c bold
-e fg=#878580 bold
-f fg=#dad8ce
+6 fg=#9da5a9
+7 bg=#213b49
+8 fg=#dee0e1 bg=#213b49
+9 bold
+a fg=#a798d7
+b fg=#6c767b
+c inverse

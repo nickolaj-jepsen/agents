@@ -7,7 +7,6 @@
  Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.
 
 
- Warning: codemode_only: not registered, declarations stay visible: subagent, get_subagent_result, steer_subagent
 
 
 
@@ -38,22 +37,22 @@
 
 
 
-
-
-── ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  ──  ── 0% / 1M ──
 
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  auto  DeepSeek V4.1 Flash   high  docs 2                                                    ~/.local/state/agents<tmp>                                main
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+<tmp> (main)
+0.0%/200k (auto)                                                                                                                                          replay
+docs 2
 --- styles
 -
-. 1 2x2 .x2 3x6
+. 1 2x2 .x2 3x5
 . 4x2 . 5 . 3x6 6x13 3x13 6x14 3 6x12 3 6x8 3x6 6x5
 . 3x39
 -
 . 3x85
 -
 -
-. 7x112
 -
 -
 -
@@ -85,21 +84,18 @@
 -
 -
 -
+7x160
+8
+7x160
+3x5
+3x160
 -
-8x139 . 3 8x4 9 8x4 3x7 8x3
--
-8x160
-.x2 3x4 .x2 ax19 .x2 8x6 .x2 3x6 .x52 3x53 bx3 . c . 6x4
 --- legend
 1 fg=#e48a7a bg=#4f8eb3
 2 fg=#e48a7a
-3 fg=#878580
+3 fg=#7e888e
 4 fg=#4f8eb3
 5 fg=#eab65d
-6 fg=#b7b5ac
-7 fg=#d0a215
-8 fg=#cf6a4c
-9 fg=#cf6a4c bold
-a fg=#878580 bold
-b fg=#dad8ce
-c fg=#879a39
+6 fg=#9da5a9
+7 fg=#6c767b
+8 inverse

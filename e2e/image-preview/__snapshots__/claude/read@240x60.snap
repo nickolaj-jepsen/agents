@@ -1,8 +1,8 @@
 # image-preview/claude/read 240x60 @0,0 (240x15)
 
  ▐▛███▛█   Claude Code <ver>
-▝▜██████▀  Sonnet 5.5 · API Usage Billing
- ▝▝   ▝▝   ~/.local/state/agents<tmp>
+▝▜██████▀  <model>
+ ▝▝   ▝▝   <tmp>
 
 
 ❯ show the preview
@@ -16,9 +16,9 @@
 ● preview ready
 --- styles
 -
-1x2 2x6 .x3 3x11 . 4x8
-1x2 2x5 1x2 .x2 4x30
-1x9 .x2 4x56
+1x2 2x6 .x3 3x11 . 4x5
+1x2 2x5 1x2 .x2 4x7
+1x9 .x2 4x5
 -
 -
 5x2 6x16 7x222
@@ -27,7 +27,7 @@
 -
 .x2 4x28
 -
-.x2 4x137
+.x2 4x5 .x73 4 . 4 . 4
 -
 9
 --- legend
