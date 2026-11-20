@@ -416,11 +416,12 @@ export function terminalReview(
       {actions ? (
         <Box columnGap={tokens.gutter} flexWrap="wrap" paddingLeft={1}>
           {view.reply ? (
-            <Button key="review-fill" label="Fill prompt" plain onPress={actions.fill}>
-              <Text weight="semibold" {...roleProps(open && cursor < 0 ? "accent" : "note")}>
-                {`${open && cursor < 0 ? tokens.glyph.pointer : " "} Fill prompt`}
-              </Text>
-            </Button>
+            <Button
+              key="review-fill"
+              variant="primary"
+              label={open && cursor < 0 ? `${tokens.glyph.pointer} Fill prompt` : "Fill prompt"}
+              onPress={actions.fill}
+            />
           ) : null}
           <Button key="review-toggle" label={toggle} plain onPress={() => actions.go(view.count)}>
             <Text dimColor>{`${open ? "▾" : "▸"} ${toggle}`}</Text>
