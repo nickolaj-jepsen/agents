@@ -98,6 +98,7 @@ In progress, and not ready for anyone else to use:
 
 - [prune-churn](https://nickolaj-jepsen.github.io/agents/skills/prune-churn/): removes tests, docs and structure that must change whenever something else does.
 - [prune-comments](https://nickolaj-jepsen.github.io/agents/skills/prune-comments/): cuts comments and docstrings down to the load-bearing why.
+- [prune-docs](https://nickolaj-jepsen.github.io/agents/skills/prune-docs/): audits overgrown docs, reviews what can go, and consolidates owner-approved project direction.
 
 ### Harnesses
 
@@ -118,7 +119,6 @@ Each starts the real program and drives it with keys, screenshots and logs.
 
 My variants of public skills. Prefer the originals.
 
-- [avoid-ai-tropes](https://nickolaj-jepsen.github.io/agents/skills/avoid-ai-tropes/): finds AI writing tells in prose and rewrites them. Its catalog comes from [tropes.fyi](https://tropes.fyi) by [ossama.is](https://ossama.is).
 - [grill-me](https://nickolaj-jepsen.github.io/agents/skills/grill-me/): the `/grill-me` entry point to `grilling`. Reworked from the latest version of [Matt Pocock's `grill-me`](https://github.com/mattpocock/skills).
 - [grilling](https://nickolaj-jepsen.github.io/agents/skills/grilling/): interviews you about a plan in rounds; other skills call it. Reworked from the latest version of [Matt Pocock's `grill-me`](https://github.com/mattpocock/skills).
 

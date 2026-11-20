@@ -1,0 +1,18 @@
+# Consolidating project decisions
+
+Use one temporary Markdown file in task-specific scratch outside the tracked tree. Capture before cutting, including from policies, plans, architecture docs, examples, READMEs, agent instructions and narrative source comments. Read the material in context; keyword search locates candidates but misses decisions stated as facts. Skip vendored material. Treat quoted prompts, test fixtures and directives that programs consume as behavior when editing.
+
+For each statement record the source path and location, the original words, and any evidence of ownership, scope or an actual consumer. Keep contradictory statements and every source of a repeated claim until reconciled. The inventory may be large. It is disposable review material and carries no authority.
+
+Begin with an empty shortlist. Nominate a choice only when you can name a concrete future design fork it should influence and why the owner would want that guidance. Agreement to implement something once, including an explicit “yes,” does not establish that intent. Condense in that same file. Group copies by meaning. For each group choose a disposition:
+
+- **Propose for the root file** when the choice still guides a consequential project-wide tradeoff and its reason would be expensive to reconstruct. A future direction needs explicit owner endorsement. Write the proposed wording and the condition or tradeoff that makes it relevant.
+- **Keep a fact at point of use** when someone needs a current contract, failure mode, safety boundary or operational instruction. Remove the surrounding decision narrative. A deployed behavior, a binding external obligation and an owner's preferred direction carry different authority.
+- **Drop** temporary instructions, rejected options, implementation narration and unendorsed plans. A prototype interview or an agent's repeated assertion is weak evidence of lasting intent. A discarded proposal needs no disclaimer in the rewritten guide.
+- **Ask** about genuinely consequential conflicts or unclear ownership. An uncertain choice stays in scratch until answered.
+
+Show the shortlist with exact proposed wording, target filename and the agent-entry notice you propose. Reuse the owner's existing root Markdown file, otherwise propose `PHILOSOPHY.md`. Obtain explicit permission for the entries and any change to an existing protected file. Approval to remove a duplicate or ship a feature is insufficient. Previously granted explicit approval for the same text and action stands. Preserve existing owner-written entries outside the authorized changes. If nothing qualifies, an empty shortlist is a valid result.
+
+Mark the owner’s actual selections in the scratch inventory so that resuming the work cannot promote a rejected draft. After approval, write only the agreed entries. Remove redundant policy claims from the approved cleanup scope; preserve the fact a reader needs to operate the current system. When the root file exists or its creation was approved, apply the agreed notice in the canonical agent entry file. For example: “PHILOSOPHY.md is the only document where we record lasting project choices. They guide development and can be revisited. Ask the owner for explicit permission before editing that file.” A CLAUDE.md that includes AGENTS.md needs no second notice. Check that templates and nearby instructions no longer invite agents to deposit rationale elsewhere.
+
+For example, “the demo needn't migrate this database” stays with the demo. An owner's continuing decision to operate a disposable staging deployment could qualify. The observed behavior that a failed migration retries on next startup belongs in the operator guide if operators rely on it. Do not convert one into another.

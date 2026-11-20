@@ -87,4 +87,4 @@ For `diff` and `branch`, edit only added or changed hunks. Never touch gitignore
    - Frame each one as coupling to remove, with any drift as its evidence, not as a bug in one site.
    - Findings without evidence go in a one-line **Considered, low** list (`structure.md`, Report shape).
    - Then any content moved out of deleted session artifacts, for the PR description.
-   - End with `review: git diff`, and suggest `prune-comments` on the same scope for comments.
+   - End with `review: git diff`, showing the checks that passed.

@@ -5,7 +5,7 @@ Files, tooling and policy that make every change drag extra edits along. Report 
 ### Session artifacts
 
 - **Tell**: files describing a moment rather than the system (tracked, or untracked in `diff` scope): `git ls-files --cached --others --exclude-standard | grep -iE '(SUMMARY|REPORT|PLAN|PROGRESS|STATUS|IMPLEMENTATION|ANALYSIS|FINDINGS)[^/]*\.md$'`; a copy matching `(_old|_backup|_copy|\.bak|\.orig)(\.\w+)?$` whose original sits beside it; root-level `scratch*`, `tmp*`, `debug_*`, `verify_*` scripts that no runner, CI job or task file references and the test runner doesn't collect; prose with `Phase 2`, `Status:`, `next steps`, `will be implemented`, `we just added`, checkbox progress lists.
-- **Do**: if the current diff added it, delete it. Move anything durable first: a trap → a comment at the trap; a decision → the existing topic doc, or an ADR if the repo keeps them; the plan or summary → your report, for the PR description. Older ones: report.
+- **Do**: if the current diff added it, delete it. Move anything durable first: a trap → a comment at the trap; a candidate project choice → raise it with the owner before recording it, respecting any protected decision file; the plan or summary → your report, for the PR description. Older ones: report.
 - **Keep when**: ADRs and RFCs; a ROADMAP a person owns; CHANGES, NEWS and release notes; user-facing MIGRATION/UPGRADE guides; anything in a migrations dir; versioned code (`api_v2.py`, `client_new.ts`) something imports; files linked from the README or a docs index; plans checked in by explicit team convention for a multi-PR effort. Never search gitignored files.
 
 ### Generated output without a regen gate

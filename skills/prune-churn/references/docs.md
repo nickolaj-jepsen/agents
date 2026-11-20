@@ -1,13 +1,13 @@
 # Docs and agent instruction files
 
-First check what the passage does for its reader. A map can explain how parts fit together even when each part is easy to find. For a block that merely repeats the source:
+First check what the passage does for its reader. A map can explain how parts fit together even when each part is easy to find. Before substituting a pointer, start where the intended reader starts and answer the same question using the proposed destination. Preserve an accessible example or answer if the pointer loses it. For a block that merely repeats the source:
 
 1. **Point**: remove the duplicate. Leave a pointer if someone following the surrounding guide needs it, and verify the destination. If a whole page in scope loses its purpose, remove it and its incoming links. If a link would need an out-of-scope edit, report the deletion instead.
 2. **Generate**: only if humans need the list _and_ the repo already has a generator (cog/mdsh markers, a `docs` recipe, an options or OpenAPI renderer). Wire the block into that generator. Never add one.
-3. **Execute**: only if a doc-test runner is already configured. Otherwise trim or delete instead.
+3. **Execute**: use an existing doc-test runner or run a representative example manually from its stated starting point. A missing runner is no reason to delete an example.
 4. **Keep as prose**: keep an explanation or worked example that helps the reader apply the rule. A rejected alternative belongs here only if its reason still affects the reader’s choice.
 
-Skip generated output (`<!-- generated -->`, `[[[cog`, files a `docs` recipe writes); edit the generator's source instead. Help text in code (`--help` strings, justfile `[doc]`) is the source of truth to point at, not a finding. Comments, docstrings and plain wordiness with no coupling belong to `prune-comments`; don't catalog them here.
+Skip generated output (`<!-- generated -->`, `[[[cog`, files a `docs` recipe writes); edit the generator's source instead. Help text in code (`--help` strings, justfile `[doc]`) is the source of truth to point at, not a finding. Use `prune-comments` for source comments and docstrings. Wording alone is outside this audit.
 
 Judge line by line, never by heading: a section titled `Architecture` can hold the one trap worth keeping. When a finding needs another file changed (the canonical copy, the instruction file), edit only this file if the other side already holds the fact; otherwise report it and leave both.
 
@@ -53,7 +53,7 @@ We support 12 providers:
   - Fix every dead symbol first; that is a bug, not churn.
   - If a runner exists (Go `Example*` functions, `--doctest-glob`, `cargo test --doc` over an included README), move the example under it.
   - If `examples/` is built in CI and the docs already include from it, point there.
-  - Otherwise shrink each example to the calls that show intent, and delete repeats.
+  - Otherwise run the example manually where feasible. Keep setup and expected results that make it usable.
 - **Keep when**: the one quickstart example in a library or CLI README (keep it short and correct; never delete it); the block is marked pseudo-code; the snippet needs live infrastructure and is short.
 
 ### Version- and time-pinned prose
@@ -80,7 +80,7 @@ We support 12 providers:
 ### Inferable boilerplate
 
 - **Tell**: generic `Installation` (clone, `npm install`), `Prerequisites: Node.js`, fork-and-PR `Contributing`; explanations of framework conventions; script or dependency lists mirroring `package.json`/`pyproject`/justfile; module-by-module "How it works" narration of what the code plainly does.
-- **Do**: delete only when **both** hold: no human reader needs it, _and_ a competent reader or agent would infer it from the code or manifest within about 10 seconds. Keep intent, constraints, gotchas, non-default tooling and approval requirements.
+- **Do**: delete only when **both** hold: no human reader needs it, _and_ a competent reader or agent can find the answer at their normal entry point. Keep intent, constraints, gotchas, non-default tooling and approval requirements.
 - **Keep when**: a public library or product (keep a minimal install/usage section, no copied dependency lists); a deliberate onboarding path or non-developer audience; a non-default setup step that actually trips people up.
 
 ### Screenshots and binary diagrams
@@ -91,7 +91,7 @@ We support 12 providers:
 
 ## Agent instruction files
 
-Any file an agent loads as standing instructions (e.g. `AGENTS.md`, `CLAUDE.md`, Cursor or Copilot rule files), including nested per-directory variants. Agents follow these literally, so a stale line misleads instead of merely sitting there. Evidence (Gloaguen et al.): generated context files slightly lower task success, hand-written ones barely help, both raise cost, and repository overviews don't help.
+Any file an agent loads as standing instructions (e.g. `AGENTS.md`, `CLAUDE.md`, Cursor or Copilot rule files), including nested per-directory variants. A stale instruction can change what an agent does. Gloaguen et al. found higher inference costs and no statistically significant average improvement in issue resolution in their comparison. Evaluate a routing instruction against an actual project task.
 
 Keep a line only if **both** hold: an agent doing a task would not pick it up from the code it reads anyway, the manifest or `--help`; _and_ without it the agent would plausibly make a mistake or stop to ask. Line count prompts a review; on its own it is never a violation.
 

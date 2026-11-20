@@ -1,6 +1,6 @@
 ---
 name: prune-comments
-description: Prune redundant, over-long or coupled comments, docstrings, and prose docs down to the minimal load-bearing why — including comments that rot when something elsewhere changes (file/line references, caller lists, inventories, keep-in-sync markers, change narration). Run after generating code to clean up comment/doc bloat. Optional scope arg — diff (default), touched, branch, repo, or a path.
+description: Clean up implementation comments and public docstrings in a diff, branch, repo or path. Preserve caller contracts and non-obvious failure modes. Use prune-docs for prose pages or documentation-sized blocks during a repo refresh.
 disable-model-invocation: true
 argument-hint: "[diff|touched|branch|repo|<path>]"
 arguments: scope
@@ -11,7 +11,7 @@ metadata:
 
 Cut comments and docstrings down to what a reader can't cheaply recover from the code.
 
-- Reduction only: never add or expand. Rewriting a comment into one of equal or shorter length is fine.
+- Delete ordinary restatements. Allow a contract to grow when callers need an omitted precondition, side effect, error or unit. Preserve executable directives, license text and comments consumed by tools.
 - A comment fails in one of two ways:
   - verbose: it says what the code already says;
   - coupled: it talks about another place (a file, a caller, a list kept elsewhere, the diff that produced it), so it must be edited whenever that place changes, and nobody remembers to.
@@ -21,7 +21,7 @@ Cut comments and docstrings down to what a reader can't cheaply recover from the
 
 `$scope` selects what's in range (default `diff` when empty):
 
-- `diff` (default): only comments, docstrings and doc lines added or changed in the uncommitted diff, staged and unstaged (`git diff HEAD`). Comments you didn't just touch are off-limits.
+- `diff` (default): only comments and docstrings added or changed in the uncommitted diff, staged and unstaged (`git diff HEAD`). Comments you didn't just touch are off-limits.
 - `touched`: every comment in any file the diff touches.
 - `branch`: everything changed on this branch vs the default branch.
 - `repo`: the whole repository.
@@ -47,8 +47,7 @@ Otherwise:
 - Multi-line where one line suffices: compress to that line.
 - Recoverable with one lookup (a stdlib call's semantics, a flag's meaning): drop. Compressed domain knowledge that would cost a textbook or RFC dive stays.
 - Coupled to something outside itself: see "Coupled comments".
-- Docstrings: keep the contract, cut signature restatement. Where the repo's linter or pervasive convention requires public-API docstrings, the floor is a one-line contract: compress to it, never delete.
-- For prose docs, judge the passage by what its reader needs. Keep the map or worked example that saves them tracing the code. Cut repeated or incidental detail before shortening sentences.
+- Docstrings: judge the contract from the caller’s point of view, including generated reference and editor hover.
 
 How to judge:
 
@@ -167,11 +166,11 @@ Over-long why to minimal why (real case):
     - # aarch64 emulation so this x86_64 host can cross-build the Raspberry Pi
     - # kiosk SD image (~/dev/kiosk). Some derivations run target binaries at
     - # build time (e.g. writeShellScript's bash -n), which fails without binfmt.
-    + # cross-builds the Raspberry Pi kiosk SD image
+    + # The kiosk image build runs ARM binaries on this x86 host.
       boot.binfmt.emulatedSystems = ["aarch64-linux"];
 
 - The code already says it enables aarch64 emulation; that's the what.
-- The only thing the code can't tell you is why this host has it: the cross-build. Keep that, drop the rest.
+- Preserve the reason emulation is needed during the build.
 
 Plan reference, delete:
 
@@ -192,14 +191,6 @@ Docstring carrying its weight, leave it:
 ## Procedure
 
 1. Resolve scope from `$scope` (default `diff` when empty) and gather the target lines.
-2. Enumerate every comment and docstring in scope, then rule on each: delete, compress, rewrite, keep, or report.
-   - No comment goes unruled.
-   - A keep needs a one-line justification naming what the code can't recover. If you can't name it, delete.
-   - Check coupled claims before ruling: `test -e` the paths, grep the named callers and symbols.
-3. Edit the working tree in place.
-4. Print the verdicts, one line per comment: `path:line  <verdict>` (e.g. `3 lines → 1`, `deleted (same-level restatement)`, `deleted (plan reference)`, `path → symbol`, `kept — lock-retry gotcha`).
-   - For `branch` and `repo`, print changes only and end with the keep count.
-   - Then a **Report** section for findings left for a human: duplications behind keep-in-sync markers, license headers, interface contracts that can't be stated without the implementation.
-   - End with `review: git diff`.
-
-Never commit; leave edits uncommitted for review.
+2. Read the comments in scope alongside the code. Verify questionable paths, symbols, constraints and caller behavior. Preserve the reason a surprising line is necessary.
+3. Edit in place. Check that executable source and tooling directives retain their behavior, then run applicable project checks.
+4. Report consequential edits or unresolved claims. Skip an inventory of unchanged comments. Never commit.
