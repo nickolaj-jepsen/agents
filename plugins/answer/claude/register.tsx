@@ -1,12 +1,19 @@
 import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register, SessionMessage } from "claude-code";
 
-import { offer, hasWork, startLines, step as stepForm, view as viewOf } from "../core/forms";
+import {
+  formId,
+  offer,
+  hasWork,
+  startLines,
+  step as stepForm,
+  view as viewOf,
+} from "../core/forms";
 import { fitBody, GAPS, heightOf, keyRows, keysOf, KEY_CELLS, type Gaps } from "./terminal";
 import {
   controlBar,
   questionCard,
-  reviewCard,
+  nativeRound,
   reviewTarget,
   ROUND_FOCUS,
   terminalReview,
@@ -299,7 +306,7 @@ const isNotPerson = (text: string) =>
  * past any turn something other than the person started, as a live session keeps a round
  * through those. One the person has spoken after is left alone.
  */
-async function recover($: EngineInterface) {
+async function recover($: EngineInterface, graphical = false) {
   if (await read($, current)) return;
   const messages = await $.session.messages();
   if (!Array.isArray(messages)) return;
@@ -307,7 +314,11 @@ async function recover($: EngineInterface) {
     if (message.role === "assistant") {
       const held = message.text ? offer(null, message.text) : null;
       if (!held) continue;
-      await update($, current, (c) => c ?? over(null, held));
+      const id =
+        graphical && held.form.kind === "round"
+          ? await captureRound($, held, message.text, formId(held.form), message, false)
+          : undefined;
+      await update($, current, (c) => c ?? { ...over(null, held), transcript: id });
       return;
     }
     if (!message.toolResults?.length && !isNotPerson(message.text)) return;
@@ -433,10 +444,19 @@ async function recentMessages(
   return Array.isArray(messages) ? messages : [];
 }
 
-async function captureRound($: EngineInterface, held: Held, answer: string, turnId: string) {
-  const message = (await recentMessages($, 24)).findLast(
-    (row) => row.role === "assistant" && row.text.trim() === answer.trim(),
-  );
+async function captureRound(
+  $: EngineInterface,
+  held: Held,
+  answer: string,
+  turnId: string,
+  recovered?: SessionMessage & { uuid?: string },
+  place = true,
+) {
+  const message =
+    recovered ??
+    (await recentMessages($, 24)).findLast(
+      (row) => row.role === "assistant" && row.text.trim() === answer.trim(),
+    );
   if (!message) return;
   const id = message.uuid ?? turnId;
   const starts = startLines(message.text);
@@ -448,7 +468,7 @@ async function captureRound($: EngineInterface, held: Held, answer: string, turn
     .join("\n")
     .trimEnd();
   const placed: string[] = [];
-  if ((await $.session.surfaces()).includes("terminal")) {
+  if (place && (await $.session.surfaces()).includes("terminal")) {
     for (let index = 0; index <= starts.length; index++) {
       const row = await $.ui.place({ id: `round-${id}-${index}` });
       if (!row.isPlaced) break;
@@ -607,6 +627,10 @@ async function writeRound(
   }
 }
 
+function savedField(c: Current) {
+  return c.editing === NOTE ? (c.view.item?.note ?? c.view.note) : (c.view.item?.written ?? "");
+}
+
 async function finishWriting($: EngineInterface, id: string, text?: string) {
   const before = await read($, current);
   const surface = before?.writer?.surface ?? (before?.pending ? "terminal" : undefined);
@@ -630,63 +654,6 @@ async function finishWriting($: EngineInterface, id: string, text?: string) {
     if (c.view.isReview) await revealReview($, id, c);
     else await revealRound($, id, c.view.step);
   }
-}
-
-async function useComposer($: EngineInterface, id: string, text: string) {
-  const c = await read($, current);
-  if (c?.transcript !== id || c.writer?.surface !== "vscode" || c.writer.composer) return;
-  const { text: before, cursor } = await $.prompt.read();
-  const writer = { ...c.writer, composer: { before, cursor } };
-  let started = false;
-  await edit($, (was) => {
-    started =
-      was.transcript === id &&
-      was.view.step === c.view.step &&
-      was.writer?.surface === "vscode" &&
-      !was.writer.composer;
-    return started ? { ...was, writer } : was;
-  });
-  if (!started) return;
-  const filled = await $.prompt.fill({ text, mode: "replace" }).catch(() => undefined);
-  if (filled?.isFilled) return;
-  await edit($, (was) =>
-    was.transcript === id && was.writer?.composer ? { ...was, writer: c.writer } : was,
-  );
-  await $.ui.toast("The composer is unavailable. Your note is still open.");
-}
-
-async function finishComposer($: EngineInterface, id: string, save: boolean, submitted?: string) {
-  const c = await read($, current);
-  const composer = c?.writer?.composer;
-  if (c?.transcript !== id || !composer) return false;
-  const note = save ? (submitted ?? (await $.prompt.read()).text) : undefined;
-  const restored = await $.prompt.fill({
-    text: composer.before,
-    cursor: composer.cursor,
-    mode: "replace",
-  });
-  if (!restored.isFilled) {
-    await $.ui.toast("Could not restore the prompt. The note is still open.");
-    return false;
-  }
-  await finishWriting($, id, note);
-  return true;
-}
-
-function composerActions($: EngineInterface, kit: Kit, id: string) {
-  return actionBar(kit, [
-    {
-      key: "composer-save",
-      label: "Save note",
-      isPrimary: true,
-      onPress: () => finishComposer($, id, true),
-    },
-    {
-      key: "composer-cancel",
-      label: "Cancel note",
-      onPress: () => finishComposer($, id, false),
-    },
-  ]);
 }
 
 async function replyToRound(
@@ -723,27 +690,45 @@ function roundActions(
 ): RoundActions {
   // A transcript click that takes focus from the editor only parks the field.
   const press = async (run: () => unknown) => {
-    if (surface !== "terminal") return run();
-    if (await pressElsewhere($, id)) return;
+    if (surface === "terminal") {
+      if (await pressElsewhere($, id)) return;
+    } else {
+      const c = await read($, current);
+      if (c?.transcript !== id) return;
+      // Keep the controls live. Leaving an editor via another form action keeps
+      // what was typed; an untouched field doesn't answer the question.
+      if (c.writer) {
+        await finishWriting($, id, typed?.field === c.editing ? typed?.text : undefined);
+      }
+    }
     return run();
   };
-  const edit = async (question: number, field: NonNullable<Editing>, from?: number) => {
-    if (surface !== "terminal")
-      return writeRound($, id, question, field, surface, from ?? question);
-    if (await pressElsewhere($, id)) return;
-    return writeRound($, id, question, field, surface, from ?? question, true);
-  };
+  const edit = (question: number, field: NonNullable<Editing>, from?: number) =>
+    press(() => writeRound($, id, question, field, surface, from ?? question, true));
   return {
     go: (index) =>
       press(async () => {
-        if (surface === "terminal") {
-          const c = await read($, current);
-          if (c?.transcript !== id) return;
-          if (index === c.view.count) return toggleReview($, id);
-          if (c.view.isReview) return openReviewQuestion($, id, index);
-        }
-        return moveRound($, id, surface, index);
+        const c = await read($, current);
+        if (c?.transcript !== id) return;
+        if (index === c.view.count) return toggleReview($, id, surface);
+        if (c.view.isReview && surface === "terminal") return openReviewQuestion($, id, index);
+        await moveRound($, id, surface, index);
+        if (c.view.isReview && surface === "desktop")
+          await $.ui
+            .scroll({ to: { key: `question-${index}-card` }, block: "start" })
+            .catch(() => undefined);
       }),
+    details:
+      surface !== "desktop"
+        ? undefined
+        : (index) =>
+            press(() =>
+              update($, current, (c) => {
+                if (c?.transcript !== id || c.writer) return c;
+                const at = over(c, stepForm(c.held, { do: "go", step: index }));
+                return { ...at, isBodyOpen: c.view.step !== index || !c.isBodyOpen };
+              }),
+            ),
     pick: (question, entry) => press(() => changeRound($, id, question, { do: "pick", entry })),
     edit,
     clear: (question) => press(() => changeRound($, id, question, { do: "clear" })),
@@ -773,7 +758,12 @@ async function revealReview($: EngineInterface, id: string, c: Current) {
   await $.ui.scroll({ to: { requestId }, block: "start" }).catch(() => undefined);
 }
 
-async function toggleReview($: EngineInterface, id: string, fromNext = false) {
+async function toggleReview(
+  $: EngineInterface,
+  id: string,
+  surface: RoundEditor["surface"] = "terminal",
+  fromNext = false,
+) {
   const c = await update($, current, (was) => {
     if (was?.transcript !== id || was.writer) return was;
     if (was.view.isReview)
@@ -784,7 +774,7 @@ async function toggleReview($: EngineInterface, id: string, fromNext = false) {
       reviewCursor: fromNext ? undefined : was.reviewCursor,
     };
   });
-  if (c?.transcript !== id || c.writer) return;
+  if (c?.transcript !== id || c.writer || surface !== "terminal") return;
   if (c.view.isReview) {
     await revealReview($, id, c);
   } else await revealRound($, id, c.view.step);
@@ -832,7 +822,7 @@ async function pressRoundKey($: EngineInterface, id: string, key: string) {
   if (c?.transcript !== id || c.writer) return;
   if (key === "r") return toggleReview($, id);
   if (c.view.isReview) return pressReview($, id, c, key);
-  if (key === "j" && c.view.step === c.view.count - 1) return toggleReview($, id, true);
+  if (key === "j" && c.view.step === c.view.count - 1) return toggleReview($, id, "terminal", true);
   if (key === "j" || key === "k")
     return moveRound($, id, "terminal", (view) =>
       Math.max(0, Math.min(view.count - 1, view.step + (key === "j" ? 1 : -1))),
@@ -862,18 +852,8 @@ function writingMode(
   const label = note ? "Write note" : "Write answer";
   const title = view.item ? `${label}  /  ${view.item.label}` : `${label}  /  Round`;
   const answer = view.review[view.step];
-  const saved = note ? (view.item?.note ?? view.note) : (view.item?.written ?? "");
+  const saved = savedField(c);
   const value = () => (typed?.field === editing ? typed.text : saved);
-  const usesComposer = note && writer.surface === "vscode";
-  const isMultiline = usesComposer && saved.includes("\n");
-  if (writer.composer) {
-    return (
-      <Box key="writing" flexDirection="column">
-        <Text weight="semibold">{title}</Text>
-        <Text>Use Save note above the composer when you’re done.</Text>
-      </Box>
-    );
-  }
   if (writer.surface === "terminal") {
     const detail = view.item?.title ?? "Review answers";
     const singleLine = (text: string, width: number) =>
@@ -922,19 +902,47 @@ function writingMode(
     );
   }
   return (
-    <Box key="writing" flexDirection="column">
-      <Text weight="semibold">{title}</Text>
-      {answer?.isAnswered ? (
-        <Text>{clamp(answer.shown, kit.columns, { max: 1 }).join("")}</Text>
-      ) : null}
-      {isMultiline ? null : (
+    <Box
+      key="writing"
+      flexDirection="column"
+      backgroundColor={tokens.gui.fill}
+      paddingX={tokens.gui.across.inset}
+      paddingY={tokens.gui.space.sm}
+      rowGap={tokens.gui.space.sm}
+      borderStyle="round"
+      borderColor="#00000000"
+    >
+      {!view.item ? <Text weight="semibold">{title}</Text> : null}
+      {writer.surface === "vscode" ? (
+        <Box flexDirection="column" rowGap={tokens.gui.space.sm}>
+          <Text weight="semibold">{note ? "Note" : "Your answer"}</Text>
+          {Array.from({ length: writer.lines ?? saved.split("\n").length }, (_, i) => {
+            const setLine = (line: string) => {
+              const lines = value().split("\n");
+              while (lines.length <= i) lines.push("");
+              lines[i] = line;
+              typed = { field: editing, text: lines.join("\n") };
+              return typed.text;
+            };
+            return (
+              <Input
+                key={`${view.step}-${keyOf(editing)}-${i}`}
+                placeholder={i === 0 ? (note ? "Type a note" : "Type an answer") : `Line ${i + 1}`}
+                value={value().split("\n")[i] ?? ""}
+                onInput={setLine}
+                onSubmit={(line) => finishWriting($, id, setLine(line))}
+              />
+            );
+          })}
+        </Box>
+      ) : (
         <Input
           key={keyOf(editing)}
           label={note ? "Note" : "Answer"}
-          rows={writer.surface === "vscode" ? undefined : Math.min(3, Math.max(1, maxRows - 3))}
+          rows={Math.min(3, Math.max(1, maxRows - 3))}
           autoFocus
           value={value()}
-          placeholder={note ? "Add a condition or follow-up" : "Write your own answer"}
+          placeholder={note ? "Add a condition or follow-up" : "Type an answer"}
           onInput={(text) => {
             typed = { field: editing, text };
           }}
@@ -942,23 +950,32 @@ function writingMode(
         />
       )}
       {actionBar(kit, [
-        ...(!isMultiline
+        {
+          key: "keep",
+          label: "Save",
+          isPrimary: true,
+          onPress: () => finishWriting($, id, value()),
+        },
+        ...(writer.surface === "vscode"
           ? [
               {
-                key: "keep",
-                label: "Save",
-                isPrimary: true,
-                onPress: () => finishWriting($, id, value()),
-              },
-            ]
-          : []),
-        ...(usesComposer
-          ? [
-              {
-                key: "longer",
-                label: isMultiline ? "Edit multiline note" : "Write longer note",
-                isPrimary: isMultiline,
-                onPress: () => useComposer($, id, value()),
+                key: "add-line",
+                label: "Add line",
+                onPress: () =>
+                  edit($, (was) =>
+                    was.transcript === id &&
+                    was.view.step === view.step &&
+                    was.editing === editing &&
+                    was.writer?.surface === "vscode"
+                      ? {
+                          ...was,
+                          writer: {
+                            ...was.writer,
+                            lines: (was.writer.lines ?? saved.split("\n").length) + 1,
+                          },
+                        }
+                      : was,
+                  ),
               },
             ]
           : []),
@@ -974,28 +991,17 @@ function roundBody(
   current: Current | null,
   index: number,
   actions?: RoundActions,
-  editor?: JSX.Element | null,
   sent = false,
 ) {
-  const count = held.form.items.length;
-  if (index === count && !kit.isNative)
-    return terminalReview(
-      kit,
-      viewOf(held.form, held.draft),
-      current,
-      current?.writer ? undefined : actions,
-      sent,
-    );
-  return index === count
-    ? reviewCard(
+  return index === held.form.items.length
+    ? terminalReview(
         kit,
         viewOf(held.form, held.draft),
-        current?.view.isReview === true,
+        current,
         current?.writer ? undefined : actions,
-        editor,
         sent,
       )
-    : questionCard(kit, held, index, current, actions, editor, sent);
+    : questionCard(kit, held, index, current, actions, null, sent);
 }
 
 export const register: Register = (on) => {
@@ -1008,7 +1014,9 @@ export const register: Register = (on) => {
       })
       .catch((error) => complain($, `/answer not registered: ${String(error)}`));
     const started = await next(e);
-    await recover($).catch((error) => complain($, error));
+    await recover($, e.surface === "desktop" || e.surface === "vscode").catch((error) =>
+      complain($, error),
+    );
     return started;
   });
 
@@ -1039,15 +1047,8 @@ export const register: Register = (on) => {
   on("prompt.submit", async ($, e, next) => {
     const c = PERSON.has(e.origin.kind) ? await read($, current) : null;
     if (!c) return next(e);
-    if (c.transcript && c.writer?.composer) {
-      const saved = await finishComposer($, c.transcript, true, e.text).catch((error) => {
-        complain($, error);
-        return false;
-      });
-      return {
-        drop: saved ? "Saved as a note" : "Use Save note to keep your draft",
-      };
-    }
+    if (c.transcript && c.writer?.surface === "vscode" && e.origin.kind === "composer")
+      return { drop: "Save or cancel the edit on the question card first" };
     // A field asked for by a click waits for the keys the prompt has. The first Enter is kept
     // back, with its draft still in the prompt, so it cannot send an ordinary message instead;
     // a second Enter goes through, as the person then means it.
@@ -1121,17 +1122,11 @@ export const register: Register = (on) => {
     return (
       <Box flexDirection="column" rowGap={kit.isNative ? tokens.gui.space.sm : 1}>
         {round.preamble ? <Markdown text={round.preamble} /> : null}
-        {cards.map((index) =>
-          roundBody(
-            kit,
-            held,
-            active,
-            index,
-            actions,
-            index === active?.writer?.from ? inline : null,
-            !active && round.sent,
-          ),
-        )}
+        {kit.isNative
+          ? nativeRound(kit, held, active, actions, inline, !active && round.sent)
+          : cards.map((index) =>
+              roundBody(kit, held, active, index, actions, !active && round.sent),
+            )}
       </Box>
     );
   });
@@ -1151,7 +1146,7 @@ export const register: Register = (on) => {
     if (!held) return next(e);
     const kit = kitOf($.ui.resolve(e), e);
     const actions = active ? roundActions($, id, "terminal") : undefined;
-    return roundBody(kit, held, active, index, actions, null, !active && round.sent) ?? next(e);
+    return roundBody(kit, held, active, index, actions, !active && round.sent) ?? next(e);
   });
 
   // Drawn in the band, not a pane: the surface docks every pane beside the transcript once
@@ -1194,8 +1189,6 @@ export const register: Register = (on) => {
           (key) => pressRoundKey($, id, key),
         );
       }
-      if (e.surface === "vscode" && c.writer?.composer)
-        return composerActions($, kit, c.transcript) ?? next(e);
       if ((e.surface === "desktop" || e.surface === "vscode") && !c.isOpen) return next(e);
     }
     const { view, editing } = c;

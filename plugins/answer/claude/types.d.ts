@@ -110,7 +110,8 @@ export type TranscriptRound = {
 export type RoundEditor = {
   from: number;
   surface: "terminal" | "desktop" | "vscode";
-  composer?: { before: string; cursor: number };
+  /** Number of single-line fields in the VS Code inline editor, if extended. */
+  lines?: number;
 };
 
 /** The last turn's form, while it can still be answered. */

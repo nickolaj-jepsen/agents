@@ -148,12 +148,11 @@ const form = async ($: Engine, surface: Surface = "terminal") => {
   return band($, surface);
 };
 
-test("Desktop cards bind to the rendered block and keep the submitted round visible", async ($, on) => {
+test("Desktop restores the latest round in the transcript and keeps the submitted round visible", async ($, on) => {
   const w = world(on, "Already typed");
   let messages: Array<{ role: "assistant"; text: string; toolUses: []; uuid: string }> = [];
   on("session.messages", () => ({ value: messages }));
   on("session.surfaces", () => ({ value: ["desktop"] }));
-  await start($, "desktop");
   messages = [
     {
       role: "assistant",
@@ -162,7 +161,7 @@ test("Desktop cards bind to the rendered block and keep the submitted round visi
       uuid: "bc4b6cdd-4ccd-4e7c-92b4-b208e879b0ed",
     },
   ];
-  await ends($, GRILLING);
+  await start($, "desktop");
   const cards = await $.ui.mount({
     plugin: "answer",
     surface: "desktop",
@@ -170,11 +169,19 @@ test("Desktop cards bind to the rendered block and keep the submitted round visi
     requestId: "block-of-the-assistant-message",
     props: { text: GRILLING, isFirstOfReply: true },
   });
-  expect(await cards.find({ type: "Text", text: /Review answers.*0\/3/ })).toBeDefined();
+  expect(await cards.find({ type: "Text", text: /0\/3 answered/ })).toBeDefined();
   expect(await hint($, "desktop")).toBeUndefined();
   await cards.press({ key: "question-0-choose-1" });
-  expect(await cards.find({ type: "Text", text: /Review answers.*1\/3/ })).toBeDefined();
+  expect(await cards.find({ type: "Text", text: /1\/3 answered/ })).toBeDefined();
   expect(await cards.find({ type: "Text", text: /^Sent$/ })).toBeUndefined();
+  expect(await cards.find({ key: "question-1-card" })).toBeDefined();
+  expect(await cards.find({ key: "review-answer-0" })).toBeUndefined();
+  await cards.press({ key: "review" });
+  expect(await cards.find({ key: "review-answer-0" })).toBeDefined();
+  await cards.press({ key: "review-answer-0" });
+  expect(await cards.find({ key: "question-1-card" })).toBeDefined();
+  expect(await cards.find({ key: "review-answer-0" })).toBeUndefined();
+  await cards.press({ key: "review" });
   w.refuses = true;
   await cards.press({ key: "send" });
   expect(await cards.find({ type: "Text", text: /^Sent$/ })).toBeUndefined();
@@ -185,7 +192,7 @@ test("Desktop cards bind to the rendered block and keep the submitted round visi
   expect(w.box).toBe("Already typed");
   expect(await cards.find({ type: "Text", text: /^Sent$/ })).toBeDefined();
   expect(await cards.find({ key: "question-0-choose-1" })).toBeUndefined();
-  expect(await cards.find({ type: "Text", text: /Review answers.*1\/3/ })).toBeDefined();
+  expect(await cards.find({ type: "Text", text: /1\/3 answered/ })).toBeDefined();
   await cards.unmount();
 });
 

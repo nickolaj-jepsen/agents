@@ -146,7 +146,7 @@ export default site({
       scenario: "form",
     },
     chosen: {
-      caption: "A chosen option stays selected on the card and updates the review.",
+      caption: "A chosen option stays selected on the card and updates the answer count.",
       scenario: "chosen",
     },
   },

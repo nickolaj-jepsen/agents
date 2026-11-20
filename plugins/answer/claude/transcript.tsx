@@ -4,9 +4,10 @@ import {
   actionBar,
   cellWidth,
   clamp,
+  choice,
+  icon,
   note as noteLines,
   roleProps,
-  section,
   stack,
   tokens,
   widthCap,
@@ -16,6 +17,7 @@ import {
 
 export type RoundActions = {
   go: (index: number) => unknown;
+  details?: (index: number) => unknown;
   pick: (question: number, entry: number) => unknown;
   edit: (question: number, field: NonNullable<Editing>, from?: number) => unknown;
   clear: (question: number) => unknown;
@@ -108,7 +110,7 @@ export function questionCard(
               },
               {
                 key: `${prefix}-note`,
-                label: item.note ? "Edit note" : "Write note",
+                label: item.note ? "Edit note" : "Add note",
                 icon: "",
                 onPress: () => interactive.edit(index, "note"),
               },
@@ -179,7 +181,7 @@ export function questionCard(
 
   return (
     <Box
-      key={item.label}
+      key={kit.isNative ? `${prefix}-card` : item.label}
       width={kit.isNative ? undefined : width}
       flexDirection="column"
       borderStyle={kit.isNative ? undefined : "quote"}
@@ -237,26 +239,43 @@ export function questionCard(
                     paddingLeft={kit.isNative ? 0 : 1}
                   >
                     {kit.isNative ? (
-                      <Box columnGap={tokens.gui.across.sm} alignItems="flex-start">
-                        {interactive ? (
-                          <Button
-                            key={key}
-                            label={entry.key || words}
-                            dimColor={!entry.isChosen || undefined}
-                            onPress={pick}
-                          />
-                        ) : null}
-                        {entry.key || !interactive ? (
-                          <Box flexShrink={1} width={0} flexGrow={1}>
-                            <Text weight={weight}>
-                              {entry.key && !interactive ? `${entry.key}  ` : ""}
-                              {words}
-                              {entry.isChosen ? (
-                                <Text {...markRole}>{sent ? "  Sent" : "  Picked"}</Text>
-                              ) : null}
-                              {recommendation ? <Text dimColor>{recommendation}</Text> : null}
+                      <Box flexDirection="column" rowGap={tokens.gui.space.xs}>
+                        <Box
+                          flexDirection="row"
+                          flexWrap="wrap"
+                          columnGap={tokens.gui.across.sm}
+                          alignItems="center"
+                        >
+                          {interactive ? (
+                            <Button
+                              key={key}
+                              label={
+                                cellWidth(words) > tokens.gui.maxLabel
+                                  ? entry.key
+                                    ? `Choose ${entry.key}`
+                                    : "Accept recommendation"
+                                  : [entry.key, words].filter(Boolean).join(" ")
+                              }
+                              variant={entry.isChosen ? "primary" : "secondary"}
+                              dimColor={!entry.isChosen || undefined}
+                              onPress={pick}
+                            />
+                          ) : null}
+                          {entry.isChosen || entry.isRecommended ? (
+                            <Text dimColor>
+                              {entry.isChosen
+                                ? entry.isRecommended
+                                  ? "Selected, recommended"
+                                  : "Selected"
+                                : "Recommended"}
                             </Text>
-                          </Box>
+                          ) : null}
+                        </Box>
+                        {!interactive || cellWidth(words) > tokens.gui.maxLabel ? (
+                          <Text weight={weight}>
+                            {!interactive ? tag : ""}
+                            {words}
+                          </Text>
                         ) : null}
                       </Box>
                     ) : interactive && short ? (
@@ -524,141 +543,471 @@ export function terminalReview(
   );
 }
 
-export function reviewCard(
-  outer: Kit,
-  view: View,
-  active: boolean,
+/** An answer or note under the choices, aligned without forcing the editor to one line. */
+function nativeQuestionField(kit: Kit, kind: "write" | "note", body: JSX.Element) {
+  const { Box } = kit;
+  const { across, lead, space } = tokens.gui;
+  return (
+    <Box paddingX={across.inset} flexDirection="row" flexWrap="nowrap" columnGap={across.sm}>
+      <Box flexShrink={0} minWidth={lead}>
+        {icon(kit, kind)}
+      </Box>
+      <Box flexDirection="column" flexGrow={1} flexShrink={1} minWidth={0} rowGap={space.xs}>
+        {body}
+      </Box>
+    </Box>
+  );
+}
+
+/** Native choice buttons with pi's selection marks. */
+function vscodeOption(
+  kit: Kit,
+  key: string,
+  tag: string,
+  label: string,
+  selected: boolean,
+  multiple: boolean,
+  press?: () => unknown,
+  detail?: string,
+  recommended = false,
+) {
+  const { Box, Button, Text, Markdown } = kit;
+  const marks = multiple ? tokens.glyph.multi : tokens.glyph.single;
+  const marker = `${selected ? marks.on : marks.off}${tag ? `  ${tag}` : ""}`;
+  const text = `${marker}  ${label}`;
+  // VS Code flattens Button children to a single non-wrapping label.
+  const long = cellWidth(text) > tokens.gui.maxLabel || label.includes("\n");
+  return (
+    <Box key={`${key}-row`} flexDirection="column" rowGap={tokens.gui.space.xs} minWidth={0}>
+      {press && !long ? (
+        <Button key={key} dimColor={!selected || undefined} label={text} onPress={press} />
+      ) : press ? (
+        <Box flexWrap="nowrap" columnGap={tokens.gui.across.sm} alignItems="flex-start">
+          <Button key={key} dimColor={!selected || undefined} label={marker} onPress={press} />
+          <Box flexShrink={1} minWidth={0}>
+            <Text>{label}</Text>
+          </Box>
+        </Box>
+      ) : (
+        <Text weight={selected ? "semibold" : undefined}>{text}</Text>
+      )}
+      {recommended || detail ? (
+        <Box flexDirection="column" paddingLeft={tokens.gui.across.inset}>
+          {detail ? (
+            <Markdown text={recommended ? `**Recommended.** ${detail}` : detail} dimColor />
+          ) : (
+            <Text dimColor>Recommended</Text>
+          )}
+        </Box>
+      ) : null}
+    </Box>
+  );
+}
+
+/** A transcript question with native controls. */
+function nativeQuestion(
+  kit: Kit,
+  held: Held,
+  index: number,
+  current: Current | null,
+  actions: RoundActions | undefined,
+  editor: JSX.Element | null | undefined,
+  sent: boolean,
+) {
+  const { Box, Text, Button, Markdown } = kit;
+  const show = viewOf(held.form, { ...held.draft, step: index });
+  const item = show.item;
+  if (!item) return null;
+  const prefix = `question-${index}`;
+  const answered = show.review[index]?.isAnswered;
+  const active = current?.view.step === index && !current.view.isReview;
+  const vscode = kit.surface === "vscode";
+  const highlighted = active && (!vscode || Boolean(editor));
+  const rail = highlighted ? tokens.role.accent : answered ? tokens.role.note : tokens.gui.rule;
+  const editingNote = editor && current?.editing === "note";
+  const editingAnswer = editor && current?.editing === "write";
+  const options = item.entries.flatMap((entry, i) => {
+    if (entry.kind === "write") return [];
+    const label =
+      entry.kind === "accept"
+        ? entry.text.replace(/^Yes:\s*(?:Yes\b[.,:]?\s*)?/i, "") || "As recommended"
+        : labelOf(entry.text);
+    return [
+      {
+        key: `${prefix}-choose-${i}`,
+        tag: entry.kind === "accept" ? "Yes" : entry.key,
+        label,
+        detail:
+          [entry.isRecommended ? "Recommended" : "", entry.detail.replace(/\s*\n\s*/g, " ")]
+            .filter(Boolean)
+            .join("  /  ") || undefined,
+        isOn: entry.isChosen,
+        fullDetail: entry.detail,
+        isRecommended: entry.isRecommended,
+        onPress: () => actions?.pick(index, i),
+      },
+    ];
+  });
+  const full = current?.view.step === index && current.isBodyOpen;
+  const hasDetails = options.some((o) => o.fullDetail || cellWidth(o.label) > tokens.gui.maxLabel);
+  const details = actions?.details;
+  return (
+    <Box key={`${prefix}-card`} flexDirection="row" flexWrap="nowrap" minWidth={0}>
+      <Box backgroundColor={rail} width={0.2} flexShrink={0} />
+      <Box
+        flexDirection="column"
+        flexGrow={1}
+        flexShrink={1}
+        minWidth={0}
+        rowGap={vscode ? tokens.gui.space.sm : tokens.gui.space.xs}
+      >
+        <Box paddingX={tokens.gui.across.inset} flexDirection="column" rowGap={tokens.gui.space.xs}>
+          <Box
+            flexDirection="row"
+            flexWrap="nowrap"
+            alignItems="flex-start"
+            columnGap={tokens.gui.across.sm}
+          >
+            <Box flexShrink={0} minWidth={tokens.gui.lead}>
+              <Text weight="semibold" {...roleProps(highlighted ? "accent" : "dim")}>
+                {item.label}
+              </Text>
+            </Box>
+            <Box flexGrow={1} flexShrink={1} minWidth={0}>
+              <Text weight="semibold">{item.title}</Text>
+            </Box>
+            {answered ? (
+              <Box flexShrink={0}>
+                <Text {...roleProps(sent ? "success" : "note")}>{tokens.glyph.done}</Text>
+              </Box>
+            ) : null}
+          </Box>
+          {item.body ? <Markdown text={item.body} dimColor /> : null}
+          {item.recommended ? (
+            <Markdown text={`**Recommended:** ${item.recommended}`} dimColor />
+          ) : null}
+        </Box>
+        {vscode ? (
+          <Box
+            flexDirection="column"
+            rowGap={tokens.gui.space.xs}
+            paddingX={tokens.gui.across.inset}
+          >
+            {options.map((option) =>
+              vscodeOption(
+                kit,
+                option.key,
+                option.tag,
+                option.label,
+                option.isOn,
+                item.isSeveral,
+                actions && option.onPress,
+                option.fullDetail,
+                option.isRecommended,
+              ),
+            )}
+            {editingAnswer
+              ? editor
+              : actions || item.written
+                ? vscodeOption(
+                    kit,
+                    `${prefix}-write`,
+                    writeLetter(item),
+                    item.written ? "Edit answer" : "Write your own answer",
+                    Boolean(item.written),
+                    false,
+                    actions && (() => actions.edit(index, "write")),
+                  )
+                : null}
+            {item.written && !editingAnswer ? <Text>{`Answer: ${item.written}`}</Text> : null}
+          </Box>
+        ) : actions ? (
+          choice(kit, options, {
+            key: `${prefix}-options`,
+            isMulti: item.isSeveral,
+            gui: { layout: "rows" },
+          })
+        ) : (
+          <Box flexDirection="column" paddingX={tokens.gui.across.inset}>
+            {options.map((option) => (
+              <Text key={`${option.key}-saved`} weight={option.isOn ? "semibold" : undefined}>
+                {[option.tag, option.label, option.isOn ? "Selected" : ""]
+                  .filter(Boolean)
+                  .join("  ")}
+              </Text>
+            ))}
+          </Box>
+        )}
+        {!vscode && details && hasDetails ? (
+          <Box
+            paddingX={tokens.gui.across.inset}
+            flexDirection="column"
+            alignItems="flex-start"
+            rowGap={tokens.gui.space.xs}
+          >
+            <Button
+              key={`${prefix}-details`}
+              label={full ? "Hide option details" : "Option details"}
+              dimColor
+              onPress={() => details(index)}
+            />
+            {full
+              ? options.map((o) => (
+                  <Box key={`${o.key}-detail`} flexDirection="column">
+                    <Text weight="semibold">{`${o.tag}  ${o.label}`}</Text>
+                    {o.fullDetail ? <Markdown text={o.fullDetail} dimColor /> : null}
+                  </Box>
+                ))
+              : null}
+          </Box>
+        ) : null}
+        {vscode ? (
+          <Box flexDirection="column" rowGap={tokens.gui.space.xs}>
+            {editingNote ? (
+              <Box paddingX={tokens.gui.across.inset} flexDirection="column">
+                {editor}
+              </Box>
+            ) : item.note ? (
+              <Box paddingX={tokens.gui.across.inset}>
+                <Text>{`Note: ${item.note}`}</Text>
+              </Box>
+            ) : null}
+            {actions
+              ? actionBar(kit, [
+                  ...(!editingNote
+                    ? [
+                        {
+                          key: `${prefix}-note`,
+                          label: item.note ? "Edit note" : "Add note",
+                          onPress: () => actions.edit(index, "note"),
+                        },
+                      ]
+                    : []),
+                  ...(answered && !editingAnswer
+                    ? [
+                        {
+                          key: `${prefix}-clear`,
+                          label: "Clear answer",
+                          onPress: () => actions.clear(index),
+                        },
+                      ]
+                    : []),
+                  ...(item.canAccept && item.accepts.includes(",")
+                    ? [
+                        {
+                          key: `${prefix}-accept`,
+                          label: `Take ${item.accepts}`,
+                          onPress: () => actions.accept(index),
+                        },
+                      ]
+                    : []),
+                ])
+              : null}
+          </Box>
+        ) : (
+          <Box flexDirection="column" rowGap={tokens.gui.space.xs}>
+            {editingAnswer || item.written || actions
+              ? nativeQuestionField(
+                  kit,
+                  "write",
+                  editingAnswer ? (
+                    editor
+                  ) : (
+                    <Box flexDirection="column" rowGap={tokens.gui.space.xs}>
+                      {item.written ? <Text>{`Answer: ${item.written}`}</Text> : null}
+                      {actions ? (
+                        <Button
+                          key={`${prefix}-write`}
+                          dimColor
+                          label={item.written ? "Edit answer" : "Write your own answer"}
+                          onPress={() => actions.edit(index, "write")}
+                        />
+                      ) : null}
+                    </Box>
+                  ),
+                )
+              : null}
+            {actions && (answered || (item.canAccept && item.accepts.includes(",")))
+              ? actionBar(kit, [
+                  ...(answered
+                    ? [
+                        {
+                          key: `${prefix}-clear`,
+                          label: "Clear answer",
+                          onPress: () => actions.clear(index),
+                        },
+                      ]
+                    : []),
+                  ...(item.canAccept && item.accepts.includes(",")
+                    ? [
+                        {
+                          key: `${prefix}-accept`,
+                          label: `Take ${item.accepts}`,
+                          onPress: () => actions.accept(index),
+                        },
+                      ]
+                    : []),
+                ])
+              : null}
+            {editingNote || item.note || actions
+              ? nativeQuestionField(
+                  kit,
+                  "note",
+                  editingNote ? (
+                    editor
+                  ) : (
+                    <Box flexDirection="column" rowGap={tokens.gui.space.xs}>
+                      {item.note ? <Text dimColor>{item.note}</Text> : null}
+                      {actions ? (
+                        <Button
+                          key={`${prefix}-note`}
+                          label={item.note ? "Edit note" : "Add note"}
+                          dimColor
+                          onPress={() => actions.edit(index, "note")}
+                        />
+                      ) : null}
+                    </Box>
+                  ),
+                )
+              : null}
+          </Box>
+        )}
+      </Box>
+    </Box>
+  );
+}
+
+/** Transcript cards and the surface's reply controls. */
+export function nativeRound(
+  kit: Kit,
+  held: Held,
+  current: Current | null,
   actions?: RoundActions,
   editor?: JSX.Element | null,
   sent = false,
 ) {
-  const { Box, Text, Button } = outer;
-  const width = widthCap("reading", outer.columns);
-  const kit = withColumns(outer, Math.max(1, width - 4));
-  const title = `${active && !outer.isNative ? `${tokens.glyph.pointer} ` : ""}Review answers  ${view.answered}/${view.count}`;
+  const { Box, Text, Button } = kit;
+  const view = current?.view ?? viewOf(held.form, held.draft);
+  const writingAt = current?.writer ? view.step : -1;
+  const live = actions;
+  const reviewEditor = writingAt === view.count ? editor : null;
+  const open = sent || (current ? view.isReview : true);
   return (
-    <Box
-      key="review-card"
-      width={outer.isNative ? undefined : width}
-      paddingX={outer.isNative ? undefined : 1}
-      borderStyle={outer.isNative ? undefined : "round"}
-      borderColor={!outer.isNative && active ? tokens.role.accent : undefined}
-      borderDimColor={(!outer.isNative && !active) || undefined}
-      backgroundColor={outer.isNative ? undefined : "userMessageBackground"}
-    >
-      {stack(
-        kit,
-        [
-          <Box flexDirection="column">
-            {outer.isNative ? (
-              section(kit, title)
-            ) : (
-              <Text weight="semibold" {...roleProps(active ? "accent" : "text")}>
-                {title}
-              </Text>
-            )}
-            {sent ? (
-              <Text weight="semibold" {...roleProps("success")}>
-                {outer.isNative ? "Sent" : "✓ Sent"}
-              </Text>
-            ) : null}
-          </Box>,
-          <Box
-            flexDirection="column"
-            rowGap={kit.isNative ? tokens.gui.space.sm : 1}
-            paddingX={kit.isNative ? tokens.gui.across.inset : undefined}
-          >
-            {view.review.map((row, i) => (
-              <Box key={row.label} flexDirection="column">
-                <Box columnGap={1} alignItems="flex-start">
-                  {actions && !outer.isNative ? (
-                    <Button
-                      key={`review-answer-${i}`}
-                      label={row.label}
-                      plain
-                      dimColor
-                      onPress={() => actions.go(i)}
-                    />
-                  ) : (
-                    <Text dimColor>{row.label}</Text>
-                  )}
-                  <Box flexShrink={1}>
-                    <Text weight="semibold">{row.title}</Text>
-                  </Box>
-                </Box>
-                <Box flexDirection="column" paddingLeft={outer.isNative ? undefined : 4}>
-                  {row.isAnswered ? (
-                    outer.isNative ? (
-                      <Text>
-                        <Text {...roleProps(sent ? "success" : "note")}>
-                          {sent ? "Sent  " : "Picked  "}
+    <Box flexDirection="row" minWidth={0}>
+      <Box
+        width={tokens.prose}
+        flexShrink={1}
+        minWidth={0}
+        flexDirection="column"
+        rowGap={tokens.gui.space.md}
+      >
+        {held.form.items.map((_, index) =>
+          nativeQuestion(
+            kit,
+            held,
+            index,
+            current,
+            live,
+            index === writingAt ? editor : null,
+            sent,
+          ),
+        )}
+        {kit.surface === "vscode" ? (
+          <Box flexDirection="column" rowGap={tokens.gui.space.xs} paddingTop={tokens.gui.space.sm}>
+            <Box paddingX={tokens.gui.across.inset} flexDirection="column">
+              <Text dimColor>{`${view.answered}/${view.count} answered`}</Text>
+              {sent ? <Text {...roleProps("success")}>Sent</Text> : null}
+              {view.note ? <Text>{`Round note: ${view.note}`}</Text> : null}
+            </Box>
+            {live && view.reply
+              ? actionBar(kit, [
+                  { key: "send", label: "Send reply", isPrimary: true, onPress: live.send },
+                  { key: "fill", label: "Fill prompt", onPress: live.fill },
+                ])
+              : null}
+          </Box>
+        ) : (
+          <Box flexDirection="column" rowGap={tokens.gui.space.sm}>
+            <Box
+              flexDirection="row"
+              flexWrap="wrap"
+              alignItems="center"
+              columnGap={tokens.gui.across.md}
+            >
+              {live ? (
+                <Button
+                  key="review"
+                  label={open ? "Hide review" : "Review answers"}
+                  dimColor={open || undefined}
+                  onPress={() => live.go(view.count)}
+                />
+              ) : (
+                <Text weight="semibold">{sent ? "Answers" : "Review answers"}</Text>
+              )}
+              <Text dimColor>{`${view.answered}/${view.count} answered`}</Text>
+              {sent ? <Text {...roleProps("success")}>Sent</Text> : null}
+            </Box>
+            {open ? (
+              <Box flexDirection="column" rowGap={tokens.gui.space.md}>
+                <Box flexDirection="column" rowGap={tokens.gui.space.sm}>
+                  {view.review.map((row, i) => (
+                    <Box
+                      key={row.label}
+                      flexDirection="row"
+                      columnGap={tokens.gui.across.md}
+                      alignItems="flex-start"
+                    >
+                      {live ? (
+                        <Button
+                          key={`review-answer-${i}`}
+                          label={row.label}
+                          dimColor
+                          onPress={() => live.go(i)}
+                        />
+                      ) : (
+                        <Text dimColor>{row.label}</Text>
+                      )}
+                      <Box flexGrow={1} flexShrink={1} minWidth={0} flexDirection="column">
+                        <Text weight="semibold">{row.title}</Text>
+                        <Text dimColor={!row.isAnswered || undefined}>
+                          {row.isAnswered ? row.shown : "Not answered"}
                         </Text>
-                        {row.shown}
-                      </Text>
-                    ) : (
-                      <Text {...roleProps(sent ? "success" : "note")}>{row.shown}</Text>
-                    )
-                  ) : (
-                    <Text dimColor>Unanswered</Text>
-                  )}
-                  {row.note
-                    ? outer.isNative
-                      ? noteLines(kit, row.note, { role: "note" })
-                      : inlineField(
-                          kit,
-                          `review-note-${i}`,
-                          "Note",
-                          `Edit note for ${row.label}`,
-                          row.note,
-                          actions && (() => actions.edit(i, "note", view.count)),
-                        )
-                    : null}
-                  {outer.isNative && row.note && actions ? (
-                    <Button
-                      key={`review-note-${i}`}
-                      label={`Edit note for ${row.label}`}
-                      plain={!outer.isNative || undefined}
-                      dimColor
-                      onPress={() => actions.edit(i, "note", view.count)}
-                    />
-                  ) : null}
+                        {row.note ? <Text dimColor>{`Note: ${row.note}`}</Text> : null}
+                      </Box>
+                    </Box>
+                  ))}
                 </Box>
+                {view.note ? <Text dimColor>{`Round note: ${view.note}`}</Text> : null}
+                {reviewEditor}
+                {live
+                  ? actionBar(kit, [
+                      ...(!reviewEditor
+                        ? [
+                            {
+                              key: "round-note",
+                              label: view.note ? "Edit round note" : "Add round note",
+                              onPress: () => live.edit(view.count, "note"),
+                            },
+                          ]
+                        : []),
+                      ...(view.reply
+                        ? [
+                            { key: "fill", label: "Fill prompt", onPress: live.fill },
+                            {
+                              key: "send",
+                              label: "Send reply",
+                              isPrimary: true,
+                              onPress: live.send,
+                            },
+                          ]
+                        : []),
+                    ])
+                  : null}
               </Box>
-            ))}
-          </Box>,
-          view.note
-            ? outer.isNative
-              ? noteLines(kit, view.note, { role: "note" })
-              : inlineField(kit, "review-note", "Note", "Edit round note", view.note)
-            : null,
-          editor ?? null,
-          actions
-            ? actionBar(kit, [
-                {
-                  key: "round-note",
-                  label: view.note ? "Edit round note" : "Write round note",
-                  onPress: () => actions.edit(view.count, "note"),
-                },
-                ...(view.reply
-                  ? [
-                      {
-                        key: "fill",
-                        label: "Fill prompt",
-                        onPress: actions.fill,
-                      },
-                      {
-                        key: "send",
-                        label: "Send reply",
-                        onPress: actions.send,
-                        isPrimary: true,
-                      },
-                    ]
-                  : []),
-              ])
-            : null,
-        ],
-        { gui: { gap: "sm" } },
-      )}
+            ) : null}
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 }

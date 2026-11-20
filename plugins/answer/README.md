@@ -8,9 +8,9 @@ order: 4
 When Claude ends a turn with numbered questions, each gets a card in the
 transcript. Picking an option leaves that card active so you can add a note.
 
-The review follows the last question and updates as you answer. **Fill prompt**
-puts the reply above any text you've already typed. **Send reply** sends the
-answers you have and keeps your prompt draft. You can leave questions unanswered.
+**Fill prompt** puts the reply above any text you've already typed.
+Where **Send reply** is available, it sends the answers you have and keeps
+your prompt draft. You can leave questions unanswered.
 
 If you send a different message, `/answer` brings back the round and its draft.
 A submitted round stays visible in the current chat with its saved answers
@@ -65,9 +65,14 @@ The built-in `ctrl+x tab` focuses the band too, and needs no binding.
 
 ## VS Code and Desktop
 
-Use the controls on the transcript cards and scroll between questions. In
-VS Code, **Write longer note** uses the main composer for multiline notes.
-**Save note** or **Cancel note** returns any text you already had in the composer.
+The questions stay in the transcript. In VS Code, choose an option or write
+your own answer on its card. Add notes there too, without changing your chat
+draft. Use **Add line** for another line, then **Save** or **Cancel**.
+The footer shows how many you've answered and lets you fill the prompt or
+send the reply directly, without a separate review.
+
+In Desktop, open **Review answers** below the last card. Select a question
+number in the review to go back to that card.
 
 ## pi
 

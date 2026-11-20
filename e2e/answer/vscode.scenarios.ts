@@ -9,7 +9,7 @@ const asks = (fixture: string): VscodeScenario["start"] => ({
 const asked: VscodeStep[] = [
   { type: "ask" },
   { press: "Enter" },
-  { wait: "Review answers", timeout: 30_000 },
+  { wait: /0\/\d+ answered/, timeout: 30_000 },
 ];
 
 export default vscodeScenarios({
@@ -17,62 +17,117 @@ export default vscodeScenarios({
   harness: "vscode",
   scenarios: {
     form: {
-      about: "expanded question cards and live review in the transcript",
+      about: "all question cards stay in the transcript with a single progress footer",
       start: asks("details"),
-      steps: [...asked, { hover: "Which database should the journal use?" }],
+      steps: [
+        ...asked,
+        { wait: "Keep the journal?" },
+        { wait: "Review answers", gone: true },
+        { hover: "Which database should the journal use?" },
+      ],
     },
     chosen: {
       from: "form",
-      about: "a selected option keeps its detail and updates the live review",
-      steps: [{ click: "B" }, { wait: /Review answers\s+1\/3/ }],
+      about: "a selected option keeps its detail and updates the footer",
+      steps: [
+        { click: /○\s+B\s+Postgres/ },
+        { wait: /●\s+B\s+Postgres/ },
+        { wait: "1/3 answered" },
+        { wait: "Clear answer" },
+      ],
     },
     write: {
       from: "form",
-      about: "a write-in answer uses the native input inside its card",
+      about: "Enter saves a write-in in place without sending the chat draft",
       steps: [
-        { click: "Write answer" },
+        { click: "Message input" },
+        { type: "Unsent chat draft." },
         { click: "Write your own answer" },
+        { click: "Type an answer" },
         { type: "Use the existing schema." },
-        { click: "Save" },
+        { press: "Enter" },
         { wait: "Answer: Use the existing schema." },
+        { wait: "Unsent chat draft." },
       ],
     },
-    note: {
-      from: "chosen",
-      about: "a short note is edited and saved inside its card",
+    "editing-many": {
+      about: "editing a long write-in leaves the other eleven questions interactive",
+      start: asks("many"),
+      size: [420, 800],
       steps: [
-        { click: "Write note" },
-        { click: "Add a condition or follow-up" },
-        { type: "Use the managed instance." },
-        { click: "Save" },
-        { wait: "Edit note for Q1" },
+        ...asked,
+        { click: "Write your own answer" },
+        { click: "Type an answer" },
+        { type: "数据库 / café / follow the existing migration plan. ".repeat(15).trim() },
+        { click: "Add line" },
+        { click: "Line 2" },
+        { type: "Keep the current indexes." },
       ],
     },
-    "longer-note": {
-      from: "note",
-      about: "the composer saves a multiline note and restores its original draft",
+    "pick-while-editing": {
+      from: "editing-many",
+      about: "picking on another card keeps both lines and applies the choice",
+      steps: [
+        { click: /○\s+B\s+Option B for 2/ },
+        { wait: "2/12 answered" },
+        { wait: /Answer: 数据库.*\s+Keep the current indexes\./ },
+      ],
+    },
+    "note-open": {
+      from: "chosen",
+      about: "the inline note editor leaves the choices and chat draft alone",
       steps: [
         { click: "Message input" },
         { type: "Draft to keep." },
-        { click: "Edit note for Q1" },
-        { click: "Write longer note" },
-        { wait: "Save note" },
-        { click: "Message input" },
-        { press: "End" },
-        { press: "Shift+Enter" },
-        { type: "Rotate the credentials first." },
-        { click: "Save note" },
-        { wait: /Use the managed instance\.\s+Rotate the credentials first\./ },
-        {
-          run: async (s) => {
-            const draft = await s.evalInView<string>(
-              "document.querySelector('[aria-label=\"Message input\"]')?.innerText",
-            );
-            if (draft !== "Draft to keep.")
-              throw new Error(`Composer draft was ${JSON.stringify(draft)}`);
-          },
-        },
+        { click: "Add note" },
+        { wait: "Add line" },
+        { wait: "Clear answer" },
+        { wait: "Send reply" },
       ],
+    },
+    note: {
+      from: "note-open",
+      about: "save and reopen a multiline note on the same card",
+      steps: [
+        { click: "Type a note" },
+        { type: "Use the managed instance." },
+        { click: "Add line" },
+        { click: "Line 2" },
+        { type: "Rotate the credentials first." },
+        { click: /^Save$/ },
+        { wait: /Use the managed instance\.\s+Rotate the credentials first\./ },
+        { wait: "Draft to keep." },
+      ],
+    },
+    "cancel-note": {
+      from: "note",
+      about: "cancelling leaves both saved note lines and the chat draft intact",
+      steps: [
+        { click: "Edit note" },
+        { click: "Line 2" },
+        { press: "Ctrl+a" },
+        { type: "A change to discard" },
+        { click: "Cancel" },
+        { wait: "A change to discard", gone: true },
+        { wait: "Rotate the credentials first." },
+        { wait: "Draft to keep." },
+      ],
+    },
+    "clear-with-note": {
+      from: "note",
+      about: "clearing a choice leaves the question's note in place",
+      steps: [
+        { click: "Clear answer" },
+        { wait: "0/3 answered" },
+        { wait: "Use the managed instance." },
+        { wait: "Edit note" },
+      ],
+    },
+    "long-title": {
+      about: "a very long heading wraps beside the question number and answer mark",
+      start: asks("long-title"),
+      size: [420, 800],
+      steps: [...asked, { click: /○\s+A\s+Yes/ }, { wait: "1/1 answered" }],
     },
     "long-body": {
       about: "the full question body is in the transcript",
@@ -80,14 +135,15 @@ export default vscodeScenarios({
       steps: [...asked, { wait: "Line 30" }],
     },
     "long-option": {
-      about: "long option text can wrap beside its selection button",
+      about: "long options wrap in place without hiding their labels or details",
       start: asks("long-option"),
-      steps: asked,
+      size: [420, 800],
+      steps: [...asked, { wait: /a very long option text that keeps going/ }],
     },
     many: {
-      about: "the transcript can hold twelve expanded questions",
+      about: "12 questions, including eight options on one card, without a review step",
       start: asks("many"),
-      steps: [...asked, { wait: "Question number 12" }],
+      steps: [...asked, { wait: "Question number 12" }, { wait: "Review answers", gone: true }],
     },
     picks: {
       about: "a numbered list still opens from its offer above the prompt",
@@ -105,8 +161,17 @@ export default vscodeScenarios({
       start: asks("recommended"),
       steps: [...asked, { wait: "per-generator" }],
     },
+    filled: {
+      from: "note",
+      about: "fill copies the partial reply into the chat draft without sending it",
+      steps: [
+        { click: "Fill prompt" },
+        { wait: /Postgres[\s\S]*Draft to keep\./ },
+        { wait: "Thanks, going with that.", gone: true },
+      ],
+    },
     sent: {
-      from: "longer-note",
+      from: "note",
       about: "send a partial reply and keep the original questions and draft",
       steps: [
         { click: "Send reply" },
