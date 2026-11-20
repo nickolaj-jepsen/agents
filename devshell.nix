@@ -22,6 +22,11 @@
         pkgs.pngquant # optimises the kit's crops, with oxipng
         pkgs.oxipng
       ];
+      # This shell's `pi` is nixpkgs' bare one; the system's wrapper is what exports the
+      # key's location to plugins, so the exa tools would otherwise throw.
+      shellHook = ''
+        export PI_EXA_KEY_FILE="''${PI_EXA_KEY_FILE:-''${HOME:-}/.pi/agent/exa-api-key}"
+      '';
     };
 
     # What `just media` needs and nothing of the machine's: the agents, VS Code and its Claude
