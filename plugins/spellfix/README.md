@@ -21,9 +21,10 @@ it, or use **Fix all**. Fix all can be undone from its confirmation. **Add
 word** needs a personal dictionary. In VS Code the band can lag behind typing
 and the picker is mouse-only.
 
-`claude plugin configure spellfix@nickolaj-jepsen` shows the defaults and your
-settings. Use the ID from `claude plugin list` if you installed it under another
-name.
+```bash
+claude plugin list                                # find the installed plugin ID
+claude plugin configure spellfix@nickolaj-jepsen    # inspect defaults and change settings
+```
 
 ## pi
 
@@ -39,9 +40,7 @@ Spellfix runs in the session you started, not in subagents.
 - A large paste stays its `[paste #n]` marker, and a draft that starts with `!`
   (a shell command) is not checked.
 
-The underline and the automatic recheck need an editor that publishes itself on
-pi's event bus, which the house editor in the system config does; under pi's
-stock editor the commands, the shortcut and the review still work, without them.
+With pi's stock editor, use the commands or shortcut to open the review. Inline underlines and automatic rechecks need an editor that publishes itself on pi's event bus.
 
 Configuration is in the environment, so a pi install sets it once:
 

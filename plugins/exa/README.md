@@ -6,7 +6,11 @@ requires:
 order: 10
 ---
 
-pi only; subagents have it too. Each call is capped to a share of the model's
-context, split across its results or pages.
+Before starting pi, point to a file containing your key:
 
-Set `PI_EXA_KEY_FILE` to the path of a file containing your key. Both tools fail if it is unset.
+```bash
+export PI_EXA_KEY_FILE=/path/to/exa-key  # use an existing key file
+pi                                     # start the session with the tools
+```
+
+Both tools fail if the variable is unset or the file is unreadable or empty. Subagents can use them too. Results are capped to a share of the model's context.

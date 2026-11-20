@@ -6,4 +6,23 @@ requires:
 order: 11
 ---
 
-The plugin also runs in pi subagents. Set `PI_LSP_SERVERS` to the JSON file of server configurations; when unset or empty, the plugin does nothing.
+Set `PI_LSP_SERVERS` before starting pi. It takes a path to a JSON file, not a server name:
+
+```bash
+export PI_LSP_SERVERS=/path/to/servers.json  # use the file you created
+pi                                       # edit or write a matching file
+```
+
+For example, with `typescript-language-server` on PATH:
+
+```json
+{
+  "typescript": {
+    "command": "typescript-language-server",
+    "args": ["--stdio"],
+    "extensionToLanguage": { ".ts": "typescript", ".tsx": "typescriptreact" }
+  }
+}
+```
+
+An unset, unreadable or invalid JSON file disables the plugin. Subagents use the same configuration.

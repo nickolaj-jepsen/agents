@@ -8,13 +8,10 @@ requires:
 order: 2
 ---
 
-- `/git` opens the checkout's repository, branch, commit or pull request on
-  GitHub, GitLab or Codeberg. It links the compare page for a new pull request,
-  and copies the branch, SHA or PR URL.
-- `/open` hands the checkout to VS Code, Zed, Sublime Merge, the file manager or
-  Ghostty.
-- `/open plan` lists the checkout's notes (`.agents/store`), newest first, and
-  opens the one you pick in the editor.
+| Command      | What to use it for                                                                                                                                       |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/git`       | Open a repository, branch, commit or pull request on GitHub, GitLab or Codeberg, or copy the branch, SHA or PR URL. For a new PR, open the compare page. |
+| `/open`      | Open the checkout in VS Code, Zed, Sublime Merge, the file manager or Ghostty.                                                                           |
+| `/open plan` | Pick a note from `.agents/store`, newest first, and open it in the editor.                                                                               |
 
-Rows that can't run say why. In the terminal a number key picks a row; in the desktop app and
-VS Code each row has a quiet button at its end, and a row that can't run has none.
+Press the row's number in the terminal or click its action in Desktop or VS Code. Disabled rows explain what's missing.
