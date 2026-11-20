@@ -43,9 +43,9 @@ Record `git rev-parse HEAD` as the report's commit. Read the README, manifests, 
 
 With a subsystem, read its own files first, then only the root files that build or run it. Grep the repo for its name and entry points, and read what wires it in and what talks to it; its edges are half the map.
 
-Check the shape of the history before trusting it, then use `references/tools.md` for the questions you still have. Draft how the project should run, its core features, which actions could be traced, and which well-known projects it resembles.
+Check the shape of the history before trusting it, then use `references/tools.md` for the questions you still have. Draft how the project should run, its core features, and which actions would show how its parts work together.
 
-With `--quick`, read an existing overview if there is one, but write nothing, and use only tools that need no approved plan. Then answer: what it is, what users do with it, how it should run (unverified), similar projects its own docs name, the map (the parts and what crosses their edges, as text, citing `path` and symbol), where its docs are wrong, tools you skipped, and what you couldn't tell without running it. Stop there.
+With `--quick`, read an existing overview if there is one, but write nothing, and use only tools that need no approved plan. Then answer: what it is, what users do with it, how it should run (unverified), the map (the parts and what crosses their edges, as text, citing `path` and symbol), where its docs are wrong, tools you skipped, and what you couldn't tell without running it. Stop there.
 
 ## 2. Early ask
 
@@ -81,7 +81,7 @@ Use the harness's question tool (pi `ask_user_question`, Claude `AskUserQuestion
 - **Architecture:** entry points, import graph and the real schema. Write down the layers you believe exist and test them with a contract from `references/tools.md`; the failures show where the model is wrong.
 - **Trace:** follow the chosen action from entry to storage and back, using a debugger, a tracer, spans or state inspection (API, database, git refs), and note each boundary and what it does for the feature. For each gate you were told about, grep for every caller of what it guards, and try the ones that skip it. Before each probe, write down what your account predicts (an output, a stored row, a log line), then run it; change a string, or break what you called essential. The method, each observation and each wrong prediction go in the evidence file, not the report. Run `git restore .` in the clone after each probe.
 - **Invariants:** for each one, find the test that guards it by reading the tests. Don't stub code to see whether tests notice: that is reviewing the tests.
-- **Similar projects:** start from prior art the project's docs name. If the plan approved it, search the web for others and cite the page. Something you remember can start a search but is never a source on its own.
+- **Similar projects:** start from prior art the project's docs name. Research a comparison only when it helps answer the user’s question and the plan approved it. Cite the page. Something you remember can start a search but is never a source on its own.
 - **Design choices:** look in plan files, ADRs, commit messages, PRs and any logs the user pointed at. Label each choice:
   - **stated:** a source gives the reason; cite it.
   - **inferred:** your reading of the code; say what supports it.
@@ -104,7 +104,7 @@ Everything is saved before you send this one message, so walking away loses noth
 1. The report's path, and in a few lines what the project is.
 2. Where the project's docs are wrong, most consequential first.
 3. The skipped commands that need the user (credentials, paid calls, external services), with exact commands and what each needs.
-4. 3–5 subsystems to dive into, ranked by complexity, how much depends on them and whether the traced action passes through them. Ask which to dive into, or none.
+4. Subsystems worth a closer look for the user’s purpose, starting with the most relevant. If there are candidates, ask which to dive into.
 
 Start the picked dives as soon as the user picks.
 

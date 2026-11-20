@@ -1,11 +1,11 @@
 # Docs and agent instruction files
 
-For every block that restates something the code defines, take the first option that fits:
+First check what the passage does for its reader. A map can explain how parts fit together even when each part is easy to find. For a block that merely repeats the source:
 
-1. **Point**: delete the restatement and name where the truth lives (`see providers/`, `run just`, `--help`, the schema file). Before writing a pointer, check that the path or command actually exists.
+1. **Point**: remove the duplicate. Leave a pointer if someone following the surrounding guide needs it, and verify the destination. If a whole page in scope loses its purpose, remove it and its incoming links. If a link would need an out-of-scope edit, report the deletion instead.
 2. **Generate**: only if humans need the list _and_ the repo already has a generator (cog/mdsh markers, a `docs` recipe, an options or OpenAPI renderer). Wire the block into that generator. Never add one.
 3. **Execute**: only if a doc-test runner is already configured. Otherwise trim or delete instead.
-4. **Keep as prose**: only what code can't express, such as why, constraints, rejected alternatives, invariants and absences ("core never imports the HTTP layer").
+4. **Keep as prose**: keep an explanation or worked example that helps the reader apply the rule. A rejected alternative belongs here only if its reason still affects the reader’s choice.
 
 Skip generated output (`<!-- generated -->`, `[[[cog`, files a `docs` recipe writes); edit the generator's source instead. Help text in code (`--help` strings, justfile `[doc]`) is the source of truth to point at, not a finding. Comments, docstrings and plain wordiness with no coupling belong to `prune-comments`; don't catalog them here.
 
@@ -114,7 +114,7 @@ Keep a line only if **both** hold: an agent doing a task would not pick it up fr
 - Traps and non-inferable invariants ("every file under `modules/` is auto-imported, so gate it").
 - Non-default tooling and environment quirks (uv/pnpm, "no global installs; use the devshell").
 - Approval and safety gates (never force-push, deploys need sign-off). Restate these one line each in the entry file even if canonical elsewhere; agents don't reliably follow pointers.
-- Settled decisions the code can't show, as the rule plus the rejected alternative.
+- Standing decisions the project actually made. A deadline or an accepted suggestion for one prototype belongs to that task.
 - A short routing table: topic → doc by name.
 
 ```markdown
@@ -137,7 +137,7 @@ Keep a line only if **both** hold: an agent doing a task would not pick it up fr
 ### Settled conventions repeated per feature
 
 - **Tell**: a feature README, design note or module doc restating a project-wide decision ("we use `fetch`, not axios", "errors return `Result`", "tests live next to source").
-- **Do**: if the instruction file or a lint rule already states it, delete the per-feature copy. If no central home states it, report it as a candidate line for the instruction file; don't move it yourself.
+- **Do**: if the instruction file or a lint rule already states it, delete the per-feature copy. If no central home states it, first check that the project adopted it beyond this feature. Report a candidate instruction only when that wider rule is supported.
 - **Keep when**: the doc records a local exception to the convention and why; a deliberate migration is in flight (one line in the instruction file says which direction).
 
 ## Sources

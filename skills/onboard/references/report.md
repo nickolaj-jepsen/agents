@@ -1,106 +1,32 @@
 # Report structure
 
-A report is written for someone who will work in the project, not as a record of the run. Keep the section order. Write "none" rather than dropping a section. A quiz the user asks for goes last, under `## Quiz`. Mark the header **not run** when the project never ran, and **short** on a short overview: a rerun treats both as unfinished.
+Write for the person coming back to work on this project. Link the evidence file from the header. Mark the report **not run** when the project never ran and **short** for a short overview. A rerun uses these markers.
 
-Each report has an evidence file beside it, `<report name>-evidence.md`, linked from the header (template at the end). How you checked something, the probes, the scripts in the clone and the predictions that turned out wrong go there and nowhere else in the report.
-
-Rules shared by both reports:
-
-- **Terms:** define each project term in plain words at its first use, and never cite a decision or rule ID (such as P3 or D4) without saying what it decided.
-- **How you know:** never mention probes, the clone or its logs. State what is true; the evidence file says how you found it.
-- **Similar projects:** 2–4 well-known projects, one or two lines each: what this one shares with each, and what it does differently. Each says its source: **stated** (the project's own docs name it) or **researched** (a cited page about the other project). Prefer stated. Something you remember can start a search but is never a source on its own.
-- **Getting started:** the steps from a fresh clone to a first visible result, each one run in the clone. For a library, a minimal code sample that you ran, shown in full with its output, not as a pointer to where it came from. Leave out anything you didn't run.
-- **Walkthroughs:** one per traced action, as 5–8 numbered steps. Each step is one sentence on what happens and why it matters for the feature, then `path` plus symbol. One sequence diagram. No predictions, probe output, commit logs or call chains.
-- **Invariants and boundaries:** what must stay true and what happens when a dependency fails, with a "tested by" column filled from reading the tests (`path` plus test name, or "none").
-- **Where the docs are wrong:** what the project's docs, comments, READMEs or config say that isn't true, and what actually happens. Never your own predictions, test quality, or failures caused by this machine.
-- **Open questions:** only questions whose answer would change how someone uses or extends this part, at most five. Small quirks are dropped.
-- **Commands:** a table of the project's own commands in this report's scope. Columns: command, what it shows, result (**passed**, **failed** or **skipped**), and why, in a few words, for a failure or a skip. A failure caused by this machine is a row here with its cause. Never list scripts you wrote in the clone.
-
-## `overview.md`
+## Overview
 
 ```markdown
 # <project>: overview
 
-<commit> · <date> · <ran | not run> · <full | short> · Looked at: <areas, history usable or not> · [Evidence](overview-evidence.md)
-
-## What it's for
-
-The problem it solves and for whom, in the project's own terms.
-
-## Similar projects
-
-## Getting started
-
-## Core features
-
-For each: what it's for, how to do it (command, URL or API call), what you should see, **ran it**, **tests only** or **docs only**, and a screenshot or text capture if there is one. Mark the traced feature.
-
-## Where it sits
-
-What it talks to and what talks to it, with a context diagram.
-
-## Codemap
-
-The main parts and how they relate, with a diagram. For each part: what it does and where to find it. Not how each part works inside.
-
-## Walkthroughs
-
-## Invariants and boundaries
-
-## Design choices
-
-Each with its label (**stated**, **inferred**, **accidental**, **unknown**) and its evidence.
-
-## Where the docs are wrong
-
-## Open questions
-
-## Commands
-
-## Dive candidates
-
-Ranked, each with its reason and `/onboard <subsystem>`.
+<commit> · <date> · <ran | not run> · <full | short> · [Evidence](overview-evidence.md)
 ```
 
-A short overview, written when a subsystem is the first thing asked for, keeps only the header, What it's for, Getting started, a Where it sits section that shows where the subsystem sits, and Commands.
+Start with who uses the project and what they do with it. Give the reader a map of the main parts and what crosses their boundaries. Then follow one chosen action from start to a visible result. Use the project's terms and define unfamiliar ones as you go. Put the commands, inputs or results that make the example concrete together. Use a diagram when it makes a relationship easier to see.
 
-## `<subsystem>.md`
+For **Getting started**, give the steps you ran from a fresh clone. For a library, show the minimal sample you ran and its output. When the project never ran, label the walkthrough as a reading of the code. In Core features, describe the actions that matter for this reader. Link a capture when it shows the result and distinguish **ran it**, **tests only** and **docs only**.
 
-```markdown
-# <project>: <subsystem>
+Add sections where the reader needs them:
 
-<commit> · <date> · <ran | not run> · [Evidence](<subsystem>-evidence.md)
+- A comparison with another project can explain an unfamiliar idea. Include it when it answers the user's question, and cite the project's own comparison or the source you checked.
+- Describe a design choice when it explains current behavior. Distinguish a stated reason from an inference. A proposal in an old plan is evidence about that proposal.
+- Include a failure boundary when it changes how the reader should use or extend the project. Give the relevant test by path and name if one exists.
+- Correct a misleading project claim by giving the claim and the behavior you verified. Include open questions that would change someone's next step.
+- Give commands you checked as a compact table with their result. For a failed or skipped command give its reason. Leave diagnostic scripts and probe logs in the evidence file.
 
-## What it's for
+Offer dive candidates where a closer look would help. A short overview for a subsystem request needs only the header, the purpose, the checked starting point, where the subsystem fits and the commands checked. Put a requested quiz last.
 
-What it owns, what it doesn't, and how users encounter it.
+## Subsystem report
 
-## Similar projects
-
-Only when the subsystem has a space of its own; otherwise "none: no space of its own".
-
-## Getting started
-
-When it has a surface of its own, such as an API to call; otherwise point to the overview.
-
-## Where it sits
-
-What crosses its edges, in both directions, with a diagram.
-
-## Codemap
-
-## Walkthroughs
-
-## Invariants and boundaries
-
-## Design choices
-
-## Where the docs are wrong
-
-## Open questions
-
-## Commands
-```
+Use the same header with the subsystem name and its own evidence link. Start at the point where a user or another component encounters it. Trace the chosen action through its boundaries. This is the place for the details the overview skipped. Link back to shared setup and explain any extra step needed for this subsystem.
 
 ## `<report name>-evidence.md`
 

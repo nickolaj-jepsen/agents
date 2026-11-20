@@ -9,7 +9,7 @@ metadata:
   category: clean-up
 ---
 
-Cut comments, docstrings and docs down to what a reader can't cheaply recover from the code.
+Cut comments and docstrings down to what a reader can't cheaply recover from the code.
 
 - Reduction only: never add or expand. Rewriting a comment into one of equal or shorter length is fine.
 - A comment fails in one of two ways:
@@ -48,12 +48,12 @@ Otherwise:
 - Recoverable with one lookup (a stdlib call's semantics, a flag's meaning): drop. Compressed domain knowledge that would cost a textbook or RFC dive stays.
 - Coupled to something outside itself: see "Coupled comments".
 - Docstrings: keep the contract, cut signature restatement. Where the repo's linter or pervasive convention requires public-API docstrings, the floor is a one-line contract: compress to it, never delete.
-- Markdown and prose: cut on density and redundancy only. Leave tone and phrasing to the avoid-ai-tropes skill; don't duplicate its job.
+- For prose docs, judge the passage by what its reader needs. Keep the map or worked example that saves them tracing the code. Cut repeated or incidental detail before shortening sentences.
 
 How to judge:
 
 - Measure against a reader who has only the source tree: no plan doc, no PR description, no chat transcript.
-- Default to one line. A comment that really is load-bearing stays, compressed.
+- For a code comment, one line often suffices. Keep enough to explain the constraint.
 
 ## Coupled comments
 
@@ -88,7 +88,8 @@ Each pattern lists its tells, what to do, and when it stays.
 - Not a finding: preconditions the caller establishes (`caller holds mu`); that's contract.
 
 ```text
-# Used by checkout and the mobile API.   → # Payload shape is frozen: mobile v2 clients parse it.
+# Used by checkout and the mobile API.   → delete if this only names two callers.
+# Keep the legacy field: released mobile v2 clients still read it.   → keep when verified.
 ```
 
 ### Keep-in-sync markers
@@ -127,7 +128,7 @@ Each pattern lists its tells, what to do, and when it stays.
   - A TODO survives only when self-contained: a concrete condition that stands without the plan (`remove after v2 migration ships`). Rewrite it to one if recoverable, else delete.
 - Keep:
   - deprecations with a removal target (`@deprecated since 3.2, removed in 4.0`), and `versionadded`/`versionchanged` in published docs;
-  - a rejected alternative with its reason;
+  - a rejected alternative when the reason still constrains the code;
   - an incident cited because it _is_ the constraint (`don't batch: double charges, INC-123`);
   - a workaround with its removal condition (`drop once lib >= 2.4`);
   - files whose job is recording a change (migrations).

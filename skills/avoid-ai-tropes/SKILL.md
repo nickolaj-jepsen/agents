@@ -28,7 +28,5 @@ Prose means documentation, READMEs, blog posts, PR and commit descriptions, comm
 ## How to review
 
 1. Read [references/catalog.md](references/catalog.md) and check the draft against every trope in it.
-2. Rewrite anything that matches.
-   - A single pattern used once is usually fine.
-   - The problem is several tropes appearing together, or one used repeatedly.
-3. Aim for varied, imperfect, specific, human writing, not a mechanical strip of every flagged word.
+2. Read the passage as someone trying to use it. A bold command name can help them find an entry. A bold label on each line of a three-line recipe can make it harder to copy and run.
+3. Keep useful local names and formats. Rewrite the parts that obscure the meaning, even when nearby entries use the same phrasing. Give independent facts their own sentences. When the user asks for replacement copy, return the copy without a defense of the edit.

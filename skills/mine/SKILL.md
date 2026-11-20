@@ -31,7 +31,7 @@ Matchers, by what the question is about:
 - A pi extension or tool: one `--tool` per tool name it registers (read its source). The header says how many sessions offered the tool and how many called it. Offered and never called is a description problem.
 - A CLI: `--cmd <binary>`, plus `--tool` for a harness tool that wraps it. `--help` calls and an error followed by a retry point at discoverability.
 - A hook, a setting or a symptom: `--text <regex>` on its distinctive output, such as a block message. A blocked call followed by a rephrased retry of the same intent is probably a false positive, and the same denial repeating suggests a missing allow rule.
-- A skill that asks questions: the header splits answers into recommended, other, custom and so on. A question nearly always answered with the recommendation is a decision to state instead of ask. One often answered custom is missing an option. One where another option often wins has the wrong recommendation.
+- A skill that asks questions: the header splits answers into recommended, other, custom and so on. Read the question before interpreting those counts. A leading option can produce almost unanimous agreement. Look for what users asked for in their own words or changed afterward before proposing a default.
 
 Transcripts are rarely the only evidence, and often not the fastest:
 
@@ -53,7 +53,7 @@ A correction is the user redirecting, repeating themselves, rejecting an approac
 
 - Count. "7 of 20 runs" with their session ids is a finding, and one run is an anecdote: mention it, don't build on it. Rank by how many runs something hit and what it cost the user in corrections, interrupts and abandoned runs.
 - Look for desire paths as well as failures. A follow-up most runs share is a step the target could offer itself, and a tool-call sequence the agent works out again each time is a script to bundle.
-- Fix it where the cause is: the target's own text or scripts; the harness or an extension, through its extension points instead of patches to its built-ins; agent instructions or memory; the repo; the environment. A cause shared with other targets is not a fix to this one.
+- Fix it where the cause is: the target's own text or scripts; the harness or an extension, through its extension points instead of patches to its built-ins; the repo; the environment. Carry a personal preference into agent instructions or memory only when the user asks for it to apply beyond the task. A cause shared with other targets is not a fix to this one.
 - Prefer the cheapest change that holds, in roughly this order. Cutting or correcting the text that asked for the behaviour is nearly free. A tool or error message changed so the failure can't happen holds without anyone remembering it. A check or hook comes next, when the rule has no legitimate exceptions. New prose is last: every later session pays for it in context, and it is the first thing ignored. A rule that exists and keeps being broken needs a stronger level, and restating it louder won't help.
 - `work` shows earlier decisions. They are context, and when a change reverses one, say so.
 

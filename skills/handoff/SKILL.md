@@ -35,7 +35,7 @@ metadata:
    - If the directory already holds a `HANDOFF.md`, ask before overwriting.
    - Wait for a go or a correction.
 
-2. **Harvest decisions.** List every choice the conversation made, with its why, and tag each one:
+2. **Harvest decisions.** Keep the choices the builder needs for this handoff. Record where each applies (for example, this demo or all supported clients), its reason when known, and its owner:
    - **Yours:** the user stated it, typed their own answer, or picked an option you didn't recommend. These lock.
    - **Defaults:** a bare "yes" to your recommendation, or an implementation call. The builder may change one when evidence shows it's wrong, and says so in its report.
    - When the tag is unclear, it's a default.
@@ -69,7 +69,7 @@ metadata:
    Fix what it finds. Reopen the grill only for a real decision gap.
 
 9. **Ask what's still open,** because a question that is only reported goes unanswered. In one round, ask each open question the user can answer now, with its meanwhile rule as the recommended answer. Use the harness's question tool when they fit, otherwise a numbered list with your pick on each.
-   - An answer moves to Locked decisions under Yours, and the items it touches change to match.
+   - Classify each answer as Yours or Defaults by the same rule as step 2. Update the items it affects.
    - Only what can't be answered yet stays in Open questions.
    - A fact goes in Gotchas, and something the user has to do goes in the item or gate that needs it.
    - If nothing is open, skip this step.
@@ -138,7 +138,7 @@ Review model override: <only if the user chose one; otherwise use the invoking h
 
 ### Yours
 
-Stated by the owner. Do not re-litigate. If evidence shows one is wrong, raise it; don't deviate.
+Stated by the owner for the scope recorded here. Do not re-litigate. If evidence shows one is wrong, raise it; don't deviate.
 
 - U1 <decision>. Why: <reason>.
 
