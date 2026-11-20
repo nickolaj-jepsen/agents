@@ -82,6 +82,12 @@ claude-desktop-dev FIXTURE="recommended" MODE="seed":
 readme:
     npm run readme
 
+[doc('Refresh the upstream Markdown references in the agent-plugin-dev skill')]
+[group('dev')]
+[positional-arguments]
+plugin-docs PI_TAG="":
+    node skills/agent-plugin-dev/scripts/refresh-docs.ts ${1:+"$1"}
+
 [doc('Serve the site (site/) with live reload at http://localhost:4321/agents/')]
 [group('site')]
 [script]

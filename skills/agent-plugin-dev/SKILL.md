@@ -14,6 +14,7 @@ Most plugins have a Claude half and a pi half. Design both together: the harness
 - `references/style.md`: the house style, for the terminal and for the graphical surfaces (the desktop app and VS Code). Read it before any layout.
 - `references/claude.md`: what a mod can draw, the engine's limits and traps, how the kit draws for the graphical surfaces, what VS Code does with each element, and how to look at a VS Code screen. Load `plugin-authoring` too; it holds the API.
 - `references/pi.md`: what a pi extension can draw, pi-tui's components, traps, and reading a session file.
+- [Upstream manuals](references/upstream.md): Claude Code plugin packaging and mod APIs, and pi extensions, packages and terminal UI. Read the page that covers the API you need.
 - `references/sources.md`: where to look for how others solved a component.
 - `e2e/README.md`: writing scenarios and reading snapshots.
 

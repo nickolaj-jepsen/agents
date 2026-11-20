@@ -14,6 +14,7 @@
       settings.global.excludes = [
         "result"
         "skills/mermaid/scripts/vendor/*" # Vendored Pele, kept byte-identical to upstream
+        "skills/agent-plugin-dev/references/upstream/**" # Generated from upstream docs
         "*.{gitignore,pub,svg,snap,gif}"
       ];
     };
