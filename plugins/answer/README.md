@@ -1,7 +1,6 @@
 ---
 tagline: "Answer a round of questions in the chat, add notes, and send the answers you have."
 featured: true
-requires: []
 order: 4
 ---
 
@@ -29,30 +28,21 @@ classic renderer uses the guided form.
 | `n`      | Write or edit a note                                        |
 | `r`      | Open review or go back to the question                      |
 | `Enter`  | In review, open the highlighted question or fill the prompt |
+| `f`      | Fill the prompt without sending                             |
 
 The write-in gets the next letter after the printed choices. Click the write-in
 or **Add a note** to open its editor. **Clear answer** appears below the choices and above the note.
 It removes the answer without clearing the note.
 
-The editor appears above the prompt without taking keyboard focus. Click inside
-its field or press `Alt+a` (or `ctrl+x tab`) to start typing. If you press `Enter`
-in the prompt before focusing the field, the first send is blocked and your draft
-stays in place. `Fill prompt` also returns the keys to the
-prompt, and the guide goes back to saying `alt+a`.
+The editor opens above the prompt without taking focus. Click the field or press
+`Alt+a` (or `ctrl+x tab`) before typing or pasting. Use `Shift+Enter` for a
+new line and `Enter` to save. If you press `Enter` in the prompt without
+focusing the field, the first send is blocked and your draft stays in place.
 
-The **Answers** summary below the last question shows how many you’ve answered.
-**Fill prompt** copies your answers into the prompt without sending them.
-Click **Show all questions** or press `r` to expand the summary.
-In the expanded summary, press `Alt+a` to focus the controls, then `Enter`
-to use **Fill prompt**, which starts selected. Use `j` and `k` to move
-through the list, or press `f` to fill from any question.
-Click a question or press `Enter` on it to jump to its card. Reopening the
-summary takes you back to that question.
-
-The editor sits above the prompt and keeps the question in view. After the
-guide has the keys, typed keys and pasted text reach the field. `Shift+Enter`
-adds a line and `Enter` saves. Saving or cancelling leaves your prompt draft
-alone.
+Click **Show all questions** or press `r` to expand **Answers**. With the
+controls focused, `Enter` uses **Fill prompt**, which starts selected. Use
+`j` and `k` to pick a question, then press `Enter` to return to its card.
+**Fill prompt** returns focus to the prompt.
 
 Bind `Alt+a` in `~/.claude/keybindings.json` to give the control bar the keys.
 The built-in `ctrl+x tab` focuses the band too, and needs no binding.

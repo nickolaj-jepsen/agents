@@ -1,21 +1,4 @@
-/**
- * Spelling fixes for the prompt draft, hunspell's flags and one model call for
- * every flagged word plus the real-word typos hunspell cannot see (`form` for
- * `from`).
- *
- * - Misspelled words are underlined in the editor while you type, where an
- *   editor publishes itself on the event bus (`./editor.ts`; nixos's chrome
- *   does). Elsewhere the commands still work, without the underlines.
- * - ctrl+q (or /spellfix) opens the draft as a review: one row per decision,
- *   each the word struck out and its replacement in green. `space` toggles a
- *   row, `a` writes the checked ones into the editor and closes, `enter` applies
- *   just the focused one, `d` keeps a word by adding it to the personal
- *   dictionary, `u` takes back the words this answer added, esc changes nothing.
- *   `/spellfix undo` takes the last answer's adds back once the review is closed.
- *
- * Shares the personal dictionary and the rules with the Claude Code mod
- * (`../core/spellfix.ts`), so a word learned in one is known to the other.
- */
+// The editor bridge enables inline underlines; explicit review also works in stock pi.
 import { spawn } from "node:child_process";
 import { mkdir, open, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";

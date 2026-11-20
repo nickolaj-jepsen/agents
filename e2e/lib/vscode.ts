@@ -1,15 +1,4 @@
-/**
- * Drives a real VS Code with the `anthropic.claude-code` extension: the sibling of
- * `lib/session.ts` for the one surface a terminal does not show. Local only.
- *
- * VS Code runs on the desktop or in headless `cage`, and is steered over the
- * Chrome DevTools Protocol: the workbench is the `page` target, the Claude tab's webview is an
- * `iframe` target whose UI lives in `#active-frame`. Nothing here is a mock: the extension's own
- * `claude` runs against the model stub (`lib/stub.ts`) in a hermetic config folder.
- *
- * `launchVscode` starts it detached so it outlives the process, and `VscodeSession.attach`
- * reconnects over the saved port, which is how the CLI's verbs share one window.
- */
+// Each command reconnects to the detached VS Code window over its saved DevTools port.
 import { execFileSync, spawn } from "node:child_process";
 import { createServer } from "node:net";
 import {

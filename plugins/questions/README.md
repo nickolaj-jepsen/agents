@@ -1,7 +1,6 @@
 ---
 tagline: "An `ask_user_question` tool: one to four multiple-choice questions in a dialog, which come back to the model as answers."
 featured: true
-requires: []
 order: 5
 ---
 

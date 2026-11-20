@@ -25,8 +25,6 @@
         inherit agent-tools handoff-test tui-test;
         default = agent-tools;
       }
-      # The site's pictures and the catalogue's model, cached by the store: `just media` builds
-      # these. Two units, so a change to one recording does not replay the other.
       # Select the outputs explicitly: callPackage also adds an `override` function to the set.
       // lib.mapAttrs' (name: value: lib.nameValuePair "site-${name}" value) ({inherit (site-media) media kit;}
         # VS Code's pictures: cage, its display, is Linux only.
@@ -47,7 +45,7 @@
           cd ${./site}
           if grep -rnE 'from "(\.\./)+(scripts|kit)/' src --include='*.ts' --include='*.astro' \
               | grep -vE ':[0-9]+:import type '; then
-            echo "site/src imports a value from outside site/; see docs/layout.md" >&2
+            echo "site/src imports a value from outside site/; see docs/development.md#preview-the-published-site" >&2
             exit 1
           fi
           touch $out

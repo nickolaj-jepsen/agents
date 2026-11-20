@@ -1,6 +1,6 @@
 # pi extensions
 
-pi's own docs are on disk for the pinned version (`sources.md` has the paths): read `tui.md` before drawing and `extensions.md` for events and tools. This file holds the choices and traps they don't.
+Use the installed pi's `docs/tui.md` for drawing and `docs/extensions.md` for events and tools, or the [offline manuals](upstream.md#pi). The installed `examples/extensions/` has working examples, including `overlay-test.ts` for placement and `questionnaire.ts` for wrapped options.
 
 An extension runs inside the host process, so the thing under test is a running session, not a function.
 
@@ -34,7 +34,7 @@ Colours come from the theme by role (`theme.fg("dim", …)`), never a literal.
 | Renders wrong                           | `sweep`, and read the PNGs                                                                                                                 |
 | Works in the TUI, breaks headless       | Re-run with `--mode rpc`. `ctx.ui.custom()` returns `undefined` there, `getTheme()` returns `undefined`, `setEditorComponent()` is a no-op |
 
-`scripts/digest.py <session file>` flattens a session file into what it recorded: declared tools, calls, results, entries, cost. It can't see a tool that was registered but never declared; that is a `pi.getAllTools()` question, asked from inside the extension. It shows that a tool ran, not whether the model had a fair chance of picking it; that needs one real prompt.
+`skills/agent-plugin-dev/scripts/digest.py <session file>` flattens a session file into what it recorded: declared tools, calls, results, entries, cost. It can't see a tool that was registered but never declared; that is a `pi.getAllTools()` question, asked from inside the extension. It shows that a tool ran, not whether the model had a fair chance of picking it; that needs one real prompt.
 
 ## Traps
 
@@ -53,6 +53,6 @@ These pass a casual look and break in use:
 
 ## Driving a session
 
-- The session is `pi-dev`: the extensions from their checkout. It does not reload on a save: `goto` again after an edit.
+- The scenario loads the extensions from this checkout. pi does not reload on save: run `goto` again after an edit.
 - `start.turns` replays canned assistant turns, one entry per turn, consumed in order: `text`, `thinking`, `toolCall` or `error`. Malformed arguments are the point: they exercise validation and error paths without a model.
 - The session file is under the run folder (`E2E_KEEP=1` keeps it after a test); give it to `digest.py`.

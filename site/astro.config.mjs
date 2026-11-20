@@ -4,8 +4,7 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, fontProviders } from "astro/config";
 
-// The recorded pictures, in this folder: the pages read `data/content.json` and this, and nothing
-// outside `site/` (docs/layout.md).
+// Keep media inside site/ so Astro can build without the rest of the checkout.
 const media = fileURLToPath(new URL("media/", import.meta.url));
 const base = "/agents";
 const fonts = "./src/assets/fonts";
@@ -72,6 +71,11 @@ function mediaDir() {
 export default defineConfig({
   site: "https://nickolaj-jepsen.github.io",
   base,
+  // Static HTML redirects need the GitHub Pages project prefix in their destination.
+  redirects: {
+    "/dev/layout/": `${base}/dev/development/#change-or-add-a-plugin`,
+    "/dev/testing-plugins/": `${base}/dev/development/#try-the-answer-form`,
+  },
   // GitHub Pages serves a folder's index.html at the folder's URL with its slash.
   trailingSlash: "always",
   build: { format: "directory" },

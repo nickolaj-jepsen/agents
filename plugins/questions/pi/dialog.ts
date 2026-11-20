@@ -1,25 +1,4 @@
-/**
- * The questionnaire: one tab per question, a review tab when there is more
- * than one, and the pointer wired to the same actions as the keys.
- *
- * Sizing is layout rather than taste. A question with four described options
- * does not fit a twenty-row terminal alongside a preview pane, so the frame is
- * built three ways — descriptions, then clipped, then without the preview — and
- * the first that fits the row budget is drawn. Options are few enough that
- * windowing them would cost more than it explains.
- *
- * Geometry never depends on which row is highlighted: the preview keeps its
- * rows even for an option without a preview, and no row gains or loses a line
- * under the cursor. Moving the highlight changes what is drawn inside the frame,
- * never the frame itself, so the rows do not jump under the pointer.
- *
- * The preview is a bordered box that hugs what is inside it, so a two-line
- * preview is a small box rather than a mostly empty one, and scrolls within
- * itself, with the position in its own bottom border.
- *
- * Nothing is cached between frames: the answers, the highlighted row and the
- * preview all move together, and a cache would be one more thing to invalidate.
- */
+// Keep geometry independent of focus so option rows don't jump under the pointer.
 import { getMarkdownTheme, type Theme } from "@earendil-works/pi-coding-agent";
 import {
   type Component,

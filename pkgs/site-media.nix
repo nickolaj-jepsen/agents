@@ -1,11 +1,5 @@
-# The site's recorded pictures and the catalogue's model, as three derivations. Nix keys each on the
-# files it reads and on the agent versions it runs, so an unchanged recording is substituted from the
-# store (or a binary cache) instead of replayed, and a changed one is the only thing rebuilt.
-#
-# Why not one per plugin: a site scenario that names no `plugins` loads every mod in `plugins/`, so
-# every plugin's recording reads the whole plugin tree. A change under `plugins/` therefore
-# invalidates all of them. What does separate is the kit's stories, which read no plugin, and the
-# VS Code pictures, which read VS Code and its driver; each has a source of its own.
+# A scenario without an explicit plugin list loads every mod. Splitting the terminal
+# recording by plugin wouldn't isolate invalidation: each recording still reads plugins/.
 {
   lib,
   buildNpmPackage,
@@ -27,9 +21,6 @@
     '';
   };
 
-  # A build's source is the files its recording reads and nothing else, so an edit elsewhere leaves
-  # its store path, and so the derivation, as it was. Not `site/`, `docs/` or the skills: none
-  # reaches a screenshot.
   sourceOf = fileset: let
     src = lib.fileset.toSource {
       inherit root;

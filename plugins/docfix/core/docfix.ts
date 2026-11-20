@@ -1,14 +1,3 @@
-/**
- * docfix's harness-free half, run by both harnesses: the queue rules and the text they
- * show the model and the person.
- *
- * A suggestion says a doc no longer matches reality. The agent files it and
- * carries on; the person reviews the queue with /docfix, and an apply hands the
- * edit back to the session's agent, drafted against the file as it stands then.
- * Repeats bump one suggestion's session list instead of adding another, so the
- * count says how often agents tripped on the same gap.
- */
-
 export const TOOL_NAME = "docfix";
 export const KINDS = ["wrong", "missing", "stale"] as const;
 export type Kind = (typeof KINDS)[number];

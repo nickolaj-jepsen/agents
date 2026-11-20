@@ -7,96 +7,21 @@ metadata:
   category: harnesses
 ---
 
-A plugin's logic can be right while its screen is unusable: a title cut to nothing, lines 200 columns wide, metadata at a different column on every row. Tests don't see that, and neither does a text capture read as text. So this skill has three parts: a style that says what good looks like, a kit that already does it, and a driver that makes you look.
+Start with the [layout reference](references/style.md) and an example from the [kit catalogue](../../kit/catalog/COMPONENTS.md). Sketch the busiest state at the narrowest and widest sizes. Design for each harness's controls rather than forcing one layout onto both.
 
-Most plugins have a Claude half and a pi half. Design both together: the harnesses can draw different things, and a layout that suits one may not exist in the other.
+- [Claude](references/claude.md): available surfaces, focus, graphical controls and their traps. Load `plugin-authoring` for the API.
+- [pi](references/pi.md): available surfaces, runtime traps and session logs.
+- [Offline upstream manuals](references/upstream.md): packaging and extension APIs.
+- [Kit guide](../../kit/README.md): change the shared kit instead of maintaining separate frames, text clamping or key hints in plugins.
+- [Replay guide](../../e2e/README.md): write scenarios, drive a screen, take pictures and check snapshots.
 
-- `references/style.md`: the house style, for the terminal and for the graphical surfaces (the desktop app and VS Code). Read it before any layout.
-- `references/claude.md`: what a mod can draw, the engine's limits and traps, how the kit draws for the graphical surfaces, what VS Code does with each element, and how to look at a VS Code screen. Load `plugin-authoring` too; it holds the API.
-- `references/pi.md`: what a pi extension can draw, pi-tui's components, traps, and reading a session file.
-- [Upstream manuals](references/upstream.md): Claude Code plugin packaging and mod APIs, and pi extensions, packages and terminal UI. Read the page that covers the API you need.
-- `references/sources.md`: where to look for how others solved a component.
-- `e2e/README.md`: writing scenarios and reading snapshots.
-
-## What each harness can draw
-
-| Need                           | Claude Code                                                           | pi                                                              |
-| ------------------------------ | --------------------------------------------------------------------- | --------------------------------------------------------------- |
-| A form that replaces the input | a band above the prompt (`AbovePrompt`)                               | a component in the editor's place (`overlay: false`)            |
-| A panel to read or pick from   | a `Pane`: the surface docks it from 110 columns, the mod can't choose | an overlay: you choose width, anchor and margin                 |
-| List beside its detail         | no: a docked pane is about 48 columns                                 | yes: two panes from 110 columns                                 |
-| Layout                         | flex `Box` and `Text`; no `maxWidth`, no list, table or divider       | `render(width)` returns lines; pi-tui has stacks, lists, scroll |
-| Selection and focus            | the engine draws focus on a `Button`; focus is asked for, not taken   | yours to draw; you get every key                                |
-| Mouse                          | free on `Button`                                                      | hit-test it yourself, or `MouseRegion`                          |
-| Status                         | `$.ui.status`: one plain line per mod                                 | `setStatus`, `setWidget`, `setFooter`                           |
-
-## Design before code
-
-1. Name the surface and its width class (`style.md`).
-2. List the states: empty, one item, more than fit, text far longer than expected, wide characters, an error or notice.
-3. Sketch the fullest state as text at the narrowest and the widest size, in both harnesses. Fix the sketch before the code; it is cheaper.
-4. Build from the kit. A component the kit lacks is added to the kit, not written into the plugin.
-
-## The kit
-
-One source per harness, with the style's numbers and glyphs in its tokens:
-
-- pi: `kit/pi/`, imported by a plugin's pi half.
-- Claude Code: `kit/claude/`, copied into each mod as `claude/ui.tsx`. The build fails when a copy differs from the source, so edit the source and run `just kit-sync`.
-
-Never hand-roll a frame, a padded row, a truncation or a hint bar in a plugin. If a kit component can't do what the screen needs, change the component.
-
-The catalogue shows every component in every state, in both harnesses side by side, with its props and what each harness supports: `/dev/components/` on the site (`just site` locally; `npm run catalog` replays the stories first). Look there before designing, to see what exists and what a harness can't do. `kit/README.md` says how to add a component: the kit code, its entry in `kit/catalog/components/`, its stories in both harnesses over the shared samples, and nothing drawn that a story does not show.
-
-## The driver
-
-A scenario is a named screen of a plugin: its fixture, how the agent starts, and the steps that reach it. Scenarios live in `e2e/<plugin>/`, and the same file drives the tests and `goto`. Run these from the repo root:
-
-```bash
-npm run e2e:cli -- ls docfix
-npm run e2e:cli -- goto docfix queue --harness pi   # a live session, parked on that screen
-npm run e2e:cli -- cap                               # the screen as text
-npm run e2e:cli -- keys Down Enter                   # also: type, paste, click <text>, hover <text>, wait, resize
-npm run e2e:cli -- sweep                             # a PNG at each of the four sizes; prints the paths
-npm run e2e:cli -- stop
-npm run e2e docfix                                   # play the plugin's scenarios against their snapshots
-```
-
-A screen you need more than once gets a scenario, so the next agent reaches it in one command. Both harnesses replay canned model turns (`start.turns`), so a screen that follows a model reply costs nothing and never varies.
-
-A Claude dev session watches the mod's folder: save, and it reloads. Check `references/pi.md` for pi.
-
-A Claude mod also draws in the desktop app and VS Code. The VS Code driver, `node e2e/vscode.ts`, has the same verbs; how to photograph the real inline pane and a full one is in `references/claude.md`, "Looking at a graphical screen". The desktop app has no driver.
-
-When a plugin does nothing, look before guessing: `cap` at startup shows pi's `[Extension issues]`, and the Claude debug log in the run folder says whether the module loaded, a hook was skipped or a tree was refused.
+If a plugin does nothing, look at the running session before guessing. In pi, startup `cap` shows `[Extension issues]`; in Claude, the session debug log shows rejected hooks and trees.
 
 ## Before handing back
 
-A change to what a plugin draws, or to its keys, is not done until all of this is:
+1. Add or use an `extreme: true` scenario with long text, wide characters and more items than fit. Check empty and error states as well.
+2. Run `sweep` and open each PNG (70×24, 112×32, 160×45, 240×60). Report what wraps or is cut, whether rows and columns stay aligned, whether the width stays bounded, and which hints and controls remain at 70 columns.
+3. Try every visible key and click target with both an empty prompt and a draft. Run the plugin's scenarios and inspect any snapshot diff you accept.
+4. For a Claude mod, mount the states on `desktop` and `vscode` in mod tests, exercise keyed actions, and run `expectNative`. In VS Code, click the actions and inspect each state at 420×800, 420 wide at full height, and 1280×720. Use the [graphical screen procedure](references/claude.md#looking-at-a-graphical-screen). Report anything you could not check on Desktop.
 
-1. **A stress scenario exists**, marked `extreme: true`: the longest text you can imagine in every field, many rows, wide characters. Short placeholder text hides every layout fault.
-2. **`sweep` it, and open every PNG with Read.** A text capture does not show alignment or spacing; the picture does. Sizes are 70×24, 112×32, 160×45 and 240×60.
-3. **Write down what you saw at each size**, in the hand-back:
-   - what is cut, and whether anything the person needs is lost;
-   - what wraps, and whether rows keep their height;
-   - whether metadata sits at one column on every row;
-   - whether the width cap holds at 240;
-   - what happens to the hints and the layout at 70. A review that does not name the narrowest size has not finished.
-4. **Check it against `style.md`'s list of defaults that are wrong.**
-5. **Press every key shown and click every target**, from the prompt with a draft typed and with it empty.
-6. **Run the plugin's scenarios** (`npm run e2e <plugin>`). Read the diff of any snapshot you update, and say what changed and why. Only `.snap` files are committed; PNGs are generated (`E2E_PNG=1 npm run e2e <plugin>`, or `sweep`) and git-ignored.
-
-For a Claude mod, the graphical surfaces too:
-
-1. **Tests on `desktop` and `vscode`** mount every state, press every keyed action, and call `expectNative` on each (`references/claude.md`, "Tests").
-2. **Screenshots in VS Code** of every state (empty, one, opened, set, many, extreme, the band) at 420×800, at 420 full, and at 1280×720. Open each.
-3. **Click every keyed action** in VS Code.
-4. **Check it against `style.md`'s "Graphical surfaces" rules**, and name what you could not check in the desktop app.
-
-If a session could not be run, say that instead of calling the work tested.
-
-## Limits
-
-- A Claude session is the person's own account. Scenarios use canned turns; send no real prompt a screen does not need. It starts with no MCP servers.
-- The suite is local: nothing runs it in the build or in CI. It is run by you, before handing back.
-- A scenario starts at one size and is resized between snapshots, so a layout that depends on the size it opened at needs its own scenario with `size`.
+Use hermetic scenarios and canned turns; don't send real prompts just to reach a state. If you couldn't run a session, say what remains unverified.

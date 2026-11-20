@@ -1,13 +1,3 @@
-/**
- * Site scenarios: the project site's media, played from `e2e/<plugin>/site.scenarios.ts` and never
- * from the regression files.
- *
- * A plugin has a `demo` per harness at most, recorded as a video with its last screen as the
- * poster, and any number of `stills`, captured and captioned. The agent is the same real Claude
- * Code or pi the regression scenarios drive, on the model stub or pi's replayed turns, so a run
- * needs no model call and comes out the same each time. Its `vscode` pictures are the Claude Code
- * extension's panel, played from its VS Code scenarios by `e2e/site-vscode.ts`.
- */
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";

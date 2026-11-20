@@ -57,7 +57,7 @@ kit-sync *PLUGINS:
 catalog:
     npm run catalog
 
-[doc("Play every plugin screen in a real Claude Code and pi and compare with the snapshots; needs sign-in")]
+[doc("Play plugin scenarios in real Claude Code and pi and compare with the snapshots")]
 [group('dev')]
 e2e *ARGS:
     npm run e2e -- {{ ARGS }}

@@ -12,7 +12,7 @@ interface Crop {
   rect: { x: number; y: number; w: number; h: number };
 }
 
-/** Per plugin, per harness. Rects are read off the 1232x746 captures; mostly 620x260, so tiles match. */
+/** Crop coordinates are in source pixels. Check the home page crops after rerecording a demo. */
 const R = (x: number, y: number, w = 620, h = 260): Crop["rect"] => ({ x, y, w, h });
 const CROPS: Record<string, Partial<Record<Harness, Crop>>> = {
   // The review: the answers so far above the prompt, and the form that fills it.

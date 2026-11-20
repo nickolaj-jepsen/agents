@@ -1,6 +1,6 @@
 # Claude Code mods
 
-Load `plugin-authoring` for the API. This file holds what it does not: where the surface puts things, what the layout can't do, and the traps.
+Load `plugin-authoring` for the API and examples for your version, or use the [offline mod manuals](upstream.md#claude-code). Run `just dev-setup` to get the local types in `plugins/<name>/.claude-plugin/types/`.
 
 `claude plugin validate` and `claude plugin test` say a mod loads and its logic holds. They run against a fake engine, so they don't show where a pane docks, which keys reach it, or how it looks. A regression after a Claude Code upgrade shows only in a real session: run the scenarios.
 
@@ -112,7 +112,6 @@ node e2e/vscode.ts reload                             # after an edit to the mod
 node e2e/vscode.ts stop
 ```
 
-- Unset every inherited `CLAUDE*` and `ANTHROPIC*` variable first. `goto` takes about 9 seconds. After a change to the mod, `reload` (about 4 seconds) plays the scenario again in a new Claude tab, which reads the mod from disk; it can also switch to another scenario of the same plugin. The extension never reloads a mod in a running session, and its New session keeps the old code.
 - Shoot each state at 420 by 800 (the real pane), at 420 "full", and at 1280 by 720 (docked). Open every PNG.
 - For a full photograph, lift the inline pane's and the band's height caps in the page, then shoot at a taller size. The band's cap is on `[class*=band_]`, inside `[class*=abovePrompt_]`. This is for the photograph only, never the mod:
 
@@ -150,7 +149,6 @@ Checked live on 2.1.319 to 2.1.325:
 - A band that steps aside while a pane is up must do so before `$.ui.open`: hidden after it, the inline pane is placed against the old layout and now and then comes out two rows tall (docfix, 2.1.325).
 - No hotkey can be space or Enter, and the engine presses a focused `Button` only on Enter, so a pane can't give space a job of its own (docfix, 2.1.325).
 - A `Button`'s children are strings and `Text` only, so a row with metadata columns is one string padded with `cellWidth`, never a `Box` of cells. A `Pane`'s `backgroundColor: "transparent"` drops the stock grey fill; the inline box asks for `rows` and still gets about a third of the terminal.
-- `kit/claude/ui.tsx` is copied into each mod: edit the source and run `just kit-sync`.
 
 Seen in earlier versions, not re-checked; confirm with the driver before designing on one:
 
@@ -162,9 +160,8 @@ Seen in earlier versions, not re-checked; confirm with the driver before designi
 
 ## Driving a session
 
-- The session is `claude-dev`: every mod from the checkout, none of the installed copies, no MCP servers.
-- It runs in an empty folder of its own. A mod that reads a repository gets one from the scenario's `setup` (`ctx.initRepo`, `ctx.write`), never the real checkout.
-- `start.turns` replays canned turns through a stub on localhost. A turn is `text`, `thinking`, `toolCall` or `error`.
+Use [hermetic scenarios](../../../e2e/README.md#write-a-scenario) to control loaded mods, model turns and fixtures.
+
 - In a key step, `Escape` followed at once by a letter is read as alt+letter. Put a `sleep` between them.
 - The debug log in the run folder says what the engine did with the mod: loaded, a hook skipped, a tree refused, a reload after a save.
 - The built-in cards (`You should know`) can't be made to appear on demand.

@@ -1,14 +1,4 @@
-/**
- * `node e2e/site-vscode.ts [plugin...]` (`just site-vscode`): the site's pictures of the mods in VS
- * Code's Claude Code extension. A plugin's `site.scenarios.ts` names them under `vscode`, each a
- * scenario of its `vscode.scenarios.ts` and the steps after it. They are played in one window per
- * plugin, a new Claude tab for each after the first (`reloadVscode`), and each is the Claude panel
- * at `VSCODE_SIZE`: `site/media/<plugin>/vscode-<name>.png`. See "Site media" in e2e/README.md.
- *
- * The captions and sizes go to `media-vscode.json`, not `media.json`: the terminal's recorder
- * writes that one, in a derivation of its own, and `scripts/content.ts` merges the two. A plugin
- * whose run fails keeps its old pictures, as `e2e/site.ts` does.
- */
+// Keep the VS Code manifest separate: the terminal recorder runs independently.
 import {
   copyFileSync,
   existsSync,

@@ -6,8 +6,4 @@ requires:
 order: 11
 ---
 
-pi only; subagents have it too. It declares no tools, so it costs no context until
-an edit breaks something.
-
-Servers come from the JSON file `PI_LSP_SERVERS` names, which the pi leaf writes from
-`fireproof.agents.lspServers`. With it unset or empty, the plugin does nothing.
+The plugin also runs in pi subagents. Set `PI_LSP_SERVERS` to the JSON file of server configurations; when unset or empty, the plugin does nothing.

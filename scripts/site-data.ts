@@ -1,7 +1,4 @@
-// Writes site/data/content.json: the site's content model, loaded here and read there as data.
-// The pages then need no file outside site/ (see docs/layout.md), and the site build needs neither
-// this checkout's markdown nor `yaml`. Run by `just site` and `just site-build`, and by the Pages
-// workflow after it records the media.
+// Resolve checkout content before Astro runs so the site can build from its own folder.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { loadContent, repoRoot } from "./content.ts";

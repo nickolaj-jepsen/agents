@@ -15,4 +15,4 @@ These Markdown snapshots are available offline. Use the [house references](../SK
 
 ## Refresh the snapshots
 
-Run `just plugin-docs` from the checkout. It takes Claude Code's current public Markdown and the Pi docs at tag `v1.5.2`. When updating the Pi version, run `just plugin-docs vMAJOR.MINOR.PATCH` with the release tag and update the default in `scripts/refresh-docs.ts`. Review the generated diff before committing it.
+Run `just plugin-docs` from the checkout. It takes Claude Code's current public Markdown and the Pi docs at tag `v1.5.2`. When updating the Pi version, run `just plugin-docs vMAJOR.MINOR.PATCH` with the release tag and update the default in `skills/agent-plugin-dev/scripts/refresh-docs.ts`. Review the generated diff before committing it.

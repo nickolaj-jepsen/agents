@@ -1,485 +1,92 @@
-# e2e
+# Plugin screen tests and recordings
 
-End-to-end tests for plugin screens, in the real Claude Code and the real pi.
-They are local only: `npm test`, the nix build and `just check` never run them.
-
-One scenario is one named screen of one plugin: the fixture, how the agent starts,
-and the steps that reach the screen. The same file drives these commands:
-
-- `npm run e2e` plays every scenario and compares its screen with a stored snapshot.
-- `just e2e-live` plays one scenario and hands you the controls in your terminal.
-- `goto` parks a live session on a scenario so you can keep driving it by hand.
-
-The engine is [tui-test](https://github.com/microsoft/tui-test) with its Ghostty backend, the
-terminal emulator it drives. Tests run it in-process under vitest. `goto` uses its CLI daemon,
-which keeps a session alive between invocations (`pkgs/tui-test`).
-
-## Write a scenario
-
-Add `e2e/<plugin>/claude.scenarios.ts` or `pi.scenarios.ts`; `docfix/claude.scenarios.ts` is the
-worked example. Every field of `scenarios({...})` and of a step, with its default, is on the
-`ScenarioSet`, `Scenario` and `Step` types in `lib/scenario.ts`.
-
-A click lands in the middle of the visible text. When the same text shows twice, `{ text, nth }`
-picks a later one. A click waits up to 5s for its text to show.
-
-A `wait` passes as soon as its text is anywhere on screen. Wait for what the step brings, not for
-text that was there before it: a form's title is often in the transcript above the form too.
-
-A Claude mod registers its commands a moment after the prompt shows, and a command typed before
-then is lost. `slashCommand(name, description)` in `lib/scenario.ts` types it once the slash menu
-offers it.
-
-### Hermetic sessions
-
-Start every scenario of a file hermetic, with `start` on the set:
-
-```ts
-start: { hermetic: true, plugins: ["docfix"], turns: [] },
-```
-
-The agent then runs in its own empty folder with a config of its own, the named plugins only, and no
-model but the replayed turns (`start.turns`, `Turn` in `lib/harness.ts`). Nothing of your setup
-shows in a snapshot: your account, model, effort, theme, MCP servers and pi extensions all change
-under you.
-
-Every session's folder is `/tmp/e2e-<random>`, not under `$TMPDIR`. An agent's session sets a
-`$TMPDIR` of its own, and a longer folder path moves where a path on screen wraps. `E2E_TMP`
-names another base.
-
-Without `hermetic`, a session runs `claude-dev --strict-mcp-config` or `pi-dev` with your own
-config. Claude is then your signed-in account, so send no prompts a screen does not need. `pi-dev`
-loads your system config's pi extensions from source, and when one fails to load, pi stops before
-its prompt and the run says so.
-
-For Claude those turns come from `lib/stub.ts`, a stand-in for Anthropic's Messages API on a free
-127.0.0.1 port for that session only (`ANTHROPIC_BASE_URL`,
-`CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`). A hermetic session reaches it with a stub key, and
-any other under your sign-in. It never touches stored config, reads or logs headers, and is stopped
-with the session. A turn after the last gets
-"(stub: no more turns)". An `error` is a 400, since Claude retries a 5xx and that eats the next
-turn.
-
-The files of the fixture are yours to make. Never point a scenario at your real
-store or repository.
-
-## Snapshots
-
-A state is snapshotted at 70x24 and 160x45 (`SIZES` in `lib/session.ts`). A scenario with
-`extreme: true` gets all four sizes, adding 112x32 and 240x60. The session starts at `size` and is
-resized between snapshots.
-
-A scenario's `sizes` replaces them, as the kit catalogue does (`e2e/kit/sizes.ts`).
-
-A snapshot is the styled text of the plugin's own surface, and `lib/screen.ts` documents it: the
-`region` with its helpers, the built-in masks and `{ pattern, with }`, and the file's rows of
-text, runs of style ids and legend.
-
-Only the `.snap` files are committed. A PNG of the whole terminal is drawn for review, and a run
-draws none unless one of these asks for it:
-
-- `E2E_PNG=1`: a `.png` beside every snapshot;
-- a state that differs: `*.actual.snap` and `*.actual.png` beside it;
-- a scenario whose steps fail: `<scenario>@failed.actual.png`.
-
-`sweep`, `shot` and `npm run catalog` draw PNGs too. Git ignores every `.png` and `*.actual.*`.
-
-Files live in `e2e/<plugin>/__snapshots__/<harness>/<scenario>@<cols>x<rows>.snap`.
-
-## Run
-
-```bash
-npm run e2e                  # all scenarios
-npm run e2e docfix           # one plugin
-npm run e2e docfix -- -t queue
-E2E_UPDATE=1 npm run e2e docfix   # accept what is on screen (or pass -u)
-```
-
-Read the diff of the `.snap` files before you commit an update. For the pictures, run
-`E2E_UPDATE=1 E2E_PNG=1 npm run e2e <plugin>` and open the PNGs.
-`E2E_KEEP=1` keeps each run's folder in `/tmp`.
-
-## How a run goes
-
-The scenarios of a run are played first, together, then the tests read what each came to.
-
-- Sessions run side by side: each agent gets a pool of them, sized by `E2E_JOBS_CLAUDE`,
-  `E2E_JOBS_PI`, or `E2E_JOBS` for both. The default is a share of the CPU count, per agent
-  (`lib/runner.ts`).
-- A scenario that continues another (`from`) plays in the same session when it can: the parent is
-  snapshotted, then the child's own steps go on from where it stands.
-  - Where scenarios branch from one parent, only one child continues the session. The others start
-    again and replay the parent's steps.
-  - A scenario with `reset: [steps]` that put the session back on the screen it started from (its
-    parent's, or the fresh start) lets its siblings take turns in one session. The kit catalogue is
-    one session per agent that way.
-  - `fresh: true` always gets a session of its own, as does a scenario with its own `setup` or
-    `start`.
-- A shared session must not change a snapshot. A scenario that fails or differs in a shared session
-  is run again alone and the difference is printed (`e2e: ... failed in the session of ...`). That
-  is a leak between scenarios: a plugin bug to fix, not a snapshot to update.
-- Claude Code now and then starts in its classic renderer ("fullscreen didn't finish starting last
-  time"). That start is dropped and made once more, and the run says so.
-- Before a Claude state is snapshotted the driver waits out `◐ medium · /effort`, which a start
-  shows for a while and which shifts the inline layout by a row at narrow sizes (the wait is in
-  `lib/session.ts`).
-- After a step the driver waits for the screen to stop changing (a quiet window, in
-  `lib/session.ts`), unless a `wait` step follows, which says what to wait for.
-- That quiet window watches the text only, so a style can still land after it. A snapshot is read
-  again until it is the stored one or reads the same twice after 4s (`STEADY` in `lib/check.ts`).
-  A real difference costs those seconds at each size.
+Run from the repository root after [dev setup](../docs/development.md#set-up-and-check-a-change). The local screen suite drives real Claude Code and pi with canned turns. It isn't part of `just check`.
 
 ## Live mode
 
 ```bash
-npm run e2e:cli -- ls answer
-just e2e-live answer open --harness claude
-just e2e-live answer form --harness vscode
+npm run e2e:cli -- ls answer                  # list saved screens
+just e2e-live answer open --harness claude    # replay in your terminal; Ctrl+] stops it
+just e2e-live answer open --harness pi        # try the pi version instead
+just e2e-live answer form --harness vscode    # open a separate Linux VS Code window; close it to stop
 ```
 
-Live mode plays the same steps as `goto` at the scenario’s starting size. Once
-the scenario is ready, the interactive view fits your terminal and follows window
-resizes. Click or use your keyboard to continue. Press `Ctrl+]` to exit and stop
-the terminal replay. Use `--size 96x30` to override the size used for the scripted steps.
+The view fits your window once the scripted steps finish. To change the size **during** those steps, pass `--size 96x30` in terminal cells or `--size 900x700` in VS Code pixels. For the Desktop app, see [Claude Desktop](#claude-desktop).
 
-The VS Code variant opens a separate window on your desktop with the Claude Code
-extension and a localhost replay. The window follows normal resizing after the
-scripted steps. Close it to end the replay. Use `--size 900x700` to set the
-viewport in pixels during the scripted steps.
-
-## goto
+## Drive a parked terminal session
 
 ```bash
-npm run e2e:cli -- ls docfix
-npm run e2e:cli -- goto docfix queue [--harness pi] [--size 120x36]
-npm run e2e:cli -- snap                   # the scenario's snapshot, as it is now
+npm run e2e:cli -- goto docfix queue --harness pi  # park a session at the queue
+npm run e2e:cli -- cap                            # read the screen as text
+npm run e2e:cli -- keys Down Enter                # act on the focused row
+npm run e2e:cli -- sweep                          # write PNGs at all four test sizes
+npm run e2e:cli -- stop                           # end the session
 ```
 
-`npm run e2e:cli` alone lists the other verbs. One session lives at a time, and `goto` replaces it.
-Each verb prints the screen after it. The CLI finds `tui-test` through `TUI_TEST_BIN`, then `PATH`,
-then builds `.#tui-test` from this flake.
+Run `npm run e2e:cli` for all verbs. After editing pi code, run `goto` again. For parallel runs, give each driver its own `XDG_STATE_HOME` and short `XDG_RUNTIME_DIR`: the saved state and daemon socket are separate. The CLI finds tui-test via `TUI_TEST_BIN`, then `PATH`, then `.#tui-test` (use `nix build .#tui-test` to build it yourself).
 
-## Try answer in your terminal
+## Write a scenario
 
-Run `just answer-demo` from the checkout to start Claude Code with a canned question
-round. The replay runs on localhost and uses its own Claude config. Resize the
-terminal while it runs to see how the cards wrap.
+Copy the pattern in [docfix's Claude scenarios](docfix/claude.scenarios.ts) to `e2e/<plugin>/claude.scenarios.ts` or `pi.scenarios.ts`. [The scenario types](lib/scenario.ts) document the steps, defaults, and how one screen can continue from another.
 
-The demo opens on the first card. Click the controls or press `Alt+a` to focus
-the control bar. Run `just answer-demo long-body` to try a question with a long
-body. Fixture names come from `e2e/answer/fixtures/`.
+- Start with `start: { hermetic: true, plugins: ["<plugin>"], turns: [] }` on the set. Add [canned turns](lib/harness.ts) when the screen needs a model response. A non-hermetic run uses your own config; don't send a real prompt just to reach a screen.
+- Use `setup` to create a fixture, never your real repository or notes store. A driver must carry the [fixture environment](lib/setup.ts) into git and the agent so neither reaches your hooks, notes or worktrees. Run folders are under `/tmp` by default so a user's longer `TMPDIR` doesn't change line wrapping.
+- Wait for text that the step introduces, not a title already in the transcript. Use `slashCommand` for a newly loaded Claude mod: the prompt may be ready before the command is registered.
+- Crop to the plugin surface with [a region](lib/screen.ts). Use `extreme: true` for a state with long text, wide characters and more items than fit. If initial size changes layout, set `size` explicitly; the driver resizes a running session for snapshots.
 
-## Claude Desktop
+## Snapshots
 
-On Linux, run `just claude-desktop-dev` with `claude` and `claude-desktop` on `PATH`. Claude Code
-saves a session containing the `recommended` answer fixture using the localhost model stub. The
-launcher asks Desktop to open that session. Sign in to the test profile on first use and run the
-recipe again if Desktop opened on the sign-in screen.
+```bash
+just e2e docfix                                  # compare one plugin with its committed snapshots
+E2E_PNG=1 just e2e docfix                        # also write PNGs for inspection
+E2E_UPDATE=1 just e2e docfix                     # accept intentional changes; inspect the diff
+```
 
-Pass another name from `e2e/answer/fixtures/`, such as `just claude-desktop-dev long-body`. For a
-live turn, use `just claude-desktop-dev recommended live`. Select Haiku in the Code tab and send
-the prefilled draft.
+Commit only the `.snap` files under `e2e/<plugin>/__snapshots__/`. A mismatch writes `.actual.snap` and `.actual.png`; failed steps leave `*.actual.png`. Set `E2E_KEEP=1` to keep the session and logs. Use `E2E_JOBS=1` to diagnose contention. If a scenario fails only in a shared session and passes when retried alone, look for state leaking between scenarios instead of updating the snapshot.
 
-Each checkout or worktree gets its own Desktop profile and Claude Code config under
-`${XDG_STATE_HOME:-$HOME/.local/state}/agent-tools-e2e/`. The config loads mods directly from the
-checkout. Each launch keeps its scratch folder alongside the profile so you can reopen the session.
-
-For a scripted replay that drives the UI through a live turn, use the VS Code driver below, for example
-`npm run e2e:vscode -- goto answer form`.
+Under Ghostty's test backend, Claude's terminal `Image` may show only its alt text. To check pixels, use a graphics-capable terminal or [capture inline graphics](#capture-inline-graphics).
 
 ## VS Code
 
-A mod can also be seen in the Claude Code extension for VS Code, which draws the same mod in a
-webview. `e2e/vscode.ts` parks a real, headless VS Code on a scenario's screen so you can read,
-click and photograph it. It is for a person or an agent that is developing a mod: no test and no
-check runs it, and it has no snapshots. The site's VS Code pictures are taken with the same driver
-(see [Site media](#site-media)).
-
-It needs `code` on PATH with the `anthropic.claude-code` extension installed, and nix (it runs
-`cage`, a Wayland compositor with a headless output, from nixpkgs). Nothing else of the machine
-is used, but the extensions folder, read only.
-
-These variables replace the machine's parts, as the site's derivation, which has none of them, sets
-them (`pkgs/media-environment.nix`):
-
-| Variable                     | Instead of                                                 |
-| ---------------------------- | ---------------------------------------------------------- |
-| `E2E_VSCODE_CODE`            | `code` on PATH                                             |
-| `E2E_VSCODE_EXTENSIONS`      | `~/.vscode/extensions`; the folder needs `extensions.json` |
-| `E2E_VSCODE_CAGE`            | `nix run nixpkgs#cage`                                     |
-| `E2E_VSCODE_FONTCONFIG_FILE` | the machine's fonts, for VS Code alone                     |
+Use Linux with `code`, the `anthropic.claude-code` extension, and Nix for the headless compositor. The driver opens an isolated workspace and profile. It doesn't run snapshot tests. Write scenarios in `vscode.scenarios.ts` using [the VS Code scenario types](lib/vscode-scenario.ts).
 
 ```bash
-npm run e2e:vscode -- ls docfix            # or: node e2e/cli.ts vscode ls docfix
-npm run e2e:vscode -- goto docfix queue
-npm run e2e:vscode -- reload [set]         # again, or another scenario, in the same window
-npm run e2e:vscode -- cap                  # the Claude panel as text
-npm run e2e:vscode -- click apply [--nth 1]
-npm run e2e:vscode -- type "hello"         # then: keys Enter
-npm run e2e:vscode -- wait "doc suggestions to review"
-npm run e2e:vscode -- shot [file] [--window]   # the panel; --window is the whole window
-npm run e2e:vscode -- sweep                # panel PNGs at 420x800 and 1280x720
-npm run e2e:vscode -- stop
+npm run e2e:vscode -- goto docfix queue --size 420x800  # open the real Claude panel
+npm run e2e:vscode -- cap                              # read the panel as text
+npm run e2e:vscode -- shot                            # write a PNG of the panel
+npm run e2e:vscode -- reload                          # read edited mods in a new Claude tab
+npm run e2e:vscode -- stop                            # close the driver and its stub
 ```
 
-`goto` takes about 9 seconds. `reload` takes about 4: it plays the scenario again, or another of
-the same plugin's, in the window already up, in a new Claude tab whose `claude` reads the mods
-from disk, so it is how an edit to a mod is seen. A scenario started another way (other `env`,
-`bin`, `hide` or `plugins`) needs `goto`. `E2E_TIMING=1` prints how long each phase took.
+- `reload` can replay a different scenario of the same plugin. Use `goto` when launch options change; the extension's own **New session** doesn't reload code. For parallel drivers set a distinct `E2E_VSCODE_SESSION` on every command.
+- `wait` can't match an input placeholder. Wait for a label instead. If a shot shows icon alt text after `reload`, run `goto` and take it again.
+- A mod that reads the prompt while rendering may not redraw on typing. If testing it requires a redraw, resize below the prompt's maximum width, then back; see [spellfix's recording](spellfix/site.scenarios.ts).
+- For a failed start, retain the run with `E2E_KEEP=1` and inspect `vscode.log`. See [graphical screen inspection](../skills/agent-plugin-dev/references/claude.md#looking-at-a-graphical-screen) for full-height screenshots and overflow checks.
 
-`resize <width> <height>` sets the window's size. Each verb prints the panel's text after it. One
-VS Code lives at a time, in its own state file, so a terminal `goto` can be parked beside it. Set
-`E2E_VSCODE_SESSION=<name>` on every verb to keep a second window under that name, as two agents
-working at once must.
+## Claude Desktop
 
-Scenarios are `e2e/<plugin>/vscode.scenarios.ts`, a `vscodeScenarios({...})` from
-`lib/vscode-scenario.ts` (`harness: "vscode"`). The shape is the terminal's: `setup` is the same
-`SetupContext` function (so `docfix/fixture.ts` serves both), `start.turns` the same stubbed
-`Turn`s, and `steps` are `type`, `press`, `click`, `hover`, `wait`, `sleep`, `resize` and `run`.
-A click lands on the visible element whose own text matches, buttons and links first and an exact
-text before a partial one; `{ text, nth }` picks a later one.
+```bash
+just answer-demo long-body                        # try a canned round in a Claude terminal
+just claude-desktop-dev long-body                 # open that fixture in Claude Desktop on Linux
+just claude-desktop-dev recommended live          # open a prefilled draft; choose Haiku before sending
+```
 
-### How it works
-
-- `goto` starts VS Code detached (`setsid`, under `cage`) with a fresh profile, so it outlives the
-  command. Each verb reconnects over the saved Chrome DevTools port (`lib/vscode.ts`).
-- The workbench is the `page` target. Ctrl+Shift+Escape opens the Claude tab, whose webview is an
-  `iframe` target; the UI is the document of `#active-frame` inside it. Text, clicks, keys and
-  typing are sent to that target, and a screenshot is taken from the page, clipped to the webview
-  for a panel shot.
-- A press before the extension has activated is lost, and a second press opens a second tab. So
-  the driver presses once the extension's status bar entry is up, and again only after 5 seconds
-  with no Claude tab in the workbench.
-- The webview it drives is the one on screen: the largest visible `iframe.webview`, matched to its
-  target by the id in the target's URL. A window can hold a hidden one too, a second tab or one a
-  reload closed, which draws no frames.
-- The extension's `claude` inherits VS Code's environment, so that is where the hermetic setup
-  goes: a config folder of the run's own (`hermeticClaude` in `lib/harness.ts`), the model stub for
-  `ANTHROPIC_BASE_URL`, and the checkout's mods as `CLAUDE_CODE_PLUGIN_DIRS`. Every inherited
-  `CLAUDE*`, `ANTHROPIC*` and `VSCODE_*` variable is dropped first.
-- Only the Claude extension runs, and the explorer and the chat sidebar are hidden, so the panel
-  has the window's width and nothing lands on it. The chat shows no clock or date line
-  (`claudeCode.showMessageTimestamps`), so a picture is the same on every run.
-- `stop` ends every process whose command line or environment names the run folder, and the stub.
-  It touches nothing else.
-- `reload` closes the Claude tab (its `claude` goes with it), puts the stub back on the port VS
-  Code's environment names, with its turns from the first, rebuilds the fixture in the same folder,
-  rewrites the config folder and `.mcp.json`, then opens a new tab and plays the steps.
-- A shot waits up to 10 seconds for the panel's pictures to be drawn (`undrawn()` in
-  `lib/vscode.ts`), then is kept once two captures 400 ms apart agree, with the prompt's caret
-  hidden.
-- A session starts on the first prompt or slash command: the panel is empty until then, and a mod's
-  band shows only after a turn.
-
-### Resize
-
-cage keeps its one output at 1280x720 and has no way to change it. `resize` overrides the page's
-viewport instead (`Emulation.setDeviceMetricsOverride`), and the workbench reflows to it. The
-override ends with the connection, so the size is saved in the run's state and each verb applies it
-again.
-
-### Traps
-
-- The extension spawns `claude` only for a folder with a trust record in the config folder's
-  `.claude.json`. Without one it logs "Launching Claude on channel" and never starts, and the tab
-  shows "Waiting for your plugins…", then "stopped responding". `goto` writes the record.
-- Start from a fresh `--user-data-dir`. A reused one restores the old Claude tab, and the new one
-  hangs. The run's profile is always new.
-- The extension's session does not reload an edited mod, after a turn or otherwise, and the panel's
-  New session starts the next session in the same `claude`, with the old code. Only a new tab
-  starts a new `claude`: that is what `reload` does.
-- `code` returns at once, so cage runs `sh -c 'code …; sleep infinity'` to stay alive.
-- The extension locks the editor group it opens a tab in. A locked group stays when its tab
-  closes, and the next tab opens in a new group beside it, half as wide. The run's settings turn
-  the lock off (`claudeCode.lockEditorGroups`), so a `reload`'s tab takes the old one's place.
-- Ctrl+B toggles the explorer, so the driver presses it only while the explorer is shown.
-- A leftover `VSCODE_IPC_HOOK_CLI` makes `code` hand the folder to a VS Code that is already
-  running, which is why those variables are dropped.
-- `E2E_KEEP=1` leaves a VS Code that failed to start, with its `vscode.log`, for a look.
-- A mod's picture (an `Svg`, such as an icon) is drawn by the host in a frame of its own, and its
-  alt text stands in until it is: "Wrong" where docfix's icon goes. A new tab can take seconds. A
-  `reload`'s tab can refuse them for good: in the site's build, about half the reloaded pictures
-  kept their alt text after 15 seconds, and the same scenario in a new window drew them. A shot
-  prints a line when pictures are still undrawn, and `e2e/site-vscode.ts` takes such a picture
-  again in a new window.
-- A band that reads the draft on render (spellfix) can lag what `type` typed, or not show at all.
-  VS Code raises no prompt event, and the band is drawn again only when its props change: a turn
-  starting or ending, or the prompt box changing width.
-  - On 2.1.325 and 2.1.327, typing, keys and resizes to 1200 and 900 wide drew nothing in 100
-    seconds. The prompt box is at most about 680 px wide, so those sizes leave its width alone.
-  - On 2.1.325, `resize 560 720` then `resize 1280 720` after the draft draws the band
-    (`e2e/spellfix/site.scenarios.ts` does this).
-- `wait` reads the webview's text, which holds no `Input`'s placeholder. `Escape` leaves a field
-  but does not hide a pane.
-- The setup's git reads no global or system config, and the session keeps `agent-notes` data in
-  the run's folder (`lib/setup.ts`), so neither the person's git hooks nor a mod's
-  `agent-notes root --ensure` reach their real notes store.
-
-## Traps
-
-- PNGs need fonts under `$HOME/.local/share/fonts`, which NixOS lacks. `lib/fonts.ts`
-  links the ones fontconfig knows into a cache folder and swaps `HOME` for that one
-  call. `goto`'s daemon is started with that `HOME` and the child gets the real one.
-- The daemon's socket path must stay short, so it lives in `$XDG_RUNTIME_DIR/tt-e2e`.
-- tui-test has no paste call: `paste` wraps the text in bracketed-paste escapes.
-  `type` sends a newline as a raw `\n`.
-- Claude's `Image` draws its `alt` under the Ghostty backend: its debug log reports
-  `kittyGraphics=no` for `libghostty`. Screenshots check the fallback and layout text; use
-  `claude plugin test` to check the image source and cell box, and a graphics-capable terminal
-  to inspect the pixels.
-- After a resize pi leaves old rows on screen outside its surface. The crop hides
-  them, which is why every snapshot has a region.
-- A test session never inherits the parent agent's `CLAUDE_CODE_*` variables, or it would print
-  "Transcript saving is off".
+Desktop needs `claude` and `claude-desktop` on PATH. Sign in to the isolated test profile on first use and rerun the command if it stopped at sign-in. The profile is per checkout; saved sessions are kept alongside it under `${XDG_STATE_HOME:-$HOME/.local/state}/agent-tools-e2e/`.
 
 ## Site media
 
-The project site's videos and screenshots are played from the same engine, on a stubbed model. A
-run needs no sign-in and no model call, and comes out the same each time.
-
 ```bash
-just site-shots                  # every plugin with an e2e/<plugin>/site.scenarios.ts
-just site-shots docfix answer    # only those plugins
+just media                # get or record all site assets before building the site
+just site-shots docfix    # rerecord just this plugin's terminal demo and stills
+just site-vscode docfix   # retake just its VS Code pictures on Linux
 ```
 
-A run writes `site/media/<plugin>/`: `demo.mp4` and its poster `demo.png` (`demo-pi.*` for a second
-harness's demo), a `<still>.png` per still, and `media.json`, the captions, sizes and paths the site
-reads, relative to the repo root.
+The site reads generated files under `site/media/`; don't commit them. Stage new scenarios before `just media` so Nix can see them. For a local recording from the checkout as it stands, use `just media-fresh`.
 
-The files are not committed. `just media` builds `.#site-media` and `.#site-kit`, which record in the
-same hermetic shell: the agents from this flake's nixpkgs, the fonts, ffmpeg and hunspell, and nothing
-of the machine's. It builds `.#site-vscode` too, the pictures in VS Code (below). The Pages workflow
-builds the same three.
-
-A plugin whose run fails keeps its old files, and the failed screens are left in the temp folder it
-names. `E2E_KEEP=1` and `SITE_JOBS=<n>` (scenarios side by side) work as in the regression run.
-Needs `tui-test`, and `ffmpeg` for the video: without one on PATH the runner builds nixpkgs' and
-clears `LD_LIBRARY_PATH` for it.
+Use `e2e/<plugin>/site.scenarios.ts` for a demo tour, its stills, and any VS Code pictures. [docfix's recording](docfix/site.scenarios.ts) is a working example; [the types](lib/site.ts) describe what the runner reads. Keep tours short and inspect the video for unintended account details, private paths, or distractions. If a capture is over budget, shorten the tour before changing the limits. Match side calls to their own canned turn with `match` rather than relying on their order. Use the [fake Linear server](lib/linear-mcp.ts) for Linear scenarios, not a logged-in account.
 
 ### Capture inline graphics
 
-Set `capture: "kitty"` on a site demo or still that shows inline images. The Linux Pages build
-and `just media` record a cast with `tui-test`, then replay it in Kitty on a private Xvfb display.
-A cast without Kitty graphics fails the scenario instead of publishing a blank preview.
-Kitty demos use their final screen as the poster; non-Linux media builds skip Kitty captures.
+Set `capture: "kitty"` for a demo or still with terminal images. The ordinary rasterizer doesn't render Kitty image placeholders. Run `nix develop .#media -c just site-shots image-preview` to replay in Kitty on a private display (Linux).
 
-For a targeted run, use `nix develop .#media -c just site-shots image-preview`. To export a saved
-cast yourself, pass the cast path and an output prefix:
-
-```bash
-just capture-cast /path/to/demo.mp4.tui-test.cast ./image-preview
-```
-
-On Linux this replays the cast in Kitty on a private Xvfb display and captures the window pixels.
-It writes `image-preview.mp4` and `image-preview.png` (the final screen), replacing those files if
-present. The output directory must exist. It accepts fixed-size asciicast v2 recordings only.
-Use casts you trust: the replay sends their terminal escape sequences to Kitty. The command does
-not rerun the scenario or update the site's media manifest.
-
-### Pictures in VS Code
-
-A plugin's `site.scenarios.ts` can name pictures of its mod in VS Code's Claude panel, under
-`vscode` (`SiteVscode` in `lib/site.ts`). Each is a scenario of the plugin's `vscode.scenarios.ts`
-and, optionally, `steps` played after it, with a caption. The site shows them under Claude Code's
-Terminal / VS Code switch.
-
-```bash
-just site-vscode                 # every plugin whose site.scenarios.ts names vscode pictures
-just site-vscode docfix          # only those plugins
-```
-
-- `e2e/site-vscode.ts` plays them with the VS Code driver: `goto` for a plugin's first picture,
-  then `reload` for each picture whose scenario starts the same way, about twice as fast. A
-  reloaded picture with a mod's picture left undrawn is taken again in a new window (Traps, above).
-  A picture still undrawn there fails the plugin.
-- Each is the panel at a 1280x720 window (`VSCODE_SIZE`), where a mod's pane docks beside the chat.
-- It writes `site/media/<plugin>/vscode-<name>.png` and `media-vscode.json`, and leaves the
-  terminal's files alone, as `just site-shots` leaves its own. `scripts/content.ts` merges the two
-  manifests, marking each still's `surface`.
-- `.#site-vscode` records them in a build: VS Code and the Claude extension from this flake's
-  nixpkgs, cage, and fonts of its own (Inter for the interface, Hack for code). The extension runs
-  the `claude` it bundles, so the Claude Code version is the extension's, not `claude-code`'s.
-- In the build, VS Code runs with Chromium's sandbox off (`--no-sandbox`): it needs user
-  namespaces, which a build may not get, and the build's own sandbox holds VS Code in.
-- Its source is the mods, `e2e/lib` and the e2e folders of plugins with VS Code scenarios, less
-  their snapshots and terminal scenarios. The terminal's derivations leave the VS Code driver and
-  scenarios out, and this README, so an edit to the driver re-records only VS Code.
-
-### Add a site scenario
-
-`e2e/<plugin>/site.scenarios.ts`, never `claude.scenarios.ts` / `pi.scenarios.ts`: the regression
-run reads those and these are not snapshots. `docfix/site.scenarios.ts` is the worked example;
-`SiteSet`, `SiteDemo` and `SiteScenario` in `lib/site.ts` document the fields.
-
-- A plugin with both halves gives a demo per harness, the first shown first.
-- The demo is a tour of 15 to 40 seconds. Its poster is the last screen unless a `poster` step
-  takes it earlier. `slow(text)` types a key at a time at a human rhythm, seeded so it is the same
-  on every run, and ends on a short beat before Enter.
-  - The recorder cuts each `sleep` to about 70% and varies it (`pace` in `lib/site.ts`). Write a
-    sleep as the dwell you mean and expect a little less.
-  - `slowPress(key, n)` repeats a key at a pace a field that redraws on every key keeps up with.
-- A still is the screen after its steps. Give a plugin with both halves at least one pi still.
-- The default size (`SITE_SIZE` in `lib/site.ts`) suits a column of 1000 to 1100 px.
-- Nothing unintended is on screen: no account, no path of the person's, no email, no real
-  repository. Look at the frames (`ffmpeg -i demo.mp4 -vf fps=1/3 …`) before committing.
-
-### What makes it hermetic
-
-- `start.hermetic: true` runs plain `claude` with every mod of the checkout (`start.plugins` narrows
-  it), never the `claude-dev` wrapper, so the screens are the same on any machine. Claude gets a
-  config folder of its own (`lib/harness.ts`): onboarding done, the stub's API key approved,
-  fullscreen, manual permissions, the keys the READMEs ask for, no hooks, status line, debug banner
-  or account. pi gets its own agent folder and loads only `start.plugins` (`plugins/<name>`), with
-  no skills or context files, theme `dark`.
-- The agent runs in `/tmp/s-<random>/<project>`, so its header shows no home folder.
-- `start.bin` puts stand-ins first on PATH (git-menu's `gh`, which would otherwise ask GitHub).
-- `claude-dev` / `pi-dev` are used with their checkout swapped for this one, so a session loads the
-  plugins of the tree the run is in (a worktree's), also in the regression run.
-
-### The model stub
-
-`start.turns` is a list the stub serves to the main loop in order, as in a regression scenario. A
-turn with `match: "text"` is not part of that list: it is served, once, to the request whose system
-prompt or messages contain the text. A side call that races the main loop (spellfix's Haiku check,
-linear-issue's drafter and duplicate check) gets its own answer that way, whatever the order. A
-request nothing matches is answered as before ("Stub" for a side call without tools).
-
-`STUB_LOG=<file>` appends a line per request (model, tool count, the start and end of what it says,
-never headers), to find the text to match. The stub's safety rules stand: localhost, one session, no
-header is read.
-
-Claude Code's built-in "You should know" side agent does not call the model through the stub (no
-request of it reaches the stub, with the stub's key or with an account), so the card and the Learn
-more flow of linear-issue cannot be played; the site shows `/linear` only.
-
-### The fake Linear server
-
-`lib/linear-mcp.ts` is a stdio MCP server written by hand (newline-delimited JSON-RPC, no
-dependencies) that serves fixtures for the tools linear-issue calls, one of its issues the duplicate
-the stubbed check can pick. Name it `linear` in `start.mcp` (`mcp: linearMcp`): linear-issue finds
-its server by a tool name like `mcp__linear__save_issue`. A write is answered with a made-up key
-and recorded to `linear-writes.jsonl` in the run's folder, and the site runner fails a scenario that
-made one.
-
-The server starts with the session, and a `/linear` typed before Claude Code has its tools answers
-"No Linear MCP server is configured in this session". So the server writes `linear-listed` in the
-run's folder once it has listed them, and linear-issue's site stills wait for that file
-(`LINEAR_UP`) before they type.
-
-### Budgets
-
-Each `.mp4` and each `.png` has a budget, which the site's check enforces (`BUDGET` in
-`lib/site.ts`). `VIDEO_ZOOM`, `FPS` and `IDLE` are there too, as is why a recording is drawn at
-twice an image's scale for the same zoom. A PNG over budget goes through oxipng. A video over
-budget fails the run with its size: shorten the tour, or lower `FPS`. Colours, padding and window
-chrome are in `e2e/tui-test.toml`, below.
-
-### The terminal's colours, and no window
-
-`e2e/tui-test.toml` (named by `TUI_TEST_CONFIG`) holds the person's terminal colours (the fireproof
-theme: background, foreground, cursor and palette) and draws pictures with no title bar, shadow or
-border and 16 px of padding. The site runner plays on the daemon backend, which reads that file, so
-its media are the bare terminal. The in-process engine takes colours as an option instead (`lib/term.ts`
-reads them from the same file) and has no config for the window, so the kit catalogue's screenshots
-keep tui-test's window in the right colours. `kit/catalog/crops.ts` crops inside it, so its geometry
-is unchanged.
+To export an existing trusted asciicast v2 without rerunning a scenario, use `just capture-cast /path/to/demo.mp4.tui-test.cast ./image-preview`. It replays the cast's terminal escape sequences, overwrites the output prefix's `.mp4` and `.png`, and doesn't update the site's manifest.

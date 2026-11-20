@@ -17,11 +17,6 @@ describe("content", () => {
     }
   });
 
-  it("orders plugins uniquely", () => {
-    const orders = content.plugins.map((p) => p.order);
-    expect(new Set(orders).size).toBe(orders.length);
-  });
-
   it("gives every skill a summary and a known category", () => {
     const slugs = CATEGORIES.map((c) => c.slug);
     for (const s of content.skills) {

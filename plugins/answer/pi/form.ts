@@ -1,11 +1,3 @@
-/**
- * The answer form, a widget above the prompt that keeps the prompt shown: one item per screen and a
- * review, every row and key chip clickable. A key answers and goes on; a click takes the answer and
- * opens its note, and a click on the taken answer goes on. The frame is the kit's `bandShell`, its top
- * border holding the question stops. The draft and every step through it are the core's
- * (`../core/forms.ts`), which Claude Code's mod shares; this file draws its view and maps keys and
- * clicks onto those steps.
- */
 import { getMarkdownTheme, type Theme } from "@earendil-works/pi-coding-agent";
 import {
   type Component,

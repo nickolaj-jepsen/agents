@@ -1,7 +1,6 @@
 ---
 tagline: "Two changes to how the transcript reads."
 featured: false
-requires: []
 order: 8
 ---
 

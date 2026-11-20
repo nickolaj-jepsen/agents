@@ -1,7 +1,6 @@
 ---
 tagline: "Claude Code habits in pi."
 featured: false
-requires: []
 order: 9
 ---
 
