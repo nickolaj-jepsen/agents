@@ -1,7 +1,13 @@
-import { getMarkdownTheme, type Theme } from "@earendil-works/pi-coding-agent";
+import {
+  getMarkdownTheme,
+  getSelectListTheme,
+  rawKeyHint,
+  type Theme,
+} from "@earendil-works/pi-coding-agent";
 import {
   type Component,
   Container,
+  Editor,
   type Focusable,
   Markdown,
   matchesKey,
@@ -13,10 +19,8 @@ import {
 } from "@earendil-works/pi-tui";
 import {
   bandAct,
-  bodyOrigin,
-  chipRow,
   clamp,
-  modalFrame,
+  gutterLine,
   note,
   paint,
   prose,
@@ -32,8 +36,13 @@ export type RoundAction =
   | { kind: "go" | "note" | "clear" | "accept"; step: number }
   | { kind: "fill" | "send" | "review" | "release" | "focus" };
 
-type Row = BandRow<RoundAction>;
+type Row = BandRow<RoundAction> & { editorWidth?: number };
+type Field = { kind: "write" | "note"; step: number; editor: Editor };
 type Item = NonNullable<View["item"]>;
+
+// Separate the active stop from answered stops, using Pi's focus and ordinary border colors.
+const questionTone = (theme: Theme, active: boolean, answered: boolean, text: string) =>
+  theme.fg(active ? "borderAccent" : answered ? "border" : "text", text);
 
 const choiceLetters = (item: Item): string[] => {
   const unused = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].filter(
@@ -47,16 +56,19 @@ export class Transcript implements Component {
   private hits = new Map<number, Row>();
   private stops: number[] = [];
   private ends: number[] = [];
+  private input?: { field: Field; first: number; x: number; width: number; height: number };
 
   constructor(
     private readonly theme: Theme,
-    private readonly read: () => { round: Round; active: boolean } | undefined,
+    private readonly read: () => { round: Round; active: boolean; field?: Field } | undefined,
     private readonly onAction: (action: RoundAction) => void,
   ) {}
 
   invalidate(): void {}
 
   span(step: number): [number, number] | undefined {
+    if (this.input?.field.step === step)
+      return [this.input.first, this.input.first + this.input.height];
     const start = this.stops[step];
     const end = this.ends[step];
     return start === undefined || end === undefined ? undefined : [start, end];
@@ -66,50 +78,103 @@ export class Transcript implements Component {
     this.hits.clear();
     this.stops = [];
     this.ends = [];
+    this.input = undefined;
     const state = this.read();
     if (!state || columns < 20) return [];
-    const { round, active } = state;
+    const { round, active, field } = state;
     const { theme } = this;
-    const width = widthCap("reading", columns - 2);
-    const inner = width - 2 * bodyOrigin.x;
+    // Match the assistant transcript's left inset and leave room for Pi's scrollbar.
+    const width = widthCap("reading", columns - tokens.gutter);
+    const indent = " ".repeat(tokens.gutter);
+    const inner = Math.min(width - tokens.gutter, tokens.prose);
     const out: string[] = [];
     const dim = (text: string) => paint(theme, "dim", text);
     const accent = (text: string) => paint(theme, "accent", text);
     const asRows = (lines: string[], act?: RoundAction): Row[] =>
       lines.map((text) => ({ text, act }));
-    const card = (step: number, title: string, rows: Row[], action?: RoundAction) => {
-      if (out.length) out.push("");
+    const editRows = (step: number, kind: Field["kind"], label: string): Row[] | undefined => {
+      if (!field || field.step !== step || field.kind !== kind) return undefined;
+      const width = inner - visibleWidth(label);
+      const lines = field.editor.render(width).slice(1, -1);
+      return lines.map((line, i) => ({
+        text: dim(i ? " ".repeat(visibleWidth(label)) : label) + line,
+        editorWidth: width,
+      }));
+    };
+    const section = (
+      step: number,
+      heading: Row[],
+      body: Row[],
+      state?: { here: boolean; answered: boolean },
+    ) => {
+      if (out.length) out.push("", "");
       this.stops[step] = out.length;
-      if (action) this.hits.set(out.length, { text: ` ${title}`, act: action });
-      rows.forEach((row, i) => {
-        if (row.act) this.hits.set(out.length + bodyOrigin.y + i, row);
-      });
-      const frame = modalFrame(theme, { width, title, body: rows.map((r) => r.text), hints: [] });
-      out.push(...frame.map((line) => ` ${line}`));
+      const rail = state
+        ? questionTone(theme, state.here, state.answered, tokens.border.v)
+        : dim(tokens.border.v);
+      const append = (row: Row) => {
+        const text = gutterLine(rail, row.text);
+        if (row.editorWidth !== undefined && field) {
+          if (this.input) this.input.height++;
+          else
+            this.input = {
+              field,
+              first: out.length,
+              x: 1 + tokens.gutter + inner - row.editorWidth,
+              width: row.editorWidth,
+              height: 1,
+            };
+        } else if (row.act) this.hits.set(out.length, { ...row, text });
+        out.push(text);
+      };
+      heading.forEach(append);
+      if (body.length) append({ text: "" });
+      body.forEach(append);
       this.ends[step] = out.length;
     };
+    const reviewHeading = (title: string, pointer: string, action?: RoundAction) =>
+      asRows(
+        clamp(`${pointer} ${title}`, inner).map((line) => theme.bold(line)),
+        action,
+      );
 
     const current = view(round.form, round.draft);
     for (let step = 0; step < current.count; step++) {
       const item = view(round.form, { ...round.draft, step }).item;
       if (!item) continue;
       const here = active && current.step === step;
-      const rows: Row[] = asRows(prose(theme, inner, item.title));
+      const answered = current.review[step]?.isAnswered ?? false;
+      const tone = (text: string) => questionTone(theme, here, answered, text);
+      const prefix = `${here ? tokens.glyph.pointer : " "} ${item.label}${indent}`;
+      const title = `${item.title}${answered ? ` ${tokens.glyph.done}` : ""}`;
+      const heading = asRows(
+        clamp(title, inner - visibleWidth(prefix)).map((line, i) =>
+          theme.bold(tone((i ? " ".repeat(visibleWidth(prefix)) : prefix) + line)),
+        ),
+      );
+      const rows: Row[] = [];
       if (item.body) {
-        rows.push({ text: "" });
         // The original assistant message stays above the cards, with all its Markdown intact.
         const detail = new Markdown(item.body, 0, 0, getMarkdownTheme()).render(inner);
         rows.push(...asRows(detail.slice(0, 3)));
         if (detail.length > 3) rows.push({ text: dim("… full context in the message above") });
+        rows.push({ text: "" });
       }
-      rows.push({ text: "" });
       const letters = choiceLetters(item);
       item.entries.forEach((entry, index) => {
         if (!active && entry.kind === "write" && !entry.isChosen) return;
         const key = letters[index];
         const marker = entry.isChosen ? tokens.glyph.single.on : tokens.glyph.single.off;
-        const prefix = `${marker} ${key ? `${key}. ` : ""}`;
+        const prefix = `${key || " "} ${marker} `;
+        const editing =
+          entry.kind === "write" ? editRows(step, "write", `${key || " "} › `) : undefined;
+        if (editing) {
+          rows.push(...editing);
+          return;
+        }
         const pad = " ".repeat(visibleWidth(prefix));
+        const ink = (text: string) =>
+          entry.isChosen && entry.kind !== "write" ? theme.bold(tone(text)) : tone(text);
         const text =
           entry.kind === "write" && item.written
             ? item.written
@@ -124,8 +189,11 @@ export class Transcript implements Component {
           ...asRows(
             lines.map(
               (line, i) =>
-                (i ? pad : entry.isChosen ? accent(prefix) : dim(prefix)) +
-                (entry.isChosen ? accent(line) : line),
+                (i
+                  ? pad
+                  : (here || entry.isChosen ? ink(key || " ") : dim(key || " ")) +
+                    ` ${entry.isChosen && entry.kind !== "write" ? ink(marker) : dim(marker)} `) +
+                (entry.isChosen ? ink(line) : entry.kind === "write" ? dim(line) : line),
             ),
             action,
           ),
@@ -145,21 +213,38 @@ export class Transcript implements Component {
           { text: "" },
           ...asRows(prose(theme, inner, `Recommended: ${item.recommended}`, { max: 3 }, "dim")),
         );
-      if (active || item.note) rows.push({ text: "" });
+      if (active && (answered || item.accepts.includes(","))) rows.push({ text: "" });
       if (active && item.accepts.includes(","))
-        rows.push({ text: `Take ${item.accepts}`, act: { kind: "accept", step } });
-      if (current.review[step]?.isAnswered && active)
-        rows.push({ text: "Clear answer", act: { kind: "clear", step } });
-      if (item.note) rows.push(...asRows(note(theme, inner, item.note)));
-      if (active)
-        rows.push({ text: item.note ? "Edit note" : "Add a note", act: { kind: "note", step } });
-      card(step, `${here ? "❯ " : ""}${item.label}/${current.count}`, rows);
+        rows.push(
+          ...asRows(prose(theme, inner, `Take ${item.accepts}`, {}, "dim"), {
+            kind: "accept",
+            step,
+          }),
+        );
+      if (answered && active)
+        rows.push({ text: dim("Clear answer"), act: { kind: "clear", step } });
+      if (active || item.note) {
+        const label = "Note: ";
+        rows.push(
+          { text: "" },
+          ...(editRows(step, "note", label) ??
+            asRows(
+              clamp(item.note || "Add a note", inner - visibleWidth(label)).map(
+                (line, i) =>
+                  (i ? " ".repeat(visibleWidth(label)) : dim(label)) +
+                  (item.note ? tone(line) : dim(line)),
+              ),
+              active ? { kind: "note", step } : undefined,
+            )),
+        );
+      }
+      section(step, heading, rows, { here, answered });
     }
 
     // The review is a single stop until opened. Older rounds retain their full summary.
     const title = `Review answers  ${current.answered}/${current.count}`;
     if (active && !current.isReview) {
-      card(current.count, `+ ${title}`, [], { kind: "review" });
+      section(current.count, reviewHeading(title, "+", { kind: "review" }), []);
       return out;
     }
     const review: Row[] = [];
@@ -171,7 +256,7 @@ export class Transcript implements Component {
       review.push(
         ...asRows(
           clamp(row.title, inner - pad.length, { max: 3 }).map(
-            (line, i) => (i ? pad : accent(prefix)) + line,
+            (line, i) => (i ? pad : dim(prefix)) + line,
           ),
           action,
         ),
@@ -190,30 +275,57 @@ export class Transcript implements Component {
     }
     if (current.note) review.push(...asRows(note(theme, inner, current.note)), { text: "" });
     if (active) {
-      review.push({
-        text: current.note ? "Edit round note" : "Add a round note",
-        act: { kind: "note", step: current.count },
-      });
+      review.push(
+        ...(editRows(current.count, "note", "Round note: ") ?? [
+          {
+            text: dim(current.note ? "Edit round note" : "Add a round note"),
+            act: { kind: "note", step: current.count } as const,
+          },
+        ]),
+      );
       if (current.reply) {
         review.push({ text: accent("Fill prompt"), act: { kind: "fill" } });
         review.push({ text: accent("Send reply"), act: { kind: "send" } });
       }
     }
     const marker = round.sent ? "  Sent" : "";
-    card(
+    section(
       current.count,
-      `${active ? "❯ " : ""}${title}${marker}`,
+      reviewHeading(
+        `${title}${marker}`,
+        active ? tokens.glyph.pointer : " ",
+        active ? { kind: "review" } : undefined,
+      ),
       review,
-      active ? { kind: "review" } : undefined,
     );
     return out;
   }
 
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
+    const input = this.input;
+    if (
+      input &&
+      event.y >= input.first &&
+      event.y < input.first + input.height &&
+      event.x >= 1 + tokens.gutter &&
+      event.x < input.x + input.width &&
+      event.type === "click" &&
+      event.button === "left"
+    ) {
+      this.onAction({ kind: "focus" });
+      input.field.editor.handleMouse({
+        ...event,
+        x: Math.max(0, event.x - input.x),
+        y: event.y - input.first + 1,
+        width: input.width,
+        height: input.height + 2,
+      });
+      return { handled: true };
+    }
     const row = this.hits.get(event.y);
     if (!row?.act || event.button !== "left") return undefined;
-    const x = event.x - bodyOrigin.x - 1;
-    if (x < 0 || x >= visibleWidth(row.text.trimEnd())) return undefined;
+    if (event.x < 1 + tokens.gutter || event.x >= visibleWidth(row.text.trimEnd()))
+      return undefined;
     if (event.type === "click") this.onAction(row.act);
     return event.type === "press" || event.type === "click" ? { handled: true } : undefined;
   }
@@ -224,6 +336,11 @@ export class AnswerGuide implements Component, Focusable {
   private hits = new Map<number, Row>();
   private isFocused = false;
   private size: string | undefined;
+  private field?: Field & { done: (text?: string) => void };
+
+  get activeField(): Field | undefined {
+    return this.field;
+  }
 
   constructor(
     private readonly tui: TUI,
@@ -238,10 +355,36 @@ export class AnswerGuide implements Component, Focusable {
   }
   set focused(value: boolean) {
     this.isFocused = value;
+    if (this.field) this.field.editor.focused = value;
     this.tui.requestRender();
   }
 
-  invalidate(): void {}
+  get editing(): boolean {
+    return this.field !== undefined;
+  }
+
+  edit(kind: Field["kind"], step: number, text: string, done: (text?: string) => void): void {
+    const editor = new Editor(this.tui, {
+      borderColor: (s) => this.theme.fg("borderAccent", s),
+      selectList: getSelectListTheme(),
+    });
+    editor.setText(text);
+    editor.focused = this.focused;
+    editor.onSubmit = (value) => this.finishEdit(value);
+    this.field = { kind, step, editor, done };
+    this.tui.requestRender();
+  }
+
+  private finishEdit(text?: string): void {
+    const field = this.field;
+    this.field = undefined;
+    field?.done(text);
+    this.tui.requestRender();
+  }
+
+  invalidate(): void {
+    this.field?.editor.invalidate();
+  }
 
   private actionFor(data: string, v: View): RoundAction | undefined {
     if (matchesKey(data, "escape") || matchesKey(data, "alt+a")) return { kind: "release" };
@@ -261,6 +404,13 @@ export class AnswerGuide implements Component, Focusable {
   }
 
   handleInput(data: string): void {
+    if (this.field) {
+      if (matchesKey(data, "escape")) this.finishEdit();
+      else this.field.editor.handleInput(data);
+      this.tui.requestRender();
+      if (this.field) this.onResize();
+      return;
+    }
     const v = viewOf(this.read());
     if (!v) return;
     const action = this.actionFor(data, v);
@@ -272,47 +422,70 @@ export class AnswerGuide implements Component, Focusable {
     const v = viewOf(this.read());
     if (!v) return [];
     const dim = (text: string) => paint(this.theme, "dim", text);
-    const label = v.isReview ? "Review" : (v.item?.label ?? v.title);
+    const label = v.isReview ? "Review" : (v.item?.label ?? "Answer");
     if (columns < 20) return [];
     const size = `${columns}x${this.tui.terminal.rows}`;
     if (this.size && size !== this.size) queueMicrotask(this.onResize);
     this.size = size;
-    const head =
-      clamp(`${label}  ${v.answered}/${v.count} answered`, columns - 1, { max: 1 })[0] ?? "";
-    if (!this.focused) {
-      const row = chipRow<RoundAction>(this.theme, [
-        { key: "alt+a", label: "answer", act: { kind: "focus" } },
-      ]);
-      this.hits.set(1, row);
-      return [dim(` ${head}`), ` ${row.text}  ${dim("/answer")}`];
+    const gap = " ".repeat(tokens.gutter);
+    if (this.field) {
+      if (!this.focused) return this.offer("resume editing", "");
+      return clamp(
+        ` ${[
+          rawKeyHint("enter", "save"),
+          rawKeyHint("shift+enter", "newline"),
+          rawKeyHint("esc", "cancel"),
+        ].join(gap)}`,
+        columns,
+      );
     }
-    const hints = [
-      "esc prompt",
-      "j/k move",
-      "r review",
-      "n note",
-      ...(v.item
-        ? [
-            `${choiceLetters(v.item).join("/").toLowerCase()} choose`,
-            ...(v.review[v.step]?.isAnswered ? ["x clear"] : []),
-            ...(v.item.accepts.includes(",") ? ["y take recommendation"] : []),
-          ]
-        : v.reply
-          ? ["enter fill", "s send"]
-          : []),
-    ];
-    // Wrap whole hints rather than cutting a key off the narrow guide.
-    const lines: string[] = [];
+    const progress = dim(`${label}  ${v.answered}/${v.count} answered`);
+    if (!this.focused)
+      return clamp(this.offer("answer", `${gap}${progress}`)[0]!, columns, { max: 1 });
+    const keyHint = (key: string, description: string) =>
+      questionTone(this.theme, false, true, key) + dim(` ${description}`);
+    const hints = [keyHint("jk", "move")];
+    if (v.item) {
+      const item = v.item;
+      const letters = choiceLetters(item);
+      const picks = letters.filter((key, i) => key && item.entries[i]?.kind !== "write");
+      const write = letters.find((_, i) => item.entries[i]?.kind === "write");
+      const consecutive = picks.every(
+        (key, i) => i === 0 || key.charCodeAt(0) === picks[i - 1]!.charCodeAt(0) + 1,
+      );
+      if (picks.length)
+        hints.push(
+          keyHint(
+            picks.length > 1 && consecutive ? `${picks[0]}–${picks.at(-1)}` : picks.join("/"),
+            "pick",
+          ),
+        );
+      if (write) hints.push(keyHint(write, "write"));
+    } else if (v.reply) {
+      hints.push(keyHint("enter", "fill"), keyHint("s", "send"));
+    }
+    hints.push(keyHint("n", "note"), keyHint("r", "review"), keyHint("esc", "prompt"));
+    if (v.item && v.review[v.step]?.isAnswered) hints.push(keyHint("x", "clear"));
+    if (v.item?.accepts.includes(",")) hints.push(keyHint("y", "take recommendation"));
+    const digits = String(v.count).length;
+    const stop = v.isReview ? "Review" : `${String(v.step + 1).padStart(digits, "0")}/${v.count}`;
+    const badge = questionTone(this.theme, true, false, this.theme.inverse(` ${stop} `));
+    const lines = [badge];
     for (const hint of hints) {
-      const previous = lines.at(-1);
-      if (previous && visibleWidth(previous + "  " + hint) < columns)
-        lines[lines.length - 1] += `  ${hint}`;
-      else lines.push(hint);
+      const previous = lines.at(-1)!;
+      if (visibleWidth(previous + gap + hint) <= columns) lines[lines.length - 1] += gap + hint;
+      else lines.push(` ${hint}`);
     }
-    return [
-      paint(this.theme, "accent", ` ${head}`),
-      ...lines.flatMap((line) => clamp(` ${line}`, columns).map(dim)),
-    ];
+    return lines.map((line) => clamp(line, columns, { max: 1 })[0] ?? "");
+  }
+
+  private offer(label: string, suffix: string): [string] {
+    const shortcut = rawKeyHint("alt+a", label);
+    this.hits.set(0, {
+      text: shortcut,
+      cells: [{ start: 0, end: visibleWidth(shortcut), act: { kind: "focus" } }],
+    });
+    return [` ${shortcut}${suffix}`];
   }
 
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
@@ -325,7 +498,12 @@ export class AnswerGuide implements Component, Focusable {
 
 /** Pi has no extension API for scrolling to an entry. If its viewport internals change, the
  * cards are still reachable through ordinary scrollback, and the guide still works. */
-export function reveal(tui: TUI, card: Transcript, step: number, align: "start" | "end"): boolean {
+export function reveal(
+  tui: TUI,
+  card: Transcript,
+  step: number,
+  align: "start" | "end" | "nearest",
+): boolean {
   const primary: unknown = Reflect.get(tui, "getPrimaryScrollView");
   if (typeof primary !== "function") return true; // Unsupported viewport; keep manual scrolling.
   tui.renderNow();
@@ -346,7 +524,13 @@ export function reveal(tui: TUI, card: Transcript, step: number, align: "start" 
   const offset = locate(scroll);
   const span = card.span(step);
   if (offset === undefined || !span) return false;
-  const row = align === "end" ? Math.max(span[0], span[1] - scroll.viewportHeight) : span[0];
-  scroll.scrollTo(offset + row);
+  const start = offset + span[0];
+  const end = offset + span[1] - scroll.viewportHeight;
+  if (align === "nearest" && end <= start) {
+    const top = Math.max(end, Math.min(start, scroll.scrollTop));
+    if (top !== scroll.scrollTop) scroll.scrollTo(top);
+  } else {
+    scroll.scrollTo(align === "end" ? Math.max(start, end) : start);
+  }
   return true;
 }

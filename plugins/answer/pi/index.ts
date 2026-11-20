@@ -99,11 +99,9 @@ export default function (pi: ExtensionAPI) {
   let tui: TUI | undefined;
   let guide: AnswerGuide | undefined;
   let promptFocus: Component | null = null;
-  let writer = false;
   let reviewFrom = 0;
   let filled: { reply: string; round: Round } | undefined;
   let sending: { round: Round; reply: string } | undefined;
-  let branchVersion = 0;
   const visibleCards = new Set<string>();
 
   pi.registerFlag(GUIDED, {
@@ -154,7 +152,7 @@ export default function (pi: ExtensionAPI) {
           () => held,
           (action) => act(ctx, action),
           () => {
-            if (made === guide && held) locate(held.draft.step);
+            if (made === guide && held) locate(held.draft.step, made.editing ? "nearest" : "start");
           },
         );
         guide = made;
@@ -201,9 +199,8 @@ export default function (pi: ExtensionAPI) {
     aside = null;
     filled = undefined;
     sending = undefined;
-    writer = false;
+    guide = undefined;
     reviewFrom = 0;
-    ++branchVersion;
     lastText = "";
     ctxOf = ctx;
     rounds.clear();
@@ -236,11 +233,10 @@ export default function (pi: ExtensionAPI) {
   pi.on("session_compact", (_event, ctx) => refreshProjection(ctx));
   pi.on("session_tree", (_event, ctx) => restore(ctx));
   pi.on("session_shutdown", () => {
-    ++branchVersion;
     ctxOf = undefined;
   });
 
-  const locate = (step: number, align: "start" | "end" = "start") => {
+  const locate = (step: number, align: "start" | "end" | "nearest" = "start") => {
     if (!tui || !held?.anchor) return false;
     const card = cards.get(held.anchor);
     return !!card && reveal(tui, card, step, align);
@@ -254,7 +250,11 @@ export default function (pi: ExtensionAPI) {
       () => {
         const round = rounds.get(id);
         return round && tui?.children.length && tui.mode === "fullscreen" && !pi.getFlag(GUIDED)
-          ? { round, active: held?.anchor === id }
+          ? {
+              round,
+              active: held?.anchor === id,
+              field: held?.anchor === id ? guide?.activeField : undefined,
+            }
           : undefined;
       },
       (action) => {
@@ -380,8 +380,7 @@ export default function (pi: ExtensionAPI) {
 
   function focusGuide() {
     if (!tui || !guide || !held) return false;
-    if (writer) return true;
-    if (!locate(held.draft.step)) return false; // Compaction may have removed the card.
+    if (!guide.editing && !locate(held.draft.step, "nearest")) return false;
     if (!guide.focused) {
       promptFocus = focusedOf(tui);
       tui.setFocus(guide);
@@ -413,37 +412,25 @@ export default function (pi: ExtensionAPI) {
     pi.sendUserMessage(reply);
   }
 
-  async function editText(ctx: ExtensionContext, field: "write" | "note") {
+  function editText(ctx: ExtensionContext, field: "write" | "note") {
     const round = held;
     const v = viewOf(round);
-    if (!round || !v) return;
-    writer = true;
-    const version = branchVersion;
-    const resumeGuide = guide?.focused ? guide : undefined;
-    const label = v.item?.label ?? "Round";
-    try {
-      const prefill = field === "write" ? v.item?.written : (v.item?.note ?? v.note);
-      const text = await ctx.ui.editor(
-        `${label}: ${field === "write" ? "Write an answer" : "Edit note"}`,
-        prefill,
-      );
-      if (version !== branchVersion || round !== held || text === undefined) return;
-      advance(ctx, round, { do: field, text });
-    } finally {
-      if (version === branchVersion) {
-        writer = false;
-        if (held?.anchor === round.anchor) {
-          // Pi's multiline dialog returns the keys to the composer by default.
-          if (tui && resumeGuide && resumeGuide === guide && focusedOf(tui) === promptFocus)
-            tui.setFocus(resumeGuide);
-          locate(held?.draft.step ?? v.step);
-        }
-      }
-    }
+    const editingGuide = guide;
+    if (!round || !v || !editingGuide) return;
+    const wasFocused = editingGuide.focused;
+    if (!focusGuide()) return;
+    const prefill = field === "write" ? v.item?.written : (v.item?.note ?? v.note);
+    editingGuide.edit(field, v.step, prefill ?? "", (text) => {
+      if (guide !== editingGuide || round !== held) return;
+      if (text !== undefined) advance(ctx, round, { do: field, text });
+      if (!wasFocused) release();
+      locate(held?.draft.step ?? v.step, "nearest");
+    });
+    locate(v.step, "nearest");
   }
 
   function act(ctx: ExtensionContext, action: RoundAction) {
-    if (!held || writer) return;
+    if (!held || (guide?.editing && action.kind !== "focus")) return;
     const go = (step: number) => {
       if (held) hold(ctx, at(held, step));
     };
@@ -467,8 +454,7 @@ export default function (pi: ExtensionAPI) {
         break;
       case "note":
         go(action.step);
-        locate(action.step, "end");
-        void editText(ctx, "note");
+        editText(ctx, "note");
         return;
       case "clear":
       case "accept":
@@ -480,8 +466,7 @@ export default function (pi: ExtensionAPI) {
         if (!entry) return;
         if (entry.kind === "write") {
           hold(ctx, target);
-          locate(action.step);
-          void editText(ctx, "write");
+          editText(ctx, "write");
           return;
         }
         advance(ctx, target, entry.isChosen ? { do: "next" } : { do: "pick", entry: action.entry });
@@ -490,7 +475,7 @@ export default function (pi: ExtensionAPI) {
         break;
       }
     }
-    if (held) locate(held.draft.step);
+    if (held) locate(held.draft.step, action.kind === "review" ? "start" : "nearest");
   }
 
   pi.registerShortcut(SHORTCUT, {

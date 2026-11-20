@@ -30,6 +30,11 @@ export function prose(
   return clamp(text, Math.min(width, tokens.prose), options).map((l) => paint(theme, role, l));
 }
 
+/** A left gutter that still draws its mark on a blank line. */
+export function gutterLine(mark: string, text: string, gap: number = tokens.gutter): string {
+  return text ? mark + " ".repeat(gap) + text : mark;
+}
+
 /**
  * A note: a dim gutter, `│` on each line but the last, `╰▸` on the last.
  * @param options Bounds for the wrap, as `clamp` takes them.
@@ -38,8 +43,10 @@ export function note(theme: Theme, width: number, text: string, options: ClampOp
   const lines = clamp(text, width - 3, options);
   return lines.map((line, i) => {
     const last = i === lines.length - 1;
-    return (
-      paint(theme, "dim", last ? tokens.glyph.noteEnd + " " : tokens.glyph.noteMid + "  ") + line
+    return gutterLine(
+      paint(theme, "dim", last ? tokens.glyph.noteEnd : tokens.glyph.noteMid),
+      line,
+      last ? 1 : 2,
     );
   });
 }

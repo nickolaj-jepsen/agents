@@ -1,6 +1,6 @@
 import { region, type Region } from "../lib/screen.ts";
 import { scenarios, type Scenario, type Step } from "../lib/scenario.ts";
-import { says } from "./fixture.ts";
+import { message, says } from "./fixture.ts";
 
 /**
  * The open form, from its top border to its keys (it has no bottom border: the prompt's rule is
@@ -35,10 +35,9 @@ const withoutScrollbar =
     const rect = area(grid);
     return rect && { ...rect, w: rect.w - 1 };
   };
-const CARD = withoutScrollbar(region.rows(/╭─ ❯?\s*Q1\//, /alt\+a answer|esc prompt/));
-const REVIEW = withoutScrollbar(
-  region.rows(/╭─ ❯?\s*Review answers/, /alt\+a answer|esc prompt|\d%\/\d+k/),
-);
+const promptRule = /^─{20,}/;
+const CARD = withoutScrollbar(region.rows(/^│\s+(?:❯ )?Q1  /, promptRule));
+const REVIEW = withoutScrollbar(region.rows(/^│\s+❯ Review answers/, promptRule));
 const FULL_CARD = withoutScrollbar(region.full);
 const asserts = (pattern: RegExp | string): Step => ({ wait: pattern, timeout: 4000 });
 const SOME = (fixture: string, n: number): Step[] => [
@@ -59,13 +58,13 @@ export default scenarios({
       about: "the active card appears without taking the keys from the prompt",
       start: cards("two-q"),
       region: CARD,
-      steps: [...CARD_ASK, { wait: "❯ Q1/2" }, { type: "a draft for later" }],
+      steps: [...CARD_ASK, { wait: "❯ Q1  Use SQLite?" }, { type: "a draft for later" }],
     },
     "cards-click": {
       from: "cards-open",
       about: "a click records a choice and leaves that card active",
       region: CARD,
-      steps: [{ click: "○ B. Postgres" }, { wait: "● B. Postgres" }, { wait: "a draft for later" }],
+      steps: [{ click: "B ○ Postgres" }, { wait: "B ● Postgres" }, { wait: "a draft for later" }],
     },
     "cards-note": {
       from: "cards-click",
@@ -73,10 +72,28 @@ export default scenarios({
       region: FULL_CARD,
       steps: [
         { click: "Add a note" },
-        { wait: "Q1: Edit note" },
-        { paste: "keep the flag\ncheck the results" },
+        { wait: "enter save" },
+        { type: "keep the flag" },
+        { press: "Shift+Enter" },
+        { type: "check the results" },
         { press: "Enter" },
         { wait: "check the results" },
+        { wait: "a draft for later" },
+      ],
+    },
+    "cards-editing": {
+      from: "cards-click",
+      about: "a note edits inline above the untouched composer",
+      region: FULL_CARD,
+      steps: [
+        { click: "Note: Add a note" },
+        { wait: "enter save" },
+        { type: "draft note" },
+        { wait: "Note: draft note" },
+        { click: "a draft for later" },
+        { wait: "alt+a resume editing" },
+        { click: "draft note" },
+        { wait: "shift+enter newline" },
         { wait: "a draft for later" },
       ],
     },
@@ -84,7 +101,7 @@ export default scenarios({
       from: "cards-note",
       about: "clearing the choice keeps its note",
       region: CARD,
-      steps: [{ click: "Clear answer" }, { wait: "○ B. Postgres" }, { wait: "check the results" }],
+      steps: [{ click: "Clear answer" }, { wait: "B ○ Postgres" }, { wait: "check the results" }],
     },
     "cards-keys": {
       from: "cards-open",
@@ -92,15 +109,15 @@ export default scenarios({
       region: REVIEW,
       steps: [
         { press: "Alt+a" },
-        { wait: "esc prompt" },
+        { wait: "jk move" },
         { press: "b" },
-        { wait: "● B. Postgres" },
+        { wait: "B ● Postgres" },
         { press: "j" },
-        { wait: "❯ Q2/2" },
+        { wait: "❯ Q2  Add caching?" },
         { press: "a" },
-        { wait: "● A. Yes" },
+        { wait: "A ● Yes" },
         { press: "k" },
-        { wait: "❯ Q1/2" },
+        { wait: "❯ Q1  Use SQLite?" },
         { press: "r" },
         { wait: "❯ Review answers  2/2" },
       ],
@@ -120,7 +137,19 @@ export default scenarios({
       from: "cards-keys",
       about: "a review row takes you back to its question",
       region: CARD,
-      steps: [{ click: "Q1  Use SQLite?" }, { wait: "❯ Q1/2" }],
+      steps: [{ click: "B: Postgres" }, { wait: "❯ Q1  Use SQLite?" }],
+    },
+    "cards-write-editing": {
+      from: "cards-open",
+      about: "the write-in replaces its choice row while the composer draft stays visible",
+      region: FULL_CARD,
+      steps: [
+        { click: "C ○ Write your own answer" },
+        { wait: "C ›" },
+        { type: "DuckDB" },
+        { wait: "C › DuckDB" },
+        { wait: "a draft for later" },
+      ],
     },
     "cards-write": {
       from: "cards-open",
@@ -128,17 +157,18 @@ export default scenarios({
       region: CARD,
       steps: [
         { press: "Alt+a" },
-        { wait: "esc prompt" },
-        { press: "c" },
-        { wait: "Q1: Write an answer" },
+        { wait: "jk move" },
+        { click: "C ○ Write your own answer" },
+        { wait: "C ›" },
         { type: "not this" },
+        { wait: "C › not this" },
         { press: "Escape" },
-        { wait: "esc prompt" },
+        { wait: "jk move" },
         { press: "c" },
-        { wait: "Q1: Write an answer" },
+        { wait: "C ›" },
         { paste: "DuckDB\nembedded is fine" },
         { press: "Enter" },
-        { wait: "❯ Q2/2" },
+        { wait: "❯ Q2  Add caching?" },
         { press: "k" },
         { wait: "embedded is fine" },
         { press: "Escape" },
@@ -154,8 +184,8 @@ export default scenarios({
         { press: "Alt+a" },
         { wait: "y take recommendation" },
         { press: "y" },
-        { wait: /● A\./ },
-        { wait: /● C\./ },
+        { wait: /A ●/ },
+        { wait: /C ●/ },
       ],
     },
     "cards-fill": {
@@ -189,8 +219,8 @@ export default scenarios({
         { wait: "alt+a answer", gone: true },
         { type: "/answer" },
         { press: "Enter" },
-        { wait: "esc prompt" },
-        { wait: "● B. Postgres" },
+        { wait: "jk move" },
+        { wait: "B ● Postgres" },
       ],
     },
     "cards-reload": {
@@ -203,8 +233,8 @@ export default scenarios({
         { press: "Enter" },
         { wait: "Reloaded" },
         { press: "Alt+a" },
-        { wait: "esc prompt" },
-        { wait: "● B. Postgres" },
+        { wait: "jk move" },
+        { wait: "B ● Postgres" },
       ],
     },
     "cards-long": {
@@ -213,6 +243,72 @@ export default scenarios({
       region: CARD,
       steps: CARD_ASK,
       extreme: true,
+    },
+    "cards-stress": {
+      about: "a long multilingual heading, choice and note in a twelve-question transcript",
+      start: {
+        ...cards("many"),
+        turns: [
+          {
+            text: message("many")
+              .replace(
+                "Question number 1: pick a strategy?",
+                `Which rollout should we use for ${"東京、大阪、名古屋 and the other regional clusters, ".repeat(3)}given the migration window?`,
+              )
+              .replace(
+                "Option A for 1",
+                `Canary: ${"validate the read replicas in 東京 and compare results before promoting. ".repeat(3)}`,
+              ),
+          },
+        ],
+      },
+      region: CARD,
+      extreme: true,
+      steps: [
+        ...CARD_ASK,
+        { click: "alt+a answer" },
+        { wait: "jk move" },
+        { press: "a" },
+        { wait: "A ● Canary:" },
+        { press: "n" },
+        { wait: "enter save" },
+        {
+          paste:
+            "Keep 東京 on the old routing until the replicas catch up and the dashboards agree.\nCheck 大阪 before widening the rollout.",
+        },
+        { press: "Enter" },
+        { wait: "Check 大阪" },
+      ],
+    },
+    "cards-reference": {
+      about:
+        "the reference screen: answered Q1 with a note, active Q2 with a write-in, and Q3 below",
+      start: cards("many"),
+      size: [62, 38],
+      sizes: [[62, 38]],
+      region: CARD,
+      steps: [
+        ...CARD_ASK,
+        { press: "Alt+a" },
+        { press: "a" },
+        { press: "n" },
+        { wait: "enter save" },
+        { type: "test test" },
+        { press: "Enter" },
+        { wait: "Note: test test" },
+        { press: "j" },
+        { press: "c" },
+        { wait: "C ›" },
+        { type: "test est" },
+        { press: "Enter" },
+        { wait: "03/12" },
+        { press: "k" },
+        { press: "k" },
+        { press: "j" },
+        { wait: "❯ Q2" },
+        { wait: "C ● test est" },
+        { wait: "02/12" },
+      ],
     },
     "cards-regular": {
       about: "the regular terminal still offers the guided form",

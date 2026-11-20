@@ -1,40 +1,38 @@
-# answer/pi/cards-keys 160x45 @0,24 (159x16)
- ╭─ ❯ Review answers  2/2 ──────────────────────────────────────────────────────────────────────╮
- │                                                                                              │
- │ Q1  Use SQLite?                                                                              │
- │     B: Postgres                                                                              │
- │                                                                                              │
- │ Q2  Add caching?                                                                             │
- │     A: Yes                                                                                   │
- │                                                                                              │
- │ Add a round note                                                                             │
- │ Fill prompt                                                                                  │
- │ Send reply                                                                                   │
- │                                                                                              │
- ╰─  ───────────────────────────────────────────────────────────────────────────────────────────╯
+# answer/pi/cards-keys 160x45 @0,27 (159x14)
+│  ❯ Review answers  2/2
+│
+│  Q1  Use SQLite?
+│      B: Postgres
+│
+│  Q2  Add caching?
+│      A: Yes
+│
+│  Add a round note
+│  Fill prompt
+│  Send reply
 
- Review  2/2 answered
- esc prompt  j/k move  r review  n note  enter fill  s send
+ Review   jk move  enter fill  s send  n note  r review  esc prompt
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-. 1x3 2x21 . 1x71
-. 1 .x94 1
-. 1 . 3x4 .x89 1
-. 1 .x5 4x11 .x78 1
-. 1 .x94 1
-. 1 . 3x4 .x89 1
-. 1 .x5 4x6 .x83 1
-. 1 .x94 1
-. 1 .x94 1
-. 1 . 3x11 .x82 1
-. 1 . 3x10 .x83 1
-. 1 .x94 1
-. 1x3 . 1x92
+1 .x2 2x21
+1
+1 .x2 1x4
+1 .x6 3x11
+1
+1 .x2 1x4
+1 .x6 3x6
+1
+1 .x2 1x16
+1 .x2 4x11
+1 .x2 4x10
 -
-3x21
-5x59
+5x8 .x2 6x2 1x5 .x2 6x5 1x5 .x2 6 1x5 .x2 6 1x5 .x2 6 1x7 .x2 6x3 1x7
+7x159
 --- legend
-1 fg=#768186
-2 fg=#a798d7 bold
-3 fg=#a798d7
-4 fg=#dee0e1
-5 fg=#7e888e
+1 fg=#7e888e
+2 bold
+3 fg=#dee0e1
+4 fg=#a798d7
+5 fg=#a08ed5 inverse
+6 fg=#5fa8cc
+7 fg=#6c767b

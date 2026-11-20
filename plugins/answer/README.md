@@ -72,9 +72,9 @@ VS Code, **Write longer note** uses the main composer for multiline notes.
 ## pi
 
 In fullscreen, question cards and their review appear below the assistant's
-message. Click a choice to save it. Click **Add a note** or the write-in to open
-a multiline editor. `Enter` saves, `Shift+Enter` adds a line, and `Esc` cancels.
-Your prompt draft stays in place.
+message. Click a choice to save it. Click the **Note** line or your write-in
+choice to turn that line into an editor. `Enter` saves, `Shift+Enter` adds a line,
+and `Esc` cancels. Your prompt draft stays in place.
 
 Press `Alt+a` or run `/answer` to give the key guide focus. Use the letters
 printed on a card to choose, `j` and `k` to move, `n` to edit a note, and `r`

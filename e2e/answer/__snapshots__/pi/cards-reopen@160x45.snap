@@ -1,33 +1,25 @@
-# answer/pi/cards-reopen 160x45 @0,0 (159x40)
- ╭─ ❯ Q1/2 ─────────────────────────────────────────────────────────────────────────────────────╮
- │                                                                                              │
- │ Use SQLite?                                                                                  │
- │                                                                                              │
- │ ○ A. SQLite                                                                                  │
- │ ● B. Postgres                                                                                │
- │ ○ C. Write your own answer                                                                   │
- │                                                                                              │
- │ Clear answer                                                                                 │
- │ Add a note                                                                                   │
- │                                                                                              │
- ╰─  ───────────────────────────────────────────────────────────────────────────────────────────╯
+# answer/pi/cards-reopen 160x45 @0,8 (159x33)
+│  ❯ Q1  Use SQLite? ✓
+│
+│  A ○ SQLite
+│  B ● Postgres
+│  C ○ Write your own answer
+│
+│  Clear answer
+│
+│  Note: Add a note
 
- ╭─ Q2/2 ───────────────────────────────────────────────────────────────────────────────────────╮
- │                                                                                              │
- │ Add caching?                                                                                 │
- │                                                                                              │
- │ ○ A. Yes                                                                                     │
- │ ○ B. No                                                                                      │
- │ ○ C. Write your own answer                                                                   │
- │                                                                                              │
- │ Add a note                                                                                   │
- │                                                                                              │
- ╰─  ───────────────────────────────────────────────────────────────────────────────────────────╯
 
- ╭─ + Review answers  1/2 ──────────────────────────────────────────────────────────────────────╮
- │                                                                                              │
- │                                                                                              │
- ╰─  ───────────────────────────────────────────────────────────────────────────────────────────╯
+│    Q2  Add caching?
+│
+│  A ○ Yes
+│  B ○ No
+│  C ○ Write your own answer
+│
+│  Note: Add a note
+
+
+│  + Review answers  1/2
 
  1 answer set aside: /answer brings them back.
 
@@ -35,57 +27,56 @@
  a draft for later
 
 
- Error: fixture-provider: turn 1 requested but 1 exist        ↓ Jump to latest message · Ctrl+End
+ Error: fixture-provider: turn 1 requested but 1 exist
+ If this looks like a pi bug, /bug sends a report to the developers.
 
- Q1  1/2 answered
- esc prompt  j/k move  r review  n note  a/b/c choose  x clear
+ 1/2   jk move  A–B pick  C write  n note  r review  esc prompt  x clear
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-. 1x3 2x6 . 1x86
-. 1 .x94 1
-. 1 . 3x11 .x82 1
-. 1 .x94 1
-. 1 . 4x5 .x88 1
-. 1 . 5x13 .x80 1
-. 1 . 4x5 .x88 1
-. 1 .x94 1
-. 1 .x94 1
-. 1 .x94 1
-. 1 .x94 1
-. 1x3 . 1x92
+1 .x2 2x19
+1
+1 .x2 1 . 3
+1 .x2 2 . 2 . 2x8
+1 .x2 1 . 3 . 3x21
+1
+1 .x2 3x12
+1
+1 .x2 3x16
 -
-. 1x3 2x4 . 1x88
-. 1 .x94 1
-. 1 . 3x12 .x81 1
-. 1 .x94 1
-. 1 . 4x5 .x88 1
-. 1 . 4x5 .x88 1
-. 1 . 4x5 .x88 1
-. 1 .x94 1
-. 1 .x94 1
-. 1 .x94 1
-. 1x3 . 1x92
 -
-. 1x3 2x21 . 1x71
-. 1 .x94 1
-. 1 .x94 1
-. 1x3 . 1x92
+4 .x2 5x18
+4
+4 .x2 3 . 3
+4 .x2 3 . 3
+4 .x2 3 . 3 . 3x21
+4
+4 .x2 3x16
 -
-. 4x45
 -
-6x159
-6 7x17 6x141
-6x159
+3 .x2 6x21
 -
-. 8x53 .x7 7x37
+. 3x45
 -
-5x17
-4x62
+7x159
+7 8x17 7x141
+7x159
+-
+. 9x53
+. ax67
+-
+bx5 .x2 cx2 3x5 .x2 cx3 3x5 .x2 c 3x6 .x2 c 3x5 .x2 c 3x7 .x2 cx3 3x7 .x2 c 3x6
+dx159
 --- legend
-1 fg=#768186
-2 fg=#a798d7 bold
-3 fg=#dee0e1
-4 fg=#7e888e
-5 fg=#a798d7
-6 bg=#213b49
-7 fg=#dee0e1 bg=#213b49
-8 fg=#ea7f81
+1 fg=#a08ed5
+2 fg=#a08ed5 bold
+3 fg=#7e888e
+4 fg=#dee0e1
+5 fg=#dee0e1 bold
+6 bold
+7 bg=#213b49
+8 fg=#dee0e1 bg=#213b49
+9 fg=#ea7f81
+a fg=#9da5a9
+b fg=#a08ed5 inverse
+c fg=#5fa8cc
+d fg=#6c767b

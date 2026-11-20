@@ -1,0 +1,81 @@
+# answer/pi/cards-reference 62x38 @0,0 (61x34)
+│    Q1  Question number 1: pick a strategy? ✓
+│
+│  A ● Option A for 1
+│  B ○ Option B for 1
+│  C ○ Write your own answer
+│
+│  Clear answer
+│
+│  Note: test test
+
+
+│  ❯ Q2  Question number 2: pick a strategy? ✓
+│
+│  A ○ Option A for 2
+│  B ○ Option B for 2
+│  C ● test est
+│
+│  Clear answer
+│
+│  Note: Add a note
+
+
+│    Q3  Question number 3: pick a strategy?
+│
+│  A ○ Option A for 3
+│  B ○ Option B for 3
+│  C ○ Option C for 3
+│  D ○ Option D for 3
+│  E ○ Option E for 3
+│  F ○ Optio ↓ Jump to latest message · Ctrl+End
+
+ 02/12   jk move  A–B pick  C write  n note  r review
+ esc prompt  x clear
+─────────────────────────────────────────────────────────────
+--- styles
+1 .x2 2x43
+1
+1 .x2 2 . 2 . 2x14
+1 .x2 3 . 3
+1 .x2 3 . 3 . 3x21
+1
+1 .x2 3x12
+1
+1 .x2 3x6 1x9
+-
+-
+4 .x2 5x43
+4
+4 .x2 4 . 3
+4 .x2 4 . 3
+4 .x2 4 . 3 . 4x8
+4
+4 .x2 3x12
+4
+4 .x2 3x16
+-
+-
+6 .x2 7x41
+6
+6 .x2 3 . 3
+6 .x2 3 . 3
+6 .x2 3 . 3
+6 .x2 3 . 3
+6 .x2 3 . 3
+6 .x2 3 . 3 .x6 8x37
+-
+9x7 .x2 1x2 3x5 .x2 1x3 3x5 .x2 1 3x6 .x2 1 3x5 .x2 1 3x7
+. 1x3 3x7 .x2 1 3x6
+ax61
+--- legend
+1 fg=#5fa8cc
+2 fg=#5fa8cc bold
+3 fg=#7e888e
+4 fg=#a08ed5
+5 fg=#a08ed5 bold
+6 fg=#dee0e1
+7 fg=#dee0e1 bold
+8 fg=#dee0e1 bg=#213b49
+9 fg=#a08ed5 inverse
+a fg=#6c767b

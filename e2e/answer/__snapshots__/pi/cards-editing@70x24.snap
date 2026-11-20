@@ -1,0 +1,59 @@
+# answer/pi/cards-editing 70x24 @0,0 (69x24)
+│  C ○ Write your own answer
+│
+│  Clear answer
+│
+│  Note: draft note
+
+
+│    Q2  Add caching?
+│
+│  A ○ Yes
+│  B ○ No
+│  C ○ Write your own answer
+│
+│  Note: Add a note
+
+
+│  + Review answers  1/2
+
+ enter save  shift+enter newline  esc cancel
+─────────────────────────────────────────────────────────────────────
+a draft for later
+─────────────────────────────────────────────────────────────────────
+<tmp>
+0.7%/200k (auto)                                                repla
+--- styles
+1 .x2 1 . 2 . 2x21
+1
+1 .x2 2x12
+1
+1 .x2 2x6 .x5 3
+-
+-
+4 .x2 5x18
+4
+4 .x2 2 . 2
+4 .x2 2 . 2
+4 .x2 2 . 2 . 2x21
+4
+4 .x2 2x16
+-
+-
+2 .x2 6x21
+-
+. 2x5 7x5 .x2 2x11 7x8 .x2 2x3 7x7
+8x69
+.x8 3
+8x69
+2x19
+2x69
+--- legend
+1 fg=#a08ed5
+2 fg=#7e888e
+3 inverse
+4 fg=#dee0e1
+5 fg=#dee0e1 bold
+6 bold
+7 fg=#9da5a9
+8 fg=#6c767b

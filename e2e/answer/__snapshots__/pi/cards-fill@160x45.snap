@@ -1,41 +1,41 @@
 # answer/pi/cards-fill 160x45 @0,0 (159x45)
- │ ● B. Postgres                                                                                │
- │ ○ C. Write your own answer                                                                   │
- │                                                                                              │
- │ Clear answer                                                                                 │
- │ Add a note                                                                                   │
- │                                                                                              │
- ╰─  ───────────────────────────────────────────────────────────────────────────────────────────╯
+ - B. No
 
- ╭─ Q2/2 ───────────────────────────────────────────────────────────────────────────────────────╮
- │                                                                                              │
- │ Add caching?                                                                                 │
- │                                                                                              │
- │ ● A. Yes                                                                                     │
- │ ○ B. No                                                                                      │
- │ ○ C. Write your own answer                                                                   │
- │                                                                                              │
- │ Clear answer                                                                                 │
- │ Add a note                                                                                   │
- │                                                                                              │
- ╰─  ───────────────────────────────────────────────────────────────────────────────────────────╯
+│    Q1  Use SQLite? ✓
+│
+│  A ○ SQLite
+│  B ● Postgres
+│  C ○ Write your own answer
+│
+│  Clear answer
+│
+│  Note: Add a note
 
- ╭─ ❯ Review answers  2/2 ──────────────────────────────────────────────────────────────────────╮
- │                                                                                              │
- │ Q1  Use SQLite?                                                                              │
- │     B: Postgres                                                                              │
- │                                                                                              │
- │ Q2  Add caching?                                                                             │
- │     A: Yes                                                                                   │
- │                                                                                              │
- │ Add a round note                                                                             │
- │ Fill prompt                                                                                  │
- │ Send reply                                                                                   │
- │                                                                                              │
- ╰─  ───────────────────────────────────────────────────────────────────────────────────────────╯
 
- Review  2/2 answered
- alt+a answer  /answer
+│    Q2  Add caching? ✓
+│
+│  A ● Yes
+│  B ○ No
+│  C ○ Write your own answer
+│
+│  Clear answer
+│
+│  Note: Add a note
+
+
+│  ❯ Review answers  2/2
+│
+│  Q1  Use SQLite?
+│      B: Postgres
+│
+│  Q2  Add caching?
+│      A: Yes
+│
+│  Add a round note
+│  Fill prompt
+│  Send reply
+
+ alt+a answer  Review  2/2 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 Q1: B
 Q2: A
@@ -45,56 +45,58 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                                                                                                          repla
 --- styles
-. 1 . 2x13 .x80 1
-. 1 . 3x5 .x88 1
-. 1 .x94 1
-. 1 .x94 1
-. 1 .x94 1
-. 1 .x94 1
-. 1x3 . 1x92
+. 1x2 2x2
 -
-. 1x3 4x4 . 1x88
-. 1 .x94 1
-. 1 . 5x12 .x81 1
-. 1 .x94 1
-. 1 . 2x8 .x85 1
-. 1 . 3x5 .x88 1
-. 1 . 3x5 .x88 1
-. 1 .x94 1
-. 1 .x94 1
-. 1 .x94 1
-. 1 .x94 1
-. 1x3 . 1x92
--
-. 1x3 4x21 . 1x71
-. 1 .x94 1
-. 1 . 2x4 .x89 1
-. 1 .x5 5x11 .x78 1
-. 1 .x94 1
-. 1 . 2x4 .x89 1
-. 1 .x5 5x6 .x83 1
-. 1 .x94 1
-. 1 .x94 1
-. 1 . 2x11 .x82 1
-. 1 . 2x10 .x83 1
-. 1 .x94 1
-. 1x3 . 1x92
--
-3x21
-. 2x5 .x9 3x7
-6x159
+3 .x2 4x19
+3
+3 .x2 5 . 5
+3 .x2 4 . 4 . 4x8
+3 .x2 5 . 5 . 5x21
+3
+3 .x2 5x12
+3
+3 .x2 5x16
 -
 -
+3 .x2 4x20
+3
+3 .x2 4 . 4 . 4x3
+3 .x2 5 . 5
+3 .x2 5 . 5 . 5x21
+3
+3 .x2 5x12
+3
+3 .x2 5x16
 -
-.x17 7
-6x159
-3x19
-3x159
+-
+5 .x2 2x21
+5
+5 .x2 5x4
+5 .x6 6x11
+5
+5 .x2 5x4
+5 .x6 6x6
+5
+5 .x2 5x16
+5 .x2 1x11
+5 .x2 1x10
+-
+. 5x5 7x7 .x2 5x20
+8x159
+-
+-
+-
+.x17 9
+8x159
+5x19
+5x159
 --- legend
-1 fg=#768186
-2 fg=#a798d7
-3 fg=#7e888e
-4 fg=#a798d7 bold
-5 fg=#dee0e1
-6 fg=#6c767b
-7 inverse
+1 fg=#a798d7
+2 bold
+3 fg=#5fa8cc
+4 fg=#5fa8cc bold
+5 fg=#7e888e
+6 fg=#dee0e1
+7 fg=#9da5a9
+8 fg=#6c767b
+9 inverse
