@@ -1,4 +1,4 @@
-# image-preview/claude/read 70x24 @0,0 (70x16)
+# image-preview/claude/read 70x24 @0,0 (70x18)
 
  ▐▛███▛█   Claude Code <ver>
 ▝▜██████▀  <model>
@@ -7,14 +7,16 @@
 
 ❯ show the preview
 
-  Read 1 file
-
+  Read 2 files
   [image] picture#1-日本語.png
+  +1 more
 
-  <tmp>
-  icture#1-日本語.png
+● preview ready: result
 
-● preview ready
+  another
+[image] result.png
+
+<tmp>
 --- styles
 -
 1x2 2x6 .x3 3x11 . 4x5
@@ -24,14 +26,16 @@
 -
 5x2 6x16 7x52
 -
-.x2 4x5 8 4x6
--
+.x2 4x5 8 4x7
 .x2 4x28
+.x2 4x7
 -
-.x2 4x5
-.x2 4x19
+9 .x16 ax6
 -
-9
+.x2 ax7
+4x18
+-
+4x5
 --- legend
 1 fg=#d77757
 2 fg=#d77757 bg=#000000
@@ -42,3 +46,4 @@
 7 bg=#373737
 8 fg=#999999 bold
 9 fg=#ffffff
+a fg=p12

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_INLINE_BYTES,
-  attachmentPreviews,
+  attachmentImages,
+  readJpeg,
   base64ByteLength,
   pngSize,
   readPreview,
@@ -76,85 +77,56 @@ describe("readPreview", () => {
   });
 });
 
-describe("attachmentPreviews", () => {
-  const output = {
-    caption: "Two files",
-    attachments: [
-      {
-        path: "/tmp/chart.png",
-        size: 123,
-        isImage: true,
-        media_type: "image/png",
-        scaled: { original_width: 1200, original_height: 600 },
-      },
-      { path: "/tmp/report.pdf", size: 456, isImage: false },
-    ],
+describe("attachmentImages", () => {
+  const png = {
+    path: "/tmp/chart.png",
+    isImage: true,
+    scaled: { original_width: 1200, original_height: 600 },
   };
+  const jpeg = { path: "/tmp/photo", isImage: true, media_type: "image/jpeg" };
 
-  it("uses file sources and preserves non-image attachments as paths", () => {
-    expect(attachmentPreviews(output)).toEqual({
-      caption: "Two files",
-      images: [
-        {
-          key: "0:/tmp/chart.png",
-          source: { file: "/tmp/chart.png", format: "png", generation: 123 },
-          size: { width: 1200, height: 600 },
-          alt: "[image] chart.png",
-          path: "/tmp/chart.png",
-        },
-      ],
-      others: ["/tmp/report.pdf"],
-    });
+  it("selects PNG and JPEG without replacing other attachments", () => {
+    expect(
+      attachmentImages({
+        attachments: [png, jpeg, { path: "/tmp/report.pdf", isImage: false }],
+      }),
+    ).toMatchObject([
+      { path: png.path, format: "png", size: { width: 1200, height: 600 } },
+      { path: jpeg.path, format: "jpeg", size: null },
+    ]);
   });
 
-  it("accepts PNG media types without relying on the extension", () => {
-    const result = attachmentPreviews({
-      attachments: [{ path: "/tmp/blob", isImage: true, media_type: "image/png" }],
-    });
-    expect(result?.images[0]?.size).toBeNull();
-  });
-
-  it("uses an upload UUID as the content generation when one is available", () => {
-    const file = {
-      path: "/tmp/chart.png",
-      size: 123,
-      isImage: true,
-      media_type: "image/png",
-    };
-    const one = attachmentPreviews({ attachments: [{ ...file, file_uuid: "upload-one" }] });
-    const two = attachmentPreviews({ attachments: [{ ...file, file_uuid: "upload-two" }] });
-    const first = one?.images[0]?.source;
-    const second = two?.images[0]?.source;
-    expect(first && "generation" in first ? first.generation : undefined).not.toBe(123);
-    expect(first && "generation" in first ? first.generation : undefined).not.toBe(
-      second && "generation" in second ? second.generation : undefined,
-    );
-  });
-
-  it("passes attach-only, errored, relative and non-PNG results through", () => {
-    expect(attachmentPreviews({ ...output, display: "attach" })).toBeNull();
+  it("skips attach-only, invalid, failed and unsupported attachments", () => {
+    expect(attachmentImages({ display: "attach", attachments: [png] })).toEqual([]);
     expect(
-      attachmentPreviews({
-        attachments: [{ ...output.attachments[0], upload_error: "too large" }],
-      }),
-    ).toBeNull();
-    expect(
-      attachmentPreviews({
-        attachments: [{ path: "chart.png", isImage: true, media_type: "image/png" }],
-      }),
-    ).toBeNull();
-    expect(
-      attachmentPreviews({
-        attachments: [{ path: "/tmp/photo.jpg", isImage: true, media_type: "image/jpeg" }],
-      }),
-    ).toBeNull();
-    expect(
-      attachmentPreviews({
+      attachmentImages({
         attachments: [
-          output.attachments[0],
-          { path: "/tmp/photo.jpg", isImage: true, media_type: "image/jpeg" },
+          { ...png, upload_error: "too large" },
+          { ...png, partial_error: "failed" },
+          { ...png, pathValidated: false },
+          { ...png, path: "chart.png" },
+          { ...png, media_type: "image/gif" },
         ],
       }),
-    ).toBeNull();
+    ).toEqual([]);
+  });
+
+  it("uses the upload UUID as content generation", () => {
+    const [one, two] = attachmentImages({
+      attachments: [
+        { ...png, file_uuid: "one" },
+        { ...png, file_uuid: "two" },
+      ],
+    });
+    expect(one?.generation).toBeTypeOf("number");
+    expect(one?.generation).not.toBe(two?.generation);
+  });
+});
+
+describe("readJpeg", () => {
+  it("requires JPEG bytes in an image/jpeg Read result", () => {
+    const jpeg = (base64: string) => ({ type: "image", file: { type: "image/jpeg", base64 } });
+    expect(readJpeg(jpeg(PNG))).toBeNull();
+    expect(readJpeg(jpeg("/9j/4A=="))).toBe("/9j/4A==");
   });
 });

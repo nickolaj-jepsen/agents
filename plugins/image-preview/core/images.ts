@@ -62,7 +62,23 @@ export const base64ByteLength = (base64: string): number => {
   return Math.max(0, Math.floor((clean.length * 3) / 4) - padding);
 };
 
-const fileName = (path: string | undefined) => path?.split("/").pop() || "image.png";
+export const imageAlt = (path?: string) => `[image] ${path?.split("/").pop() || "image"}`;
+
+export const isJpeg = (base64: string) => {
+  const bytes = header(base64);
+  return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+};
+
+export const readJpeg = (output: unknown): string | null => {
+  const read = output as ReadOutput | null;
+  const file = read?.file;
+  return read?.type === "image" &&
+    file?.type === "image/jpeg" &&
+    typeof file.base64 === "string" &&
+    isJpeg(file.base64)
+    ? file.base64
+    : null;
+};
 
 type ReadOutput = {
   type?: unknown;
@@ -111,7 +127,7 @@ export const readPreview = (output: unknown, path?: string, key?: string): Previ
     key: key ?? path ?? file.base64.slice(0, 44),
     source,
     size: imageSize,
-    alt: `[image] ${fileName(path)}`,
+    alt: imageAlt(path ?? "image.png"),
     ...(path && canReadFile ? { path } : {}),
   };
 };
@@ -131,63 +147,54 @@ type Attachment = {
   };
 };
 
-type SendOutput = { caption?: unknown; display?: unknown; attachments?: unknown };
-export type AttachmentPreviews = { caption?: string; images: Preview[]; others: string[] };
-
-const attachment = (value: unknown): Attachment | null =>
-  value && typeof value === "object" ? (value as Attachment) : null;
-
-const isPng = (file: Attachment) =>
-  file.isImage === true &&
-  typeof file.path === "string" &&
-  file.path.startsWith("/") &&
-  file.pathValidated !== false &&
-  (file.media_type === "image/png" || /\.png$/i.test(file.path));
-
-/** A content token for Image; uploads have a UUID, older results only their byte size. */
-const generation = (file: Attachment): number | undefined => {
-  if (typeof file.file_uuid === "string" && file.file_uuid) {
-    let hash = 0x811c9dc5;
-    for (const char of file.file_uuid) hash = Math.imul(hash ^ char.charCodeAt(0), 0x01000193);
-    return hash >>> 0;
-  }
-  return typeof file.size === "number" ? file.size : undefined;
+type SendOutput = { display?: unknown; attachments?: unknown };
+export type LocalImage = {
+  path: string;
+  format: "png" | "jpeg";
+  size?: Size | null;
+  generation?: number;
 };
 
-/** Extracts safe local PNG attachments, leaving errored or attach-only results to the host. */
-export const attachmentPreviews = (output: unknown): AttachmentPreviews | null => {
-  const send = output as SendOutput | null;
-  if (!send || send.display === "attach" || !Array.isArray(send.attachments)) return null;
-  const files = send.attachments.map(attachment);
-  if (files.some((file) => !file || file.upload_error || file.partial_error)) return null;
-  // A mixed PNG/JPEG result stays whole, so the other image keeps the host's renderer too.
-  if (files.some((file) => file!.isImage === true && !isPng(file!))) return null;
+export const imageFormat = (path: string) =>
+  /\.png$/i.test(path) ? "png" : /\.jpe?g$/i.test(path) ? "jpeg" : null;
 
-  const images = files.flatMap((file, index) => {
-    if (!file || !isPng(file) || typeof file.path !== "string") return [];
-    const path = file.path;
-    const contentGeneration = generation(file);
+/** Select previews only; Claude still draws every attachment and the caption. */
+export const attachmentImages = (output: unknown): LocalImage[] => {
+  const send = output as SendOutput | null;
+  if (send?.display === "attach" || !Array.isArray(send?.attachments)) return [];
+  return send.attachments.flatMap((file: Attachment | null) => {
+    if (
+      !file ||
+      file.isImage !== true ||
+      typeof file.path !== "string" ||
+      !file.path.startsWith("/") ||
+      file.pathValidated === false ||
+      file.upload_error ||
+      file.partial_error
+    )
+      return [];
+    const format =
+      file.media_type === "image/png"
+        ? "png"
+        : file.media_type === "image/jpeg"
+          ? "jpeg"
+          : file.media_type == null
+            ? imageFormat(file.path)
+            : null;
+    if (!format) return [];
+    let generation: number | undefined;
+    if (typeof file.file_uuid === "string" && file.file_uuid) {
+      let hash = 0x811c9dc5;
+      for (const char of file.file_uuid) hash = Math.imul(hash ^ char.charCodeAt(0), 0x01000193);
+      generation = hash >>> 0;
+    }
     return [
       {
-        key: `${index}:${path}`,
-        source: {
-          file: path,
-          format: "png" as const,
-          ...(contentGeneration !== undefined ? { generation: contentGeneration } : {}),
-        },
+        path: file.path,
+        format,
+        generation,
         size: size(file.scaled?.original_width, file.scaled?.original_height),
-        alt: `[image] ${fileName(path)}`,
-        path,
       },
     ];
   });
-  if (images.length === 0) return null;
-
-  return {
-    ...(typeof send.caption === "string" && send.caption ? { caption: send.caption } : {}),
-    images,
-    others: files.flatMap((file) =>
-      file && !isPng(file) && typeof file.path === "string" ? [file.path] : [],
-    ),
-  };
 };

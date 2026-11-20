@@ -1,11 +1,14 @@
 ---
-tagline: "Show PNG images read by tools directly in the terminal transcript, with their aspect ratio preserved and a clickable file path."
+tagline: "Preview local PNG and JPEG images in the Claude Code terminal transcript."
 featured: false
 requires:
-  - "A terminal with Kitty, Ghostty or iTerm2 image support; other terminals show the image's fallback text"
+  - "A terminal with inline graphics for pictures; other terminals show a readable image label"
+  - "ImageMagick (`magick` on PATH) for JPEG previews"
 order: 12
 ---
 
-In the terminal, `Read` shows a PNG below its tool row or folded tool group. `SendUserFile` shows local PNG attachments with their caption and a clickable path; non-image attachments appear as paths.
+`Read` previews local images, including relative paths. A folded tool group shows one thumbnail and counts the rest. Press `Ctrl+O` to see each image in the detailed transcript.
 
-If a PNG doesn't appear, check terminal image support. In tmux enable `allow-passthrough` and `focus-events`. A `Read` result over 2 MiB needs an absolute source path so the terminal can load the file instead. Without image support the preview falls back to text and the path.
+A completed assistant reply can preview one explicit local Markdown link or image, such as `[Chart](./chart.png)`. Bare paths, code examples, and remote URLs do not get previews. `SendUserFile` keeps its attachments and captions, and previews supported images unless the tool used attach-only mode.
+
+Full previews fit within 144 columns and 42 rows; thumbnails fit within 24 columns and 6 rows. If images do not render in tmux, enable `allow-passthrough` and `focus-events`. Terminals without inline graphics show the image label and path. Failed JPEG conversion leaves the original output intact. Bash output and graphical clients are unchanged.

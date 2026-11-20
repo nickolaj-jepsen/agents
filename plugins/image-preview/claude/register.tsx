@@ -1,141 +1,249 @@
-import type { Register } from "claude-code";
+import type { EngineInterface as Engine, Register } from "claude-code";
 import {
   MAX_DIMENSION_READ_BYTES,
-  attachmentPreviews,
+  MAX_INLINE_BYTES,
+  attachmentImages,
+  base64ByteLength,
+  imageAlt,
+  imageFormat,
+  isJpeg,
   pngSize,
+  readJpeg,
   readPreview,
+  type LocalImage,
   type Preview,
-  type Size,
 } from "../core/images";
+import { imageLinks } from "../core/links";
 import { imageGallery, kitOf } from "./ui";
 
-const MAX_COLUMNS = 80;
-const MAX_ROWS = 30;
-const READ_MAX_COLUMNS = 40;
-const READ_MAX_ROWS = 15;
-const READ_PATHS_LIMIT = 200;
-const DIMENSION_CACHE_LIMIT = 64;
-const MARGIN = 4;
+const fullSize = (viewport?: { columns: number; rows: number }) => ({
+  columns: Math.max(1, Math.min(144, (viewport?.columns ?? 84) - 4)),
+  rows: Math.max(1, Math.min(42, Math.floor((viewport?.rows ?? 48) * 0.6))),
+});
+const thumbnail = { columns: 24, rows: 6 };
 
-const availableColumns = (cap: number, viewport: number | undefined) =>
-  Math.max(1, Math.min(cap, (viewport ?? cap + MARGIN) - MARGIN));
+function remember<T>(map: Map<string, T>, key: string, value: T, cap: number) {
+  map.delete(key);
+  map.set(key, value);
+  if (map.size > cap) {
+    const oldest = map.keys().next().value;
+    if (oldest !== undefined) map.delete(oldest);
+  }
+}
+
+const absolute = (cwd: string, path: string) => (path.startsWith("/") ? path : `${cwd}/${path}`);
+const safeLocal = (path: string) => !/^\/(?:dev|proc|sys)(?:\/|$)/.test(path);
+const inputPath = (input: unknown) => {
+  const path = (input as { file_path?: unknown } | null)?.file_path;
+  return typeof path === "string" ? path : undefined;
+};
+
+async function jpegToPng($: Engine, bytes: string) {
+  if (!isJpeg(bytes) || base64ByteLength(bytes) > MAX_DIMENSION_READ_BYTES) return null;
+  try {
+    // The pipeline is fixed. Only base64 bytes, never a filename or command, enter stdin.
+    const result = await $.process.run(
+      [
+        "sh",
+        "-c",
+        "base64 -d | magick -limit thread 1 -limit memory 64MiB -limit map 64MiB -limit disk 0 jpeg:- -auto-orient -thumbnail '640x640>' -strip inline:png:-",
+      ],
+      { stdin: bytes, timeoutMs: 2000 },
+    );
+    const png = result.stdout
+      .trim()
+      .match(/^data:image\/png;base64,([\s\S]+)$/)?.[1]
+      ?.replace(/\s/g, "");
+    return result.exitCode === 0 &&
+      !result.isStdoutTruncated &&
+      png &&
+      base64ByteLength(png) <= MAX_INLINE_BYTES &&
+      pngSize(png)
+      ? png
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+type PreviewCache = Map<string, Promise<Preview | null>>;
+
+async function pathFor($: Engine, path?: string) {
+  if (!path) return undefined;
+  return path.startsWith("/") ? path : absolute(await $.session.cwd(), path);
+}
+
+async function fromRead(
+  $: Engine,
+  output: unknown,
+  path: string | undefined,
+  key: string,
+  readJpegCache: PreviewCache,
+) {
+  const png = readPreview(output, path, key);
+  if (png) return png;
+  const jpeg = readJpeg(output);
+  if (!jpeg) return null;
+  const cached = readJpegCache.get(key);
+  if (cached) return cached;
+  const pending = jpegToPng($, jpeg).then((png): Preview | null =>
+    png
+      ? {
+          key,
+          source: { png },
+          size: pngSize(png),
+          alt: imageAlt(path ?? "image.jpg"),
+          path,
+        }
+      : null,
+  );
+  remember(readJpegCache, key, pending, 16);
+  return pending;
+}
+
+async function loadLocal(
+  $: Engine,
+  image: LocalImage,
+  localCache: PreviewCache,
+): Promise<Preview | null> {
+  try {
+    const stat = await $.fs.stat(image.path, { resolve: true });
+    const file = stat.realPath;
+    if (stat.kind !== "file" || !file || !safeLocal(file)) return null;
+    const generation = image.generation ?? Math.floor(stat.mtimeMs);
+    const key = `${image.format}:${file}:${stat.size}:${stat.mtimeMs}:${generation}`;
+    let pending = localCache.get(key);
+    if (!pending) {
+      pending = (async (): Promise<Preview | null> => {
+        const preview = { key, alt: imageAlt(image.path) };
+        if (image.format === "png" && stat.size > MAX_DIMENSION_READ_BYTES) {
+          return {
+            ...preview,
+            size: image.size ?? null,
+            source: { file, format: "png", generation },
+          };
+        }
+        if (stat.size <= 0 || stat.size > MAX_DIMENSION_READ_BYTES) return null;
+        const { base64 } = await $.fs.read(file, { as: "bytes" });
+        if (image.format === "png") {
+          const size = pngSize(base64);
+          if (!size) return null;
+          return { ...preview, size, source: { file, format: "png", generation } };
+        }
+        const png = await jpegToPng($, base64);
+        return png ? { ...preview, size: pngSize(png), source: { png } } : null;
+      })().catch(() => null);
+      remember(localCache, key, pending, 16);
+    }
+    const preview = await pending;
+    if (!preview && localCache.get(key) === pending) localCache.delete(key);
+    return preview ? { ...preview, alt: imageAlt(image.path), path: image.path } : null;
+  } catch {
+    return null;
+  }
+}
 
 export const register: Register = (on) => {
   const readPaths = new Map<string, string>();
-  const dimensions = new Map<string, Size>();
+  const placed = new Map<string, Preview>();
+  const localCache = new Map() as PreviewCache;
+  const readJpegCache = new Map() as PreviewCache;
 
-  const rememberPath = (id: string, path: string) => {
-    readPaths.delete(id);
-    readPaths.set(id, path);
-    if (readPaths.size > READ_PATHS_LIMIT) {
-      const oldest = readPaths.keys().next().value;
-      if (oldest !== undefined) readPaths.delete(oldest);
+  on("tool.call", { tool: "Read" }, async ($, e, next) => {
+    const path = await pathFor($, e.file_path);
+    if (path) remember(readPaths, e.tool_use_id, path, 500);
+    const result = await next(e);
+    if (
+      !result.isError &&
+      readJpeg(result.result) &&
+      (await $.session.surfaces()).includes("terminal")
+    ) {
+      await fromRead($, result.result, path, e.tool_use_id, readJpegCache);
     }
-  };
-
-  const rememberSize = (key: string, value: Size) => {
-    dimensions.delete(key);
-    dimensions.set(key, value);
-    if (dimensions.size > DIMENSION_CACHE_LIMIT) {
-      const oldest = dimensions.keys().next().value;
-      if (oldest !== undefined) dimensions.delete(oldest);
-    }
-  };
-
-  on("tool.call", { tool: "Read" }, ($, e, next) => {
-    rememberPath(e.tool_use_id, e.file_path);
-    return next(e);
+    return result;
   }).catch(($, e, next) => next(e));
 
   on("ui.render", { component: "ToolGroup" }, async ($, e, next) => {
     if (e.surface !== "terminal" || e.props.isExpanded) return next(e);
-    const images = e.props.calls.flatMap((call, index) => {
-      if (call.tool !== "Read" || call.isRunning || call.isErrored || call.isInterrupted) return [];
-      const input = call.input as { file_path?: unknown } | undefined;
-      const path = typeof input?.file_path === "string" ? input.file_path : undefined;
-      const image = readPreview(call.output, path, call.tool_use_id ?? `read-${index}`);
-      return image ? [image] : [];
-    });
-    if (images.length === 0) return next(e);
-
-    const line = await next(e);
-    const els = $.ui.resolve(e);
-    const { Box } = els;
-    const gallery = imageGallery(kitOf(els, e), images, {
-      columns: availableColumns(READ_MAX_COLUMNS, e.viewport?.columns),
-      rows: READ_MAX_ROWS,
-    });
-    return (
-      <Box flexDirection="column" rowGap={1}>
-        {line}
-        <Box marginLeft={2}>{gallery}</Box>
-      </Box>
-    );
-  });
-
-  on("ui.render", { component: "ToolResult" }, async ($, e, next) => {
-    if (e.surface !== "terminal" || e.props.tool !== "Read" || e.props.isErrored) return next(e);
-    const image = readPreview(
-      e.props.output,
-      readPaths.get(e.props.tool_use_id),
-      e.props.tool_use_id,
-    );
-    if (!image) return next(e);
-
-    const els = $.ui.resolve(e);
-    const { Box } = els;
-    return (
-      <Box flexDirection="column" marginBottom={1}>
-        {imageGallery(kitOf(els, e), [image], {
-          columns: availableColumns(READ_MAX_COLUMNS, e.viewport?.columns),
-          rows: READ_MAX_ROWS,
-        })}
-      </Box>
-    );
-  });
-
-  on("ui.render", { component: "ToolResult" }, async ($, e, next) => {
-    if (e.surface !== "terminal" || e.props.tool !== "SendUserFile" || e.props.isErrored)
-      return next(e);
-    const result = attachmentPreviews(e.props.output);
-    if (!result) return next(e);
-
-    await Promise.all(
-      result.images.map(async (image: Preview) => {
-        if (image.size || !("file" in image.source)) return;
-        const { file, generation } = image.source;
-        const key = `${file}:${generation ?? "unknown"}`;
-        const cached = dimensions.get(key);
-        if (cached) {
-          image.size = cached;
-          return;
-        }
-        if (typeof generation !== "number" || generation > MAX_DIMENSION_READ_BYTES) return;
-        try {
-          const { base64 } = await $.fs.read(file, { as: "bytes" });
-          image.size = pngSize(base64);
-          if (image.size) rememberSize(key, image.size);
-        } catch {
-          // A later redraw may find the file readable; never memoise a failure.
-        }
-      }),
-    );
-
+    let first: Preview | null = null;
+    let count = 0;
+    for (const [index, call] of e.props.calls.entries()) {
+      if (call.tool !== "Read" || call.isRunning || call.isErrored || call.isInterrupted) continue;
+      const key = call.tool_use_id ?? `${e.requestId}:${index}`;
+      const path = readPaths.get(key) ?? (await pathFor($, inputPath(call.input)));
+      if (!first) {
+        first = await fromRead($, call.output, path, key, readJpegCache);
+        if (first) count++;
+      } else if (readPreview(call.output, path, key) || readJpeg(call.output)) {
+        count++;
+      }
+    }
+    const native = await next(e);
+    if (!first) return native;
     const els = $.ui.resolve(e);
     const { Box, Text } = els;
     return (
-      <Box flexDirection="column" rowGap={1} marginTop={1} marginBottom={1}>
-        {imageGallery(kitOf(els, e), result.images, {
-          columns: availableColumns(MAX_COLUMNS, e.viewport?.columns),
-          rows: MAX_ROWS,
-          caption: result.caption,
-        })}
-        {result.others.map((path, index) => (
-          <Text key={`${index}:${path}`} dimColor wrap="wrap">
-            {path}
-          </Text>
-        ))}
+      <Box flexDirection="column">
+        {native}
+        <Box flexDirection="column" marginLeft={2}>
+          {imageGallery(kitOf(els, e), [{ ...first, path: undefined }], {
+            ...thumbnail,
+            columns: Math.min(thumbnail.columns, fullSize(e.viewport).columns),
+          })}
+          {count > 1 ? <Text dimColor>{`+${count - 1} more`}</Text> : null}
+        </Box>
       </Box>
     );
+  });
+
+  on("ui.render", { component: "ToolResult" }, async ($, e, next) => {
+    if (e.surface !== "terminal" || e.props.isErrored) return next(e);
+    const els = $.ui.resolve(e);
+    const kit = kitOf(els, e);
+    if (e.props.tool === "Read") {
+      const key = e.props.tool_use_id;
+      const image = await fromRead($, e.props.output, readPaths.get(key), key, readJpegCache);
+      return image ? imageGallery(kit, [image], fullSize(e.viewport)) : next(e);
+    }
+    if (e.props.tool !== "SendUserFile") return next(e);
+    const native = await next(e);
+    const images: Preview[] = [];
+    for (const [index, image] of attachmentImages(e.props.output).entries()) {
+      const preview = await loadLocal($, image, localCache);
+      if (preview) images.push({ ...preview, key: `${index}:${preview.key}`, path: undefined });
+    }
+    return images.length ? (
+      <els.Box flexDirection="column" rowGap={1}>
+        {native}
+        {imageGallery(kit, images, fullSize(e.viewport))}
+      </els.Box>
+    ) : (
+      native
+    );
+  });
+
+  on("turn.complete", async ($, e, next) => {
+    if (e.agentId || e.reason !== "answer" || !e.answer.includes("](")) return next(e);
+    if (!(await $.session.surfaces()).includes("terminal")) return next(e);
+    let attempts = 0;
+    const cwd = await $.session.cwd();
+    for (const path of imageLinks(e.answer)) {
+      if (++attempts > 8) break;
+      const format = imageFormat(path);
+      if (!format) continue;
+      const image = await loadLocal($, { path: absolute(cwd, path), format }, localCache);
+      if (!image) continue;
+      const id = `reply-${e.turnId}`;
+      remember(placed, id, image, 32);
+      await $.ui.place({ id });
+      break;
+    }
+    return next(e);
+  }).catch(($, e, next) => next(e));
+
+  on("ui.render", { component: "Placed" }, ($, e, next) => {
+    if (e.surface !== "terminal" || e.props.plugin !== "image-preview") return next(e);
+    const image = placed.get(e.props.id);
+    return image ? imageGallery(kitOf($.ui.resolve(e), e), [image], fullSize(e.viewport)) : next(e);
   });
 };

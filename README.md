@@ -70,7 +70,7 @@ More:
 - [claude-compat](https://nickolaj-jepsen.github.io/agents/plugins/claude-compat/): Claude Code habits in pi. (pi)
 - [exa](https://nickolaj-jepsen.github.io/agents/plugins/exa/): `exa_search` and `exa_fetch` tools over Exa. (pi)
 - [lsp](https://nickolaj-jepsen.github.io/agents/plugins/lsp/): Appends language-server errors to `edit` and `write` results. (pi)
-- [image-preview](https://nickolaj-jepsen.github.io/agents/plugins/image-preview/): Show PNG images read by tools directly in the terminal transcript, with their aspect ratio preserved and a clickable file path. (Claude Code)
+- [image-preview](https://nickolaj-jepsen.github.io/agents/plugins/image-preview/): Preview local PNG and JPEG images in the Claude Code terminal transcript. (Claude Code)
 
 In progress, and not ready for anyone else to use:
 

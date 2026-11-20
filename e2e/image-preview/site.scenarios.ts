@@ -101,8 +101,7 @@ export default site({
   plugin: "image-preview",
   demo: [
     {
-      caption:
-        "A Read of a PNG draws the picture under the tool row, fitted to the terminal, with the file's path below it.",
+      caption: "A folded Read group keeps Claude’s summary and adds a compact thumbnail.",
       capture: "kitty",
       project: "growth-report",
       setup,
@@ -127,7 +126,7 @@ export default site({
   stills: {
     read: {
       caption:
-        "The preview keeps the picture's aspect ratio, takes at most 40 columns and 15 rows, and links its path.",
+        "The folded thumbnail preserves the image’s aspect ratio and uses at most 24 columns and 6 rows.",
       capture: "kitty",
       project: "growth-report",
       setup,
