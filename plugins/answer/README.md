@@ -34,13 +34,10 @@ The write-in gets the next letter after the printed choices. Click the write-in
 or **Add a note** to open its editor. **Clear answer** appears below the choices and above the note.
 It removes the answer without clearing the note.
 
-A click in the transcript gives the keyboard back to the prompt, and Claude does
-not give the band the keys from a click. So the band does not open a field the
-prompt would take the typing from: it shows the handoff instead, `Note · Q1 …
-Alt+a, then Enter, writes it`. Press `Alt+a` (or `ctrl+x tab`), then `Enter`.
-Until then the guide says `alt+a for the keys` rather than listing letters it
-cannot hear. The first `Enter` on the prompt while a handoff waits is kept back,
-with your draft left in place. `Fill prompt` also returns the keys to the
+The editor appears above the prompt without taking keyboard focus. Click inside
+its field or press `Alt+a` (or `ctrl+x tab`) to start typing. If you press `Enter`
+in the prompt before focusing the field, the first send is blocked and your draft
+stays in place. `Fill prompt` also returns the keys to the
 prompt, and the guide goes back to saying `alt+a`.
 
 The **Answers** summary below the last question shows how many you’ve answered.

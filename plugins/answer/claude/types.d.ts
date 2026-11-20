@@ -132,8 +132,7 @@ export type Current = {
   reviewCursor?: number;
   reviewFrom?: number;
   /**
-   * A field a transcript press asked for while the band had no keys. The band offers the way in
-   * (`Alt+a`, then Enter) instead of drawing a field the prompt would take the typing from.
+   * A field shown above the prompt that has not received keyboard focus yet.
    */
   pending?: { from: number; field: NonNullable<Editing>; isWarned?: true };
   /** Drawn as the form, not its one row. */

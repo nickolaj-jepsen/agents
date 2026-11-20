@@ -5,14 +5,12 @@ import { offer, hasWork, startLines, step as stepForm, view as viewOf } from "..
 import { fitBody, GAPS, heightOf, keyRows, keysOf, KEY_CELLS, type Gaps } from "./terminal";
 import {
   controlBar,
-  PENDING_FOCUS,
   questionCard,
   reviewCard,
   reviewTarget,
   ROUND_FOCUS,
   terminalReview,
   writeLetter,
-  writePending,
   type RoundActions,
 } from "./transcript";
 import type { Action, Current, Editing, Entry, Held, RoundEditor, View } from "./types.d.ts";
@@ -125,8 +123,8 @@ async function keysHeld($: EngineInterface) {
 }
 
 /**
- * A press in the transcript gives the prompt the keys. A field it would leave behind is put back
- * to the handoff instead, so no ready text field ever waits for keys the prompt has.
+ * A press in the transcript gives the prompt the keys. Keep the field visible but mark it as
+ * waiting for focus again.
  */
 async function pressElsewhere($: EngineInterface, id: string): Promise<boolean> {
   let wasWriting = false;
@@ -143,46 +141,6 @@ async function pressElsewhere($: EngineInterface, id: string): Promise<boolean> 
     };
   });
   return wasWriting;
-}
-
-/** Opens the field a handoff asked for, once the band has proved it holds the keys. */
-async function startPending($: EngineInterface, id: string) {
-  const c = await read($, current);
-  if (c?.transcript !== id || !c.pending) return;
-  const { from, field } = c.pending;
-  let probed: { deny?: string } | undefined;
-  for (let tries = 0; tries < 4; tries++) {
-    probed = await focus($, PENDING_FOCUS);
-    if (!probed?.deny) break;
-    await $.clock.sleep(60);
-  }
-  if (!probed || probed.deny) return;
-  const opened = await update($, current, (was) =>
-    was?.transcript === id && was.pending
-      ? {
-          ...was,
-          writer: { from, surface: "terminal" },
-          editing: field,
-          pending: undefined,
-          hasKeys: true,
-        }
-      : was,
-  );
-  if (!opened?.writer) return;
-  for (let tries = 0; tries < 4; tries++) {
-    const placed = await focus($, keyOf(field));
-    if (!placed?.deny) break;
-    await $.clock.sleep(60);
-  }
-  await revealRound($, id, opened.view.step, "end");
-}
-
-/** Drops a handoff the person did not take. */
-async function cancelPending($: EngineInterface, id: string) {
-  typed = null;
-  await update($, current, (was) =>
-    was?.transcript === id ? { ...was, pending: undefined, editing: null } : was,
-  );
 }
 
 /** The ring's place on what is shown: the answer or the recommendation, or the review's button. */
@@ -618,11 +576,10 @@ async function writeRound(
   from = index,
   isPress = false,
 ) {
-  // A click on a transcript card cannot give the band the keyboard: offer the way in instead
-  // of an Input the prompt would take the typing from.
+  // Show the field without moving the transcript or taking the prompt's keys.
   if (surface === "terminal" && isPress) {
     typed = null;
-    const c = await update($, current, (was) => {
+    await update($, current, (was) => {
       if (was?.transcript !== id || was.writer) return was;
       return {
         ...over(was, stepForm(was.held, { do: "go", step: index })),
@@ -632,7 +589,6 @@ async function writeRound(
         pending: { from, field },
       };
     });
-    if (c?.transcript === id && c.pending) await revealRound($, id, index, "end");
     return;
   }
   const c = await update($, current, (was) => {
@@ -647,19 +603,20 @@ async function writeRound(
     };
   });
   if (surface === "terminal" && c?.transcript === id && c.writer) {
-    // The transcript can draw an Input but cannot give it the keyboard. Keep its
-    // question against the band instead, with a short title even for a tall card.
     await focus($, keyOf(field));
-    await revealRound($, id, index, "end");
   }
 }
 
 async function finishWriting($: EngineInterface, id: string, text?: string) {
-  const surface = (await read($, current))?.writer?.surface;
+  const before = await read($, current);
+  const surface = before?.writer?.surface ?? (before?.pending ? "terminal" : undefined);
   const c = await update($, current, (was) => {
-    if (was?.transcript !== id || !was.writer || !was.editing) return was;
-    const draft = text === undefined ? was.held : stepForm(was.held, { do: was.editing, text });
-    const held = stepForm(draft, { do: "go", step: was.writer.from });
+    if (was?.transcript !== id) return was;
+    const field = was.editing ?? was.pending?.field;
+    const from = was.writer?.from ?? was.pending?.from;
+    if (!field || from === undefined) return was;
+    const draft = text === undefined ? was.held : stepForm(was.held, { do: field, text });
+    const held = stepForm(draft, { do: "go", step: from });
     typed = null;
     return {
       ...over(was, held),
@@ -764,8 +721,7 @@ function roundActions(
   id: string,
   surface: RoundEditor["surface"],
 ): RoundActions {
-  // The terminal's cards live in the transcript: a press there gives the prompt the keys, so a
-  // field is offered as a handoff instead. A click that would leave a field behind only parks it.
+  // A transcript click that takes focus from the editor only parks the field.
   const press = async (run: () => unknown) => {
     if (surface !== "terminal") return run();
     if (await pressElsewhere($, id)) return;
@@ -960,6 +916,7 @@ function writingMode(
             onPress={() => finishWriting($, id, value())}
           />
           <Button plain dimColor key="cancel" label="Cancel" onPress={() => finishWriting($, id)} />
+          {c.pending ? <Text dimColor>{`Click field or ${CHORD}`}</Text> : null}
         </Box>
       </Box>
     );
@@ -1106,7 +1063,7 @@ export const register: Register = (on) => {
         was?.pending ? { ...was, pending: { ...was.pending, isWarned: true } } : was,
       );
       $.ui.toast(
-        "A note is waiting: Alt+a, then Enter, writes it. Send again to send your message.",
+        "An editor is waiting: click its field or press Alt+a. Send again to send your message.",
       );
       return { drop: "The note is still waiting" };
     }
@@ -1214,11 +1171,18 @@ export const register: Register = (on) => {
           return writingMode($, kit, c, $.ui.resolve(e).Input, e.props.maxRows) ?? next(e);
         const id = c.transcript;
         if (c.pending)
-          return writePending(
-            kit,
-            c,
-            () => startPending($, id),
-            () => cancelPending($, id),
+          return (
+            writingMode(
+              $,
+              kit,
+              {
+                ...c,
+                writer: { from: c.pending.from, surface: "terminal" },
+                editing: c.pending.field,
+              },
+              els.Input,
+              e.props.maxRows,
+            ) ?? next(e)
           );
         return controlBar(
           kit,
@@ -1784,6 +1748,22 @@ export const register: Register = (on) => {
     };
     const c =
       e.component === "AbovePrompt" && e.origin.kind === "person" ? await read($, current) : null;
+    if (inBand && c?.pending && e.element === keyOf(c.pending.field)) {
+      const moved = await next(e);
+      if (!moved.deny)
+        await edit($, (was) =>
+          was.transcript === c.transcript && was.pending && e.element === keyOf(was.pending.field)
+            ? {
+                ...was,
+                writer: { from: was.pending.from, surface: "terminal" },
+                editing: was.pending.field,
+                pending: undefined,
+                hasKeys: true,
+              }
+            : was,
+        );
+      return moved;
+    }
     if (c?.transcript && !c.writer && e.element?.startsWith("round-key-"))
       return mark(await next({ ...e, element: ROUND_FOCUS }));
     if (!c?.isOpen || !c.view.item || !e.element) return mark(await next(e));

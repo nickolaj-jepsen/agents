@@ -664,13 +664,12 @@ export function reviewCard(
 }
 
 export const ROUND_FOCUS = "round-current";
-export const PENDING_FOCUS = "write-handoff";
 const binding = (key: string) => `round-key-${key}`;
 const shortcuts = "abcdefghijklmnopqrstuvwxyz";
 
 /**
  * The host sends unmatched printable keys back to the prompt. While the band has the keys, bind
- * every letter so a slip stays there. `press` is what each does; a handoff only keeps them.
+ * every letter so a slip stays there.
  */
 function absorb(kit: Kit, press: (key: string) => unknown) {
   const { Box, Button } = kit;
@@ -679,49 +678,6 @@ function absorb(kit: Kit, press: (key: string) => unknown) {
       {Array.from(shortcuts, (key) => (
         <Button key={binding(key)} plain hotkey={key} label={key} onPress={() => press(key)} />
       ))}
-    </Box>
-  );
-}
-
-/**
- * The field a transcript click asked for, with the way into it. Nothing here takes typing: the
- * keys stay in the prompt until `Alt+a` gives them to the band. A click on this row does not give
- * them (the band takes the keys from the chord or `ctrl+x tab`, not from a press), so it names
- * only the chord.
- */
-export function writePending(
-  kit: Kit,
-  current: Current,
-  onWrite: () => unknown,
-  onCancel: () => unknown,
-) {
-  const { Box, Text, Button } = kit;
-  const pending = current.pending;
-  if (!pending) return null;
-  const item = current.view.item;
-  const field = pending.field === "note" ? "Note" : "Answer";
-  const where = item ? `${field} · ${item.label} ${item.title}` : field;
-  const caption = clamp(where, Math.max(1, kit.columns - 24), {
-    min: 1,
-    max: 1,
-  }).join("");
-  const hint = current.hasKeys ? "Enter writes it" : "Alt+a, then Enter, writes it";
-  return (
-    <Box columnGap={1}>
-      <Button
-        key={PENDING_FOCUS}
-        plain
-        autoFocus
-        label={`write ${field.toLowerCase()}`}
-        onPress={onWrite}
-      >
-        <Text weight="semibold" {...roleProps("accent")}>
-          {caption}
-        </Text>
-        <Text dimColor>{`  ${hint}`}</Text>
-      </Button>
-      <Button key="pending-cancel" plain dimColor label="Cancel" onPress={onCancel} />
-      {absorb(kit, () => undefined)}
     </Box>
   );
 }
