@@ -13,6 +13,8 @@ from pathlib import Path
 from watch import process_identity
 
 SCRIPT = Path(__file__).with_name("watch.py")
+# A watch that should end on an event: long enough that a loaded machine never idles first.
+AWAKE = {"idle": "5", "deadline": "10"}
 
 
 class WatchTests(unittest.TestCase):
@@ -138,31 +140,34 @@ class WatchTests(unittest.TestCase):
         self.assertEqual(output[-1]["reason"], "idle")
 
     def test_stable_report_finishes_watch(self):
-        child = self.monitor()
+        child = self.monitor(**AWAKE)
         (self.worktree / ".handoff-report.md").write_text("DONE\nAcceptance passed.\n")
         code, output = self.result(child)
         self.assertEqual(code, 0)
         self.assertEqual(output[-1]["status"], "DONE")
 
     def test_invalid_report_is_not_done(self):
-        child = self.monitor()
+        child = self.monitor(**AWAKE)
         (self.worktree / ".handoff-report.md").write_text("looks good\n")
         code, output = self.result(child)
         self.assertEqual(code, 2)
         self.assertEqual(output[-1]["reason"], "invalid_report")
 
     def test_changes_reset_idle_but_not_deadline(self):
-        child = self.monitor(idle="0.3", deadline="0.55")
-        for n in range(5):
+        child = self.monitor(idle="1", deadline="1.5")
+        # A change every 0.1s keeps it from idling until the deadline ends it.
+        n = 0
+        while child.poll() is None:
             (self.worktree / "progress").write_text(str(n))
+            n += 1
             time.sleep(0.1)
         code, output = self.result(child)
         self.assertEqual(code, 124)
         self.assertEqual(output[-1]["reason"], "deadline")
 
     def test_finite_live_command_is_not_idle(self):
-        child = self.monitor(idle="0.15")
-        command = self.run_command("import time; time.sleep(.4)")
+        child = self.monitor(idle="1", deadline="10")
+        command = self.run_command("import time; time.sleep(2)", timeout="5")
         self.assertEqual(self.result(command)[0], 0)
         (self.worktree / ".handoff-report.md").write_text("DONE\n")
         code, output = self.result(child)
@@ -175,7 +180,7 @@ class WatchTests(unittest.TestCase):
         self.assertEqual(output[-1]["reason"], "idle")
 
     def test_missing_worktree_wakes(self):
-        child = self.monitor()
+        child = self.monitor(**AWAKE)
         self.git("clean", "-fdq")
         self.worktree.rename(self.root / "moved")
         code, output = self.result(child)
@@ -235,9 +240,10 @@ class WatchTests(unittest.TestCase):
         self.assertFalse((self.state / "commands").exists())
 
     def test_concurrent_commands_have_independent_leases(self):
-        watcher = self.monitor(idle="0.2")
-        one = self.run_command("import time; time.sleep(.2)")
-        two = self.run_command("import time; time.sleep(.5)")
+        watcher = self.monitor(idle="1", deadline="10")
+        one = self.run_command("import time; time.sleep(.5)", timeout="5")
+        # Past one's end by more than idle: only two's own lease keeps the watch awake.
+        two = self.run_command("import time; time.sleep(2.5)", timeout="5")
         self.assertEqual(self.result(one)[0], 0)
         self.assertIsNone(watcher.poll())
         self.assertEqual(self.result(two)[0], 0)
@@ -250,10 +256,10 @@ class WatchTests(unittest.TestCase):
         self.wait_for(self.state / "progress.json")
         first.terminate()
         first.communicate(timeout=3)
-        time.sleep(0.2)
+        # Down for longer than the second watch's idle: only the change keeps it awake.
+        time.sleep(1)
         (self.worktree / "changed").write_text("work continued")
-        second = self.monitor()
-        time.sleep(0.15)
+        second = self.monitor(idle="0.8")
         (self.worktree / ".handoff-report.md").write_text("DONE\n")
         self.assertEqual(self.result(second)[0], 0)
 
@@ -284,7 +290,7 @@ class WatchTests(unittest.TestCase):
     def test_attempt_deadline_caps_command_timeout(self):
         self.state.mkdir()
         (self.state / "attempt.json").write_text(
-            json.dumps({"expires": time.time() + 0.2})
+            json.dumps({"expires": time.time() + 1.5})
         )
         code, output = self.result(
             self.run_command("import time; time.sleep(60)", timeout="60")

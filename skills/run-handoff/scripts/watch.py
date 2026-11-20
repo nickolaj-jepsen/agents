@@ -146,8 +146,13 @@ def watch_locked(args, state):
             emit("missing_worktree", worktree=str(worktree))
             return 2
         report = worktree / ".handoff-report.md"
-        if report.exists() and report.stat().st_mtime >= started:
-            stamp = (report.stat().st_mtime_ns, report.stat().st_size)
+        try:
+            # One stat: a report removed between two calls would raise and end the watch.
+            seen = report.stat()
+        except FileNotFoundError:
+            seen = None
+        if seen is not None and seen.st_mtime >= started:
+            stamp = (seen.st_mtime_ns, seen.st_size)
             # A stable report avoids waking on its first, partly written line.
             if stamp == previous_report:
                 with report.open() as source:
