@@ -169,10 +169,8 @@ function loadPlugins(root: string): Plugin[] {
     : { plugins: [] };
   const listed = new Set(marketplace.plugins.map((p) => p.name));
   return dirs(join(root, "plugins"))
-    .map((name): Plugin => {
+    .flatMap((name): Plugin[] => {
       const dir = join(root, "plugins", name);
-      const file = join(dir, "README.md");
-      const { data, body } = frontmatter(file);
       const pkgFile = join(dir, "package.json");
       const pkg = existsSync(pkgFile)
         ? (JSON.parse(readFileSync(pkgFile, "utf8")) as Record<string, unknown>)
@@ -181,6 +179,10 @@ function loadPlugins(root: string): Plugin[] {
         claude: existsSync(join(dir, ".claude-plugin/plugin.json")),
         pi: "pi" in pkg,
       };
+      // Generated Claude types can leave a directory behind after a plugin is removed.
+      if (!harness.claude && !harness.pi) return [];
+      const file = join(dir, "README.md");
+      const { data, body } = frontmatter(file);
       if (
         !Array.isArray(data.requires ?? []) ||
         typeof data.featured !== "boolean" ||
@@ -194,19 +196,21 @@ function loadPlugins(root: string): Plugin[] {
       if (harness.claude && listed.has(name))
         install.claude = `${MARKETPLACE_ADD} && claude plugin install ${name}@nickolaj-jepsen`;
       if (harness.pi) install.pi = `git clone ${REPO_URL} && pi install ./agents/plugins/${name}`;
-      return {
-        name,
-        tagline: str(file, data, "tagline"),
-        featured: data.featured,
-        requires: (data.requires ?? []).map(String),
-        order: data.order,
-        ...(data.status === "in-progress" ? { status: "in-progress" as const } : {}),
-        harness,
-        install,
-        body: body.trimEnd(),
-        path: `plugins/${name}`,
-        media: readMedia(root, name),
-      };
+      return [
+        {
+          name,
+          tagline: str(file, data, "tagline"),
+          featured: data.featured,
+          requires: (data.requires ?? []).map(String),
+          order: data.order,
+          ...(data.status === "in-progress" ? { status: "in-progress" as const } : {}),
+          harness,
+          install,
+          body: body.trimEnd(),
+          path: `plugins/${name}`,
+          media: readMedia(root, name),
+        },
+      ];
     })
     .sort(
       (a, b) =>
