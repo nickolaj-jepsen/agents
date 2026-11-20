@@ -1,19 +1,49 @@
-# answer/claude/numbered 70x24 @0,13 (70x5)
-──   1 of 2   ○ 1   ○ 2   r: review   ──────────────────────────  [-]
-Should we use a monorepo?
-… more above
-w: ○ ✎ Write your own answer
-h: back   l: next   s: skip   n: note   q: quit
+# answer/claude/numbered 70x24 @0,0 (70x19)
+▎ Yes or no.
+▎
+▎  A ○ Write your own answer
+▎
+▎  Note: Add a note
+
+
+▎   2  Pick a license?
+▎
+▎ MIT or Apache.
+▎
+▎  A ○ Write your own answer
+▎
+▎  Note: Add a note
+
+
+▎  + Review answers  0/2
+
+1/2    alt+a for the keys                                         [-]
 --- styles
-1x2 .x3 2x6 .x3 1x2 3 .x3 1x3 .x3 4 1x8 .x3 1x26 .x2 1x3
-2x25
-1x12
-5 6x27
-4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6
+1 .x68 1
+1 .x68 1
+1 .x2 2x3 . 3x21 .x41 1
+1 .x68 1
+1 .x2 3x5 . 3x10 .x50 1
+1x70
+4x70
+4 . 5x20 .x47 4
+4 .x68 4
+4 .x68 4
+4 .x68 4
+4 .x2 3x3 . 3x21 .x41 4
+4 .x68 4
+4 .x2 3x5 . 3x10 .x50 4
+4x70
+4x70
+4 . 6 7x21 6x45 4
+4x70
+8x6 . 2x5 3x13 .x41 3x3
 --- legend
-1 fg=#999999
-2 bold
-3 fg=#d77757
-4 fg=#b1b9f9
-5 fg=#b1b9f9 inverse
-6 inverse
+1 fg=#d77757
+2 fg=#b1b9f9
+3 fg=#999999
+4 dim
+5 bold
+6 bg=#373737
+7 bg=#373737 bold
+8 fg=#d77757 bold

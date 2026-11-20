@@ -148,6 +148,78 @@ const form = async ($: Engine, surface: Surface = "terminal") => {
   return band($, surface);
 };
 
+test("Desktop cards bind to the rendered block and keep the submitted round visible", async ($, on) => {
+  const w = world(on, "Already typed");
+  let messages: Array<{ role: "assistant"; text: string; toolUses: []; uuid: string }> = [];
+  on("session.messages", () => ({ value: messages }));
+  on("session.surfaces", () => ({ value: ["desktop"] }));
+  await start($, "desktop");
+  messages = [
+    {
+      role: "assistant",
+      text: GRILLING,
+      toolUses: [],
+      uuid: "bc4b6cdd-4ccd-4e7c-92b4-b208e879b0ed",
+    },
+  ];
+  await ends($, GRILLING);
+  const cards = await $.ui.mount({
+    plugin: "answer",
+    surface: "desktop",
+    component: "AssistantMessage",
+    requestId: "block-of-the-assistant-message",
+    props: { text: GRILLING, isFirstOfReply: true },
+  });
+  expect(await cards.find({ type: "Text", text: /Review answers.*0\/3/ })).toBeDefined();
+  expect(await hint($, "desktop")).toBeUndefined();
+  await cards.press({ key: "question-0-choose-1" });
+  expect(await cards.find({ type: "Text", text: /Review answers.*1\/3/ })).toBeDefined();
+  expect(await cards.find({ type: "Text", text: /^Sent$/ })).toBeUndefined();
+  w.refuses = true;
+  await cards.press({ key: "send" });
+  expect(await cards.find({ type: "Text", text: /^Sent$/ })).toBeUndefined();
+  expect(await cards.find({ key: "send" })).toBeDefined();
+  w.refuses = false;
+  await cards.press({ key: "send" });
+  expect(w.submitted).toEqual(["Q1: B"]);
+  expect(w.box).toBe("Already typed");
+  expect(await cards.find({ type: "Text", text: /^Sent$/ })).toBeDefined();
+  expect(await cards.find({ key: "question-0-choose-1" })).toBeUndefined();
+  expect(await cards.find({ type: "Text", text: /Review answers.*1\/3/ })).toBeDefined();
+  await cards.unmount();
+});
+
+test("Terminal cards can match a transcript row when the engine omits its UUID", async ($, on) => {
+  world(on);
+  let messages: Array<{ role: "assistant"; text: string; toolUses: [] }> = [];
+  on("session.messages", () => ({ value: messages }));
+  on("session.surfaces", () => ({ value: ["terminal"] }));
+  on("ui.place", () => ({ value: { isPlaced: false, reason: "no surface in the test" } }));
+  await start($);
+  messages = [{ role: "assistant", text: GRILLING, toolUses: [] }];
+  await ends($, GRILLING);
+  const cards = await $.ui.mount({
+    plugin: "answer",
+    surface: "terminal",
+    component: "AssistantMessage",
+    requestId: "assistant-row",
+    props: { text: GRILLING, isFirstOfReply: true },
+  });
+  expect(await cards.find({ type: "Text", text: /Review answers.*0\/3/ })).toBeDefined();
+  await cards.press({ key: "question-0-choose-1" });
+  expect(await cards.find({ type: "Text", text: /Review answers.*1\/3/ })).toBeDefined();
+
+  // The review only marks what actually entered the prompt as sent.
+  await cards.press({ key: "review-toggle" });
+  await cards.press({ key: "review-action-1" });
+  expect(await cards.find({ type: "Text", text: /✓ Sent/ })).toBeUndefined();
+  await cards.press({ key: "question-0-choose-0" });
+  await $.prompt.submit({ text: "Q1: B", origin: { kind: "composer" }, wait: false });
+  expect(await cards.find({ type: "Text", text: /✓ Sent/ })).toBeDefined();
+  expect(await cards.find({ type: "Text", text: /B: Default by kind\.$/ })).toBeDefined();
+  await cards.unmount();
+});
+
 test("a turn that ends on questions offers the form; the person's next send drops it", async ($, on) => {
   world(on);
   await ends($, GRILLING);

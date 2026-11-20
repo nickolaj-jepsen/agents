@@ -1,0 +1,24 @@
+# answer/claude/cleared 160x45 @0,10 (160x8)
+▎ ❯ Q1  Use SQLite?
+▎
+▎  A ○ SQLite
+▎  B ○ Postgres
+▎  C ○ Write your own answer
+▎
+▎  Note: Keep the hosted instance.
+▎        Rotate its credentials first.
+--- styles
+1 . 2x17 .x76 1
+1 .x94 1
+1 .x2 3x2 4x2 .x88 1
+1 .x2 3x2 4x2 .x88 1
+1 .x2 5x3 . 4x21 .x67 1
+1 .x94 1
+1 .x2 4x5 . 5x25 .x61 1
+1 .x8 5x29 .x57 1
+--- legend
+1 fg=#d77757
+2 fg=#d77757 bold
+3 fg=#b1b9f9 bold
+4 fg=#999999
+5 fg=#b1b9f9

@@ -12,6 +12,12 @@
 
 - **A.** Option A for 3
 - **B.** Option B for 3
+- **C.** Option C for 3
+- **D.** Option D for 3
+- **E.** Option E for 3
+- **F.** Option F for 3
+- **G.** Option G for 3
+- **H.** Option H for 3
 
 **Q4. Question number 4: pick a strategy?**
 

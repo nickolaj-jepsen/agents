@@ -5,7 +5,9 @@ export type Action =
   | { do: "pick" | "toggle"; entry: number }
   | { do: "write" | "note"; text: string }
   | { do: "go"; step: number }
-  | { do: "accept" | "next" | "back" | "forward" | "skip" | "review" };
+  | {
+      do: "accept" | "next" | "back" | "forward" | "skip" | "clear" | "review";
+    };
 
 export type Entry = {
   kind: "option" | "accept" | "write";
@@ -52,7 +54,13 @@ export type View = {
   step: number;
   isReview: boolean;
   item: Item | null;
-  review: { label: string; title: string; shown: string; isAnswered: boolean; note: string }[];
+  review: {
+    label: string;
+    title: string;
+    shown: string;
+    isAnswered: boolean;
+    note: string;
+  }[];
   /** Said last, about the whole round. */
   note: string;
   reply: string;
@@ -78,11 +86,34 @@ export type Held = {
       recommendedOptions?: number[];
     }[];
   };
-  draft: { answers: (Answer | null)[]; notes: string[]; note: string; step: number };
+  draft: {
+    answers: (Answer | null)[];
+    notes: string[];
+    note: string;
+    step: number;
+  };
 };
 
 /** The field being typed in: the shown item's write-in, or a note. */
 export type Editing = "write" | "note" | null;
+
+export type TranscriptRound = {
+  source: string;
+  preamble: string;
+  matchByText?: boolean;
+  /** One anchor per question plus review, or one shared message anchor. */
+  anchors: string[];
+  /** A transcript anchor per review question, then one for the footer. */
+  reviewAnchors?: string[];
+  frozen?: Held;
+  sent?: true;
+};
+
+export type RoundEditor = {
+  from: number;
+  surface: "terminal" | "desktop" | "vscode";
+  composer?: { before: string; cursor: number };
+};
 
 /** The last turn's form, while it can still be answered. */
 export type Current = {
@@ -95,12 +126,30 @@ export type Current = {
   several: boolean | null;
   /** The shown item's body opened whole on a graphical surface; it folds to a line otherwise. */
   isBodyOpen: boolean;
+  /**
+   * Whether the band holds the keyboard on a terminal: true only after a `ui.focus` that moved
+   * the ring into it. A click in the transcript gives the keys back to the prompt and the band
+   * is not told, so the actions that take them say so themselves.
+   */
+  hasKeys?: boolean;
+  /** The terminal review cursor and the question the review opened from. */
+  reviewCursor?: number;
+  reviewFrom?: number;
+  /**
+   * A field a transcript press asked for while the band had no keys. The band offers the way in
+   * (`Alt+a`, then Enter) instead of drawing a field the prompt would take the typing from.
+   */
+  pending?: { from: number; field: NonNullable<Editing>; isWarned?: true };
   /** Drawn as the form, not its one row. */
   isOpen: boolean;
   /** The prompt's text, set aside while the form is open; null with none. */
   stash: string | null;
   /** The reply the last fill put in the prompt, so the next one takes its place. */
   filled: string | null;
+  /** The answers placed in the prompt, which may differ from the latest picks. */
+  filledRound?: Held;
+  transcript?: string;
+  writer?: RoundEditor;
 };
 
 declare module "claude-code" {
@@ -108,7 +157,8 @@ declare module "claude-code" {
     answer: {
       current: Shaped<Current | null>;
       /** The round a send set aside, which `/answer` brings back. */
-      aside: Shaped<Held | null>;
+      aside: Shaped<(Held & { transcript?: string }) | null>;
+      transcript: Shaped<Record<string, TranscriptRound>>;
     };
   }
 }

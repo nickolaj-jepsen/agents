@@ -1,138 +1,131 @@
-import { vscodeScenarios } from "../lib/vscode-scenario.ts";
-import type { VscodeScenario } from "../lib/vscode-scenario.ts";
+import { vscodeScenarios, type VscodeScenario, type VscodeStep } from "../lib/vscode-scenario.ts";
 import { says } from "./fixture.ts";
 
-/** The turn the questions come from, then the model's answer to the reply that is sent. */
 const asks = (fixture: string): VscodeScenario["start"] => ({
+  plugins: ["answer"],
   turns: [...says(fixture), { text: "Thanks, going with that." }],
 });
 
-/** The turn, and the offer it leaves above the prompt. */
-const ASKED = (words: RegExp | string) => [
+const asked: VscodeStep[] = [
   { type: "ask" },
   { press: "Enter" },
-  { wait: words, timeout: 30_000 },
-];
-
-/** A click on the offer's button opens the form; the pointer then leaves, so no button shows its hover. */
-const OPEN = (first: string, way = "Answer") => [
-  { click: way },
-  { wait: first },
-  { hover: "From the answer plugin" },
+  { wait: "Review answers", timeout: 30_000 },
 ];
 
 export default vscodeScenarios({
   plugin: "answer",
   harness: "vscode",
   scenarios: {
-    offer: {
-      about: "a turn that asked three questions: the status band above the prompt",
-      start: asks("details"),
-      steps: ASKED("Answer 3 questions"),
-    },
     form: {
-      about: "the form on a single-choice question whose options carry detail text",
+      about: "expanded question cards and live review in the transcript",
       start: asks("details"),
-      steps: [...ASKED("Answer 3 questions"), ...OPEN("Which database")],
+      steps: [...asked, { hover: "Which database should the journal use?" }],
     },
     chosen: {
       from: "form",
-      about: "an option chosen: its row opens in place, its detail whole, a note's field and Next",
-      // An option is pressed by the Button of its letter; the field's words are its placeholder.
-      steps: [{ click: "B" }, { sleep: 1000 }],
+      about: "a selected option keeps its detail and updates the live review",
+      steps: [{ click: "B" }, { wait: /Review answers\s+1\/3/ }],
     },
     several: {
       from: "form",
-      about: "a multi-choice question: two options taken, both filled, Next on the action row",
+      about: "more than one option can be chosen in the same question",
       steps: [
-        { click: "Q2" },
-        { wait: "Which checks" },
         { click: "Pick several" },
         { click: "A" },
         { click: "C" },
+        { wait: /Picked\s+A, C: SQLite; Flat files/ },
       ],
     },
     write: {
       from: "form",
-      about: "write your own: a click lands in the field, and an answer is being typed",
+      about: "a write-in answer uses the native input inside its card",
       steps: [
-        // The field is always drawn, so a real click puts the keys in it; nothing else focuses it.
+        { click: "Write answer" },
         { click: "Write your own answer" },
-        { type: "Something between the two, generated from the schema, and kept in sync." },
+        { type: "Use the existing schema." },
+        { click: "Save" },
+        { wait: "Answer: Use the existing schema." },
       ],
     },
     note: {
-      from: "form",
-      about: "a chosen answer with a note: kept with Enter, which goes on, then back to it",
+      from: "chosen",
+      about: "a short note is edited and saved inside its card",
       steps: [
-        { click: "B" },
-        { sleep: 1000 },
-        { click: "Add a note" },
-        { type: "Only if the team already runs one." },
-        { press: "Enter" },
-        { wait: "Which checks" },
-        { click: "Q1" },
-        { wait: "Which database" },
+        { click: "Write note" },
+        { click: "Add a condition or follow-up" },
+        { type: "Use the managed instance." },
+        { click: "Save" },
+        { wait: "Edit note for Q1" },
+      ],
+    },
+    "longer-note": {
+      from: "note",
+      about: "the composer saves a multiline note and restores its original draft",
+      steps: [
+        { click: "Message input" },
+        { type: "Draft to keep." },
+        { click: "Edit note for Q1" },
+        { click: "Write longer note" },
+        { wait: "Save note" },
+        { click: "Message input" },
+        { press: "End" },
+        { press: "Shift+Enter" },
+        { type: "Rotate the credentials first." },
+        { click: "Save note" },
+        { wait: /Use the managed instance\.\s+Rotate the credentials first\./ },
+        {
+          run: async (s) => {
+            const draft = await s.evalInView<string>(
+              "document.querySelector('[aria-label=\"Message input\"]')?.innerText",
+            );
+            if (draft !== "Draft to keep.")
+              throw new Error(`Composer draft was ${JSON.stringify(draft)}`);
+          },
+        },
       ],
     },
     "long-body": {
-      about: "a question whose body runs to thirty lines",
+      about: "the full question body is in the transcript",
       start: asks("long-body"),
-      steps: [...ASKED("Answer 1 question"), ...OPEN("Keep the journal")],
-    },
-    "long-body-open": {
-      from: "long-body",
-      about: "the long body opened whole in its well",
-      steps: [{ click: "More" }, { wait: "Line 30" }],
+      steps: [...asked, { wait: "Line 30" }],
     },
     "long-option": {
-      about: "options whose text is far longer than a button",
+      about: "long option text can wrap beside its selection button",
       start: asks("long-option"),
-      steps: [...ASKED("Answer 1 question"), ...OPEN("Which one")],
-    },
-    "long-option-chosen": {
-      from: "long-option",
-      about: "the long option chosen: its words whole in the well",
-      steps: [{ click: "A" }, { sleep: 1000 }],
+      steps: asked,
     },
     many: {
-      about: "twelve questions: the tabs wrap under one another",
+      about: "the transcript can hold twelve expanded questions",
       start: asks("many"),
-      steps: [...ASKED("Answer 12 questions"), ...OPEN("Question number 1")],
+      steps: [...asked, { wait: "Question number 12" }],
     },
     picks: {
-      about: "a pick list: each item routed by a Button of its own words",
+      about: "a numbered list still opens from its offer above the prompt",
       start: asks("picks"),
-      steps: [...ASKED("Pick from 2 items"), ...OPEN("default bar", "Pick")],
+      steps: [
+        { type: "ask" },
+        { press: "Enter" },
+        { wait: "Pick from 2 items" },
+        { click: "Pick" },
+        { wait: "default bar" },
+      ],
     },
     recommended: {
-      about: "a question with no options, only a recommendation: one Yes row and the write-in",
+      about: "a recommendation without multiple-choice options can still be accepted",
       start: asks("recommended"),
-      steps: [
-        ...ASKED("Answer 3 questions"),
-        ...OPEN("same bar"),
-        { click: "Q2" },
-        { wait: "per-generator" },
-      ],
-    },
-    review: {
-      from: "form",
-      about: "the review: two answered, one not, and the reply",
-      steps: [
-        { click: "A" },
-        { sleep: 1000 },
-        { click: "Next" },
-        { wait: "Which checks" },
-        { click: "A" },
-        { sleep: 1000 },
-        { click: "Review" },
-        { wait: "Not answered" },
-      ],
+      steps: [...asked, { wait: "per-generator" }],
     },
     sent: {
-      from: "review",
-      about: "after Send: the reply is the person's message and the form is gone",
-      steps: [{ click: "Send" }, { wait: "Thanks, going with that.", timeout: 30_000 }],
+      from: "longer-note",
+      about: "send a partial reply and keep the original questions and draft",
+      steps: [
+        { click: "Send reply" },
+        { wait: "Thanks, going with that.", timeout: 30_000 },
+        { wait: "Which database should the journal use?" },
+        { wait: "Sent" },
+        { wait: "Send reply", gone: true },
+        { wait: "Draft to keep." },
+      ],
     },
   },
 });

@@ -1,28 +1,58 @@
-# answer/claude/long-title 112x32 @0,16 (112x10)
-jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the      [-]
-lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick
-brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps
-over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog
-the quick brown fox jumps over the lazy dog the quick brown fox jumps over the lazy dog?
-a: ○ Yes
-b: ○ No
-w: ○ ✎ Write your own answer
-h: back   l: next   s: skip   n: note   m: several   q: quit
-↑ 13 more
+# answer/claude/long-title 112x32 @0,2 (112x25)
+▎ ❯ Q1  Why this matters: the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
+▎   jumps over the lazy dog?
+▎
+▎  A ○ Yes
+▎  B ○ No
+Q1/1   alt+a for the keys                                                                                   [-]
 --- styles
-1x103 .x5 2x3
-1x107
-1x104
-1x106
-1x88
-3 4x7
-5
-5 2x27
-5 2x6 .x3 5 2x6 .x3 5 2x6 .x3 5 2x6 .x3 5 2x9 .x3 5 2x6
-2x9
+1 . 1x2 2x86 .x5 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x88 .x3 1
+1 .x3 2x24 .x67 1
+1 .x94 1
+1 .x2 3x2 4x2 .x88 1
+1 .x2 3x2 4x2 .x88 1
+2x6 . 5x5 4x13 .x83 4x3
 --- legend
-1 bold
-2 fg=#999999
-3 fg=#b1b9f9 inverse
-4 inverse
+1 fg=#d77757
+2 fg=#d77757 bold
+3 fg=#b1b9f9 bold
+4 fg=#999999
 5 fg=#b1b9f9

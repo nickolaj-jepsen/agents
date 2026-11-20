@@ -1,72 +1,75 @@
 ---
-tagline: "A form for the round of questions or numbered pick list a turn ended on, which writes your reply into the prompt and keeps your answers when a send sets it aside."
+tagline: "Answer a round of questions in the chat, add notes, and send the answers you have."
 featured: true
 requires: []
 order: 4
 ---
 
-- A row above the prompt offers the form when a turn ends on questions; `/answer`
-  or a click opens it.
-- One question per screen. Each option is keyed by the letter the message gave it
-  (`a`, `b`, `c`), plus a last entry to write your own (`w`); a pick list's rows are
-  numbered instead. The back key is `h`, so an option H is reached by the ring or a
-  click.
-- Its letter, `Enter` or a click takes an answer, and the form goes on to the next
-  question; the last one lands on the review. A note is `n`, or a click on `add a note`
-  under the answer.
-- `y` takes the recommendation (`y: take B`); `m` picks several options (`Q3: A, C`).
-- `h` / `l` / `s` / `r`: back, next, skip, review. `↑` / `↓` / `Tab` move between answers.
-- The review lists each question with its answer, and the reply below it. `fill the
-  prompt` writes the reply into the prompt, above any draft, for you to send. `s`
-  sends it at once as your message, and leaves your draft where it was. A send that
-  fails keeps the answers in the form.
-- Every row, key and button takes a click, so the mouse alone works.
-- In the desktop app and VS Code the form is drawn with the host's own controls, not
-  the terminal's rows. The offer is a status line with an `Answer` button. The form's
-  top line has a tab per question (`✓ Q1` once answered) and the review, the current
-  one filled, and `Close`. Under the question and the first line of its body (`More`
-  opens the rest), each option is one line: a button of its letter, its words and its
-  detail beside it, so three options, the write-in and the keys fit the band. The last
-  row is a field to write your own answer; a click lands in it and Enter keeps it. A
-  chosen option opens in place: its words whole, a field for a note, and `Next`
-  (`Review` on the last one). `Skip`, `Pick several`, `Add note` and, for a
-  recommendation of several options, `Take A, B, C` are quiet buttons at the foot. The
-  review lists each answer beside its question, a field for a note on the whole round,
-  and `Send`, filled once something is answered, with `Fill the prompt` beside it.
-- Answers last the session: a turn a background task starts keeps them, your own
-  send sets the round aside, and sending the reply itself just closes it. A round set
-  aside comes back with `/answer`, answers and all (pi: `alt+a` or `/answer`).
-- pi has the same form from the same parser (`core/forms.ts`), as its own pi package
-  (`pi/`). It takes the same keys, and the form stands as tall as its tallest question,
-  so stepping moves nothing.
-- In pi the form is a widget above the prompt, which stays shown. `alt+a` or a click on
-  the form gives it the keys, and a click on the prompt gives them back; `Esc` closes
-  it. Closed, it is one row, `Answer 4 questions · alt+a or /answer`, which a click
-  opens; the question stops in the form's top border are clickable too.
+When Claude ends a turn with numbered questions, each gets a card in the
+transcript. Picking an option leaves that card active so you can add a note.
 
-An open form takes the band above the prompt to itself; the other plugins' rows come back
-when it closes.
+The review follows the last question and updates as you answer. **Fill prompt**
+puts the reply above any text you've already typed. **Send reply** sends the
+answers you have and keeps your prompt draft. You can leave questions unanswered.
 
-## Keys
+If you send a different message, `/answer` brings back the round and its draft.
+A submitted round stays visible in the current chat with its saved answers
+and a **Sent** marker.
 
-In `~/.claude/keybindings.json` (a mod can't take the keyboard itself):
+## Claude Code Terminal
+
+In fullscreen, run `/answer` to show the active card, marked with `❯`. Click a
+choice, or press `Alt+a` to give the key guide the keys and use shortcuts. The
+classic renderer uses the guided form.
+
+| Key      | Action                                                                        |
+| -------- | ----------------------------------------------------------------------------- |
+| Letter   | Pick a choice or open its write-in field                                      |
+| `j`, `k` | Move to the next or previous card                                             |
+| `n`      | Write or edit a note                                                          |
+| `r`      | Open review or go back to the question                                        |
+| `Enter`  | In review, open the highlighted question or use the highlighted footer action |
+
+The write-in gets the next letter after the printed choices. Click the write-in
+or **Add a note** to ask for its editor. **Pick several** lets you select more
+than one choice. **Clear** removes the answer without clearing its note.
+
+A click in the transcript gives the keyboard back to the prompt, and Claude does
+not give the band the keys from a click. So the band does not open a field the
+prompt would take the typing from: it shows the handoff instead, `Note · Q1 …
+Alt+a, then Enter, writes it`. Press `Alt+a` (or `ctrl+x tab`), then `Enter`.
+Until then the guide says `alt+a for the keys` rather than listing letters it
+cannot hear. The first `Enter` on the prompt while a handoff waits is kept back,
+with your draft left in place. `Fill prompt` also returns the keys to the
+prompt, and the guide goes back to saying `alt+a`.
+
+Click **Review answers** after the last question, or press `r`. In review,
+`j` and `k` move through the questions and then the reply actions at the bottom.
+Click a question row or press `Enter` on it to edit it on its card. Reopening
+review takes you back to that row.
+
+The editor sits above the prompt and keeps the question in view. After the
+guide has the keys, typed keys and pasted text reach the field. `Shift+Enter`
+adds a line and `Enter` saves. Saving or cancelling leaves your prompt draft
+alone.
+
+Bind `Alt+a` in `~/.claude/keybindings.json` to give the control bar the keys.
+The built-in `ctrl+x tab` focuses the band too, and needs no binding.
 
 ```json
 {
-  "bindings": [
-    { "context": "Chat", "bindings": { "alt+a": "abovePrompt:focus" } },
-    {
-      "context": "AbovePrompt",
-      "bindings": { "j": "abovePrompt:next", "k": "abovePrompt:previous" }
-    },
-    {
-      "context": "AbovePromptInput",
-      "bindings": { "escape": "abovePrompt:previous" }
-    }
-  ]
+  "bindings": [{ "context": "Chat", "bindings": { "alt+a": "abovePrompt:focus" } }]
 }
 ```
 
-- `alt+a` lands on the offer row, and `Enter` opens the form.
-- `Esc` in a field steps back onto the form instead of out to the prompt.
-- A mod can't bind `Esc` or `←` / `→` to close the form or change question; `q`, `h` and `l` do.
+## VS Code and Desktop
+
+Use the controls on the transcript cards and scroll between questions. In
+VS Code, **Write longer note** uses the main composer for multiline notes.
+**Save note** or **Cancel note** returns any text you already had in the composer.
+
+## Numbered pick lists and pi
+
+Numbered pick lists in Claude and question rounds in pi use the guided form
+above the prompt. Open it with `/answer` or click its offer. In pi, `Alt+a`
+focuses the form and `Esc` closes it.

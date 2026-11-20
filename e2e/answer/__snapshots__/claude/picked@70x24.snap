@@ -1,22 +1,46 @@
-# answer/claude/picked 70x24 @0,12 (70x6)
-──   2 of 2   ✓ Q1   ○ Q2   r: review   ────────────────────────  [-]
-Add caching?
-a: ○ Yes
-b: ○ No
-w: ○ ✎ Write your own answer
-h: back   l: next   s: skip   n: note   m: several   q: quit
+# answer/claude/picked 70x24 @0,2 (70x17)
+▎ ❯ Q1  Use SQLite? ✓
+▎
+▎  A ○ SQLite
+▎  B ● Postgres
+▎  C ○ Write your own answer
+▎
+▎  Note: Add a note
+▎
+▎  Pick several  Clear
+
+
+▎   Q2  Add caching?
+▎
+▎  A ○ Yes
+▎  B ○ No
+▎  C ○ Write your own answer
+Q1/2   jk move A–B pick C write  n note  r review keys here       [-]
 --- styles
-1x2 .x3 2x6 .x3 3x2 1x2 .x3 1x2 4x2 .x3 5 1x8 .x3 1x24 .x2 1x3
-2x12
-6 7x7
-5
-5 1x27
-5 1x6 .x3 5 1x6 .x3 5 1x6 .x3 5 1x6 .x3 5 1x9 .x3 5 1x6
+1 . 2x17 3x2 .x48 1
+1 .x68 1
+1 .x2 3x2 4x2 .x62 1
+1 .x2 3x4 5x8 .x54 1
+1 .x2 6x3 . 4x21 .x41 1
+1 .x68 1
+1 .x2 4x5 . 4x10 .x50 1
+1 .x68 1
+1 .x2 4x12 .x2 4x5 .x47 1
+1x70
+7x70
+7 . 5x18 .x49 7
+7 .x68 7
+7 .x2 8x2 4x2 .x62 7
+7 .x2 8x2 4x2 .x62 7
+7 .x2 4x3 . 4x21 .x41 7
+9x6 . 6x2 4x5 . 6x3 4x5 . 6 4x6 .x2 6 4x5 .x2 6 4x7 . 4x9 .x7 4x3
 --- legend
-1 fg=#999999
-2 bold
-3 fg=#4eba65
-4 fg=#d77757
-5 fg=#b1b9f9
-6 fg=#b1b9f9 inverse
-7 inverse
+1 fg=#d77757
+2 fg=#d77757 bold
+3 fg=#b1b9f9 bold
+4 fg=#999999
+5 bold
+6 fg=#b1b9f9
+7 dim
+8 fg=#999999 bold
+9 fg=#d77757 bold inverse

@@ -42,7 +42,7 @@ export type Action =
   | { do: "pick" | "toggle"; entry: number }
   | { do: "write" | "note"; text: string }
   | { do: "go"; step: number }
-  | { do: "accept" | "next" | "back" | "forward" | "skip" | "review" };
+  | { do: "accept" | "next" | "back" | "forward" | "skip" | "clear" | "review" };
 
 export type EntryKind = "option" | "accept" | "write";
 
@@ -531,6 +531,8 @@ export function apply(form: Form, draft: Draft, action: Action): Draft {
       return go(form, draft, step + 1);
     case "skip":
       return go(form, clear(form, draft), step + 1);
+    case "clear":
+      return clear(form, draft);
     case "review":
       return go(form, draft, form.items.length);
     default:

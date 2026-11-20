@@ -1,19 +1,41 @@
-# answer/claude/many-review 70x24 @0,12 (70x6)
-Q11 Question number 11: pick a strategy?  → skipped               [-]
-Q12 Question number 12: pick a strategy?  → skipped
-Not answered: Q9, Q10, Q11, Q12. Its row goes back to it.
-[ fill the prompt ]
-h: back   n: note   s: send   q: quit
-↑ 12 more
+# answer/claude/many-review 70x24 @0,3 (70x16)
+▎    Q5   Question number 5: pick a strategy?  Unanswered
+▎    Q6   Question number 6: pick a strategy?  Unanswered
+▎    Q7   Question number 7: pick a strategy?  Unanswered
+▎    Q8   Question number 8: pick a strategy?  Unanswered
+
+
+▎    Q9   Question number 9: pick a strategy?  Unanswered
+▎    Q10  Question number 10: pick a strategy?  Unanswered
+▎    Q11  Question number 11: pick a strategy?  Unanswered
+▎    Q12  Question number 12: pick a strategy?  Unanswered
+
+
+▎
+▎    Add round note  ❯ Fill prompt    Send reply
+
+Review  1/12 answered jk move enter fill r back keys here         [-]
 --- styles
-.x40 1x11 .x15 1x3
-.x40 1x11
-2x57
-3x19
-4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6
-1x9
+1 .x2 2x7 .x35 2x12 .x12 1
+1 .x2 2x7 .x35 2x12 .x12 1
+1 .x2 2x7 .x35 2x12 .x12 1
+1 .x2 2x7 .x35 2x12 .x12 1
+1x70
+1x70
+1 .x2 2x7 .x35 2x12 .x12 1
+1 .x2 2x7 .x36 2x12 .x11 1
+1 .x2 2x7 .x36 2x12 .x11 1
+1 .x2 2x7 .x36 2x12 .x11 1
+1x70
+1x70
+1 .x68 1
+1 .x2 2x16 .x2 3x13 .x2 2x12 .x21 1
+1x70
+3x21 . 4x2 2x5 . 5x5 6x5 . 4 2x5 . 2x9 .x9 2x3
 --- legend
-1 fg=#999999
-2 fg=#ffc107
-3 fg=#b1b9f9 bold inverse
+1 dim
+2 fg=#999999
+3 fg=#d77757 bold
 4 fg=#b1b9f9
+5 fg=#b1b9f9 inverse
+6 fg=#999999 inverse

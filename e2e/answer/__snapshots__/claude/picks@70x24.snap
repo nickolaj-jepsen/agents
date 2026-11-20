@@ -1,21 +1,29 @@
-# answer/claude/picks 70x24 @0,12 (70x6)
-… more above                                                      [-]
+# answer/claude/picks 70x24 @0,12 (70x9)
+──   1 of 2   ○ 1   ○ 2   r: review   ──────────────────────────  [-]
+The default bar cuts the ideas you act on
+… more above
 1: ○ Build it (recommended)
 w: ○ ✎ Something else
 Recommended: build it
 h: back   l: next   y: take build   s: skip   n: note   q: quit
-↑ 2 more
+
+──────────────────────────────────────────────────────────────────────
 --- styles
-1x12 .x54 1x3
-2 3x12 4x14
-5 1x20
-6x12
-5 1x6 .x3 5 1x6 .x3 5 .x15 5 1x6 .x3 5 1x6 .x3 5 1x6
-1x8
+1x2 .x3 2x6 .x3 1x2 3 .x3 1x3 .x3 4 1x8 .x3 1x26 .x2 1x3
+2x41
+1x12
+5 6x12 7x14
+4 1x20
+2x12
+4 1x6 .x3 4 1x6 .x3 4 .x15 4 1x6 .x3 4 1x6 .x3 4 1x6
+-
+8x70
 --- legend
 1 fg=#999999
-2 fg=#b1b9f9 inverse
-3 inverse
-4 fg=#999999 inverse
-5 fg=#b1b9f9
-6 bold
+2 bold
+3 fg=#d77757
+4 fg=#b1b9f9
+5 fg=#b1b9f9 inverse
+6 inverse
+7 fg=#999999 inverse
+8 fg=#888888

@@ -1,39 +1,101 @@
-# answer/claude/long-option 240x60 @0,39 (240x15)
-──   1 of 1   ○ Q1   r: review   ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
+# answer/claude/long-option 240x60 @0,10 (240x45)
+▎ ❯ Q1  Which one?
+▎
+▎  A ○ a very long option text that keeps going and going a very long option text that keeps
+▎      going and going a very long option text that keeps going and going a very long option
+▎      text that keeps going and going a very long option text that keeps going and going a
+▎      very long option text that keeps going and going a very long option text that keeps
+▎      going and going a very long option text that keeps going and going a very long option
+▎      text that keeps going and going a very long option text that keeps going and going a
+▎      very long option text that keeps going and going a very long option text that keeps
+▎      going and going
+▎  B ○ Short
+▎      a very long option text that keeps going and going a very long option text that keeps
+▎      going and going a very long option text that keeps going and going a very long option
+▎      text that keeps going and going a very long option text that keeps going and going a
+▎      very long option text that keeps going and going a very long option text that keeps
+▎      going and going a very long option text that keeps going and going a very long option
+▎      text that keeps going and going a very long option text that keeps going and going a
+▎      very long option text that keeps going and going a very long option text that keeps
+▎      going and going
+▎  C ○ Write your own answer
+▎
+▎  Note: Add a note
+▎
+▎  Pick several
 
-Which one?
 
-a: ○ a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text
-that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a
-very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going
-b: ○ Short
-   a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that
-keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going a very
-long option text that keeps going and going a very long option text that keeps going and going a very long option text that keeps going and going
-w: ○ ✎ Write your own answer
+▎  + Review answers  0/1
 
 
-h: back   l: next   s: skip   n: note   m: several   q: quit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Q1/1   alt+a for the keys                                                                                                                                                                                                                   [-]
 --- styles
-1x2 .x3 2x6 .x3 1x2 3x2 .x3 4 1x8 .x3 1x201 .x2 1x3
+1 . 2x16 .x77 1
+1 .x94 1
+1 .x2 3x2 4 .x89 1
+1 .x94 1
+1 .x94 1
+1 .x94 1
+1 .x94 1
+1 .x94 1
+1 .x94 1
+1 .x94 1
+1 .x2 5x2 4x2 .x88 1
+1 .x6 6x86 .x2 1
+1 .x6 6x86 .x2 1
+1 .x6 6x85 .x3 1
+1 .x6 6x84 .x4 1
+1 .x6 6x86 .x2 1
+1 .x6 6x85 .x3 1
+1 .x6 6x84 .x4 1
+1 .x6 6x15 .x73 1
+1 .x2 3x3 . 4x21 .x67 1
+1 .x94 1
+1 .x2 4x5 . 4x10 .x76 1
+1 .x94 1
+1 .x2 4x12 .x80 1
+1x96
+6x96
+6 . 7 8x21 7x71 6
+6x96
 -
-2x10
--
-5 6x232
-6x233
-6x150
-4
-1x235
-1x233
-1x145
-4 1x27
 -
 -
-4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x9 .x3 4 1x6
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+2x6 . 3x5 4x13 .x211 4x3
 --- legend
-1 fg=#999999
-2 bold
-3 fg=#d77757
-4 fg=#b1b9f9
-5 fg=#b1b9f9 inverse
-6 inverse
+1 fg=#d77757
+2 fg=#d77757 bold
+3 fg=#b1b9f9
+4 fg=#999999
+5 fg=#b1b9f9 bold
+6 dim
+7 bg=#373737
+8 bg=#373737 bold

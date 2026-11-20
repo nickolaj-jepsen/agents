@@ -1,8 +1,17 @@
-# answer/claude/fill-click 160x45 @0,40 (160x2)
-❯ Q1: A
-  Q2: B
+# answer/claude/fill-click 160x45 @0,38 (160x6)
+❯ Q1: B
+      Note: Keep the hosted instance.
+            Rotate its credentials first.
+
+  draft to keep
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
 -
-.x7 1
+-
+-
+-
+.x15 1
+2x160
 --- legend
 1 inverse
+2 fg=#888888

@@ -1,18 +1,46 @@
-# answer/claude/several 70x24 @0,13 (70x5)
-──   Review   ✓ Q1   r: review   ───────────────────────────────  [-]
-1: Q1 Which checks should run?  → A, B, C: lint; types; tests
-[ fill the prompt ]
-The reply: yes
-h: back   n: note   s: send   q: quit
+# answer/claude/several 70x24 @0,2 (70x17)
+▎ ❯ Q1  Use SQLite? ✓
+▎
+▎  A ■ SQLite
+▎  B ■ Postgres
+▎  C ○ Write your own answer
+▎
+▎  Note: Add a note
+▎
+▎  Pick one  Clear
+
+
+▎   Q2  Add caching?
+▎
+▎  A ○ Yes
+▎  B ○ No
+▎  C ○ Write your own answer
+Q1/2   jk move A–B pick C write  n note  r review keys here       [-]
 --- styles
-1x2 .x3 2x6 .x3 3x2 1x2 .x3 4 .x11 1x31 .x2 1x3
-4
-5x19
-1x14
-4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6
+1 . 2x17 3x2 .x48 1
+1 .x68 1
+1 .x2 3x4 4x6 .x56 1
+1 .x2 3x4 4x8 .x54 1
+1 .x2 5x3 . 6x21 .x41 1
+1 .x68 1
+1 .x2 6x5 . 6x10 .x50 1
+1 .x68 1
+1 .x2 6x8 .x2 6x5 .x51 1
+1x70
+7x70
+7 . 4x18 .x49 7
+7 .x68 7
+7 .x2 8x2 6x2 .x62 7
+7 .x2 8x2 6x2 .x62 7
+7 .x2 6x3 . 6x21 .x41 7
+9x6 . 5x2 6x5 . 5x3 6x5 . 5 6x6 .x2 5 6x5 .x2 5 6x7 . 6x9 .x7 6x3
 --- legend
-1 fg=#999999
-2 bold
-3 fg=#4eba65
-4 fg=#b1b9f9
-5 fg=#b1b9f9 bold inverse
+1 fg=#d77757
+2 fg=#d77757 bold
+3 fg=#b1b9f9 bold
+4 bold
+5 fg=#b1b9f9
+6 fg=#999999
+7 dim
+8 fg=#999999 bold
+9 fg=#d77757 bold inverse

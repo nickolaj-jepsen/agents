@@ -1,19 +1,52 @@
-# answer/claude/table-code 70x24 @0,12 (70x6)
-… more above                                                      [-]
-a: ○ SQLite
-b: ○ Postgres
-w: ○ ✎ Write your own answer
-h: back   l: next   s: skip   n: note   m: several   q: quit
-↑ 2 more
+# answer/claude/table-code 70x24 @0,0 (70x19)
+▎ ├──────────┼─────────┼────────────────┤
+▎ │ Postgres │ •••     │ needs a server │
+▎ └──────────┴─────────┴────────────────┘
+▎
+▎ const db = open("app.db");
+▎ await db.exec("select 1");
+▎
+▎  A ○ SQLite
+▎  B ○ Postgres
+▎  C ○ Write your own answer
+▎
+▎  Note: Add a note
+▎
+▎  Pick several
+
+
+▎  + Review answers  0/1
+
+Q1/1   alt+a for the keys                                         [-]
 --- styles
-1x12 .x54 1x3
-2 3x10
-4
-4 1x27
-4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x6 .x3 4 1x9 .x3 4 1x6
-1x8
+1 .x68 1
+1 .x68 1
+1 .x68 1
+1 .x68 1
+1 . 2x5 .x6 3x4 . 4x8 .x43 1
+1 . 2x5 .x4 3x4 . 4x10 .x43 1
+1 .x68 1
+1 .x2 5x2 6x2 .x62 1
+1 .x2 5x2 6x2 .x62 1
+1 .x2 7x3 . 6x21 .x41 1
+1 .x68 1
+1 .x2 6x5 . 6x10 .x50 1
+1 .x68 1
+1 .x2 6x12 .x54 1
+1x70
+8x70
+8 . 9 ax21 9x45 8
+8x70
+bx6 . 7x5 6x13 .x41 6x3
 --- legend
-1 fg=#999999
-2 fg=#b1b9f9 inverse
-3 inverse
-4 fg=#b1b9f9
+1 fg=#d77757
+2 fg=p4
+3 fg=p3
+4 fg=p1
+5 fg=#b1b9f9 bold
+6 fg=#999999
+7 fg=#b1b9f9
+8 dim
+9 bg=#373737
+a bg=#373737 bold
+b fg=#d77757 bold

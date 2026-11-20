@@ -1,20 +1,34 @@
-# answer/claude/note-kept 70x24 @0,12 (70x6)
-a: ● SQLite                                                       [-]
-   ╰▸ keep the flag
-b: ○ Postgres
-w: ○ ✎ Write your own answer
-h: back   l: next   s: skip   n: note   m: several   q: quit
-↑ 2 more
+# answer/claude/note-kept 70x24 @0,7 (70x12)
+▎ ❯ Q1  Use SQLite? ✓
+▎
+▎  A ○ SQLite
+▎  B ● Postgres
+▎  C ○ Write your own answer
+▎
+▎  Note: Keep the hosted instance.
+▎        Rotate its credentials first.
+▎
+▎  Pick several  Clear
+
+Q1/2   jk move A–B pick C write  n note  r review keys here       [-]
 --- styles
-1 2x10 .x55 3x3
-.x3 3x3 4x13
-5
-5 3x27
-5 3x6 .x3 5 .x9 5 3x6 .x3 5 3x6 .x3 5 3x9 .x3 5 3x6
-3x8
+1 . 2x17 3x2 .x48 1
+1 .x68 1
+1 .x2 3x2 4x2 .x62 1
+1 .x2 3x4 5x8 .x54 1
+1 .x2 6x3 . 4x21 .x41 1
+1 .x68 1
+1 .x2 4x5 . 6x25 .x35 1
+1 .x8 6x29 .x31 1
+1 .x68 1
+1 .x2 4x12 .x2 4x5 .x47 1
+1x70
+7x6 . 6x2 4x5 . 6x3 4x5 . 6 4x6 .x2 6 4x5 .x2 6 4x7 . 4x9 .x7 4x3
 --- legend
-1 fg=#b1b9f9 inverse
-2 inverse
-3 fg=#999999
-4 fg=#b1b9f9 italic
-5 fg=#b1b9f9
+1 fg=#d77757
+2 fg=#d77757 bold
+3 fg=#b1b9f9 bold
+4 fg=#999999
+5 bold
+6 fg=#b1b9f9
+7 fg=#d77757 bold inverse
