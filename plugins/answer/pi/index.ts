@@ -268,6 +268,7 @@ export default function (pi: ExtensionAPI) {
           ? {
               round,
               active: held?.anchor === id,
+              terminalRows: tui.terminal.rows,
               reviewCursor,
               field: held?.anchor === id ? guide?.activeField : undefined,
             }
@@ -463,7 +464,7 @@ export default function (pi: ExtensionAPI) {
         return submit(ctx, true);
       case "review-toggle":
         go(v.isReview ? reviewFrom : v.count);
-        locate(v.count, "start");
+        locate(v.count, "end");
         return;
       case "review":
         go(v.isReview ? reviewFrom : v.count);
@@ -516,12 +517,7 @@ export default function (pi: ExtensionAPI) {
       }
     }
     if (held)
-      locate(
-        held.draft.step,
-        action.kind === "review" || (!v.isReview && held.draft.step === v.count)
-          ? "start"
-          : "nearest",
-      );
+      locate(held.draft.step, !v.isReview && held.draft.step === v.count ? "end" : "nearest");
   }
 
   pi.registerShortcut(SHORTCUT, {

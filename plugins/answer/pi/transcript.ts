@@ -66,7 +66,13 @@ export class Transcript implements Component {
   constructor(
     private readonly theme: Theme,
     private readonly read: () =>
-      | { round: Round; active: boolean; reviewCursor?: number; field?: Field }
+      | {
+          round: Round;
+          active: boolean;
+          terminalRows: number;
+          reviewCursor?: number;
+          field?: Field;
+        }
       | undefined,
     private readonly onAction: (action: RoundAction) => void,
   ) {}
@@ -307,28 +313,8 @@ export class Transcript implements Component {
     const review: Row[] = [];
     let selected: [number, number] | undefined;
     if (open || round.sent) {
-      const start = open ? Math.floor(Math.max(0, cursor) / REVIEW_PAGE) * REVIEW_PAGE : 0;
-      const end = open ? Math.min(start + REVIEW_PAGE, current.count) : current.count;
-      if (open && current.count > REVIEW_PAGE) {
-        review.push(
-          ...controls(dim(` Questions ${start + 1}–${end} of ${current.count}`), [
-            ...(start
-              ? [
-                  {
-                    text: "Previous",
-                    act: { kind: "review-cursor", index: start - REVIEW_PAGE } as const,
-                  },
-                ]
-              : []),
-            ...(end < current.count
-              ? [{ text: "Next", act: { kind: "review-cursor", index: end } as const }]
-              : []),
-          ]),
-        );
-      }
       const labelWidth = Math.max(...current.review.map((row) => visibleWidth(row.label)));
-      for (let step = start; step < end; step++) {
-        const row = current.review[step]!;
+      const entries = current.review.map((row, step) => {
         const here = open && step === cursor;
         const ink = (text: string) => theme.bold(questionTone(theme, here, row.isAnswered, text));
         const action: RoundAction | undefined = open ? { kind: "go", step } : undefined;
@@ -337,8 +323,7 @@ export class Transcript implements Component {
           " ".repeat(labelWidth - visibleWidth(row.label) + tokens.gutter);
         const pad = " ".repeat(visibleWidth(prefix));
         const textWidth = inner - visibleWidth(prefix);
-        const first = review.length;
-        review.push(
+        const lines = [
           ...asRows(
             clamp(`${row.title}${row.isAnswered ? ` ${tokens.glyph.done}` : ""}`, textWidth, {
               max: 3,
@@ -351,9 +336,9 @@ export class Transcript implements Component {
             ),
             action,
           ),
-        );
+        ];
         if (row.note)
-          review.push(
+          lines.push(
             ...asRows(
               prose(theme, textWidth, `Note: ${row.note}`, { max: 2 }, "dim").map(
                 (line) => pad + line,
@@ -361,7 +346,45 @@ export class Transcript implements Component {
               action,
             ),
           );
-        if (here) selected = [first, review.length];
+        return lines;
+      });
+
+      let start = 0;
+      let end = entries.length;
+      if (open) {
+        // Keep entries whole on short screens. Leave room for the guide, prompt, and Pi chrome.
+        const budget = Math.max(1, state.terminalRows - heading.length - 11);
+        const pages = [0];
+        let used = 0;
+        for (const [i, lines] of entries.entries()) {
+          const first = pages.at(-1)!;
+          if (i > first && (used + lines.length > budget || i - first === REVIEW_PAGE)) {
+            pages.push(i);
+            used = 0;
+          }
+          used += lines.length;
+        }
+        let page = 0;
+        while ((pages[page + 1] ?? Infinity) <= cursor) page++;
+        start = pages[page]!;
+        end = pages[page + 1] ?? entries.length;
+        const previous = pages[page - 1];
+        if (pages.length > 1)
+          review.push(
+            ...controls(dim(` Questions ${start + 1}–${end} of ${current.count}`), [
+              ...(previous === undefined
+                ? []
+                : [{ text: "Previous", act: { kind: "review-cursor", index: previous } as const }]),
+              ...(end < entries.length
+                ? [{ text: "Next", act: { kind: "review-cursor", index: end } as const }]
+                : []),
+            ]),
+          );
+      }
+      for (let step = start; step < end; step++) {
+        const first = review.length;
+        review.push(...entries[step]!);
+        if (open && step === cursor) selected = [first, review.length];
       }
       const roundNote = editRows(current.count, "note", "Round note: ");
       if (roundNote || current.note) {

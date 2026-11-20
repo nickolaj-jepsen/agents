@@ -1,8 +1,8 @@
-# answer/pi/cards-review-stress 70x24 @0,0 (69x20)
+# answer/pi/cards-review-stress 70x24 @0,2 (69x18)
 │    Answers  1 of 12 answered
 │   [ Fill prompt ]  ▾ Hide questions
 │
-│   Questions 1–5 of 12  Next
+│   Questions 1–2 of 12  Next
 │  ❯ Q1   Which rollout should we use for 東京、大阪、名古屋 and the
 │         other regional clusters, 東京、大阪、名古屋 and the other
 │         regional clusters, 東京、大阪、名古屋 and the other region…
@@ -13,8 +13,6 @@
 │         up and the dashboards agree. Check 大阪 before widening th…
 │    Q2   Question number 2: pick a strategy?
 │         Unanswered
-│    Q3   Question number 3: pick a strategy?
-│         Unansw ↓ Jump to latest message · Ctrl+End
 
 Review  1/12 answered  jk move  enter open  f fill  s send  n note
  r back  esc prompt
@@ -34,19 +32,16 @@ Review  1/12 answered  jk move  enter open  f fill  s send  n note
 1 .x9 4x58
 1 .x2 5x42
 1 .x9 4x10
-1 .x2 5x42
-1 .x9 4x6 6x37
 -
-2x21 .x2 7x2 4x5 .x2 4x5 8x5 .x2 7 4x5 .x2 7 4x5 .x2 7 4x5
-. 7 4x5 .x2 7x3 4x7
-9x69
+2x21 .x2 6x2 4x5 .x2 4x5 7x5 .x2 6 4x5 .x2 6 4x5 .x2 6 4x5
+. 6 4x5 .x2 6x3 4x7
+8x69
 --- legend
 1 fg=#a08ed5
 2 fg=#a08ed5 bold
 3 fg=#5fa8cc bold
 4 fg=#7e888e
 5 fg=#dee0e1 bold
-6 fg=#dee0e1 bg=#213b49
-7 fg=#5fa8cc
-8 fg=#9da5a9
-9 fg=#6c767b
+6 fg=#5fa8cc
+7 fg=#9da5a9
+8 fg=#6c767b

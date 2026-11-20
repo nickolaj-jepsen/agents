@@ -301,12 +301,13 @@ export default scenarios({
     },
     "cards-review-stress": {
       from: "cards-stress",
-      about: "a paginated review with a long multilingual title, answer and note",
+      about:
+        "a review that fits whole rows on short screens, including a multilingual answer and note",
       region: REVIEW,
       extreme: true,
       steps: [
         { press: "r" },
-        { wait: /Questions 1.5 of 12/ },
+        { wait: /Questions 1.[2-5] of 12/ },
         { press: "j" },
         { wait: "enter open" },
       ],
