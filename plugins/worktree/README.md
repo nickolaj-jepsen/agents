@@ -11,17 +11,18 @@ pi only, session you started only. The session moves itself: pi pins a
 session's working directory at startup, so a move forks the conversation into a
 new session file rooted at the target and switches to it.
 
-- `enter_worktree` (a tool) creates a worktree, or picks an existing one, and
-  moves the session there. A new worktree starts from `base`, by default the
-  default branch, so uncommitted changes in the current checkout stay behind.
-  The call ends the turn, and the session continues in the worktree.
-- `exit_worktree` moves the session back to the repository's primary checkout
-  and closes the worktree it leaves: `wt close` commits anything uncommitted as
-  a wip commit and keeps the branch until its work is in the default branch.
-- `/wt <name> [base]` and `/back` are the same moves, for you; `/wt` without a
-  name picks from the worktrees that already exist.
-- While a move is queued, any other tool call is blocked, so nothing runs
-  between the decision and the move.
+Ask pi to work in a worktree. When it reports the change ready, it stays there
+so you can test and request follow-ups. Ask it to return to the primary checkout
+when you're ready to leave.
 
-A worktree stays open when a session is quit or moves to another one:
-`wt clean` sweeps those, and landing work stays an explicit `wt land`.
+- `enter_worktree` creates or reopens a worktree by `name`, or enters an open
+  worktree by `path`. If neither is set, it generates a name. A new worktree
+  starts from `base`, or the default branch if omitted. Uncommitted changes
+  in the current checkout stay behind.
+- `exit_worktree` returns to the primary checkout. The default action, `keep`,
+  leaves the worktree on disk. Use `remove` with `discard_changes: true` only
+  when asked to close it. Unlike Claude Code's native removal, pi runs `wt close`,
+  which saves uncommitted changes on the branch before removing the checkout.
+
+Both tools move the session at the end of the turn. To land, exit with `keep`
+first, then run `wt land` from the primary checkout.

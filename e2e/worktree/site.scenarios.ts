@@ -8,9 +8,10 @@ const setup = (ctx: { write(rel: string, content: string): void; initRepo(): voi
 };
 
 const turns: Turn[] = [
-  {
-    text: "The retry loop is in `src/sync.ts`; in the worktree I can change it without touching your checkout.",
-  },
+  { toolCall: { name: "enter_worktree", arguments: { name: "spike" } } },
+  { text: "The retry change is ready to test in the spike worktree." },
+  { toolCall: { name: "exit_worktree", arguments: { action: "keep" } } },
+  { text: "Back in the primary checkout. The spike worktree is still open." },
 ];
 
 /**
@@ -31,14 +32,11 @@ case "$1" in
     mkdir -p "$dest"
     (cd "$dest" && pwd)
     ;;
-  list)
-    for dir in "$bin"/../worktrees/*/*; do [ -d "$dir" ] && basename "$dir"; done
-    ;;
   cd)
-    cat "$state" 2>/dev/null || pwd
-    ;;
-  close)
-    rm -rf "$2"
+    case "$2" in
+      --main) cat "$state" ;;
+      .) pwd ;;
+    esac
     ;;
 esac
 `;
@@ -47,26 +45,21 @@ export default site({
   plugin: "worktree",
   demo: {
     caption:
-      "The session moves itself into a git worktree, with its conversation, and the next turn starts there; /back brings it home and closes the worktree it leaves.",
+      "Ask pi to work in a separate checkout, then test the change there. You can ask pi to return without closing the worktree.",
     project: "shop-api",
     harness: "pi",
     setup,
     start: { hermetic: true, plugins: ["worktree"], turns, bin: { wt: WT } },
     steps: [
       { sleep: 600 },
-      slow("/wt spike"),
+      slow("Make the retry back off in a worktree named spike."),
       { press: "Enter" },
-      // The footer names the checkout the session now runs in.
-      { wait: /worktrees\/\S*\/spike/, timeout: 60_000 },
-      { sleep: 2400 },
-      slow("Make the retry back off instead of doubling."),
-      { press: "Enter" },
-      { wait: /The retry loop is in/, timeout: 30_000 },
+      { wait: /The retry change is ready/, timeout: 60_000 },
       { sleep: 3200 },
       poster,
-      slow("/back"),
+      slow("Return to the main checkout, but leave spike open."),
       { press: "Enter" },
-      { wait: /This session moved from/, timeout: 30_000 },
+      { wait: /Back in the primary checkout/, timeout: 30_000 },
       { sleep: 3200 },
     ],
   },

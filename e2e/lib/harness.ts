@@ -271,7 +271,7 @@ export const pi: Harness = {
         "fixture",
         "--model",
         "replay",
-        // The model scope too: a session that switches (worktree's `/wt`) resolves it again, and
+        // The model scope too: a session that switches worktrees resolves it again, and
         // from settings it is the system's `enabledModels`, which a `pi` wrapper may merge into a
         // hermetic config, where none of them exist.
         "--models",

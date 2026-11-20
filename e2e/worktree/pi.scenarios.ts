@@ -17,18 +17,9 @@ const repo = (ctx: { write(rel: string, content: string): void; initRepo(): void
   ctx.write("src/sync.ts", "export const retry = (n: number) => n * 2;\n");
 };
 
-/** The move is announced in the conversation when the next turn starts. */
-const turns: Turn[] = [{ text: "Continuing in the worktree, from `src/sync.ts`." }];
-
-/** `/wt spike`, then a prompt the moved session answers: where the moved notice lands. */
-const moveAndSpeak = [
-  { type: "/wt spike" },
-  { press: "Enter" },
-  // The footer names the checkout the session now runs in.
-  { wait: /worktrees\/\S*\/spike/, timeout: 60_000 },
-  { type: "Carry on with the retry logic." },
-  { press: "Enter" },
-  { wait: /This session moved from/, timeout: 30_000 },
+const turns: Turn[] = [
+  { toolCall: { name: "enter_worktree", arguments: { name: "spike" } } },
+  { text: "Ready in the worktree." },
 ];
 
 export default scenarios({
@@ -41,22 +32,80 @@ export default scenarios({
   region: footer,
   scenarios: {
     moved: {
-      about: "/wt moves the session into a new worktree, and the next turn says where from",
+      about: "The session stays in the worktree after reporting the task ready",
       setup: repo,
       start: { turns },
       // The paths in the notice wrap at 70 columns, where a placeholder would leave fragments.
       sizes: [[160, 45]],
-      steps: moveAndSpeak,
+      steps: [
+        { type: "Work in a worktree named spike." },
+        { press: "Enter" },
+        { wait: /Ready in the worktree\./, timeout: 60_000 },
+        { wait: /\/spike \(spike\)/ },
+      ],
     },
     returned: {
-      about: "/back moves it to the primary checkout and closes the worktree it leaves",
+      about: "Leaving moves to the primary checkout and keeps the worktree open",
       from: "moved",
+      start: {
+        turns: [
+          ...turns,
+          { toolCall: { name: "exit_worktree", arguments: {} } },
+          {
+            toolCall: {
+              name: "bash",
+              arguments: { command: "wt cd spike >/dev/null && echo 'checkout still open'" },
+            },
+          },
+          { text: "Back in the primary checkout." },
+        ],
+      },
       sizes: [[160, 45]],
       steps: [
-        { type: "/back" },
+        { type: "Go back, but leave the worktree open." },
         { press: "Enter" },
-        // The notice is on screen from `moved` already: the footer leaving the worktree is the move.
-        { wait: /\/spike \(spike\)/, gone: true, timeout: 30_000 },
+        { wait: /^\s*checkout still open\s*$/m, timeout: 30_000 },
+        { wait: /Back in the primary checkout\./ },
+        { wait: /\/spike \(spike\)/, gone: true },
+      ],
+    },
+    closed: {
+      about: "Only confirmed removal closes the worktree after returning to the primary checkout",
+      from: "moved",
+      start: {
+        turns: [
+          ...turns,
+          { toolCall: { name: "exit_worktree", arguments: { action: "remove" } } },
+          { text: "Removal needs confirmation." },
+          {
+            toolCall: {
+              name: "exit_worktree",
+              arguments: { action: "remove", discard_changes: true },
+            },
+          },
+          {
+            toolCall: {
+              name: "bash",
+              arguments: {
+                command: "test ! -d \"$WT_WORKTREE_ROOT/cwd/spike\" && echo 'checkout removed'",
+              },
+            },
+          },
+          { text: "Back in the primary checkout." },
+        ],
+      },
+      sizes: [[160, 45]],
+      steps: [
+        { type: "Check whether the worktree can be removed." },
+        { press: "Enter" },
+        { wait: /confirm an explicit request to close/ },
+        { wait: /Removal needs confirmation\./ },
+        { wait: /\/spike \(spike\)/ },
+        { type: "Yes, close the worktree." },
+        { press: "Enter" },
+        { wait: /^\s*checkout removed\s*$/m, timeout: 30_000 },
+        { wait: /Back in the primary checkout\./ },
+        { wait: /\/spike \(spike\)/, gone: true },
       ],
     },
   },

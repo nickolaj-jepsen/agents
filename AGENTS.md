@@ -74,13 +74,12 @@ New files must be `git add`ed or the flake ignores them.
 - An e2e fixture's git reads no global or system config (`e2e/lib/setup.ts`), and every session the
   drivers start keeps `agent-notes` data and `wt` worktrees in the run's folder (`runEnv`). Without
   them, a fixture's checkout ran the person's `post-checkout` hook, docfix's
-  `agent-notes root --ensure` left folders in their real notes store, and worktree's `/wt` left
+  `agent-notes root --ensure` left folders in their real notes store, and `enter_worktree` left
   worktrees in `~/worktrees`. A new driver or fixture helper keeps them.
 - `pi.getSettings()` throws `Extension runtime not initialized` in an extension's factory. Read settings
   inside `execute()` or an event handler; a try/catch around the factory call yields empty settings.
-- A Claude Code or pi session that ends inside a worktree may close it once nothing runs there
-  (`wt close --when-free`). An agent's Bash calls only visit its worktree between calls, so a test
-  session it drives there must set `WT_NO_AUTOCLOSE=1`, as the e2e harness (`e2e/lib/harness.ts`) does.
+- In this setup, ending a Claude Code or pi session does not close its worktree. Tests that check
+  removal should request it explicitly and verify that the checkout is gone.
 - The e2e harness starts `claude-dev` / `pi-dev` when they are on PATH (wrappers a system config
   provides that load the checkout's plugins), else plain `claude` / `pi`, which then load none of them
   unless given `--plugin-dir` / `-e`.

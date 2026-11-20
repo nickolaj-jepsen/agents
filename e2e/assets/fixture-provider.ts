@@ -30,7 +30,8 @@ interface Turn {
   error?: string;
 }
 
-let cursor = 0;
+// Pi reloads extensions when the session moves. Keep the replay position for this process.
+const cursorKey = Symbol.for("agents.e2e.fixture-provider.cursor");
 
 function loadTurns(): Turn[] {
   const path = process.env.FIXTURE;
@@ -46,7 +47,8 @@ function streamFixture(model: Model<Api>): AssistantMessageEventStream {
 
   (async () => {
     const turns = loadTurns();
-    const index = cursor++;
+    const index = globalThis[cursorKey] ?? 0;
+    globalThis[cursorKey] = index + 1;
     const turn = turns[index];
     const output: AssistantMessage = {
       role: "assistant",
