@@ -568,10 +568,18 @@ export type InlineOptions = {
   indent?: number;
   /** Dim words after the text (`"  Recommended"`), wrapped with it. */
   aside?: string;
+  /**
+   * Every run dim but code: a run with its own weight does not take a dim Text's around it, and
+   * a Text's dim is a grey in place of its colour, which would set code as prose.
+   */
+  isDim?: boolean;
 };
 
 /** One paragraph of inline markdown as the runs of each line, wrapped at `width` when given. */
-export function inlineLines(text: string, options: Omit<InlineOptions, "indent"> = {}): Run[][] {
+export function inlineLines(
+  text: string,
+  options: Omit<InlineOptions, "indent" | "isDim"> = {},
+): Run[][] {
   const runs = runsOf(linesOf(text).join(" "));
   if (options.aside) runs.push({ text: options.aside, isDim: true });
   return wrapRuns(runs, Math.max(1, options.width ?? Infinity));
@@ -596,7 +604,7 @@ export function inlineMarkdown(k: Kit, text: string, options: InlineOptions = {}
             color={run.isCode ? tokens.code : undefined}
             weight={run.isBold ? "bold" : undefined}
             italic={run.isItalic || undefined}
-            dimColor={run.isDim || undefined}
+            dimColor={run.isDim || (options.isDim && !run.isCode) || undefined}
           >
             {run.text}
           </Text>
@@ -1431,7 +1439,9 @@ function choiceRows(
         const label = o.field || o.tag === undefined ? "" : o.label;
         // Opened, the label and what it means are one paragraph: the label in the heavier weight
         // while it is a name, the detail running on after it.
-        const named = cellWidth(label) <= tokens.gui.maxLabel ? `**${label}**` : label;
+        // A bold inside the label would close the one around it.
+        const named =
+          cellWidth(label) <= tokens.gui.maxLabel ? `**${label.replaceAll("**", "")}**` : label;
         const whole = isOpen ? [label ? named : "", o.detail ?? ""].filter(Boolean).join("  ") : "";
         return guiRow(k, {
           key: `${o.key}:row`,
