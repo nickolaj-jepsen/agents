@@ -1,11 +1,10 @@
 ---
-tagline: "Open the checkout's repository, branch, commit or pull request, hand it to an editor or file manager, and review the diff in tuicr."
+tagline: "Open the checkout's repository, branch, commit or pull request, or hand it to an editor or file manager."
 featured: true
 status: in-progress
 requires:
   - "`git`"
   - "`gh`, for the pull request"
-  - "`tuicr` and Ghostty, for `/open diff`"
 order: 2
 ---
 
@@ -16,8 +15,6 @@ order: 2
   Ghostty.
 - `/open plan` lists the checkout's notes (`.agents/store`), newest first, and
   opens the one you pick in the editor.
-- `/open diff` opens [tuicr](https://github.com/agavra/tuicr) on the changes in a
-  new Ghostty window, and tells the model how to read your comments back.
 
 Rows that can't run say why. In the terminal a number key picks a row; in the desktop app and
 VS Code each row has a quiet button at its end, and a row that can't run has none.

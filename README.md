@@ -74,7 +74,7 @@ More:
 
 In progress, and not ready for anyone else to use:
 
-- [git-menu](https://nickolaj-jepsen.github.io/agents/plugins/git-menu/): Open the checkout's repository, branch, commit or pull request, hand it to an editor or file manager, and review the diff in tuicr. (Claude Code)
+- [git-menu](https://nickolaj-jepsen.github.io/agents/plugins/git-menu/): Open the checkout's repository, branch, commit or pull request, or hand it to an editor or file manager. (Claude Code)
 - [docfix](https://nickolaj-jepsen.github.io/agents/plugins/docfix/): Agents file doc suggestions instead of editing docs outside their change; you review them and hand the ones you want back to the agent. (Claude Code / pi)
 
 ## Skills

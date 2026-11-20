@@ -65,7 +65,7 @@ New files must be `git add`ed or the flake ignores them.
   editor and `tsc -p <plugin>/claude`. Re-run it after a Claude Code upgrade.
 - A plugin command's name can be refused at runtime, and neither `claude plugin validate` nor
   `claude plugin test` says so. `$.command.register` throws when a built-in (`review`, now
-  `/code-review`) or a skill (`tuicr`) already has the name, and the mod's own catch logs it at debug.
+  `/code-review`) or a skill already has the name, and the mod's own catch logs it at debug.
   Check a new name by typing it in a real session.
 - `claude plugin test` refuses to run through a `claude` wrapper that puts options before `plugin`
   (a system config's `--plugin-dir`): "not run from this spelling". Run the binary it wraps, with a
