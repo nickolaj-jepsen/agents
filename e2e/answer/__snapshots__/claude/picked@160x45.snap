@@ -19,8 +19,8 @@
 ▎  Note: Add a note
 
 
-▎  + Review answers  1/2
-
+▎  Answers  1 of 2 answered
+▎  ▸ Show all 2 questions    Fill prompt
 
 
 
@@ -50,7 +50,8 @@ Q1/2   jk move A–B pick C write  n note  r review keys here                   
 4 .x2 3x5 . 3x10 .x76 4
 4x96
 4x96
-4 . 7 8x21 7x71 4
+4 .x2 5x24 .x68 4
+4 .x26 7x13 .x55 4
 4x96
 -
 -
@@ -58,8 +59,7 @@ Q1/2   jk move A–B pick C write  n note  r review keys here                   
 -
 -
 -
--
-9x6 . ax2 3x5 . ax3 3x5 . a 3x6 .x2 a 3x5 .x2 a 3x7 . 3x9 .x97 3x3
+8x6 . 9x2 3x5 . 9x3 3x5 . 9 3x6 .x2 9 3x5 .x2 9 3x7 . 3x9 .x97 3x3
 --- legend
 1 fg=#d77757
 2 fg=#d77757 bold
@@ -67,7 +67,6 @@ Q1/2   jk move A–B pick C write  n note  r review keys here                   
 4 dim
 5 bold
 6 fg=#999999 bold
-7 bg=#373737
-8 bg=#373737 bold
-9 fg=#d77757 bold inverse
-a fg=#b1b9f9
+7 fg=#b1b9f9 bold
+8 fg=#d77757 bold inverse
+9 fg=#b1b9f9

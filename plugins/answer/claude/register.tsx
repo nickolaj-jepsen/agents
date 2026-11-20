@@ -502,7 +502,7 @@ async function captureRound($: EngineInterface, held: Held, answer: string, turn
   const anchors = placed.length === starts.length + 1 ? placed : [id];
   const reviewAnchors: string[] = [];
   if (placed.length === starts.length + 1) {
-    for (let index = 0; index <= reviewGroups(starts.length); index++) {
+    for (let index = 0; index < reviewGroups(starts.length); index++) {
       const row = await $.ui.place({ id: `review-${id}-${index}` });
       if (!row.isPlaced) break;
       reviewAnchors.push(row.requestId);
@@ -515,7 +515,7 @@ async function captureRound($: EngineInterface, held: Held, answer: string, turn
       preamble,
       anchors,
       reviewAnchors:
-        reviewAnchors.length === reviewGroups(starts.length) + 1 ? reviewAnchors : undefined,
+        reviewAnchors.length === reviewGroups(starts.length) ? reviewAnchors : undefined,
       matchByText: !message.uuid,
     },
   }));
@@ -815,10 +815,8 @@ async function revealReview($: EngineInterface, id: string, c: Current) {
   if (!requestId) return;
   if (c.reviewCursor !== undefined) {
     const segment =
-      c.reviewCursor < c.view.count
-        ? Math.floor(c.reviewCursor / REVIEW_GROUP_ROWS)
-        : reviewGroups(c.view.count);
-    const rowId = round.reviewAnchors?.[segment];
+      c.reviewCursor < c.view.count ? Math.floor(c.reviewCursor / REVIEW_GROUP_ROWS) : -1;
+    const rowId = segment < 0 ? requestId : round?.reviewAnchors?.[segment];
     if (rowId) {
       await $.ui.scroll({ to: { requestId: rowId }, block: "nearest" });
       return;
@@ -867,7 +865,7 @@ async function pressReview($: EngineInterface, id: string, c: Current, key: stri
             reviewCursor: Math.max(
               0,
               Math.min(
-                was.view.count + (was.view.reply ? 2 : 0),
+                was.view.count - (was.view.reply ? 0 : 1),
                 (was.reviewCursor ?? 0) + (key === "j" ? 1 : -1),
               ),
             ),
@@ -880,9 +878,7 @@ async function pressReview($: EngineInterface, id: string, c: Current, key: stri
   if (key !== "enter" || !c.hasKeys) return;
   const cursor = c.reviewCursor ?? 0;
   if (cursor < c.view.count) return openReviewQuestion($, id, cursor);
-  if (cursor === c.view.count) return writeRound($, id, c.view.count, NOTE, "terminal");
-  if (cursor === c.view.count + 1) return replyToRound($, id, "terminal", "fill");
-  if (cursor === c.view.count + 2) return replyToRound($, id, "terminal", "send");
+  if (cursor === c.view.count && c.view.reply) return replyToRound($, id, "terminal", "fill");
 }
 
 async function pressRoundKey($: EngineInterface, id: string, key: string) {

@@ -1,5 +1,4 @@
 # answer/claude/long-option 70x24 @0,0 (70x19)
-▎      a very long option text that keeps going and going a very
 ▎      long option text that keeps going and going a very long
 ▎      option text that keeps going and going a very long option
 ▎      text that keeps going and going a very long option text that
@@ -15,11 +14,11 @@
 ▎  Note: Add a note
 
 
-▎  + Review answers  0/1
+▎  Answers  0 of 1 answered
+▎  ▸ Show all 1 questions
 
 Q1/1   alt+a for the keys                                         [-]
 --- styles
-1 .x6 2x58 .x4 1
 1 .x6 2x56 .x6 1
 1 .x6 2x58 .x4 1
 1 .x6 2x61 . 1
@@ -35,14 +34,14 @@ Q1/1   alt+a for the keys                                         [-]
 1 .x2 3x5 . 3x10 .x50 1
 1x70
 2x70
-2 . 4 5x21 4x45 2
+2 .x2 4x24 .x42 2
+2 .x68 2
 2x70
-6x6 . 7x5 3x13 .x41 3x3
+5x6 . 6x5 3x13 .x41 3x3
 --- legend
 1 fg=#d77757
 2 dim
 3 fg=#999999
-4 bg=#373737
-5 bg=#373737 bold
-6 fg=#d77757 bold
-7 fg=#b1b9f9
+4 bold
+5 fg=#d77757 bold
+6 fg=#b1b9f9

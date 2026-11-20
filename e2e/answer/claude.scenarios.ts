@@ -7,7 +7,6 @@ const keys = (...names: string[]): Step[] => names.map((press) => ({ press }));
 const ask: Step[] = [{ type: "ask" }, { press: "Enter" }];
 const answer: Step[] = [{ type: "/answer" }, { press: "Enter" }];
 const round: Step[] = [...ask, { wait: /(?:^|\s)Q?1\/\d/ }, ...answer];
-const savedDraft = /^❯\s*draft to keep$/;
 const turn = (fixture: string): Scenario["start"] => ({
   hermetic: true,
   plugins: ["answer"],
@@ -68,32 +67,31 @@ export default scenarios({
     review: {
       from: "note-kept",
       about: "live review shows the kept note and one unanswered question",
-      steps: [{ press: "r" }, { wait: /Review answers\s+1\/2/ }, { wait: "Unanswered" }],
+      steps: [{ press: "r" }, { wait: /Answers\s+1 of 2 answered/ }, { wait: "Unanswered" }],
     },
     "review-first": {
       from: "review",
       about: "mouse jumps to a question card, and review reopens at that question",
       steps: [
-        { click: "Q2  Add caching?  Unanswered" },
+        { click: "Q2  Add caching?" },
         { wait: /❯\s+Q2\s+Add caching/ },
         ...keys("Alt+a", "r"),
-        { wait: /❯ Q2\s+Add caching\?\s+Unanswered/ },
+        { wait: /❯ Q2\s+Add caching\?/ },
       ],
     },
-    sent: {
+    "summary-fill": {
       from: "review",
-      about: "partial send preserves the prompt draft",
-      region: region.rows(savedDraft, savedDraft),
+      about: "click to collapse the list and fill the prompt without reopening it",
+      region: region.rows(/^❯\s*Q1: B$/, /^─+$/),
       steps: [
-        { click: /^❯\s*$/ },
-        { type: "draft to keep" },
-        ...keys("Alt+a", "j", "j", "j", "j"),
-        { wait: "❯ Send reply" },
-        { press: "Enter" },
-        { wait: "Reply received." },
-        { run: expectPrompt("draft to keep") },
-        { wait: "✓ Sent" },
-        { wait: "Send reply", gone: true },
+        { click: "Hide questions" },
+        { wait: "Show all 2 questions" },
+        { wait: "Unanswered", gone: true },
+        { click: "Show all 2 questions" },
+        { wait: "Unanswered" },
+        { click: "Hide questions" },
+        { click: "Fill prompt" },
+        { wait: /^❯\s*Q1: B$/m },
       ],
     },
     "fill-click": {
@@ -103,7 +101,7 @@ export default scenarios({
       steps: [
         { click: /^❯\s*$/ },
         { type: "draft to keep" },
-        ...keys("Alt+a", "j", "j", "j"),
+        ...keys("Alt+a", "j", "j"),
         { wait: "❯ Fill prompt" },
         { press: "Enter" },
         { wait: /^❯\s*Q1: B$/m },
@@ -252,7 +250,7 @@ export default scenarios({
         { wait: "Q9/12" },
         { press: "r" },
         { wait: /❯ Q9\s+Question number 9/ },
-        ...keys(...Array(5).fill("j")),
+        ...keys(...Array(4).fill("j")),
         { wait: "❯ Fill prompt" },
         { resize: [70, 24] },
       ],

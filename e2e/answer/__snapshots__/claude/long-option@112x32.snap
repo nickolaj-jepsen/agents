@@ -1,5 +1,4 @@
 # answer/claude/long-option 112x32 @0,0 (112x27)
-▎ ❯ Q1  Which one?
 ▎
 ▎  A ○ a very long option text that keeps going and going a very long option text that keeps
 ▎      going and going a very long option text that keeps going and going a very long option
@@ -23,21 +22,21 @@
 ▎  Note: Add a note
 
 
-▎  + Review answers  0/1
+▎  Answers  0 of 1 answered
+▎  ▸ Show all 1 questions
 
 Q1/1   alt+a for the keys                                                                                   [-]
 --- styles
-1 . 2x16 .x77 1
 1 .x94 1
-1 .x2 1x2 3 .x89 1
-1 .x94 1
+1 .x2 1x2 2 .x89 1
 1 .x94 1
 1 .x94 1
 1 .x94 1
 1 .x94 1
 1 .x94 1
 1 .x94 1
-1 .x2 2x2 3x2 .x88 1
+1 .x94 1
+1 .x2 3x2 2x2 .x88 1
 1 .x6 4x86 .x2 1
 1 .x6 4x86 .x2 1
 1 .x6 4x85 .x3 1
@@ -46,19 +45,19 @@ Q1/1   alt+a for the keys                                                       
 1 .x6 4x85 .x3 1
 1 .x6 4x84 .x4 1
 1 .x6 4x15 .x73 1
-1 .x2 1x2 3 . 3x21 .x67 1
+1 .x2 1x2 2 . 2x21 .x67 1
 1 .x94 1
-1 .x2 3x5 . 3x10 .x76 1
+1 .x2 2x5 . 2x10 .x76 1
 1x96
 4x96
-4 . 5 6x21 5x71 4
+4 .x2 5x24 .x68 4
+4 .x94 4
 4x96
-2x6 . 7x5 3x13 .x83 3x3
+3x6 . 6x5 2x13 .x83 2x3
 --- legend
 1 fg=#d77757
-2 fg=#d77757 bold
-3 fg=#999999
+2 fg=#999999
+3 fg=#d77757 bold
 4 dim
-5 bg=#373737
-6 bg=#373737 bold
-7 fg=#b1b9f9
+5 bold
+6 fg=#b1b9f9

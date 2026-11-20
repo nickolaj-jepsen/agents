@@ -1,49 +1,43 @@
-# answer/claude/recommended 70x24 @0,0 (70x19)
+# answer/claude/recommended 70x24 @0,2 (70x17)
+▎ ❯ Q1  Should every focus default to the same bar?
+▎
+▎  A ○ Yes, one default for every kind.  Recommended
+▎  B ○ Default by kind.
+▎  C ○ Add the bar as a second pick.
+▎  D ○ Write your own answer
+▎
+▎ Recommended: A. A per-kind table is one more thing to keep in
+▎ sync.
+▎
+▎  Note: Add a note
+
+
+▎   Q2  Lower the per-generator target to 5-6?
+▎
 ▎  ○ Yes: Yes. Four generators still give 20-24.
-▎  A ○ Write your own answer
-▎
-▎  Note: Add a note
-
-
-▎   Q3  What should happen to `--quick`?
-▎
-▎  A ○ Drop it.
-▎  B ○ Keep it as an alias.
-▎      Scripts may still call it.
-▎  C ○ Write your own answer
-▎
-▎  Note: Add a note
-
-
-▎  + Review answers  0/3
-
 Q1/3   alt+a for the keys                                         [-]
 --- styles
-1 .x2 2x2 .x64 1
-1 .x2 2x3 . 2x21 .x41 1
+1 . 2x49 .x18 1
 1 .x68 1
-1 .x2 2x5 . 2x10 .x50 1
-1x70
-1x70
-1 . 3x38 .x29 1
+1 .x2 2x2 3x2 .x32 3x13 .x17 1
+1 .x2 2x2 3x2 .x62 1
+1 .x2 2x2 3x2 .x62 1
+1 .x2 1x2 3 . 3x21 .x41 1
 1 .x68 1
-1 .x2 4x2 2x2 .x62 1
-1 .x2 4x2 2x2 .x62 1
-1 .x6 1x26 .x36 1
-1 .x2 2x3 . 2x21 .x41 1
+1 . 4x62 .x5 1
+1 . 4x5 .x62 1
 1 .x68 1
-1 .x2 2x5 . 2x10 .x50 1
+1 .x2 3x5 . 3x10 .x50 1
 1x70
-1x70
-1 . 5 6x21 5x45 1
-1x70
-7x6 . 8x5 2x13 .x41 2x3
+4x70
+4 . 5x44 .x23 4
+4 .x68 4
+4 .x2 3x2 .x64 4
+2x6 . 6x5 3x13 .x41 3x3
 --- legend
-1 dim
-2 fg=#999999
-3 bold
-4 fg=#999999 bold
-5 bg=#373737
-6 bg=#373737 bold
-7 fg=#d77757 bold
-8 fg=#b1b9f9
+1 fg=#d77757
+2 fg=#d77757 bold
+3 fg=#999999
+4 dim
+5 bold
+6 fg=#b1b9f9

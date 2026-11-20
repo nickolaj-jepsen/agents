@@ -1,16 +1,4 @@
-# answer/claude/many-review 240x60 @0,0 (240x55)
-▎  Note: Add a note
-
-
-▎   Q10  Question number 10: pick a strategy?
-▎
-▎  A ○ Option A for 10
-▎  B ○ Option B for 10
-▎  C ○ Write your own answer
-▎
-▎  Note: Add a note
-
-
+# answer/claude/many-review 240x60 @0,3 (240x52)
 ▎   Q11  Question number 11: pick a strategy?
 ▎
 ▎  A ○ Option A for 11
@@ -29,95 +17,99 @@
 ▎  Note: Add a note
 
 
-▎  − Review answers  1/12
+▎  Answers  1 of 12 answered
+▎  ▾ Hide questions  ❯ Fill prompt
 
 
-▎    Q1   Question number 1: pick a strategy?  Unanswered
-▎    Q2   Question number 2: pick a strategy?  Unanswered
-▎    Q3   Question number 3: pick a strategy?  H: Option H for 3
-▎    Q4   Question number 4: pick a strategy?  Unanswered
+▎    Q1   Question number 1: pick a strategy?
+▎         Unanswered
+▎    Q2   Question number 2: pick a strategy?
+▎         Unanswered
+▎    Q3   Question number 3: pick a strategy?
+▎         H: Option H for 3
+▎    Q4   Question number 4: pick a strategy?
+▎         Unanswered
 
 
-▎    Q5   Question number 5: pick a strategy?  Unanswered
-▎    Q6   Question number 6: pick a strategy?  Unanswered
-▎    Q7   Question number 7: pick a strategy?  Unanswered
-▎    Q8   Question number 8: pick a strategy?  Unanswered
+▎    Q5   Question number 5: pick a strategy?
+▎         Unanswered
+▎    Q6   Question number 6: pick a strategy?
+▎         Unanswered
+▎    Q7   Question number 7: pick a strategy?
+▎         Unanswered
+▎    Q8   Question number 8: pick a strategy?
+▎         Unanswered
 
 
-▎    Q9   Question number 9: pick a strategy?  Unanswered
-▎    Q10  Question number 10: pick a strategy?  Unanswered
-▎    Q11  Question number 11: pick a strategy?  Unanswered
-▎    Q12  Question number 12: pick a strategy?  Unanswered
-
-
-▎
-▎    Add round note  ❯ Fill prompt    Send reply
+▎    Q9   Question number 9: pick a strategy?
+▎         Unanswered
+▎    Q10  Question number 10: pick a strategy?
+▎         Unanswered
+▎    Q11  Question number 11: pick a strategy?
+▎         Unanswered
+▎    Q12  Question number 12: pick a strategy?
+▎         Unanswered
 
 Review  1/12 answered jk move enter fill r back keys here                                                                                                                                                                                   [-]
 --- styles
-1 .x2 2x5 . 2x10 .x76 1
-1x96
-1x96
-1 . 3x43 .x50 1
+1 . 2x43 .x50 1
 1 .x94 1
-1 .x2 4x2 2x2 .x88 1
-1 .x2 4x2 2x2 .x88 1
-1 .x2 2x3 . 2x21 .x67 1
+1 .x2 3x2 4x2 .x88 1
+1 .x2 3x2 4x2 .x88 1
+1 .x2 4x3 . 4x21 .x67 1
 1 .x94 1
-1 .x2 2x5 . 2x10 .x76 1
+1 .x2 4x5 . 4x10 .x76 1
 1x96
 1x96
-1 . 3x43 .x50 1
+1 . 2x43 .x50 1
 1 .x94 1
-1 .x2 4x2 2x2 .x88 1
-1 .x2 4x2 2x2 .x88 1
-1 .x2 2x3 . 2x21 .x67 1
+1 .x2 3x2 4x2 .x88 1
+1 .x2 3x2 4x2 .x88 1
+1 .x2 4x3 . 4x21 .x67 1
 1 .x94 1
-1 .x2 2x5 . 2x10 .x76 1
+1 .x2 4x5 . 4x10 .x76 1
 1x96
 1x96
-1 . 3x43 .x50 1
-1 .x94 1
-1 .x2 4x2 2x2 .x88 1
-1 .x2 4x2 2x2 .x88 1
-1 .x2 2x3 . 2x21 .x67 1
-1 .x94 1
-1 .x2 2x5 . 2x10 .x76 1
+1 .x2 5x25 .x67 1
+1 .x20 5x13 .x61 1
 1x96
 1x96
-1 . 5 6x22 5x70 1
+1 .x2 4x7 .x85 1
+1 .x9 4x10 .x75 1
+1 .x2 4x7 .x85 1
+1 .x9 4x10 .x75 1
+1 .x2 4x7 .x85 1
+1 .x9 6x17 .x68 1
+1 .x2 4x7 .x85 1
+1 .x9 4x10 .x75 1
 1x96
 1x96
-1 .x2 2x7 .x35 2x12 .x38 1
-1 .x2 2x7 .x35 2x12 .x38 1
-1 .x2 2x7 .x35 7x19 .x31 1
-1 .x2 2x7 .x35 2x12 .x38 1
+1 .x2 4x7 .x85 1
+1 .x9 4x10 .x75 1
+1 .x2 4x7 .x85 1
+1 .x9 4x10 .x75 1
+1 .x2 4x7 .x85 1
+1 .x9 4x10 .x75 1
+1 .x2 4x7 .x85 1
+1 .x9 4x10 .x75 1
 1x96
 1x96
-1 .x2 2x7 .x35 2x12 .x38 1
-1 .x2 2x7 .x35 2x12 .x38 1
-1 .x2 2x7 .x35 2x12 .x38 1
-1 .x2 2x7 .x35 2x12 .x38 1
+1 .x2 4x7 .x85 1
+1 .x9 4x10 .x75 1
+1 .x2 4x7 .x85 1
+1 .x9 4x10 .x75 1
+1 .x2 4x7 .x85 1
+1 .x9 4x10 .x75 1
+1 .x2 4x7 .x85 1
+1 .x9 4x10 .x75 1
 1x96
-1x96
-1 .x2 2x7 .x35 2x12 .x38 1
-1 .x2 2x7 .x36 2x12 .x37 1
-1 .x2 2x7 .x36 2x12 .x37 1
-1 .x2 2x7 .x36 2x12 .x37 1
-1x96
-1x96
-1 .x94 1
-1 .x2 2x16 .x2 8x13 .x2 2x12 .x47 1
-1x96
-8x21 . 7x2 2x5 . 9x5 ax5 . 7 2x5 . 2x9 .x179 2x3
+5x21 . 6x2 4x5 . 7x5 8x5 . 6 4x5 . 4x9 .x179 4x3
 --- legend
 1 dim
-2 fg=#999999
-3 bold
-4 fg=#999999 bold
-5 bg=#373737
-6 fg=#d77757 bg=#373737 bold
-7 fg=#b1b9f9
-8 fg=#d77757 bold
-9 fg=#b1b9f9 inverse
-a fg=#999999 inverse
+2 bold
+3 fg=#999999 bold
+4 fg=#999999
+5 fg=#d77757 bold
+6 fg=#b1b9f9
+7 fg=#b1b9f9 inverse
+8 fg=#999999 inverse

@@ -1,61 +1,59 @@
 # answer/claude/many-review 112x32 @0,2 (112x25)
-▎  − Review answers  1/12
+▎  Answers  1 of 12 answered
+▎  ▾ Hide questions  ❯ Fill prompt
 
 
-▎    Q1   Question number 1: pick a strategy?  Unanswered
-▎    Q2   Question number 2: pick a strategy?  Unanswered
-▎    Q3   Question number 3: pick a strategy?  H: Option H for 3
-▎    Q4   Question number 4: pick a strategy?  Unanswered
+▎    Q1   Question number 1: pick a strategy?
+▎         Unanswered
+▎    Q2   Question number 2: pick a strategy?
+▎         Unanswered
+▎    Q3   Question number 3: pick a strategy?
+▎         H: Option H for 3
+▎    Q4   Question number 4: pick a strategy?
+▎         Unanswered
 
 
-▎    Q5   Question number 5: pick a strategy?  Unanswered
-▎    Q6   Question number 6: pick a strategy?  Unanswered
-▎    Q7   Question number 7: pick a strategy?  Unanswered
-▎    Q8   Question number 8: pick a strategy?  Unanswered
+▎    Q5   Question number 5: pick a strategy?
+▎         Unanswered
+▎    Q6   Question number 6: pick a strategy?
+▎         Unanswered
+▎    Q7   Question number 7: pick a strategy?
+▎         Unanswered
+▎    Q8   Question number 8: pick a strategy?
+▎         Unanswered
 
-
-▎    Q9   Question number 9: pick a strategy?  Unanswered
-▎    Q10  Question number 10: pick a strategy?  Unanswered
-▎    Q11  Question number 11: pick a strategy?  Unanswered
-▎    Q12  Question number 12: pick a strategy?  Unanswered
-
-
-▎
-▎    Add round note  ❯ Fill prompt    Send reply
 
 Review  1/12 answered jk move enter fill r back keys here                                                   [-]
 --- styles
-1 . 2 3x22 2x70 1
+1 .x2 2x25 .x67 1
+1 .x20 2x13 .x61 1
 1x96
 1x96
-1 .x2 4x7 .x35 4x12 .x38 1
-1 .x2 4x7 .x35 4x12 .x38 1
-1 .x2 4x7 .x35 5x19 .x31 1
-1 .x2 4x7 .x35 4x12 .x38 1
+1 .x2 3x7 .x85 1
+1 .x9 3x10 .x75 1
+1 .x2 3x7 .x85 1
+1 .x9 3x10 .x75 1
+1 .x2 3x7 .x85 1
+1 .x9 4x17 .x68 1
+1 .x2 3x7 .x85 1
+1 .x9 3x10 .x75 1
 1x96
 1x96
-1 .x2 4x7 .x35 4x12 .x38 1
-1 .x2 4x7 .x35 4x12 .x38 1
-1 .x2 4x7 .x35 4x12 .x38 1
-1 .x2 4x7 .x35 4x12 .x38 1
+1 .x2 3x7 .x85 1
+1 .x9 3x10 .x75 1
+1 .x2 3x7 .x85 1
+1 .x9 3x10 .x75 1
+1 .x2 3x7 .x85 1
+1 .x9 3x10 .x75 1
+1 .x2 3x7 .x85 1
+1 .x9 3x10 .x75 1
 1x96
 1x96
-1 .x2 4x7 .x35 4x12 .x38 1
-1 .x2 4x7 .x36 4x12 .x37 1
-1 .x2 4x7 .x36 4x12 .x37 1
-1 .x2 4x7 .x36 4x12 .x37 1
-1x96
-1x96
-1 .x94 1
-1 .x2 4x16 .x2 6x13 .x2 4x12 .x47 1
-1x96
-6x21 . 5x2 4x5 . 7x5 8x5 . 5 4x5 . 4x9 .x51 4x3
+2x21 . 4x2 3x5 . 5x5 6x5 . 4 3x5 . 3x9 .x51 3x3
 --- legend
 1 dim
-2 bg=#373737
-3 fg=#d77757 bg=#373737 bold
-4 fg=#999999
-5 fg=#b1b9f9
-6 fg=#d77757 bold
-7 fg=#b1b9f9 inverse
-8 fg=#999999 inverse
+2 fg=#d77757 bold
+3 fg=#999999
+4 fg=#b1b9f9
+5 fg=#b1b9f9 inverse
+6 fg=#999999 inverse

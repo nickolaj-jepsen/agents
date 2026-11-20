@@ -20,8 +20,8 @@
 ▎  Note: Add a note
 
 
-▎  + Review answers  1/2
-
+▎  Answers  1 of 2 answered
+▎  ▸ Show all 2 questions    Fill prompt
 
 
 
@@ -51,15 +51,15 @@ Q1/2   jk move A–B pick C write  n note  r review keys here                   
 5 .x2 3x5 . 3x10 .x76 5
 5x96
 5x96
-5 . 8 9x21 8x71 5
+5 .x2 6x24 .x68 5
+5 .x26 8x13 .x55 5
 5x96
 -
 -
 -
 -
 -
--
-ax6 . 4x2 3x5 . 4x3 3x5 . 4 3x6 .x2 4 3x5 .x2 4 3x7 . 3x9 .x97 3x3
+9x6 . 4x2 3x5 . 4x3 3x5 . 4 3x6 .x2 4 3x5 .x2 4 3x7 . 3x9 .x97 3x3
 --- legend
 1 fg=#d77757
 2 fg=#d77757 bold
@@ -68,6 +68,5 @@ ax6 . 4x2 3x5 . 4x3 3x5 . 4 3x6 .x2 4 3x5 .x2 4 3x7 . 3x9 .x97 3x3
 5 dim
 6 bold
 7 fg=#999999 bold
-8 bg=#373737
-9 bg=#373737 bold
-a fg=#d77757 bold inverse
+8 fg=#b1b9f9 bold
+9 fg=#d77757 bold inverse

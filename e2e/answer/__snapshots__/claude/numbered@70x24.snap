@@ -1,5 +1,4 @@
 # answer/claude/numbered 70x24 @0,0 (70x19)
-▎ Yes or no.
 ▎
 ▎  A ○ Write your own answer
 ▎
@@ -15,11 +14,11 @@
 ▎  Note: Add a note
 
 
-▎  + Review answers  0/2
+▎  Answers  0 of 2 answered
+▎  ▸ Show all 2 questions
 
 1/2    alt+a for the keys                                         [-]
 --- styles
-1 .x68 1
 1 .x68 1
 1 .x2 1x2 2 . 2x21 .x41 1
 1 .x68 1
@@ -35,15 +34,14 @@
 3 .x2 2x5 . 2x10 .x50 3
 3x70
 3x70
-3 . 5 6x21 5x45 3
+3 .x2 4x24 .x42 3
+3 .x68 3
 3x70
-7x6 . 8x5 2x13 .x41 2x3
+5x6 . 6x5 2x13 .x41 2x3
 --- legend
 1 fg=#d77757
 2 fg=#999999
 3 dim
 4 bold
-5 bg=#373737
-6 bg=#373737 bold
-7 fg=#d77757 bold
-8 fg=#b1b9f9
+5 fg=#d77757 bold
+6 fg=#b1b9f9

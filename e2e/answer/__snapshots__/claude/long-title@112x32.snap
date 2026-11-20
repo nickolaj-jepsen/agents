@@ -13,7 +13,6 @@
 ▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
 ▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
 ▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
-▎   jumps over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
 ▎   jumps over the lazy dog?
 ▎
 ▎  A ○ Yes
@@ -23,11 +22,11 @@
 ▎  Note: Add a note
 
 
-▎  + Review answers  0/1
+▎  Answers  0 of 1 answered
+▎  ▸ Show all 1 questions
 
 Q1/1   alt+a for the keys                                                                                   [-]
 --- styles
-1 .x3 2x88 .x3 1
 1 .x3 2x88 .x3 1
 1 .x3 2x88 .x3 1
 1 .x3 2x88 .x3 1
@@ -51,14 +50,14 @@ Q1/1   alt+a for the keys                                                       
 1 .x2 3x5 . 3x10 .x76 1
 1x96
 4x96
-4 . 5 6x21 5x71 4
+4 .x2 5x24 .x68 4
+4 .x94 4
 4x96
-2x6 . 7x5 3x13 .x83 3x3
+2x6 . 6x5 3x13 .x83 3x3
 --- legend
 1 fg=#d77757
 2 fg=#d77757 bold
 3 fg=#999999
 4 dim
-5 bg=#373737
-6 bg=#373737 bold
-7 fg=#b1b9f9
+5 bold
+6 fg=#b1b9f9

@@ -205,13 +205,12 @@ test("Terminal cards can match a transcript row when the engine omits its UUID",
     requestId: "assistant-row",
     props: { text: GRILLING, isFirstOfReply: true },
   });
-  expect(await cards.find({ type: "Text", text: /Review answers.*0\/3/ })).toBeDefined();
+  expect(await cards.find({ type: "Text", text: /Answers\s+0 of 3 answered/ })).toBeDefined();
   await cards.press({ key: "question-0-choose-1" });
-  expect(await cards.find({ type: "Text", text: /Review answers.*1\/3/ })).toBeDefined();
+  expect(await cards.find({ type: "Text", text: /Answers\s+1 of 3 answered/ })).toBeDefined();
 
-  // The review only marks what actually entered the prompt as sent.
-  await cards.press({ key: "review-toggle" });
-  await cards.press({ key: "review-action-1" });
+  // Filling the prompt doesn't mark the round as sent.
+  await cards.press({ key: "review-fill" });
   expect(await cards.find({ type: "Text", text: /✓ Sent/ })).toBeUndefined();
   await cards.press({ key: "question-0-choose-0" });
   await $.prompt.submit({ text: "Q1: B", origin: { kind: "composer" }, wait: false });

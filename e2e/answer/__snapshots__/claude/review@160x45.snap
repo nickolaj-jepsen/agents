@@ -1,4 +1,4 @@
-# answer/claude/review 160x45 @0,6 (160x34)
+# answer/claude/review 160x45 @0,7 (160x33)
 ▎   Q1  Use SQLite? ✓
 ▎
 ▎  A ○ SQLite
@@ -20,17 +20,16 @@
 ▎  Note: Add a note
 
 
-▎  − Review answers  1/2
+▎  Answers  1 of 2 answered
+▎  ▾ Hide questions    Fill prompt
 
 
-▎  ❯ Q1  Use SQLite?  B: Postgres
+▎  ❯ Q1  Use SQLite?
+▎        B: Postgres
 ▎        Note: Keep the hosted instance.
 ▎              Rotate its credentials first.
-▎    Q2  Add caching?  Unanswered
-
-
-▎
-▎    Add round note    Fill prompt    Send reply
+▎    Q2  Add caching?
+▎        Unanswered
 
 Review  1/2 answered jk move enter open r back keys here                                                                                                    [-]
 --- styles
@@ -55,19 +54,18 @@ Review  1/2 answered jk move enter open r back keys here                        
 5 .x2 4x5 . 4x10 .x76 5
 5x96
 5x96
-5 . 7 8x21 7x71 5
+5 .x2 7x24 .x68 5
+5 .x20 2x13 .x61 5
 5x96
 5x96
-5 .x2 9x17 1x13 .x62 5
+5 .x2 8x17 .x75 5
+5 .x8 1x11 .x75 5
 5 .x8 4x5 . 1x25 .x55 5
 5 .x14 1x29 .x51 5
-5 .x2 4x6 .x12 4x12 .x62 5
+5 .x2 4x6 .x86 5
+5 .x8 4x10 .x76 5
 5x96
-5x96
-5 .x94 5
-5 .x2 4x16 .x2 2x13 .x2 4x12 .x47 5
-5x96
-ax20 . 1x2 4x5 . bx5 cx5 . 1 4x5 . 4x9 .x100 4x3
+7x20 . 1x2 4x5 . 9x5 ax5 . 1 4x5 . 4x9 .x100 4x3
 --- legend
 1 fg=#b1b9f9
 2 fg=#b1b9f9 bold
@@ -75,9 +73,7 @@ ax20 . 1x2 4x5 . bx5 cx5 . 1 4x5 . 4x9 .x100 4x3
 4 fg=#999999
 5 dim
 6 bold
-7 bg=#373737
-8 fg=#d77757 bg=#373737 bold
-9 fg=#d77757
-a fg=#d77757 bold
-b fg=#b1b9f9 inverse
-c fg=#999999 inverse
+7 fg=#d77757 bold
+8 fg=#d77757
+9 fg=#b1b9f9 inverse
+a fg=#999999 inverse

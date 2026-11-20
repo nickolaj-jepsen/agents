@@ -379,15 +379,10 @@ export function questionCard(
 export const REVIEW_GROUP_ROWS = 4;
 export const reviewGroups = (count: number) => Math.ceil(count / REVIEW_GROUP_ROWS);
 const reviewHeading = "review-heading";
-const reviewFooter = "review-footer";
-const reviewRow = (index: number) => `review-answer-${index}`;
+const reviewRow = (index: number) => `review-row-${index}`;
 
 export function reviewTarget(view: View, cursor: number | undefined) {
-  return cursor === undefined
-    ? reviewHeading
-    : cursor < view.count
-      ? reviewRow(cursor)
-      : reviewFooter;
+  return cursor === undefined || cursor >= view.count ? reviewHeading : reviewRow(cursor);
 }
 
 export function terminalReview(
@@ -400,57 +395,46 @@ export function terminalReview(
 ) {
   const { Box, Text, Button } = outer;
   const width = widthCap("reading", outer.columns);
-  const kit = withColumns(outer, Math.max(1, width - 3));
+  const kit = withColumns(outer, Math.max(1, width - 4));
   const open = current?.view.isReview === true;
   const cursor = current?.reviewCursor ?? 0;
-  const title = `Review answers  ${view.answered}/${view.count}`;
-  const heading = (
-    <Text weight="semibold" {...roleProps(open ? "accent" : "text")}>
-      {actions ? `${open ? "−" : "+"} ${title}` : title}
-      {sent ? <Text {...roleProps("success")}> ✓ Sent</Text> : null}
-    </Text>
-  );
-  const footer = [
-    {
-      label: view.note ? "Edit round note" : "Add round note",
-      press: () => actions?.edit(view.count, "note"),
-    },
-    ...(view.reply
-      ? [
-          { label: "Fill prompt", primary: true, press: actions?.fill },
-          { label: "Send reply", press: actions?.send },
-        ]
-      : []),
-  ];
+  const title = `Answers  ${view.answered} of ${view.count} answered`;
+  const toggle = open ? "Hide questions" : `Show all ${view.count} questions`;
   const header = (
-    <Box key={reviewHeading} backgroundColor="userMessageBackground" paddingX={1}>
+    <Box key={reviewHeading} flexDirection="column" paddingLeft={1}>
+      <Text weight="semibold" {...roleProps(open ? "accent" : "text")}>
+        {title}
+        {sent ? <Text {...roleProps("success")}> ✓ Sent</Text> : null}
+      </Text>
       {actions ? (
-        <Button key="review-toggle" label={title} plain onPress={() => actions.go(view.count)}>
-          {heading}
-        </Button>
-      ) : (
-        heading
-      )}
+        <Box columnGap={tokens.gutter} flexWrap="wrap">
+          <Button key="review-toggle" label={toggle} plain onPress={() => actions.go(view.count)}>
+            <Text>{`${open ? "▾" : "▸"} ${toggle}`}</Text>
+          </Button>
+          {view.reply ? (
+            <Button key="review-fill" label="Fill prompt" plain onPress={actions.fill}>
+              <Text
+                weight="semibold"
+                {...roleProps(open && cursor === view.count ? "accent" : "note")}
+              >
+                {`${open && cursor === view.count ? tokens.glyph.pointer : " "} Fill prompt`}
+              </Text>
+            </Button>
+          ) : null}
+        </Box>
+      ) : null}
     </Box>
   );
-  const rowAt = (i: number) => {
-    const row = view.review[i];
+  const rowAt = (row: View["review"][number], i: number) => {
     const selected = open && cursor === i;
     const prefix = `${selected ? tokens.glyph.pointer : " "} ${row.label.padEnd(cellWidth(`Q${view.count}`))}  `;
-    const tail = row.isAnswered ? `  ${row.shown}` : "  Unanswered";
-    const fits = !tail.includes("\n") && cellWidth(prefix + row.title + tail) <= kit.columns - 1;
-    const titleLines = clamp(
-      row.title,
-      Math.max(1, kit.columns - cellWidth(prefix) - (row.isAnswered ? 0 : 12)),
-      { max: fits ? 1 : undefined },
-    );
-    const firstLine = (
+    const indent = cellWidth(prefix);
+    const textWidth = Math.max(1, kit.columns - indent);
+    const [first, ...rest] = clamp(row.title, textWidth);
+    const heading = (
       <Text>
         <Text {...roleProps(selected ? "accent" : "dim")}>{prefix}</Text>
-        <Text {...roleProps(selected ? "accent" : "text")}>{titleLines[0]}</Text>
-        {titleLines.length === 1 && (fits || !row.isAnswered) ? (
-          <Text {...roleProps(row.isAnswered ? "note" : "dim")}>{tail}</Text>
-        ) : null}
+        <Text {...roleProps(selected ? "accent" : "text")}>{first}</Text>
       </Text>
     );
     return (
@@ -462,22 +446,21 @@ export function terminalReview(
             label={`${row.label} ${row.title}`}
             onPress={() => actions.go(i)}
           >
-            {firstLine}
+            {heading}
           </Button>
         ) : (
-          firstLine
+          heading
         )}
-        <Box flexDirection="column" paddingLeft={cellWidth(prefix)}>
-          {titleLines.length > 1 ? (
-            <Text {...roleProps(selected ? "accent" : "text")}>
-              {titleLines.slice(1).join("\n")}
-              {row.isAnswered ? null : <Text dimColor>{tail}</Text>}
-            </Text>
+        <Box flexDirection="column" paddingLeft={indent}>
+          {rest.length ? (
+            <Text {...roleProps(selected ? "accent" : "text")}>{rest.join("\n")}</Text>
           ) : null}
-          {row.isAnswered && !fits ? <Text {...roleProps("note")}>{row.shown}</Text> : null}
+          <Text {...roleProps(row.isAnswered ? "note" : "dim")}>
+            {row.isAnswered ? clamp(row.shown, textWidth).join("\n") : "Unanswered"}
+          </Text>
           {row.note
             ? inlineField(
-                { ...kit, columns: kit.columns - cellWidth(prefix) },
+                withColumns(kit, textWidth),
                 `${reviewRow(i)}-note`,
                 "Note:",
                 "",
@@ -488,51 +471,19 @@ export function terminalReview(
       </Box>
     );
   };
-  const actionsRow = (
-    <Box key={reviewFooter} paddingTop={1} flexDirection="column">
-      {view.note ? inlineField(kit, "review-note", "Round note:", "", view.note) : null}
-      {actions ? (
-        <Box columnGap={tokens.gutter} flexWrap="wrap">
-          {footer.map((action, i) => (
-            <Button key={`review-action-${i}`} plain label={action.label} onPress={action.press}>
-              <Text
-                {...roleProps(
-                  cursor === view.count + i ? "accent" : action.primary ? "note" : "dim",
-                )}
-                weight={action.primary ? "semibold" : undefined}
-              >
-                {`${cursor === view.count + i ? tokens.glyph.pointer : " "} ${action.label}`}
-              </Text>
-            </Button>
-          ))}
-        </Box>
-      ) : null}
-    </Box>
-  );
   if (segment !== undefined && segment > 0 && !open && !sent) return null;
-  const footerSegment = reviewGroups(view.count) + 1;
   const start = ((segment ?? 1) - 1) * REVIEW_GROUP_ROWS;
   return (
     <Box width={width} borderStyle="quote" borderDimColor paddingLeft={1} flexDirection="column">
-      {segment === 0 ? (
-        header
-      ) : segment === footerSegment ? (
-        <Box paddingLeft={1}>{actionsRow}</Box>
-      ) : segment !== undefined ? (
+      {segment === undefined || segment === 0 ? header : null}
+      {(open || sent) && segment !== 0 ? (
         <Box paddingLeft={1} flexDirection="column">
-          {view.review.slice(start, start + REVIEW_GROUP_ROWS).map((_, i) => rowAt(start + i))}
+          {(segment === undefined
+            ? view.review
+            : view.review.slice(start, start + REVIEW_GROUP_ROWS)
+          ).map((row, i) => rowAt(row, start + i))}
         </Box>
-      ) : (
-        <>
-          {header}
-          {open || sent ? (
-            <Box flexDirection="column" paddingTop={1} paddingLeft={1}>
-              {view.review.map((_, i) => rowAt(i))}
-              {actionsRow}
-            </Box>
-          ) : null}
-        </>
-      )}
+      ) : null}
     </Box>
   );
 }
@@ -791,7 +742,7 @@ export function controlBar(
       </Box>
     );
   if (view.isReview) {
-    const action = ["note", "fill", "send"][(current.reviewCursor ?? 0) - view.count] ?? "open";
+    const action = current.reviewCursor === view.count ? "fill" : "open";
     return (
       <Box columnGap={1}>
         <Text {...roleProps("accent")} weight="semibold">

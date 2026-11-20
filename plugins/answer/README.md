@@ -22,13 +22,13 @@ In fullscreen, run `/answer` to show the active card, marked with `❯`. Click a
 choice, or press `Alt+a` to give the key guide the keys and use shortcuts. The
 classic renderer uses the guided form.
 
-| Key      | Action                                                                        |
-| -------- | ----------------------------------------------------------------------------- |
-| Letter   | Pick a choice or open its write-in field                                      |
-| `j`, `k` | Move to the next or previous card                                             |
-| `n`      | Write or edit a note                                                          |
-| `r`      | Open review or go back to the question                                        |
-| `Enter`  | In review, open the highlighted question or use the highlighted footer action |
+| Key      | Action                                                      |
+| -------- | ----------------------------------------------------------- |
+| Letter   | Pick a choice or open its write-in field                    |
+| `j`, `k` | Move to the next or previous card                           |
+| `n`      | Write or edit a note                                        |
+| `r`      | Open review or go back to the question                      |
+| `Enter`  | In review, open the highlighted question or fill the prompt |
 
 The write-in gets the next letter after the printed choices. Click the write-in
 or **Add a note** to open its editor. **Clear answer** appears below the choices and above the note.
@@ -43,10 +43,12 @@ cannot hear. The first `Enter` on the prompt while a handoff waits is kept back,
 with your draft left in place. `Fill prompt` also returns the keys to the
 prompt, and the guide goes back to saying `alt+a`.
 
-Click **Review answers** after the last question, or press `r`. In review,
-`j` and `k` move through the questions and then the reply actions at the bottom.
-Click a question row or press `Enter` on it to edit it on its card. Reopening
-review takes you back to that row.
+The **Answers** summary below the last question shows how many you’ve answered.
+**Fill prompt** copies your answers into the prompt without sending them.
+Click **Show all questions** or press `r` to expand the summary.
+Use `j` and `k` to move through the questions and **Fill prompt**.
+Click a question or press `Enter` on it to jump to its card. Reopening the
+summary takes you back to that question.
 
 The editor sits above the prompt and keeps the question in view. After the
 guide has the keys, typed keys and pasted text reach the field. `Shift+Enter`
