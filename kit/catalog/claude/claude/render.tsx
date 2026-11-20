@@ -7,6 +7,7 @@ import {
   bandShell,
   buttonRow,
   clamp,
+  inlineMarkdown,
   cellWidth,
   emptyState,
   entries,
@@ -45,6 +46,29 @@ export type Env = { columns: number; rows: number };
 type Render = (k: Kit, width: number, env: Env) => JSX.Element | null;
 
 const none = () => undefined;
+
+/** Inline markdown wrapped at each width, its later lines hanging under a two-cell lead. */
+const MARKDOWN =
+  'A 200 response like `{kind: "redirect"}`: `page.tsx` calls `redirect()`, **once**, per _URL_.';
+const markdownDemo: Render = (k, width) => {
+  const { Box, Text } = k;
+  const used = [22, 30, 36].filter(
+    (w, i, all) => all.slice(0, i + 1).reduce((a, b) => a + b + 2) <= width,
+  );
+  return (
+    <Box flexDirection="row" columnGap={2}>
+      {used.map((w) => (
+        <Box key={`w${w}`} flexDirection="column" width={w}>
+          <Text dimColor>{`width ${w}`}</Text>
+          <Text>
+            {"○ "}
+            {inlineMarkdown(k, MARKDOWN, { width: w - 2, indent: 2, aside: "  Recommended" })}
+          </Text>
+        </Box>
+      ))}
+    </Box>
+  );
+};
 
 /** Each width's lines in a column of its own, side by side; as many as fit, as in the pi story. */
 const clampDemo =
@@ -218,6 +242,7 @@ export const renders: Record<string, Render> = {
   "clamp/target": clampDemo(LONG, { target: 90 }),
   "clamp/target-bounded": clampDemo(LONG, { target: 90, min: 2, max: 3 }),
   "clamp/wide-chars": clampDemo(CJK, { max: 3 }),
+  "clamp/markdown": markdownDemo,
 
   "detail/section": (k, width) => {
     const { Box } = k;

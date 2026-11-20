@@ -9,6 +9,7 @@ import {
   fileUrl,
   fit,
   fitImage,
+  inlineLines,
   noteText,
   rowsOf,
   widthCap,
@@ -108,6 +109,48 @@ describe("text helpers", () => {
   it("noteText puts │ on each line but the last, ╰▸ on it", () => {
     expect(noteText("one\ntwo\nthree", "  ")).toBe("  │  one\n  │  two\n  ╰▸ three");
     expect(noteText("one")).toBe("╰▸ one");
+  });
+});
+
+describe("inlineLines", () => {
+  const said = (lines: ReturnType<typeof inlineLines>) =>
+    lines.map((line) => line.map((run) => run.text).join(""));
+  it("sets code, bold, italics and a link's words; a marker inside a word is a letter", () => {
+    expect(
+      inlineLines("Call `redirect()`, **now**, *maybe* or _later_; see [the RFC](https://x.y)"),
+    ).toEqual([
+      [
+        { text: "Call " },
+        { text: "redirect()", isCode: true },
+        { text: ", " },
+        { text: "now", isBold: true },
+        { text: ", " },
+        { text: "maybe", isItalic: true },
+        { text: " or " },
+        { text: "later", isItalic: true },
+        { text: "; see the RFC" },
+      ],
+    ]);
+    expect(said(inlineLines("snake_case_name and a*b*c"))).toEqual(["snake_case_name and a*b*c"]);
+  });
+  it("wraps in cells, drops the space at a break and breaks a word too long", () => {
+    const lines = inlineLines("A 200 response like `{kind: redirect}` is cached per URL", {
+      width: 20,
+    });
+    expect(said(lines)).toEqual(["A 200 response like", "{kind: redirect} is", "cached per URL"]);
+    expect(lines[1]?.[0]).toEqual({ text: "{kind: redirect}", isCode: true });
+    expect(said(inlineLines("abcdefghij", { width: 4 }))).toEqual(["abcd", "efgh", "ij"]);
+    const wide = said(inlineLines("日本語のテキスト", { width: 5 }));
+    expect(wide.every((line) => cellWidth(line) <= 5)).toBe(true);
+  });
+  it("keeps the aside's own spacing mid-line and dims it", () => {
+    expect(inlineLines("Drop it.", { aside: "  Recommended" })).toEqual([
+      [{ text: "Drop it." }, { text: "  Recommended", isDim: true }],
+    ]);
+    expect(said(inlineLines("Drop it.", { width: 12, aside: "  Recommended" }))).toEqual([
+      "Drop it.",
+      "Recommended",
+    ]);
   });
 });
 

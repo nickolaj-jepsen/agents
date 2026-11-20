@@ -36,7 +36,7 @@ Features:
 Wraps text to a width in cells and bounds its line count; the text component of the style.
 
 - pi: exists: `clamp`
-- claude: exists: `clamp`
+- claude: exists: `clamp`, `inlineMarkdown`
 
 Features:
 
@@ -46,6 +46,7 @@ Features:
 - Pad to n lines so rows keep one height: pi yes; claude yes
 - Line count from a text length: pi yes (a narrow pane gets more lines than a wide list); claude yes
 - Cells, not characters: pi yes (pi-tui's width functions); claude yes (`cellWidth` covers East Asian wide characters and emoji; the engine exposes no measure, so the ranges are the kit's own)
+- Inline markdown wrapped as styled runs, for a row pressed whole: pi planned (pi-tui's `Markdown` wraps and styles a paragraph; the pi kit adds nothing yet); claude yes (`inlineMarkdown`: a Button holds only strings and Text, so the kit sets code, bold, italics and links itself)
 
 ## Detail blocks
 

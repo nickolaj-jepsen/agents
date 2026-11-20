@@ -69,6 +69,12 @@ export const stories: Story[] = [
   pane("clamp", "wide-chars", "Cells, not characters: CJK counts two", "{max: 3}", {
     extreme: true,
   }),
+  pane(
+    "clamp",
+    "markdown",
+    "Inline markdown as Text runs, wrapped with a hanging indent",
+    "inlineMarkdown(kit, text, {width, indent: 2, aside})",
+  ),
 
   pane(
     "image",

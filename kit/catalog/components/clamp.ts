@@ -1,11 +1,11 @@
-import { defineComponent, yes } from "../manifest.ts";
+import { defineComponent, planned, yes } from "../manifest.ts";
 
 export default defineComponent({
   id: "clamp",
   name: "Clamp",
   purpose:
     "Wraps text to a width in cells and bounds its line count; the text component of the style.",
-  impl: { pi: "clamp", claude: "clamp" },
+  impl: { pi: "clamp", claude: ["clamp", "inlineMarkdown"] },
   features: [
     {
       id: "wrap",
@@ -49,6 +49,15 @@ export default defineComponent({
       pi: yes("pi-tui's width functions"),
       claude: yes(
         "`cellWidth` covers East Asian wide characters and emoji; the engine exposes no measure, so the ranges are the kit's own",
+      ),
+    },
+    {
+      id: "markdown",
+      label: "Inline markdown wrapped as styled runs, for a row pressed whole",
+      story: { claude: "clamp/markdown" },
+      pi: planned("pi-tui's `Markdown` wraps and styles a paragraph; the pi kit adds nothing yet"),
+      claude: yes(
+        "`inlineMarkdown`: a Button holds only strings and Text, so the kit sets code, bold, italics and links itself",
       ),
     },
   ],

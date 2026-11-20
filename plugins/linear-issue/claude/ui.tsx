@@ -179,6 +179,8 @@ export const tokens = {
   },
   /** Lines of a folded claim on the terminal. */
   foldedLines: 3,
+  /** Inline code on the terminal, outside a `Markdown`: the theme colour its Markdown uses. */
+  code: "permission",
   /** The graphical surfaces' numbers: none of them is a cell. */
   gui: {
     /** A long list shows this many rows, then an `N more` row. */
@@ -476,6 +478,136 @@ export const linesOf = (text: string) => text.replace(/\r\n?/g, "\n").split("\n"
  */
 export const rowsOf = (text: string, columns: number) =>
   text.split("\n").reduce((n, line) => n + Math.max(1, Math.ceil(cellWidth(line) / columns)), 0);
+
+/** A stretch of inline markdown and how a Text sets it. */
+export type Run = {
+  text: string;
+  isCode?: boolean;
+  isBold?: boolean;
+  isItalic?: boolean;
+  isDim?: boolean;
+};
+
+// `code`, **bold** or __bold__, *italic* or _italic_, and a [link](url), which keeps only its
+// words. A marker inside a word is a letter of it, as in `snake_case_name`.
+const INLINE =
+  /`([^`\n]+)`|\*\*([^*\n]+?)\*\*|(?<!\w)__([^_\n]+?)__(?!\w)|(?<![\w*])\*(?!\s)([^*\n]+?)(?<!\s)\*(?![\w*])|(?<![\w_])_(?!\s)([^_\n]+?)(?<!\s)_(?![\w_])|\[([^\]\n]+)\]\([^)\s]+\)/g;
+
+function runsOf(text: string): Run[] {
+  const runs: Run[] = [];
+  let at = 0;
+  for (const m of text.matchAll(INLINE)) {
+    const start = m.index ?? 0;
+    if (start > at) runs.push({ text: text.slice(at, start) });
+    const [, code, bold, underscored, italic, slanted, link] = m;
+    if (code !== undefined) runs.push({ text: code, isCode: true });
+    else if (bold !== undefined || underscored !== undefined)
+      runs.push({ text: bold ?? underscored ?? "", isBold: true });
+    else if (italic !== undefined || slanted !== undefined)
+      runs.push({ text: italic ?? slanted ?? "", isItalic: true });
+    else runs.push({ text: link ?? "" });
+    at = start + m[0].length;
+  }
+  if (at < text.length) runs.push({ text: text.slice(at) });
+  return runs;
+}
+
+const sameStyle = (a: Run, b: Run) =>
+  !a.isCode === !b.isCode &&
+  !a.isBold === !b.isBold &&
+  !a.isItalic === !b.isItalic &&
+  !a.isDim === !b.isDim;
+
+/** Runs in lines of at most `width` cells: greedy by word, a space at a break dropped. */
+function wrapRuns(runs: readonly Run[], width: number): Run[][] {
+  const lines: Run[][] = [[]];
+  let used = 0;
+  const put = (run: Run, text: string) => {
+    const line = lines[lines.length - 1] ?? [];
+    const last = line[line.length - 1];
+    if (last && sameStyle(last, run)) last.text += text;
+    else line.push({ ...run, text });
+    used += cellWidth(text);
+  };
+  const end = () => {
+    const line = lines[lines.length - 1] ?? [];
+    while (line.length) {
+      const last = line[line.length - 1];
+      if (!last) break;
+      last.text = last.text.replace(/ +$/, "");
+      if (last.text) break;
+      line.pop();
+    }
+    lines.push([]);
+    used = 0;
+  };
+  for (const run of runs)
+    for (const piece of run.text.replace(/\s/g, " ").split(/( +)/)) {
+      if (!piece) continue;
+      if (piece.startsWith(" ")) {
+        if (used > 0) put(run, piece);
+        continue;
+      }
+      let word = piece;
+      if (used > 0 && used + cellWidth(word) > width) end();
+      while (cellWidth(word) > width) {
+        const [head, rest] = split(word, width);
+        put(run, head);
+        end();
+        word = rest;
+      }
+      put(run, word);
+    }
+  return lines;
+}
+
+export type InlineOptions = {
+  /** Wrap at this many cells. @default no wrapping */
+  width?: number;
+  /** Cells each line after the first is set in by, to hang under the first line's text. */
+  indent?: number;
+  /** Dim words after the text (`"  Recommended"`), wrapped with it. */
+  aside?: string;
+};
+
+/** One paragraph of inline markdown as the runs of each line, wrapped at `width` when given. */
+export function inlineLines(text: string, options: Omit<InlineOptions, "indent"> = {}): Run[][] {
+  const runs = runsOf(linesOf(text).join(" "));
+  if (options.aside) runs.push({ text: options.aside, isDim: true });
+  return wrapRuns(runs, Math.max(1, options.width ?? Infinity));
+}
+
+/**
+ * One paragraph of inline markdown as Text runs, for where a `Markdown` cannot go: a `Button`
+ * holds only strings and Text, so a row that is pressed whole sets its own. `code` takes the
+ * colour the terminal's Markdown sets it in, **bold** and *italic* their faces, and a link its
+ * words. With a `width` the runs are wrapped there, each later line set in by `indent`.
+ */
+export function inlineMarkdown(k: Kit, text: string, options: InlineOptions = {}): RenderNode[] {
+  const { Text } = k;
+  const nodes: RenderNode[] = [];
+  inlineLines(text, options).forEach((line, i) => {
+    if (i) nodes.push(`\n${" ".repeat(options.indent ?? 0)}`);
+    line.forEach((run, j) =>
+      nodes.push(
+        run.isCode || run.isBold || run.isItalic || run.isDim ? (
+          <Text
+            key={`r${i}.${j}`}
+            color={run.isCode ? tokens.code : undefined}
+            weight={run.isBold ? "bold" : undefined}
+            italic={run.isItalic || undefined}
+            dimColor={run.isDim || undefined}
+          >
+            {run.text}
+          </Text>
+        ) : (
+          run.text
+        ),
+      ),
+    );
+  });
+  return nodes;
+}
 
 // ---- icons
 
