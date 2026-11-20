@@ -60,7 +60,7 @@ npm run e2e:vscode -- stop                            # close the driver and its
 
 - `reload` can replay a different scenario of the same plugin. Use `goto` when launch options change; the extension's own **New session** doesn't reload code. For parallel drivers set a distinct `E2E_VSCODE_SESSION` on every command.
 - `wait` can't match an input placeholder. Wait for a label instead. If a shot shows icon alt text after `reload`, run `goto` and take it again.
-- A mod that reads the prompt while rendering may not redraw on typing. If testing it requires a redraw, resize below the prompt's maximum width, then back; see [spellfix's recording](spellfix/site.scenarios.ts).
+- A mod that reads the prompt while rendering doesn't redraw on typing. If testing it requires a redraw, resize below the prompt's maximum width, then back; see [spellfix's recording](spellfix/site.scenarios.ts).
 - For a failed start, retain the run with `E2E_KEEP=1` and inspect `vscode.log`. See [graphical screen inspection](../skills/agent-plugin-dev/references/claude.md#looking-at-a-graphical-screen) for narrow, wide, and full-height screenshots.
 
 ## Claude Desktop

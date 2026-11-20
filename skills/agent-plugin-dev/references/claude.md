@@ -18,7 +18,8 @@ These quirks were observed in the VS Code extension at 2.1.327. Recheck them aft
 
 - A `Button` label doesn't wrap. `dimColor`, not `variant`, makes the button quiet in the versions tested. A long label can overflow a narrow pane.
 - An `Input` is one line. Clicking a button that reveals an input doesn't necessarily focus it; test Tab and typing. `wait` can't see placeholder text. For scripted native inputs or selects, use the setter and dispatch the corresponding event, as in [linear-issue's VS Code scenarios](../../../e2e/linear-issue/vscode.scenarios.ts).
-- Typing doesn't emit the terminal's prompt-edit events. A band that reads `$.prompt.read()` when it renders may lag the draft. See the [replay guide](../../../e2e/README.md#vs-code) for a resize workaround.
+- Typing doesn't emit the terminal's prompt-edit events or redraw the band. The band redraws only when its props change: a turn starts or ends, or the prompt box changes width. A band that reads `$.prompt.read()` when it renders can stay blank or stale until then. See the [replay guide](../../../e2e/README.md#vs-code) for a resize workaround.
+- `$.ui.scroll` can't jump to an element inside an `AssistantMessage` the mod renders: the call is denied or does nothing. Don't offer a transcript jump control that depends on it.
 
 ## Test a mod
 

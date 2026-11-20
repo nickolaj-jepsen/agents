@@ -18,8 +18,9 @@ bind `app:toggleDiffNoiseFilter` in the `Global` context of
 
 In Desktop or VS Code, click **Review** to pick a suggestion in context, skip
 it, or use **Fix all**. Fix all can be undone from its confirmation. **Add
-word** needs a personal dictionary. In VS Code the band can lag behind typing
-and the picker is mouse-only.
+word** needs a personal dictionary. In VS Code the band doesn't follow typing:
+it updates when a turn starts or ends, or when the prompt box changes width.
+The picker there is mouse-only.
 
 ```bash
 claude plugin list                                # find the installed plugin ID
