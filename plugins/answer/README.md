@@ -69,8 +69,21 @@ Use the controls on the transcript cards and scroll between questions. In
 VS Code, **Write longer note** uses the main composer for multiline notes.
 **Save note** or **Cancel note** returns any text you already had in the composer.
 
-## Numbered pick lists and pi
+## pi
 
-Numbered pick lists in Claude and question rounds in pi use the guided form
-above the prompt. Open it with `/answer` or click its offer. In pi, `Alt+a`
-focuses the form and `Esc` closes it.
+In fullscreen, question cards and their review appear below the assistant's
+message. Click a choice to save it. Click **Add a note** or the write-in to open
+a multiline editor. `Enter` saves, `Shift+Enter` adds a line, and `Esc` cancels.
+Your prompt draft stays in place.
+
+Press `Alt+a` or run `/answer` to give the key guide focus. Use the letters
+printed on a card to choose, `j` and `k` to move, `n` to edit a note, and `r`
+to switch between a question and the review. `Esc` or a click on the prompt
+returns focus there. In review, `Enter` fills the prompt and `s` sends the reply.
+
+Regular terminal mode and numbered pick lists use the guided form above the
+prompt. Open it with `/answer` or `Alt+a`. To use this form for fullscreen
+question rounds too, start pi with `--answer-guided`.
+
+Numbered pick lists in Claude Code also use the guided form. Open it with
+`/answer` or click its offer.

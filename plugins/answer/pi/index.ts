@@ -1,19 +1,5 @@
-/**
- * The pi half of the answer form: when a turn ends on a question round or a
- * pick list, a widget offers a form for it. alt+a or /answer opens it in the
- * editor's place, and its review writes the reply into the editor, above any
- * draft, to send.
- *
- * The form is a widget above the prompt, which stays shown: a click on the form or alt+a
- * gives the form the keys, a click on the prompt gives them back, and esc closes it.
- *
- * The form is the core's (`../core/forms.ts`). The draft is this session's own: in memory,
- * and on the session branch so a reload or a resumed session has its round and answers back.
- *
- * The answers outlive closing the form: a turn a background task starts keeps them, your
- * own send sets the round aside (alt+a or /answer brings it back, answers and all), and
- * sending the reply the form filled just closes the round.
- */
+/** Fullscreen rounds live in the transcript. Pick lists and regular mode use the guided form. */
+import { randomUUID } from "node:crypto";
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import { contentText } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
@@ -29,13 +15,16 @@ import {
 } from "../core/forms.ts";
 import { AnswerForm, type FormAction, type FormResult } from "./form.ts";
 import { AnswerOffer } from "./offer.ts";
+import { AnswerGuide, type Round, type RoundAction, Transcript, reveal } from "./transcript.ts";
 
 const WIDGET_KEY = "answer";
 const SHORTCUT = "alt+a";
 const ENTRY = "answer-form";
+const CARD = "answer-round";
+const GUIDED = "answer-guided";
 
-/** What the branch keeps: the form as it stood, and the round a send set aside. */
-type Saved = { held: Held | null; aside?: Held | null };
+/** Only the card entry is visible. State entries update that same card by its anchor. */
+type Saved = { held: Round | null; aside?: Round | null; archived?: Round };
 
 /** What has the keys now: the prompt, as the form opens. The TUI class has it; its interface doesn't. */
 const focusedOf = (tui: TUI): Component | null =>
@@ -77,35 +66,50 @@ const signature = (view: View | null) => (view ? `${view.id}|${view.answered}` :
 /** A round as the branch stored it: its form and an answer for each of its items. */
 const isRound = (value: unknown) => {
   if (value === null) return true;
-  const { form, draft } = value as { form?: { items?: unknown }; draft?: { answers?: unknown } };
+  if (typeof value !== "object" || value === null) return false;
+  const { form, draft } = value as {
+    form?: { items?: unknown };
+    draft?: { answers?: unknown; notes?: unknown };
+  };
   return (
     Array.isArray(form?.items) &&
     Array.isArray(draft?.answers) &&
-    form.items.length === draft.answers.length
+    Array.isArray(draft?.notes) &&
+    form.items.length === draft.answers.length &&
+    form.items.length === draft.notes.length
   );
 };
 
 /** A record another version wrote, or a corrupt one, is skipped rather than believed. */
 const isSaved = (data: unknown): data is Saved => {
   if (typeof data !== "object" || data === null || !("held" in data)) return false;
-  const { held, aside } = data as { held: unknown; aside?: unknown };
-  return isRound(held) && (aside === undefined || isRound(aside));
+  const { held, aside, archived } = data as { held: unknown; aside?: unknown; archived?: unknown };
+  return (
+    isRound(held) &&
+    (aside === undefined || isRound(aside)) &&
+    (archived === undefined || isRound(archived))
+  );
 };
 
-/** What the branch last held and set aside, so a fork or a resumed session starts from its own. */
-function restored(ctx: ExtensionContext): { held: Held | null; aside: Held | null } {
-  const branch = ctx.sessionManager.getBranch();
-  for (let i = branch.length - 1; i >= 0; i--) {
-    const entry = branch[i];
-    if (entry?.type !== "custom" || entry.customType !== ENTRY) continue;
-    if (isSaved(entry.data)) return { held: entry.data.held, aside: entry.data.aside ?? null };
-  }
-  return { held: null, aside: null };
-}
-
 export default function (pi: ExtensionAPI) {
-  let held: Held | null = null;
-  let aside: Held | null = null;
+  let held: Round | null = null;
+  let aside: Round | null = null;
+  const rounds = new Map<string, Round>();
+  let ctxOf: ExtensionContext | undefined;
+  let tui: TUI | undefined;
+  let guide: AnswerGuide | undefined;
+  let promptFocus: Component | null = null;
+  let writer = false;
+  let reviewFrom = 0;
+  let filled: { reply: string; round: Round } | undefined;
+  let sending: { round: Round; reply: string } | undefined;
+  let branchVersion = 0;
+  const visibleCards = new Set<string>();
+
+  pi.registerFlag(GUIDED, {
+    type: "boolean",
+    description: "Use the guided answer form even in fullscreen",
+  });
   /** The signature the widget last drew. */
   let shown = "";
   let lastText = "";
@@ -113,29 +117,71 @@ export default function (pi: ExtensionAPI) {
   /** The screen the form is on, and what had the keys before it. */
   let surface: { tui: TUI; back: Component | null } | undefined;
 
+  const isTranscript = () =>
+    !!held?.anchor &&
+    visibleCards.has(held.anchor) &&
+    tui?.mode === "fullscreen" &&
+    !pi.getFlag(GUIDED);
+
+  const release = () => {
+    if (guide?.focused) tui?.setFocus(promptFocus);
+  };
+
   const draw = (ctx: ExtensionContext) => {
     const view = viewOf(held);
     form?.refresh(view);
     // An open form is the widget; the offer comes back when it closes.
     if (form) return;
-    const next = signature(view);
-    if (next === shown) return;
+    // Changing pi's renderer remounts the widgets on a new TUI without calling their factories.
+    if (tui?.children.length === 0) tui = undefined;
+    const next = isTranscript() ? `round:${held?.anchor}` : signature(view);
+    if (tui && guide && shown === next) {
+      tui?.requestRender();
+      return;
+    }
+    if (shown === next && tui) return;
+    release();
+    guide = undefined;
     shown = next;
-    if (!view) return ctx.ui.setWidget(WIDGET_KEY, undefined);
-    const { answered, title } = view;
-    const note = `${answered ? ` · ${answered} answered` : ""} · ${SHORTCUT} or /answer`;
-    ctx.ui.setWidget(
-      WIDGET_KEY,
-      (_tui, theme) => new AnswerOffer(theme, title, note, () => void open(ctx)),
-    );
+    // The factory also tells us the renderer mode; ctx.mode only distinguishes TUI from RPC.
+    ctx.ui.setWidget(WIDGET_KEY, (surface, theme) => {
+      tui = surface;
+      if (isTranscript()) {
+        shown = `round:${held?.anchor}`;
+        const made = new AnswerGuide(
+          surface,
+          theme,
+          () => held,
+          (action) => act(ctx, action),
+          () => {
+            if (made === guide && held) locate(held.draft.step);
+          },
+        );
+        guide = made;
+        return guide;
+      }
+      shown = signature(view);
+      if (!view) return { render: () => [], invalidate() {} };
+      const { answered, title } = view;
+      const note = `${answered ? ` · ${answered} answered` : ""} · ${SHORTCUT} or /answer`;
+      return new AnswerOffer(theme, title, note, () => void open(ctx));
+    });
   };
 
-  const save = (ctx: ExtensionContext) => pi.appendEntry<Saved>(ENTRY, { held, aside });
+  const remember = (round: Round | null | undefined) => {
+    if (round?.anchor) rounds.set(round.anchor, round);
+  };
+  const save = (archived?: Round) => {
+    remember(held);
+    remember(aside);
+    remember(archived);
+    pi.appendEntry<Saved>(ENTRY, { held, aside, archived });
+  };
 
-  const hold = (ctx: ExtensionContext, next: Held | null) => {
+  const hold = (ctx: ExtensionContext, next: Round | null, archived?: Round) => {
     const isSame = next === held;
     held = next;
-    if (!isSame) save(ctx);
+    if (!isSame || archived) save(archived);
     draw(ctx);
   };
 
@@ -143,17 +189,80 @@ export default function (pi: ExtensionAPI) {
     if (held || !aside) return;
     held = aside;
     aside = null;
-    save(ctx);
+    save();
     draw(ctx);
   };
 
-  pi.on("session_start", (_event, ctx) => {
+  const restore = (ctx: ExtensionContext) => {
     if (!hasEditor(ctx)) return;
-    const was = restored(ctx);
-    held = was.held;
-    aside = was.aside;
+    release();
+    form?.refresh(null);
+    held = null;
+    aside = null;
+    filled = undefined;
+    sending = undefined;
+    writer = false;
+    reviewFrom = 0;
+    ++branchVersion;
+    lastText = "";
+    ctxOf = ctx;
+    rounds.clear();
+    cards.clear();
+    for (const entry of ctx.sessionManager.getBranch()) {
+      if (entry.type !== "custom" || entry.customType !== ENTRY || !isSaved(entry.data)) continue;
+      held = entry.data.held;
+      aside = entry.data.aside ?? null;
+      remember(held);
+      remember(aside);
+      remember(entry.data.archived);
+    }
     shown = "";
+    tui = undefined;
+    refreshProjection(ctx);
+  };
+
+  function refreshProjection(ctx: ExtensionContext) {
+    if (!hasEditor(ctx)) return;
+    // A compacted card is still in the branch, but no longer in the visible transcript.
+    visibleCards.clear();
+    for (const entry of ctx.sessionManager.buildContextEntries()) {
+      if (entry.type === "custom" && entry.customType === CARD && typeof entry.data === "string")
+        visibleCards.add(entry.data);
+    }
     draw(ctx);
+  }
+
+  pi.on("session_start", (_event, ctx) => restore(ctx));
+  pi.on("session_compact", (_event, ctx) => refreshProjection(ctx));
+  pi.on("session_tree", (_event, ctx) => restore(ctx));
+  pi.on("session_shutdown", () => {
+    ++branchVersion;
+    ctxOf = undefined;
+  });
+
+  const locate = (step: number, align: "start" | "end" = "start") => {
+    if (!tui || !held?.anchor) return false;
+    const card = cards.get(held.anchor);
+    return !!card && reveal(tui, card, step, align);
+  };
+  const cards = new Map<string, Transcript>();
+  pi.registerEntryRenderer<string>(CARD, (entry, _options, theme) => {
+    const id = entry.data;
+    if (typeof id !== "string") return undefined;
+    const made = new Transcript(
+      theme,
+      () => {
+        const round = rounds.get(id);
+        return round && tui?.children.length && tui.mode === "fullscreen" && !pi.getFlag(GUIDED)
+          ? { round, active: held?.anchor === id }
+          : undefined;
+      },
+      (action) => {
+        if (ctxOf && held?.anchor === id) act(ctxOf, action);
+      },
+    );
+    cards.set(id, made);
+    return made;
   });
 
   pi.on("agent_end", (event) => {
@@ -163,25 +272,47 @@ export default function (pi: ExtensionAPI) {
   // A turn that asks nothing leaves the form: a background task's turn ends on that task's news.
   pi.on("agent_settled", (event, ctx) => {
     if (!hasEditor(ctx) || event.aborted) return;
-    hold(ctx, offer(held, lastText));
+    const incoming = offer(held, lastText);
+    if (!incoming || incoming === held) return;
+    const previous = held;
+    const anchor = incoming.form.kind === "round" && !pi.getFlag(GUIDED) ? randomUUID() : undefined;
+    if (anchor) {
+      visibleCards.add(anchor);
+      pi.appendEntry(CARD, anchor);
+    }
+    reviewFrom = 0;
+    filled = undefined;
+    hold(ctx, { ...incoming, anchor }, previous ?? undefined);
+    if (isTranscript()) locate(0);
   });
 
-  // The person's own input: a blank one is no input, the round's own reply answers it, and any
-  // other message sets an answered round aside for alt+a or /answer, rather than dropping it.
+  // Extension-authored background input must not dismiss someone else's draft.
   pi.on("input", (event, ctx) => {
-    if (!held) return;
-    const text = event.text;
-    if (!text.trim()) return;
+    if (!held || !event.text.trim() || event.source === "extension") return;
     const answering = held;
-    const answered = viewOf(answering)?.answered ?? 0;
-    if (!isReplyOf(text, viewOf(answering)?.reply ?? "")) {
-      if (hasWork(answering)) {
-        aside = answering;
-        // A message from another program is not the person's, so it gets no notice.
-        if (event.source === "interactive") ctx.ui.notify(asideNotice(answered), "info");
-      }
+    const submitted = filled && isReplyOf(event.text, filled.reply) ? filled.round : undefined;
+    const v = viewOf(answering);
+    const sent = submitted || isReplyOf(event.text, v?.reply ?? "");
+    if (!sent && hasWork(answering)) {
+      aside = answering;
+      if (event.source === "interactive") ctx.ui.notify(asideNotice(v?.answered ?? 0), "info");
     }
-    hold(ctx, null);
+    sending = undefined;
+    filled = undefined;
+    hold(ctx, null, sent ? { ...(submitted ?? answering), sent: true } : answering);
+  });
+
+  pi.on("message_start", (event, ctx) => {
+    // The host emits input before its model and auth checks. Only a real user message marks
+    // a direct submission as sent; if pi refuses it, the round stays open.
+    const pending = sending;
+    if (!pending || event.message.role !== "user") return;
+    const content = event.message.content;
+    const text = typeof content === "string" ? content : contentText(content, "\n");
+    sending = undefined;
+    if (text !== pending.reply || held?.form !== pending.round.form) return;
+    filled = undefined;
+    hold(ctx, null, { ...pending.round, sent: true });
   });
 
   /** Closes the form: the keys go back where they were, the offer returns, a reply is placed. */
@@ -197,31 +328,16 @@ export default function (pi: ExtensionAPI) {
     // A turn that ended while the form was up has replaced what it answered.
     const now = viewOf(held);
     if (!result.fill || now?.id !== opened.id || !now.reply) return;
-    if (!result.send) {
-      ctx.ui.setEditorText(placeReply(ctx.ui.getEditorText(), now.reply));
-      return;
-    }
-    const answers = held;
-    try {
-      // The input hooks run inside the send and drop the round. pi 1.5.2's `sendUserMessage`
-      // answers nothing and reports a refusal to its runner, so a throw is all this can see.
-      await pi.sendUserMessage(now.reply);
-    } catch (error) {
-      if (answers) {
-        held = answers;
-        aside = null;
-        save(ctx);
-        draw(ctx);
-      }
-      ctx.ui.notify(`The message didn't send: ${String(error)}`, "warning");
-    }
+    submit(ctx, result.send ?? false);
   };
 
   const open = async (ctx: ExtensionContext) => {
     if (!hasEditor(ctx)) return;
     if (form) return surface?.tui.setFocus(form);
+    if (tui?.children.length === 0) draw(ctx);
     // A round a send set aside comes back when none is held, so alt+a works as /answer does.
     adopt(ctx);
+    if (isTranscript() && guide && focusGuide()) return;
     const answering = held;
     const opened = answering && view(answering.form, answering.draft);
     if (!answering || !opened) {
@@ -230,7 +346,7 @@ export default function (pi: ExtensionAPI) {
     }
     // Aimed at the form that was opened, so a round that arrived meanwhile is left as it is.
     const step = async (action: FormAction) => {
-      if (held) hold(ctx, stepForm(held, action, opened.id));
+      if (held) advance(ctx, held, action, opened.id);
       return viewOf(held);
     };
     // Every question's screen, so the form stands as tall as its tallest on all of them.
@@ -253,13 +369,137 @@ export default function (pi: ExtensionAPI) {
     if (form) surface?.tui.setFocus(form);
   };
 
+  function advance(ctx: ExtensionContext, round: Round, action: FormAction, id?: string) {
+    const next = stepForm(round, action, id);
+    if (next !== round) hold(ctx, { ...round, ...next });
+  }
+
+  function at(round: Round, step: number): Round {
+    return round.draft.step === step ? round : { ...round, ...stepForm(round, { do: "go", step }) };
+  }
+
+  function focusGuide() {
+    if (!tui || !guide || !held) return false;
+    if (writer) return true;
+    if (!locate(held.draft.step)) return false; // Compaction may have removed the card.
+    if (!guide.focused) {
+      promptFocus = focusedOf(tui);
+      tui.setFocus(guide);
+    }
+    return true;
+  }
+
+  function submit(ctx: ExtensionContext, send: boolean) {
+    const round = held;
+    const reply = viewOf(round)?.reply;
+    if (!round || !reply) return;
+    if (!send) {
+      const text = ctx.ui.getEditorText();
+      const draft =
+        filled && isReplyOf(text, filled.reply)
+          ? text.slice(filled.reply.length).replace(/^\n\n?/, "")
+          : text;
+      ctx.ui.setEditorText(placeReply(draft, reply));
+      filled = { reply, round };
+      release();
+      return;
+    }
+    if (!ctx.isIdle()) {
+      ctx.ui.notify("Wait for the current turn to finish before sending answers.", "info");
+      return;
+    }
+    release();
+    sending = { round, reply };
+    pi.sendUserMessage(reply);
+  }
+
+  async function editText(ctx: ExtensionContext, field: "write" | "note") {
+    const round = held;
+    const v = viewOf(round);
+    if (!round || !v) return;
+    writer = true;
+    const version = branchVersion;
+    const resumeGuide = guide?.focused ? guide : undefined;
+    const label = v.item?.label ?? "Round";
+    try {
+      const prefill = field === "write" ? v.item?.written : (v.item?.note ?? v.note);
+      const text = await ctx.ui.editor(
+        `${label}: ${field === "write" ? "Write an answer" : "Edit note"}`,
+        prefill,
+      );
+      if (version !== branchVersion || round !== held || text === undefined) return;
+      advance(ctx, round, { do: field, text });
+    } finally {
+      if (version === branchVersion) {
+        writer = false;
+        if (held?.anchor === round.anchor) {
+          // Pi's multiline dialog returns the keys to the composer by default.
+          if (tui && resumeGuide && resumeGuide === guide && focusedOf(tui) === promptFocus)
+            tui.setFocus(resumeGuide);
+          locate(held?.draft.step ?? v.step);
+        }
+      }
+    }
+  }
+
+  function act(ctx: ExtensionContext, action: RoundAction) {
+    if (!held || writer) return;
+    const go = (step: number) => {
+      if (held) hold(ctx, at(held, step));
+    };
+    const v = viewOf(held);
+    if (!v) return;
+    switch (action.kind) {
+      case "focus":
+        return void open(ctx);
+      case "release":
+        return release();
+      case "fill":
+        return submit(ctx, false);
+      case "send":
+        return submit(ctx, true);
+      case "review":
+        if (!v.isReview) reviewFrom = v.step;
+        go(v.isReview ? reviewFrom : v.count);
+        break;
+      case "go":
+        go(action.step);
+        break;
+      case "note":
+        go(action.step);
+        locate(action.step, "end");
+        void editText(ctx, "note");
+        return;
+      case "clear":
+      case "accept":
+        advance(ctx, at(held, action.step), { do: action.kind });
+        break;
+      case "pick": {
+        const target = at(held, action.step);
+        const entry = viewOf(target)?.item?.entries[action.entry];
+        if (!entry) return;
+        if (entry.kind === "write") {
+          hold(ctx, target);
+          locate(action.step);
+          void editText(ctx, "write");
+          return;
+        }
+        advance(ctx, target, entry.isChosen ? { do: "next" } : { do: "pick", entry: action.entry });
+        // The first pick doesn't move away: its note and every other card remain clickable.
+        if (!entry.isChosen) return;
+        break;
+      }
+    }
+    if (held) locate(held.draft.step);
+  }
+
   pi.registerShortcut(SHORTCUT, {
     description: "Answer the questions or pick list the last turn ended on",
     handler: (ctx) => open(ctx),
   });
 
   pi.registerCommand("answer", {
-    description: "Answer the questions or pick list the last turn ended on, from a form",
+    description: "Open the question round or numbered pick list",
     handler: async (_args, ctx) => open(ctx),
   });
 }

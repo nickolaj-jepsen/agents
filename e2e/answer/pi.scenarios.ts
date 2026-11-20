@@ -17,7 +17,29 @@ const keys = (...names: string[]): Step[] => names.map((press) => ({ press }));
 const ASKED: Step[] = [{ type: "ask" }, { press: "Enter" }, { wait: /Answer \d+ questions?/ }];
 /** alt+a opens the form in the editor's place. */
 const OPEN: Step[] = [{ press: "Alt+a" }, { wait: /1-9/ }];
-const turn = (fixture: string): Scenario["start"] => ({ turns: says(fixture) });
+const turn = (fixture: string): Scenario["start"] => ({
+  args: ["--answer-guided"],
+  turns: says(fixture),
+});
+const cards = (fixture: string, ...args: string[]): Scenario["start"] => ({
+  hermetic: true,
+  plugins: ["answer"],
+  args,
+  turns: says(fixture),
+});
+const CARD_ASK: Step[] = [{ type: "ask" }, { press: "Enter" }, { wait: "alt+a answer" }];
+// pi's scrollbar appears on the last column, then hides on its own timer.
+const withoutScrollbar =
+  (area: Region): Region =>
+  (grid) => {
+    const rect = area(grid);
+    return rect && { ...rect, w: rect.w - 1 };
+  };
+const CARD = withoutScrollbar(region.rows(/╭─ ❯?\s*Q1\//, /alt\+a answer|esc prompt/));
+const REVIEW = withoutScrollbar(
+  region.rows(/╭─ ❯?\s*Review answers/, /alt\+a answer|esc prompt|\d%\/\d+k/),
+);
+const FULL_CARD = withoutScrollbar(region.full);
 const asserts = (pattern: RegExp | string): Step => ({ wait: pattern, timeout: 4000 });
 const SOME = (fixture: string, n: number): Step[] => [
   { type: "ask" },
@@ -31,6 +53,173 @@ export default scenarios({
   harness: "pi",
   region: surface,
   scenarios: {
+    // ---- fullscreen transcript cards
+
+    "cards-open": {
+      about: "the active card appears without taking the keys from the prompt",
+      start: cards("two-q"),
+      region: CARD,
+      steps: [...CARD_ASK, { wait: "❯ Q1/2" }, { type: "a draft for later" }],
+    },
+    "cards-click": {
+      from: "cards-open",
+      about: "a click records a choice and leaves that card active",
+      region: CARD,
+      steps: [{ click: "○ B. Postgres" }, { wait: "● B. Postgres" }, { wait: "a draft for later" }],
+    },
+    "cards-note": {
+      from: "cards-click",
+      about: "a multiline note saves without changing the prompt draft",
+      region: FULL_CARD,
+      steps: [
+        { click: "Add a note" },
+        { wait: "Q1: Edit note" },
+        { paste: "keep the flag\ncheck the results" },
+        { press: "Enter" },
+        { wait: "check the results" },
+        { wait: "a draft for later" },
+      ],
+    },
+    "cards-clear": {
+      from: "cards-note",
+      about: "clearing the choice keeps its note",
+      region: CARD,
+      steps: [{ click: "Clear answer" }, { wait: "○ B. Postgres" }, { wait: "check the results" }],
+    },
+    "cards-keys": {
+      from: "cards-open",
+      about: "the guide picks a choice and navigates question cards without losing the prompt",
+      region: REVIEW,
+      steps: [
+        { press: "Alt+a" },
+        { wait: "esc prompt" },
+        { press: "b" },
+        { wait: "● B. Postgres" },
+        { press: "j" },
+        { wait: "❯ Q2/2" },
+        { press: "a" },
+        { wait: "● A. Yes" },
+        { press: "k" },
+        { wait: "❯ Q1/2" },
+        { press: "r" },
+        { wait: "❯ Review answers  2/2" },
+      ],
+    },
+    "cards-review-click": {
+      from: "cards-click",
+      about: "the collapsed review opens from its heading without taking the keys",
+      region: REVIEW,
+      steps: [
+        { click: "+ Review answers  1/2" },
+        { wait: "❯ Review answers  1/2" },
+        { wait: "Unanswered" },
+        { wait: "alt+a answer" },
+      ],
+    },
+    "cards-review-row": {
+      from: "cards-keys",
+      about: "a review row takes you back to its question",
+      region: CARD,
+      steps: [{ click: "Q1  Use SQLite?" }, { wait: "❯ Q1/2" }],
+    },
+    "cards-write": {
+      from: "cards-open",
+      about: "keyboard write-in cancels without saving, then keeps a multiline answer",
+      region: CARD,
+      steps: [
+        { press: "Alt+a" },
+        { wait: "esc prompt" },
+        { press: "c" },
+        { wait: "Q1: Write an answer" },
+        { type: "not this" },
+        { press: "Escape" },
+        { wait: "esc prompt" },
+        { press: "c" },
+        { wait: "Q1: Write an answer" },
+        { paste: "DuckDB\nembedded is fine" },
+        { press: "Enter" },
+        { wait: "❯ Q2/2" },
+        { press: "k" },
+        { wait: "embedded is fine" },
+        { press: "Escape" },
+        { wait: "a draft for later" },
+      ],
+    },
+    "cards-recommendation": {
+      about: "a bundled recommendation can be accepted, but individual choices are single-select",
+      start: cards("several"),
+      region: CARD,
+      steps: [
+        ...CARD_ASK,
+        { press: "Alt+a" },
+        { wait: "y take recommendation" },
+        { press: "y" },
+        { wait: /● A\./ },
+        { wait: /● C\./ },
+      ],
+    },
+    "cards-fill": {
+      from: "cards-keys",
+      about: "fill places the reply above the draft and returns the keyboard",
+      region: FULL_CARD,
+      steps: [
+        { click: "Fill prompt" },
+        { wait: "Q2: A" },
+        { wait: "a draft for later" },
+        { wait: "alt+a answer" },
+      ],
+    },
+    "cards-send": {
+      from: "cards-keys",
+      about: "send freezes the submitted round, but leaves the prompt draft alone",
+      region: FULL_CARD,
+      steps: [
+        { click: "Send reply" },
+        { wait: "Review answers  2/2  Sent" },
+        { wait: "a draft for later" },
+        { wait: "Q2: A" },
+      ],
+    },
+    "cards-reopen": {
+      from: "cards-click",
+      about: "a different message sets the round aside; /answer restores its answers",
+      region: CARD,
+      steps: [
+        { press: "Enter" },
+        { wait: "alt+a answer", gone: true },
+        { type: "/answer" },
+        { press: "Enter" },
+        { wait: "esc prompt" },
+        { wait: "● B. Postgres" },
+      ],
+    },
+    "cards-reload": {
+      from: "cards-click",
+      about: "reloading the extension restores the round without adding another card",
+      region: CARD,
+      steps: [
+        { press: "Ctrl+u" },
+        { type: "/reload" },
+        { press: "Enter" },
+        { wait: "Reloaded" },
+        { press: "Alt+a" },
+        { wait: "esc prompt" },
+        { wait: "● B. Postgres" },
+      ],
+    },
+    "cards-long": {
+      about: "long options and details in a fullscreen card",
+      start: cards("long-option"),
+      region: CARD,
+      steps: CARD_ASK,
+      extreme: true,
+    },
+    "cards-regular": {
+      about: "the regular terminal still offers the guided form",
+      start: cards("two-q", "--tui-mode", "regular"),
+      steps: [...ASKED, ...OPEN],
+    },
+
     // ---- the widget, closed
 
     collapsed: {

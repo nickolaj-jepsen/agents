@@ -1,0 +1,47 @@
+# answer/pi/cards-write 70x24 @0,0 (69x19)
+ ╭─ ❯ Q1/2 ─────────────────────────────────────────────────────────╮
+ │                                                                  │
+ │ Use SQLite?                                                      │
+ │                                                                  │
+ │ ○ A. SQLite                                                      │
+ │ ○ B. Postgres                                                    │
+ │ ● C. DuckDB                                                      │
+ │      embedded is fine                                            │
+ │                                                                  │
+ │ Clear answer                                                     │
+ │ Add a note                                                       │
+ │                                                                  │
+ ╰─  ───────────────────────────────────────────────────────────────╯
+
+ ╭─ Q2/2 ───────────────────────────────────────────────────────────╮
+ │               ↓ Jump to latest message · Ctrl+End                │
+
+ Q1  1/2 answered
+ alt+a answer  /answer
+--- styles
+. 1x3 2x6 . 1x58
+. 1 .x66 1
+. 1 . 3x11 .x54 1
+. 1 .x66 1
+. 1 . 4x5 .x60 1
+. 1 . 4x5 .x60 1
+. 1 . 5x11 .x54 1
+. 1 .x6 5x16 .x44 1
+. 1 .x66 1
+. 1 .x66 1
+. 1 .x66 1
+. 1 .x66 1
+. 1x3 . 1x64
+-
+. 1x3 2x4 . 1x60
+. 1 .x14 6x37 .x15 1
+-
+4x17
+. 5x5 .x9 4x7
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#dee0e1
+4 fg=#7e888e
+5 fg=#a798d7
+6 fg=#dee0e1 bg=#213b49

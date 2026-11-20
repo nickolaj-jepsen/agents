@@ -1,0 +1,40 @@
+# answer/pi/cards-review-click 160x45 @0,24 (159x16)
+ ╭─ ❯ Review answers  1/2 ──────────────────────────────────────────────────────────────────────╮
+ │                                                                                              │
+ │ Q1  Use SQLite?                                                                              │
+ │     B: Postgres                                                                              │
+ │                                                                                              │
+ │ Q2  Add caching?                                                                             │
+ │     Unanswered                                                                               │
+ │                                                                                              │
+ │ Add a round note                                                                             │
+ │ Fill prompt                                                                                  │
+ │ Send reply                                                                                   │
+ │                                                                                              │
+ ╰─  ───────────────────────────────────────────────────────────────────────────────────────────╯
+
+ Review  1/2 answered
+ alt+a answer  /answer
+--- styles
+. 1x3 2x21 . 1x71
+. 1 .x94 1
+. 1 . 3x4 .x89 1
+. 1 .x5 4x11 .x78 1
+. 1 .x94 1
+. 1 . 3x4 .x89 1
+. 1 .x5 5x10 .x79 1
+. 1 .x94 1
+. 1 .x94 1
+. 1 . 3x11 .x82 1
+. 1 . 3x10 .x83 1
+. 1 .x94 1
+. 1x3 . 1x92
+-
+5x21
+. 3x5 .x9 5x7
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#a798d7
+4 fg=#dee0e1
+5 fg=#7e888e
