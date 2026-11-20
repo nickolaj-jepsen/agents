@@ -18,8 +18,8 @@
 │  Note: Add a note
 
 
-│  + Review answers  0/2
-
+│    Answers  0 of 2 answered
+│   [ Fill prompt ]  ▸ Show all 2 questions
 
 
 
@@ -46,8 +46,8 @@
 4 .x2 3x16
 -
 -
-3 .x2 6x21
--
+4 .x4 5x24
+4 .x3 6x15 .x2 3x22
 -
 -
 -
@@ -60,6 +60,6 @@
 3 fg=#7e888e
 4 fg=#dee0e1
 5 fg=#dee0e1 bold
-6 bold
+6 fg=#5fa8cc bold
 7 fg=#9da5a9
 8 fg=#6c767b

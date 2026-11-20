@@ -1,4 +1,6 @@
 # answer/pi/cards-send 160x45 @0,0 (159x45)
+ ask
+
 
  Q1. Use SQLite?
 
@@ -22,14 +24,12 @@
 │  B ○ No
 
 
-│    Review answers  2/2  Sent
+│    Answers  2 of 2 answered ✓ Sent
 │
-│  Q1  Use SQLite?
-│      B: Postgres
-│
-│  Q2  Add caching?
-│      A: Yes
-│
+│    Q1  Use SQLite? ✓
+│        B: Postgres
+│    Q2  Add caching? ✓
+│        A: Yes
 
 
  Q1: B
@@ -45,42 +45,42 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                                                                                                          repla
 --- styles
+1 2x3 1x155
+1x159
 -
-. 1x15
+. 3x15
 -
-. 2x2 1x2
-. 2x2 1x2
+. 4x2 3x2
+. 4x2 3x2
 -
-. 1x16
+. 3x16
 -
-. 2x2 1x2
-. 2x2 1x2
+. 4x2 3x2
+. 4x2 3x2
 -
-3 .x2 4x19
-3
-3 .x2 5 . 5
-3 .x2 4 . 4 . 4x8
--
--
-3 .x2 4x20
-3
-3 .x2 4 . 4 . 4x3
-3 .x2 5 . 5
--
--
-5 .x2 1x27
+5 .x2 6x19
 5
-5 .x2 5x4
-5 .x6 6x11
-5
-5 .x2 5x4
-5 .x6 6x6
-5
+5 .x2 7 . 7
+5 .x2 6 . 6 . 6x8
 -
-7x159
-7 8x5 7x153
-7 8x5 7x153
-7x159
+-
+5 .x2 6x20
+5
+5 .x2 6 . 6 . 6x3
+5 .x2 7 . 7
+-
+-
+5 .x4 6x24 8x7
+5
+5 .x2 6x19
+5 .x8 6x11
+5 .x2 6x20
+5 .x8 6x6
+-
+1x159
+1 2x5 1x153
+1 2x5 1x153
+1x159
 -
 . 9x53
 . ax67
@@ -88,17 +88,17 @@ a draft for later
 bx159
 .x17 c
 bx159
-5x19
-5x159
+7x19
+7x159
 --- legend
-1 bold
-2 fg=#a798d7
-3 fg=#5fa8cc
-4 fg=#5fa8cc bold
-5 fg=#7e888e
-6 fg=#dee0e1
-7 bg=#213b49
-8 fg=#dee0e1 bg=#213b49
+1 bg=#213b49
+2 fg=#dee0e1 bg=#213b49
+3 bold
+4 fg=#a798d7
+5 fg=#5fa8cc
+6 fg=#5fa8cc bold
+7 fg=#7e888e
+8 fg=#68b78d
 9 fg=#ea7f81
 a fg=#9da5a9
 b fg=#6c767b

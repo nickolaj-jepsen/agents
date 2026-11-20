@@ -34,11 +34,15 @@ export type Round = Held & { anchor?: string; sent?: boolean };
 export type RoundAction =
   | { kind: "pick"; step: number; entry: number }
   | { kind: "go" | "note" | "clear" | "accept"; step: number }
-  | { kind: "fill" | "send" | "review" | "release" | "focus" };
+  | { kind: "move"; delta: -1 | 1 }
+  | { kind: "review-cursor"; index: number }
+  | { kind: "fill" | "send" | "review" | "review-toggle" | "review-open" | "release" | "focus" };
 
 type Row = BandRow<RoundAction> & { editorWidth?: number };
 type Field = { kind: "write" | "note"; step: number; editor: Editor };
 type Item = NonNullable<View["item"]>;
+const REVIEW_PAGE = 5;
+export const firstReviewStop = (v: View) => (v.reply ? -1 : 0);
 
 // Separate the active stop from answered stops, using Pi's focus and ordinary border colors.
 const questionTone = (theme: Theme, active: boolean, answered: boolean, text: string) =>
@@ -56,11 +60,14 @@ export class Transcript implements Component {
   private hits = new Map<number, Row>();
   private stops: number[] = [];
   private ends: number[] = [];
+  private reviewSelection?: [number, number];
   private input?: { field: Field; first: number; x: number; width: number; height: number };
 
   constructor(
     private readonly theme: Theme,
-    private readonly read: () => { round: Round; active: boolean; field?: Field } | undefined,
+    private readonly read: () =>
+      | { round: Round; active: boolean; reviewCursor?: number; field?: Field }
+      | undefined,
     private readonly onAction: (action: RoundAction) => void,
   ) {}
 
@@ -74,10 +81,15 @@ export class Transcript implements Component {
     return start === undefined || end === undefined ? undefined : [start, end];
   }
 
+  selection(): [number, number] | undefined {
+    return this.reviewSelection;
+  }
+
   render(columns: number): string[] {
     this.hits.clear();
     this.stops = [];
     this.ends = [];
+    this.reviewSelection = undefined;
     this.input = undefined;
     const state = this.read();
     if (!state || columns < 20) return [];
@@ -89,7 +101,6 @@ export class Transcript implements Component {
     const inner = Math.min(width - tokens.gutter, tokens.prose);
     const out: string[] = [];
     const dim = (text: string) => paint(theme, "dim", text);
-    const accent = (text: string) => paint(theme, "accent", text);
     const asRows = (lines: string[], act?: RoundAction): Row[] =>
       lines.map((text) => ({ text, act }));
     const editRows = (step: number, kind: Field["kind"], label: string): Row[] | undefined => {
@@ -124,7 +135,15 @@ export class Transcript implements Component {
               width: row.editorWidth,
               height: 1,
             };
-        } else if (row.act) this.hits.set(out.length, { ...row, text });
+        } else if (row.act || row.cells) {
+          // bandAct measures chip ranges from column one; the rail adds the gutter.
+          const cells = row.cells?.map(({ start, end, act }) => ({
+            start: start + tokens.gutter,
+            end: end + tokens.gutter,
+            act,
+          }));
+          this.hits.set(out.length, { ...row, text, cells });
+        }
         out.push(text);
       };
       heading.forEach(append);
@@ -132,12 +151,6 @@ export class Transcript implements Component {
       body.forEach(append);
       this.ends[step] = out.length;
     };
-    const reviewHeading = (title: string, pointer: string, action?: RoundAction) =>
-      asRows(
-        clamp(`${pointer} ${title}`, inner).map((line) => theme.bold(line)),
-        action,
-      );
-
     const current = view(round.form, round.draft);
     for (let step = 0; step < current.count; step++) {
       const item = view(round.form, { ...round.draft, step }).item;
@@ -241,63 +254,132 @@ export class Transcript implements Component {
       section(step, heading, rows, { here, answered });
     }
 
-    // The review is a single stop until opened. Older rounds retain their full summary.
-    const title = `Review answers  ${current.answered}/${current.count}`;
-    if (active && !current.isReview) {
-      section(current.count, reviewHeading(title, "+", { kind: "review" }), []);
-      return out;
-    }
-    const review: Row[] = [];
-    const labelWidth = Math.max(...current.review.map((row) => visibleWidth(row.label)));
-    for (const [step, row] of current.review.entries()) {
-      const action: RoundAction | undefined = active ? { kind: "go", step } : undefined;
-      const prefix = row.label + " ".repeat(labelWidth - visibleWidth(row.label) + 2);
-      const pad = " ".repeat(visibleWidth(prefix));
-      review.push(
-        ...asRows(
-          clamp(row.title, inner - pad.length, { max: 3 }).map(
-            (line, i) => (i ? pad : dim(prefix)) + line,
-          ),
-          action,
-        ),
-      );
-      const answer = row.isAnswered ? row.shown : "Unanswered";
-      review.push(
-        ...asRows(
-          prose(theme, inner - pad.length, answer, { max: 3 }, row.isAnswered ? "text" : "dim").map(
-            (line) => pad + line,
-          ),
-          action,
-        ),
-      );
-      if (row.note) review.push(...asRows(note(theme, inner, row.note)));
-      review.push({ text: "" });
-    }
-    if (current.note) review.push(...asRows(note(theme, inner, current.note)), { text: "" });
+    const open = active && current.isReview;
+    const cursor = state.reviewCursor ?? firstReviewStop(current);
+    const tone = (s: string) => questionTone(theme, open, current.answered > 0, s);
+    const title = `Answers  ${current.answered} of ${current.count} answered`;
+    const sent = round.sent ? theme.fg("success", ` ${tokens.glyph.done} Sent`) : "";
+    const heading = asRows(clamp(`  ${theme.bold(tone(title))}${sent}`, inner));
+    // Keep independent targets on the same line, wrapping only between controls.
+    const controls = (leading: string, buttons: { text: string; act: RoundAction }[]) => {
+      const rows: Row[] = [];
+      let row: Row = { text: leading, cells: [] };
+      for (const button of buttons) {
+        if (visibleWidth(row.text + indent + button.text) > inner && row.text.trim()) {
+          rows.push(row);
+          row = { text: " ", cells: [] };
+        }
+        if (row.text.trim()) row.text += indent;
+        const start = visibleWidth(row.text);
+        const text = clamp(button.text, inner - start, { max: 1 })[0] ?? "";
+        row.text += text;
+        row.cells!.push({ start, end: visibleWidth(row.text), act: button.act });
+      }
+      rows.push(row);
+      return rows;
+    };
     if (active) {
-      review.push(
-        ...(editRows(current.count, "note", "Round note: ") ?? [
-          {
-            text: dim(current.note ? "Edit round note" : "Add a round note"),
-            act: { kind: "note", step: current.count } as const,
-          },
+      const toggle = open
+        ? "▾ Hide questions"
+        : `▸ Show ${current.count === 1 ? "question" : `all ${current.count} questions`}`;
+      heading.push(
+        ...controls(" ", [
+          ...(current.reply
+            ? [
+                {
+                  text: theme.bold(
+                    questionTone(
+                      theme,
+                      open && cursor < 0,
+                      true,
+                      `[ ${open && cursor < 0 ? tokens.glyph.pointer + " " : ""}Fill prompt ]`,
+                    ),
+                  ),
+                  act: { kind: "fill" } as const,
+                },
+              ]
+            : []),
+          { text: dim(toggle), act: { kind: "review-toggle" } },
         ]),
       );
-      if (current.reply) {
-        review.push({ text: accent("Fill prompt"), act: { kind: "fill" } });
-        review.push({ text: accent("Send reply"), act: { kind: "send" } });
+    }
+
+    const review: Row[] = [];
+    let selected: [number, number] | undefined;
+    if (open || round.sent) {
+      const start = open ? Math.floor(Math.max(0, cursor) / REVIEW_PAGE) * REVIEW_PAGE : 0;
+      const end = open ? Math.min(start + REVIEW_PAGE, current.count) : current.count;
+      if (open && current.count > REVIEW_PAGE) {
+        review.push(
+          ...controls(dim(` Questions ${start + 1}–${end} of ${current.count}`), [
+            ...(start
+              ? [
+                  {
+                    text: "Previous",
+                    act: { kind: "review-cursor", index: start - REVIEW_PAGE } as const,
+                  },
+                ]
+              : []),
+            ...(end < current.count
+              ? [{ text: "Next", act: { kind: "review-cursor", index: end } as const }]
+              : []),
+          ]),
+        );
+      }
+      const labelWidth = Math.max(...current.review.map((row) => visibleWidth(row.label)));
+      for (let step = start; step < end; step++) {
+        const row = current.review[step]!;
+        const here = open && step === cursor;
+        const ink = (text: string) => theme.bold(questionTone(theme, here, row.isAnswered, text));
+        const action: RoundAction | undefined = open ? { kind: "go", step } : undefined;
+        const prefix =
+          `${here ? tokens.glyph.pointer : " "} ${row.label}` +
+          " ".repeat(labelWidth - visibleWidth(row.label) + tokens.gutter);
+        const pad = " ".repeat(visibleWidth(prefix));
+        const textWidth = inner - visibleWidth(prefix);
+        const first = review.length;
+        review.push(
+          ...asRows(
+            clamp(`${row.title}${row.isAnswered ? ` ${tokens.glyph.done}` : ""}`, textWidth, {
+              max: 3,
+            }).map((line, i) => ink((i ? pad : prefix) + line)),
+            action,
+          ),
+          ...asRows(
+            clamp(row.isAnswered ? row.shown : "Unanswered", textWidth, { max: 3 }).map(
+              (line) => pad + (row.isAnswered ? ink(line) : dim(line)),
+            ),
+            action,
+          ),
+        );
+        if (row.note)
+          review.push(
+            ...asRows(
+              prose(theme, textWidth, `Note: ${row.note}`, { max: 2 }, "dim").map(
+                (line) => pad + line,
+              ),
+              action,
+            ),
+          );
+        if (here) selected = [first, review.length];
+      }
+      const roundNote = editRows(current.count, "note", "Round note: ");
+      if (roundNote || current.note) {
+        review.push(
+          { text: "" },
+          ...(roundNote ??
+            asRows(
+              note(theme, inner, current.note),
+              open ? { kind: "note", step: current.count } : undefined,
+            )),
+        );
       }
     }
-    const marker = round.sent ? "  Sent" : "";
-    section(
-      current.count,
-      reviewHeading(
-        `${title}${marker}`,
-        active ? tokens.glyph.pointer : " ",
-        active ? { kind: "review" } : undefined,
-      ),
-      review,
-    );
+    section(current.count, heading, review, { here: open, answered: current.answered > 0 });
+    if (selected) {
+      const body = this.stops[current.count]! + heading.length + 1;
+      this.reviewSelection = [body + selected[0], body + selected[1]];
+    }
     return out;
   }
 
@@ -322,11 +404,10 @@ export class Transcript implements Component {
       });
       return { handled: true };
     }
-    const row = this.hits.get(event.y);
-    if (!row?.act || event.button !== "left") return undefined;
-    if (event.x < 1 + tokens.gutter || event.x >= visibleWidth(row.text.trimEnd()))
-      return undefined;
-    if (event.type === "click") this.onAction(row.act);
+    if (event.button !== "left" || event.x < 1 + tokens.gutter) return undefined;
+    const action = bandAct({ hits: this.hits }, event.x, event.y);
+    if (!action) return undefined;
+    if (event.type === "click") this.onAction(action);
     return event.type === "press" || event.type === "click" ? { handled: true } : undefined;
   }
 }
@@ -346,6 +427,7 @@ export class AnswerGuide implements Component, Focusable {
     private readonly tui: TUI,
     private readonly theme: Theme,
     private readonly read: () => Held | null,
+    private readonly reviewCursor: () => number | undefined,
     private readonly onAction: (action: RoundAction) => void,
     private readonly onResize: () => void,
   ) {}
@@ -390,10 +472,12 @@ export class AnswerGuide implements Component, Focusable {
     if (matchesKey(data, "escape") || matchesKey(data, "alt+a")) return { kind: "release" };
     if (data === "r") return { kind: "review" };
     if (data === "n") return { kind: "note", step: v.step };
-    if (data === "j") return { kind: "go", step: (v.step + 1) % (v.count + 1) };
-    if (data === "k") return { kind: "go", step: (v.step + v.count) % (v.count + 1) };
-    if (v.isReview && v.reply && matchesKey(data, "enter")) return { kind: "fill" };
-    if (v.isReview && v.reply && data === "s") return { kind: "send" };
+    if (data === "j" || data === "k") return { kind: "move", delta: data === "j" ? 1 : -1 };
+    if (v.isReview) {
+      if (matchesKey(data, "enter")) return { kind: "review-open" };
+      if (v.reply && data === "f") return { kind: "fill" };
+      if (v.reply && data === "s") return { kind: "send" };
+    }
     if (v.item && v.review[v.step]?.isAnswered && data === "x")
       return { kind: "clear", step: v.step };
     if (v.item?.accepts.includes(",") && data === "y") return { kind: "accept", step: v.step };
@@ -439,7 +523,8 @@ export class AnswerGuide implements Component, Focusable {
         columns,
       );
     }
-    const progress = dim(`${label}  ${v.answered}/${v.count} answered`);
+    const progressText = `${label}  ${v.answered}/${v.count} answered`;
+    const progress = dim(progressText);
     if (!this.focused)
       return clamp(this.offer("answer", `${gap}${progress}`)[0]!, columns, { max: 1 });
     const keyHint = (key: string, description: string) =>
@@ -461,15 +546,29 @@ export class AnswerGuide implements Component, Focusable {
           ),
         );
       if (write) hints.push(keyHint(write, "write"));
-    } else if (v.reply) {
-      hints.push(keyHint("enter", "fill"), keyHint("s", "send"));
+    } else {
+      const cursor = this.reviewCursor() ?? firstReviewStop(v);
+      hints.push(rawKeyHint("enter", cursor < 0 ? "fill" : "open"));
+      if (v.reply) {
+        if (cursor >= 0) hints.push(keyHint("f", "fill"));
+        hints.push(keyHint("s", "send"));
+      }
     }
-    hints.push(keyHint("n", "note"), keyHint("r", "review"), keyHint("esc", "prompt"));
+    hints.push(
+      keyHint("n", "note"),
+      keyHint("r", v.isReview ? "back" : "review"),
+      keyHint("esc", "prompt"),
+    );
     if (v.item && v.review[v.step]?.isAnswered) hints.push(keyHint("x", "clear"));
     if (v.item?.accepts.includes(",")) hints.push(keyHint("y", "take recommendation"));
     const digits = String(v.count).length;
-    const stop = v.isReview ? "Review" : `${String(v.step + 1).padStart(digits, "0")}/${v.count}`;
-    const badge = questionTone(this.theme, true, false, this.theme.inverse(` ${stop} `));
+    const stop = `${String(v.step + 1).padStart(digits, "0")}/${v.count}`;
+    const badge = questionTone(
+      this.theme,
+      true,
+      false,
+      v.isReview ? this.theme.bold(progressText) : this.theme.inverse(` ${stop} `),
+    );
     const lines = [badge];
     for (const hint of hints) {
       const previous = lines.at(-1)!;
@@ -526,7 +625,13 @@ export function reveal(
   if (offset === undefined || !span) return false;
   const start = offset + span[0];
   const end = offset + span[1] - scroll.viewportHeight;
-  if (align === "nearest" && end <= start) {
+  const selection = card.selection();
+  if (align === "nearest" && selection && end > start) {
+    // Keep the header in view when it fits; scroll to the selected row for tall pages.
+    const first = offset + selection[0];
+    const last = offset + selection[1] - scroll.viewportHeight;
+    scroll.scrollTo(Math.max(start, Math.min(first, last)));
+  } else if (align === "nearest" && end <= start) {
     const top = Math.max(end, Math.min(start, scroll.scrollTop));
     if (top !== scroll.scrollTop) scroll.scrollTo(top);
   } else {

@@ -1,5 +1,4 @@
 # answer/pi/cards-write-editing 70x24 @0,0 (69x24)
-│  A ○ SQLite
 │  B ○ Postgres
 │  C › DuckDB
 │
@@ -15,7 +14,8 @@
 │  Note: Add a note
 
 
-│  + Review answers  0/2
+│    Answers  0 of 2 answered
+│   ▸ Show all 2 questions
 
  enter save  shift+enter newline  esc cancel
 ─────────────────────────────────────────────────────────────────────
@@ -24,7 +24,6 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                repla
 --- styles
-1 .x2 1 . 2
 1 .x2 1 . 2
 1 .x2 2x4 .x6 3
 1
@@ -40,12 +39,13 @@ a draft for later
 4 .x2 2x16
 -
 -
-2 .x2 6x21
+4 .x4 5x24
+4 .x3 2x22
 -
-. 2x5 7x5 .x2 2x11 7x8 .x2 2x3 7x7
-8x69
+. 2x5 6x5 .x2 2x11 6x8 .x2 2x3 6x7
+7x69
 .x17 3
-8x69
+7x69
 2x19
 2x69
 --- legend
@@ -54,6 +54,5 @@ a draft for later
 3 inverse
 4 fg=#dee0e1
 5 fg=#dee0e1 bold
-6 bold
-7 fg=#9da5a9
-8 fg=#6c767b
+6 fg=#9da5a9
+7 fg=#6c767b

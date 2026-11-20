@@ -14,8 +14,8 @@
 │  Note: Add a note
 
 
-│  + Review answers  1/1
-
+│    Answers  1 of 1 answered
+│   [ Fill prompt ]  ▸ Show question
 
 
 
@@ -44,7 +44,8 @@
 1 .x2 3x16
 -
 -
-3 .x2 4x21
+4 .x4 5x24
+4 .x3 5x15 .x2 3x15
 -
 -
 -
@@ -55,14 +56,13 @@
 -
 -
 -
--
-5x5 .x2 6x2 3x5 .x2 6x3 3x5 .x2 6 3x6 .x2 6 3x5 .x2 6 3x7 .x2 6x3 3x7 .x2 6 3x6 .x2 6 3x20
+6x5 .x2 4x2 3x5 .x2 4x3 3x5 .x2 4 3x6 .x2 4 3x5 .x2 4 3x7 .x2 4x3 3x7 .x2 4 3x6 .x2 4 3x20
 7x159
 --- legend
 1 fg=#a08ed5
 2 fg=#a08ed5 bold
 3 fg=#7e888e
-4 bold
-5 fg=#a08ed5 inverse
-6 fg=#5fa8cc
+4 fg=#5fa8cc
+5 fg=#5fa8cc bold
+6 fg=#a08ed5 inverse
 7 fg=#6c767b

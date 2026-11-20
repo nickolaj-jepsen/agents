@@ -1,38 +1,32 @@
-# answer/pi/cards-keys 70x24 @0,6 (69x14)
-│  ❯ Review answers  2/2
+# answer/pi/cards-keys 70x24 @0,9 (69x11)
+│    Answers  2 of 2 answered
+│   [ ❯ Fill prompt ]  ▾ Hide questions
 │
-│  Q1  Use SQLite?
-│      B: Postgres
-│
-│  Q2  Add caching?
-│      A: Yes
-│
-│  Add a round note
-│  Fill prompt
-│  Send reply
+│    Q1  Use SQLite? ✓
+│        B: Postgres
+│    Q2  Add caching? ✓
+│        A: Yes
 
- Review   jk move  enter fill  s send  n note  r review  esc prompt
+Review  2/2 answered  jk move  enter fill  s send  n note  r back
+ esc prompt
 ─────────────────────────────────────────────────────────────────────
 --- styles
-1 .x2 2x21
+1 .x4 2x24
+1 .x3 2x17 .x2 3x16
 1
-1 .x2 1x4
-1 .x6 3x11
-1
-1 .x2 1x4
-1 .x6 3x6
-1
-1 .x2 1x16
-1 .x2 4x11
-1 .x2 4x10
+1 .x2 4x19
+1 .x8 4x11
+1 .x2 4x20
+1 .x8 4x6
 -
-5x8 .x2 6x2 1x5 .x2 6x5 1x5 .x2 6 1x5 .x2 6 1x5 .x2 6 1x7 .x2 6x3 1x7
+2x20 .x2 5x2 3x5 .x2 3x5 6x5 .x2 5 3x5 .x2 5 3x5 .x2 5 3x5
+. 5x3 3x7
 7x69
 --- legend
-1 fg=#7e888e
-2 bold
-3 fg=#dee0e1
-4 fg=#a798d7
-5 fg=#a08ed5 inverse
-6 fg=#5fa8cc
+1 fg=#a08ed5
+2 fg=#a08ed5 bold
+3 fg=#7e888e
+4 fg=#5fa8cc bold
+5 fg=#5fa8cc
+6 fg=#9da5a9
 7 fg=#6c767b

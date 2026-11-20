@@ -37,7 +37,7 @@ const withoutScrollbar =
   };
 const promptRule = /^─{20,}/;
 const CARD = withoutScrollbar(region.rows(/^│\s+(?:❯ )?Q1  /, promptRule));
-const REVIEW = withoutScrollbar(region.rows(/^│\s+❯ Review answers/, promptRule));
+const REVIEW = withoutScrollbar(region.rows(/^│\s+Answers /, promptRule));
 const FULL_CARD = withoutScrollbar(region.full);
 const asserts = (pattern: RegExp | string): Step => ({ wait: pattern, timeout: 4000 });
 const SOME = (fixture: string, n: number): Step[] => [
@@ -119,18 +119,24 @@ export default scenarios({
         { press: "k" },
         { wait: "❯ Q1  Use SQLite?" },
         { press: "r" },
-        { wait: "❯ Review answers  2/2" },
+        { wait: "Answers  2 of 2 answered" },
+        { wait: "Hide questions" },
       ],
     },
     "cards-review-click": {
       from: "cards-click",
-      about: "the collapsed review opens from its heading without taking the keys",
+      about: "the review expands and collapses without taking the keys",
       region: REVIEW,
       steps: [
-        { click: "+ Review answers  1/2" },
-        { wait: "❯ Review answers  1/2" },
+        { click: "Show all 2 questions" },
         { wait: "Unanswered" },
         { wait: "alt+a answer" },
+        { click: "Hide questions" },
+        { wait: "Unanswered", gone: true },
+        { wait: "Show all 2 questions" },
+        { wait: "a draft for later" },
+        { click: "Show all 2 questions" },
+        { wait: "Hide questions" },
       ],
     },
     "cards-review-row": {
@@ -204,8 +210,8 @@ export default scenarios({
       about: "send freezes the submitted round, but leaves the prompt draft alone",
       region: FULL_CARD,
       steps: [
-        { click: "Send reply" },
-        { wait: "Review answers  2/2  Sent" },
+        { press: "s" },
+        { wait: "Answers  2 of 2 answered ✓ Sent" },
         { wait: "a draft for later" },
         { wait: "Q2: A" },
       ],
@@ -278,6 +284,58 @@ export default scenarios({
         },
         { press: "Enter" },
         { wait: "Check 大阪" },
+      ],
+    },
+    "cards-review-closed": {
+      from: "cards-stress",
+      about: "the folded summary keeps the fill and expand controls visible",
+      region: REVIEW,
+      sizes: [[160, 45]],
+      steps: [
+        { press: "r" },
+        { wait: "Hide questions" },
+        { click: "Hide questions" },
+        { wait: "Show all 12 questions" },
+        { wait: "Hide questions", gone: true },
+      ],
+    },
+    "cards-review-stress": {
+      from: "cards-stress",
+      about: "a paginated review with a long multilingual title, answer and note",
+      region: REVIEW,
+      extreme: true,
+      steps: [
+        { press: "r" },
+        { wait: /Questions 1.5 of 12/ },
+        { press: "j" },
+        { wait: "enter open" },
+      ],
+    },
+    "cards-review-page": {
+      about: "page buttons and j/k move the selection; Enter opens its question",
+      start: cards("many"),
+      region: REVIEW,
+      steps: [
+        ...CARD_ASK,
+        { press: "Ctrl+End" },
+        { wait: "Show all 12 questions" },
+        { click: "Show all 12 questions" },
+        { wait: /Questions 1.5 of 12/ },
+        { click: "Next" },
+        { wait: "❯ Q6" },
+        { click: "Previous" },
+        { wait: "❯ Q1" },
+        { press: "Alt+a" },
+        { press: "k" },
+        { wait: "❯ Q12" },
+        { press: "j" },
+        { wait: "❯ Q1" },
+        { press: "j" },
+        { wait: "❯ Q2" },
+        { press: "Enter" },
+        { wait: "02/12" },
+        { press: "r" },
+        { wait: "Hide questions" },
       ],
     },
     "cards-reference": {

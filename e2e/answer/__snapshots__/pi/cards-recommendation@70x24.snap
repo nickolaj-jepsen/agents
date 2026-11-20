@@ -14,7 +14,7 @@
 │  Note: Add a note
 
 
-│  + Review answers  1/1
+│    Answers  1  ↓ Jump to latest message · Ctrl+End
 
  1/1   jk move  A–C pick  D write  n note  r review  esc prompt
  x clear  y take recommendation
@@ -35,16 +35,17 @@
 1 .x2 3x16
 -
 -
-3 .x2 4x21
+4 .x4 5x11 6x37
 -
-5x5 .x2 6x2 3x5 .x2 6x3 3x5 .x2 6 3x6 .x2 6 3x5 .x2 6 3x7 .x2 6x3 3x7
-. 6 3x6 .x2 6 3x20
-7x69
+7x5 .x2 4x2 3x5 .x2 4x3 3x5 .x2 4 3x6 .x2 4 3x5 .x2 4 3x7 .x2 4x3 3x7
+. 4 3x6 .x2 4 3x20
+8x69
 --- legend
 1 fg=#a08ed5
 2 fg=#a08ed5 bold
 3 fg=#7e888e
-4 bold
-5 fg=#a08ed5 inverse
-6 fg=#5fa8cc
-7 fg=#6c767b
+4 fg=#5fa8cc
+5 fg=#5fa8cc bold
+6 fg=#dee0e1 bg=#213b49
+7 fg=#a08ed5 inverse
+8 fg=#6c767b

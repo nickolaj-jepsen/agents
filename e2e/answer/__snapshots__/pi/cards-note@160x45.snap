@@ -34,8 +34,8 @@
 │  Note: Add a note
 
 
-│  + Review answers  1/2
-
+│    Answers  1 of 2 answered
+│   [ Fill prompt ]  ▸ Show all 2 questions
 
 
  alt+a answer  Q1  1/2 answered
@@ -80,14 +80,14 @@ a draft for later
 8 .x2 7x16
 -
 -
-7 .x2 3x21
+a .x4 bx24
+a .x3 bx15 .x2 7x22
 -
 -
--
-. 7x5 ax7 .x2 7x16
-bx159
-.x17 c
-bx159
+. 7x5 cx7 .x2 7x16
+dx159
+.x17 e
+dx159
 7x19
 7x159
 --- legend
@@ -100,6 +100,8 @@ bx159
 7 fg=#7e888e
 8 fg=#dee0e1
 9 fg=#dee0e1 bold
-a fg=#9da5a9
-b fg=#6c767b
-c inverse
+a fg=#5fa8cc
+b fg=#5fa8cc bold
+c fg=#9da5a9
+d fg=#6c767b
+e inverse

@@ -1,18 +1,18 @@
 # answer/pi/cards-fill 70x24 @0,0 (69x24)
+│  C ○ Write your own answer
+│
+│  Clear answer
+│
 │  Note: Add a note
 
 
-│  ❯ Review answers  2/2
+│    Answers  2 of 2 answered
+│   [ ❯ Fill prompt ]  ▾ Hide questions
 │
-│  Q1  Use SQLite?
-│      B: Postgres
-│
-│  Q2  Add caching?
-│      A: Yes
-│
-│  Add a round note
-│  Fill prompt
-│  Send reply
+│    Q1  Use SQLite? ✓
+│        B: Postgres
+│    Q2  Add caching? ✓
+│        A: Yes
 
  alt+a answer  Review  2/2 answered
 ─────────────────────────────────────────────────────────────────────
@@ -24,20 +24,20 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                repla
 --- styles
+1 .x2 2 . 2 . 2x21
+1
+1 .x2 2x12
+1
 1 .x2 2x16
 -
 -
-2 .x2 3x21
-2
-2 .x2 2x4
-2 .x6 4x11
-2
-2 .x2 2x4
-2 .x6 4x6
-2
-2 .x2 2x16
-2 .x2 5x11
-2 .x2 5x10
+3 .x4 4x24
+3 .x3 4x17 .x2 2x16
+3
+3 .x2 5x19
+3 .x8 5x11
+3 .x2 5x20
+3 .x8 5x6
 -
 . 2x5 6x7 .x2 2x20
 7x69
@@ -51,9 +51,9 @@ a draft for later
 --- legend
 1 fg=#5fa8cc
 2 fg=#7e888e
-3 bold
-4 fg=#dee0e1
-5 fg=#a798d7
+3 fg=#a08ed5
+4 fg=#a08ed5 bold
+5 fg=#5fa8cc bold
 6 fg=#9da5a9
 7 fg=#6c767b
 8 inverse

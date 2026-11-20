@@ -1,37 +1,30 @@
-# answer/pi/cards-review-click 70x24 @0,6 (69x14)
-│  ❯ Review answers  1/2
+# answer/pi/cards-review-click 70x24 @0,10 (69x10)
+│    Answers  1 of 2 answered
+│   [ ❯ Fill prompt ]  ▾ Hide questions
 │
-│  Q1  Use SQLite?
-│      B: Postgres
-│
-│  Q2  Add caching?
-│      Unanswered
-│
-│  Add a round note
-│  Fill prompt
-│  Send reply
+│    Q1  Use SQLite? ✓
+│        B: Postgres
+│    Q2  Add caching?
+│        Unanswered
 
  alt+a answer  Review  1/2 answered
 ─────────────────────────────────────────────────────────────────────
 --- styles
-1 .x2 2x21
+1 .x4 2x24
+1 .x3 2x17 .x2 3x16
 1
-1 .x2 1x4
-1 .x6 3x11
-1
-1 .x2 1x4
-1 .x6 1x10
-1
-1 .x2 1x16
-1 .x2 4x11
-1 .x2 4x10
+1 .x2 4x19
+1 .x8 4x11
+1 .x2 5x18
+1 .x8 3x10
 -
-. 1x5 5x7 .x2 1x20
-6x69
+. 3x5 6x7 .x2 3x20
+7x69
 --- legend
-1 fg=#7e888e
-2 bold
-3 fg=#dee0e1
-4 fg=#a798d7
-5 fg=#9da5a9
-6 fg=#6c767b
+1 fg=#a08ed5
+2 fg=#a08ed5 bold
+3 fg=#7e888e
+4 fg=#5fa8cc bold
+5 fg=#dee0e1 bold
+6 fg=#9da5a9
+7 fg=#6c767b

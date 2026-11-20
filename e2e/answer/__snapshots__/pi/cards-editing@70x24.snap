@@ -1,5 +1,4 @@
 # answer/pi/cards-editing 70x24 @0,0 (69x24)
-│  C ○ Write your own answer
 │
 │  Clear answer
 │
@@ -15,7 +14,8 @@
 │  Note: Add a note
 
 
-│  + Review answers  1/2
+│    Answers  1 of 2 answered
+│   [ Fill prompt ]  ▸ Show all 2 questions
 
  enter save  shift+enter newline  esc cancel
 ─────────────────────────────────────────────────────────────────────
@@ -24,7 +24,6 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                repla
 --- styles
-1 .x2 1 . 2 . 2x21
 1
 1 .x2 2x12
 1
@@ -40,12 +39,13 @@ a draft for later
 4 .x2 2x16
 -
 -
-2 .x2 6x21
+6 .x4 7x24
+6 .x3 7x15 .x2 2x22
 -
-. 2x5 7x5 .x2 2x11 7x8 .x2 2x3 7x7
-8x69
+. 2x5 8x5 .x2 2x11 8x8 .x2 2x3 8x7
+9x69
 .x8 3
-8x69
+9x69
 2x19
 2x69
 --- legend
@@ -54,6 +54,7 @@ a draft for later
 3 inverse
 4 fg=#dee0e1
 5 fg=#dee0e1 bold
-6 bold
-7 fg=#9da5a9
-8 fg=#6c767b
+6 fg=#5fa8cc
+7 fg=#5fa8cc bold
+8 fg=#9da5a9
+9 fg=#6c767b

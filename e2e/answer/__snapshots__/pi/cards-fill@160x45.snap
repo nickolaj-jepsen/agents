@@ -1,4 +1,8 @@
 # answer/pi/cards-fill 160x45 @0,0 (159x45)
+
+ Q2. Add caching?
+
+ - A. Yes
  - B. No
 
 │    Q1  Use SQLite? ✓
@@ -23,17 +27,13 @@
 │  Note: Add a note
 
 
-│  ❯ Review answers  2/2
+│    Answers  2 of 2 answered
+│   [ ❯ Fill prompt ]  ▾ Hide questions
 │
-│  Q1  Use SQLite?
-│      B: Postgres
-│
-│  Q2  Add caching?
-│      A: Yes
-│
-│  Add a round note
-│  Fill prompt
-│  Send reply
+│    Q1  Use SQLite? ✓
+│        B: Postgres
+│    Q2  Add caching? ✓
+│        A: Yes
 
  alt+a answer  Review  2/2 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -45,7 +45,11 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                                                                                                          repla
 --- styles
-. 1x2 2x2
+-
+. 1x16
+-
+. 2x2 1x2
+. 2x2 1x2
 -
 3 .x2 4x19
 3
@@ -69,34 +73,31 @@ a draft for later
 3 .x2 5x16
 -
 -
-5 .x2 2x21
-5
-5 .x2 5x4
-5 .x6 6x11
-5
-5 .x2 5x4
-5 .x6 6x6
-5
-5 .x2 5x16
-5 .x2 1x11
-5 .x2 1x10
+6 .x4 7x24
+6 .x3 7x17 .x2 5x16
+6
+6 .x2 4x19
+6 .x8 4x11
+6 .x2 4x20
+6 .x8 4x6
 -
-. 5x5 7x7 .x2 5x20
-8x159
+. 5x5 8x7 .x2 5x20
+9x159
 -
 -
 -
-.x17 9
-8x159
+.x17 a
+9x159
 5x19
 5x159
 --- legend
-1 fg=#a798d7
-2 bold
+1 bold
+2 fg=#a798d7
 3 fg=#5fa8cc
 4 fg=#5fa8cc bold
 5 fg=#7e888e
-6 fg=#dee0e1
-7 fg=#9da5a9
-8 fg=#6c767b
-9 inverse
+6 fg=#a08ed5
+7 fg=#a08ed5 bold
+8 fg=#9da5a9
+9 fg=#6c767b
+a inverse

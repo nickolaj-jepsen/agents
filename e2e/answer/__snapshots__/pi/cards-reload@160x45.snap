@@ -19,10 +19,10 @@
 │  Note: Add a note
 
 
-│  + Review answers  1/2
+│    Answers  1 of 2 answered
+│   [ Fill prompt ]  ▸ Show all 2 questions
 
  Reloaded keybindings, extensions, skills, prompts, themes, and context files
-
 
  1/2   jk move  A–B pick  C write  n note  r review  esc prompt  x clear
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -47,12 +47,12 @@
 4 .x2 3x16
 -
 -
-3 .x2 6x21
+6 .x4 7x24
+6 .x3 7x15 .x2 3x22
 -
 . 3x76
 -
--
-7x5 .x2 8x2 3x5 .x2 8x3 3x5 .x2 8 3x6 .x2 8 3x5 .x2 8 3x7 .x2 8x3 3x7 .x2 8 3x6
+8x5 .x2 6x2 3x5 .x2 6x3 3x5 .x2 6 3x6 .x2 6 3x5 .x2 6 3x7 .x2 6x3 3x7 .x2 6 3x6
 9x159
 --- legend
 1 fg=#a08ed5
@@ -60,7 +60,7 @@
 3 fg=#7e888e
 4 fg=#dee0e1
 5 fg=#dee0e1 bold
-6 bold
-7 fg=#a08ed5 inverse
-8 fg=#5fa8cc
+6 fg=#5fa8cc
+7 fg=#5fa8cc bold
+8 fg=#a08ed5 inverse
 9 fg=#6c767b

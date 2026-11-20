@@ -1,4 +1,4 @@
-# answer/pi/cards-reopen 160x45 @0,8 (159x33)
+# answer/pi/cards-reopen 160x45 @0,7 (159x34)
 │  ❯ Q1  Use SQLite? ✓
 │
 │  A ○ SQLite
@@ -19,7 +19,8 @@
 │  Note: Add a note
 
 
-│  + Review answers  1/2
+│    Answers  1 of 2 answered
+│   [ Fill prompt ]  ▸ Show all 2 questions
 
  1 answer set aside: /answer brings them back.
 
@@ -53,18 +54,19 @@
 4 .x2 3x16
 -
 -
-3 .x2 6x21
+6 .x4 7x24
+6 .x3 7x15 .x2 3x22
 -
 . 3x45
 -
-7x159
-7 8x17 7x141
-7x159
+8x159
+8 9x17 8x141
+8x159
 -
-. 9x53
-. ax67
+. ax53
+. bx67
 -
-bx5 .x2 cx2 3x5 .x2 cx3 3x5 .x2 c 3x6 .x2 c 3x5 .x2 c 3x7 .x2 cx3 3x7 .x2 c 3x6
+cx5 .x2 6x2 3x5 .x2 6x3 3x5 .x2 6 3x6 .x2 6 3x5 .x2 6 3x7 .x2 6x3 3x7 .x2 6 3x6
 dx159
 --- legend
 1 fg=#a08ed5
@@ -72,11 +74,11 @@ dx159
 3 fg=#7e888e
 4 fg=#dee0e1
 5 fg=#dee0e1 bold
-6 bold
-7 bg=#213b49
-8 fg=#dee0e1 bg=#213b49
-9 fg=#ea7f81
-a fg=#9da5a9
-b fg=#a08ed5 inverse
-c fg=#5fa8cc
+6 fg=#5fa8cc
+7 fg=#5fa8cc bold
+8 bg=#213b49
+9 fg=#dee0e1 bg=#213b49
+a fg=#ea7f81
+b fg=#9da5a9
+c fg=#a08ed5 inverse
 d fg=#6c767b

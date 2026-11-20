@@ -33,8 +33,8 @@
 │  Note: Add a note
 
 
-│  + Review answers  1/2
-
+│    Answers  1 of 2 answered
+│   [ Fill prompt ]  ▸ Show all 2 questions
 
 
 
@@ -79,15 +79,15 @@ a draft for later
 9 .x2 7x16
 -
 -
-7 .x2 3x21
+b .x4 cx24
+b .x3 cx15 .x2 7x22
 -
 -
 -
--
-. 7x5 bx5 .x2 7x11 bx8 .x2 7x3 bx7
-cx159
+. 7x5 dx5 .x2 7x11 dx8 .x2 7x3 dx7
+ex159
 .x8 8
-cx159
+ex159
 7x19
 7x159
 --- legend
@@ -101,5 +101,7 @@ cx159
 8 inverse
 9 fg=#dee0e1
 a fg=#dee0e1 bold
-b fg=#9da5a9
-c fg=#6c767b
+b fg=#5fa8cc
+c fg=#5fa8cc bold
+d fg=#9da5a9
+e fg=#6c767b

@@ -1,14 +1,14 @@
 # answer/pi/cards-send 70x24 @0,0 (69x24)
+│  A ● Yes
+│  B ○ No
 
 
-│    Review answers  2/2  Sent
+│    Answers  2 of 2 answered ✓ Sent
 │
-│  Q1  Use SQLite?
-│      B: Postgres
-│
-│  Q2  Add caching?
-│      A: Yes
-│
+│    Q1  Use SQLite? ✓
+│        B: Postgres
+│    Q2  Add caching? ✓
+│        A: Yes
 
 
  Q1: B
@@ -24,37 +24,38 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                repla
 --- styles
+1 .x2 2 . 2 . 2x3
+1 .x2 3 . 3
 -
 -
-1 .x2 2x27
+1 .x4 2x24 4x7
 1
-1 .x2 1x4
-1 .x6 3x11
-1
-1 .x2 1x4
-1 .x6 3x6
-1
+1 .x2 2x19
+1 .x8 2x11
+1 .x2 2x20
+1 .x8 2x6
 -
-4x69
-4 5x5 4x63
-4 5x5 4x63
-4x69
+5x69
+5 6x5 5x63
+5 6x5 5x63
+5x69
 -
-. 6x53
-. 7x67
+. 7x53
+. 8x67
 -
-8x69
-.x17 9
-8x69
-1x19
-1x69
+9x69
+.x17 a
+9x69
+3x19
+3x69
 --- legend
-1 fg=#7e888e
-2 bold
-3 fg=#dee0e1
-4 bg=#213b49
-5 fg=#dee0e1 bg=#213b49
-6 fg=#ea7f81
-7 fg=#9da5a9
-8 fg=#6c767b
-9 inverse
+1 fg=#5fa8cc
+2 fg=#5fa8cc bold
+3 fg=#7e888e
+4 fg=#68b78d
+5 bg=#213b49
+6 fg=#dee0e1 bg=#213b49
+7 fg=#ea7f81
+8 fg=#9da5a9
+9 fg=#6c767b
+a inverse

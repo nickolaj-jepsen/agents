@@ -79,7 +79,14 @@ and `Esc` cancels. Your prompt draft stays in place.
 Press `Alt+a` or run `/answer` to give the key guide focus. Use the letters
 printed on a card to choose, `j` and `k` to move, `n` to edit a note, and `r`
 to switch between a question and the review. `Esc` or a click on the prompt
-returns focus there. In review, `Enter` fills the prompt and `s` sends the reply.
+returns focus there.
+
+The **Answers** box shows your progress. Click **Show questions** to expand it,
+or press `j` from the last question. In review, use `j` and `k` to move between
+rows, and `Enter` to open the selected question or activate **Fill prompt**.
+Press `k` from the first stop to return to the last question. You can also click
+**Hide questions** to collapse the box. Press `f` to fill the prompt without
+sending, or `s` to send the reply.
 
 Regular terminal mode and numbered pick lists use the guided form above the
 prompt. Open it with `/answer` or `Alt+a`. To use this form for fullscreen

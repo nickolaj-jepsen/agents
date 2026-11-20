@@ -1,0 +1,57 @@
+# answer/pi/cards-review-stress 240x60 @0,33 (239x23)
+│    Answers  1 of 12 answered
+│   [ Fill prompt ]  ▾ Hide questions
+│
+│   Questions 1–5 of 12  Next
+│  ❯ Q1   Which rollout should we use for 東京、大阪、名古屋 and the other regional
+│         clusters, 東京、大阪、名古屋 and the other regional clusters, 東京、大阪
+│         、名古屋 and the other regional clusters, given the migration window? ✓
+│         A: Canary: validate the read replicas in 東京 and compare results before
+│         promoting. validate the read replicas in 東京 and compare results before
+│         promoting. validate the read replicas in 東京 and compare results before…
+│         Note: Keep 東京 on the old routing until the replicas catch up and the
+│         dashboards agree. Check 大阪 before widening the rollout.
+│    Q2   Question number 2: pick a strategy?
+│         Unanswered
+│    Q3   Question number 3: pick a strategy?
+│         Unanswered
+│    Q4   Question number 4: pick a strategy?
+│         Unanswered
+│    Q5   Question number 5: pick a strategy?
+│         Unanswered
+
+Review  1/12 answered  jk move  enter open  f fill  s send  n note  r back  esc prompt
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+--- styles
+1 .x4 2x25
+1 .x3 3x15 .x2 4x16
+1
+1 .x2 4x20
+1 .x2 2x80
+1 .x2 2x79
+1 .x2 2x78
+1 .x9 2x72
+1 .x9 2x72
+1 .x9 2x72
+1 .x9 4x70
+1 .x9 4x57
+1 .x2 5x42
+1 .x9 4x10
+1 .x2 5x42
+1 .x9 4x10
+1 .x2 5x42
+1 .x9 4x10
+1 .x2 5x42
+1 .x9 4x10
+-
+2x21 .x2 6x2 4x5 .x2 4x5 7x5 .x2 6 4x5 .x2 6 4x5 .x2 6 4x5 .x2 6 4x5 .x2 6x3 4x7
+8x239
+--- legend
+1 fg=#a08ed5
+2 fg=#a08ed5 bold
+3 fg=#5fa8cc bold
+4 fg=#7e888e
+5 fg=#dee0e1 bold
+6 fg=#5fa8cc
+7 fg=#9da5a9
+8 fg=#6c767b

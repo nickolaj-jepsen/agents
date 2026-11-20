@@ -1,0 +1,18 @@
+# answer/pi/cards-review-closed 160x45 @0,36 (159x5)
+│    Answers  1 of 12 answered
+│   [ Fill prompt ]  ▸ Show all 12 questions
+
+ 01/12   jk move  A–B pick  C write  n note  r review  esc prompt  x clear
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+--- styles
+1 .x4 2x25
+1 .x3 2x15 .x2 3x23
+-
+4x7 .x2 1x2 3x5 .x2 1x3 3x5 .x2 1 3x6 .x2 1 3x5 .x2 1 3x7 .x2 1x3 3x7 .x2 1 3x6
+5x159
+--- legend
+1 fg=#5fa8cc
+2 fg=#5fa8cc bold
+3 fg=#7e888e
+4 fg=#a08ed5 inverse
+5 fg=#6c767b

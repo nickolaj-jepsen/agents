@@ -15,7 +15,14 @@ import {
 } from "../core/forms.ts";
 import { AnswerForm, type FormAction, type FormResult } from "./form.ts";
 import { AnswerOffer } from "./offer.ts";
-import { AnswerGuide, type Round, type RoundAction, Transcript, reveal } from "./transcript.ts";
+import {
+  AnswerGuide,
+  firstReviewStop,
+  type Round,
+  type RoundAction,
+  Transcript,
+  reveal,
+} from "./transcript.ts";
 
 const WIDGET_KEY = "answer";
 const SHORTCUT = "alt+a";
@@ -100,6 +107,7 @@ export default function (pi: ExtensionAPI) {
   let guide: AnswerGuide | undefined;
   let promptFocus: Component | null = null;
   let reviewFrom = 0;
+  let reviewCursor: number | undefined;
   let filled: { reply: string; round: Round } | undefined;
   let sending: { round: Round; reply: string } | undefined;
   const visibleCards = new Set<string>();
@@ -150,6 +158,7 @@ export default function (pi: ExtensionAPI) {
           surface,
           theme,
           () => held,
+          () => reviewCursor,
           (action) => act(ctx, action),
           () => {
             if (made === guide && held) locate(held.draft.step, made.editing ? "nearest" : "start");
@@ -178,6 +187,11 @@ export default function (pi: ExtensionAPI) {
 
   const hold = (ctx: ExtensionContext, next: Round | null, archived?: Round) => {
     const isSame = next === held;
+    if (!next || next.form !== held?.form || next.draft.step !== held.draft.step) {
+      reviewCursor = undefined;
+      if (next && next.form === held?.form && next.draft.step === next.form.items.length)
+        reviewFrom = held.draft.step;
+    }
     held = next;
     if (!isSame || archived) save(archived);
     draw(ctx);
@@ -201,6 +215,7 @@ export default function (pi: ExtensionAPI) {
     sending = undefined;
     guide = undefined;
     reviewFrom = 0;
+    reviewCursor = undefined;
     lastText = "";
     ctxOf = ctx;
     rounds.clear();
@@ -253,6 +268,7 @@ export default function (pi: ExtensionAPI) {
           ? {
               round,
               active: held?.anchor === id,
+              reviewCursor,
               field: held?.anchor === id ? guide?.activeField : undefined,
             }
           : undefined;
@@ -445,10 +461,34 @@ export default function (pi: ExtensionAPI) {
         return submit(ctx, false);
       case "send":
         return submit(ctx, true);
+      case "review-toggle":
+        go(v.isReview ? reviewFrom : v.count);
+        locate(v.count, "start");
+        return;
       case "review":
-        if (!v.isReview) reviewFrom = v.step;
         go(v.isReview ? reviewFrom : v.count);
         break;
+      case "review-open": {
+        const cursor = reviewCursor ?? firstReviewStop(v);
+        if (cursor < 0) return submit(ctx, false);
+        go(cursor);
+        break;
+      }
+      case "review-cursor":
+        if (!v.isReview) return;
+        reviewCursor = action.index;
+        break;
+      case "move": {
+        if (!v.isReview) {
+          go(Math.max(0, Math.min(v.count, v.step + action.delta)));
+        } else {
+          const first = firstReviewStop(v);
+          const cursor = reviewCursor ?? first;
+          if (cursor === first && action.delta < 0) go(v.count - 1);
+          else reviewCursor = Math.min(v.count - 1, cursor + action.delta);
+        }
+        break;
+      }
       case "go":
         go(action.step);
         break;
@@ -475,7 +515,13 @@ export default function (pi: ExtensionAPI) {
         break;
       }
     }
-    if (held) locate(held.draft.step, action.kind === "review" ? "start" : "nearest");
+    if (held)
+      locate(
+        held.draft.step,
+        action.kind === "review" || (!v.isReview && held.draft.step === v.count)
+          ? "start"
+          : "nearest",
+      );
   }
 
   pi.registerShortcut(SHORTCUT, {
