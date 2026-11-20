@@ -14,17 +14,15 @@ In fullscreen, question cards appear in the transcript. The classic renderer in 
 
 Focus the fullscreen card controls before using the keys below: in Claude Code press `Ctrl+x Tab` or bind `Alt+a`; in pi press `Alt+a` or run `/answer`.
 
-| Key               | Action                                                          |
-| ----------------- | --------------------------------------------------------------- |
-| Option letter     | Pick a choice or open its write-in; pi also accepts row numbers |
-| `j`, `k`          | Move between questions or review rows                           |
-| `n`               | Add or edit a note                                              |
-| `r`               | Open review or return to the question                           |
-| `Enter` in review | Open the selected question or activate **Fill prompt**          |
-| `f`               | Fill the prompt without sending                                 |
-| `s` in pi         | Send the answers you have                                       |
-
-In pi, click a key guide action such as **Note [n]**, or press its shortcut. Hints such as `jk move` are keyboard-only.
+| Key               | Action                                                 |
+| ----------------- | ------------------------------------------------------ |
+| Option letter     | Pick a row, including write-in (pi allows row numbers) |
+| `j`, `k`          | Move between questions or review rows                  |
+| `n`               | Add or edit a note                                     |
+| `r`               | Open review or return to the question                  |
+| `Enter` in review | Open the selected question or activate **Fill prompt** |
+| `f`               | Fill the prompt without sending                        |
+| `s` in pi         | Send the answers you have                              |
 
 Open the review with **Show all questions** in Claude Code or **Show questions** in pi. **Clear answer** removes a choice without clearing its note. In the editor, `Shift+Enter` adds a line and `Enter` saves. In Claude Code, click the field or focus the band before typing. In pi, `Esc` cancels editing; a click on the prompt gives it focus.
 

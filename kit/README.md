@@ -15,12 +15,6 @@ just test                # check copies, component manifests, and unit tests
 
 Claude types are only available after `just dev-setup`; check changes in a mod with `npx tsc -p plugins/<name>/claude` as well.
 
-Use `buttonRow` for a pi footer that mixes clickable actions and keyboard-only hints. It returns rendered rows and button hit ranges. Actions are left-aligned and label-first (`Send ↵`, `Note [n]`). Pass the primary action first and mark it `isLit`. A single row drops lower-priority entries; a wrapping row keeps them.
-
-Use `controlLabel` for interactive labels. Hover or keyboard focus can bold a neutral label without taking the primary color. Pass the style to `markdownLines`, or use `.text()` for a plain label.
-
-For an inline `captionFrame`, pass `close: {}` to show Close and `close: { confirming: true }` to replace it with Discard and Keep. Use the returned `closeCells` for mouse hit testing; the caller handles the actions and keyboard shortcuts.
-
 ## Add a component or story
 
 1. Export the component from the applicable kit. Document props and non-obvious defaults on the exported types or parameters: the catalogue reads their JSDoc.

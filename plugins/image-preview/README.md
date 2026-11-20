@@ -7,8 +7,8 @@ requires:
 order: 12
 ---
 
-`Read` previews local images, including relative paths. A folded tool group shows one thumbnail and counts the rest. Press `Ctrl+O` to see each image in the detailed transcript.
+`Read` previews local images in the terminal transcript, as does `SendUserFile` unless it uses attach-only mode. Folded tool groups show one thumbnail; press `Ctrl+O` to see all images.
 
-A completed assistant reply can preview one explicit local Markdown link or image, such as `[Chart](./chart.png)`. Bare paths, code examples, and remote URLs do not get previews. `SendUserFile` keeps its attachments and captions, and previews supported images unless the tool used attach-only mode.
+An assistant reply can preview a local Markdown link or image, such as `[Chart](./chart.png)`. Bare paths, code blocks and remote URLs don't preview.
 
-Full previews fit within 144 columns and 42 rows; thumbnails fit within 24 columns and 6 rows. If images do not render in tmux, enable `allow-passthrough` and `focus-events`. Terminals without inline graphics show the image label and path. Failed JPEG conversion leaves the original output intact. Bash output and graphical clients are unchanged.
+If images don't appear in tmux, enable `allow-passthrough` and `focus-events`.
