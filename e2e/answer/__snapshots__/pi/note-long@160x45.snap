@@ -9,25 +9,28 @@
 │  3 ○ Write your own answer                                                                                                                                   │
 │                                                                                                                                                              │
 │                                                                                                                                                              │
-│ b back  f forward  s skip  r review  n note                                                                                                                  │
+│ Back [b]  Forward [f]  Skip [s]  Review [r]  Note [n]                                                                                                        │
 │ enter goes on · esc leaves the field                                                                                                                         │
 --- styles
-1x2 . 2x6 .x2 3 . 2x2 .x2 4 . 4x2 . 1x138
-1 . 5x11 .x146 1
+1x2 . 2x6 .x2 3 . 4x2 .x2 5 . 5x2 . 1x138
+1 . 6x11 .x146 1
 1 .x158 1
-1 .x2 2 . 3x11 .x143 1
-1 . 4x7 .x134 6 .x15 1
-1 .x2 2 .x155 1
+1 .x2 2 . 3x2 7x9 .x143 1
+1 . 5x7 .x134 8 .x15 1
+1 .x2 2 . 5x2 .x152 1
 1 .x158 1
-1 .x2 2 . 4x23 .x131 1
+1 .x2 2 . 5x23 .x131 1
 1 .x158 1
 1 .x158 1
-1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x119 1
-1 . 4x36 .x121 1
+1 . 9x4 . 5x3 .x2 9x7 . 5x3 .x2 9x4 . 5x3 .x2 9x6 . 5x3 .x2 9x4 . 5x3 .x104 1
+1 . 5x36 .x121 1
 --- legend
 1 fg=#768186
 2 fg=#a798d7
 3 fg=#68b78d
-4 fg=#7e888e
-5 bold
-6 inverse
+4 fg=#a798d7 bold
+5 fg=#7e888e
+6 bold
+7 fg=#68b78d bold
+8 inverse
+9 fg=#dee0e1

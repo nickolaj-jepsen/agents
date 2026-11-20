@@ -1,0 +1,59 @@
+# questions/pi/multi-extreme 160x45 @0,19 (160x24)
+─ 保存とアーカイブ ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── Close × ─
+
+  Q1  Which parts of the complete session history should stay available across
+      machines? Include the archived sessions, the tool_result records, and the
+      full 日本語 transcript when deciding what needs to be kept. Assume one
+      machine will often be offline.
+  3 selected
+
+  ❯ A ■ The complete transcript including all 日本語 tool records
+        An offline copy keeps the full sequence of user and assistant messages,
+        tool calls and their results. Copy it with the archive index, check that…
+    B ■ Every exported summary and its original session index
+        Read the session index first to find the full run. Retain the original
+        summary with the exported version so edits can be compared offline.
+    C □ 個別のツール結果と transcripts before each compaction
+        Keep the tool_result records and intermediate summaries as they were
+        written, including all of the Japanese test fixtures.
+    D □ A backup manifest that names deleted or missing sessions
+        Record which sessions were deliberately deleted, which moves are still
+        pending, and whether the backup was verified on both machines.
+  ↓ 2 below
+
+  Send [s]  Note [n]  space toggle
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+--- styles
+1 . 2x16 . 1x131 . 3x7 . 1
+-
+.x2 4x4 5x72
+.x6 5x45 6x11 5x17
+.x6 5x70
+.x6 5x30
+.x2 4x10
+-
+.x2 5 . 4 . 2 . 7x57
+.x8 4x71
+.x8 4x73
+.x4 4 . 2 . 2x53
+.x8 4x9 8x13 4x48
+.x8 4x67
+.x4 4 . 4
+.x8 4x9 6x11 4x48
+.x8 4x53
+.x4 4 . 4
+.x8 4x70
+.x8 4x62
+.x2 4x9
+-
+.x2 2x4 . 4x3 .x2 3x4 . 4x3 .x2 4x12
+1x160
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#dee0e1
+4 fg=#7e888e
+5 fg=#dee0e1 bold
+6 fg=#a798d7
+7 fg=#a798d7 bold underline=single
+8 fg=#7e888e bold

@@ -1,0 +1,37 @@
+# questions/pi/review-extreme 70x24 @0,8 (70x14)
+─ ✓ 1 保… ── ✓ 2 Loc… ── ✓ 3 履… ── ✓ 4 Remo… ── Review ──── Close × ─
+
+  1  保存とアーカイブの設定
+     • Complete 日本語 transcript and the uncompressed tool log
+     • Every exported summary with the original session index
+     • All intermediate versions before each compaction
+     • A manifest of deleted and missing archived sessions
+     • 保管する項目 and the archive index from the last complete
+       export with both timestamps and a reference to the original
+       repository
+  Lines 1–8 of 21
+
+  Send ↵
+──────────────────────────────────────────────────────────────────────
+--- styles
+1 . 2 . 3x4 . 1x4 2 . 3x5 . 1x4 2 . 3x4 . 1x4 2 . 3x6 . 1x4 4x6 . 1x4 . 3x7 . 1
+-
+.x2 2x3 5x22
+.x5 2x2
+.x5 2x2
+.x5 2x2 .x4 6x12
+.x5 2x2
+.x5 2x2
+-
+-
+.x2 2x15
+-
+.x2 4x4 . 2
+1x70
+--- legend
+1 fg=#768186
+2 fg=#7e888e
+3 fg=#dee0e1
+4 fg=#a798d7 bold
+5 fg=#dee0e1 bold
+6 bold

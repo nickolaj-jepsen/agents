@@ -35,7 +35,7 @@
 │    Q2  Add caching? ✓
 │        A: Yes
 
- alt+a answer  Review  2/2 answered
+ Answer [alt+a]  Review  2/2 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 Q1: B
 Q2: A
@@ -81,13 +81,13 @@ a draft for later
 6 .x2 4x20
 6 .x8 4x6
 -
-. 2x5 .x9 5x20
-8x159
+. 8x6 . 5x7 .x2 5x20
+9x159
 -
 -
 -
-.x17 9
-8x159
+.x17 a
+9x159
 5x5
 5x159
 --- legend
@@ -98,5 +98,6 @@ a draft for later
 5 fg=#7e888e
 6 fg=#a08ed5
 7 fg=#a08ed5 bold
-8 fg=#6c767b
-9 inverse
+8 fg=#dee0e1
+9 fg=#6c767b
+a inverse

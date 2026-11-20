@@ -8,7 +8,7 @@
 │   Q2: B                                                                                                                                                      │
 │                                                                                                                                                              │
 │                                                                                                                                                              │
-│ enter fill the prompt  s send  n note  b back                                                                                                                │
+│ Fill the prompt ↵  Send [s]  Note [n]  Back [b]                                                                                                              │
 │ 1-9 revisits · esc closes, answers kept                                                                                                                      │
 --- styles
 1x2 . 2x6 .x2 3 . 4x2 .x2 3 . 4x2 . 1x138
@@ -20,10 +20,12 @@
 1 .x158 1
 1 .x158 1
 1 .x158 1
-1 . 2x5 .x18 2 .x7 2 .x7 2 .x117 1
+1 . 5x15 . 4 .x2 6x4 . 4x3 .x2 6x4 . 4x3 .x2 6x4 . 4x3 .x110 1
 1 . 4x39 .x118 1
 --- legend
 1 fg=#768186
 2 fg=#a798d7
 3 fg=#68b78d
 4 fg=#7e888e
+5 fg=#a798d7 bold
+6 fg=#dee0e1

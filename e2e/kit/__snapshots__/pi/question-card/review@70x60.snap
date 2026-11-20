@@ -1,0 +1,41 @@
+# kit/pi/question-card/review 70x60 @2,2 (66x16)
+─ ✓ 1 AGENTS.md ── ✓ 2 docs/hosts.md ── Review ───────────────────
+
+  1  AGENTS.md
+     just build is not enough to verify a pi change; the docs
+     say it is.
+
+  2  docs/hosts.md
+     • The legacy card was removed; the section still describes
+       it.
+     • Darwin hosts need the app leaf to work on both halves.
+     Note: この節は古くなっています。ビルドが検証するのは型だけ
+           で、エージェントを起動しないことを書き足す必要があり
+           ます。
+
+
+──────────────────────────────────────────────────────────────────
+--- styles
+1 . 2 . 3x11 1x4 2 . 4x15 1x4 5x6 . 1x19
+-
+.x2 2x3 3x9
+.x5 6x10
+-
+-
+.x2 2x3 3x13
+.x5 2x2 .x4 6x6
+-
+.x5 2x2
+.x5 2x58
+.x5 2x58
+.x5 2x12
+-
+-
+1x66
+--- legend
+1 fg=#768186
+2 fg=#7e888e
+3 fg=#dee0e1 bold
+4 fg=#dee0e1
+5 fg=#a798d7 bold
+6 fg=#a798d7

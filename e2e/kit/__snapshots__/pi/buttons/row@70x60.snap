@@ -1,8 +1,9 @@
 # kit/pi/buttons/row 70x60 @2,2 (66x1)
-a apply  d dismiss  ↑↓ move  q later
+Apply ↵  Dismiss [d]  ↑↓ move  Later [q]
 --- styles
-1 . 2x5 .x2 1 .x10 3x7 .x2 1
+1x5 . 2 .x2 3x7 . 2x3 .x2 2x7 .x2 4x5 . 2x3
 --- legend
-1 fg=#a798d7
-2 bold
-3 fg=#7e888e
+1 fg=#a798d7 bold
+2 fg=#7e888e
+3 fg=#dee0e1 bold
+4 fg=#dee0e1

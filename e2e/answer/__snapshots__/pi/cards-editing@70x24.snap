@@ -17,7 +17,7 @@
 │    Answers  1 of 2 answered
 │   [ Fill prompt ]  ▸ Show all 2 questions
 
- enter save  shift+enter newline  esc cancel
+ Save ↵  shift+enter newline  Cancel [esc]
 ─────────────────────────────────────────────────────────────────────
 a draft for later
 ─────────────────────────────────────────────────────────────────────
@@ -42,10 +42,10 @@ a draft for later
 6 .x4 7x24
 6 .x3 7x15 .x2 2x22
 -
-. 8x5 . 9x4 .x2 2x19 .x2 8x3
-ax69
+. 8x4 . 2 .x2 2x19 .x2 4x6 . 2x5
+9x69
 .x8 3
-ax69
+9x69
 2x5
 2x69
 --- legend
@@ -56,6 +56,5 @@ ax69
 5 fg=#dee0e1 bold
 6 fg=#5fa8cc
 7 fg=#5fa8cc bold
-8 fg=#a798d7
-9 bold
-a fg=#6c767b
+8 fg=#a798d7 bold
+9 fg=#6c767b

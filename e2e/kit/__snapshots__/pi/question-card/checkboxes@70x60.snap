@@ -1,0 +1,19 @@
+# kit/pi/question-card/checkboxes 70x60 @2,2 (66x6)
+  A ■ just build is not enough to verify a pi change; the docs
+      say it is.
+❯ B □ The legacy card was removed; the section still describes
+      it.
+  C □ Darwin hosts need the app leaf to work on both halves.
+  D + Write your own answer
+--- styles
+.x2 1 . 2 . 3x10 2x46
+.x6 2x10
+4 . 1 . 1 . 4x4 3x6 4x46
+.x6 4x3
+.x2 1 . 1
+.x2 1 . 1 . 1x21
+--- legend
+1 fg=#7e888e
+2 fg=#a798d7 bold
+3 fg=#a798d7
+4 fg=#dee0e1 bold

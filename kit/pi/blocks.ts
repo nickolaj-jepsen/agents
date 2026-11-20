@@ -3,6 +3,31 @@ import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import { clamp, type ClampOptions } from "./text.ts";
 import { paint, tokens, type Role } from "./tokens.ts";
 
+/** One label style for plain controls and Markdown rows. Hover never takes the primary colour. */
+export function controlLabel(
+  theme: Theme,
+  {
+    primary = false,
+    highlighted = false,
+    rest = "text",
+    primaryRole = "accent",
+  }: { primary?: boolean; highlighted?: boolean; rest?: Role; primaryRole?: Role } = {},
+) {
+  const color = (text: string) =>
+    paint(theme, primary ? primaryRole : highlighted ? "text" : rest, text);
+  const bold = primary || highlighted;
+  const underline = primary && highlighted;
+  return {
+    color,
+    bold,
+    underline,
+    text: (label: string) => {
+      const ink = bold ? theme.bold(color(label)) : color(label);
+      return underline ? theme.underline(ink) : ink;
+    },
+  };
+}
+
 /**
  * A section header: bold title, then a dim rule to the edge.
  * @param title Cut with `…` when it is wider than `width`.

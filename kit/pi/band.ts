@@ -5,6 +5,14 @@ import { paint, tokens } from "./tokens.ts";
 /** A target on one cell range of a row. */
 export type BandCell<A> = { start: number; end: number; act: A };
 
+/** The visible control at `x`; separators and keyboard-only hints have no target. */
+export function cellAt<A>(
+  cells: readonly BandCell<A>[] | undefined,
+  x: number,
+): BandCell<A> | undefined {
+  return cells?.find(({ start, end }) => x >= start && x < end);
+}
+
 /**
  * One row of a band's body or footer: its text (already painted), and what a click does, as
  * one target for the whole row or one per cell range (the footer's key chips).
@@ -159,7 +167,7 @@ export function bandAct<A>(band: Pick<Band<A>, "hits">, x: number, y: number): A
   const row = band.hits.get(y);
   const at = x - 1;
   return (
-    row?.cells?.find((c) => at >= c.start && at < c.end)?.act ??
+    cellAt(row?.cells, at)?.act ??
     (row?.act !== undefined && at < visibleWidth(row.text.trimEnd()) ? row.act : undefined)
   );
 }

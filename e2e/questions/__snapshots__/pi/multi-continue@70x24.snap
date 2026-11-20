@@ -1,0 +1,27 @@
+# questions/pi/multi-continue 70x24 @0,11 (70x10)
+ The user answered:
+ - Retention: The whole transcript, Keep metadata too
+   note: Check disk usage
+ - Storage: Postgres beside the app
+
+
+ Got it.
+
+──────────────────────────────────────────────────────────────────────
+Composer draft!
+--- styles
+1 2x18 1x51
+1 2x52 1x17
+1 2x24 1x45
+1 2x34 1x35
+1x70
+-
+-
+-
+3x70
+.x15 4
+--- legend
+1 bg=#254131
+2 fg=#9da5a9 bg=#254131
+3 fg=#6c767b
+4 inverse

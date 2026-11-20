@@ -1,0 +1,38 @@
+# questions/pi/review-incomplete 70x24 @0,8 (70x14)
+─ ❯ 1 Storage ──   2 Retention ── Review ─────────────────── Close × ─
+
+  Where should the session store live?
+
+  ❯ A ○ SQLite in the checkout
+        One file, no service to run, and it can be deleted with the
+        checkout.
+    B ○ Postgres beside the app
+        Shared between machines, and one more service to keep
+        running.
+  ↓ 3 below
+  Answer question 1 first
+  Choose ↵  Note [n]
+──────────────────────────────────────────────────────────────────────
+--- styles
+1 . 2 . 3x9 1x4 4 . 4x11 1x4 5x6 . 1x19 . 5x7 . 1
+-
+.x2 6x36
+-
+.x2 6 . 4 . 4 . 6x22
+.x8 4x59
+.x8 4x9
+.x4 4 . 4
+.x8 4x53
+.x8 4x8
+.x2 4x9
+.x2 7x23
+.x2 3x6 . 4 .x2 5x4 . 4x3
+1x70
+--- legend
+1 fg=#768186
+2 fg=#a798d7
+3 fg=#a798d7 bold
+4 fg=#7e888e
+5 fg=#dee0e1
+6 fg=#dee0e1 bold
+7 fg=#cd9a22

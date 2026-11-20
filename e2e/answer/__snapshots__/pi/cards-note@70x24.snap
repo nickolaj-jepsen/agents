@@ -17,7 +17,7 @@
 │  B ○ No
 │  C ○ Write you ↓ Jump to latest message · Ctrl+End
 
- alt+a answer  Q1  1/2 answered
+ Answer [alt+a]  Q1  1/2 answered
 ─────────────────────────────────────────────────────────────────────
 a draft for later
 ─────────────────────────────────────────────────────────────────────
@@ -42,10 +42,10 @@ a draft for later
 4 .x2 3 . 3
 4 .x2 3 . 3 . 3x9 6x37
 -
-. 7x5 .x9 3x16
-8x69
-.x17 9
-8x69
+. 4x6 . 3x7 .x2 3x16
+7x69
+.x17 8
+7x69
 3x5
 3x69
 --- legend
@@ -55,6 +55,5 @@ a draft for later
 4 fg=#dee0e1
 5 fg=#dee0e1 bold
 6 fg=#dee0e1 bg=#213b49
-7 fg=#a798d7
-8 fg=#6c767b
-9 inverse
+7 fg=#6c767b
+8 inverse

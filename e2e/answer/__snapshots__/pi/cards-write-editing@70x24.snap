@@ -17,7 +17,7 @@
 │    Answers  0 of 2 answered
 │   ▸ Show all 2 questions
 
- enter save  shift+enter newline  esc cancel
+ Save ↵  shift+enter newline  Cancel [esc]
 ─────────────────────────────────────────────────────────────────────
 a draft for later
 ─────────────────────────────────────────────────────────────────────
@@ -42,10 +42,10 @@ a draft for later
 4 .x4 5x24
 4 .x3 2x22
 -
-. 6x5 . 7x4 .x2 2x19 .x2 6x3
-8x69
+. 6x4 . 2 .x2 2x19 .x2 4x6 . 2x5
+7x69
 .x17 3
-8x69
+7x69
 2x5
 2x69
 --- legend
@@ -54,6 +54,5 @@ a draft for later
 3 inverse
 4 fg=#dee0e1
 5 fg=#dee0e1 bold
-6 fg=#a798d7
-7 bold
-8 fg=#6c767b
+6 fg=#a798d7 bold
+7 fg=#6c767b

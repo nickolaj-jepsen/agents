@@ -29,7 +29,7 @@ const cards = (fixture: string, ...args: string[]): Scenario["start"] => ({
   args,
   turns: says(fixture),
 });
-const CARD_ASK: Step[] = [{ type: "ask" }, { press: "Enter" }, { wait: "alt+a answer" }];
+const CARD_ASK: Step[] = [{ type: "ask" }, { press: "Enter" }, { wait: "Answer [alt+a]" }];
 // pi's scrollbar appears on the last column, then hides on its own timer.
 const withoutScrollbar =
   (area: Region): Region =>
@@ -64,6 +64,12 @@ export default scenarios({
       region: CARD,
       steps: [...CARD_ASK, { wait: "❯ Q1  Use SQLite?" }, { type: "a draft for later" }],
     },
+    "cards-hover": {
+      from: "cards-open",
+      about: "hover a transcript choice without picking it or touching the prompt draft",
+      region: CARD,
+      steps: [{ hover: "B ○ Postgres" }, { wait: "a draft for later" }],
+    },
     "cards-click": {
       from: "cards-open",
       about: "a click records a choice and leaves that card active",
@@ -76,13 +82,13 @@ export default scenarios({
       region: FULL_CARD,
       steps: [
         { click: "Add a note" },
-        { wait: "enter save" },
+        { wait: "Save ↵" },
         { type: "keep the flag" },
         { press: "Shift+Enter" },
         { type: "check the results" },
         { press: "Enter" },
         // The editor showed the note as it was typed: its key hint going proves the save.
-        { wait: "enter save", gone: true },
+        { wait: "Save ↵", gone: true },
         { wait: "check the results" },
         { wait: "a draft for later" },
       ],
@@ -93,11 +99,11 @@ export default scenarios({
       region: FULL_CARD,
       steps: [
         { click: "Note: Add a note" },
-        { wait: "enter save" },
+        { wait: "Save ↵" },
         { type: "draft note" },
         { wait: "Note: draft note" },
         { click: "a draft for later" },
-        { wait: "alt+a resume editing" },
+        { wait: "Resume editing [alt+a]" },
         { click: "draft note" },
         { wait: "shift+enter newline" },
         { wait: "a draft for later" },
@@ -138,11 +144,11 @@ export default scenarios({
         { wait: "jk move" },
         { click: "jk move" },
         { wait: "❯ Q1  Use SQLite?" },
-        { click: "n note" },
-        { wait: "enter save" },
+        { click: "Note [n]" },
+        { wait: "Save ↵" },
         { type: "Check the migration" },
-        { click: "enter save" },
-        { wait: "enter save", gone: true },
+        { click: "Save ↵" },
+        { wait: "Save ↵", gone: true },
         { wait: "Note: Check the migration" },
         { wait: "a draft for later" },
       ],
@@ -154,7 +160,7 @@ export default scenarios({
       steps: [
         { click: "Show all 2 questions" },
         { wait: "Unanswered" },
-        { wait: "alt+a answer" },
+        { wait: "Answer [alt+a]" },
         { click: "Hide questions" },
         { wait: "Unanswered", gone: true },
         { wait: "Show all 2 questions" },
@@ -212,7 +218,7 @@ export default scenarios({
       steps: [
         ...CARD_ASK,
         { press: "Alt+a" },
-        { wait: "y take recommendation" },
+        { wait: "Take recommendation [y]" },
         { press: "y" },
         { wait: /A ●/ },
         { wait: /C ●/ },
@@ -226,7 +232,7 @@ export default scenarios({
         { click: "Fill prompt" },
         { wait: "Q2: A" },
         { wait: "a draft for later" },
-        { wait: "alt+a answer" },
+        { wait: "Answer [alt+a]" },
       ],
     },
     "cards-send": {
@@ -246,7 +252,7 @@ export default scenarios({
       region: CARD,
       steps: [
         { press: "Enter" },
-        { wait: "alt+a answer", gone: true },
+        { wait: "Answer [alt+a]", gone: true },
         { type: "/answer" },
         { press: "Enter" },
         { wait: "jk move" },
@@ -302,19 +308,19 @@ export default scenarios({
       extreme: true,
       steps: [
         ...CARD_ASK,
-        { click: "alt+a answer" },
+        { click: "Answer [alt+a]" },
         { wait: "jk move" },
         { press: "a" },
         { wait: "A ● Canary:" },
         { press: "n" },
-        { wait: "enter save" },
+        { wait: "Save ↵" },
         {
           paste:
             "Keep 東京 on the old routing until the replicas catch up and the dashboards agree.\nCheck 大阪 before widening the rollout.",
         },
         { press: "Enter" },
         // The editor showed the note as it was typed: its key hint going proves the save.
-        { wait: "enter save", gone: true },
+        { wait: "Save ↵", gone: true },
         { wait: "Check 大阪" },
       ],
     },
@@ -341,7 +347,7 @@ export default scenarios({
         { press: "r" },
         { wait: /Questions 1.[2-5] of 12/ },
         { press: "j" },
-        { wait: "enter open" },
+        { wait: "Open ↵" },
       ],
     },
     "cards-review-page": {
@@ -383,7 +389,7 @@ export default scenarios({
         { press: "Alt+a" },
         { press: "a" },
         { press: "n" },
-        { wait: "enter save" },
+        { wait: "Save ↵" },
         { type: "test test" },
         { press: "Enter" },
         { wait: "Note: test test" },
@@ -473,8 +479,8 @@ export default scenarios({
     },
     "hover-chip": {
       from: "open",
-      about: "the pointer on a key chip (no visible change)",
-      steps: [{ hover: "s skip" }],
+      about: "the label under the pointer in the footer turns bold",
+      steps: [{ hover: "Skip [s]" }],
     },
     pick: {
       from: "open",
@@ -509,7 +515,7 @@ export default scenarios({
     "forward-click": {
       from: "open",
       about: "a click on the `f forward` chip",
-      steps: [{ click: "f forward" }, asserts(ON_Q2)],
+      steps: [{ click: "Forward [f]" }, asserts(ON_Q2)],
     },
     "stop-click": {
       from: "open",
@@ -529,7 +535,7 @@ export default scenarios({
     "back-click": {
       from: "forward-key",
       about: "a click on the `b back` chip",
-      steps: [{ click: "b back" }, asserts("1 of 2")],
+      steps: [{ click: "Back [b]" }, asserts("1 of 2")],
     },
     "back-shift-tab": {
       from: "forward-key",
@@ -543,8 +549,8 @@ export default scenarios({
     },
     "skip-click": {
       from: "open",
-      about: "a click on the `s skip` chip",
-      steps: [{ click: "s skip" }, asserts(ON_Q2)],
+      about: "a click on the Skip button",
+      steps: [{ click: "Skip [s]" }, asserts(ON_Q2)],
     },
     close: {
       from: "pick",
@@ -571,7 +577,7 @@ export default scenarios({
         asserts("note ›"),
         { press: "Escape" },
         { press: "r" },
-        { wait: "enter fill the prompt" },
+        { wait: "Fill the prompt ↵" },
       ],
     },
     "arrows-walk": {
@@ -611,7 +617,7 @@ export default scenarios({
     "recommended-yes-click": {
       from: "recommended",
       about: "a click on the `y take` chip",
-      steps: [{ click: /y take/ }, asserts("2 of 3")],
+      steps: [{ click: /Take .*\[y\]/ }, asserts("2 of 3")],
     },
     "write-in": {
       from: "open",
@@ -670,7 +676,7 @@ export default scenarios({
     "note-click": {
       from: "open",
       about: "a click on the `n note` chip",
-      steps: [{ click: "n note" }, { wait: "note ›" }],
+      steps: [{ click: "Note [n]" }, { wait: "note ›" }],
     },
     "note-paste": {
       from: "note-open",
@@ -683,17 +689,17 @@ export default scenarios({
     review: {
       from: "open",
       about: "both questions answered, on the review",
-      steps: [...keys("1", "2"), { wait: "enter fill the prompt" }],
+      steps: [...keys("1", "2"), { wait: "Fill the prompt ↵" }],
     },
     "review-key": {
       from: "open",
       about: "r opens the review",
-      steps: [{ press: "r" }, { wait: "enter fill the prompt" }],
+      steps: [{ press: "r" }, { wait: "Fill the prompt ↵" }],
     },
     "review-click": {
       from: "open",
-      about: "a click on the `r review` chip",
-      steps: [{ click: "r review" }, { wait: "enter fill the prompt" }],
+      about: "a click on the Review button",
+      steps: [{ click: "Review [r]" }, { wait: "Fill the prompt ↵" }],
     },
     "review-hover": {
       from: "review",
@@ -739,14 +745,14 @@ export default scenarios({
     },
     "fill-click": {
       from: "review",
-      about: "a click on `enter fill the prompt`",
+      about: "a click on `Fill the prompt ↵`",
       region: region.full,
-      steps: [{ click: "enter fill the prompt" }, { wait: "Q2: B" }],
+      steps: [{ click: "Fill the prompt ↵" }, { wait: "Q2: B" }],
     },
     "review-empty": {
       from: "open",
       about: "the review with nothing answered",
-      steps: [{ press: "r" }, { wait: "enter fill the prompt" }],
+      steps: [{ press: "r" }, { wait: "Fill the prompt ↵" }],
     },
 
     // ---- what the message holds
@@ -765,12 +771,12 @@ export default scenarios({
     "many-review": {
       from: "many-late",
       about: "the review of twelve, eight answered",
-      steps: [{ press: "r" }, { wait: "enter fill the prompt" }],
+      steps: [{ press: "r" }, { wait: "Fill the prompt ↵" }],
     },
     "long-title-review": {
       from: "long-title",
       about: "the review of a question whose title is far longer than the width",
-      steps: [{ press: "1" }, { wait: "enter fill the prompt" }],
+      steps: [{ press: "1" }, { wait: "Fill the prompt ↵" }],
       extreme: true,
     },
     "long-title": {

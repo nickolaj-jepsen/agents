@@ -100,6 +100,7 @@ Features:
 
 - Draws its own rounded border: pi yes (one border round a modal, none inside); claude no (a pane already has the engine's frame; the kit draws the title line, a band uses its own divider)
 - Open-sided form with a caption in the top rule: pi yes (two rules frame the form, with hints above the lower rule); claude partial (the kit draws the title rule; the host frames the pane)
+- Close and discard confirmation in the top rule: pi yes (Close becomes Discard and Keep in place, with hit ranges for both); claude no (the host owns the pane's close control)
 - Width class as a cap: pi yes (reading, split, dialog, wide and auto, chosen with the overlay); claude partial (`widthCap` computes the cap; Box has no `maxWidth` and the surface sizes a pane, so a mod draws to it)
 - Fits its content (auto): pi yes (within the dialog cap); claude no (a pane and a band take the width the surface gives them)
 - Title with a dim count: pi yes (in the top border); claude yes (drawn as `─ Title  count ─────` text)
@@ -157,12 +158,14 @@ Features:
 
 A question and its choices on a left rail, with wrapped Markdown and selection marks.
 
-- pi: exists: `cardHeading`, `cardChoice`, `cardNote`, `cardSections`, `cardRail`
+- pi: exists: `cardHeading`, `cardChoice`, `cardNote`, `cardSections`, `cardRail`, `cardSteps`, `cardSummary`
 - claude: not possible: The Claude terminal Answer cards have their own renderer.
 
 Features:
 
 - Markdown headings, choices with focus and selection marks, literal write-ins, and notes: pi yes; claude planned (Reuse the native Answer card drawing when migrating the Claude kit.)
+- A neutral focus chevron, independent of the accent on checked choices: pi yes; claude planned
+- Named steps in the caption and readable answer summaries: pi yes; claude planned
 
 ## Split
 

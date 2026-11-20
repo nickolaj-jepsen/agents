@@ -14,14 +14,14 @@
 │                                                                                                              │
 │                                                                                                              │
 │                                                                                                              │
-│ b back  f forward  s skip  r review  n note                                                                  │
+│ Back [b]  Forward [f]  Skip [s]  Review [r]  Note [n]                                                        │
 │ 1-9 or enter answers · hjkl moves · esc closes, answers kept                                                 │
 --- styles
-1x2 . 2x7 .x2 3 . 2x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x3 .x2 3 . 3x3 .x2 3 . 3x3 . 1x26
-1 . 4x35 .x74 1
+1x2 . 2x7 .x2 3 . 4x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x2 .x2 3 . 3x3 .x2 3 . 3x3 .x2 3 . 3x3 . 1x26
+1 . 5x35 .x74 1
 1 .x110 1
-1 . 2x2 . 2x19 .x87 1
-1 .x2 2 .x107 1
+1 . 6 2 . 3x2 6x17 .x87 1
+1 .x2 2 . 3x2 .x104 1
 1 .x110 1
 1 .x2 2 . 3x23 .x83 1
 1 .x110 1
@@ -32,10 +32,13 @@
 1 .x110 1
 1 .x110 1
 1 .x110 1
-1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x71 1
+1 . 7x4 . 3x3 .x2 7x7 . 3x3 .x2 7x4 . 3x3 .x2 7x6 . 3x3 .x2 7x4 . 3x3 .x56 1
 1 . 3x60 .x49 1
 --- legend
 1 fg=#768186
 2 fg=#a798d7
 3 fg=#7e888e
-4 bold
+4 fg=#a798d7 bold
+5 bold
+6 fg=#dee0e1 bold
+7 fg=#dee0e1

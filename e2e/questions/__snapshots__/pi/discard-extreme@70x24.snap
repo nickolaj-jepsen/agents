@@ -1,0 +1,38 @@
+# questions/pi/discard-extreme 70x24 @0,8 (70x14)
+─ ✓1─✓2─✓3─✓4─Review ─────── Discard answers?  Discard ↵  Keep [esc] ─
+
+  1  保存とアーカイブの設定
+     • Complete 日本語 transcript and the uncompressed tool log
+     • Every exported summary with the original session index
+     • All intermediate versions before each compaction
+     • A manifest of deleted and missing archived sessions
+     • 保管する項目 and the archive index from the last complete
+       export with both timestamps and a reference to the original
+       repository
+  Lines 1–8 of 21
+
+
+──────────────────────────────────────────────────────────────────────
+--- styles
+1 . 2 3 1 2 3 1 2 3 1 2 3 1 4x6 . 1x7 . 5x16 .x2 3x7 . 2 .x2 6x4 . 2x5 . 1
+-
+.x2 2x3 6x22
+.x5 2x2
+.x5 2x2
+.x5 2x2 .x4 7x12
+.x5 2x2
+.x5 2x2
+-
+-
+.x2 2x15
+-
+-
+1x70
+--- legend
+1 fg=#768186
+2 fg=#7e888e
+3 fg=#dee0e1
+4 fg=#a798d7 bold
+5 fg=#cd9a22
+6 fg=#dee0e1 bold
+7 bold

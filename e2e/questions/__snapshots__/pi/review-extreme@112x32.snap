@@ -1,0 +1,51 @@
+# questions/pi/review-extreme 112x32 @0,9 (112x21)
+─ ✓ 1 保存とアーカイ… ── ✓ 2 Local storage ── ✓ 3 履歴バックアップ ── ✓ 4 Remote storage ── Review ─── Close × ─
+
+  1  保存とアーカイブの設定
+     • Complete 日本語 transcript and the uncompressed tool log
+     • Every exported summary with the original session index
+     • All intermediate versions before each compaction
+     • A manifest of deleted and missing archived sessions
+     • 保管する項目 and the archive index from the last complete export with both
+       timestamps and a reference to the original repository
+     Note: 二台の端末で確認 Check both machines before deleting any archived
+           session or exported summary. Check the last successful copy in the log
+           and make sure the local index has the same entry.
+  2  Local storage
+     SQLite in the checkout
+  3  履歴バックアップ
+     The last turn only
+  4  Remote storage
+     Postgres beside the app
+
+  Send ↵
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+--- styles
+1 . 2 . 3x16 . 1x4 2 . 3x15 1x4 2 . 3x18 1x4 2 . 3x16 1x4 4x6 . 1x3 . 3x7 . 1
+-
+.x2 2x3 5x22
+.x5 2x2
+.x5 2x2
+.x5 2x2 .x4 6x12
+.x5 2x2
+.x5 2x2
+-
+.x5 2x71
+.x5 2x76
+.x5 2x55
+.x2 2x3 5x13
+-
+.x2 2x3 5x16
+-
+.x2 2x3 5x14
+-
+-
+.x2 4x4 . 2
+1x112
+--- legend
+1 fg=#768186
+2 fg=#7e888e
+3 fg=#dee0e1
+4 fg=#a798d7 bold
+5 fg=#dee0e1 bold
+6 bold

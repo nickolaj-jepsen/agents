@@ -20,7 +20,7 @@
 │    Q5   Question number 5: pick a strategy?
 │         Unanswered
 
- Review  1/12 answered  jk move  enter open  f fill  s send  n note  r back  esc prompt
+ Review  1/12 answered  Open ↵  Fill [f]  Send [s]  Note [n]  Back [r]  Prompt [esc]  jk move
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
 1 .x4 2x25
@@ -44,7 +44,7 @@
 1 .x2 5x42
 1 .x9 4x10
 -
-. 2x21 .x2 4x7 .x2 6x5 . 7x4 .x2 6 .x7 6 .x7 6 .x7 6 .x7 6x3
+. 2x21 .x2 6x4 . 4 .x2 7x4 . 4x3 .x2 7x4 . 4x3 .x2 7x4 . 4x3 .x2 7x4 . 4x3 .x2 7x6 . 4x5 .x2 4x7
 8x239
 --- legend
 1 fg=#a08ed5
@@ -52,6 +52,6 @@
 3 fg=#5fa8cc bold
 4 fg=#7e888e
 5 fg=#dee0e1 bold
-6 fg=#a798d7
-7 bold
+6 fg=#a798d7 bold
+7 fg=#dee0e1
 8 fg=#6c767b

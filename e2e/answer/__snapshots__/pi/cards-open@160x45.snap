@@ -1,4 +1,4 @@
-# answer/pi/cards-open 160x45 @0,14 (159x27)
+# answer/pi/cards-open 160x45 @0,18 (159x23)
 │  ❯ Q1  Use SQLite?
 │
 │  A ○ SQLite
@@ -20,11 +20,7 @@
 │    Answers  0 of 2 answered
 │   ▸ Show all 2 questions
 
-
-
-
-
- alt+a answer  Q1  0/2 answered
+ Answer [alt+a]  Q1  0/2 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
 1 .x2 2x17
@@ -48,17 +44,12 @@
 4 .x4 5x24
 4 .x3 3x22
 -
--
--
--
--
-. 6x5 .x9 3x16
-7x159
+. 4x6 . 3x7 .x2 3x16
+6x159
 --- legend
 1 fg=#a08ed5
 2 fg=#a08ed5 bold
 3 fg=#7e888e
 4 fg=#dee0e1
 5 fg=#dee0e1 bold
-6 fg=#a798d7
-7 fg=#6c767b
+6 fg=#6c767b

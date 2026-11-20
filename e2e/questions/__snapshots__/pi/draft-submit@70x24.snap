@@ -1,15 +1,11 @@
-# questions/pi/draft-submit 70x24 @0,7 (70x14)
+# questions/pi/draft-submit 70x24 @0,11 (70x10)
  The user answered:
  - Storage: Postgres beside the app
  - Retention: The whole transcript
    note: Keep the defaults
 
 
- Error: fixture-provider: turn 1 requested but 1 exist
- If this looks like a pi bug, /bug sends a report to the developers.
-
-
-
+ Got it.
 
 ──────────────────────────────────────────────────────────────────────
 Composer draft!
@@ -20,18 +16,12 @@ Composer draft!
 1 2x25 1x44
 1x70
 -
-. 3x53
-. 4x67
 -
 -
--
--
-5x70
-.x15 6
+3x70
+.x15 4
 --- legend
 1 bg=#254131
 2 fg=#9da5a9 bg=#254131
-3 fg=#ea7f81
-4 fg=#9da5a9
-5 fg=#6c767b
-6 inverse
+3 fg=#6c767b
+4 inverse

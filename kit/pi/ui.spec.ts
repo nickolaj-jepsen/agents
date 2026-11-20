@@ -9,6 +9,9 @@ import {
   captionFrame,
   captionFrameLayout,
   cardHeading,
+  cardSteps,
+  cardSummary,
+  cellAt,
   chipRow,
   clamp,
   entries,
@@ -115,11 +118,39 @@ const hints = [
 ];
 
 describe("captionFrame", () => {
+  it.each([28, 70, 240])("keeps Close and confirmation at the right at %i columns", (width) => {
+    const base = {
+      width,
+      title: "Question",
+      caption: (room: number) => "日本語".repeat(room),
+      body: ["Body stays in place"],
+    };
+    const idle = captionFrame(plain, { ...base, close: {} });
+    const confirm = captionFrame(plain, { ...base, close: { confirming: true } });
+    const hovered = captionFrame(plain, { ...base, close: { confirming: true, hover: "keep" } });
+    const top = strip(confirm.lines[0]!);
+    expect(visibleWidth(top)).toBe(width);
+    expect(confirm.lines.slice(1)).toEqual(idle.lines.slice(1));
+    expect(strip(idle.lines[0]!)).toContain(width < 40 ? " × ─" : " Close × ─");
+    expect(cellAt(idle.closeCells, width - 3)?.act).toBe("close");
+    expect(cellAt(confirm.closeCells, width - 3)?.act).toBe("keep");
+    expect(cellAt(confirm.closeCells, width - 2)).toBeUndefined();
+    expect(confirm.closeCells.map(({ act }) => act)).toEqual(["discard", "keep"]);
+    for (const [i, label] of ["Discard ↵", "Keep [esc]"].entries()) {
+      const cell = confirm.closeCells[i]!;
+      expect(cell.start).toBe(visibleWidth(top.split(label)[0]!));
+      expect(cell.end - cell.start).toBe(visibleWidth(label));
+      expect(cellAt(confirm.closeCells, cell.start - 1)).toBeUndefined();
+    }
+    expect(top).toContain("Discard ↵  Keep [esc] ─");
+    expect(top.includes("Discard answers?")).toBe(width >= 70);
+    expect(hovered.closeCells).toEqual(confirm.closeCells);
+  });
   it.each([28, 70, 84, 124])(
     "fits %i cells and keeps the body at its advertised origin",
     (width) => {
       const { x, y, chrome } = captionFrameLayout;
-      const lines = captionFrame(plain, {
+      const { lines } = captionFrame(plain, {
         width,
         title: "日本語 " + "long header ".repeat(20),
         body: ["A ○ 選択肢"],
@@ -137,7 +168,72 @@ describe("captionFrame", () => {
   );
 });
 
+describe("cardSteps", () => {
+  it("puts Review directly after the divider, and keeps its hit range when active", () => {
+    const steps = [
+      { short: "1", name: "Storage", done: true, act: 0 },
+      { short: "Review", act: 1 },
+    ];
+    const idle = cardSteps(plain, 70, steps);
+    const active = cardSteps(plain, 70, [steps[0]!, { ...steps[1]!, current: true }]);
+    expect(idle.text).toBe("✓ 1 Storage ── Review");
+    expect(active.text).toBe(idle.text);
+    expect(active.cells).toEqual(idle.cells);
+  });
+  const steps = [
+    { short: "1", name: "保存とアーカイブ", done: true, act: 0 },
+    { short: "2", name: "Local storage", current: true, act: 1 },
+    { short: "3", name: "Backup history", act: 2 },
+    { short: "4", name: "Remote storage", act: 3 },
+    { short: "Review", act: 4 },
+  ];
+  it.each([19, 23, 65, 80])("fits %i cells while keeping every step clickable", (width) => {
+    const row = cardSteps(plain, width, steps);
+    expect(visibleWidth(row.text)).toBeLessThanOrEqual(width);
+    expect(row.text).toContain("Review");
+    expect(row.cells?.map(({ act }) => act)).toEqual([0, 1, 2, 3, 4]);
+    expect(row.cells?.at(-1)?.end).toBe(visibleWidth(row.text));
+    expect(row.text).toContain("─");
+    expect(cellAt(row.cells, row.cells![0]!.end)).toBeUndefined();
+    const {
+      lines: [top],
+    } = captionFrame(plain, {
+      width: width + 5,
+      title: "Review",
+      caption: row.text,
+      body: [],
+    });
+    expect(top).toBe(`─ ${row.text} ${"─".repeat(width + 2 - visibleWidth(row.text))}`);
+  });
+});
+
+describe("cardSummary", () => {
+  it("keeps Markdown labels distinct from literal write-ins and notes", () => {
+    const lines = cardSummary(plain, 26, {
+      label: "2",
+      title: "Retention",
+      values: [{ text: "**日本語**" }, { text: "**literal**", literal: true }],
+      note: "Keep a backup alongside each archive.",
+    }).map(strip);
+    expect(lines.slice(0, 3)).toEqual(["2  Retention", "   • 日本語", "   • **literal**"]);
+    expect(lines[3]).toMatch(/^   Note:/);
+    expect(lines[4]).toMatch(/^ {9}\S/);
+    expect(Math.max(...widths(lines))).toBeLessThanOrEqual(26);
+  });
+});
+
 describe("buttonRow", () => {
+  it("keeps the primary action at the start, even when the secondary action does not fit", () => {
+    const keys = [
+      { hotkey: "enter", label: "Send", isLit: true, act: 1 },
+      { hotkey: "n", label: "Note", act: 0 },
+    ];
+    const [row] = buttonRow(plain, 16, keys);
+    expect(row?.text).toBe("Send ↵  Note [n]");
+    expect(cellAt(row?.cells, 6)).toBeUndefined();
+    expect(cellAt(row?.cells, 5)?.act).toBe(1);
+    expect(buttonRow(plain, 8, keys)[0]?.text).toBe("Send ↵");
+  });
   const keys = [
     { hotkey: "↑↓", label: "move" },
     { hotkey: "a", label: "選択", act: 0 },
@@ -146,19 +242,28 @@ describe("buttonRow", () => {
   it("paints keyboard-only labels dim and only assigns hits to actions", () => {
     expect(buttonRow(tagged, 200, keys)[0]?.text).toContain("<dim>↑↓ move</>");
     const [row] = buttonRow(plain, 40, keys);
-    expect(row?.text).toBe("↑↓ move  a 選択  esc back");
+    expect(row?.text).toBe("↑↓ move  選択 [a]  back [esc]");
     expect(row?.cells).toEqual([
-      { start: 9, end: 15, act: 0 },
-      { start: 17, end: 25, act: 1 },
+      { start: 9, end: 17, act: 0 },
+      { start: 19, end: 29, act: 1 },
     ]);
   });
+  it("keeps button hit ranges fixed when hovered", () => {
+    const styled = { ...tagged, bold: (t: string) => `<bold>${t}</>` } as Theme;
+    const [before] = buttonRow(styled, 100, keys);
+    const [after] = buttonRow(styled, 100, keys, { hover: { x: before!.cells![0]!.start, y: 0 } });
+    expect(after!.text).toContain("<bold><text>選択</></>");
+    const [plainBefore] = buttonRow(plain, 40, keys);
+    const [plainAfter] = buttonRow(plain, 40, keys, { hover: { x: 9, y: 0 } });
+    expect(plainAfter?.cells).toEqual(plainBefore?.cells);
+  });
   it("drops whole entries on one line, keeping the way out", () => {
-    expect(buttonRow(plain, 10, keys)[0]?.text).toBe("esc back");
+    expect(buttonRow(plain, 10, keys)[0]?.text).toBe("back [esc]");
   });
   it("wraps whole entries and measures hits from each row's own start", () => {
     const rows = buttonRow(plain, 14, keys, { wrap: true, lead: "3/5" });
-    expect(rows.map((row) => row.text)).toEqual(["3/5  ↑↓ move", "a 選択", "esc back"]);
-    expect(rows[1]?.cells?.[0]).toEqual({ start: 0, end: 6, act: 0 });
+    expect(rows.map((row) => row.text)).toEqual(["3/5  ↑↓ move", "選択 [a]", "back [esc]"]);
+    expect(rows[1]?.cells?.[0]).toEqual({ start: 0, end: 8, act: 0 });
   });
 });
 

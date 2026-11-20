@@ -14,6 +14,8 @@ import {
   cardNote,
   cardRail,
   cardSections,
+  cardSteps,
+  cardSummary,
   chipRow,
   clamp,
   emptyState,
@@ -414,18 +416,82 @@ export const stories: Story[] = [
       }),
   },
   {
+    component: "question-card",
+    state: "checkboxes",
+    about: "A neutral chevron and bold label show focus; checked choices keep their accent.",
+    width: "reading",
+    make: () =>
+      pure((theme, width) => {
+        const inner = Math.min(width - 3, tokens.prose);
+        const form = { multiple: true, presentation: "form" } as const;
+        return [
+          ...cardChoice(theme, inner, { ...form, key: "A", text: GROUPED[0]!.title, chosen: true }),
+          ...cardChoice(theme, inner, {
+            ...form,
+            key: "B",
+            text: GROUPED[1]!.title,
+            focused: true,
+          }),
+          ...cardChoice(theme, inner, { ...form, key: "C", text: GROUPED[2]!.title }),
+          ...cardChoice(theme, inner, {
+            ...form,
+            key: "D",
+            text: "Write your own answer",
+            literal: true,
+          }),
+        ];
+      }),
+  },
+  {
+    component: "question-card",
+    state: "review",
+    about: "Named steps, followed by numbered answers and their notes.",
+    width: "reading",
+    make: () =>
+      pure((theme, width) => {
+        const inner = width - 2 * captionFrameLayout.x;
+        const steps = cardSteps(theme, width - captionFrameLayout.caption.reserved, [
+          { short: "1", name: GROUPED[0]!.group, done: true, hovered: true, act: 0 },
+          { short: "2", name: GROUPED[1]!.group, done: true, act: 1 },
+          { short: "Review", current: true, act: 2 },
+        ]);
+        const first = cardSummary(theme, inner, {
+          label: "1",
+          title: GROUPED[0]!.group,
+          values: [{ text: GROUPED[0]!.title }],
+        });
+        const second = cardSummary(theme, inner, {
+          label: "2",
+          title: GROUPED[1]!.group,
+          values: [{ text: GROUPED[1]!.title }, { text: GROUPED[2]!.title }],
+          note: CJK,
+        });
+        return captionFrame(theme, {
+          width,
+          title: "Review",
+          caption: steps.text || undefined,
+          body: cardSections("", first, second),
+        }).lines;
+      }),
+  },
+  {
     component: "buttons",
     state: "row",
-    about: "Clickable actions with a dim keyboard-only navigation label.",
+    about: "Primary and hovered actions, alongside a dim keyboard-only label.",
     width: "dialog",
     make: () =>
       pure((theme, width) =>
-        buttonRow(theme, width, [
-          { hotkey: "a", label: "apply", act: true, isLit: true },
-          { hotkey: "d", label: "dismiss", act: true },
-          { hotkey: "↑↓", label: "move" },
-          { hotkey: "q", label: "later", act: true, essential: true },
-        ]).map(({ text }) => text),
+        buttonRow(
+          theme,
+          width,
+          [
+            { hotkey: "enter", label: "Apply", act: true, isLit: true },
+            { hotkey: "d", label: "Dismiss", act: true },
+            { hotkey: "↑↓", label: "move" },
+            { hotkey: "q", label: "Later", act: true, essential: true },
+          ],
+          { hover: { x: 9, y: 0 } },
+        ).map(({ text }) => text),
       ),
   },
   {
@@ -457,11 +523,13 @@ export const stories: Story[] = [
   classStory("split", "124 columns"),
   classStory("dialog", "72 columns"),
   classStory("wide", "the terminal less a 2-column margin"),
-  {
+  ...[false, true].map((confirming): Story => ({
     component: "frame",
-    state: "caption",
-    about: "A composer form between two rules, with a bold question and hints inside.",
-    settings: "captionFrame(theme, { title, body, footer, width })",
+    state: confirming ? "caption-confirm" : "caption",
+    about: confirming
+      ? "Discard and Keep replace Close in the top rule without covering the form."
+      : "A composer form with Close on the top rule and a primary action below the choices.",
+    settings: confirming ? "close: { confirming: true }" : "close: {}",
     width: "reading",
     make: () =>
       pure((theme, width) => {
@@ -478,15 +546,16 @@ export const stories: Story[] = [
         return captionFrame(theme, {
           width,
           title: "Question",
+          close: { confirming },
           body: cardSections("", heading, choices),
-          footer: buttonRow(theme, inner, [
-            { hotkey: "esc", label: "close", act: true, essential: true },
-            { hotkey: "↑↓", label: "move" },
-            { hotkey: "enter", label: "select", act: true },
-          ])[0]?.text,
-        });
+          footer: confirming
+            ? undefined
+            : buttonRow(theme, inner, [
+                { hotkey: "enter", label: "Choose", isLit: true, act: true },
+              ])[0]?.text,
+        }).lines;
       }),
-  },
+  })),
   {
     component: "frame",
     state: "auto",

@@ -1,0 +1,28 @@
+# questions/pi/review-answer-hover 70x24 @0,12 (70x10)
+─ ✓ 1 Storage ── ✓ 2 Retention ── Review ─────────────────── Close × ─
+
+  1  Storage
+     Postgres beside the app
+
+  2  Retention
+     The last turn only
+
+  Send ↵
+──────────────────────────────────────────────────────────────────────
+--- styles
+1 . 2 . 3x9 1x4 2 . 3x11 1x4 4x6 . 1x19 . 3x7 . 1
+-
+.x2 2x3 5x7
+.x5 5x23
+-
+.x2 2x3 5x9
+-
+-
+.x2 4x4 . 2
+1x70
+--- legend
+1 fg=#768186
+2 fg=#7e888e
+3 fg=#dee0e1
+4 fg=#a798d7 bold
+5 fg=#dee0e1 bold

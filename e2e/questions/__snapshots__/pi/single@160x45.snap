@@ -1,43 +1,40 @@
 # questions/pi/single 160x45 @0,27 (160x16)
-─ Storage ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+─ Storage ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── Close × ─
 
   Q1  Where should the session store live?
 
-  A ○ SQLite in the checkout
-      One file, no service to run, and it can be deleted with the checkout.
-  B ○ Postgres beside the app
-      Shared between machines, and one more service to keep running.
-  C ○ The OS keyring
-      Nothing to back up, where the host has one.
-  D ○ Write your own answer
+  ❯ A ○ SQLite in the checkout
+        One file, no service to run, and it can be deleted with the checkout.
+    B ○ Postgres beside the app
+        Shared between machines, and one more service to keep running.
+    C ○ The OS keyring
+        Nothing to back up, where the host has one.
+    D + Write your own answer
 
   Note: Add a note
 
-  esc cancel  A–D/1–4 pick  ↑↓ move  enter select  n note
+  Choose ↵  Note [n]
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-1 . 2x7 . 1x150
+1 . 2x7 . 1x140 . 3x7 . 1
 -
-.x2 3x4 4x36
+.x2 4x4 5x36
 -
-.x2 5 . 6 . 2x22
-.x6 3x69
-.x2 7 . 3
-.x6 3x62
-.x2 7 . 3
-.x6 3x43
-.x2 7 . 3 . 3x21
+.x2 5 . 4 . 4 . 5x22
+.x8 4x69
+.x4 4 . 4
+.x8 4x62
+.x4 4 . 4
+.x8 4x43
+.x4 4 . 4 . 4x21
 -
-.x2 3x16
+.x2 4x16
 -
-.x2 8x3 .x9 3x12 .x2 3x7 .x2 8x5 .x9 8
+.x2 2x6 . 4 .x2 3x4 . 4x3
 1x160
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
-3 fg=#7e888e
-4 fg=#dee0e1 bold
-5 fg=#a08ed5 underline=single
-6 fg=#a08ed5 bold
-7 fg=#a08ed5
-8 fg=#a798d7
+3 fg=#dee0e1
+4 fg=#7e888e
+5 fg=#dee0e1 bold

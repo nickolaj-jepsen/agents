@@ -17,7 +17,7 @@
 │
 │  Note: Add a n ↓ Jump to latest message · Ctrl+End
 
- alt+a answer  Q1  0/2 answered
+ Answer [alt+a]  Q1  0/2 answered
 ─────────────────────────────────────────────────────────────────────
 --- styles
 1 .x2 2x17
@@ -38,8 +38,8 @@
 4
 4 .x2 3x13 6x37
 -
-. 7x5 .x9 3x16
-8x69
+. 4x6 . 3x7 .x2 3x16
+7x69
 --- legend
 1 fg=#a08ed5
 2 fg=#a08ed5 bold
@@ -47,5 +47,4 @@
 4 fg=#dee0e1
 5 fg=#dee0e1 bold
 6 fg=#dee0e1 bg=#213b49
-7 fg=#a798d7
-8 fg=#6c767b
+7 fg=#6c767b

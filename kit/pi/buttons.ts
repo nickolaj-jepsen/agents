@@ -1,10 +1,11 @@
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import type { BandCell, BandRow } from "./band.ts";
+import { controlLabel } from "./blocks.ts";
 import { paint, tokens } from "./tokens.ts";
 
 export type KeyChip<A = never> = {
-  /** The printed key or key range. The caller owns the actual binding. */
+  /** Key or key range, without brackets. The caller owns the actual binding. */
   hotkey: string;
   label: string;
   /** The click action. Omit it for a dim, keyboard-only label. */
@@ -20,22 +21,26 @@ export type ButtonRowOptions = {
   wrap?: boolean;
   /** Non-interactive, already styled text before the first entry (e.g. progress). */
   lead?: string;
+  /** Cell under the pointer, relative to the returned rows. */
+  hover?: { x: number; y: number };
 };
 
-/** Key chips and keyboard-only labels. Hit ranges include only the visible cells of buttons. */
+/** A left-aligned row of label-first actions and dim keyboard hints. Only actions have hit ranges. */
 export function buttonRow<A>(
   theme: Theme,
   width: number,
   keys: readonly KeyChip<A>[],
-  { wrap = false, lead = "" }: ButtonRowOptions = {},
+  { wrap = false, lead = "", hover }: ButtonRowOptions = {},
 ): BandRow<A>[] {
   const gap = " ".repeat(tokens.gutter);
-  const chips = keys.map(({ hotkey, label, act, isLit, essential }) => {
-    const text =
-      act === undefined
-        ? paint(theme, "dim", `${hotkey} ${label}`)
-        : paint(theme, "accent", hotkey) + " " + (isLit ? theme.bold(label) : label);
-    return { text, act, essential, width: visibleWidth(text) };
+  const chips = keys.map((key) => {
+    const shortcut =
+      key.act === undefined
+        ? key.hotkey
+        : key.hotkey === "enter"
+          ? tokens.glyph.enter
+          : `[${key.hotkey}]`;
+    return { ...key, shortcut, width: visibleWidth(`${key.label} ${shortcut}`) };
   });
   const prefix = truncateToWidth(lead, width, tokens.glyph.ellipsis);
   if (!wrap) {
@@ -44,7 +49,7 @@ export function buttonRow<A>(
       chips.reduce((n, chip) => n + chip.width + tokens.gutter, 0) -
       (prefix || !chips.length ? 0 : tokens.gutter);
     while (remaining > width) {
-      const index = chips.map((chip) => !chip.essential).lastIndexOf(true);
+      const index = chips.map((chip) => !chip.essential && !chip.isLit).lastIndexOf(true);
       if (index < 0) break;
       remaining -= chips.splice(index, 1)[0]!.width + tokens.gutter;
     }
@@ -60,7 +65,15 @@ export function buttonRow<A>(
     }
     const start = visibleWidth(text) + (text ? tokens.gutter : 0);
     if (start >= width) break;
-    text += (text ? gap : "") + truncateToWidth(chip.text, width - start, tokens.glyph.ellipsis);
+    const highlighted =
+      hover?.y === rows.length && hover.x >= start && hover.x < start + chip.width;
+    const label =
+      chip.act === undefined
+        ? paint(theme, "dim", `${chip.shortcut} ${chip.label}`)
+        : controlLabel(theme, { primary: chip.isLit, highlighted }).text(chip.label) +
+          " " +
+          paint(theme, "dim", chip.shortcut);
+    text += (text ? gap : "") + truncateToWidth(label, width - start, tokens.glyph.ellipsis);
     if (chip.act !== undefined) cells.push({ start, end: visibleWidth(text), act: chip.act });
   }
   rows.push({ text, cells });

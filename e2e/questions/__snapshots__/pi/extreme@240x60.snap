@@ -1,63 +1,61 @@
 # questions/pi/extreme 240x60 @0,34 (240x24)
-─ Where stored? ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+─ Where stored? ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── Close × ─
 
   Q1  Where should a session's full transcript, every tool result and each compaction summary be kept once a run ends?
       Include the archived sessions, the tool_result records and the full 日本語 transcript, not just the latest entry.
       Assume the developer will often be offline and needs to carry this between machines without losing any run history.
 
-  A ○ SQLite in the repository, beside the worktrees                Preview
-      One file the checkout can delete, and no service to keep      ```sql
-      running on any of the machines. Copy it together with the …     create table if not exists event (
-  B ○ Postgres beside the application, shared by every machine          id integer primary key,
-      One more service to run, back up and keep reachable from a        session text not null,
-      laptop that is often offline.                                     at text not null,
-  C ○ Keep a local log beside each checkout and merge later             body json not null
-      Works offline without setting up a server, but syncing a        ) strict;
-      single run can produce duplicate records.                     ```
-  D ○ Mirror sessions to an append-only archive as they finish
-      The archive stores every event and preserves links to the     A row per event, so the history is the table and a
-      original run.                                                 reader can replay it.
-  E ○ Write your own answer
+  ❯ A ○ SQLite in the repository, beside the worktrees              Preview
+        One file the checkout can delete, and no service to keep    ```sql
+        running on any of the machines. Copy it together with the…    create table if not exists event (
+    B ○ Postgres beside the application, shared by every machine        id integer primary key,
+        One more service to run, back up and keep reachable from a      session text not null,
+        laptop that is often offline.                                   at text not null,
+    C ○ Keep a local log beside each checkout and merge later           body json not null
+        Works offline without setting up a server, but syncing a      ) strict;
+        single run can produce duplicate records.                   ```
+    D ○ Mirror sessions to an append-only archive as they finish
+        The archive stores every event and preserves links to the   A row per event, so the history is the table and a
+        original run.                                               reader can replay it.
+    E + Write your own answer
 
   Note: Add a note
 
-  esc cancel  A–E/1–5 pick  ↑↓ move  enter select  n note
+  Choose ↵  Note [n]
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-1 . 2x13 . 1x224
+1 . 2x13 . 1x214 . 3x7 . 1
 -
-.x2 3x4 4x112
-.x6 4x35 5x11 4x67
-.x6 4x115
+.x2 4x4 5x112
+.x6 5x35 6x11 5x67
+.x6 5x115
 -
-.x2 6 . 7 . 2x46 .x16 8x7
-.x6 8x8 3x48 .x6 9x6
-.x6 3x59 .x5 ax6 . ax5 .x4 ax3 . ax6
-.x2 b . 3 .x70 5x7 . ax7
-.x6 3x58 .x21 ax3 . ax4
-.x6 3x29 .x37 ax2 .x6 ax3 . ax4
-.x2 b . 3 .x8 cx9 .x60 ax3 . ax4
-.x6 3x56
-.x6 3x41 .x21 9x3
-.x2 b . 3 .x23 cx11
-.x6 3x57
-.x6 3x13
-.x2 b . 3 . 3x21
+.x2 5 . 4 . 4 . 5x46 .x14 7x7
+.x8 7x8 4x48 .x4 8x6
+.x8 4x58 .x4 9x6 3 9x5 3x4 9x3 3 9x6 3x8
+.x4 4 . 4 .x63 3x5 6x7 3 9x7 3x5
+.x8 4x58 .x4 3x15 9x3 3 9x4 3
+.x8 4x29 .x33 3x2 9x2 3x6 9x3 3 9x4 3
+.x4 4 . 4 .x8 ax9 .x46 3x12 9x3 3 9x4
+.x8 4x56 .x6 3x9
+.x8 4x41 .x19 8x3
+.x4 4 . 4 .x23 ax11
+.x8 4x57
+.x8 4x13
+.x4 4 . 4 . 4x21
 -
-.x2 3x16
+.x2 4x16
 -
-.x2 5x3 .x9 3x12 .x2 3x7 .x2 5x5 .x9 5
+.x2 2x6 . 4 .x2 3x4 . 4x3
 1x240
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
-3 fg=#7e888e
-4 fg=#dee0e1 bold
-5 fg=#a798d7
-6 fg=#a08ed5 underline=single
-7 fg=#a08ed5 bold
-8 fg=#7e888e bold
-9 fg=#9da5a9
-a fg=#69add0
-b fg=#a08ed5
-c bold
+3 fg=#dee0e1
+4 fg=#7e888e
+5 fg=#dee0e1 bold
+6 fg=#a798d7
+7 fg=#7e888e bold
+8 fg=#9da5a9
+9 fg=#69add0
+a bold

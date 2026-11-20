@@ -80,7 +80,7 @@ export default site({
         { sleep: 400 },
         slow(ask),
         { press: "Enter" },
-        { wait: "alt+a answer", timeout: 20_000 },
+        { wait: "Answer [alt+a]", timeout: 20_000 },
         { sleep: 1800 },
         { press: "Alt+a" },
         { wait: "jk move" },
@@ -134,7 +134,7 @@ export default site({
       steps: [
         { type: ask },
         { press: "Enter" },
-        { wait: "alt+a answer" },
+        { wait: "Answer [alt+a]" },
         { press: "Alt+a" },
         { wait: "jk move" },
       ],

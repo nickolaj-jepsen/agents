@@ -1,5 +1,8 @@
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+import type { BandCell, BandRow } from "./band.ts";
+import { controlLabel } from "./blocks.ts";
+import { buttonRow, type KeyChip } from "./buttons.ts";
 import { fit } from "./text.ts";
 import { paint, tokens } from "./tokens.ts";
 
@@ -168,13 +171,21 @@ export function modalFrame(theme: Theme, o: ModalOptions): string[] {
 }
 
 /** Body origin and the total number of rows used for the frame, notice and key hints. */
-export const captionFrameLayout = { ...bodyOrigin, chrome: 5 } as const;
+export const captionFrameLayout = {
+  ...bodyOrigin,
+  chrome: 5,
+  caption: { x: 2, y: 0, reserved: 5 },
+} as const;
 
 export type CaptionFrameOptions = {
   /** The frame's outer width in cells, padding included. */
   width: number;
   /** Bold accent text set between the top rule's ends. */
   title: string;
+  /** Styled content in place of the title, or a renderer given the available header width. */
+  caption?: string | ((width: number) => string | undefined);
+  /** Show Close at the right edge, or replace it in place with the discard confirmation. */
+  close?: { confirming?: boolean; hover?: CaptionCloseAction };
   /** Lines laid out for `width - 2 * captionFrameLayout.x` cells. */
   body: string[];
   /** A laid-out button row above the bottom rule. */
@@ -183,28 +194,85 @@ export type CaptionFrameOptions = {
   notice?: string;
 };
 
-/** An inline form between two rules, with the same `─ Title ───` header as a Claude pane. */
+export type CaptionCloseAction = "close" | "discard" | "keep";
+
+const confirmButtons: KeyChip<CaptionCloseAction>[] = [
+  { label: "Discard", hotkey: "enter", act: "discard", essential: true },
+  { label: "Keep", hotkey: "esc", act: "keep", essential: true },
+];
+
+function captionClose(
+  theme: Theme,
+  width: number,
+  { confirming, hover }: NonNullable<CaptionFrameOptions["close"]>,
+): BandRow<CaptionCloseAction> | undefined {
+  const room = width - 7;
+  if (!confirming) {
+    const label = width < 40 ? tokens.glyph.times : `Close ${tokens.glyph.times}`;
+    if (visibleWidth(label) > room) return undefined;
+    return {
+      text: controlLabel(theme, { highlighted: hover === "close" }).text(label),
+      cells: [{ start: 0, end: visibleWidth(label), act: "close" }],
+    };
+  }
+  const buttonsWidth =
+    visibleWidth(`Discard ${tokens.glyph.enter}`) + tokens.gutter + visibleWidth("Keep [esc]");
+  if (room < buttonsWidth) return undefined;
+  const prompt = "Discard answers?";
+  // Allow the longer prompt only when there is still room for a caption.
+  const lead =
+    room >= buttonsWidth + tokens.gutter + visibleWidth(prompt) + 7
+      ? paint(theme, "warning", prompt)
+      : undefined;
+  const row = buttonRow(theme, room, confirmButtons, { lead })[0]!;
+  const cell = row.cells?.find(({ act }) => act === hover);
+  return cell
+    ? buttonRow(theme, room, confirmButtons, { lead, hover: { x: cell.start, y: 0 } })[0]!
+    : row;
+}
+
+/** An inline form between two rules. Close targets use frame-local columns on the caption row. */
 export function captionFrame(
   theme: Theme,
-  { width, title, body, footer, notice }: CaptionFrameOptions,
-): string[] {
+  { width, title, caption, close, body, footer, notice }: CaptionFrameOptions,
+): { lines: string[]; closeCells: BandCell<CaptionCloseAction>[] } {
   const inner = Math.max(0, width - 2 * captionFrameLayout.x);
   const pad = " ".repeat(captionFrameLayout.x);
   const row = (text: string) => fit(pad + fit(text, inner), width);
   const h = tokens.border.h;
-  const caption = truncateToWidth(title, Math.max(0, width - 5), tokens.glyph.ellipsis);
-  const head = caption
-    ? border(theme, h) + " " + theme.bold(paint(theme, "accent", caption)) + " "
-    : "";
-  const titleLine = head + border(theme, h.repeat(width - visibleWidth(head)));
-  return [
-    titleLine,
-    row(""),
-    ...body.map(row),
-    row(notice ?? ""),
-    row(footer ?? ""),
-    border(theme, h.repeat(width)),
-  ];
+  const right = close && captionClose(theme, width, close);
+  const action = right?.text;
+  const actionStart = action ? width - visibleWidth(action) - 2 : width;
+  const limit = Math.max(
+    0,
+    (action ? actionStart - 1 : width) - captionFrameLayout.caption.reserved,
+  );
+  const content = typeof caption === "function" ? caption(limit) : caption;
+  const label =
+    content === undefined
+      ? theme.bold(paint(theme, "accent", truncateToWidth(title, limit, tokens.glyph.ellipsis)))
+      : truncateToWidth(content, limit, tokens.glyph.ellipsis);
+  const head = visibleWidth(label) ? border(theme, h) + " " + label + " " : "";
+  const end = action ? actionStart - 1 : width;
+  const titleLine =
+    head +
+    border(theme, h.repeat(end - visibleWidth(head))) +
+    (action ? ` ${action} ${border(theme, h)}` : "");
+  return {
+    lines: [
+      titleLine,
+      row(""),
+      ...body.map(row),
+      row(notice ?? ""),
+      row(footer ?? ""),
+      border(theme, h.repeat(width)),
+    ],
+    closeCells: (right?.cells ?? []).map(({ start, end, act }) => ({
+      start: actionStart + start,
+      end: actionStart + end,
+      act,
+    })),
+  };
 }
 
 export type SplitLayout = {

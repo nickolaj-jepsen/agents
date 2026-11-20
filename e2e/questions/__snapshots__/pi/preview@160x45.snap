@@ -1,44 +1,42 @@
 # questions/pi/preview 160x45 @0,28 (160x15)
-─ Layout ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+─ Layout ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── Close × ─
 
   Q1  Which table layout?
 
-  A ○ One row per event                                             Preview
-      Append-only, and the history is the table.                    ```sql
-  B ○ One row per session                                             create table event (
-      A document per session, rewritten on every turn.                  id integer primary key,
-  C ○ Write your own answer                                             session text not null,
+  ❯ A ○ One row per event                                           Preview
+        Append-only, and the history is the table.                  ```sql
+    B ○ One row per session                                           create table event (
+        A document per session, rewritten on every turn.                id integer primary key,
+    C + Write your own answer                                           session text not null,
                                                                         at text not null
   Note: Add a note                                                    );
                                                                     ```
 
-  esc cancel  A–C/1–3 pick  ↑↓ move  enter select  n note
+  Choose ↵  Note [n]
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-1 . 2x6 . 1x151
+1 . 2x6 . 1x141 . 3x7 . 1
 -
-.x2 3x4 4x19
+.x2 4x4 5x19
 -
-.x2 5 . 6 . 2x17 .x45 7x7
-.x6 3x42 .x20 8x6
-.x2 9 . 3 .x65 ax6 . ax5
-.x6 3x48 .x21 bx7 . ax7
-.x2 9 . 3 . 3x21 .x58 ax3 . ax4
-.x72 ax2 .x6 ax3 . ax4
-.x2 3x16
-.x68 8x3
+.x2 5 . 4 . 4 . 5x17 .x43 6x7
+.x8 4x42 .x18 7x6
+.x4 4 . 4 .x63 8x6 3 8x5 3x8
+.x8 4x48 .x14 3x5 9x7 3 8x7 3x5
+.x4 4 . 4 . 4x21 .x41 3x15 8x3 3 8x4 3
+.x70 3x2 8x2 3x6 8x3 3 8x4
+.x2 4x16 .x52 3x2
+.x68 7x3
 -
-.x2 bx3 .x9 3x12 .x2 3x7 .x2 bx5 .x9 b
+.x2 2x6 . 4 .x2 3x4 . 4x3
 1x160
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
-3 fg=#7e888e
-4 fg=#dee0e1 bold
-5 fg=#a08ed5 underline=single
-6 fg=#a08ed5 bold
-7 fg=#7e888e bold
-8 fg=#9da5a9
-9 fg=#a08ed5
-a fg=#69add0
-b fg=#a798d7
+3 fg=#dee0e1
+4 fg=#7e888e
+5 fg=#dee0e1 bold
+6 fg=#7e888e bold
+7 fg=#9da5a9
+8 fg=#69add0
+9 fg=#a798d7

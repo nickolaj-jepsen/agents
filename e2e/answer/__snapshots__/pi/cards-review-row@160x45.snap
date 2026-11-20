@@ -24,7 +24,7 @@
 │    Answers  2 of 2 answered
 │   [ Fill prompt ]  ▸ Show all 2 questions
 
-  1/2   jk move  A–B pick  C write  n note  r review  esc prompt  x clear
+  1/2   A–B pick  Write [C]  Note [n]  Review [r]  Prompt [esc]  jk move  Clear [x]
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
 1 .x2 2x19
@@ -52,7 +52,7 @@
 4 .x4 5x24
 4 .x3 5x15 .x2 3x22
 -
-. 6x5 .x2 3x7 .x2 3x8 .x2 7 .x8 7 .x7 7 .x9 7x3 .x9 7
+. 6x5 .x2 3x8 .x2 7x5 . 3x3 .x2 7x4 . 3x3 .x2 7x6 . 3x3 .x2 7x6 . 3x5 .x2 3x7 .x2 7x5 . 3x3
 8x159
 --- legend
 1 fg=#a08ed5
@@ -61,5 +61,5 @@
 4 fg=#5fa8cc
 5 fg=#5fa8cc bold
 6 fg=#a08ed5 inverse
-7 fg=#a798d7
+7 fg=#dee0e1
 8 fg=#6c767b

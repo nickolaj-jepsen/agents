@@ -23,6 +23,13 @@ export default defineComponent({
       claude: partial("the kit draws the title rule; the host frames the pane"),
     },
     {
+      id: "caption-close",
+      label: "Close and discard confirmation in the top rule",
+      story: "frame/caption-confirm",
+      pi: yes("Close becomes Discard and Keep in place, with hit ranges for both"),
+      claude: no("the host owns the pane's close control"),
+    },
+    {
       id: "width-cap",
       label: "Width class as a cap",
       story: "frame/dialog",

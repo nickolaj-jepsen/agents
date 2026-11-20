@@ -17,7 +17,7 @@
 │  the legacy CmsPageModal can simply ignore that kind.
 │                ↓ Jump to latest message · Ctrl+End
 
- alt+a answer  Q1  0/1 answered
+ Answer [alt+a]  Q1  0/1 answered
 ─────────────────────────────────────────────────────────────────────
 --- styles
 1 .x2 2x56 3x4
@@ -38,8 +38,8 @@
 1 .x2 4x11 3x12 4x29
 1x16 9x37
 -
-. 3x5 .x9 4x16
-ax69
+. ax6 . 4x7 .x2 4x16
+bx69
 --- legend
 1 fg=#a08ed5
 2 fg=#a08ed5 bold
@@ -50,4 +50,5 @@ ax69
 7 fg=#69add0 underline=single
 8 fg=#7e888e bold
 9 fg=#dee0e1 bg=#213b49
-a fg=#6c767b
+a fg=#dee0e1
+b fg=#6c767b

@@ -1,9 +1,9 @@
 # kit/pi/buttons/wrap 70x60 @2,2 (66x2)
-b back  n next  s skip  ↑↓ move  q quit
-r review  y yes  m more
+back [b]  next [n]  skip [s]  ↑↓ move
+quit [q]  review [r]  yes [y]  more [m]
 --- styles
-1 .x7 1 .x7 1 .x7 2x7 .x2 1
-1 .x9 1 .x6 1
+1x4 . 2x3 .x2 1x4 . 2x3 .x2 1x4 . 2x3 .x2 2x7
+1x4 . 2x3 .x2 1x6 . 2x3 .x2 1x3 . 2x3 .x2 1x4 . 2x3
 --- legend
-1 fg=#a798d7
+1 fg=#dee0e1
 2 fg=#7e888e

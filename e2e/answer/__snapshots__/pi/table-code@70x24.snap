@@ -9,23 +9,25 @@
 │ ├──────────┼─────────┼────────────────┤                            │
 │ │ Postgres │ •••     │ needs a server │                            │
 │                                                                    │
-│ b back  f forward  s skip  r review  n note                        │
+│ Back [b]  Forward [f]  Skip [s]  Review [r]  Note [n]              │
 │ shift+↑↓ scrolls · 1-9 or enter answers · hjkl moves · esc closes… │
 --- styles
-1x2 . 2x6 .x2 3 . 2x2 . 1x54
-1 . 4x23 .x44 1
+1x2 . 2x6 .x2 3 . 4x2 . 1x54
+1 . 5x23 .x44 1
 1 .x68 1
 1 .x68 1
-1 .x3 4x8 .x3 4x7 .x3 4x14 .x30 1
+1 .x3 5x8 .x3 5x7 .x3 5x14 .x30 1
 1 .x68 1
 1 .x68 1
 1 .x68 1
 1 .x68 1
 1 .x68 1
-1 . 2 .x7 2 .x10 2 .x7 2 .x9 2 .x29 1
+1 . 6x4 . 3x3 .x2 6x7 . 3x3 .x2 6x4 . 3x3 .x2 6x6 . 3x3 .x2 6x4 . 3x3 .x14 1
 1 . 3x65 .x2 1
 --- legend
 1 fg=#768186
 2 fg=#a798d7
 3 fg=#7e888e
-4 bold
+4 fg=#a798d7 bold
+5 bold
+6 fg=#dee0e1

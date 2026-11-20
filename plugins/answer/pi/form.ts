@@ -17,6 +17,8 @@ import {
   bandAct,
   bandShell,
   buttonRow,
+  cellAt,
+  controlLabel,
   digitChoice,
   markdownLines,
   tokens,
@@ -61,6 +63,8 @@ export class AnswerForm implements Component, Focusable {
     offset: 0,
     lines: [],
   };
+  private hoverStop?: number;
+  private hoverButton?: number;
   private isFocused = false;
   /** Keys that came while a step ran, so a quick typist's note isn't lost to it. */
   private queued: string[] = [];
@@ -259,12 +263,22 @@ export class AnswerForm implements Component, Focusable {
       return { handled: true };
     }
     const act = bandAct(this.band, event.x, event.y);
-    if (!act) return inside ? { handled: true } : undefined;
-    if (event.type === "move" && act.kind === "entry" && act.index !== this.cursor) {
-      this.cursor = act.index;
-      this.tui.requestRender();
-      return { handled: true };
+    if (event.type === "move") {
+      const stop = act?.kind === "goto" ? act.index : undefined;
+      // The joined band has the footer just above its final keyboard-hint line.
+      const footer = this.band.lines.length - 2;
+      const button =
+        event.y === footer ? cellAt(this.band.hits.get(footer)?.cells, event.x - 1) : undefined;
+      const buttonX = button && button.start - 1;
+      const cursor = act?.kind === "entry" ? act.index : this.cursor;
+      const changed =
+        stop !== this.hoverStop || buttonX !== this.hoverButton || cursor !== this.cursor;
+      this.hoverStop = stop;
+      this.hoverButton = buttonX;
+      this.cursor = cursor;
+      return inside || changed ? { handled: inside, render: changed } : undefined;
     }
+    if (!act) return inside ? { handled: true } : undefined;
     if (event.type === "press") return { handled: true, focus: true };
     if (event.type !== "click" || event.button !== "left") return { handled: true };
     if (this.isStepping) return { handled: true };
@@ -303,7 +317,12 @@ export class AnswerForm implements Component, Focusable {
         ? t.fg("success", tokens.glyph.done)
         : t.fg("dim", tokens.glyph.single.off);
       const isHere = !this.view.isReview && i === this.view.step;
-      text += `${mark} ${isHere ? t.fg("accent", row.label) : t.fg("dim", row.label)}`;
+      const label = controlLabel(t, {
+        primary: isHere,
+        highlighted: i === this.hoverStop,
+        rest: "dim",
+      });
+      text += `${mark} ${label.text(row.label)}`;
       cells.push({ start, end: visibleWidth(text), act: { kind: "goto", index: i } });
     });
     return { text, cells };
@@ -367,21 +386,26 @@ export class AnswerForm implements Component, Focusable {
       // The write-in stands apart from what the question offered, dim until it holds an answer.
       const isWaiting = entry.kind === "write" && !item.written;
       if (entry.kind === "write" && k > 0) rows.push({ text: "" });
-      const tone = isCursor ? "accent" : entry.isChosen ? "success" : isWaiting ? "dim" : undefined;
-      const ink = tone ? (s: string) => t.fg(tone, s) : undefined;
+      const style = controlLabel(t, {
+        primary: entry.isChosen,
+        primaryRole: "success",
+        highlighted: isCursor,
+        rest: isWaiting ? "dim" : "text",
+      });
       // The option's markdown set in its state's colour, which the Markdown puts back after
       // each code span; the box leads the first line and the rest hang under the words.
       const lines = markdownLines(
         this.theme,
         entry.text,
         Math.max(6, width - 6),
-        ink && { color: ink },
+        isCursor || entry.isChosen || isWaiting ? style : undefined,
       );
       lines.forEach((line, i) => {
-        const pointer = isCursor ? t.fg("accent", "›") : " ";
+        const pointer = isCursor ? controlLabel(t, { highlighted: true }).text("›") : " ";
         const head = i === 0 ? `${pointer}${t.fg("accent", String(k + 1))} ` : "   ";
         const tail = i === lines.length - 1 ? rec : "";
-        const lead = i === 0 ? (ink ?? String)(box) : " ".repeat(box.length);
+        const lead =
+          i === 0 ? t.fg(entry.isChosen ? "success" : "dim", box) : " ".repeat(box.length);
         rows.push({ text: `${head}${lead}${line}${tail}`, act: { kind: "entry", index: k } });
       });
       if (entry.detail)
@@ -451,19 +475,22 @@ export class AnswerForm implements Component, Focusable {
       textWidth,
       review
         ? [
-            chip("enter", "fill the prompt", { kind: "fill" }),
-            chip("s", "send", { kind: "send" }),
-            chip("n", "note", { kind: "note" }),
-            chip("b", "back", { kind: "back" }),
+            { ...chip("enter", "Fill the prompt", { kind: "fill" }), isLit: true },
+            chip("s", "Send", { kind: "send" }),
+            chip("n", "Note", { kind: "note" }),
+            chip("b", "Back", { kind: "back" }),
           ]
         : [
-            chip("b", "back", { kind: "back" }),
-            chip("f", "forward", { kind: "forward" }),
-            ...(item?.canAccept ? [chip("y", `take ${item.accepts}`, { kind: "accept" })] : []),
-            chip("s", "skip", { kind: "skip" }),
-            chip("r", "review", { kind: "review" }),
-            chip("n", "note", { kind: "note" }),
+            chip("b", "Back", { kind: "back" }),
+            chip("f", "Forward", { kind: "forward" }),
+            ...(item?.canAccept
+              ? [{ ...chip("y", `Take ${item.accepts}`, { kind: "accept" }), isLit: true }]
+              : []),
+            chip("s", "Skip", { kind: "skip" }),
+            chip("r", "Review", { kind: "review" }),
+            chip("n", "Note", { kind: "note" }),
           ],
+      { hover: this.hoverButton === undefined ? undefined : { x: this.hoverButton, y: 0 } },
     );
     const keys = !this.isFocused
       ? "alt+a or a click comes back here · esc closes"

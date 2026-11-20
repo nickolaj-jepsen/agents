@@ -1,5 +1,5 @@
 # kit/pi/frame/caption 160x45 @2,2 (96x10)
-─ Question ─────────────────────────────────────────────────────────────────────────────────────
+─ Question ─────────────────────────────────────────────────────────────────────────── Close × ─
 
   Q1  The section says the build verifies a pi change, but the build only type-checks the
       cores and the pi halves and never starts an agent.
@@ -7,25 +7,25 @@
   A ○ just build is not enough to verify a pi change; the docs say it is.
   B ○ The legacy card was removed; the section still describes it.
 
-  esc close  ↑↓ move  enter select
+  Choose ↵
 ────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-1 . 2x8 . 1x85
+1 . 2x8 . 1x75 . 3x7 . 1
 -
-.x2 3x4 4x83
-.x6 4x50
+.x2 4x4 5x83
+.x6 5x50
 -
-.x2 5 . 6 . 7x10 2x57
-.x2 8 . 3 .x5 7x6
+.x2 6 . 4 . 7x10 5x57
+.x2 8 . 4 .x5 7x6
 -
-.x2 7x3 .x8 3x7 .x2 7x5
+.x2 2x6 . 4
 1x96
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
-3 fg=#7e888e
-4 fg=#dee0e1 bold
-5 fg=#a08ed5 underline=single
-6 fg=#a08ed5 bold
+3 fg=#dee0e1
+4 fg=#7e888e
+5 fg=#dee0e1 bold
+6 fg=#dee0e1 underline=single
 7 fg=#a798d7
 8 fg=#a08ed5

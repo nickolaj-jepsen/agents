@@ -30,8 +30,8 @@
 │  E ○ Option E for 3
 │  F ○ Optio ↓ Jump to latest message · Ctrl+End
 
-  02/12   jk move  A–B pick  C write  n note  r review
- esc prompt  x clear
+  02/12   A–B pick  Write [C]  Note [n]  Review [r]
+ Prompt [esc]  jk move  Clear [x]
 ─────────────────────────────────────────────────────────────
 --- styles
 1 .x2 2x43
@@ -65,9 +65,9 @@
 6 .x2 3 . 3
 6 .x2 3 . 3 .x6 8x37
 -
-. 9x7 .x2 3x7 .x2 3x8 .x2 a .x8 a .x7 a
-. ax3 .x9 a
-bx61
+. 9x7 .x2 3x8 .x2 6x5 . 3x3 .x2 6x4 . 3x3 .x2 6x6 . 3x3
+. 6x6 . 3x5 .x2 3x7 .x2 6x5 . 3x3
+ax61
 --- legend
 1 fg=#5fa8cc
 2 fg=#5fa8cc bold
@@ -78,5 +78,4 @@ bx61
 7 fg=#dee0e1 bold
 8 fg=#dee0e1 bg=#213b49
 9 fg=#a08ed5 inverse
-a fg=#a798d7
-b fg=#6c767b
+a fg=#6c767b

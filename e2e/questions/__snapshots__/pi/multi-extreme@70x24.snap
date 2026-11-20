@@ -1,0 +1,37 @@
+# questions/pi/multi-extreme 70x24 @0,8 (70x14)
+─ 保存とアーカイブ ───────────────────────────────────────── Close × ─
+
+  Q1  Which parts of the complete session history should stay
+      available across machines? Include the archived sessions, th …
+  3 selected
+
+  ❯ A ■ The complete transcript including all 日本語 tool records
+        An offline copy keeps the full sequence of user and
+        assistant messages, tool calls and their results. Copy it…
+
+  ↓ 5 below
+
+  Send [s]  Note [n]  ⇧←→ question  space toggle
+──────────────────────────────────────────────────────────────────────
+--- styles
+1 . 2x16 . 1x41 . 3x7 . 1
+-
+.x2 4x4 5x55
+.x6 5x60 4x2
+.x2 4x10
+-
+.x2 5 . 4 . 2 . 6x57
+.x8 4x51
+.x8 4x58
+-
+.x2 4x9
+-
+.x2 2x4 . 4x3 .x2 3x4 . 4x3 .x2 4x12 .x2 4x12
+1x70
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#dee0e1
+4 fg=#7e888e
+5 fg=#dee0e1 bold
+6 fg=#a798d7 bold underline=single

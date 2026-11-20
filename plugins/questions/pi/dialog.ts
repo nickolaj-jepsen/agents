@@ -16,13 +16,17 @@ import {
   type BandRow,
   captionFrame,
   captionFrameLayout,
+  type CaptionCloseAction,
   CARD_NOTE_LABEL,
   cardChoice,
   cardHeading,
   cardNote,
   cardSections,
-  chipRow,
+  cardSteps,
+  cardSummary,
+  cellAt,
   clamp,
+  controlLabel,
   digitChoice,
   fit,
   type KeyChip,
@@ -38,18 +42,12 @@ const RESERVED_ROWS = 10;
 const MAX_ROWS = 24;
 const GAP = " ".repeat(tokens.gutter);
 
-type Item =
-  | { kind: "option"; index: number }
-  | { kind: "custom" }
-  | { kind: "note" }
-  | { kind: "done" }
-  | { kind: "review"; question: number }
-  | { kind: "send" }
-  | { kind: "cancel" };
+type ChoiceItem = { kind: "option"; index: number } | { kind: "custom" } | { kind: "note" };
+type Item = ChoiceItem | { kind: "review"; question: number };
 
 type Tab = { kind: "question"; index: number } | { kind: "review" };
 
-/** What the user has said so far for one question; picks and text exclude each other. */
+/** The options picked and any write-in (both can be set for a multi-select). */
 interface Draft {
   picked: number[];
   text: string;
@@ -124,8 +122,14 @@ export class QuestionsDialog implements Component, Focusable {
   private closed = false;
   private isFocused = false;
   private hits = new Map<number, { item: Item; to: number }>();
-  private tabCells: { start: number; end: number; tab: number }[] = [];
-  private tabRow = -1;
+  private tabCells: NonNullable<BandRow<number>["cells"]> = [];
+  private hoverTab?: number;
+  private hoverClose?: CaptionCloseAction;
+  private closeCells: NonNullable<BandRow<CaptionCloseAction>["cells"]> = [];
+  private hoverReview?: number;
+  private hoverButton?: number;
+  private reviewOffset = 0;
+  private reviewMaxOffset = 0;
   private footer?: { row: number; buttons: BandRow<() => void> };
 
   constructor(
@@ -150,12 +154,7 @@ export class QuestionsDialog implements Component, Focusable {
       return answer ? draftFrom(question, answer.values) : { picked: [], text: "" };
     });
     this.notes = questions.map((question) => was(question)?.note ?? "");
-    // Start on the answer this round already has: its first pick, or the row its typed text sits on.
-    const first = this.drafts[0];
-    const typed = first?.text.trim()
-      ? this.items().findIndex((item) => item.kind === "custom")
-      : -1;
-    this.row = first?.picked[0] ?? Math.max(0, typed);
+    this.row = this.firstChoice();
     this.input = new Input({ prompt: "", placeholder: "Your answer" });
     this.noteInput = new Input({ prompt: "", placeholder: "Your note" });
   }
@@ -193,24 +192,28 @@ export class QuestionsDialog implements Component, Focusable {
     return index === undefined ? undefined : this.questions[index];
   }
 
-  private items(): Item[] {
+  private items(): ChoiceItem[] {
     const question = this.question;
-    if (!question) {
-      return [
-        ...this.questions.map((_, index) => ({ kind: "review", question: index }) as Item),
-        { kind: "send" },
-        { kind: "cancel" },
-      ];
-    }
-    const items: Item[] = question.options.map((_, index) => ({ kind: "option", index }));
+    if (!question) return [];
+    const items: ChoiceItem[] = question.options.map((_, index) => ({ kind: "option", index }));
     items.push({ kind: "custom" });
     items.push({ kind: "note" });
-    if (question.multiSelect) items.push({ kind: "done" });
     return items;
+  }
+
+  /** Return to the answer already given, or start on the first option. */
+  private firstChoice(): number {
+    const index = this.questionIndex;
+    const draft = index === undefined ? undefined : this.drafts[index];
+    return draft?.picked[0] ?? (draft?.text.trim() ? this.question!.options.length : 0);
   }
 
   private move(step: number): void {
     if (this.editing) return;
+    if (this.tabKind.kind === "review") {
+      this.scrollReview(step);
+      return;
+    }
     const items = this.items();
     if (items.length === 0) return;
     this.row = (this.row + (step % items.length) + items.length) % items.length;
@@ -220,16 +223,13 @@ export class QuestionsDialog implements Component, Focusable {
 
   private goTab(tab: number): void {
     this.keepDraft();
+    this.clearHover();
     this.questionOffset = 0;
     this.previewOffset = 0;
     this.previewFor = undefined;
+    this.reviewOffset = 0;
     this.tab = Math.max(0, Math.min(tab, this.tabs.length - 1));
-    // The review tab exists to be sent, so enter offers to send it rather than
-    // to walk back into a question the user has already answered.
-    this.row = Math.max(
-      0,
-      this.tabKind.kind === "review" ? this.items().findIndex((item) => item.kind === "send") : 0,
-    );
+    this.row = this.firstChoice();
     this.editing = undefined;
     this.input.focused = false;
     this.noteInput.focused = false;
@@ -248,6 +248,13 @@ export class QuestionsDialog implements Component, Focusable {
     const next = Math.max(0, Math.min(this.questionMaxOffset, this.questionOffset + step));
     if (next === this.questionOffset) return;
     this.questionOffset = next;
+    this.tui.requestRender();
+  }
+
+  private scrollReview(step: number): void {
+    const next = Math.max(0, Math.min(this.reviewMaxOffset, this.reviewOffset + step));
+    if (next === this.reviewOffset) return;
+    this.reviewOffset = next;
     this.tui.requestRender();
   }
 
@@ -324,8 +331,7 @@ export class QuestionsDialog implements Component, Focusable {
       return;
     }
     // A typed answer joins the picks of a multi-select question instead of
-    // replacing them, and does not carry the user off a tab whose answer the
-    // Done row still has to confirm.
+    // replacing them. The footer action confirms the whole set.
     const keepPicks = this.question?.multiSelect === true;
     this.saveWriteIn(index, text);
     this.editing = undefined;
@@ -413,8 +419,10 @@ export class QuestionsDialog implements Component, Focusable {
 
   /** Esc asks once: an accidental key must not throw away the answers already given. */
   private askCancel(): void {
+    if (this.editing) this.stopEditing();
+    this.clearHover();
     this.confirming = true;
-    this.warning = "Cancel without answering?";
+    this.warning = undefined;
     this.tui.requestRender();
   }
 
@@ -438,38 +446,23 @@ export class QuestionsDialog implements Component, Focusable {
       case "note":
         this.startEditing("note");
         return;
-      case "done":
-        if (!isAnswered(this.drafts[this.questionIndex ?? 0]!)) {
-          this.warning = "Pick an option or write an answer first";
-          this.tui.requestRender();
-          return;
-        }
-        this.advance();
-        return;
       case "review":
         this.goTab(item.question);
-        return;
-      case "send":
-        this.submit();
-        return;
-      case "cancel":
-        this.cancel();
         return;
     }
   }
 
   handleInput(data: string): void {
+    if (this.clearHover()) this.tui.requestRender();
     if (this.editing) {
       this.handleEditingInput(data);
       return;
     }
     if (this.confirming) {
-      // Enter is the answer to the question on the hint line; anything else,
-      // esc included, is the user saying they did not mean it.
+      // Enter confirms the discard; any other key keeps the draft.
       if (matchesKey(data, Key.enter)) this.cancel();
       else {
         this.confirming = false;
-        this.warning = undefined;
         this.tui.requestRender();
       }
       return;
@@ -503,7 +496,8 @@ export class QuestionsDialog implements Component, Focusable {
     // claims PageUp/PageDown before a focused inline component sees them.
     if (matchesKey(data, Key.shift("up")) || matchesKey(data, Key.shift("down"))) {
       const step = matchesKey(data, Key.shift("down")) ? 3 : -3;
-      if (this.previewMax > 0) this.scrollPreview(step);
+      if (this.tabKind.kind === "review") this.scrollReview(step);
+      else if (this.previewMax > 0) this.scrollPreview(step);
       else this.scrollQuestion(step);
       return;
     }
@@ -513,6 +507,23 @@ export class QuestionsDialog implements Component, Focusable {
     }
     if (data === "n" && this.question) {
       this.startEditing("note");
+      return;
+    }
+    if (data === "s" && this.question?.multiSelect) {
+      if (!isAnswered(this.drafts[this.questionIndex!]!)) {
+        this.warning = "Pick an option or write an answer first";
+        this.tui.requestRender();
+        return;
+      }
+      this.advance();
+      return;
+    }
+    if (this.tabKind.kind === "review") {
+      if (matchesKey(data, Key.enter)) this.submit();
+      else {
+        const index = digitChoice(data);
+        if (index >= 0 && index < this.questions.length) this.goTab(index);
+      }
       return;
     }
     if (matchesKey(data, Key.enter)) {
@@ -560,18 +571,54 @@ export class QuestionsDialog implements Component, Focusable {
     return hit && x < hit.to ? hit.item : undefined;
   }
 
+  private clearHover(): boolean {
+    const changed =
+      this.hoverTab !== undefined ||
+      this.hoverReview !== undefined ||
+      this.hoverButton !== undefined ||
+      this.hoverClose !== undefined;
+    this.hoverTab = this.hoverReview = this.hoverButton = this.hoverClose = undefined;
+    return changed;
+  }
+
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
-    const row = event.y - captionFrameLayout.y;
+    const caption = captionFrameLayout.caption;
     const x = event.x - captionFrameLayout.x;
-    if (x < 0 || row < 0) return undefined;
-    if (this.footer?.row === row && event.button === "left") {
-      const hit = this.footer.buttons.cells?.find((cell) => x >= cell.start && x < cell.end);
-      if (hit && event.type === "press") return { handled: true, focus: true };
-      if (hit && event.type === "click") {
-        hit.act();
+    const row = event.y - captionFrameLayout.y;
+    const tab =
+      !this.confirming && event.y === caption.y
+        ? cellAt(this.tabCells, event.x - caption.x)
+        : undefined;
+    const button = this.footer?.row === row ? cellAt(this.footer.buttons.cells, x) : undefined;
+    const close = event.y === caption.y ? cellAt(this.closeCells, event.x)?.act : undefined;
+    if (event.type === "move") {
+      const item = !this.confirming && x >= 0 ? this.itemAt(x, row) : undefined;
+      const review = item?.kind === "review" ? item.question : undefined;
+      if (
+        this.hoverTab !== tab?.act ||
+        this.hoverButton !== button?.start ||
+        this.hoverReview !== review ||
+        this.hoverClose !== close
+      ) {
+        this.hoverClose = close;
+        this.hoverTab = tab?.act;
+        this.hoverButton = button?.start;
+        this.hoverReview = review;
+        this.tui.requestRender();
+      }
+    }
+    if (event.button === "left" && (tab || button || close)) {
+      if (event.type === "press") return { handled: true, focus: true };
+      if (event.type === "click") {
+        if (close === "close") this.askCancel();
+        else if (close === "discard") this.handleInput("\r");
+        else if (close === "keep") this.handleInput("\x1b");
+        else if (tab) this.goTab(tab.act);
+        else button?.act();
         return { handled: true };
       }
     }
+    if (x < 0 || row < 0) return undefined;
     if (this.confirming) return undefined;
     if (event.type === "wheel" && event.wheelDelta) {
       const step = event.wheelDelta < 0 ? -1 : 1;
@@ -589,17 +636,6 @@ export class QuestionsDialog implements Component, Focusable {
       }
       this.move(step);
       return { handled: true };
-    }
-    // A tab row is a strip of chips, so it hit-tests by column, not by row.
-    if (row === this.tabRow) {
-      const cell = this.tabCells.find((candidate) => x >= candidate.start && x < candidate.end);
-      if (!cell) return undefined;
-      if (event.type === "press") return { handled: true, focus: true };
-      if (event.type === "click") {
-        this.goTab(cell.tab);
-        return { handled: true };
-      }
-      return undefined;
     }
     const item = this.itemAt(x, row);
     if (!item) return undefined;
@@ -630,7 +666,8 @@ export class QuestionsDialog implements Component, Focusable {
         this.startEditing(field);
         return { handled: true };
       }
-      const prefix = field === "note" ? visibleWidth(CARD_NOTE_LABEL) : 4;
+      const prefix =
+        field === "note" ? visibleWidth(CARD_NOTE_LABEL) : visibleWidth(this.writeInLead(index));
       return (
         this.editingInput.handleMouse?.({ ...event, x: Math.max(0, x - prefix), y: 0 }) ?? {
           handled: true,
@@ -652,7 +689,8 @@ export class QuestionsDialog implements Component, Focusable {
   render(width: number): string[] {
     this.hits.clear();
     this.tabCells = [];
-    this.tabRow = -1;
+    this.closeCells = [];
+    this.reviewMaxOffset = 0;
     this.footer = undefined;
     this.previewCells = undefined;
     this.previewMax = 0;
@@ -665,19 +703,78 @@ export class QuestionsDialog implements Component, Focusable {
     const inset = 2 * captionFrameLayout.x;
     const contentWidth = split ? widthCap("split", width) : Math.min(width, tokens.prose + inset);
     const inner = contentWidth - inset;
-    const choiceWidth = split ? Math.floor((inner - GAP.length) * tokens.splitRatio) : inner;
     const budget = Math.max(
       9,
       Math.min(MAX_ROWS, this.tui.terminal.rows - RESERVED_ROWS) - captionFrameLayout.chrome,
     );
-    const rows: BodyRow[] = [];
-    const answered =
-      this.questionIndex !== undefined && isAnswered(this.drafts[this.questionIndex]!);
+    const rows = question
+      ? this.questionBody(question, inner, budget, split, hasPreview)
+      : this.reviewBody(inner, budget);
+    rows.forEach((row, index) => {
+      if (row.hit) this.hits.set(index, { item: row.hit, to: row.hitTo ?? inner });
+    });
+    const hover = this.hoverButton === undefined ? undefined : { x: this.hoverButton, y: 0 };
+    const buttons = this.confirming
+      ? undefined
+      : buttonRow(theme, inner, this.footerActions(), { hover })[0];
+    if (buttons) this.footer = { row: rows.length + 1, buttons };
+    const frame = captionFrame(theme, {
+      width,
+      title: question?.header.trim() || "Questions",
+      caption:
+        this.tabs.length > 1
+          ? (available) => {
+              const steps = cardSteps(
+                theme,
+                Math.min(widthCap("split", width) - captionFrameLayout.caption.reserved, available),
+                this.tabs.map((tab, index) => ({
+                  short: tab.kind === "question" ? String(tab.index + 1) : "Review",
+                  name: tab.kind === "question" ? this.headerOf(tab.index) : undefined,
+                  current: index === this.tab,
+                  hovered: index === this.hoverTab,
+                  done: tab.kind === "question" && isAnswered(this.drafts[tab.index]!),
+                  act: index,
+                })),
+              );
+              this.tabCells = steps.cells ?? [];
+              return steps.text || undefined;
+            }
+          : undefined,
+      close: { confirming: this.confirming, hover: this.hoverClose },
+      body: rows.map(({ text }) => text),
+      footer: buttons?.text,
+      notice: this.warning ? paint(theme, "warning", this.warning) : undefined,
+    });
+    this.closeCells = frame.closeCells;
+    return frame.lines;
+  }
+
+  private headerOf(index: number): string {
+    return this.questions[index]!.header.trim() || "Question";
+  }
+
+  private questionBody(
+    question: Question,
+    inner: number,
+    budget: number,
+    split: boolean,
+    hasPreview: boolean,
+  ): BodyRow[] {
+    const { theme } = this;
+    const choiceWidth = split ? Math.floor((inner - GAP.length) * tokens.splitRatio) : inner;
+    const draft = this.drafts[this.questionIndex!]!;
+    const multiple = question.multiSelect === true;
     const dim = (line: string) => paint(theme, "dim", line);
-    const title = question
-      ? cardHeading(theme, inner, question.question, `Q${this.tab + 1}`, true, answered, "form")
-      : cardHeading(theme, inner, "Review your answers", "", true, false, "form");
-    const titleRoom = Math.max(2, Math.floor(budget / 4));
+    const title = cardHeading(
+      theme,
+      inner,
+      question.question,
+      this.tabs.length === 1 ? "Q1" : "",
+      true,
+      isAnswered(draft) && !multiple && this.tabs.length === 1,
+      "form",
+    );
+    const titleRoom = Math.max(2, Math.floor((budget - Number(multiple)) / 4));
     this.questionMaxOffset = Math.max(0, title.length - titleRoom);
     this.questionOffset = Math.min(this.questionOffset, this.questionMaxOffset);
     const shown = title.slice(this.questionOffset, this.questionOffset + titleRoom);
@@ -686,42 +783,32 @@ export class QuestionsDialog implements Component, Focusable {
       shown[index] = truncateToWidth(shown[index]!, inner - 2, "") + dim(" …");
     }
 
-    if (this.tabs.length > 1) {
-      const chips = this.tabs.map((tab, index) => ({
-        key: index === this.tab ? tokens.glyph.pointer : " ",
-        label:
-          tab.kind === "review"
-            ? "Review"
-            : `Q${index + 1}${isAnswered(this.drafts[index]!) ? tokens.glyph.done : ""}`,
-        act: index,
-      }));
-      const strip = chipRow(theme, chips);
-      if (visibleWidth(strip.text) <= inner) {
-        this.tabRow = rows.length;
-        this.tabCells = (strip.cells ?? []).map(({ start, end, act }) => ({
-          start,
-          end,
-          tab: act,
-        }));
-        rows.push({ text: strip.text });
-      }
-    }
-    this.questionRows = { start: rows.length, end: rows.length + shown.length };
+    this.questionRows = { start: 0, end: shown.length };
     const heading = shown.map((text) => ({ text }));
+    if (multiple) {
+      const count = draft.picked.length + Number(Boolean(draft.text.trim()));
+      heading.push({ text: dim(count ? `${count} selected` : "Select one or more") });
+    }
 
     const stackedRows = hasPreview && !split ? Math.max(2, Math.min(7, Math.floor(budget / 3))) : 0;
-    const room = Math.max(2, budget - rows.length - heading.length - 1);
+    const room = Math.max(2, budget - heading.length - 1);
     const listRoom = Math.max(2, room - stackedRows);
     const items = this.items();
     const blocks = items.map((item, i) => this.itemBlock(item, i, choiceWidth, Infinity));
-    const total = blocks.reduce((n, block) => n + block.length, 0);
-    const compact =
-      total > listRoom ? items.map((item, i) => this.itemBlock(item, i, choiceWidth, 2)) : blocks;
+    const height = (blocks: BodyRow[][]) => blocks.reduce((n, block) => n + block.length, 0);
+    const withoutGaps = (blocks: BodyRow[][]) =>
+      blocks.map((block) => (block[0]?.text === "" ? block.slice(1) : block));
+    let compact = blocks;
+    if (multiple && height(compact) > listRoom) compact = withoutGaps(compact);
+    if (height(compact) > listRoom) {
+      compact = items.map((item, i) => this.itemBlock(item, i, choiceWidth, 2));
+      if (multiple && height(compact) > listRoom) compact = withoutGaps(compact);
+    }
     let list = this.window(compact, listRoom);
     if (hasPreview) {
       const left = split ? choiceWidth + GAP.length : 0;
       const preview = this.preview(inner - left, split ? room : stackedRows);
-      const top = rows.length + heading.length + 1 + (split ? 0 : list.length);
+      const top = heading.length + 1 + (split ? 0 : list.length);
       this.previewCells = { top, bottom: top + preview.length, left };
       if (split) {
         list = Array.from({ length: Math.max(list.length, preview.length) }, (_, i) => {
@@ -735,75 +822,92 @@ export class QuestionsDialog implements Component, Focusable {
         list.push(...preview.map((text) => ({ text })));
       }
     }
-    rows.push(...cardSections<BodyRow>({ text: "" }, heading, list));
-    rows.forEach((row, index) => {
-      if (row.hit) this.hits.set(index, { item: row.hit, to: row.hitTo ?? inner });
-    });
-    const buttons = buttonRow(theme, inner, this.keys())[0]!;
-    this.footer = { row: rows.length + 1, buttons };
-    return captionFrame(theme, {
-      width,
-      title: question?.header.trim() || "Questions",
-      body: rows.map(({ text }) => text),
-      footer: buttons.text,
-      notice: this.warning ? paint(theme, "warning", this.warning) : undefined,
-    });
+    return cardSections<BodyRow>({ text: "" }, heading, list);
   }
 
-  private keys(): KeyChip<() => void>[] {
-    const hint = (hotkey: string, label: string) => ({ hotkey, label });
-    const enter = (label: string, isLit = false) => ({
-      hotkey: "enter",
-      label,
-      act: () => this.handleInput("\r"),
-      essential: true,
-      isLit,
+  private reviewBody(width: number, room: number): BodyRow[] {
+    const blocks = this.questions.map((_, index) => {
+      const item = { kind: "review", question: index } as const;
+      const answers = this.valuesOf(index);
+      const hasWriteIn = Boolean(this.drafts[index]!.text.trim());
+      return cardSummary(this.theme, width, {
+        label: String(index + 1),
+        title: this.headerOf(index),
+        values: answers.map((text, i) => ({
+          text,
+          literal: hasWriteIn && i === answers.length - 1,
+        })),
+        note: this.notes[index]?.trim(),
+        hovered: index === this.hoverReview,
+      }).map((line) => target(line, item));
     });
-    const escape = (label: string) => ({
-      hotkey: "esc",
-      label,
-      act: () => this.handleInput("\x1b"),
-      essential: true,
-    });
-    if (this.confirming) return [enter("yes"), escape("no")];
-    if (this.editing) return [enter("save", true), escape("back")];
-    const choices = this.question ? this.question.options.length + 1 : 0;
-    const send = this.items()[this.row]?.kind === "send";
+    const spaced = cardSections<BodyRow>({ text: "" }, ...blocks);
+    if (spaced.length <= room) return spaced;
+    const compact = blocks.flat();
+    if (compact.length <= room) return compact;
+    const limit = room - 1;
+    this.reviewMaxOffset = spaced.length - limit;
+    this.reviewOffset = Math.min(this.reviewOffset, this.reviewMaxOffset);
+    const end = this.reviewOffset + limit;
     return [
-      escape("cancel"),
-      ...(choices ? [hint(`A–${this.letter(choices - 1)}/1–${choices}`, "pick")] : []),
-      ...(this.previewMax > 0 ? [hint("⇧↑↓", "preview")] : []),
-      ...(this.questionMaxOffset > 0 ? [hint("⇧←→", "text")] : []),
-      hint("↑↓", "move"),
-      enter(send ? "send" : "select", send),
-      ...(this.question?.multiSelect ? [hint("space", "toggle")] : []),
-      ...(this.tabs.length > 1 ? [hint("tab/←→", "tabs")] : []),
-      ...(choices ? [{ ...hint("n", "note"), act: () => this.startEditing("note") }] : []),
+      ...spaced.slice(this.reviewOffset, end),
+      {
+        text: paint(this.theme, "dim", `Lines ${this.reviewOffset + 1}–${end} of ${spaced.length}`),
+      },
     ];
+  }
+
+  private footerActions(): KeyChip<() => void>[] {
+    const action = (
+      label: string,
+      hotkey: string,
+      input: string,
+      isLit = false,
+    ): KeyChip<() => void> => ({
+      label,
+      hotkey,
+      isLit,
+      act: () => this.handleInput(input),
+    });
+    const enter = (label: string, isLit = false) => action(label, "enter", "\r", isLit);
+    if (this.editing) return [enter("Save", true), action("Back", "esc", "\x1b")];
+    if (this.tabKind.kind === "review") {
+      const ready = this.drafts.every(isAnswered);
+      return [enter(ready ? "Send" : "Answer first", ready)];
+    }
+    const keys = [action("Note", "n", "n")];
+    if (this.previewMax > 0) keys.push({ hotkey: "⇧↑↓", label: "preview" });
+    if (this.questionMaxOffset > 0) keys.push({ hotkey: "⇧←→", label: "question" });
+    const option = this.items()[this.row]?.kind === "option";
+    if (this.question?.multiSelect) {
+      if (option) keys.push({ hotkey: "space", label: "toggle" });
+      const label = this.tabs.length === 1 ? "Send" : "Continue";
+      return [action(label, "s", "s", isAnswered(this.drafts[this.questionIndex!]!)), ...keys];
+    }
+    return [enter(option ? "Choose" : "Edit", true), ...keys];
   }
 
   private letter(i: number): string {
     return String.fromCharCode(65 + i);
   }
 
-  private itemBlock(item: Item, i: number, width: number, detailLines: number): BodyRow[] {
+  private writeInLead(i: number): string {
+    return `${GAP}${this.letter(i)} › `;
+  }
+
+  private itemBlock(item: ChoiceItem, i: number, width: number, detailLines: number): BodyRow[] {
     const { theme, question } = this;
     const dim = (line: string) => paint(theme, "dim", line);
     const at = i === this.row;
-    const pointer = at ? paint(theme, "accent", tokens.glyph.pointer) + " " : GAP;
     const draft = this.drafts[this.questionIndex ?? 0]!;
-    const action = (text: string) =>
-      target(pointer + (at ? theme.bold(paint(theme, "accent", text)) : text), item);
-    const lines = (text: string, max: number) => clamp(text, width - GAP.length, { max });
     const answered = isAnswered(draft);
     const choice = (key: string, text: string, chosen: boolean, literal = false, detail?: string) =>
       cardChoice(theme, width, {
         key,
         text,
         chosen,
-        active: true,
         focused: at,
-        answered,
+        presentation: "form",
         literal,
         multiple: question?.multiSelect,
         detail,
@@ -822,8 +926,9 @@ export class QuestionsDialog implements Component, Focusable {
       }
       case "custom": {
         if (this.editing === "answer") {
-          const field = this.input.render(width - 4)[0] ?? "";
-          return [{ ...target(dim(`${this.letter(i)} › `) + field, item), hitTo: width }];
+          const lead = this.writeInLead(i);
+          const field = this.input.render(width - visibleWidth(lead))[0] ?? "";
+          return [{ ...target(dim(lead) + field, item), hitTo: width }];
         }
         return choice(
           this.letter(i),
@@ -848,26 +953,6 @@ export class QuestionsDialog implements Component, Focusable {
               ]
             : cardNote(theme, width, note, true, answered, 3, at).map((line) => target(line, item));
         return [{ text: "" }, ...content];
-      }
-      case "done":
-        return [action("Done")];
-      case "send":
-        return [action("Send")];
-      case "cancel":
-        return [action("Cancel")];
-      case "review": {
-        const values = this.valuesOf(item.question);
-        const header = this.questions[item.question]!.header;
-        const note = this.notes[item.question]?.trim();
-        return [
-          ...lines(header + (values.length ? ` ${tokens.glyph.done}` : ""), 1).map((line) =>
-            action(line),
-          ),
-          ...lines(values.join(", ") || "Unanswered", 2).map((line) =>
-            target(GAP + dim(line), item),
-          ),
-          ...(note ? lines(`Note: ${note}`, 2).map((line) => target(GAP + dim(line), item)) : []),
-        ];
       }
     }
   }
@@ -936,9 +1021,8 @@ export class QuestionsDialog implements Component, Focusable {
 }
 
 /** Two items are the same target when they name the same thing. */
-function sameItem(left: Item, right: Item): boolean {
+function sameItem(left: ChoiceItem, right: Item): boolean {
   if (left.kind !== right.kind) return false;
   if (left.kind === "option" && right.kind === "option") return left.index === right.index;
-  if (left.kind === "review" && right.kind === "review") return left.question === right.question;
   return true;
 }

@@ -7,7 +7,7 @@
 │    Q2  Add caching?
 │        Unanswered
 
- alt+a answer  Review  1/2 answered
+ Answer [alt+a]  Review  1/2 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
 1 .x4 2x24
@@ -18,7 +18,7 @@
 1 .x2 5x18
 1 .x8 3x10
 -
-. 6x5 .x9 3x20
+. 6x6 . 3x7 .x2 3x20
 7x159
 --- legend
 1 fg=#a08ed5
@@ -26,5 +26,5 @@
 3 fg=#7e888e
 4 fg=#5fa8cc bold
 5 fg=#dee0e1 bold
-6 fg=#a798d7
+6 fg=#dee0e1
 7 fg=#6c767b
