@@ -32,16 +32,16 @@ Q1/1   alt+a for the keys                                                       
 --- styles
 1 . 2x40 .x53 1
 1 .x94 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 5x3 . 4x21 .x67 1
+1 .x2 2x2 3x2 .x88 1
+1 .x2 2x2 3x2 .x88 1
+1 .x2 2x2 3x2 .x88 1
+1 .x2 1x2 3 . 3x21 .x67 1
 1 .x94 1
-1 .x2 4x5 . 4x10 .x76 1
+1 .x2 3x5 . 3x10 .x76 1
 1x96
-6x96
-6 . 7 8x21 7x71 6
-6x96
+4x96
+4 . 5 6x21 5x71 4
+4x96
 -
 -
 -
@@ -59,13 +59,12 @@ Q1/1   alt+a for the keys                                                       
 -
 -
 -
-2x6 . 5x5 4x13 .x131 4x3
+2x6 . 7x5 3x13 .x131 3x3
 --- legend
 1 fg=#d77757
 2 fg=#d77757 bold
-3 fg=#b1b9f9 bold
-4 fg=#999999
-5 fg=#b1b9f9
-6 dim
-7 bg=#373737
-8 bg=#373737 bold
+3 fg=#999999
+4 dim
+5 bg=#373737
+6 bg=#373737 bold
+7 fg=#b1b9f9

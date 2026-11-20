@@ -34,7 +34,7 @@ Q2/2   jk move A–B pick C write  n note  r review keys here                   
 1 .x94 1
 1 .x2 3x2 4x2 .x88 1
 1 .x2 3x2 4x2 .x88 1
-1 .x2 4x3 . 1x17 .x71 1
+1 .x2 1x2 4 . 1x17 .x71 1
 1 .x94 1
 1 .x2 4x12 .x80 1
 1 .x94 1
@@ -43,9 +43,9 @@ Q2/2   jk move A–B pick C write  n note  r review keys here                   
 5x96
 5 . 6x18 .x75 5
 5 .x94 5
-5 .x2 2x2 4x2 .x88 5
-5 .x2 2x2 4x2 .x88 5
-5 .x2 1x3 . 4x21 .x67 5
+5 .x2 6x2 4x2 .x88 5
+5 .x2 6x2 4x2 .x88 5
+5 .x2 5x2 4 . 4x21 .x67 5
 5 .x94 5
 5 .x2 4x5 . 4x10 .x76 5
 5x96

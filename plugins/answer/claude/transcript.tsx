@@ -41,12 +41,12 @@ function inlineField(
   placeholder: string,
   value: string,
   press?: () => unknown,
-  labelRole: "note" | "dim" = "dim",
+  style?: { tag: JSX.Element; valueRole: "accent" | "note" | "success" },
 ) {
   const { Box, Text, Button } = kit;
   const content = value || placeholder;
-  const field = <Text {...roleProps(value ? "note" : "dim")}>{content}</Text>;
-  const tag = <Text {...roleProps(labelRole)}>{label}</Text>;
+  const field = <Text {...roleProps(value ? (style?.valueRole ?? "note") : "dim")}>{content}</Text>;
+  const tag = style?.tag ?? <Text {...roleProps("dim")}>{label}</Text>;
   if (press && !content.includes("\n") && cellWidth(content) + cellWidth(label) + 2 <= kit.columns)
     return (
       <Button key={key} plain label={`${label} ${content}`} onPress={press}>
@@ -128,6 +128,9 @@ export function questionCard(
 
   const heading = `${item.label}  ${item.title}`;
   const answerTone = sent ? "success" : "note";
+  const selectionTone = isActive && !kit.isNative ? "accent" : answerTone;
+  const letterTone = (chosen: boolean) => (isActive ? "accent" : chosen ? answerTone : "dim");
+  const writeMark = item.written ? single.on : single.off;
   const titleRole = roleProps(
     isActive ? "accent" : !kit.isNative && answered ? answerTone : "text",
   );
@@ -135,7 +138,7 @@ export function questionCard(
   const terminalHeading = (
     <Text weight="semibold" {...titleRole}>
       {heading}
-      {answered ? <Text {...roleProps(answerTone)}> ✓</Text> : null}
+      {answered ? <Text {...roleProps(selectionTone)}> ✓</Text> : null}
     </Text>
   );
   const activate =
@@ -208,10 +211,13 @@ export function questionCard(
                 const weight = entry.isChosen ? "semibold" : undefined;
                 const pick = () => interactive?.pick(index, i);
                 const key = `${prefix}-choose-${i}`;
-                const letterRole = roleProps(isActive ? "note" : "dim");
-                const markRole = roleProps(entry.isChosen ? (sent ? "success" : "note") : "dim");
+                const letterRole = roleProps(letterTone(entry.isChosen));
+                const markRole = roleProps(entry.isChosen ? selectionTone : "dim");
+                const choiceRole = roleProps(
+                  !kit.isNative && entry.isChosen ? selectionTone : "text",
+                );
                 const option = (
-                  <Text weight={weight}>
+                  <Text weight={weight} {...choiceRole}>
                     {tag ? (
                       <Text weight="semibold" {...letterRole}>
                         {tag}
@@ -265,7 +271,7 @@ export function questionCard(
                           </Text>
                         </Button>
                         <Box flexShrink={1}>
-                          <Text weight={weight}>
+                          <Text weight={weight} {...choiceRole}>
                             {words}
                             <Text dimColor>{recommendation}</Text>
                           </Text>
@@ -287,11 +293,18 @@ export function questionCard(
                   {inlineField(
                     kit,
                     `${prefix}-write`,
-                    `${writeLetter(item)} ${item.written ? single.on : single.off}`,
+                    `${writeLetter(item)} ${writeMark}`,
                     "Write your own answer",
                     item.written,
                     interactive && (() => interactive.edit(index, "write")),
-                    isActive ? "note" : "dim",
+                    {
+                      tag: (
+                        <Text {...roleProps(letterTone(!!item.written))}>
+                          {writeLetter(item)} <Text {...roleProps("dim")}>{writeMark}</Text>
+                        </Text>
+                      ),
+                      valueRole: selectionTone,
+                    },
                   )}
                 </Box>
               ) : null}

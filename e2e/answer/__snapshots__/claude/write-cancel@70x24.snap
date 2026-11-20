@@ -22,7 +22,7 @@ Q2/2   jk move A–B pick C write  n note  r review keys here       [-]
 1 .x68 1
 1 .x2 2x2 3x2 .x62 1
 1 .x2 2x2 3x2 .x62 1
-1 .x2 3x3 . 1x17 .x45 1
+1 .x2 1x2 3 . 1x17 .x45 1
 1 .x68 1
 1 .x2 3x12 .x54 1
 1 .x68 1
@@ -31,18 +31,17 @@ Q2/2   jk move A–B pick C write  n note  r review keys here       [-]
 4x70
 4 . 5x18 .x49 4
 4 .x68 4
-4 .x2 6x2 3x2 .x62 4
-4 .x2 6x2 3x2 .x62 4
-4 .x2 1x3 . 3x21 .x41 4
+4 .x2 5x2 3x2 .x62 4
+4 .x2 5x2 3x2 .x62 4
+4 .x2 4x2 3 . 3x21 .x41 4
 4 .x68 4
 4 .x2 3x5 . 3x10 .x50 4
 4x70
-7x6 . 1x2 3x5 . 1x3 3x5 . 1 3x6 .x2 1 3x5 .x2 1 3x7 . 3x9 .x7 3x3
+6x6 . 1x2 3x5 . 1x3 3x5 . 1 3x6 .x2 1 3x5 .x2 1 3x7 . 3x9 .x7 3x3
 --- legend
 1 fg=#b1b9f9
 2 fg=#999999 bold
 3 fg=#999999
 4 fg=#d77757
 5 fg=#d77757 bold
-6 fg=#b1b9f9 bold
-7 fg=#d77757 bold inverse
+6 fg=#d77757 bold inverse

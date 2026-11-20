@@ -37,7 +37,7 @@ Review  1/2 answered jk move enter open r back keys here                        
 1 . 2x19 .x74 1
 1 .x94 1
 1 .x2 3x2 4x2 .x88 1
-1 .x2 3x2 2x2 5x8 .x80 1
+1 .x2 2x12 .x80 1
 1 .x2 4x3 . 4x21 .x67 1
 1 .x94 1
 1 .x2 4x12 .x80 1
@@ -45,36 +45,36 @@ Review  1/2 answered jk move enter open r back keys here                        
 1 .x2 4x5 . 1x25 .x61 1
 1 .x8 1x29 .x57 1
 1x96
-6x96
-6 . 5x18 .x75 6
-6 .x94 6
-6 .x2 3x2 4x2 .x88 6
-6 .x2 3x2 4x2 .x88 6
-6 .x2 4x3 . 4x21 .x67 6
-6 .x94 6
-6 .x2 4x5 . 4x10 .x76 6
-6x96
-6x96
-6 . 7 8x21 7x71 6
-6x96
-6x96
-6 .x2 9x17 1x13 .x62 6
-6 .x8 4x5 . 1x25 .x55 6
-6 .x14 1x29 .x51 6
-6 .x2 4x6 .x12 4x12 .x62 6
-6x96
-6x96
-6 .x94 6
-6 .x2 4x16 .x2 2x13 .x2 4x12 .x47 6
-6x96
+5x96
+5 . 6x18 .x75 5
+5 .x94 5
+5 .x2 3x2 4x2 .x88 5
+5 .x2 3x2 4x2 .x88 5
+5 .x2 4x3 . 4x21 .x67 5
+5 .x94 5
+5 .x2 4x5 . 4x10 .x76 5
+5x96
+5x96
+5 . 7 8x21 7x71 5
+5x96
+5x96
+5 .x2 9x17 1x13 .x62 5
+5 .x8 4x5 . 1x25 .x55 5
+5 .x14 1x29 .x51 5
+5 .x2 4x6 .x12 4x12 .x62 5
+5x96
+5x96
+5 .x94 5
+5 .x2 4x16 .x2 2x13 .x2 4x12 .x47 5
+5x96
 ax20 . 1x2 4x5 . bx5 cx5 . 1 4x5 . 4x9 .x100 4x3
 --- legend
 1 fg=#b1b9f9
 2 fg=#b1b9f9 bold
 3 fg=#999999 bold
 4 fg=#999999
-5 bold
-6 dim
+5 dim
+6 bold
 7 bg=#373737
 8 fg=#d77757 bg=#373737 bold
 9 fg=#d77757

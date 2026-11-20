@@ -32,44 +32,43 @@ Q1/2   jk move A–B pick C write  n note  r review keys here                   
 --- styles
 1 . 2x17 .x76 1
 1 .x94 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 5x3 . 4x21 .x67 1
+1 .x2 2x2 3x2 .x88 1
+1 .x2 2x2 3x2 .x88 1
+1 .x2 1x2 3 . 3x21 .x67 1
 1 .x94 1
-1 .x2 4x5 . 5x10 .x76 1
-1 .x8 5x11 .x75 1
+1 .x2 3x5 . 4x10 .x76 1
+1 .x8 4x11 .x75 1
 1x96
-6x96
-6 . 7x18 .x75 6
-6 .x94 6
-6 .x2 8x2 4x2 .x88 6
-6 .x2 8x2 4x2 .x88 6
-6 .x2 4x3 . 4x21 .x67 6
-6 .x94 6
-6 .x2 4x5 . 4x10 .x76 6
-6x96
-6x96
-6 . 9 ax21 9x71 6
-6x96
+5x96
+5 . 6x18 .x75 5
+5 .x94 5
+5 .x2 7x2 3x2 .x88 5
+5 .x2 7x2 3x2 .x88 5
+5 .x2 3x3 . 3x21 .x67 5
+5 .x94 5
+5 .x2 3x5 . 3x10 .x76 5
+5x96
+5x96
+5 . 8 9x21 8x71 5
+5x96
 -
-b . bx51
--
--
+a . ax51
 -
 -
 -
 -
-cx6 . 5x2 4x5 . 5x3 4x5 . 5 4x6 .x2 5 4x5 .x2 5 4x7 . 4x9 .x97 4x3
+-
+-
+bx6 . 4x2 3x5 . 4x3 3x5 . 4 3x6 .x2 4 3x5 .x2 4 3x7 . 3x9 .x97 3x3
 --- legend
 1 fg=#d77757
 2 fg=#d77757 bold
-3 fg=#b1b9f9 bold
-4 fg=#999999
-5 fg=#b1b9f9
-6 dim
-7 bold
-8 fg=#999999 bold
-9 bg=#373737
-a bg=#373737 bold
-b fg=#ffc107
-c fg=#d77757 bold inverse
+3 fg=#999999
+4 fg=#b1b9f9
+5 dim
+6 bold
+7 fg=#999999 bold
+8 bg=#373737
+9 bg=#373737 bold
+a fg=#ffc107
+b fg=#d77757 bold inverse

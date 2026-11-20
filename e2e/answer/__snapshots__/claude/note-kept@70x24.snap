@@ -12,23 +12,21 @@
 
 Q1/2   jk move A–B pick C write  n note  r review keys here       [-]
 --- styles
-1 . 2x17 3x2 .x48 1
+1 . 2x19 .x48 1
 1 .x68 1
-1 .x2 3x2 4x2 .x62 1
-1 .x2 3x4 5x8 .x54 1
-1 .x2 6x3 . 4x21 .x41 1
+1 .x2 2x2 3x2 .x62 1
+1 .x2 2x12 .x54 1
+1 .x2 1x2 3 . 3x21 .x41 1
 1 .x68 1
-1 .x2 4x12 .x54 1
+1 .x2 3x12 .x54 1
 1 .x68 1
-1 .x2 4x5 . 6x25 .x35 1
-1 .x8 6x29 .x31 1
+1 .x2 3x5 . 4x25 .x35 1
+1 .x8 4x29 .x31 1
 1x70
-7x6 . 6x2 4x5 . 6x3 4x5 . 6 4x6 .x2 6 4x5 .x2 6 4x7 . 4x9 .x7 4x3
+5x6 . 4x2 3x5 . 4x3 3x5 . 4 3x6 .x2 4 3x5 .x2 4 3x7 . 3x9 .x7 3x3
 --- legend
 1 fg=#d77757
 2 fg=#d77757 bold
-3 fg=#b1b9f9 bold
-4 fg=#999999
-5 bold
-6 fg=#b1b9f9
-7 fg=#d77757 bold inverse
+3 fg=#999999
+4 fg=#b1b9f9
+5 fg=#d77757 bold inverse

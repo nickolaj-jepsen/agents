@@ -43,15 +43,15 @@ Q1/1   alt+a for the keys                                                       
 1 . 3x5 .x6 4x4 . 5x8 .x69 1
 1 . 3x5 .x4 4x4 . 5x10 .x69 1
 1 .x94 1
-1 .x2 6x2 7x2 .x88 1
-1 .x2 6x2 7x2 .x88 1
-1 .x2 8x3 . 7x21 .x67 1
+1 .x2 2x2 6x2 .x88 1
+1 .x2 2x2 6x2 .x88 1
+1 .x2 1x2 6 . 6x21 .x67 1
 1 .x94 1
-1 .x2 7x5 . 7x10 .x76 1
+1 .x2 6x5 . 6x10 .x76 1
 1x96
-9x96
-9 . a bx21 ax71 9
-9x96
+7x96
+7 . 8 9x21 8x71 7
+7x96
 -
 -
 -
@@ -59,16 +59,15 @@ Q1/1   alt+a for the keys                                                       
 -
 -
 -
-2x6 . 8x5 7x13 .x131 7x3
+2x6 . ax5 6x13 .x131 6x3
 --- legend
 1 fg=#d77757
 2 fg=#d77757 bold
 3 fg=p4
 4 fg=p3
 5 fg=p1
-6 fg=#b1b9f9 bold
-7 fg=#999999
-8 fg=#b1b9f9
-9 dim
-a bg=#373737
-b bg=#373737 bold
+6 fg=#999999
+7 dim
+8 bg=#373737
+9 bg=#373737 bold
+a fg=#b1b9f9
