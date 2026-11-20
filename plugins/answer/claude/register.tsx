@@ -56,8 +56,13 @@ import {
 const PLUGIN = "answer";
 const WRITE = "write";
 const NOTE = "note";
-/** A field's address; a key row button is already called `note`. */
-const keyOf = (field: typeof WRITE | typeof NOTE) => `${field}-field`;
+/**
+ * A field's address; a key row button is already called `note`. An Input keeps what was typed
+ * until it is drawn with another value, so each opening gets an address of its own: one opened
+ * after a cancel would otherwise come back holding the cancelled text.
+ */
+const keyOf = (field: typeof WRITE | typeof NOTE) => `${field}-field-${opened}`;
+let opened = 0;
 // What the row says focuses the band; the binding itself is in keybindings.json.
 const CHORD = "alt+a";
 
@@ -187,6 +192,7 @@ async function leave($: EngineInterface, to: (shown: number) => Action) {
 /** Opens a field and hands it the ring: a note under its answer, or the write-in. */
 async function ask($: EngineInterface, editing: typeof WRITE | typeof NOTE) {
   typed = null;
+  opened++;
   await edit($, (c) => ({ ...c, editing }));
   if (editing === NOTE) askedAt = await $.clock.now();
   // A click is what gives the band the keys, and it may not have them yet: ask again, briefly.
@@ -600,6 +606,7 @@ async function writeRound(
   // Show the field without moving the transcript or taking the prompt's keys.
   if (surface === "terminal" && isPress) {
     typed = null;
+    opened++;
     await update($, current, (was) => {
       if (was?.transcript !== id || was.writer) return was;
       return {
@@ -615,6 +622,7 @@ async function writeRound(
   const c = await update($, current, (was) => {
     if (was?.transcript !== id || was.writer) return was;
     typed = null;
+    opened++;
     return {
       ...over(was, stepForm(was.held, { do: "go", step: index })),
       editing: field,

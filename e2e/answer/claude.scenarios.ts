@@ -177,6 +177,12 @@ export default scenarios({
         { click: "Cancel" },
         { wait: /C ●\s+An embedded store/ },
         { wait: "unsaved addition", gone: true },
+        // Opened again, the field holds the saved answer, not what was cancelled.
+        { press: "c" },
+        { wait: /Answer:.*⏎ save/ },
+        { wait: "unsaved addition", gone: true },
+        { click: "Cancel" },
+        { wait: /C ●\s+An embedded store/ },
         { run: expectPrompt("draft to keep") },
         { press: "j" },
         { wait: "Q2/2" },

@@ -332,7 +332,7 @@ test("a pick opens its note, a press on the taken answer goes on, and the review
   // Q1: B, which stays for its note; Enter there goes on.
   await pick(w, drawn, "e1");
   expect(await drawn.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
-  await drawn.input({ key: "note-field", text: "but keep the flag" });
+  await typeIn(drawn, "note", "but keep the flag");
   // Q2 has a recommendation and no options: it is the first entry. A second press goes on.
   expect((await drawn.find({ key: "e0" }))?.text).toContain("Yes:");
   await pick(w, drawn, "e0");
@@ -341,7 +341,7 @@ test("a pick opens its note, a press on the taken answer goes on, and the review
   // Q3's write-in is a row like its options until it is picked; then it is a field.
   expect((await drawn.find({ key: "e2" }))?.text).toContain("Write your own answer");
   await pick(w, drawn, "e2");
-  await drawn.input({ key: "write-field", text: "drop it" });
+  await typeIn(drawn, "write", "drop it");
   const reply = "Q1: B\n    Note: but keep the flag\nQ2: yes\nQ3: drop it";
   expect((await drawn.findAll({ type: "Text" })).some((t) => t.text === reply)).toBe(true);
   await drawn.press({ key: "fill" });
@@ -362,7 +362,7 @@ test("skip, back and forward move without answering; closing keeps the answers",
   expect(await drawn.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
   await drawn.press({ key: "next" });
   await pick(w, drawn, "e0");
-  await drawn.input({ key: "note-field", text: "" });
+  await typeIn(drawn, "note", "");
   expect(await drawn.find({ type: "Text", text: /^What should happen to/ })).toBeDefined();
   await drawn.press({ key: "quit" });
   expect((await drawn.find({ key: "answer" }))?.text).toContain("1 of 3");
@@ -384,7 +384,7 @@ test("the mouse alone answers: buttons keep what a field held, and a click on an
   await drawn.press({ key: "q2" });
   expect((await drawn.find({ key: "e1" }))?.text).toContain("Scripts may still call it.");
   await pick(w, drawn, "e2");
-  await drawn.input({ key: "write-field", text: "drop it", kind: "change" });
+  await typeIn(drawn, "write", "drop it", "change");
   await drawn.press({ key: "next" });
   expect(await drawn.find({ type: "Text", text: /^Not answered: Q1, Q2\./ })).toBeDefined();
   await drawn.press({ key: "item0" });
@@ -392,12 +392,12 @@ test("the mouse alone answers: buttons keep what a field held, and a click on an
   // A note typed and never entered is kept by the button that leaves.
   await drawn.press({ key: "q0" });
   await drawn.press({ key: "note-add" });
-  await drawn.input({ key: "note-field", text: "for now", kind: "change" });
+  await typeIn(drawn, "note", "for now", "change");
   await drawn.press({ key: "next" });
   expect(await drawn.find({ type: "Text", text: /^Lower the per-generator/ })).toBeDefined();
   await drawn.press({ key: "review" });
   await drawn.press({ key: "note" });
-  await drawn.input({ key: "note-field", text: "thanks", kind: "change" });
+  await typeIn(drawn, "note", "thanks", "change");
   await drawn.press({ key: "fill" });
   await drawn.unmount();
   expect(w.box).toBe("Q1: A\n    Note: for now\nQ3: drop it\nOverall: thanks");
@@ -463,7 +463,7 @@ test("a press on an answer opens its note; a press on it again goes on", async (
   await ends($, GRILLING);
   const drawn = await form($);
   await pick(w, drawn, "e1");
-  expect(await drawn.find({ key: "note-field" })).toBeDefined();
+  expect(await field(drawn, "note")).toBeDefined();
   expect(await drawn.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
   await pick(w, drawn, "e1");
   expect(await drawn.find({ type: "Text", text: /^Lower the per-generator/ })).toBeDefined();
@@ -511,9 +511,9 @@ test("a pick list routes each item to its own next step", async ($, on) => {
   await $.command.run(RUN);
   const drawn = await $.ui.mount({ ...BAND, surface: "desktop" });
   await pick(w, drawn, "e0");
-  await drawn.input({ key: "note-field", text: "" });
+  await typeIn(drawn, "note", "");
   await pick(w, drawn, "e1");
-  await drawn.input({ key: "note-field", text: "" });
+  await typeIn(drawn, "note", "");
   await drawn.press({ key: "fill" });
   await drawn.unmount();
   expect(w.box).toBe("do 1\n2 → /grill-me");
@@ -662,6 +662,23 @@ test("nothing runs or is read outside the session: the form needs no hub", async
   expect(reached).toEqual([]);
 });
 
+/** The open field, a write-in or a note: each opening of one has a key of its own. */
+const field = async (drawn: Pick<Mounted, "findAll">, name: "write" | "note") =>
+  (await drawn.findAll({ type: "Input" })).find((e) => e.key?.startsWith(`${name}-field-`));
+
+/** Types into the open field, as `input` does into a keyed one. */
+const typeIn = async (
+  drawn: Pick<Mounted, "findAll" | "input">,
+  name: "write" | "note",
+  text: string,
+  kind?: "change",
+) =>
+  drawn.input({
+    key: (await field(drawn, name))?.key ?? `${name}-field`,
+    text,
+    ...(kind ? { kind } : {}),
+  });
+
 /** The offer's words, which a graphical surface sets beside its button rather than in it. */
 const offerSays = async (drawn: Pick<Mounted, "findAll">) =>
   (await drawn.findAll({ type: "Text" }))
@@ -713,7 +730,7 @@ for (const surface of ["desktop", "vscode"] as const) {
       await drawn.find({ type: "Text", text: /^Recommended: A\. A per-kind table/ }),
     ).toBeDefined();
     // The write-in is a field on its own row, ready for a click; no Button stands in for it.
-    expect(await drawn.find({ type: "Input", key: "write-field" })).toBeDefined();
+    expect(await field(drawn, "write")).toBeDefined();
     expect(await drawn.find({ type: "Button", key: "e3" })).toBeUndefined();
     // One tab per question and the review, the current one filled; the way out at the far edge.
     for (const key of ["q0", "q1", "q2", "review"])
@@ -724,7 +741,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     // Nothing is chosen: no way on is drawn yet, and nothing is filled but the tab.
     expect(await drawn.find({ key: "next" })).toBeUndefined();
     expect(await drawn.find({ key: "accept" })).toBeUndefined();
-    expect(await drawn.find({ key: "note-field" })).toBeUndefined();
+    expect(await field(drawn, "note")).toBeUndefined();
     await expectNative(drawn, { hotkeys: ACTIONS });
 
     await pick(w, drawn, "e1");
@@ -732,7 +749,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     expect((await drawn.find({ key: "e0" }))?.props.variant).not.toBe("primary");
     // The chosen row: its words whole, a note's field and Next, filled, in its well.
     expect(await drawn.find({ type: "Markdown", text: "**Default by kind.**" })).toBeDefined();
-    expect(await drawn.find({ key: "note-field" })).toBeDefined();
+    expect(await field(drawn, "note")).toBeDefined();
     expect((await drawn.find({ key: "next" }))?.props.label).toBe("Next");
     expect((await drawn.find({ key: "next" }))?.props.variant).toBe("primary");
     // The tab says the question is answered.
@@ -779,7 +796,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     const drawn = await form($, surface);
     // A note on a question with no answer: asked for, it is a field under the answers.
     await drawn.press({ key: "note" });
-    expect(await drawn.find({ key: "note-field" })).toBeDefined();
+    expect(await field(drawn, "note")).toBeDefined();
     await drawn.press({ key: "q2" });
     expect(await asking(drawn, /What should happen to/)).toBeDefined();
     await drawn.press({ key: "q1" });
@@ -793,7 +810,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     expect((await drawn.find({ key: "e1" }))?.props.variant).toBe("primary");
     expect((await drawn.find({ key: "next" }))?.props.variant).toBe("primary");
     await expectNative(drawn, { hotkeys: ACTIONS });
-    await drawn.input({ key: "note-field", text: "use B", kind: "change" });
+    await typeIn(drawn, "note", "use B", "change");
     await drawn.press({ key: "review" });
     expect(await drawn.find({ type: "Text", text: /^B: / })).toBeDefined();
     expect(await drawn.find({ type: "Text", text: "Note: use B" })).toBeDefined();
@@ -812,13 +829,11 @@ for (const surface of ["desktop", "vscode"] as const) {
     await start($, surface);
     await ends($, GRILLING);
     const drawn = await form($, surface);
-    await drawn.input({ key: "write-field", text: "A per-kind table, but generated." });
+    await typeIn(drawn, "write", "A per-kind table, but generated.");
     expect(await asking(drawn, /Lower the per-generator/)).toBeDefined();
     await drawn.press({ key: "q0" });
     // Written, it is the answer: its row opens with the way on, the field holding the words.
-    expect((await drawn.find({ key: "write-field" }))?.props.value).toBe(
-      "A per-kind table, but generated.",
-    );
+    expect((await field(drawn, "write"))?.props.value).toBe("A per-kind table, but generated.");
     expect((await drawn.find({ key: "next" }))?.props.variant).toBe("primary");
     await expectNative(drawn, { hotkeys: ACTIONS });
     await drawn.press({ key: "review" });
