@@ -33,6 +33,7 @@ import {
   excerpt,
   fieldRow,
   forSurface,
+  inlineMarkdown,
   kitOf,
   list,
   note as noteLines,
@@ -1479,7 +1480,9 @@ export const register: Register = (on) => {
             onPress={() => choose($, row, k)}
           >
             {`${markOf(row)} `}
-            {row.kind === "write" ? `✎ ${item.written || row.text}` : labelOf(row, k)}
+            {row.kind === "write"
+              ? `✎ ${item.written || row.text}`
+              : inlineMarkdown(kit, labelOf(row, k))}
             {row.isRecommended ? <Text dimColor> (recommended)</Text> : null}
             {/* Inside the button, so a click on any of the option's lines picks it. */}
             {row.detail ? (

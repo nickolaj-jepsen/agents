@@ -274,7 +274,7 @@ describe("parse", () => {
       "**Q1. Which?**\n\n- **A.** Read the `Location` header: **simpler** for callers.\n- **B. Keep it.** It works.\n",
     ).items[0];
     expect(item?.options[0]).toMatchObject({
-      text: "Read the `Location` header: simpler for callers.",
+      text: "Read the `Location` header: **simpler** for callers.",
       detail: "",
     });
     expect(item?.options[1]).toMatchObject({ text: "Keep it.", detail: "It works." });

@@ -7,7 +7,6 @@ import {
 import {
   type Component,
   Container,
-  type DefaultTextStyle,
   Editor,
   type Focusable,
   Markdown,
@@ -30,6 +29,7 @@ import {
   type BandRow,
 } from "../../../kit/pi/ui.ts";
 import { type Held, type View, view, viewOf } from "../core/forms.ts";
+import { markdownLines } from "./markdown.ts";
 
 export type Round = Held & { anchor?: string; sent?: boolean };
 export type RoundAction =
@@ -48,15 +48,6 @@ export const firstReviewStop = (v: View) => (v.reply ? -1 : 0);
 // Separate the active stop from answered stops, using Pi's focus and ordinary border colors.
 const questionTone = (theme: Theme, active: boolean, answered: boolean, text: string) =>
   theme.fg(active ? "borderAccent" : answered ? "border" : "text", text);
-
-/**
- * One paragraph of markdown at a width in a default style. A line in that style ends with it
- * still open, and pi pads every line to the terminal's edge, so each line is closed here.
- */
-const markdownLines = (text: string, width: number, style?: DefaultTextStyle) =>
-  new Markdown(text, 0, 0, getMarkdownTheme(), style)
-    .render(width)
-    .map((line) => `${line.trimEnd()}\x1b[0m`);
 
 const choiceLetters = (item: Item): string[] => {
   const unused = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].filter(
@@ -238,7 +229,7 @@ export class Transcript implements Component {
         if (entry.detail)
           rows.push(
             ...asRows(
-              prose(theme, inner - pad.length, entry.detail, { max: 3 }, "dim").map(
+              markdownLines(entry.detail, inner - pad.length, { color: dim }, 3).map(
                 (line) => pad + line,
               ),
               action,
@@ -248,7 +239,7 @@ export class Transcript implements Component {
       if (item.recommended)
         rows.push(
           { text: "" },
-          ...asRows(prose(theme, inner, `Recommended: ${item.recommended}`, { max: 3 }, "dim")),
+          ...asRows(markdownLines(`Recommended: ${item.recommended}`, inner, { color: dim }, 3)),
         );
       if (active && (answered || item.accepts.includes(","))) rows.push({ text: "" });
       if (active && item.accepts.includes(","))

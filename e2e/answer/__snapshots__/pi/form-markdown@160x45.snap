@@ -1,0 +1,40 @@
+# answer/pi/form-markdown 160x45 @0,25 (160x15)
+╭─ 1 of 1  ○ Q1 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Should the endpoint send one JSON response with a kind field, and send redirects as a 200 response body that page.tsx acts on?                               │
+│                                                                                                                                                              │
+│ ›1 ○ A. A 200 response like {kind: "redirect", location, permanent}. page.tsx calls permanentRedirect() (308) or redirect(). The redirect is cached per URL  │
+│      like any other result. (recommended)                                                                                                                    │
+│  2 ○ B. Django answers with a real 301, and the Next.js fetch reads the Location header: simpler for legacy callers, as the RFC has it.                      │
+│    The CmsPageModal keeps reading Location, and nothing in the legacy code changes.                                                                          │
+│                                                                                                                                                              │
+│  3 ○ Write your own answer                                                                                                                                   │
+│                                                                                                                                                              │
+│ Recommended: A. The redirect stays inside the cached result, and the legacy CmsPageModal can simply ignore that kind.                                        │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│ b back  f forward  y take A  s skip  r review  n note                                                                                                        │
+│ 1-9 or enter answers · hjkl moves · esc closes, answers kept                                                                                                 │
+--- styles
+1x2 . 2x6 .x2 3 . 2x2 . 1x144
+1 . 4x50 2x4 4x55 2x8 4x9 .x31 1
+1 .x158 1
+1 . 2x2 . 2x152 .x2 1
+1 .x6 2x22 3x14 .x116 1
+1 .x2 2 .x70 2x8 .x9 4x7 .x5 5x6 .x13 6x7 .x30 1
+1 .x4 3x4 2x12 3x15 2x8 3x6 7x7 3x28 .x74 1
+1 .x158 1
+1 .x2 2 . 3x23 .x131 1
+1 .x158 1
+1 . 3x12 .x64 2x12 .x69 1
+1 .x158 1
+1 .x158 1
+1 . 2 .x7 2 .x10 2 .x9 2 .x7 2 .x9 2 .x109 1
+1 . 3x60 .x97 1
+--- legend
+1 fg=#768186
+2 fg=#a798d7
+3 fg=#7e888e
+4 bold
+5 italic
+6 fg=#69add0 underline=single
+7 fg=#7e888e bold

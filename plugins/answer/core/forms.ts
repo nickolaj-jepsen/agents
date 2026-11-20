@@ -256,7 +256,8 @@ function parseItem(start: Start, block: string[]): FormItem {
       // closed after the letter (`**A.** More **words**`) leaves the words whole.
       const close = opened && !closed ? words.indexOf("**") : -1;
       if (close > 0) detail.unshift(words.slice(close + 2).trim());
-      const text = unbold(close > 0 ? words.slice(0, close) : words);
+      // A bold inside the words is the option's own, set by a surface that draws markdown.
+      const text = close > 0 ? unbold(words.slice(0, close)) : words.trim();
       if (OWN_RECOMMENDATION.test(text)) ownPick = options.length;
       options.push({ key: letter, text, detail: tidy(detail) });
       continue;

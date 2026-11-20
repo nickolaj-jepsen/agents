@@ -1,4 +1,4 @@
-import { view as viewOf } from "../core/forms";
+import { plain, view as viewOf } from "../core/forms";
 import type { Current, Editing, Held, View } from "./types.d.ts";
 import {
   actionBar,
@@ -29,6 +29,9 @@ export type RoundActions = {
 };
 
 const labelOf = (text: string) => text.replace(/^[A-H][.)]\s*/, "");
+
+/** Markdown that `inlineMarkdown` cannot set: a list, a heading, a quote, a fence or a table. */
+const BLOCKS = /^\s*(?:[-*+]\s|\d+[.)]\s|#{1,6}\s|>|```|~~~|\|)/m;
 
 type Entry = NonNullable<View["item"]>["entries"][number];
 
@@ -219,7 +222,9 @@ export function questionCard(
                 const words = labelOf(entry.text);
                 const tag = entryLetter(entry) ? `${entryLetter(entry)} ` : "";
                 const recommendation = entry.isRecommended ? "  Recommended" : "";
-                const label = `${tag}${mark} ${words}${recommendation}`;
+                // A Button's label is plain words: it draws no markdown.
+                const said = plain(words);
+                const label = `${tag}${mark} ${said}${recommendation}`;
                 const weight = entry.isChosen ? "semibold" : undefined;
                 const pick = () => interactive?.pick(index, i);
                 const key = `${prefix}-choose-${i}`;
@@ -229,21 +234,35 @@ export function questionCard(
                   !kit.isNative && entry.isChosen ? selectionTone : "text",
                 );
                 const lead = cellWidth(`${tag}${mark} `);
+                const lines = { width: kit.columns - 1 - lead, indent: lead };
+                const hang = `\n${" ".repeat(lead)}`;
+                // A detail of plain paragraphs is the option's too; one with blocks keeps its
+                // Markdown under the row.
+                const isDetailInline =
+                  !kit.isNative && !!entry.detail && !BLOCKS.test(entry.detail);
                 // One Text the row's Button holds whole, so a click on any of its lines picks it:
                 // the words wrapped by the kit to hang under their first line, their markdown set.
                 const option = kit.isNative ? null : (
-                  <Text weight={weight} {...choiceRole}>
-                    {tag ? (
-                      <Text weight="semibold" {...letterRole}>
-                        {tag}
+                  <Text>
+                    <Text weight={weight} {...choiceRole}>
+                      {tag ? (
+                        <Text weight="semibold" {...letterRole}>
+                          {tag}
+                        </Text>
+                      ) : null}
+                      <Text {...markRole}>{`${mark} `}</Text>
+                      {inlineMarkdown(kit, words, { ...lines, aside: recommendation })}
+                    </Text>
+                    {isDetailInline ? (
+                      <Text dimColor>
+                        {entry.detail.split(/\n\s*\n/).map((paragraph, p) => (
+                          <Text key={`detail${p}`}>
+                            {p ? `\n${hang}` : hang}
+                            {inlineMarkdown(kit, paragraph, { ...lines, isDim: true })}
+                          </Text>
+                        ))}
                       </Text>
                     ) : null}
-                    <Text {...markRole}>{`${mark} `}</Text>
-                    {inlineMarkdown(kit, words, {
-                      width: kit.columns - 1 - lead,
-                      indent: lead,
-                      aside: recommendation,
-                    })}
                   </Text>
                 );
                 return (
@@ -264,11 +283,11 @@ export function questionCard(
                             <Button
                               key={key}
                               label={
-                                cellWidth(words) > tokens.gui.maxLabel
+                                cellWidth(said) > tokens.gui.maxLabel
                                   ? entry.key
                                     ? `Choose ${entry.key}`
                                     : "Accept recommendation"
-                                  : [entry.key, words].filter(Boolean).join(" ")
+                                  : [entry.key, said].filter(Boolean).join(" ")
                               }
                               variant={entry.isChosen ? "primary" : "secondary"}
                               dimColor={!entry.isChosen || undefined}
@@ -285,10 +304,10 @@ export function questionCard(
                             </Text>
                           ) : null}
                         </Box>
-                        {!interactive || cellWidth(words) > tokens.gui.maxLabel ? (
+                        {!interactive || cellWidth(said) > tokens.gui.maxLabel ? (
                           <Text weight={weight}>
                             {!interactive ? tag : ""}
-                            {words}
+                            {said}
                           </Text>
                         ) : null}
                       </Box>
@@ -299,7 +318,7 @@ export function questionCard(
                     ) : (
                       option
                     )}
-                    {entry.detail ? (
+                    {entry.detail && !isDetailInline ? (
                       <Box paddingLeft={kit.isNative ? 1 : 4}>
                         <Markdown text={entry.detail} dimColor />
                       </Box>

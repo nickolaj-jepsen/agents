@@ -31,6 +31,7 @@ import {
   type Chip,
 } from "../../../kit/pi/ui.ts";
 import type { Action, View } from "../core/forms.ts";
+import { markdownLines } from "./markdown.ts";
 
 /** `fill` writes the reply into the editor; `send` sends it as the person's message instead. */
 export type FormResult = { fill: boolean; send?: boolean };
@@ -341,7 +342,10 @@ export class AnswerForm implements Component, Focusable {
 
   private itemRows(item: Item, width: number): Row[] {
     const t = this.theme;
-    const rows: Row[] = [...this.wrapped(item.title, width, (s) => t.bold(s)), { text: "" }];
+    const rows: Row[] = [
+      ...markdownLines(item.title, Math.max(8, width), { bold: true }).map((text) => ({ text })),
+      { text: "" },
+    ];
     if (item.body) {
       const md = new Markdown(item.body, 0, 0, getMarkdownTheme()).render(Math.max(8, width));
       rows.push(...md.map((text) => ({ text })), { text: "" });
@@ -368,30 +372,35 @@ export class AnswerForm implements Component, Focusable {
       // The write-in stands apart from what the question offered, dim until it holds an answer.
       const isWaiting = entry.kind === "write" && !item.written;
       if (entry.kind === "write" && k > 0) rows.push({ text: "" });
-      const lines = wrapTextWithAnsi(box + entry.text, Math.max(8, width - 4));
+      const tone = isCursor ? "accent" : entry.isChosen ? "success" : isWaiting ? "dim" : undefined;
+      const ink = tone ? (s: string) => t.fg(tone, s) : undefined;
+      // The option's markdown set in its state's colour, which the Markdown puts back after
+      // each code span; the box leads the first line and the rest hang under the words.
+      const lines = markdownLines(entry.text, Math.max(6, width - 6), ink && { color: ink });
       lines.forEach((line, i) => {
         const pointer = isCursor ? t.fg("accent", "›") : " ";
         const head = i === 0 ? `${pointer}${t.fg("accent", String(k + 1))} ` : "   ";
         const tail = i === lines.length - 1 ? rec : "";
-        const body = isCursor
-          ? t.fg("accent", line)
-          : entry.isChosen
-            ? t.fg("success", line)
-            : isWaiting
-              ? t.fg("dim", line)
-              : line;
-        rows.push({ text: `${head}${body}${tail}`, act: { kind: "entry", index: k } });
+        const lead = i === 0 ? (ink ?? String)(box) : " ".repeat(box.length);
+        rows.push({ text: `${head}${lead}${line}${tail}`, act: { kind: "entry", index: k } });
       });
       if (entry.detail)
-        rows.push(...this.wrapped(entry.detail, width, (s) => t.fg("dim", s), "   "));
+        rows.push(
+          ...markdownLines(entry.detail, Math.max(8, width - 3), {
+            color: (s) => t.fg("dim", s),
+          }).map((line) => ({ text: `   ${line}` })),
+        );
       if (k === noteAt) rows.push(...note);
     });
     if (noteAt < 0) rows.push(...note);
     rows.push({ text: "" });
     if (item.recommended)
-      rows.push(...this.wrapped(`${t.fg("dim", "Recommended:")} ${item.recommended}`, width), {
-        text: "",
-      });
+      rows.push(
+        ...markdownLines(`Recommended: ${item.recommended}`, Math.max(8, width)).map((line, i) => ({
+          text: i ? line : line.replace("Recommended:", t.fg("dim", "Recommended:")),
+        })),
+        { text: "" },
+      );
     if (item.written && this.editing !== "text")
       rows.push(...this.wrapped(`${t.fg("dim", "Your answer:")} ${item.written}`, width));
     if (this.editing === "text") rows.push(this.field("answer", width));

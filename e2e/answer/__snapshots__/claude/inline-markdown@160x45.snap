@@ -7,6 +7,7 @@
 ▎      result.  Recommended
 ▎  B ○ Django answers with a real 301, and the Next.js fetch reads the Location header:
 ▎      simpler for legacy callers, as the RFC has it.
+▎      The CmsPageModal keeps reading Location, and nothing in the legacy code changes.
 ▎  C ○ Write your own answer
 ▎
 ▎ Recommended: A. The redirect stays inside the cached result, and the legacy CmsPageModal can
@@ -27,7 +28,6 @@
 
 
 
-
 Q1/1   alt+a for the keys                                                                                                                                   [-]
 --- styles
 1 . 2x56 3x4 2x29 .x4 1
@@ -37,11 +37,12 @@ Q1/1   alt+a for the keys                                                       
 1 .x2 2x4 3x19 2x10 3x10 2x47 .x2 1
 1 .x2 2x11 4x13 .x68 1
 1 .x2 2x2 5x2 .x64 6x8 .x16 1
-1 .x18 7x6 .x70 1
+1 .x6 7x7 .x5 8x6 .x70 1
+1 .x2 5x8 6x12 5x15 6x8 5x6 4x7 5x28 .x8 1
 1 .x2 1x2 5 . 5x21 .x67 1
 1 .x94 1
-1 . 8x76 9x12 8x4 . 1
-1 . 8x24 .x69 1
+1 . 9x76 ax12 9x4 . 1
+1 . 9x24 .x69 1
 1 .x94 1
 1 .x2 5x12 .x80 1
 1 .x94 1
@@ -58,7 +59,6 @@ Q1/1   alt+a for the keys                                                       
 -
 -
 -
--
 2x6 . 6x5 5x13 .x131 5x3
 --- legend
 1 fg=#d77757
@@ -67,6 +67,7 @@ Q1/1   alt+a for the keys                                                       
 4 fg=#999999 bold
 5 fg=#999999
 6 fg=#b1b9f9
-7 italic
-8 dim
-9 fg=#b1b9f9 dim
+7 bold
+8 italic
+9 dim
+a fg=#b1b9f9 dim

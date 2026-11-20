@@ -764,6 +764,11 @@ export default scenarios({
       steps: SOME("long-option", 1),
       extreme: true,
     },
+    "form-markdown": {
+      about: "the form sets an option's, a detail's and the recommendation's markdown",
+      start: cards("inline-markdown", "--answer-guided"),
+      steps: SOME("inline-markdown", 1),
+    },
     "long-body": {
       about: "a question with thirty lines of body: the form scrolls",
       start: turn("long-body"),
