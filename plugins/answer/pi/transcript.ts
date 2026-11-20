@@ -7,6 +7,7 @@ import {
 import {
   type Component,
   Container,
+  type DefaultTextStyle,
   Editor,
   type Focusable,
   Markdown,
@@ -47,6 +48,15 @@ export const firstReviewStop = (v: View) => (v.reply ? -1 : 0);
 // Separate the active stop from answered stops, using Pi's focus and ordinary border colors.
 const questionTone = (theme: Theme, active: boolean, answered: boolean, text: string) =>
   theme.fg(active ? "borderAccent" : answered ? "border" : "text", text);
+
+/**
+ * One paragraph of markdown at a width in a default style. A line in that style ends with it
+ * still open, and pi pads every line to the terminal's edge, so each line is closed here.
+ */
+const markdownLines = (text: string, width: number, style?: DefaultTextStyle) =>
+  new Markdown(text, 0, 0, getMarkdownTheme(), style)
+    .render(width)
+    .map((line) => `${line.trimEnd()}\x1b[0m`);
 
 const choiceLetters = (item: Item): string[] => {
   const unused = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].filter(
@@ -166,9 +176,10 @@ export class Transcript implements Component {
       const tone = (text: string) => questionTone(theme, here, answered, text);
       const prefix = `${here ? tokens.glyph.pointer : " "} ${item.label}${indent}`;
       const title = `${item.title}${answered ? ` ${tokens.glyph.done}` : ""}`;
+      // Its markdown set as the body's is, in the heading's bold and tone.
       const heading = asRows(
-        clamp(title, inner - visibleWidth(prefix)).map((line, i) =>
-          theme.bold(tone((i ? " ".repeat(visibleWidth(prefix)) : prefix) + line)),
+        markdownLines(title, inner - visibleWidth(prefix), { color: tone, bold: true }).map(
+          (line, i) => (i ? " ".repeat(visibleWidth(prefix)) : theme.bold(tone(prefix))) + line,
         ),
       );
       const rows: Row[] = [];
@@ -203,7 +214,14 @@ export class Transcript implements Component {
         const action: RoundAction | undefined = active
           ? { kind: "pick", step, entry: index }
           : undefined;
-        const lines = clamp(text, inner - visibleWidth(prefix));
+        const width = inner - visibleWidth(prefix);
+        // An option's markdown is set as the body's is; the chosen one's bold and tone are its
+        // default style, which the Markdown puts back after each code span. A write-in is the
+        // person's own words, kept as typed.
+        const lines =
+          entry.kind === "write"
+            ? clamp(text, width).map((line) => (entry.isChosen ? ink(line) : dim(line)))
+            : markdownLines(text, width, entry.isChosen ? { color: tone, bold: true } : undefined);
         rows.push(
           ...asRows(
             lines.map(
@@ -212,7 +230,7 @@ export class Transcript implements Component {
                   ? pad
                   : (here || entry.isChosen ? ink(key || " ") : dim(key || " ")) +
                     ` ${entry.isChosen && entry.kind !== "write" ? ink(marker) : dim(marker)} `) +
-                (entry.isChosen ? ink(line) : entry.kind === "write" ? dim(line) : line),
+                line,
             ),
             action,
           ),

@@ -1,0 +1,71 @@
+# answer/pi/cards-markdown 160x45 @0,12 (159x29)
+│  ❯ Q1  Should the endpoint send one JSON response with a kind field, and send
+│        redirects as a 200 response body that page.tsx acts on?
+│
+│  A ○ A 200 response like {kind: "redirect", location, permanent}. page.tsx calls
+│      permanentRedirect() (308) or redirect(). The redirect is cached per URL like
+│      any other result.
+│  B ○ Django answers with a real 301, and the Next.js fetch reads the Location
+│      header: simpler for legacy callers, as the RFC has it.
+│  C ○ Write your own answer
+│
+│  Recommended: A. The redirect stays inside the cached result, and the legacy
+│  `CmsPageModal` can simply ignore that kind.
+│
+│  Note: Add a note
+
+
+│    Answers  0 of 1 answered
+│   ▸ Show question
+
+
+
+
+
+
+
+
+
+ alt+a answer  Q1  0/1 answered
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+--- styles
+1 .x2 2x56 3x4 2x16
+1 .x8 2x38 3x8 2x9
+1
+1 .x2 1 . 4 .x21 3x39 .x2 3x8
+1 .x6 3x19 .x10 3x10
+1
+1 .x2 1 . 4 .x65 3x8
+1 .x26 5x6 .x13 6x7
+1 .x2 1 . 4 . 4x21
+1
+1 .x2 4x75
+1 .x2 4x43
+1
+1 .x2 4x16
+-
+-
+7 .x4 8x24
+7 .x3 4x15
+-
+-
+-
+-
+-
+-
+-
+-
+-
+. 4x5 9x7 .x2 4x16
+ax159
+--- legend
+1 fg=#a08ed5
+2 fg=#a08ed5 bold
+3 fg=#a798d7
+4 fg=#7e888e
+5 italic
+6 fg=#69add0 underline=single
+7 fg=#dee0e1
+8 fg=#dee0e1 bold
+9 fg=#9da5a9
+a fg=#6c767b

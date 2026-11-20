@@ -19,7 +19,7 @@
 ▎  Note: Add a note
 
 
-▎   Q3  What should happen to `--quick`?
+▎   Q3  What should happen to --quick?
 ▎
 ▎  A ○ Drop it.
 ▎  B ○ Keep it as an alias.
@@ -54,7 +54,7 @@ Q1/3   alt+a for the keys                                                       
 4 .x2 3x5 . 3x10 .x76 4
 4x96
 4x96
-4 . 5x38 .x55 4
+4 . 5x28 7x7 5 .x57 4
 4 .x94 4
 4 .x2 6x2 3x2 .x88 4
 4 .x2 6x2 3x2 .x88 4
@@ -67,7 +67,7 @@ Q1/3   alt+a for the keys                                                       
 4 . 5x26 .x67 4
 4 .x2 3x22 .x70 4
 4x96
-2x6 . 7x5 3x13 .x131 3x3
+2x6 . 8x5 3x13 .x131 3x3
 --- legend
 1 fg=#d77757
 2 fg=#d77757 bold
@@ -75,4 +75,5 @@ Q1/3   alt+a for the keys                                                       
 4 dim
 5 bold
 6 fg=#999999 bold
-7 fg=#b1b9f9
+7 fg=#b1b9f9 bold
+8 fg=#b1b9f9

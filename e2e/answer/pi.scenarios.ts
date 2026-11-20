@@ -250,6 +250,12 @@ export default scenarios({
       steps: CARD_ASK,
       extreme: true,
     },
+    "cards-markdown": {
+      about: "an option's code, bold and link are set as the body's are",
+      start: cards("inline-markdown"),
+      region: CARD,
+      steps: CARD_ASK,
+    },
     "cards-stress": {
       about: "a long multilingual heading, choice and note in a twelve-question transcript",
       start: {

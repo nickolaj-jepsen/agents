@@ -221,6 +221,11 @@ export default scenarios({
       steps: round,
       extreme: true,
     },
+    "inline-markdown": {
+      about: "an option's code, bold and link are set, and a click on its last line picks it",
+      start: turn("inline-markdown"),
+      steps: [...round, { click: "permanentRedirect()" }, { wait: /A ● A 200 response/ }],
+    },
     "wide-chars": {
       about: "CJK and emoji in titles and options",
       start: turn("wide-chars"),

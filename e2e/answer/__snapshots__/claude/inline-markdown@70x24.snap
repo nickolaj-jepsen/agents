@@ -1,0 +1,50 @@
+# answer/claude/inline-markdown 70x24 @0,0 (70x19)
+▎      redirect is cached per URL like any other result.
+▎      Recommended
+▎  B ○ Django answers with a real 301, and the Next.js fetch reads
+▎      the Location header: simpler for legacy callers, as the RFC
+▎      has it.
+▎  C ○ Write your own answer
+▎
+▎ Recommended: A. The redirect stays inside the cached result, and
+▎ the legacy CmsPageModal can simply ignore that kind.
+▎
+▎  Clear answer
+▎
+▎  Note: Add a note
+
+
+▎   Answers  1 of 1 answered
+▎  [ Fill prompt ]  ▸ Show question
+
+Q1/1   alt+a for the keys                                         [-]
+--- styles
+1 .x2 2x53 .x13 1
+1 .x2 2x4 3x11 .x51 1
+1 .x2 2x2 4x2 .x62 1
+1 .x10 5x8 .x21 6x6 .x23 1
+1 .x68 1
+1 .x2 1x2 4 . 4x21 .x41 1
+1 .x68 1
+1 . 7x65 .x2 1
+1 . 7x11 8x12 7x29 .x15 1
+1 .x68 1
+1 .x2 4x12 .x54 1
+1 .x68 1
+1 .x2 4x5 . 4x10 .x50 1
+1x70
+5x70
+5 . 9x26 .x41 5
+5 .x2 9x15 .x2 4x15 .x34 5
+5x70
+2x6 . 5x5 4x13 .x41 4x3
+--- legend
+1 fg=#d77757
+2 fg=#d77757 bold
+3 fg=#999999 bold
+4 fg=#999999
+5 fg=#b1b9f9
+6 italic
+7 dim
+8 fg=#b1b9f9 dim
+9 fg=#b1b9f9 bold

@@ -6,6 +6,7 @@ import {
   clamp,
   choice,
   icon,
+  inlineMarkdown,
   note as noteLines,
   roleProps,
   stack,
@@ -148,46 +149,44 @@ export function questionCard(
     isActive ? "accent" : !kit.isNative && answered ? answerTone : "text",
   );
   const pointerText = isActive ? `${pointer} ` : "  ";
+  // The heading wrapped by the kit to hang under its label, so one Button holds it whole and a
+  // click on any of its lines lands; its markdown set as the body's is.
   const terminalHeading = (
     <Text weight="semibold" {...titleRole}>
-      {heading}
+      {pointerText}
+      {inlineMarkdown(kit, heading, {
+        width: kit.columns - cellWidth(pointerText) - (answered ? 3 : 0),
+        indent: cellWidth(pointerText),
+      })}
       {answered ? <Text {...roleProps(selectionTone)}> ✓</Text> : null}
     </Text>
   );
-  const activate =
-    !kit.isNative && interactive && cellWidth(heading) + (answered ? 5 : 2) <= kit.columns ? (
+  const activate = !kit.isNative ? (
+    interactive ? (
       <Button
         key={`${prefix}-activate`}
         plain
         label={heading}
         onPress={() => interactive.go(index)}
       >
-        <Text weight="semibold" {...titleRole}>
-          {pointerText}
-          {terminalHeading}
-        </Text>
+        {terminalHeading}
       </Button>
     ) : (
-      <Box columnGap={kit.isNative ? tokens.gui.across.sm : 0} alignItems="flex-start">
-        {kit.isNative ? (
-          <Text {...titleRole} weight="semibold">
-            {item.label}
-          </Text>
-        ) : (
-          <Text {...titleRole}>{pointerText}</Text>
-        )}
-        <Box flexShrink={1} width={0} flexGrow={1}>
-          {kit.isNative ? (
-            <Text weight="semibold" {...titleRole}>
-              {item.title}
-            </Text>
-          ) : (
-            terminalHeading
-          )}
-        </Box>
-        {kit.isNative && isActive ? <Text {...titleRole}>Current</Text> : null}
+      terminalHeading
+    )
+  ) : (
+    <Box columnGap={tokens.gui.across.sm} alignItems="flex-start">
+      <Text {...titleRole} weight="semibold">
+        {item.label}
+      </Text>
+      <Box flexShrink={1} width={0} flexGrow={1}>
+        <Text weight="semibold" {...titleRole}>
+          {item.title}
+        </Text>
       </Box>
-    );
+      {isActive ? <Text {...titleRole}>Current</Text> : null}
+    </Box>
+  );
 
   return (
     <Box
@@ -229,7 +228,10 @@ export function questionCard(
                 const choiceRole = roleProps(
                   !kit.isNative && entry.isChosen ? selectionTone : "text",
                 );
-                const option = (
+                const lead = cellWidth(`${tag}${mark} `);
+                // One Text the row's Button holds whole, so a click on any of its lines picks it:
+                // the words wrapped by the kit to hang under their first line, their markdown set.
+                const option = kit.isNative ? null : (
                   <Text weight={weight} {...choiceRole}>
                     {tag ? (
                       <Text weight="semibold" {...letterRole}>
@@ -237,11 +239,13 @@ export function questionCard(
                       </Text>
                     ) : null}
                     <Text {...markRole}>{`${mark} `}</Text>
-                    {words}
-                    {recommendation ? <Text dimColor>{recommendation}</Text> : null}
+                    {inlineMarkdown(kit, words, {
+                      width: kit.columns - 1 - lead,
+                      indent: lead,
+                      aside: recommendation,
+                    })}
                   </Text>
                 );
-                const short = cellWidth(label) <= kit.columns - 1;
                 return (
                   <Box
                     key={`${prefix}-option-${i}`}
@@ -288,25 +292,10 @@ export function questionCard(
                           </Text>
                         ) : null}
                       </Box>
-                    ) : interactive && short ? (
+                    ) : interactive ? (
                       <Button key={key} plain label={label} onPress={pick}>
                         {option}
                       </Button>
-                    ) : interactive ? (
-                      <Box columnGap={1} alignItems="flex-start">
-                        <Button key={key} plain label={`${tag}${mark}`} onPress={pick}>
-                          <Text {...letterRole}>
-                            {tag}
-                            <Text {...markRole}>{mark}</Text>
-                          </Text>
-                        </Button>
-                        <Box flexShrink={1}>
-                          <Text weight={weight} {...choiceRole}>
-                            {words}
-                            <Text dimColor>{recommendation}</Text>
-                          </Text>
-                        </Box>
-                      </Box>
                     ) : (
                       option
                     )}
