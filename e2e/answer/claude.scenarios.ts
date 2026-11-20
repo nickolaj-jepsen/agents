@@ -1,4 +1,4 @@
-import { region } from "../lib/screen.ts";
+import { region, type Region } from "../lib/screen.ts";
 import { scenarios, type Scenario, type Step } from "../lib/scenario.ts";
 import type { Session } from "../lib/session.ts";
 import { says } from "./fixture.ts";
@@ -27,10 +27,19 @@ const expectPrompt = (want: string) => async (session: Session) => {
     throw new Error(`Expected prompt ${JSON.stringify(want)}, got ${JSON.stringify(got)}`);
 };
 
+/**
+ * The cards on screen down to the control bar, from row 1: once the cards fill the screen,
+ * Claude Code pins the prompt over row 0 on some runs and not on others.
+ */
+const CARDS: Region = (grid) => {
+  const found = region.rows(/[▎│╭]/, /^(?:Q?\d+(?:\/\d+)?|Review) .*\[-\]/)(grid.slice(1));
+  return found && { ...found, y: found.y + 1 };
+};
+
 export default scenarios({
   plugin: "answer",
   harness: "claude",
-  region: region.rows(/[▎│╭]/, /^(?:Q?\d+(?:\/\d+)?|Review) .*\[-\]/),
+  region: CARDS,
   scenarios: {
     open: {
       about: "/answer brings the first transcript card into view",
@@ -67,11 +76,14 @@ export default scenarios({
     review: {
       from: "note-kept",
       about: "live review shows the kept note and one unanswered question",
+      // The review card to the bar: the cards above it sit wherever the transcript scrolled.
+      region: region.rows(/▎\s+Answers\s+1 of 2/, /^Review .*\[-\]/),
       steps: [{ press: "r" }, { wait: /Answers\s+1 of 2 answered/ }, { wait: "Unanswered" }],
     },
     "review-first": {
       from: "review",
       about: "mouse jumps to a question card, and review reopens at that question",
+      region: CARDS,
       steps: [
         { click: "Q2  Add caching?" },
         { wait: /❯\s+Q2\s+Add caching/ },

@@ -1,5 +1,4 @@
-# answer/claude/table-code 70x24 @0,0 (70x19)
-▎ │ SQLite   │ •••     │ embedded       │
+# answer/claude/table-code 70x24 @0,1 (70x18)
 ▎ ├──────────┼─────────┼────────────────┤
 ▎ │ Postgres │ •••     │ needs a server │
 ▎ └──────────┴─────────┴────────────────┘
@@ -19,7 +18,6 @@
 
 Q1/1   alt+a for the keys                                         [-]
 --- styles
-1 .x68 1
 1 .x68 1
 1 .x68 1
 1 .x68 1

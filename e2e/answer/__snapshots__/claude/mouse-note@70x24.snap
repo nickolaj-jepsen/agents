@@ -1,5 +1,4 @@
-# answer/claude/mouse-note 70x24 @0,0 (70x19)
-▎  Note: First line
+# answer/claude/mouse-note 70x24 @0,1 (70x18)
 ▎        Second line
 
 
@@ -19,32 +18,31 @@
 ● Prompt dropped by a hook: The note is still waiting
 Q1/2   jk move A–B pick C write  n note  r review keys here       [-]
 --- styles
-1 .x2 2x5 . 3x10 .x50 1
-1 .x8 3x11 .x49 1
+1 .x8 2x11 .x49 1
 1x70
-4x70
-4 . 5x18 .x49 4
-4 .x68 4
-4 .x2 6x2 2x2 .x62 4
-4 .x2 6x2 2x2 .x62 4
-4 .x2 2x3 . 2x21 .x41 4
-4 .x68 4
-4 .x2 2x5 . 2x10 .x50 4
-4x70
-4x70
-4 . 5x26 .x41 4
-4 .x2 7x15 .x2 2x22 .x27 4
-4x70
+3x70
+3 . 4x18 .x49 3
+3 .x68 3
+3 .x2 5x2 6x2 .x62 3
+3 .x2 5x2 6x2 .x62 3
+3 .x2 6x3 . 6x21 .x41 3
+3 .x68 3
+3 .x2 6x5 . 6x10 .x50 3
+3x70
+3x70
+3 . 4x26 .x41 3
+3 .x2 7x15 .x2 6x22 .x27 3
+3x70
 -
 8 . 8x51
-9x6 . 3x2 2x5 . 3x3 2x5 . 3 2x6 .x2 3 2x5 .x2 3 2x7 . 2x9 .x7 2x3
+9x6 . 2x2 6x5 . 2x3 6x5 . 2 6x6 .x2 2 6x5 .x2 2 6x7 . 6x9 .x7 6x3
 --- legend
 1 fg=#d77757
-2 fg=#999999
-3 fg=#b1b9f9
-4 dim
-5 bold
-6 fg=#999999 bold
+2 fg=#b1b9f9
+3 dim
+4 bold
+5 fg=#999999 bold
+6 fg=#999999
 7 fg=#b1b9f9 bold
 8 fg=#ffc107
 9 fg=#d77757 bold inverse

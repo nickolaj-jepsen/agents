@@ -1,5 +1,4 @@
-# answer/claude/long-title 70x24 @0,0 (70x19)
-▎   dog the quick brown fox jumps over the lazy dog the quick brown
+# answer/claude/long-title 70x24 @0,1 (70x18)
 ▎   fox jumps over the lazy dog the quick brown fox jumps over the
 ▎   lazy dog the quick brown fox jumps over the lazy dog the quick
 ▎   brown fox jumps over the lazy dog the quick brown fox jumps over
@@ -19,7 +18,6 @@
 
 Q1/1   alt+a for the keys                                         [-]
 --- styles
-1 . 2x65 .x2 1
 1 . 2x64 .x3 1
 1 . 2x64 .x3 1
 1 . 2x66 . 1

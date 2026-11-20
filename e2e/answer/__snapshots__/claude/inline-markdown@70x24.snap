@@ -1,5 +1,4 @@
-# answer/claude/inline-markdown 70x24 @0,0 (70x19)
-▎      redirect is cached per URL like any other result.
+# answer/claude/inline-markdown 70x24 @0,1 (70x18)
 ▎      Recommended
 ▎  B ○ Django answers with a real 301, and the Next.js fetch reads
 ▎      the Location header: simpler for legacy callers, as the RFC
@@ -19,7 +18,6 @@
 
 Q1/1   alt+a for the keys                                         [-]
 --- styles
-1 .x2 2x53 .x13 1
 1 .x2 2x4 3x11 .x51 1
 1 .x2 2x2 4x2 .x62 1
 1 .x10 5x8 .x21 6x6 .x23 1

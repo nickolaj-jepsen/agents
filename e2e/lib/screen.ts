@@ -3,6 +3,7 @@
  * region, volatile values masked, then written as rows of text, a grid of style ids
  * and a legend. Text and styles diff as plain lines, so a review reads like any diff.
  */
+import { homedir } from "node:os";
 import type { Cell, Grid } from "./term.ts";
 
 export type Pattern = string | RegExp;
@@ -167,10 +168,21 @@ const fit = (text: string, len: number) =>
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+/**
+ * A path as a surface may show it: whole, and from `~` when it is under the home folder, as pi's
+ * footer shows a run folder whose `$TMPDIR` is there.
+ */
+const spellings = (path: string) => {
+  const home = homedir();
+  return path.startsWith(`${home}/`) ? [path, `~${path.slice(home.length)}`] : [path];
+};
+
 /** What every plugin's surface can carry that changes between runs. */
 export function builtinMasks(paths: string[] = []): Mask[] {
   return [
-    ...paths.map((p) => ({ pattern: new RegExp(`${escapeRe(p)}[^\\s│]*`, "g"), with: "<tmp>" })),
+    ...paths
+      .flatMap(spellings)
+      .map((p) => ({ pattern: new RegExp(`${escapeRe(p)}[^\\s│]*`, "g"), with: "<tmp>" })),
     { pattern: /\/(?:tmp|var\/folders|run\/user)\/[^\s│]+/g, with: "<tmp>" },
     { pattern: /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, with: "<uuid>" },
     { pattern: /\bv?\d+\.\d+\.\d+(?:-[\w.]+)?\b/g, with: "<ver>" },
