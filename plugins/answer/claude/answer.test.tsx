@@ -334,7 +334,7 @@ test("a pick opens its note, a press on the taken answer goes on, and the review
   expect(await drawn.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
   await typeIn(drawn, "note", "but keep the flag");
   // Q2 has a recommendation and no options: it is the first entry. A second press goes on.
-  expect((await drawn.find({ key: "e0" }))?.text).toContain("Yes:");
+  expect((await drawn.find({ key: "e0" }))?.text).toContain("Yes. Four generators");
   await pick(w, drawn, "e0");
   expect(await drawn.find({ type: "Text", text: /^Lower the per-generator/ })).toBeDefined();
   await pick(w, drawn, "e0");

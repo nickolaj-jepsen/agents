@@ -604,7 +604,11 @@ export function reply(form: Form, draft: Draft): string {
 function entryText(form: Form, item: FormItem, entry: Row): string {
   if (entry.kind === "write")
     return form.kind === "round" ? "Write your own answer" : "Something else";
-  if (entry.kind === "accept") return `Yes: ${item.recommended || "as recommended"}`;
+  if (entry.kind === "accept") {
+    const recommended = item.recommended || "as recommended";
+    // A recommendation that already says yes ("Yes. Four generators…") says it once.
+    return /^yes\b/i.test(recommended) ? recommended : `Yes: ${recommended}`;
+  }
   const option = item.options[entry.index];
   if (!option) return "";
   return form.kind === "round" ? `${option.key}. ${option.text}` : option.text;

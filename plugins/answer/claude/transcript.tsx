@@ -640,7 +640,7 @@ function nativeQuestion(
     if (entry.kind === "write") return [];
     const label =
       entry.kind === "accept"
-        ? entry.text.replace(/^Yes:\s*(?:Yes\b[.,:]?\s*)?/i, "") || "As recommended"
+        ? entry.text.replace(/^(?:Yes:\s*)?(?:Yes\b[.,:]?\s*)?/i, "") || "As recommended"
         : labelOf(entry.text);
     return [
       {

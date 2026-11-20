@@ -424,7 +424,10 @@ describe("view", () => {
   test("starts on the recommendation and words a review", () => {
     const form = formOf(GRILLING_ROUND);
     expect(itemOf(form, newDraft(form)).start).toBe(0);
-    expect(itemOf(form, steps(form, [FORWARD])).entries[0]?.text.slice(0, 4)).toBe("Yes:");
+    // Its recommendation already says yes, so the entry does not say it again.
+    expect(itemOf(form, steps(form, [FORWARD])).entries[0]?.text).toBe(
+      "Yes. Each run threw away about 85% of its candidates, and four generators still give 20–24.",
+    );
     const review = view(form, steps(form, [pick(1), FORWARD, FORWARD, write("keep"), REVIEW]));
     expect(review.item).toBeNull();
     expect(review.isReview).toBe(true);

@@ -2,7 +2,7 @@
 ╭─ 2 of 3  ✓ Q1  ○ Q2  ○ Q3 ─────────────────────────────────────────╮
 │ Lower the per-generator target to 5-6?                             │
 │                                                                    │
-│ ›1 ○ Yes: Yes. Four generators still give 20-24.                   │
+│ ›1 ○ Yes. Four generators still give 20-24.                        │
 │                                                                    │
 │  2 ○ Write your own answer                                         │
 │                                                                    │
@@ -15,7 +15,7 @@
 1x2 . 2x6 .x2 3 . 4x2 .x2 4 . 2x2 .x2 4 . 4x2 . 1x42
 1 . 5x38 .x29 1
 1 .x68 1
-1 . 2x2 . 2x45 .x19 1
+1 . 2x2 . 2x40 .x24 1
 1 .x68 1
 1 .x2 2 . 4x23 .x41 1
 1 .x68 1

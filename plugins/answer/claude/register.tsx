@@ -1661,7 +1661,7 @@ export const register: Register = (on) => {
             };
           const words =
             row.kind === "accept"
-              ? row.text.replace(/^Yes:\s*(?:Yes\b[.,:]?\s*)?/i, "")
+              ? row.text.replace(/^(?:Yes:\s*)?(?:Yes\b[.,:]?\s*)?/i, "")
               : row.key
                 ? row.text.replace(/^[A-H][.)]\s*/, "")
                 : row.text;
