@@ -103,7 +103,6 @@ export type TranscriptRound = {
   /** One anchor per question plus review, or one shared message anchor. */
   anchors: string[];
   /** A transcript anchor per review question, then one for the footer. */
-  reviewAnchors?: string[];
   frozen?: Held;
   sent?: true;
 };

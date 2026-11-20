@@ -22,6 +22,7 @@ export type RoundActions = {
   accept: (question: number) => unknown;
   fill: () => unknown;
   send: () => unknown;
+  focusReview?: (index: number) => unknown;
 };
 
 const labelOf = (text: string) => text.replace(/^[A-H][.)]\s*/, "");
@@ -376,13 +377,13 @@ export function questionCard(
 }
 
 // Group rows so Claude's spacing between transcript entries is not repeated on every row.
-export const REVIEW_GROUP_ROWS = 4;
-export const reviewGroups = (count: number) => Math.ceil(count / REVIEW_GROUP_ROWS);
 const reviewHeading = "review-heading";
 const reviewRow = (index: number) => `review-row-${index}`;
 
 export function reviewTarget(view: View, cursor: number | undefined) {
-  return cursor === undefined || cursor >= view.count ? reviewHeading : reviewRow(cursor);
+  return cursor === undefined || cursor < 0 || cursor >= view.count
+    ? reviewHeading
+    : reviewRow(cursor);
 }
 
 export function terminalReview(
@@ -391,15 +392,19 @@ export function terminalReview(
   current: Current | null,
   actions: RoundActions | undefined,
   sent: boolean,
-  segment?: number,
 ) {
   const { Box, Text, Button } = outer;
   const width = widthCap("reading", outer.columns);
   const kit = withColumns(outer, Math.max(1, width - 4));
   const open = current?.view.isReview === true;
-  const cursor = current?.reviewCursor ?? 0;
+  const cursor = current?.reviewCursor ?? (view.reply ? -1 : 0);
   const title = `Answers  ${view.answered} of ${view.count} answered`;
-  const toggle = open ? "Hide questions" : `Show all ${view.count} questions`;
+  const pageSize = 5;
+  const start = open ? Math.floor(Math.max(0, cursor) / pageSize) * pageSize : 0;
+  const end = Math.min(start + pageSize, view.count);
+  const toggle = open
+    ? "Hide questions"
+    : `Show ${view.count === 1 ? "question" : `all ${view.count} questions`}`;
   const header = (
     <Box key={reviewHeading} flexDirection="column" paddingLeft={1}>
       <Text weight="semibold" {...roleProps(open ? "accent" : "text")}>
@@ -408,19 +413,16 @@ export function terminalReview(
       </Text>
       {actions ? (
         <Box columnGap={tokens.gutter} flexWrap="wrap">
-          <Button key="review-toggle" label={toggle} plain onPress={() => actions.go(view.count)}>
-            <Text>{`${open ? "▾" : "▸"} ${toggle}`}</Text>
-          </Button>
           {view.reply ? (
             <Button key="review-fill" label="Fill prompt" plain onPress={actions.fill}>
-              <Text
-                weight="semibold"
-                {...roleProps(open && cursor === view.count ? "accent" : "note")}
-              >
-                {`${open && cursor === view.count ? tokens.glyph.pointer : " "} Fill prompt`}
+              <Text weight="semibold" {...roleProps(open && cursor < 0 ? "accent" : "note")}>
+                {`${open && cursor < 0 ? tokens.glyph.pointer : " "} Fill prompt`}
               </Text>
             </Button>
           ) : null}
+          <Button key="review-toggle" label={toggle} plain onPress={() => actions.go(view.count)}>
+            <Text dimColor>{`${open ? "▾" : "▸"} ${toggle}`}</Text>
+          </Button>
         </Box>
       ) : null}
     </Box>
@@ -471,17 +473,42 @@ export function terminalReview(
       </Box>
     );
   };
-  if (segment !== undefined && segment > 0 && !open && !sent) return null;
-  const start = ((segment ?? 1) - 1) * REVIEW_GROUP_ROWS;
   return (
-    <Box width={width} borderStyle="quote" borderDimColor paddingLeft={1} flexDirection="column">
-      {segment === undefined || segment === 0 ? header : null}
-      {(open || sent) && segment !== 0 ? (
-        <Box paddingLeft={1} flexDirection="column">
-          {(segment === undefined
-            ? view.review
-            : view.review.slice(start, start + REVIEW_GROUP_ROWS)
-          ).map((row, i) => rowAt(row, start + i))}
+    <Box
+      width={width}
+      borderStyle="quote"
+      borderColor={open ? tokens.role.accent : view.answered ? tokens.role.note : undefined}
+      borderDimColor={!open && !view.answered}
+      paddingX={1}
+      flexDirection="column"
+    >
+      {header}
+      {open || sent ? (
+        <Box paddingTop={1} paddingLeft={1} flexDirection="column">
+          {open && view.count > pageSize ? (
+            <Box columnGap={tokens.gutter}>
+              <Text dimColor>{`Questions ${start + 1}–${end} of ${view.count}`}</Text>
+              {start > 0 && actions?.focusReview ? (
+                <Button
+                  key="review-prev"
+                  plain
+                  label="Previous"
+                  onPress={() => actions.focusReview?.(start - pageSize)}
+                />
+              ) : null}
+              {end < view.count && actions?.focusReview ? (
+                <Button
+                  key="review-next"
+                  plain
+                  label="Next"
+                  onPress={() => actions.focusReview?.(end)}
+                />
+              ) : null}
+            </Box>
+          ) : null}
+          {(open ? view.review.slice(start, end) : view.review).map((row, i) =>
+            rowAt(row, start + i),
+          )}
         </Box>
       ) : null}
     </Box>
@@ -742,7 +769,7 @@ export function controlBar(
       </Box>
     );
   if (view.isReview) {
-    const action = current.reviewCursor === view.count ? "fill" : "open";
+    const action = view.reply && (current.reviewCursor ?? -1) < 0 ? "fill" : "open";
     return (
       <Box columnGap={1}>
         <Text {...roleProps("accent")} weight="semibold">
@@ -752,6 +779,7 @@ export function controlBar(
         <Button key={ROUND_FOCUS} plain autoFocus label={`Enter to ${action}`} onPress={home}>
           <Text>{hint("enter", action)}</Text>
         </Button>
+        {view.reply && action !== "fill" ? <Text>{hint("f", "fill")}</Text> : null}
         <Text>{hint("r", "back")}</Text>
         <Text dimColor>keys here</Text>
         {absorb(kit, press)}

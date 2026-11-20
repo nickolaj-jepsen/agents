@@ -46,7 +46,9 @@ prompt, and the guide goes back to saying `alt+a`.
 The **Answers** summary below the last question shows how many you’ve answered.
 **Fill prompt** copies your answers into the prompt without sending them.
 Click **Show all questions** or press `r` to expand the summary.
-Use `j` and `k` to move through the questions and **Fill prompt**.
+In the expanded summary, press `Alt+a` to focus the controls, then `Enter`
+to use **Fill prompt**, which starts selected. Use `j` and `k` to move
+through the list, or press `f` to fill from any question.
 Click a question or press `Enter` on it to jump to its card. Reopening the
 summary takes you back to that question.
 

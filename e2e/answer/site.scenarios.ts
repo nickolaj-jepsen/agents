@@ -65,7 +65,6 @@ export default site({
         { wait: /Answers\s+3 of 3 answered/ },
         { sleep: 2500 },
         poster,
-        ...keys("j", "j", "j"),
         { wait: "❯ Fill prompt" },
         { press: "Enter" },
         { sleep: 2500 },

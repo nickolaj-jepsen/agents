@@ -8,8 +8,6 @@ import {
   PENDING_FOCUS,
   questionCard,
   reviewCard,
-  reviewGroups,
-  REVIEW_GROUP_ROWS,
   reviewTarget,
   ROUND_FOCUS,
   terminalReview,
@@ -500,22 +498,12 @@ async function captureRound($: EngineInterface, held: Held, answer: string, turn
     }
   }
   const anchors = placed.length === starts.length + 1 ? placed : [id];
-  const reviewAnchors: string[] = [];
-  if (placed.length === starts.length + 1) {
-    for (let index = 0; index < reviewGroups(starts.length); index++) {
-      const row = await $.ui.place({ id: `review-${id}-${index}` });
-      if (!row.isPlaced) break;
-      reviewAnchors.push(row.requestId);
-    }
-  }
   await update($, transcript, (rounds) => ({
     ...rounds,
     [id]: {
       source: message.text.trim(),
       preamble,
       anchors,
-      reviewAnchors:
-        reviewAnchors.length === reviewGroups(starts.length) ? reviewAnchors : undefined,
       matchByText: !message.uuid,
     },
   }));
@@ -806,6 +794,13 @@ function roundActions(
     accept: (question) => press(() => changeRound($, id, question, { do: "accept" })),
     fill: () => press(() => replyToRound($, id, surface, "fill")),
     send: () => press(() => replyToRound($, id, surface, "send")),
+    focusReview: (index) =>
+      press(async () => {
+        const c = await update($, current, (was) =>
+          was?.transcript === id && was.view.isReview ? { ...was, reviewCursor: index } : was,
+        );
+        if (c?.transcript === id && c.view.isReview) await revealReview($, id, c);
+      }),
   };
 }
 
@@ -814,13 +809,6 @@ async function revealReview($: EngineInterface, id: string, c: Current) {
   const requestId = round?.anchors[c.view.count] ?? round?.anchors[0];
   if (!requestId) return;
   if (c.reviewCursor !== undefined) {
-    const segment =
-      c.reviewCursor < c.view.count ? Math.floor(c.reviewCursor / REVIEW_GROUP_ROWS) : -1;
-    const rowId = segment < 0 ? requestId : round?.reviewAnchors?.[segment];
-    if (rowId) {
-      await $.ui.scroll({ to: { requestId: rowId }, block: "nearest" });
-      return;
-    }
     const to = { key: reviewTarget(c.view, c.reviewCursor) };
     const result = await $.ui.scroll({ to, block: "nearest" });
     if (!result?.deny) return;
@@ -841,8 +829,6 @@ async function toggleReview($: EngineInterface, id: string) {
   });
   if (c?.transcript !== id || c.writer) return;
   if (c.view.isReview) {
-    // Placed rows enter the transcript together; scroll after they have drawn.
-    if ((await read($, transcript))[id]?.reviewAnchors) await $.clock.sleep(100);
     await revealReview($, id, c);
   } else await revealRound($, id, c.view.step);
 }
@@ -863,10 +849,10 @@ async function pressReview($: EngineInterface, id: string, c: Current, key: stri
         ? {
             ...was,
             reviewCursor: Math.max(
-              0,
+              was.view.reply ? -1 : 0,
               Math.min(
-                was.view.count - (was.view.reply ? 0 : 1),
-                (was.reviewCursor ?? 0) + (key === "j" ? 1 : -1),
+                was.view.count - 1,
+                (was.reviewCursor ?? (was.view.reply ? -1 : 0)) + (key === "j" ? 1 : -1),
               ),
             ),
           }
@@ -875,10 +861,10 @@ async function pressReview($: EngineInterface, id: string, c: Current, key: stri
     if (moved?.transcript === id && moved.view.isReview) await revealReview($, id, moved);
     return;
   }
-  if (key !== "enter" || !c.hasKeys) return;
-  const cursor = c.reviewCursor ?? 0;
-  if (cursor < c.view.count) return openReviewQuestion($, id, cursor);
-  if (cursor === c.view.count && c.view.reply) return replyToRound($, id, "terminal", "fill");
+  if (!c.hasKeys) return;
+  if (c.view.reply && (key === "f" || (key === "enter" && (c.reviewCursor ?? -1) < 0)))
+    return replyToRound($, id, "terminal", "fill");
+  if (key === "enter") return openReviewQuestion($, id, c.reviewCursor ?? 0);
 }
 
 async function pressRoundKey($: EngineInterface, id: string, key: string) {
@@ -1191,9 +1177,8 @@ export const register: Register = (on) => {
   on("ui.render", { component: "Placed" }, async ($, e, next) => {
     if (e.surface !== "terminal" || e.viewport?.isFullscreen === false || e.props.plugin !== PLUGIN)
       return next(e);
-    const match = Object.entries(await read($, transcript)).find(
-      ([, round]) =>
-        round.anchors.includes(e.requestId) || round.reviewAnchors?.includes(e.requestId),
+    const match = Object.entries(await read($, transcript)).find(([, round]) =>
+      round.anchors.includes(e.requestId),
     );
     if (!match) return next(e);
     const [id, round] = match;
@@ -1204,19 +1189,6 @@ export const register: Register = (on) => {
     if (!held) return next(e);
     const kit = kitOf($.ui.resolve(e), e);
     const actions = active ? roundActions($, id, "terminal") : undefined;
-    if (round.reviewAnchors && (index === held.form.items.length || index < 0)) {
-      const segment = index < 0 ? round.reviewAnchors.indexOf(e.requestId) + 1 : 0;
-      return (
-        terminalReview(
-          kit,
-          viewOf(held.form, held.draft),
-          active,
-          active?.writer ? undefined : actions,
-          !active && !!round.sent,
-          segment,
-        ) ?? next(e)
-      );
-    }
     return roundBody(kit, held, active, index, actions, null, !active && round.sent) ?? next(e);
   });
 
