@@ -817,7 +817,7 @@ async function revealReview($: EngineInterface, id: string, c: Current) {
   await $.ui.scroll({ to: { requestId }, block: "start" }).catch(() => undefined);
 }
 
-async function toggleReview($: EngineInterface, id: string) {
+async function toggleReview($: EngineInterface, id: string, fromNext = false) {
   const c = await update($, current, (was) => {
     if (was?.transcript !== id || was.writer) return was;
     if (was.view.isReview)
@@ -825,6 +825,7 @@ async function toggleReview($: EngineInterface, id: string) {
     return {
       ...over(was, stepForm(was.held, { do: "go", step: was.view.count })),
       reviewFrom: was.view.step,
+      reviewCursor: fromNext ? undefined : was.reviewCursor,
     };
   });
   if (c?.transcript !== id || c.writer) return;
@@ -843,6 +844,9 @@ async function openReviewQuestion($: EngineInterface, id: string, index: number)
 }
 
 async function pressReview($: EngineInterface, id: string, c: Current, key: string) {
+  const first = c.view.reply ? -1 : 0;
+  if (key === "k" && (c.reviewCursor ?? first) === first)
+    return moveRound($, id, "terminal", c.view.count - 1);
   if (key === "j" || key === "k") {
     const moved = await update($, current, (was) =>
       was?.transcript === id && was.view.isReview && !was.writer
@@ -872,6 +876,7 @@ async function pressRoundKey($: EngineInterface, id: string, key: string) {
   if (c?.transcript !== id || c.writer) return;
   if (key === "r") return toggleReview($, id);
   if (c.view.isReview) return pressReview($, id, c, key);
+  if (key === "j" && c.view.step === c.view.count - 1) return toggleReview($, id, true);
   if (key === "j" || key === "k")
     return moveRound($, id, "terminal", (view) =>
       Math.max(0, Math.min(view.count - 1, view.step + (key === "j" ? 1 : -1))),
