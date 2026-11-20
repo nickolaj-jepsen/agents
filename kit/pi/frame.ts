@@ -108,6 +108,9 @@ export function hintAt(width: number, hints: Hint[], x: number): Hint | undefine
   return layout(width, hints).shown.find((h) => x >= h.start && x < h.end)?.hint;
 }
 
+const hintText = (theme: Theme, hint: Hint, label: string) =>
+  paint(theme, "text", hint.key) + " " + paint(theme, "dim", label);
+
 function bottomBorder(theme: Theme, width: number, hints: Hint[], tee?: number) {
   const b = tokens.border;
   const { shown, junction } = layout(width, hints, tee);
@@ -115,7 +118,7 @@ function bottomBorder(theme: Theme, width: number, hints: Hint[], tee?: number) 
   let col = 3;
   for (const { hint, start, label, end } of shown) {
     if (start > col) parts.push(" ", rule(theme, start - col - 2, col + 1, junction, b.up), " ");
-    parts.push(paint(theme, "text", hint.key) + " " + paint(theme, "dim", label));
+    parts.push(hintText(theme, hint, label));
     col = end;
   }
   return (
@@ -161,6 +164,60 @@ export function modalFrame(theme: Theme, o: ModalOptions): string[] {
     ...o.body.map((line) => side(theme, line, o.width)),
     side(theme, o.notice ?? "", o.width),
     bottomBorder(theme, o.width, o.hints),
+  ];
+}
+
+/** Body origin and the total number of rows used for the frame, notice and key hints. */
+export const captionFrameLayout = { ...bodyOrigin, chrome: 5 } as const;
+
+export type CaptionFrameOptions = {
+  /** The frame's outer width in cells, padding included. */
+  width: number;
+  /** Bold accent text set between the top rule's ends. */
+  title: string;
+  /** Lines laid out for `width - 2 * captionFrameLayout.x` cells. */
+  body: string[];
+  /** Above the bottom rule, highest priority first. */
+  hints: Hint[];
+  /** Takes the blank row above the hints. */
+  notice?: string;
+};
+
+/** Fit whole hints into an undecorated row, keeping the way out at narrow widths. */
+function cardKeys(theme: Theme, width: number, hints: Hint[]): string {
+  const kept = [...hints];
+  const gap = " ".repeat(tokens.gutter);
+  const measure = () =>
+    kept.reduce((cells, hint) => cells + hintWidth(hint), 0) + (kept.length - 1) * tokens.gutter;
+  while (measure() > width) {
+    const drop = kept.map((hint) => !hint.essential).lastIndexOf(true);
+    if (drop < 0) break;
+    kept.splice(drop, 1);
+  }
+  return kept.map((hint) => hintText(theme, hint, hint.label)).join(gap);
+}
+
+/** An inline form between two rules, with the same `─ Title ───` header as a Claude pane. */
+export function captionFrame(
+  theme: Theme,
+  { width, title, body, hints, notice }: CaptionFrameOptions,
+): string[] {
+  const inner = Math.max(0, width - 2 * captionFrameLayout.x);
+  const pad = " ".repeat(captionFrameLayout.x);
+  const row = (text: string) => fit(pad + fit(text, inner), width);
+  const h = tokens.border.h;
+  const caption = truncateToWidth(title, Math.max(0, inner - 5), tokens.glyph.ellipsis);
+  const head = caption
+    ? border(theme, h) + " " + theme.bold(paint(theme, "accent", caption)) + " "
+    : "";
+  const titleLine = head + border(theme, h.repeat(inner - visibleWidth(head)));
+  return [
+    row(titleLine),
+    row(""),
+    ...body.map(row),
+    row(notice ?? ""),
+    row(cardKeys(theme, inner, hints)),
+    row(border(theme, h.repeat(inner))),
   ];
 }
 

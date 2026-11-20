@@ -93,12 +93,13 @@ Features:
 
 The border round a panel: title and count in the top, key hints in the bottom.
 
-- pi: exists: `modalFrame`
+- pi: exists: `modalFrame`, `captionFrame`
 - claude: exists: `paneTitle`
 
 Features:
 
 - Draws its own rounded border: pi yes (one border round a modal, none inside); claude no (a pane already has the engine's frame; the kit draws the title line, a band uses its own divider)
+- Open-sided form with a caption in the top rule: pi yes (two rules frame the form, with hints above the lower rule); claude partial (the kit draws the title rule; the host frames the pane)
 - Width class as a cap: pi yes (reading, split, dialog, wide and auto, chosen with the overlay); claude partial (`widthCap` computes the cap; Box has no `maxWidth` and the surface sizes a pane, so a mod draws to it)
 - Fits its content (auto): pi yes (within the dialog cap); claude no (a pane and a band take the width the surface gives them)
 - Title with a dim count: pi yes (in the top border); claude yes (drawn as `─ Title  count ─────` text)

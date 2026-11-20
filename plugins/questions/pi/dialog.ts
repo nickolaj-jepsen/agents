@@ -12,7 +12,8 @@ import {
   visibleWidth,
 } from "@earendil-works/pi-tui";
 import {
-  bodyOrigin,
+  captionFrame,
+  captionFrameLayout,
   CARD_NOTE_LABEL,
   cardChoice,
   cardHeading,
@@ -24,7 +25,6 @@ import {
   fit,
   type Hint,
   markdownLines,
-  modalFrame,
   paint,
   tokens,
   widthCap,
@@ -34,7 +34,6 @@ import { type Question, type QuestionsResult, type QuestionAnswer } from "./type
 const MIN_WIDTH = 28;
 const RESERVED_ROWS = 10;
 const MAX_ROWS = 24;
-const FRAME_ROWS = 2 * bodyOrigin.y;
 const GAP = " ".repeat(tokens.gutter);
 
 type Item =
@@ -559,8 +558,8 @@ export class QuestionsDialog implements Component, Focusable {
   }
 
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
-    const row = event.y - bodyOrigin.y;
-    const x = event.x - bodyOrigin.x;
+    const row = event.y - captionFrameLayout.y;
+    const x = event.x - captionFrameLayout.x;
     if (x < 0 || row < 0 || this.confirming) return undefined;
     if (event.type === "wheel" && event.wheelDelta) {
       const step = event.wheelDelta < 0 ? -1 : 1;
@@ -650,20 +649,21 @@ export class QuestionsDialog implements Component, Focusable {
     const { theme, question } = this;
     const hasPreview = question?.options.some((option) => option.preview !== undefined) ?? false;
     const split = hasPreview && width >= tokens.splitFrom;
-    const frameWidth = widthCap(split ? "split" : "reading", width);
-    const inner = Math.min(split ? Infinity : tokens.prose, frameWidth - 2 * bodyOrigin.x);
+    const inset = 2 * captionFrameLayout.x;
+    const frameWidth = split ? widthCap("split", width) : Math.min(width, tokens.prose + inset);
+    const inner = frameWidth - inset;
     const choiceWidth = split ? Math.floor((inner - GAP.length) * tokens.splitRatio) : inner;
     const budget = Math.max(
       9,
-      Math.min(MAX_ROWS, this.tui.terminal.rows - RESERVED_ROWS) - FRAME_ROWS,
+      Math.min(MAX_ROWS, this.tui.terminal.rows - RESERVED_ROWS) - captionFrameLayout.chrome,
     );
     const rows: BodyRow[] = [];
     const answered =
       this.questionIndex !== undefined && isAnswered(this.drafts[this.questionIndex]!);
     const dim = (line: string) => paint(theme, "dim", line);
     const title = question
-      ? cardHeading(theme, inner, question.question, `Q${this.tab + 1}`, true, answered)
-      : cardHeading(theme, inner, "Review your answers", "Answers", true, false);
+      ? cardHeading(theme, inner, question.question, `Q${this.tab + 1}`, true, answered, "form")
+      : cardHeading(theme, inner, "Review your answers", "", true, false, "form");
     const titleRoom = Math.max(2, Math.floor(budget / 4));
     this.questionMaxOffset = Math.max(0, title.length - titleRoom);
     this.questionOffset = Math.min(this.questionOffset, this.questionMaxOffset);
@@ -726,10 +726,9 @@ export class QuestionsDialog implements Component, Focusable {
     rows.forEach((row, index) => {
       if (row.hit) this.hits.set(index, { item: row.hit, to: row.hitTo ?? inner });
     });
-    const titleLabel = question?.header ?? "Questions";
-    return modalFrame(theme, {
+    return captionFrame(theme, {
       width: frameWidth,
-      title: titleLabel,
+      title: question?.header.trim() || "Questions",
       body: rows.map(({ text }) => text),
       hints: this.hints(),
       notice: this.warning ? paint(theme, "warning", this.warning) : undefined,

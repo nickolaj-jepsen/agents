@@ -13,7 +13,10 @@ export function cardRail(theme: Theme, active: boolean, answered: boolean, text:
   return gutterLine(cardTone(theme, active, answered, tokens.border.v), text);
 }
 
-/** The title hangs from its question label; the rail is applied after layout. */
+/**
+ * The title hangs from its question label. In a focused form it needs no active-card marker.
+ * @param presentation `"form"` uses a dim label and a bold text heading with no pointer.
+ */
 export function cardHeading(
   theme: Theme,
   width: number,
@@ -21,14 +24,21 @@ export function cardHeading(
   label: string,
   active: boolean,
   answered: boolean,
+  presentation: "card" | "form" = "card",
 ): string[] {
-  const tone = (text: string) => cardTone(theme, active, answered, text);
-  const prefix = `${active ? tokens.glyph.pointer : " "} ${label}${" ".repeat(tokens.gutter)}`;
+  const form = presentation === "form";
+  const tone = (text: string) =>
+    form ? paint(theme, "text", text) : cardTone(theme, active, answered, text);
+  const gap = " ".repeat(tokens.gutter);
+  const prefix = form
+    ? label && label + gap
+    : `${active ? tokens.glyph.pointer : " "} ${label}${gap}`;
   const cells = visibleWidth(prefix);
+  const lead = form ? paint(theme, "dim", prefix) : theme.bold(tone(prefix));
   return markdownLines(theme, `${title}${answered ? ` ${tokens.glyph.done}` : ""}`, width - cells, {
     color: tone,
     bold: true,
-  }).map((line, i) => (i ? " ".repeat(cells) : theme.bold(tone(prefix))) + line);
+  }).map((line, i) => (i ? " ".repeat(cells) : lead) + line);
 }
 
 export type CardChoice = {

@@ -6,6 +6,8 @@ import type { Theme } from "@earendil-works/pi-coding-agent";
 import type { TuiMouseEvent, TuiMouseEventResult } from "@earendil-works/pi-tui";
 import {
   bandShell,
+  captionFrame,
+  captionFrameLayout,
   cardChoice,
   cardHeading,
   cardNote,
@@ -414,6 +416,32 @@ export const stories: Story[] = [
   classStory("split", "124 columns"),
   classStory("dialog", "72 columns"),
   classStory("wide", "the terminal less a 2-column margin"),
+  {
+    component: "frame",
+    state: "caption",
+    about: "A composer form between two rules, with a bold question and hints inside.",
+    settings: "captionFrame(theme, { title, body, hints, width })",
+    width: "reading",
+    make: () =>
+      pure((theme, width) => {
+        const inner = width - 2 * captionFrameLayout.x;
+        const heading = cardHeading(theme, inner, SENTENCE, "Q1", true, false, "form");
+        const choices = GROUPED.slice(0, 2).flatMap((row, i) =>
+          cardChoice(theme, inner, {
+            key: i === 0 ? "A" : "B",
+            text: row.title,
+            active: true,
+            focused: i === 0,
+          }),
+        );
+        return captionFrame(theme, {
+          width,
+          title: "Question",
+          body: cardSections("", heading, choices),
+          hints: [...CLOSE, { key: "↑↓", label: "move" }, { key: "enter", label: "select" }],
+        });
+      }),
+  },
   {
     component: "frame",
     state: "auto",

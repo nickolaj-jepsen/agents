@@ -5,6 +5,9 @@ import {
   bandAct,
   bandRows,
   bandShell,
+  captionFrame,
+  captionFrameLayout,
+  cardHeading,
   chipRow,
   clamp,
   entries,
@@ -109,6 +112,39 @@ const hints = [
   { key: "d", label: "dismiss" },
   { key: "esc", label: "later", essential: true },
 ];
+
+describe("captionFrame", () => {
+  it.each([28, 70, 84, 124])(
+    "fits %i cells and keeps the body at its advertised origin",
+    (width) => {
+      const { x, y, chrome } = captionFrameLayout;
+      const lines = captionFrame(plain, {
+        width,
+        title: "日本語 " + "long header ".repeat(20),
+        body: ["A ○ 選択肢"],
+        hints,
+        notice: "Check the answers",
+      });
+      expect(widths(lines)).toEqual(Array<number>(1 + chrome).fill(width));
+      expect(strip(lines[0]!).trim()).toMatch(/^─ 日本語 .+… ─{2,}$/);
+      expect(lines[y]?.indexOf("A ○ 選択肢")).toBe(x);
+      expect(lines[y + 1]).toContain("Check the answers");
+      expect(lines.at(-2)?.trim()).toBe(
+        width === 28 ? "↑↓ move  esc later" : "↑↓ move  space mark  a apply  d dismiss  esc later",
+      );
+      expect(lines.at(-1)?.trim()).toBe("─".repeat(width - 2 * x));
+    },
+  );
+});
+
+describe("cardHeading", () => {
+  it("uses a dim label and neutral text for a form, without an active pointer", () => {
+    const lines = cardHeading(tagged, 96, "Choose a store", "Q1", true, true, "form");
+    expect(lines[0]).toContain("<dim>Q1  </>");
+    expect(lines[0]).toContain("<text>Choose a store ✓");
+    expect(strip(lines.join("\n"))).not.toContain("❯");
+  });
+});
 
 describe("modalFrame", () => {
   const frame = (width: number) =>

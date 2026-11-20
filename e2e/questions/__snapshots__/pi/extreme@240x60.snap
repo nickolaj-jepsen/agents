@@ -1,61 +1,62 @@
 # questions/pi/extreme 240x60 @0,35 (124x23)
-╭─ Where stored? ──────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│                                                                                                                          │
-│ ❯ Q1  Where should a session's full transcript, every tool result and each compaction summary be kept once a run ends?   │
-│       Include the archived sessions, the tool_result records and the full 日本語 transcript, not just the latest entry.  │
-│       Assume the developer will often be offline and needs to carry this between machines without losing any run         │
-│       history.                                                                                                           │
-│                                                                                                                          │
-│ A ○ SQLite in the repository, beside the worktrees                Preview                                                │
-│     One file the checkout can delete, and no service to keep      ```sql                                                 │
-│     running on any of the machines. Copy it together with the …     create table if not exists event (                   │
-│ B ○ Postgres beside the application, shared by every machine          id integer primary key,                            │
-│     One more service to run, back up and keep reachable from a        session text not null,                             │
-│     laptop that is often offline.                                     at text not null,                                  │
-│ C ○ Keep a local log beside each checkout and merge later             body json not null                                 │
-│     Works offline without setting up a server, but syncing a        ) strict;                                            │
-│     single run can produce duplicate records.                     ```                                                    │
-│ D ○ Mirror sessions to an append-only archive as they finish                                                             │
-│     The archive stores every event and preserves links to the     A row per event, so the history is the table and a     │
-│     original run.                                                 reader can replay it.                                  │
-│ E ○ Write your own answer                                                                                                │
-│ Note: Add a note                                                                                                         │
-│                                                                                                                          │
-╰─ esc cancel ── A–E/1–5 pick ── ↑↓ move ── enter select ── n note ────────────────────────────────────────────────────────╯
+  ─ Where stored? ────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Q1  Where should a session's full transcript, every tool result and each compaction summary be kept once a run ends?
+      Include the archived sessions, the tool_result records and the full 日本語 transcript, not just the latest entry.
+      Assume the developer will often be offline and needs to carry this between machines without losing any run history.
+
+  A ○ SQLite in the repository, beside the worktrees                Preview
+      One file the checkout can delete, and no service to keep      ```sql
+      running on any of the machines. Copy it together with the …     create table if not exists event (
+  B ○ Postgres beside the application, shared by every machine          id integer primary key,
+      One more service to run, back up and keep reachable from a        session text not null,
+      laptop that is often offline.                                     at text not null,
+  C ○ Keep a local log beside each checkout and merge later             body json not null
+      Works offline without setting up a server, but syncing a        ) strict;
+      single run can produce duplicate records.                     ```
+  D ○ Mirror sessions to an append-only archive as they finish
+      The archive stores every event and preserves links to the     A row per event, so the history is the table and a
+      original run.                                                 reader can replay it.
+  E ○ Write your own answer
+  Note: Add a note
+
+  esc cancel  A–E/1–5 pick  ↑↓ move  enter select  n note
+  ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-1x3 2x13 . 1x107
-1 .x122 1
-1 . 3x118 .x3 1
-1 .x7 3x35 4x11 3x67 .x2 1
-1 .x7 3x106 .x9 1
-1 .x7 3x8 .x107 1
-1 .x122 1
-1 . 5 . 3 .x63 6x7 .x48 1
-1 .x5 6x8 7x48 .x6 8x6 .x49 1
-1 .x5 7x59 .x5 9x6 . 9x5 .x4 9x3 . 9x6 .x27 1
-1 . a . 7 .x70 4x7 . 9x7 .x33 1
-1 .x5 7x58 .x21 9x3 . 9x4 .x30 1
-1 .x5 7x29 .x37 9x2 .x6 9x3 . 9x4 .x35 1
-1 . a . 7 .x8 bx9 .x60 9x3 . 9x4 .x33 1
-1 .x5 7x56 .x61 1
-1 .x5 7x41 .x21 8x3 .x52 1
-1 . a . 7 .x23 bx11 .x84 1
-1 .x5 7x57 .x60 1
-1 .x5 7x13 .x104 1
-1 . a . 7 . 7x21 .x96 1
-1 . 7x16 .x105 1
-1 .x122 1
-1x3 cx3 . 7x6 . 1x2 . cx7 . 7x4 . 1x2 . cx2 . 7x4 . 1x2 . cx5 . 7x6 . 1x2 . c . 7x4 . 1x57
+.x2 1 . 2x13 . 1x104
+-
+.x2 3x4 4x112
+.x6 4x35 5x11 4x67
+.x6 4x115
+-
+.x2 6 . 7 .x63 8x7
+.x6 8x8 3x48 .x6 9x6
+.x6 3x59 .x5 ax6 . ax5 .x4 ax3 . ax6
+.x2 b . 3 .x70 5x7 . ax7
+.x6 3x58 .x21 ax3 . ax4
+.x6 3x29 .x37 ax2 .x6 ax3 . ax4
+.x2 b . 3 .x8 cx9 .x60 ax3 . ax4
+.x6 3x56
+.x6 3x41 .x21 9x3
+.x2 b . 3 .x23 cx11
+.x6 3x57
+.x6 3x13
+.x2 b . 3 . 3x21
+.x2 3x16
+-
+.x2 dx3 . 3x6 .x2 dx7 . 3x4 .x2 dx2 . 3x4 .x2 dx5 . 3x6 .x2 d . 3x4
+.x2 1x120
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
-3 fg=#a08ed5 bold
-4 fg=#a798d7
-5 fg=#a08ed5 underline=single
-6 fg=#7e888e bold
-7 fg=#7e888e
-8 fg=#9da5a9
-9 fg=#69add0
-a fg=#a08ed5
-b bold
-c fg=#dee0e1
+3 fg=#7e888e
+4 fg=#dee0e1 bold
+5 fg=#a798d7
+6 fg=#a08ed5 underline=single
+7 fg=#a08ed5 bold
+8 fg=#7e888e bold
+9 fg=#9da5a9
+a fg=#69add0
+b fg=#a08ed5
+c bold
+d fg=#dee0e1

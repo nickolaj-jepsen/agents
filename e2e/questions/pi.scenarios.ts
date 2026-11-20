@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import type { Turn } from "../lib/harness.ts";
-import { region } from "../lib/screen.ts";
+import { gridLines, region, type Region } from "../lib/screen.ts";
 import { scenarios } from "../lib/scenario.ts";
 
 /** The turn that asks: the model calls the tool, and the dialog takes the screen. */
@@ -58,12 +58,21 @@ const LAYOUT = {
   ],
 };
 
+// The open frame has no corners; its lower rule marks the width as well as the last row.
+const captionRows = region.rows(/^  ─ .+ ─{2,}$/, /^  ─{10,}$/);
+const frameRegion: Region = (grid) => {
+  const rect = captionRows(grid);
+  if (!rect) return undefined;
+  const bottom = gridLines(grid)[rect.y + rect.h - 1]!;
+  return { ...rect, w: bottom.length + 2 };
+};
+
 export default scenarios({
   plugin: "questions",
   harness: "pi",
   // Hermetic: its own config with this plugin alone, so nothing of the person's setup shows.
   start: { hermetic: true, plugins: ["questions"], turns: [] },
-  region: region.box(/esc cancel|enter yes|enter save/),
+  region: frameRegion,
   scenarios: {
     single: {
       about: "one question with three described options",

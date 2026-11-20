@@ -4,7 +4,7 @@ export default defineComponent({
   id: "frame",
   name: "Frame",
   purpose: "The border round a panel: title and count in the top, key hints in the bottom.",
-  impl: { pi: "modalFrame", claude: "paneTitle" },
+  impl: { pi: ["modalFrame", "captionFrame"], claude: "paneTitle" },
   features: [
     {
       id: "own-border",
@@ -14,6 +14,13 @@ export default defineComponent({
       claude: no(
         "a pane already has the engine's frame; the kit draws the title line, a band uses its own divider",
       ),
+    },
+    {
+      id: "caption",
+      label: "Open-sided form with a caption in the top rule",
+      story: { pi: "frame/caption", claude: "frame/title-count" },
+      pi: yes("two rules frame the form, with hints above the lower rule"),
+      claude: partial("the kit draws the title rule; the host frames the pane"),
     },
     {
       id: "width-cap",
