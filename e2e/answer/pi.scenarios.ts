@@ -2,7 +2,6 @@ import { region, type Region } from "../lib/screen.ts";
 import { scenarios, type Scenario, type Step } from "../lib/scenario.ts";
 import { message, says } from "./fixture.ts";
 
-const ASKED: Step[] = [{ type: "ask" }, { press: "Enter" }, { wait: /Answer \d+ questions?/ }];
 const cards = (fixture: string, ...args: string[]): Scenario["start"] => ({
   hermetic: true,
   plugins: ["answer"],
@@ -379,10 +378,16 @@ export default scenarios({
       ],
     },
     "cards-regular": {
-      about: "the regular terminal only offers the round: its cards need fullscreen",
+      about: "the regular terminal shows the cards too, and the guide's keys drive them",
       start: cards("two-q", "--tui-mode", "regular"),
       region: region.full,
-      steps: [...ASKED, { press: "Alt+a" }, { wait: "need pi's fullscreen mode" }],
+      steps: [
+        ...CARD_ASK,
+        { press: "Alt+a" },
+        { wait: "jk move" },
+        { press: "b" },
+        { wait: "B ● Postgres" },
+      ],
     },
     none: {
       about: "a turn that asked nothing: no cards, and /answer says so",

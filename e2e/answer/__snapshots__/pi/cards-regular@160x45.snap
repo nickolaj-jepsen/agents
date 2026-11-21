@@ -13,31 +13,31 @@
  - A. Yes
  - B. No
 
+│  ❯ Q1  Use SQLite?
+│
+│    A ○ SQLite
+│    B ● Postgres
+│    C ○ Write your own answer
+│    Note: Add a note
 
- The answer cards need pi's fullscreen mode.
 
- Answer 2 questions · alt+a or /answer
+│    Q2  Add caching?
+│
+│    A ○ Yes
+│    B ○ No
+│    C ○ Write your own answer
+│    Note: Add a note
+
+
+│    Answers  1 of 2 answered
+│   [ Fill prompt ]  ▸ Show all 2 questions
+
+  1/2   A–B pick  Write [C]  Note [n]  Review [r]  Prompt [esc]  jk move  Clear [x]
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 <tmp>
 0.7%/200k (auto)                                                                                                                                          replay
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -59,31 +59,31 @@
 . 4x2 3x2
 . 4x2 3x2
 -
+5 .x2 6 . 4x4 6x11
+5
+5 .x4 4 . 7
+5 .x4 4 . 8 . 8x8
+5 .x4 4 . 7 . 7x21
+5 .x4 7x16
 -
-. 5x43
 -
-. 4x18 5x19
-6x160
+7 .x4 7x4 6x12
 7
-6x160
-5x5
-5x160
+7 .x4 7 . 7
+7 .x4 7 . 7
+7 .x4 7 . 7 . 7x21
+7 .x4 7x16
 -
 -
+5 .x4 9x24
+5 .x3 9x15 .x2 7x22
 -
--
--
--
--
--
--
--
--
--
--
--
--
--
+. ax5 .x2 7x8 .x2 bx5 . 7x3 .x2 bx4 . 7x3 .x2 bx6 . 7x3 .x2 bx6 . 7x5 .x2 7x7 .x2 bx5 . 7x3
+cx160
+d
+cx160
+7x5
+7x160
 -
 -
 -
@@ -95,6 +95,12 @@
 2 fg=#dee0e1 bg=#213b49
 3 bold
 4 fg=#a798d7
-5 fg=#7e888e
-6 fg=#6c767b
-7 inverse
+5 fg=#68b78d
+6 fg=#dee0e1 bold
+7 fg=#7e888e
+8 fg=#a798d7 bold
+9 fg=#7e888e bold
+a fg=#dee0e1 inverse
+b fg=#dee0e1
+c fg=#6c767b
+d inverse

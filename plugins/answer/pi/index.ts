@@ -1,6 +1,7 @@
 /**
  * A round of questions or a pick list lives in the transcript as cards, with its keys in a guide
- * above the prompt. The cards need pi's fullscreen mode; elsewhere the round is only offered.
+ * above the prompt. In pi's regular mode the terminal owns the scrollback: the cards and the
+ * keys work there, but pi reports no mouse and cannot scroll to a card.
  */
 import { randomUUID } from "node:crypto";
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
@@ -109,8 +110,7 @@ export default function (pi: ExtensionAPI) {
   let shown = "";
   let lastText = "";
 
-  const isTranscript = () =>
-    !!held?.anchor && visibleCards.has(held.anchor) && tui?.mode === "fullscreen";
+  const isTranscript = () => !!held?.anchor && visibleCards.has(held.anchor);
 
   const release = () => {
     if (guide?.focused) tui?.setFocus(promptFocus);
@@ -243,7 +243,7 @@ export default function (pi: ExtensionAPI) {
       theme,
       () => {
         const round = rounds.get(id);
-        return round && tui?.children.length && tui.mode === "fullscreen"
+        return round && tui?.children.length
           ? {
               round,
               active: held?.anchor === id,
@@ -322,10 +322,6 @@ export default function (pi: ExtensionAPI) {
     adopt(ctx);
     if (!held || !viewOf(held)) {
       ctx.ui.notify("Nothing to answer: the last turn asked no questions.", "info");
-      return;
-    }
-    if (tui && tui.mode !== "fullscreen") {
-      ctx.ui.notify("The answer cards need pi's fullscreen mode.", "info");
       return;
     }
     // A round whose card is gone from the transcript (compacted away, or stored before every

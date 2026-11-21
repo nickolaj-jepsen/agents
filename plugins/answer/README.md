@@ -10,7 +10,7 @@ If you send a different message, run `/answer` to reopen the round. Submitted ro
 
 ## Terminal
 
-In fullscreen, question cards appear in the transcript. In pi a numbered pick list is cards too, and pi's regular terminal mode only offers the round, because the cards need fullscreen. In Claude Code, the classic renderer and numbered pick lists use a guided form above the prompt; open it with `/answer`.
+Question cards appear in the transcript. In pi a numbered pick list is cards too. In pi's regular terminal mode the keys below work, but not the mouse, and you scroll to a card yourself. In Claude Code, the classic renderer and numbered pick lists use a guided form above the prompt; open it with `/answer`.
 
 Focus the fullscreen card controls before using the keys below: in Claude Code press `Ctrl+x Tab` or bind `Alt+a`; in pi press `Alt+a` or run `/answer`.
 

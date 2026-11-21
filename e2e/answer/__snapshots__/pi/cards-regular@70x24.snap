@@ -1,58 +1,61 @@
 # answer/pi/cards-regular 70x24 @0,0 (70x24)
-
- ask
-
-
- Q1. Use SQLite?
-
- - A. SQLite
- - B. Postgres
-
- Q2. Add caching?
-
- - A. Yes
- - B. No
+│    A ○ SQLite
+│    B ● Postgres
+│    C ○ Write your own answer
+│    Note: Add a note
 
 
- The answer cards need pi's fullscreen mode.
+│    Q2  Add caching?
+│
+│    A ○ Yes
+│    B ○ No
+│    C ○ Write your own answer
+│    Note: Add a note
 
- Answer 2 questions · alt+a or /answer
+
+│    Answers  1 of 2 answered
+│   [ Fill prompt ]  ▸ Show all 2 questions
+
+  1/2   A–B pick  Write [C]  Note [n]  Review [r]  Prompt [esc]
+ jk move  Clear [x]
 ──────────────────────────────────────────────────────────────────────
 
 ──────────────────────────────────────────────────────────────────────
 <tmp>
 0.7%/200k (auto)                                                replay
-
 --- styles
-1x70
-1 2x3 1x66
-1x70
--
-. 3x15
--
-. 4x2 3x2
-. 4x2 3x2
--
-. 3x16
--
-. 4x2 3x2
-. 4x2 3x2
+1 .x4 2 . 3
+1 .x4 2 . 4 . 4x8
+1 .x4 2 . 3 . 3x21
+1 .x4 3x16
 -
 -
-. 5x43
+3 .x4 3x4 5x12
+3
+3 .x4 3 . 3
+3 .x4 3 . 3
+3 .x4 3 . 3 . 3x21
+3 .x4 3x16
 -
-. 4x18 5x19
-6x70
-7
-6x70
-5x5
-5x70
 -
+1 .x4 6x24
+1 .x3 6x15 .x2 3x22
+-
+. 7x5 .x2 3x8 .x2 8x5 . 3x3 .x2 8x4 . 3x3 .x2 8x6 . 3x3 .x2 8x6 . 3x5
+. 3x7 .x2 8x5 . 3x3
+9x70
+a
+9x70
+3x5
+3x70
 --- legend
-1 bg=#213b49
-2 fg=#dee0e1 bg=#213b49
-3 bold
-4 fg=#a798d7
-5 fg=#7e888e
-6 fg=#6c767b
-7 inverse
+1 fg=#68b78d
+2 fg=#a798d7
+3 fg=#7e888e
+4 fg=#a798d7 bold
+5 fg=#dee0e1 bold
+6 fg=#7e888e bold
+7 fg=#dee0e1 inverse
+8 fg=#dee0e1
+9 fg=#6c767b
+a inverse
