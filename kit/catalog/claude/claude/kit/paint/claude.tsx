@@ -20,7 +20,6 @@ const COLOR: Record<Role, string | undefined> = {
   code: "permission",
   link: undefined,
   border: undefined,
-  answered: "suggestion",
 };
 
 const isDim = (role: Role | undefined) => role === "dim" || role === "border";

@@ -1,11 +1,10 @@
-# answer/claude/wide-chars 70x24 @0,5 (70x14)
+# answer/claude/wide-chars 70x24 @0,6 (70x13)
 ▎ ❯ Q1  数据库を使いますか？ 🚀 Use émoji?
 ▎
 ▎   A ○ 是的，使用 SQLite 🗃️
 ▎   B ○ いいえ、Postgres 🐘
 ▎   C ○ 👨‍ family ＡＢＣ
 ▎   D ○ Write your own answer
-▎
 ▎   Note: Add a note
 
 
@@ -20,7 +19,6 @@ Q1/1   alt+a for the keys                                         [-]
 .x4 2 . 2
 .x4 2 . 2
 .x4 2 . 2 . 2x21
--
 .x4 2x16
 -
 3x70

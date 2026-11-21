@@ -4,7 +4,6 @@
 ▎   A ○ SQLite
 ▎   B ○ Postgres
 ▎   C ○ Write your own answer
-▎
 ▎   Note: Add a note
 
 
@@ -13,12 +12,13 @@
 ▎   A ○ Yes
 ▎   B ○ No
 ▎   C ○ Write your own answer
-▎
 ▎   Note: Add a note
 
 
 ▎   Answers  0 of 2 answered
 ▎  ▸ Show all 2 questions
+
+
 
 
 
@@ -35,7 +35,6 @@ Q1/2   alt+a for the keys                                                       
 .x4 2 . 2
 .x4 2 . 2
 .x4 2 . 2 . 2x21
--
 .x4 2x16
 -
 3x96
@@ -44,13 +43,14 @@ Q1/2   alt+a for the keys                                                       
 3 .x3 2 . 2 .x88 3
 3 .x3 2 . 2 .x88 3
 3 .x3 2 . 2 . 2x21 .x66 3
-3 .x94 3
 3 .x3 2x16 .x75 3
 3x96
 3x96
 3 . 1x26 .x67 3
 3 .x2 2x22 .x70 3
 3x96
+-
+-
 -
 -
 -

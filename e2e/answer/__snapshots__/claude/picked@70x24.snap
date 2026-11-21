@@ -4,9 +4,6 @@
 ▎   A ○ SQLite
 ▎   B ● Postgres
 ▎   C ○ Write your own answer
-▎
-▎   Clear answer
-▎
 ▎   Note: Add a note
 
 
@@ -15,28 +12,33 @@
 ▎   A ○ Yes
 ▎   B ○ No
 ▎   C ○ Write your own answer
+▎   Note: Add a note
+
+
 Q1/2   jk move A–B pick C write n note r review keys here         [-]
 --- styles
-.x2 1 . 2x4 1x13
+.x2 1 . 2x4 1x11 3x2
 -
 .x4 2 . 2
-.x4 2 . 3 . 3x8
+.x4 2 . 4 . 4x8
 .x4 2 . 2 . 2x21
--
-.x4 2x12
--
 .x4 2x16
 -
-4x70
-4 .x3 2x4 1x12 .x49 4
-4 .x68 4
-4 .x3 2 . 2 .x62 4
-4 .x3 2 . 2 .x62 4
-4 .x3 2 . 2 . 2x21 .x40 4
-5x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x9 2x3
+5x70
+5 .x3 2x4 1x12 .x49 5
+5 .x68 5
+5 .x3 2 . 2 .x62 5
+5 .x3 2 . 2 .x62 5
+5 .x3 2 . 2 . 2x21 .x40 5
+5 .x3 2x16 .x49 5
+5x70
+6x70
+7x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x9 2x3
 --- legend
 1 bold
 2 fg=#999999
-3 fg=#d77757 bold
-4 dim
-5 fg=#d77757 bold inverse
+3 fg=#4eba65
+4 fg=#d77757 bold
+5 dim
+6 fg=#b1b9f9
+7 fg=#d77757 bold inverse

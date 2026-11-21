@@ -1,41 +1,44 @@
-# answer/claude/recommended 70x24 @0,2 (70x17)
-▎ ❯ Q1  Should every focus default to the same bar?
-▎
-▎   A ○ Yes, one default for every kind.  Recommended
-▎   B ○ Default by kind.
-▎   C ○ Add the bar as a second pick.
-▎   D ○ Write your own answer
-▎
-▎   Recommended: A. A per-kind table is one more thing to keep in
-▎   sync.
-▎
+# answer/claude/recommended 70x24 @0,1 (70x18)
+▎   A ○ Yes. Four generators still give 20-24.
+▎   B ○ Write your own answer
 ▎   Note: Add a note
 
 
-▎   Q2  Lower the per-generator target to 5-6?
+▎   Q3  What should happen to --quick?
 ▎
-▎   A ○ Yes. Four generators still give 20-24.
+▎   A ○ Drop it.
+▎   B ○ Keep it as an alias.
+▎       Scripts may still call it.
+▎   C ○ Write your own answer
+▎   Note: Add a note
+
+
+▎   Answers  0 of 3 answered
+▎  ▸ Show all 3 questions
+
 Q1/3   alt+a for the keys                                         [-]
 --- styles
-.x2 1 . 2x4 1x43
--
-.x4 2 . 2 .x33 2x13
-.x4 2 . 2
-.x4 2 . 2
-.x4 2 . 2 . 2x21
--
-.x4 3x62
-.x4 3x5
--
-.x4 2x16
--
-3x70
-3 .x3 2x4 1x38 .x23 3
-3 .x68 3
-3 .x3 2 . 2 .x62 3
-4x6 . 2x18 .x41 2x3
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 2 . 2x21 .x40 1
+1 .x3 2x16 .x49 1
+1x70
+1x70
+1 .x3 2x4 3x22 4x7 3 .x31 1
+1 .x68 1
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 2 .x62 1
+1 .x7 2x26 .x35 1
+1 .x3 2 . 2 . 2x21 .x40 1
+1 .x3 2x16 .x49 1
+1x70
+1x70
+1 . 3x26 .x41 1
+1 .x2 2x22 .x44 1
+1x70
+5x6 . 2x18 .x41 2x3
 --- legend
-1 bold
+1 dim
 2 fg=#999999
-3 dim
-4 fg=#d77757 bold
+3 bold
+4 fg=#b1b9f9
+5 fg=#d77757 bold

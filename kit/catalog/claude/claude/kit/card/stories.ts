@@ -52,14 +52,13 @@ export const cardStories: KitStory[] = [
   {
     component: card,
     state: "form",
-    about: "A question in a form: its label, the answers and the note, the keyboard on a row",
-    settings: "sections(heading, choiceList({focus: 0}), note)",
+    about: "A question in a form: its label, then the answers and the note under them",
+    settings: "sections(heading, [choiceList({focus: 0}), note])",
     lines: (width) =>
-      sections(
-        heading({ active: true, label: "Q1", title: QUESTION }, width),
-        choiceList({ items: ITEMS, chosen: [], focus: 0 }, width),
-        note({ active: true, value: "" }, width),
-      ),
+      sections(heading({ active: true, label: "Q1", title: QUESTION }, width), [
+        ...choiceList({ items: ITEMS, chosen: [], focus: 0 }, width),
+        ...note({ active: true, value: "" }, width),
+      ]),
   },
   {
     component: card,
@@ -74,10 +73,9 @@ export const cardStories: KitStory[] = [
         chosen: number,
         noted: string,
       ) =>
-        sections(
-          heading({ ...state, focused: state.active, label, title: QUESTION }, inner),
+        sections(heading({ ...state, focused: state.active, label, title: QUESTION }, inner), [
           // A pane on a narrow terminal shows few rows, so the answers here are short ones.
-          [ITEMS[0], ITEMS[2], ITEMS[3]].flatMap((item, i) =>
+          ...[ITEMS[0], ITEMS[2], ITEMS[3]].flatMap((item, i) =>
             item
               ? choice(
                   {
@@ -91,8 +89,8 @@ export const cardStories: KitStory[] = [
                 )
               : [],
           ),
-          note({ ...state, value: noted }, inner),
-        ).map((row) => rail(state, row));
+          ...note({ ...state, value: noted }, inner),
+        ]).map((row) => rail(state, row));
       return [
         ...one({ active: true }, "Q1", -1, ""),
         blank(),

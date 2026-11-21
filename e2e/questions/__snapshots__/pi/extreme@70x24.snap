@@ -1,11 +1,11 @@
 # questions/pi/extreme 70x24 @0,8 (70x14)
 ─ Where stored? ──────────────────────────────────────────── Close × ─
 
-    Q1  Where should a session's full transcript, every tool result
-        and each compaction summary be kept once a run ends? Inclu …
+  Q1  Where should a session's full transcript, every tool result
+      and each compaction summary be kept once a run ends? Include …
 
-  ❯ A ○ SQLite in the repository, beside the worktrees
-        One file the checkout can delete, and no service to keep …
+❯ A ○ SQLite in the repository, beside the worktrees
+      One file the checkout can delete, and no service to keep …
   ↓ 5 below
   Preview  1–2 of 11
   ```sql
@@ -16,12 +16,12 @@
 --- styles
 1 . 2x13 . 1x44 . 3x7 . 1
 -
-.x4 4x4 5x59
-.x8 5x58 4x2
+.x2 4x4 5x59
+.x6 5x60 4x2
 -
-.x2 5 . 4 . 4 . 5x46
-.x8 6x8 4x50
-.x2 4x9
+5 . 4 . 4 . 5x46
+.x6 6x8 4x50
+4x11
 .x2 6x18
 .x2 7x6
 .x4 8x6 . 8x5 .x4 8x3 . 8x6

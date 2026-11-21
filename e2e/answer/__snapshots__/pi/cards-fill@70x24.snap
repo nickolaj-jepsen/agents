@@ -1,8 +1,8 @@
 # answer/pi/cards-fill 70x24 @0,0 (69x24)
+│
+│    A ● Yes
+│    B ○ No
 │    C ○ Write your own answer
-│
-│    Clear answer
-│
 │    Note: Add a note
 
 
@@ -24,35 +24,35 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                repla
 --- styles
-1 .x4 2 . 2 . 2x21
 1
-1 .x2 2x14
-1
-1 .x4 2x16
+1 .x4 1 . 2 . 2x3
+1 .x4 1 . 1
+1 .x4 1 . 1 . 1x21
+1 .x4 1x16
 -
 -
 3 .x4 4x24
-3 .x3 4x17 .x2 2x16
+3 .x3 4x17 .x2 1x16
 3
 3 .x2 5x19
 3 .x8 5x11
 3 .x2 5x20
 3 .x8 5x6
 -
-. 3x6 . 2x7 .x2 2x20
+. 3x6 . 1x7 .x2 1x20
 6x69
 -
 -
 -
 .x17 7
 6x69
-2x5
-2x69
+1x5
+1x69
 --- legend
-1 fg=#5fa8cc
-2 fg=#7e888e
+1 fg=#7e888e
+2 fg=#a798d7 bold
 3 fg=#dee0e1
 4 fg=#dee0e1 bold
-5 fg=#5fa8cc bold
+5 fg=#7e888e bold
 6 fg=#6c767b
 7 inverse

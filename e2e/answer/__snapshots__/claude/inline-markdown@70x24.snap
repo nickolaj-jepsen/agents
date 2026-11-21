@@ -1,16 +1,16 @@
 # answer/claude/inline-markdown 70x24 @0,1 (70x18)
+▎       redirect is cached per URL like any other result.
+▎       Recommended
+▎   B ○ Django answers with a real 301, and the Next.js fetch reads
 ▎       the Location header: simpler for legacy callers, as the RFC
 ▎       has it.
 ▎       The CmsPageModal keeps reading Location, and nothing in the
 ▎       legacy code changes.
 ▎   C ○ Write your own answer
+▎   Note: Add a note
 ▎
 ▎   Recommended: A. The redirect stays inside the cached result, and
 ▎   the legacy CmsPageModal can simply ignore that kind.
-▎
-▎   Clear answer
-▎
-▎   Note: Add a note
 
 
 ▎   Answers  1 of 1 answered
@@ -18,32 +18,32 @@
 
 Q1/1   alt+a for the keys                                         [-]
 --- styles
-.x12 1x8 .x9 2x7 .x5 3x6 .x13 4x7
+.x8 1x49
+.x8 2x11
+.x4 2 . 2
+.x12 3x8 .x9 4x7 .x5 5x6 .x13 6x7
 -
-.x8 5x4 1x12 5x15 1x8 5x6 6x7 5x7
-.x8 5x20
-.x4 5 . 5 . 5x21
+.x8 2x4 3x12 2x15 3x8 2x6 7x7 2x7
+.x8 2x20
+.x4 2 . 2 . 2x21
+.x4 2x16
 -
-.x4 7x64
-.x4 7x11 8x12 7x29
+.x4 8x64
+.x4 8x11 9x12 8x29
 -
-.x4 5x12
--
-.x4 5x16
--
-1x70
-1 . 9x26 .x41 1
-1 .x2 9x15 .x2 5x15 .x34 1
-1x70
-ax6 . 5x18 .x41 5x3
+3x70
+3 . ax26 .x41 3
+3 .x2 ax15 .x2 2x15 .x34 3
+3x70
+1x6 . 2x18 .x41 2x3
 --- legend
-1 fg=#b1b9f9
-2 bold
-3 italic
-4 underline=single
-5 fg=#999999
-6 fg=#999999 bold
-7 dim
-8 fg=#b1b9f9 dim
-9 fg=#b1b9f9 bold
-a fg=#d77757 bold
+1 fg=#d77757 bold
+2 fg=#999999
+3 fg=#b1b9f9
+4 bold
+5 italic
+6 underline=single
+7 fg=#999999 bold
+8 dim
+9 fg=#b1b9f9 dim
+a fg=#b1b9f9 bold

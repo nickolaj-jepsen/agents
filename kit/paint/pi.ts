@@ -21,7 +21,6 @@ const ROLE: Record<Role, ThemeColor> = {
   code: "mdCode",
   link: "mdLink",
   border: "borderMuted",
-  answered: "border",
 };
 
 /** One span in the theme: a span with no role keeps the terminal's own colour. */

@@ -1,6 +1,7 @@
 # answer/claude/write-cancel 70x24 @0,1 (70x18)
-▎   Clear answer
-▎
+▎   A ○ SQLite
+▎   B ○ Postgres
+▎   C ● An embedded store
 ▎   Note: Add a note
 
 
@@ -9,7 +10,6 @@
 ▎   A ○ Yes
 ▎   B ○ No
 ▎   C ○ Write your own answer
-▎
 ▎   Note: Add a note
 
 
@@ -18,27 +18,29 @@
 
 Q2/2   jk move A–B pick C write n note r review keys here         [-]
 --- styles
-1 .x3 2x12 .x53 1
-1 .x68 1
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 3 . 3x17 .x44 1
 1 .x3 2x16 .x49 1
 1x70
 -
-.x2 3 . 2x4 3x12
+.x2 4 . 2x4 4x12
 -
 .x4 2 . 2
 .x4 2 . 2
 .x4 2 . 2 . 2x21
--
 .x4 2x16
 -
-1x70
-1 . 4x26 .x41 1
-1 .x2 4x15 .x2 2x22 .x27 1
-1x70
-5x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x9 2x3
+5x70
+5 . 6x26 .x41 5
+5 .x2 6x15 .x2 2x22 .x27 5
+5x70
+7x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x9 2x3
 --- legend
-1 fg=#b1b9f9
+1 dim
 2 fg=#999999
-3 bold
-4 fg=#b1b9f9 bold
-5 fg=#d77757 bold inverse
+3 fg=#d77757 bold
+4 bold
+5 fg=#b1b9f9
+6 fg=#b1b9f9 bold
+7 fg=#d77757 bold inverse

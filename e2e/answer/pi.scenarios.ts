@@ -113,7 +113,7 @@ export default scenarios({
       from: "cards-note",
       about: "clearing the choice keeps its note",
       region: CARD,
-      steps: [{ click: "Clear answer" }, { wait: "B ○ Postgres" }, { wait: "check the results" }],
+      steps: [{ click: "B ● Postgres" }, { wait: "B ○ Postgres" }, { wait: "check the results" }],
     },
     "cards-keys": {
       from: "cards-open",
@@ -220,8 +220,8 @@ export default scenarios({
         { press: "Alt+a" },
         { wait: "Take recommendation [y]" },
         { press: "y" },
-        { wait: /A ●/ },
-        { wait: /C ●/ },
+        { wait: /A ■/ },
+        { wait: /C ■/ },
       ],
     },
     "cards-fill": {

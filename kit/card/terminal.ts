@@ -48,15 +48,11 @@ export function controlStyle({
 }
 
 /**
- * A card's own colour. The keyboard's card is in the text colour, as one nobody has answered
- * is: the pointer says where the keyboard is, and the accent is left to what is chosen.
+ * The rail's colour: bright beside the keyboard's card, quiet beside every other. A card has
+ * no colour of its own: the pointer says where the keyboard is, the accent what is chosen and
+ * a tick that it is answered.
  */
-export const cardRole = ({ active, answered, sent }: CardState): Role =>
-  active ? "text" : sent ? "success" : answered ? "answered" : "text";
-
-/** The rail's colour: bright beside the keyboard's card, quiet beside one still to answer. */
-export const railRole = (state: CardState): Role =>
-  state.active || state.sent || state.answered ? cardRole(state) : "dim";
+export const railRole = (state: CardState): Role => (state.active ? "text" : "dim");
 
 /**
  * The column every row of a card keeps for the focus pointer, as blank cells: what a host sets
@@ -78,36 +74,37 @@ export function rail(state: CardState, row: Line): Line {
 
 /**
  * The question: the pointer column, its label, then the title hanging from it. An answered one
- * ends in `✓`.
+ * ends in a `✓` in the success colour, as soon as it has its answer.
  */
 export function heading(h: Heading, width: number): Line[] {
-  const title = `${h.title}${h.answered ? ` ${tokens.glyph.done}` : ""}`;
-  return block(inline(title, { role: cardRole(h), bold: true }), width, {
+  const title = [
+    ...inline(h.title, { role: "text", bold: true }),
+    ...(h.answered ? [span(` ${tokens.glyph.done}`, { role: "success" })] : []),
+  ];
+  return block(title, width, {
     lead: [...pointerLead(h.focused), ...(h.label ? [span(h.label + GAP, { role: "dim" })] : [])],
   });
 }
 
 /**
  * One answer: the pointer column, its key, its mark and its words, wrapped to hang under their
- * first line. Only a chosen one takes a colour: the accent, or the success colour once sent.
+ * first line. Only a chosen one takes a colour, the accent.
  */
 export function choice(c: Choice, width: number): Line[] {
   const { chosen = false, literal: isLiteral = false, focused = false, hovered = false } = c;
   const marks = c.multiple ? tokens.glyph.multi : tokens.glyph.single;
-  const primaryRole: Role = c.sent ? "success" : "accent";
   const isLit = chosen || focused || hovered;
   const label = controlStyle({
     primary: chosen,
     highlighted: focused || hovered,
     rest: isLiteral ? "dim" : "text",
-    primaryRole,
   });
   // A row nothing marks is drawn in the terminal's own colour, as its Markdown would be.
   const words = [
     ...(isLiteral ? literal(c.text, label) : inline(c.text, isLit ? label : {})),
     ...(c.aside ? [span(c.aside, { role: "dim" })] : []),
   ];
-  const mark: Style = chosen ? { role: primaryRole, bold: true } : { role: "dim" };
+  const mark: Style = chosen ? { role: "accent", bold: true } : { role: "dim" };
   const lead = [
     ...pointerLead(focused),
     span(c.key || " ", { role: "dim" }),
@@ -136,7 +133,7 @@ export function note(n: Note, width: number): Line[] {
   const isLit = n.focused || n.hovered;
   const style = controlStyle({ highlighted: isLit, rest: "dim" });
   const room = width - cellWidth(CARD_INSET) - cellWidth(NOTE_LABEL);
-  const words: Style = isLit ? style : n.value ? { role: cardRole(n) } : { role: "dim" };
+  const words: Style = isLit ? style : { role: n.value ? "text" : "dim" };
   return clamp(n.value || "Add a note", room, { max: n.max }).map((text, i) =>
     line(
       [

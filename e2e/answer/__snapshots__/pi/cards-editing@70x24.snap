@@ -1,7 +1,8 @@
 # answer/pi/cards-editing 70x24 @0,0 (69x24)
 │
-│    Clear answer
-│
+│    A ○ SQLite
+│    B ● Postgres
+│    C ○ Write your own answer
 │    Note: draft note
 
 
@@ -10,7 +11,6 @@
 │    A ○ Yes
 │    B ○ No
 │    C ○ Write your own answer
-│
 │    Note: Add a note
 
 
@@ -25,35 +25,34 @@ a draft for later
 0.7%/200k (auto)                                                repla
 --- styles
 1
-1 .x2 2x14
-1
-1 .x2 2x8 .x5 3
+1 .x4 2 . 2
+1 .x4 2 . 3 . 3x8
+1 .x4 2 . 2 . 2x21
+1 .x2 2x8 .x5 4
 -
 -
-2 .x4 2x4 4x12
+2 .x4 2x4 5x12
 2
 2 .x4 2 . 2
 2 .x4 2 . 2
 2 .x4 2 . 2 . 2x21
-2
 2 .x4 2x16
 -
 -
-5 .x4 6x24
-5 .x3 6x15 .x2 2x22
+2 .x4 6x24
+2 .x3 6x15 .x2 2x22
 -
-. 7x4 . 2 .x2 2x19 .x2 1x6 . 2x5
-8x69
-.x8 3
-8x69
+. 3x4 . 2 .x2 2x19 .x2 1x6 . 2x5
+7x69
+.x8 4
+7x69
 2x5
 2x69
 --- legend
 1 fg=#dee0e1
 2 fg=#7e888e
-3 inverse
-4 fg=#dee0e1 bold
-5 fg=#5fa8cc
-6 fg=#5fa8cc bold
-7 fg=#a798d7 bold
-8 fg=#6c767b
+3 fg=#a798d7 bold
+4 inverse
+5 fg=#dee0e1 bold
+6 fg=#7e888e bold
+7 fg=#6c767b

@@ -1,28 +1,26 @@
-# questions/pi/radio-hover 160x45 @0,30 (160x13)
+# questions/pi/radio-hover 160x45 @0,31 (160x12)
 ─ ❯ 1 Retention ──   2 Storage ── Review ───────────────────────────────────────────────────────────────────────────────────────────────────────────── Close × ─
 
-    How much of each session should be kept?
+  How much of each session should be kept?
 
-  ❯ A ● The whole transcript
-    B ○ The last turn only
-    C ○ A summary of each run
-    D ○ Write your own answer
-
-    Note: Add a note
+❯ A ● The whole transcript
+  B ○ The last turn only
+  C ○ A summary of each run
+  D ○ Write your own answer
+  Note: Add a note
 
   Choose ↵  Note [n]
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
 1 . 2 . 3x11 1x4 4 . 4x9 1x4 5x6 . 1x109 . 5x7 . 1
 -
-.x4 6x40
+.x2 6x40
 -
-.x2 6 . 4 . 3 . 7x20
-.x4 4 . 4
-.x4 4 . 4 . 6x21
-.x4 4 . 4 . 4x21
--
-.x4 4x16
+6 . 4 . 3 . 7x20
+.x2 4 . 4
+.x2 4 . 4 . 6x21
+.x2 4 . 4 . 4x21
+.x2 4x16
 -
 .x2 3x6 . 4 .x2 5x4 . 4x3
 1x160

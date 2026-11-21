@@ -4,9 +4,6 @@
 │    A ○ SQLite
 │    B ● Postgres
 │    C ○ Write your own answer
-│
-│    Clear answer
-│
 │    Note: Add a note
 
 
@@ -14,20 +11,20 @@
 │
 │    A ○ Yes
 │    B ○ No
-│    C ○ Write y ↓ Jump to latest message · Ctrl+End
+│    C ○ Write your own answer
+│    Note: Add a note
+
+                 ↓ Jump to latest message · Ctrl+End
 
   1/2   A–B pick  Write [C]  Note [n]  Review [r]  Prompt [esc]
  jk move  Clear [x]
 ─────────────────────────────────────────────────────────────────────
 --- styles
-1 .x2 2 . 3x4 2x13
+1 .x2 2 . 3x4 2x11 4x2
 1
 1 .x4 3 . 3
-1 .x4 3 . 4 . 4x8
+1 .x4 3 . 5 . 5x8
 1 .x4 3 . 3 . 3x21
-1
-1 .x2 3x14
-1
 1 .x4 3x16
 -
 -
@@ -35,16 +32,20 @@
 3
 3 .x4 3 . 3
 3 .x4 3 . 3
-3 .x4 3 . 3 . 3x7 5x37
+3 .x4 3 . 3 . 3x21
+3 .x4 3x16
 -
-. 6x5 .x2 3x8 .x2 1x5 . 3x3 .x2 1x4 . 3x3 .x2 1x6 . 3x3 .x2 1x6 . 3x5
+.x16 6x37
+-
+. 7x5 .x2 3x8 .x2 1x5 . 3x3 .x2 1x4 . 3x3 .x2 1x6 . 3x3 .x2 1x6 . 3x5
 . 3x7 .x2 1x5 . 3x3
-7x69
+8x69
 --- legend
 1 fg=#dee0e1
 2 fg=#dee0e1 bold
 3 fg=#7e888e
-4 fg=#a798d7 bold
-5 fg=#dee0e1 bg=#213b49
-6 fg=#dee0e1 inverse
-7 fg=#6c767b
+4 fg=#68b78d
+5 fg=#a798d7 bold
+6 fg=#dee0e1 bg=#213b49
+7 fg=#dee0e1 inverse
+8 fg=#6c767b

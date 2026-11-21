@@ -4,9 +4,6 @@
 ▎   A ○ SQLite
 ▎   B ● Postgres
 ▎   C ○ Write your own answer
-▎
-▎   Clear answer
-▎
 ▎   Note: Keep the hosted instance.
 ▎         Rotate its credentials first.
 
@@ -16,7 +13,6 @@
 ▎   A ○ Yes
 ▎   B ○ No
 ▎   C ○ Write your own answer
-▎
 ▎   Note: Add a note
 
 
@@ -28,43 +24,48 @@
 
 
 
+
+
+
+
 Q1/2   jk move A–B pick C write n note r review keys here                                                                                                   [-]
 --- styles
-.x2 1 . 2x4 1x13
+.x2 1 . 2x4 1x11 3x2
 -
 .x4 2 . 2
-.x4 2 . 3 . 3x8
+.x4 2 . 4 . 4x8
 .x4 2 . 2 . 2x21
--
-.x4 2x12
--
 .x4 2x6
 -
 -
-4x96
-4 .x3 2x4 1x12 .x75 4
-4 .x94 4
-4 .x3 2 . 2 .x88 4
-4 .x3 2 . 2 .x88 4
-4 .x3 2 . 2 . 2x21 .x66 4
-4 .x94 4
-4 .x3 2x16 .x75 4
-4x96
 5x96
-5 . 6x26 .x67 5
-5 .x2 6x15 .x2 2x22 .x53 5
+5 .x3 2x4 1x12 .x75 5
+5 .x94 5
+5 .x3 2 . 2 .x88 5
+5 .x3 2 . 2 .x88 5
+5 .x3 2 . 2 . 2x21 .x66 5
+5 .x3 2x16 .x75 5
 5x96
+6x96
+6 . 7x26 .x67 6
+6 .x2 7x15 .x2 2x22 .x53 6
+6x96
 -
 -
 -
 -
 -
-7x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x99 2x3
+-
+-
+-
+-
+8x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x99 2x3
 --- legend
 1 bold
 2 fg=#999999
-3 fg=#d77757 bold
-4 dim
-5 fg=#b1b9f9
-6 fg=#b1b9f9 bold
-7 fg=#d77757 bold inverse
+3 fg=#4eba65
+4 fg=#d77757 bold
+5 dim
+6 fg=#b1b9f9
+7 fg=#b1b9f9 bold
+8 fg=#d77757 bold inverse

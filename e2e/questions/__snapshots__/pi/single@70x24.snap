@@ -1,14 +1,14 @@
 # questions/pi/single 70x24 @0,8 (70x14)
 ─ Storage ────────────────────────────────────────────────── Close × ─
 
-    Q1  Where should the session store live?
+  Q1  Where should the session store live?
 
-  ❯ A ○ SQLite in the checkout
-        One file, no service to run, and it can be deleted with the
-        checkout.
-    B ○ Postgres beside the app
-        Shared between machines, and one more service to keep
-        running.
+❯ A ○ SQLite in the checkout
+      One file, no service to run, and it can be deleted with the
+      checkout.
+  B ○ Postgres beside the app
+      Shared between machines, and one more service to keep running.
+
   ↓ 3 below
 
   Choose ↵  Note [n]
@@ -16,15 +16,15 @@
 --- styles
 1 . 2x7 . 1x50 . 3x7 . 1
 -
-.x4 4x4 5x36
+.x2 4x4 5x36
 -
-.x2 5 . 4 . 4 . 5x22
-.x8 4x59
-.x8 4x9
-.x4 4 . 4
-.x8 4x53
-.x8 4x8
-.x2 4x9
+5 . 4 . 4 . 5x22
+.x6 4x59
+.x6 4x9
+.x2 4 . 4
+.x6 4x62
+-
+4x11
 -
 .x2 2x6 . 4 .x2 3x4 . 4x3
 1x70

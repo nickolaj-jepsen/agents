@@ -8,7 +8,6 @@
  * A colour role of the style. Each painter maps it to its own theme.
  * - `code` is inline code, `link` the words of a link.
  * - `border` is a rule or a frame's line.
- * - `answered` is a question card's own: one that has its answer.
  */
 export type Role =
   | "text"
@@ -19,8 +18,7 @@ export type Role =
   | "error"
   | "code"
   | "link"
-  | "border"
-  | "answered";
+  | "border";
 
 export type Style = {
   role?: Role;

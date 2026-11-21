@@ -9,9 +9,6 @@
 │        promoting.
 │    B ○ Option B for 1
 │    C ○ Write your own answer
-│
-│    Clear answer
-│
 │    Note: Keep 東京 on the old routing until the replicas catch up and the
 │          dashboards agree.
 │          Check 大阪 before widening the rollout.
@@ -22,25 +19,25 @@
 │    A ○ Option A for 2
 │    B ○ Option B for 2
 │    C ○ Write your own answer
-│
-│    Note: Add a note                 ↓ Jump to latest message · Ctrl+End
+│    Note: Add a note
+
+
+│    Q3  Question number 3: pick a strategy?
+│                                     ↓ Jump to latest message · Ctrl+End
 
   01/12   A–B pick  Write [C]  Note [n]  Review [r]  Prompt [esc]  jk move  Clear [x]
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
 1 .x2 2 . 3x4 2x73
 1 .x8 2x74
-1 .x8 2x69
+1 .x8 2x67 4x2
 1
-1 .x4 3 . 4 . 4x69
-1 .x8 4x72
-1 .x8 4x72
-1 .x8 4x10
+1 .x4 3 . 5 . 5x69
+1 .x8 5x72
+1 .x8 5x72
+1 .x8 5x10
 1 .x4 3 . 3
 1 .x4 3 . 3 . 3x21
-1
-1 .x2 3x14
-1
 1 .x4 3x6 1x64
 1 .x10 1x17
 1 .x10 1x39
@@ -51,16 +48,20 @@
 3 .x4 3 . 3
 3 .x4 3 . 3
 3 .x4 3 . 3 . 3x21
-3
-3 .x4 3x16 .x16 5x37
+3 .x4 3x16
 -
-. 6x7 .x2 3x8 .x2 1x5 . 3x3 .x2 1x4 . 3x3 .x2 1x6 . 3x3 .x2 1x6 . 3x5 .x2 3x7 .x2 1x5 . 3x3
-7x111
+-
+3 .x4 3x4 2x35
+3x37 6x37
+-
+. 7x7 .x2 3x8 .x2 1x5 . 3x3 .x2 1x4 . 3x3 .x2 1x6 . 3x3 .x2 1x6 . 3x5 .x2 3x7 .x2 1x5 . 3x3
+8x111
 --- legend
 1 fg=#dee0e1
 2 fg=#dee0e1 bold
 3 fg=#7e888e
-4 fg=#a798d7 bold
-5 fg=#dee0e1 bg=#213b49
-6 fg=#dee0e1 inverse
-7 fg=#6c767b
+4 fg=#68b78d
+5 fg=#a798d7 bold
+6 fg=#dee0e1 bg=#213b49
+7 fg=#dee0e1 inverse
+8 fg=#6c767b

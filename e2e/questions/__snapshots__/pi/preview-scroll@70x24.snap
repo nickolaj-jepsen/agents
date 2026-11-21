@@ -1,11 +1,11 @@
 # questions/pi/preview-scroll 70x24 @0,8 (70x14)
 ─ Layout ─────────────────────────────────────────────────── Close × ─
 
-    Q1  Which table layout?
+  Q1  Which table layout?
 
-  ❯ B ○ One row per session
-        A document per session, rewritten on every turn.
-    C ○ Write your own answer
+❯ B ○ One row per session
+      A document per session, rewritten on every turn.
+  C ○ Write your own answer
   ↑ 1 above  ↓ 1 below
   Preview  1–2 of 6
   ```sql
@@ -16,12 +16,12 @@
 --- styles
 1 . 2x6 . 1x51 . 3x7 . 1
 -
-.x4 4x4 5x19
+.x2 4x4 5x19
 -
-.x2 5 . 4 . 4 . 5x19
-.x8 4x48
-.x4 4 . 4 . 4x21
-.x2 4x20
+5 . 4 . 4 . 5x19
+.x6 4x48
+.x2 4 . 4 . 4x21
+4x22
 .x2 6x17
 .x2 7x6
 .x4 8x6 . 8x5

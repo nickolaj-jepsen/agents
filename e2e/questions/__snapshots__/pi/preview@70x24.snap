@@ -1,10 +1,10 @@
 # questions/pi/preview 70x24 @0,8 (70x14)
 ─ Layout ─────────────────────────────────────────────────── Close × ─
 
-    Q1  Which table layout?
+  Q1  Which table layout?
 
-  ❯ A ○ One row per event
-        Append-only, and the history is the table.
+❯ A ○ One row per event
+      Append-only, and the history is the table.
 
   ↓ 3 below
   Preview  1–2 of 7
@@ -16,12 +16,12 @@
 --- styles
 1 . 2x6 . 1x51 . 3x7 . 1
 -
-.x4 4x4 5x19
+.x2 4x4 5x19
 -
-.x2 5 . 4 . 4 . 5x17
-.x8 4x42
+5 . 4 . 4 . 5x17
+.x6 4x42
 -
-.x2 4x9
+4x11
 .x2 6x17
 .x2 7x6
 .x4 8x6 . 8x5

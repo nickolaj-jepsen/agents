@@ -4,9 +4,6 @@
 │    A ○ SQLite
 │    B ● Postgres
 │    C ○ Write your own answer
-│
-│    Clear answer
-│
 │    Note: keep the flag
 │          check the results
 
@@ -15,7 +12,10 @@
 │
 │    A ○ Yes
 │    B ○ No
-│    C ○ Write y ↓ Jump to latest message · Ctrl+End
+│    C ○ Write your own answer
+│    Note: Add a note
+
+                 ↓ Jump to latest message · Ctrl+End
 
  Answer [alt+a]  Q1  1/2 answered
 ─────────────────────────────────────────────────────────────────────
@@ -24,14 +24,11 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                repla
 --- styles
-1 .x2 2 . 3x4 2x13
+1 .x2 2 . 3x4 2x11 4x2
 1
 1 .x4 3 . 3
-1 .x4 3 . 4 . 4x8
+1 .x4 3 . 5 . 5x8
 1 .x4 3 . 3 . 3x21
-1
-1 .x2 3x14
-1
 1 .x4 3x6 1x13
 1 .x10 1x17
 -
@@ -40,19 +37,23 @@ a draft for later
 3
 3 .x4 3 . 3
 3 .x4 3 . 3
-3 .x4 3 . 3 . 3x7 5x37
+3 .x4 3 . 3 . 3x21
+3 .x4 3x16
+-
+.x16 6x37
 -
 . 1x6 . 3x7 .x2 3x16
-6x69
-.x17 7
-6x69
+7x69
+.x17 8
+7x69
 3x5
 3x69
 --- legend
 1 fg=#dee0e1
 2 fg=#dee0e1 bold
 3 fg=#7e888e
-4 fg=#a798d7 bold
-5 fg=#dee0e1 bg=#213b49
-6 fg=#6c767b
-7 inverse
+4 fg=#68b78d
+5 fg=#a798d7 bold
+6 fg=#dee0e1 bg=#213b49
+7 fg=#6c767b
+8 inverse

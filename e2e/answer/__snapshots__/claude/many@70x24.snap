@@ -10,14 +10,14 @@
 ▎   G ○ Option G for 3
 ▎   H ● Option H for 3
 ▎   I ○ Write your own answer
-▎
-▎   Clear answer
-▎
 ▎   Note: Add a note
 
+
+▎   Q4  Question number 4: pick a strategy?
+▎
 Q3/12  jk move A–H pick I write n note r review keys here         [-]
 --- styles
-.x2 1 . 2x4 1x37
+.x2 1 . 2x4 1x35 3x2
 -
 .x4 2 . 2
 .x4 2 . 2
@@ -26,16 +26,18 @@ Q3/12  jk move A–H pick I write n note r review keys here         [-]
 .x4 2 . 2
 .x4 2 . 2
 .x4 2 . 2
-.x4 2 . 3 . 3x14
+.x4 2 . 4 . 4x14
 .x4 2 . 2 . 2x21
--
-.x4 2x12
--
 .x4 2x16
 -
-4x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x9 2x3
+5x70
+5 .x3 2x4 1x35 .x26 5
+5 .x68 5
+6x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x9 2x3
 --- legend
 1 bold
 2 fg=#999999
-3 fg=#d77757 bold
-4 fg=#d77757 bold inverse
+3 fg=#4eba65
+4 fg=#d77757 bold
+5 dim
+6 fg=#d77757 bold inverse

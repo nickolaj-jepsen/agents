@@ -4,7 +4,6 @@
 │    A ○ SQLite
 │    B ○ Postgres
 │    C ○ Write your own answer
-│
 │    Note: Check the migration
 
 
@@ -13,8 +12,9 @@
 │    A ○ Yes
 │    B ○ No
 │    C ○ Write your own answer
-│
-│    Note: Add a ↓ Jump to latest message · Ctrl+End
+│    Note: Add a note
+
+                 ↓ Jump to latest message · Ctrl+End
 
   1/2   A–B pick  Write [C]  Note [n]  Review [r]  Prompt [esc]
  jk move
@@ -25,7 +25,6 @@
 1 .x4 3 . 3
 1 .x4 3 . 3
 1 .x4 3 . 3 . 3x21
-1
 1 .x4 3x6 1x19
 -
 -
@@ -34,8 +33,9 @@
 3 .x4 3 . 3
 3 .x4 3 . 3
 3 .x4 3 . 3 . 3x21
-3
-3 .x4 3x11 4x37
+3 .x4 3x16
+-
+.x16 4x37
 -
 . 5x5 .x2 3x8 .x2 1x5 . 3x3 .x2 1x4 . 3x3 .x2 1x6 . 3x3 .x2 1x6 . 3x5
 . 3x7

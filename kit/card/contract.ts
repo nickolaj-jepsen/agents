@@ -8,12 +8,10 @@
  * form, or as one of several in a transcript.
  */
 export type CardState = {
-  /** The card the keyboard is on: it stays bright when it has its answer. */
+  /** The card the keyboard is on: its rail is bright. */
   active?: boolean;
-  /** The card has its answer. */
+  /** The card has its answer: its heading ends in a tick, wherever the keyboard is. */
   answered?: boolean;
-  /** Its answer has gone to the agent: a transcript keeps the card to read back. */
-  sent?: boolean;
 };
 
 export type Heading = CardState & {

@@ -1,6 +1,8 @@
 # answer/claude/many-review 160x45 @0,1 (160x39)
-▎   C ○ Write your own answer
 ▎
+▎   A ○ Option A for 10
+▎   B ○ Option B for 10
+▎   C ○ Write your own answer
 ▎   Note: Add a note
 
 
@@ -9,7 +11,6 @@
 ▎   A ○ Option A for 11
 ▎   B ○ Option B for 11
 ▎   C ○ Write your own answer
-▎
 ▎   Note: Add a note
 
 
@@ -18,7 +19,6 @@
 ▎   A ○ Option A for 12
 ▎   B ○ Option B for 12
 ▎   C ○ Write your own answer
-▎
 ▎   Note: Add a note
 
 
@@ -39,8 +39,10 @@
 
 Review  1/12 answered jk move enter fill r back keys here                                                                                                   [-]
 --- styles
-1 .x3 2 . 2 . 2x21 .x66 1
 1 .x94 1
+1 .x3 2 . 2 .x88 1
+1 .x3 2 . 2 .x88 1
+1 .x3 2 . 2 . 2x21 .x66 1
 1 .x3 2x16 .x75 1
 1x96
 1x96
@@ -49,7 +51,6 @@ Review  1/12 answered jk move enter fill r back keys here                       
 1 .x3 2 . 2 .x88 1
 1 .x3 2 . 2 .x88 1
 1 .x3 2 . 2 . 2x21 .x66 1
-1 .x94 1
 1 .x3 2x16 .x75 1
 1x96
 1x96
@@ -58,7 +59,6 @@ Review  1/12 answered jk move enter fill r back keys here                       
 1 .x3 2 . 2 .x88 1
 1 .x3 2 . 2 .x88 1
 1 .x3 2 . 2 . 2x21 .x66 1
-1 .x94 1
 1 .x3 2x16 .x75 1
 1x96
 4x96

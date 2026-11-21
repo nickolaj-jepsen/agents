@@ -16,7 +16,6 @@ import { buttonRow } from "../../../kit/buttons/terminal.ts";
 import { digitChoice } from "../../../kit/card/contract.ts";
 import {
   CARD_INSET,
-  cardRole,
   choice as choiceRows,
   heading as headingRows,
   note as noteRows,
@@ -212,9 +211,12 @@ export class Transcript implements Component {
             : entry.key && entry.text.startsWith(`${entry.key}. `)
               ? entry.text.slice(entry.key.length + 2)
               : entry.text;
-        const action: RoundAction | undefined = active
-          ? { kind: "pick", step, entry: index }
-          : undefined;
+        // A click on the one chosen answer takes it back, so no row is kept to clear it.
+        const action: RoundAction | undefined = !active
+          ? undefined
+          : entry.isChosen && !item.isSeveral
+            ? { kind: "clear", step }
+            : { kind: "pick", step, entry: index };
         rows.push(
           ...asRows(
             draw(
@@ -226,8 +228,7 @@ export class Transcript implements Component {
                   detail: entry.detail,
                   chosen: entry.isChosen,
                   hovered: active && this.hovered?.step === step && this.hovered.entry === index,
-                  active: here,
-                  answered,
+                  multiple: item.isSeveral,
                   literal: entry.kind === "write",
                 },
                 inner,
@@ -238,42 +239,38 @@ export class Transcript implements Component {
           ),
         );
       });
+      // The note stands under the answers; what else the card says follows a blank row.
+      const more: Row[] = [];
       if (item.recommended)
-        rows.push(
-          { text: "" },
+        more.push(
           ...asRows(
             markdownLines(theme, `Recommended: ${item.recommended}`, room, { color: dim }, 3).map(
               inset,
             ),
           ),
         );
-      if (active && (answered || item.accepts.includes(","))) rows.push({ text: "" });
       if (active && item.accepts.includes(","))
-        rows.push(
+        more.push(
           ...asRows(prose(theme, room, `Take ${item.accepts}`, {}, "dim").map(inset), {
             kind: "accept",
             step,
           }),
         );
-      if (answered && active)
-        rows.push({ text: dim(inset("Clear answer")), act: { kind: "clear", step } });
-      if (active || item.note) {
-        const note =
-          editRows(step, "note", CARD_INSET + NOTE_LABEL) ??
-          asRows(
-            draw(theme, noteRows({ value: item.note, active: here, answered }, inner), inner),
-            active ? { kind: "note", step } : undefined,
-          );
-        section(step, heading, sectionsOf<Row>({ text: "" }, rows, note), { here, answered });
-      } else {
-        section(step, heading, rows, { here, answered });
-      }
+      if (active || item.note)
+        rows.push(
+          ...(editRows(step, "note", CARD_INSET + NOTE_LABEL) ??
+            asRows(
+              draw(theme, noteRows({ value: item.note, active: here, answered }, inner), inner),
+              active ? { kind: "note", step } : undefined,
+            )),
+        );
+      section(step, heading, sectionsOf<Row>({ text: "" }, rows, more), { here, answered });
     }
 
     const open = active && current.isReview;
     const cursor = state.reviewCursor ?? firstReviewStop(current);
     const tone = (active: boolean, done: boolean, s: string, bold = false) =>
-      paintText(theme, s, { role: cardRole({ active, answered: done }), bold: bold || undefined });
+      paintText(theme, s, { role: active || !done ? "text" : "dim", bold: bold || undefined });
     const title = `Answers  ${current.answered} of ${current.count} answered`;
     const sent = round.sent
       ? paintText(theme, ` ${tokens.glyph.done} Sent`, { role: "success" })
@@ -623,7 +620,7 @@ export class AnswerGuide implements Component, Focusable {
       hints.push(action("y", "Take recommendation", { kind: "accept", step: v.step }));
     const digits = String(v.count).length;
     const stop = `${String(v.step + 1).padStart(digits, "0")}/${v.count}`;
-    const role = cardRole({ active: true, answered: false });
+    const role = "text";
     return this.shortcuts(columns, hints, acts, [
       v.isReview
         ? span(progressText, { role, bold: true })

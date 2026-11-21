@@ -7,7 +7,7 @@ import {
   heading as cardHeading,
   note as cardNote,
 } from "./kit/card/terminal.ts";
-import { line, span, type Line } from "./kit/lines.ts";
+import type { Line } from "./kit/lines.ts";
 import { paintLines } from "./kit/paint/claude.tsx";
 import {
   actionBar,
@@ -155,7 +155,7 @@ export function questionCard(
     isActive ? "accent" : !kit.isNative && answered ? answerTone : "text",
   );
   // The terminal's card is the kit's: the lines pi paints too, each control a Button here.
-  const state = { active: isActive, answered, sent };
+  const state = { active: isActive, answered };
   const room = kit.columns;
   const terminal = (lines: Line[], press?: () => unknown) =>
     paintLines(outer, lines, {
@@ -196,8 +196,7 @@ export function questionCard(
       flexDirection="column"
       borderStyle={kit.isNative ? undefined : "quote"}
       // The keyboard's card has a bright rail, not an accented one: the accent is for answers.
-      borderColor={!kit.isNative && !isActive && answered ? tokens.role[answerTone] : undefined}
-      borderDimColor={(!kit.isNative && !isActive && !answered) || undefined}
+      borderDimColor={(!kit.isNative && !isActive) || undefined}
       paddingX={1}
     >
       {stack(
@@ -205,7 +204,7 @@ export function questionCard(
         [
           activate,
           inset(item.body ? <Markdown text={item.body} /> : null),
-          hasChoices || (!kit.isNative && (interactive || item.written)) ? (
+          hasChoices || (!kit.isNative && (interactive || item.written || item.note)) ? (
             <Box flexDirection="column" rowGap={kit.isNative ? tokens.gui.space.xs : 0}>
               {item.entries.map((entry, i) => {
                 if (entry.kind === "write") return null;
@@ -214,7 +213,12 @@ export function questionCard(
                 // A Button's label is plain words: it draws no markdown.
                 const said = plain(words);
                 const weight = entry.isChosen ? "semibold" : undefined;
-                const pick = () => interactive?.pick(index, i);
+                // A press on the one chosen answer takes it back: the terminal's card keeps no
+                // row to clear it.
+                const pick = () =>
+                  !kit.isNative && entry.isChosen && !several
+                    ? interactive?.clear(index)
+                    : interactive?.pick(index, i);
                 const key = `${prefix}-choose-${i}`;
                 // A detail of plain paragraphs is the option's too; one with blocks keeps its
                 // Markdown under the row.
@@ -308,6 +312,12 @@ export function questionCard(
                     () => interactive?.edit(index, "write"),
                   )
                 : null}
+              {!kit.isNative && (interactive || item.note)
+                ? terminal(
+                    cardNote({ ...state, value: item.note, hit: `${prefix}-note` }, room),
+                    () => interactive?.edit(index, "note"),
+                  )
+                : null}
             </Box>
           ) : null,
           inset(
@@ -323,36 +333,17 @@ export function questionCard(
               {item.written}
             </Text>
           ) : null,
-          interactive && answered ? (
-            kit.isNative ? (
-              <Button
-                key={`${prefix}-clear`}
-                dimColor
-                label="Clear answer"
-                onPress={() => interactive.clear(index)}
-              />
-            ) : (
-              terminal(
-                [
-                  line(
-                    [span(CARD_INSET), span("Clear answer", { role: "dim" })],
-                    `${prefix}-clear`,
-                  ),
-                ],
-                () => interactive.clear(index),
-              )
-            )
+          // The terminal's card takes an answer back with a press on it, and has its note
+          // under the answers.
+          kit.isNative && interactive && answered ? (
+            <Button
+              key={`${prefix}-clear`}
+              dimColor
+              label="Clear answer"
+              onPress={() => interactive.clear(index)}
+            />
           ) : null,
-          kit.isNative
-            ? item.note
-              ? noteLines(kit, item.note, { role: "note" })
-              : null
-            : interactive || item.note
-              ? terminal(
-                  cardNote({ ...state, value: item.note, hit: `${prefix}-note` }, room),
-                  () => interactive?.edit(index, "note"),
-                )
-              : null,
+          kit.isNative && item.note ? noteLines(kit, item.note, { role: "note" }) : null,
           inset(editor ?? null),
           !controls.length ? null : kit.isNative ? (
             actionBar(kit, controls)

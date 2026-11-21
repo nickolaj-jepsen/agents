@@ -1,6 +1,7 @@
 # answer/claude/numbered 70x24 @0,1 (70x18)
-▎   A ○ Write your own answer
+▎   Yes or no.
 ▎
+▎   A ○ Write your own answer
 ▎   Note: Add a note
 
 
@@ -9,7 +10,6 @@
 ▎   MIT or Apache.
 ▎
 ▎   A ○ Write your own answer
-▎
 ▎   Note: Add a note
 
 
@@ -18,8 +18,9 @@
 
 1/2    alt+a for the keys                                         [-]
 --- styles
-.x4 1 . 1 . 1x21
 -
+-
+.x4 1 . 1 . 1x21
 .x4 1x16
 -
 2x70
@@ -28,7 +29,6 @@
 2 .x68 2
 2 .x68 2
 2 .x3 1 . 1 . 1x21 .x40 2
-2 .x68 2
 2 .x3 1x16 .x49 2
 2x70
 2x70

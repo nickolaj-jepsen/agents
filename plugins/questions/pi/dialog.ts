@@ -43,6 +43,8 @@ const MIN_WIDTH = 28;
 const RESERVED_ROWS = 10;
 const MAX_ROWS = 24;
 const GAP = " ".repeat(tokens.gutter);
+/** The cells a card's row keeps for the pointer. */
+const INSET = cellWidth(CARD_INSET);
 
 type ChoiceItem = { kind: "option"; index: number } | { kind: "custom" } | { kind: "note" };
 type Item = ChoiceItem | { kind: "review"; question: number };
@@ -676,9 +678,9 @@ export class QuestionsDialog implements Component, Focusable {
         this.startEditing(field);
         return { handled: true };
       }
-      const prefix = cellWidth(
-        field === "note" ? CARD_INSET + NOTE_LABEL : this.writeInLead(index),
-      );
+      // `x` counts from the frame's inset, which the pointer column stands in.
+      const prefix =
+        cellWidth(field === "note" ? CARD_INSET + NOTE_LABEL : this.writeInLead(index)) - INSET;
       return (
         this.editingInput.handleMouse?.({ ...event, x: Math.max(0, x - prefix), y: 0 }) ?? {
           handled: true,
@@ -721,7 +723,10 @@ export class QuestionsDialog implements Component, Focusable {
       ? this.questionBody(question, inner, budget, split, hasPreview)
       : this.reviewBody(inner, budget);
     rows.forEach((row, index) => {
-      if (row.hit) this.hits.set(index, { item: row.hit, to: row.hitTo ?? inner });
+      // The mouse counts from the frame's inset; a question's rows start before it.
+      const shift = question ? INSET : 0;
+      if (row.hit)
+        this.hits.set(index, { item: row.hit, to: (row.hitTo ?? inner + shift) - shift });
     });
     const hover = this.hoverButton === undefined ? undefined : { x: this.hoverButton, y: 0 };
     const actions = this.confirming ? undefined : this.footerActions();
@@ -762,8 +767,10 @@ export class QuestionsDialog implements Component, Focusable {
         })),
         acts: actions.acts,
       };
-    const pad = " ".repeat(captionFrameLayout.x);
-    const set = (text: string) => fitPainted(pad + fitPainted(text, inner), width);
+    // A question's rows bring their own pointer column, which stands in the frame's inset.
+    const pad = question ? "" : " ".repeat(captionFrameLayout.x);
+    const room = width - 2 * captionFrameLayout.x + (question ? captionFrameLayout.x : 0);
+    const set = (text: string) => fitPainted(pad + fitPainted(text, room), width);
     return [
       fitPainted(top?.text ?? "", width),
       set(gap?.text ?? ""),
@@ -799,27 +806,21 @@ export class QuestionsDialog implements Component, Focusable {
           active: true,
           answered: isAnswered(draft) && !multiple && this.tabs.length === 1,
         },
-        inner,
+        inner + INSET,
       ),
-      inner,
+      inner + INSET,
     );
-    const titleRoom = Math.max(2, Math.floor((budget - Number(multiple)) / 4));
+    const titleRoom = Math.max(2, Math.floor(budget / 4));
     this.questionMaxOffset = Math.max(0, title.length - titleRoom);
     this.questionOffset = Math.min(this.questionOffset, this.questionMaxOffset);
     const shown = title.slice(this.questionOffset, this.questionOffset + titleRoom);
     if (this.questionMaxOffset > 0) {
       const index = this.questionOffset < this.questionMaxOffset ? shown.length - 1 : 0;
-      shown[index] = cutPainted(shown[index]!, inner - 2) + dim(" …");
+      shown[index] = cutPainted(shown[index]!, inner + INSET - 2) + dim(" …");
     }
 
     this.questionRows = { start: 0, end: shown.length };
     const heading = shown.map((text) => ({ text }));
-    if (multiple) {
-      const count = draft.picked.length + Number(Boolean(draft.text.trim()));
-      heading.push({
-        text: dim(CARD_INSET + (count ? `${count} selected` : "Select one or more")),
-      });
-    }
 
     const stackedRows = hasPreview && !split ? Math.max(2, Math.min(7, Math.floor(budget / 3))) : 0;
     const room = Math.max(2, budget - heading.length - 1);
@@ -846,11 +847,11 @@ export class QuestionsDialog implements Component, Focusable {
           const row = list[i];
           return {
             ...row,
-            text: fitPainted(row?.text ?? "", choiceWidth) + GAP + (preview[i] ?? ""),
+            text: fitPainted(row?.text ?? "", choiceWidth + INSET) + GAP + (preview[i] ?? ""),
           };
         });
       } else {
-        list.push(...preview.map((text) => ({ text })));
+        list.push(...preview.map((text) => ({ text: CARD_INSET + text })));
       }
     }
     return sectionsOf<BodyRow>({ text: "" }, heading, list);
@@ -956,9 +957,9 @@ export class QuestionsDialog implements Component, Focusable {
             detail,
             detailLines,
           },
-          width,
+          width + INSET,
         ),
-        width,
+        width + INSET,
       ).map((line) => target(line, item));
     switch (item.kind) {
       case "option": {
@@ -974,8 +975,8 @@ export class QuestionsDialog implements Component, Focusable {
       case "custom": {
         if (this.editing === "answer") {
           const lead = this.writeInLead(i);
-          const field = this.input.render(width - cellWidth(lead))[0] ?? "";
-          return [{ ...target(dim(lead) + field, item), hitTo: width }];
+          const field = this.input.render(width + INSET - cellWidth(lead))[0] ?? "";
+          return [{ ...target(dim(lead) + field, item), hitTo: width + INSET }];
         }
         return choice(
           this.letter(i),
@@ -992,10 +993,10 @@ export class QuestionsDialog implements Component, Focusable {
                 {
                   ...target(
                     dim(CARD_INSET + NOTE_LABEL) +
-                      (this.noteInput.render(width - cellWidth(CARD_INSET + NOTE_LABEL))[0] ?? ""),
+                      (this.noteInput.render(width - cellWidth(NOTE_LABEL))[0] ?? ""),
                     item,
                   ),
-                  hitTo: width,
+                  hitTo: width + INSET,
                 },
               ]
             : draw(
@@ -1009,11 +1010,11 @@ export class QuestionsDialog implements Component, Focusable {
                     focused: at,
                     hovered: i === this.hoverRow,
                   },
-                  width,
+                  width + INSET,
                 ),
-                width,
+                width + INSET,
               ).map((line) => target(line, item));
-        return [{ text: "" }, ...content];
+        return content;
       }
     }
   }
@@ -1049,7 +1050,7 @@ export class QuestionsDialog implements Component, Focusable {
     const above = start ? `↑ ${start} above` : "";
     const below = end < blocks.length ? `↓ ${blocks.length - end} below` : "";
     rows.push({
-      text: paintText(this.theme, [above, below].filter(Boolean).join(GAP) || "…", {
+      text: paintText(this.theme, CARD_INSET + ([above, below].filter(Boolean).join(GAP) || "…"), {
         role: "dim",
       }),
     });

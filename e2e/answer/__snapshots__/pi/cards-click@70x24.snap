@@ -4,9 +4,6 @@
 │    A ○ SQLite
 │    B ● Postgres
 │    C ○ Write your own answer
-│
-│    Clear answer
-│
 │    Note: Add a note
 
 
@@ -15,19 +12,19 @@
 │    A ○ Yes
 │    B ○ No
 │    C ○ Write your own answer
-│                ↓ Jump to latest message · Ctrl+End
+│    Note: Add a note
+
+
+│    Answers  1  ↓ Jump to latest message · Ctrl+End
 
  Answer [alt+a]  Q1  1/2 answered
 ─────────────────────────────────────────────────────────────────────
 --- styles
-1 .x2 2 . 3x4 2x13
+1 .x2 2 . 3x4 2x11 4x2
 1
 1 .x4 3 . 3
-1 .x4 3 . 4 . 4x8
+1 .x4 3 . 5 . 5x8
 1 .x4 3 . 3 . 3x21
-1
-1 .x2 3x14
-1
 1 .x4 3x16
 -
 -
@@ -36,14 +33,19 @@
 3 .x4 3 . 3
 3 .x4 3 . 3
 3 .x4 3 . 3 . 3x21
-3x16 5x37
+3 .x4 3x16
+-
+-
+3 .x4 6x11 7x37
 -
 . 1x6 . 3x7 .x2 3x16
-6x69
+8x69
 --- legend
 1 fg=#dee0e1
 2 fg=#dee0e1 bold
 3 fg=#7e888e
-4 fg=#a798d7 bold
-5 fg=#dee0e1 bg=#213b49
-6 fg=#6c767b
+4 fg=#68b78d
+5 fg=#a798d7 bold
+6 fg=#7e888e bold
+7 fg=#dee0e1 bg=#213b49
+8 fg=#6c767b

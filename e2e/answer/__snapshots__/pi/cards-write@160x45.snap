@@ -5,9 +5,6 @@
 │    B ○ Postgres
 │    C ● DuckDB
 │        embedded is fine
-│
-│    Clear answer
-│
 │    Note: Add a note
 
 
@@ -16,7 +13,6 @@
 │    A ○ Yes
 │    B ○ No
 │    C ○ Write your own answer
-│
 │    Note: Add a note
 
 
@@ -24,18 +20,19 @@
 │   [ Fill prompt ]  ▸ Show all 2 questions
 
 
+
+
+
+
  Answer [alt+a]  Q1  1/2 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-1 .x2 2 . 3x4 2x13
+1 .x2 2 . 3x4 2x11 4x2
 1
 1 .x4 3 . 3
 1 .x4 3 . 3
-1 .x4 3 . 4 . 4x6
-1 .x8 4x16
-1
-1 .x2 3x14
-1
+1 .x4 3 . 5 . 5x6
+1 .x8 5x16
 1 .x4 3x16
 -
 -
@@ -44,12 +41,15 @@
 3 .x4 3 . 3
 3 .x4 3 . 3
 3 .x4 3 . 3 . 3x21
-3
 3 .x4 3x16
 -
 -
-5 .x4 6x24
-5 .x3 6x15 .x2 3x22
+3 .x4 6x24
+3 .x3 6x15 .x2 3x22
+-
+-
+-
+-
 -
 -
 . 1x6 . 3x7 .x2 3x16
@@ -58,7 +58,7 @@
 1 fg=#dee0e1
 2 fg=#dee0e1 bold
 3 fg=#7e888e
-4 fg=#a798d7 bold
-5 fg=#5fa8cc
-6 fg=#5fa8cc bold
+4 fg=#68b78d
+5 fg=#a798d7 bold
+6 fg=#7e888e bold
 7 fg=#6c767b

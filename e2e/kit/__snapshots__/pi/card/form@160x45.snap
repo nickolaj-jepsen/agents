@@ -1,4 +1,4 @@
-# kit/pi/card/form 160x45 @2,2 (96x10)
+# kit/pi/card/form 160x45 @2,2 (96x9)
   Q1  How much of each session should be kept, once the run that made it is over?
 
 ❯ A ○ The whole transcript
@@ -7,7 +7,6 @@
       履歴は保存されますが、古い出力は要約されます。 Older output is summarised.
   C ○ A summary of each run
   D ○ Write your own answer
-
   Note: Add a note
 --- styles
 .x2 1x4 2x75
@@ -18,7 +17,6 @@
 .x6 1x74
 .x2 1 . 1 .x3 3x7 .x4 4x4
 .x2 1 . 1 . 1x21
--
 .x2 1x16
 --- legend
 1 fg=#7e888e

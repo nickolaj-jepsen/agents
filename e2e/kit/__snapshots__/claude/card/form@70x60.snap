@@ -1,4 +1,4 @@
-# kit/claude/card/form 70x60 @2,42 (66x12)
+# kit/claude/card/form 70x60 @2,43 (66x11)
   Q1  How much of each session should be kept, once the run that
       made it is over?
 
@@ -9,7 +9,6 @@
       is summarised.
   C ○ A summary of each run
   D ○ Write your own answer
-
   Note: Add a note
 --- styles
 .x2 1x4 2x58
@@ -22,7 +21,6 @@
 .x6 1x14
 .x2 1 . 1 .x3 3x7 .x4 2x4
 .x2 1 . 1 . 1x21
--
 .x2 1x16
 --- legend
 1 fg=#999999

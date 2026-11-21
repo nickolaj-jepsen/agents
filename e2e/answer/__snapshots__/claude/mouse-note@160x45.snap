@@ -4,7 +4,6 @@
 ▎   A ○ SQLite
 ▎   B ○ Postgres
 ▎   C ○ Write your own answer
-▎
 ▎   Note: First line
 ▎         Second line
 
@@ -14,7 +13,6 @@
 ▎   A ○ Yes
 ▎   B ○ No
 ▎   C ○ Write your own answer
-▎
 ▎   Note: Add a note
 
 
@@ -28,6 +26,8 @@
 
 
 
+
+
 Q1/2   jk move A–B pick C write n note r review keys here                                                                                                   [-]
 --- styles
 .x2 1 . 2x4 1x11
@@ -35,7 +35,6 @@ Q1/2   jk move A–B pick C write n note r review keys here                     
 .x4 2 . 2
 .x4 2 . 2
 .x4 2 . 2 . 2x21
--
 .x4 2x6
 -
 -
@@ -45,7 +44,6 @@ Q1/2   jk move A–B pick C write n note r review keys here                     
 3 .x3 2 . 2 .x88 3
 3 .x3 2 . 2 .x88 3
 3 .x3 2 . 2 . 2x21 .x66 3
-3 .x94 3
 3 .x3 2x16 .x75 3
 3x96
 3x96
@@ -54,6 +52,8 @@ Q1/2   jk move A–B pick C write n note r review keys here                     
 3x96
 -
 5 . 5x51
+-
+-
 -
 -
 -

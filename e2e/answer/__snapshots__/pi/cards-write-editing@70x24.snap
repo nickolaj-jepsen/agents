@@ -1,7 +1,8 @@
 # answer/pi/cards-write-editing 70x24 @0,0 (69x24)
+│
+│    A ○ SQLite
 │    B ○ Postgres
 │    C › DuckDB
-│
 │    Note: Add a note
 
 
@@ -10,7 +11,6 @@
 │    A ○ Yes
 │    B ○ No
 │    C ○ Write your own answer
-│
 │    Note: Add a note
 
 
@@ -24,9 +24,10 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                repla
 --- styles
+1
+1 .x4 2 . 2
 1 .x4 2 . 2
 1 .x2 2x6 .x6 3
-1
 1 .x4 2x16
 -
 -
@@ -35,7 +36,6 @@ a draft for later
 2 .x4 2 . 2
 2 .x4 2 . 2
 2 .x4 2 . 2 . 2x21
-2
 2 .x4 2x16
 -
 -

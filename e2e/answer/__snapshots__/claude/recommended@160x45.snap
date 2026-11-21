@@ -1,21 +1,19 @@
-# answer/claude/recommended 160x45 @0,6 (160x34)
+# answer/claude/recommended 160x45 @0,9 (160x31)
 ▎ ❯ Q1  Should every focus default to the same bar?
 ▎
 ▎   A ○ Yes, one default for every kind.  Recommended
 ▎   B ○ Default by kind.
 ▎   C ○ Add the bar as a second pick.
 ▎   D ○ Write your own answer
+▎   Note: Add a note
 ▎
 ▎   Recommended: A. A per-kind table is one more thing to keep in sync.
-▎
-▎   Note: Add a note
 
 
 ▎   Q2  Lower the per-generator target to 5-6?
 ▎
 ▎   A ○ Yes. Four generators still give 20-24.
 ▎   B ○ Write your own answer
-▎
 ▎   Note: Add a note
 
 
@@ -25,7 +23,6 @@
 ▎   B ○ Keep it as an alias.
 ▎       Scripts may still call it.
 ▎   C ○ Write your own answer
-▎
 ▎   Note: Add a note
 
 
@@ -40,17 +37,15 @@ Q1/3   alt+a for the keys                                                       
 .x4 2 . 2
 .x4 2 . 2
 .x4 2 . 2 . 2x21
+.x4 2x16
 -
 .x4 3x67
--
-.x4 2x16
 -
 3x96
 3 .x3 2x4 1x38 .x49 3
 3 .x94 3
 3 .x3 2 . 2 .x88 3
 3 .x3 2 . 2 . 2x21 .x66 3
-3 .x94 3
 3 .x3 2x16 .x75 3
 3x96
 3x96
@@ -60,7 +55,6 @@ Q1/3   alt+a for the keys                                                       
 3 .x3 2 . 2 .x88 3
 3 .x7 2x26 .x61 3
 3 .x3 2 . 2 . 2x21 .x66 3
-3 .x94 3
 3 .x3 2x16 .x75 3
 3x96
 3x96

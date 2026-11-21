@@ -71,11 +71,11 @@ describe("a choice", () => {
     expect(styles({ answered: true })).toEqual(styles({}));
   });
 
-  test("a chosen one is in the accent, and in the success colour once its card is sent", () => {
+  test("a chosen one is in the accent, whatever its card's state", () => {
     const [chosen] = choice({ ...item, chosen: true }, 60);
-    const [sent] = choice({ ...item, chosen: true, sent: true }, 60);
+    const [answered] = choice({ ...item, chosen: true, answered: true }, 60);
     expect(chosen!.spans.at(-1)).toMatchObject({ role: "accent", bold: true });
-    expect(sent!.spans.at(-1)).toMatchObject({ role: "success", bold: true });
+    expect(answered!.spans).toEqual(chosen!.spans);
   });
 
   test("the pointer's row is bold like the keyboard's, without its pointer", () => {

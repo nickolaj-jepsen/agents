@@ -1,15 +1,15 @@
 # questions/pi/preview 160x45 @0,28 (160x15)
 ─ Layout ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── Close × ─
 
-    Q1  Which table layout?
+  Q1  Which table layout?
 
-  ❯ A ○ One row per event                                           Preview
-        Append-only, and the history is the table.                  ```sql
-    B ○ One row per session                                           create table event (
-        A document per session, rewritten on every turn.                id integer primary key,
-    C ○ Write your own answer                                           session text not null,
-                                                                        at text not null
-    Note: Add a note                                                  );
+❯ A ○ One row per event                                             Preview
+      Append-only, and the history is the table.                    ```sql
+  B ○ One row per session                                             create table event (
+      A document per session, rewritten on every turn.                  id integer primary key,
+  C ○ Write your own answer                                             session text not null,
+  Note: Add a note                                                      at text not null
+                                                                      );
                                                                     ```
 
   Choose ↵  Note [n]
@@ -17,15 +17,15 @@
 --- styles
 1 . 2x6 . 1x141 . 3x7 . 1
 -
-.x4 4x4 5x19
+.x2 4x4 5x19
 -
-.x2 5 . 4 . 4 . 5x17 .x43 6x7
-.x8 4x42 .x18 7x6
-.x4 4 . 4 .x63 8x6 . 8x5
-.x8 4x48 .x19 9x7 . 8x7
-.x4 4 . 4 . 4x21 .x56 8x3 . 8x4
-.x72 8x2 .x6 8x3 . 8x4
-.x4 4x16
+5 . 4 . 4 . 5x17 .x45 6x7
+.x6 4x42 .x20 7x6
+.x2 4 . 4 .x65 8x6 . 8x5
+.x6 4x48 .x21 9x7 . 8x7
+.x2 4 . 4 . 4x21 .x58 8x3 . 8x4
+.x2 4x16 .x54 8x2 .x6 8x3 . 8x4
+-
 .x68 7x3
 -
 .x2 2x6 . 4 .x2 3x4 . 4x3

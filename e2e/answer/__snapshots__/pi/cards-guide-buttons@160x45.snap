@@ -4,7 +4,6 @@
 │    A ○ SQLite
 │    B ○ Postgres
 │    C ○ Write your own answer
-│
 │    Note: Check the migration
 
 
@@ -13,12 +12,13 @@
 │    A ○ Yes
 │    B ○ No
 │    C ○ Write your own answer
-│
 │    Note: Add a note
 
 
 │    Answers  0 of 2 answered
 │   [ Fill prompt ]  ▸ Show all 2 questions
+
+
 
 
 
@@ -32,7 +32,6 @@
 1 .x4 3 . 3
 1 .x4 3 . 3
 1 .x4 3 . 3 . 3x21
-1
 1 .x4 3x6 1x19
 -
 -
@@ -41,12 +40,13 @@
 3 .x4 3 . 3
 3 .x4 3 . 3
 3 .x4 3 . 3 . 3x21
-3
 3 .x4 3x16
 -
 -
 3 .x4 2x24
 3 .x3 4x15 .x2 3x22
+-
+-
 -
 -
 -
@@ -58,6 +58,6 @@
 1 fg=#dee0e1
 2 fg=#dee0e1 bold
 3 fg=#7e888e
-4 fg=#5fa8cc bold
+4 fg=#7e888e bold
 5 fg=#dee0e1 inverse
 6 fg=#6c767b

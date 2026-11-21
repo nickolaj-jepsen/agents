@@ -1,4 +1,5 @@
 # answer/claude/mouse-note 70x24 @0,1 (70x18)
+▎   Note: First line
 ▎         Second line
 
 
@@ -7,7 +8,6 @@
 ▎   A ○ Yes
 ▎   B ○ No
 ▎   C ○ Write your own answer
-▎
 ▎   Note: Add a note
 
 
@@ -18,27 +18,27 @@
 ● Prompt dropped by a hook: The note is still waiting
 Q1/2   jk move A–B pick C write n note r review keys here         [-]
 --- styles
+.x4 1x6
 -
 -
-1x70
-1 .x3 2x4 3x12 .x49 1
-1 .x68 1
-1 .x3 2 . 2 .x62 1
-1 .x3 2 . 2 .x62 1
-1 .x3 2 . 2 . 2x21 .x40 1
-1 .x68 1
-1 .x3 2x16 .x49 1
-1x70
-1x70
-1 . 3x26 .x41 1
-1 .x2 4x15 .x2 2x22 .x27 1
-1x70
+2x70
+2 .x3 1x4 3x12 .x49 2
+2 .x68 2
+2 .x3 1 . 1 .x62 2
+2 .x3 1 . 1 .x62 2
+2 .x3 1 . 1 . 1x21 .x40 2
+2 .x3 1x16 .x49 2
+2x70
+2x70
+2 . 3x26 .x41 2
+2 .x2 4x15 .x2 1x22 .x27 2
+2x70
 -
 5 . 5x51
-6x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x9 2x3
+6x6 . 1x7 . 1x8 . 1x7 . 1x6 . 1x8 . 1x9 .x9 1x3
 --- legend
-1 dim
-2 fg=#999999
+1 fg=#999999
+2 dim
 3 bold
 4 fg=#b1b9f9 bold
 5 fg=#ffc107

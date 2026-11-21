@@ -4,7 +4,6 @@
 │    A ○ SQLite
 │    B ○ Postgres
 │    C ○ Write your own answer
-│
 │    Note: Add a note
 
 
@@ -13,9 +12,10 @@
 │    A ○ Yes
 │    B ○ No
 │    C ○ Write your own answer
-│
 │    Note: Add a note
-                 ↓ Jump to latest message · Ctrl+End
+
+
+│    Answers  0  ↓ Jump to latest message · Ctrl+End
 
  Answer [alt+a]  Q1  0/2 answered
 ─────────────────────────────────────────────────────────────────────
@@ -25,7 +25,6 @@
 1 .x4 3 . 3
 1 .x4 3 . 3 . 2x8
 1 .x4 3 . 3 . 3x21
-1
 1 .x4 3x16
 -
 -
@@ -34,9 +33,10 @@
 3 .x4 3 . 3
 3 .x4 3 . 3
 3 .x4 3 . 3 . 3x21
-3
 3 .x4 3x16
-.x16 4x37
+-
+-
+3 .x4 2x11 4x37
 -
 . 1x6 . 3x7 .x2 3x16
 5x69

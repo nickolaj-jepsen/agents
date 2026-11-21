@@ -12,10 +12,10 @@
 │        The CmsPageModal keeps reading Location, and nothing in the
 │        legacy code changes.
 │    C ○ Write your own answer
+│    Note: Add a note
 │
 │    Recommended: A. The redirect stays inside the cached result, and
-│    the legacy CmsPageModal can simply ignore that kind.
-│                ↓ Jump to latest message · Ctrl+End
+│    the legacy  ↓ Jump to latest message · Ctrl+End ind.
 
  Answer [alt+a]  Q1  0/1 answered
 ─────────────────────────────────────────────────────────────────────
@@ -33,10 +33,10 @@
 1 .x8 3x4 4x12 3x15 4x8 3x6 8x7 3x7
 1 .x8 3x20
 1 .x4 3 . 3 . 3x21
+1 .x4 3x16
 1
 1 .x4 3x64
-1 .x4 3x11 4x12 3x29
-1x16 9x37
+1 .x4 3x11 9x37 3x4
 -
 . 1x6 . 3x7 .x2 3x16
 ax69

@@ -1,52 +1,47 @@
-# answer/pi/cards-recommendation 70x24 @0,0 (69x20)
+# answer/pi/cards-recommendation 70x24 @0,2 (69x18)
 │  ❯ Q1  Which checks should run? ✓
 │
-│    A ● lint
-│    B ● types
-│    C ● tests
-│    D ○ Write your own answer
+│    A ■ lint
+│    B ■ types
+│    C ■ tests
+│    D □ Write your own answer
+│    Note: Add a note
 │
 │    Recommended: A, B and C.
-│
 │    Take A, B, C
-│    Clear answer
-│
-│    Note: Add a note
 
 
-│    Answers  1  ↓ Jump to latest message · Ctrl+End
+│    Answers  1 of 1 answered
+│   [ Fill prompt ]  ▸ Show question
 
   1/1   A–C pick  Write [D]  Note [n]  Review [r]  Prompt [esc]
  jk move  Clear [x]  Take recommendation [y]
 ─────────────────────────────────────────────────────────────────────
 --- styles
-1 .x2 2 . 3x4 2x26
+1 .x2 2 . 3x4 2x24 4x2
 1
-1 .x4 3 . 4 . 4x4
-1 .x4 3 . 4 . 4x5
-1 .x4 3 . 4 . 4x5
+1 .x4 3 . 5 . 5x4
+1 .x4 3 . 5 . 5x5
+1 .x4 3 . 5 . 5x5
 1 .x4 3 . 3 . 3x21
+1 .x4 3x16
 1
 1 .x4 3x24
-1
 1 .x4 3x12
-1 .x2 3x14
-1
-1 .x4 3x16
 -
 -
-5 .x4 6x11 7x37
+3 .x4 6x24
+3 .x3 6x15 .x2 3x15
 -
-. 8x5 .x2 3x8 .x2 1x5 . 3x3 .x2 1x4 . 3x3 .x2 1x6 . 3x3 .x2 1x6 . 3x5
+. 7x5 .x2 3x8 .x2 1x5 . 3x3 .x2 1x4 . 3x3 .x2 1x6 . 3x3 .x2 1x6 . 3x5
 . 3x7 .x2 1x5 . 3x3 .x2 1x19 . 3x3
-9x69
+8x69
 --- legend
 1 fg=#dee0e1
 2 fg=#dee0e1 bold
 3 fg=#7e888e
-4 fg=#a798d7 bold
-5 fg=#5fa8cc
-6 fg=#5fa8cc bold
-7 fg=#dee0e1 bg=#213b49
-8 fg=#dee0e1 inverse
-9 fg=#6c767b
+4 fg=#68b78d
+5 fg=#a798d7 bold
+6 fg=#7e888e bold
+7 fg=#dee0e1 inverse
+8 fg=#6c767b

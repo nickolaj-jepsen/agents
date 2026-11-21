@@ -1,11 +1,10 @@
-# kit/pi/card/transcript 70x60 @2,2 (66x17)
+# kit/pi/card/transcript 70x60 @2,2 (66x15)
 │  ❯ Q1  How much of each session should be kept, once the run
 │        that made it is over?
 │
 │    A ○ The whole transcript
 │    B ○ A summary of each run
 │    C ○ Write your own answer
-│
 │    Note: Add a note
 
 │    Q2  How much of each session should be kept, once the run
@@ -14,7 +13,6 @@
 │    A ○ The whole transcript
 │    B ● A summary of each run
 │    C ○ Write your own answer
-│
 │    Note: Keep local copies as well
 --- styles
 1 .x2 2 . 3x4 2x53
@@ -23,23 +21,20 @@
 1 .x4 3 . 3
 1 .x4 3 . 3 .x3 4x7 .x4 5x4
 1 .x4 3 . 3 . 3x21
-1
 1 .x4 3x16
 -
-6 .x4 3x4 7x53
-6 .x8 7x23
-6
-6 .x4 3 . 3
-6 .x4 3 . 8 . 8x2 4x7 8x12
-6 .x4 3 . 3 . 3x21
-6
-6 .x4 3x6 6x25
+3 .x4 3x4 2x53
+3 .x8 2x21 6x2
+3
+3 .x4 3 . 3
+3 .x4 3 . 7 . 7x2 4x7 7x12
+3 .x4 3 . 3 . 3x21
+3 .x4 3x6 1x25
 --- legend
 1 fg=#dee0e1
 2 fg=#dee0e1 bold
 3 fg=#7e888e
 4 fg=#a798d7
 5 bold
-6 fg=#5fa8cc
-7 fg=#5fa8cc bold
-8 fg=#a798d7 bold
+6 fg=#68b78d
+7 fg=#a798d7 bold

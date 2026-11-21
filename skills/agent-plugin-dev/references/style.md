@@ -6,8 +6,7 @@ Draw with a kit component before making anything by hand. [`AGENTS.md`](../../..
 
 These hold on both clients. A kit component already follows them; they matter when you add a state or a component.
 
-- **One look.** A component is drawn the same in a form, a pane and a transcript. The place may add what goes round it (a frame, a rail), but a component takes no option that changes its look by place.
-- **Focus** is a neutral `❯` and a bold label. The accent is not a focus colour. Every row a pointer can reach keeps a column for it, so nothing shifts when focus moves. Where keys act on a whole card and not on a row, the pointer stands on the card's heading.
+- **Focus** is a neutral `❯` and a bold label. The accent is not a focus colour.
 - **Chosen** is the accent and a filled mark (`●`, `■`). Nothing else takes the accent, so a chosen answer is still readable with the keyboard elsewhere.
 - **Hover** shows on the label, never by moving the focus pointer. pi bolds the label; Claude Code puts the row on a soft fill.
 - **Close** sits in the frame's top-right corner. A form that would lose answers asks there, in place, before it closes.

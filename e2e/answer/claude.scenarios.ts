@@ -211,7 +211,7 @@ export default scenarios({
       about: "clear removes a picked option in place and leaves its note",
       region: region.rows(/▎.*❯\s+Q1/, /Rotate its credentials first/),
       steps: [
-        { click: "Clear answer" },
+        { click: "B ● Postgres" },
         { wait: "B ○ Postgres" },
         { wait: "Q1/2" },
         { wait: "Rotate its credentials first." },
