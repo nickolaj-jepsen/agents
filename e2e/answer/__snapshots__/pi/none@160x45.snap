@@ -1,12 +1,5 @@
 # answer/pi/none 160x45 @0,0 (160x45)
 
- ▀▀█  <ver>
- █▀ █ escape interrupt · ctrl+c/ctrl+d clear/exit · / commands · ! bash · ctrl+o more
- Press ctrl+o to show full startup help.
-
- Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.
-
-
  ask
 
 
@@ -39,31 +32,31 @@
 
 
 
+
+
+
+
+
+
+
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 <tmp>
 0.7%/200k (auto)                                                                                                                                          replay
 --- styles
--
-. 1 2x2 .x2 3x5
-. 4x2 . 5 . 3x6 6x13 3x13 6x14 3 6x12 3 6x8 3x6 6x5
-. 3x39
--
-. 3x85
--
-7x160
-7 8x3 7x156
-7x160
+1x160
+1 2x3 1x156
+1x160
 -
 -
 -
-. 9x3
-. 9x3
+. 3x3
+. 3x3
 -
 -
 -
-. 3x52
+. 4x52
 -
 -
 -
@@ -85,20 +78,22 @@
 -
 -
 -
-ax160
-b
-ax160
-3x5
-3x160
+-
+-
+-
+-
+-
+-
+-
+5x160
+6
+5x160
+4x5
+4x160
 --- legend
-1 fg=#e48a7a bg=#4f8eb3
-2 fg=#e48a7a
-3 fg=#7e888e
-4 fg=#4f8eb3
-5 fg=#eab65d
-6 fg=#9da5a9
-7 bg=#213b49
-8 fg=#dee0e1 bg=#213b49
-9 fg=#a798d7
-a fg=#6c767b
-b inverse
+1 bg=#213b49
+2 fg=#dee0e1 bg=#213b49
+3 fg=#a798d7
+4 fg=#7e888e
+5 fg=#6c767b
+6 inverse

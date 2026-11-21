@@ -1,14 +1,14 @@
 # kit/claude/caption-frame/confirm 160x45 @89,1 (71x6)
 ─ Storage ─────────────────── Discard answers?  Discard ↵  Keep [esc] ─
 
-  Q1  Where should the session store live?
+    Q1  Where should the session store live?
 
   Choose ↵  Note [n]
 ───────────────────────────────────────────────────────────────────────
 --- styles
 1 . 2x7 . 1x19 . 3x16 .x10 1 .x7 1x5 . 1
 -
-.x2 1x4 4x36
+.x4 1x4 4x36
 -
 .x2 2x6 . 1 .x7 1x3
 1x71

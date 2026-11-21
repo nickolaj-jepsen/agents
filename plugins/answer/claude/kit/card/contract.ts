@@ -4,22 +4,16 @@
  */
 
 /**
- * How a card is shown. A `form` is the one question the keyboard is in: its rows keep a gutter
- * for the focus pointer. A `card` is one of several in a transcript: the pointer is on the
- * active card's heading and its rows have none.
+ * The state every part of one card shares. A card looks the same wherever it is drawn: in a
+ * form, or as one of several in a transcript.
  */
-export type Presentation = "card" | "form";
-
-/** The state every part of one card shares. */
 export type CardState = {
-  /** The card the keyboard is on. */
+  /** The card the keyboard is on: it stays bright when it has its answer. */
   active?: boolean;
   /** The card has its answer. */
   answered?: boolean;
   /** Its answer has gone to the agent: a transcript keeps the card to read back. */
   sent?: boolean;
-  /** @default "card" */
-  presentation?: Presentation;
 };
 
 export type Heading = CardState & {
@@ -27,6 +21,11 @@ export type Heading = CardState & {
   title: string;
   /** The question's short name, such as `Q1`. */
   label?: string;
+  /**
+   * The keyboard is on this card and on none of its rows, as where letters pick an answer
+   * directly: the pointer stands on the heading.
+   */
+  focused?: boolean;
 };
 
 export type Choice = CardState & {
@@ -41,8 +40,10 @@ export type Choice = CardState & {
   /** Dim words after the label, wrapped with it: that it is the recommended answer. */
   aside?: string;
   chosen?: boolean;
-  /** The keyboard's or the pointer's target, whatever is chosen. */
+  /** The keyboard's row, whatever is chosen: it takes the pointer. */
   focused?: boolean;
+  /** The row under the mouse: bold as the keyboard's is, without the pointer. */
+  hovered?: boolean;
   /** Several of many (`□ ■`) instead of one of many (`○ ●`). */
   multiple?: boolean;
   /** The person's own words, not Markdown: a write-in. */
@@ -55,6 +56,7 @@ export type Note = CardState & {
   /** What the person wrote; empty shows the invitation to add one. */
   value: string;
   focused?: boolean;
+  hovered?: boolean;
   /** Rows it may take. */
   max?: number;
   hit?: string;

@@ -2,20 +2,20 @@
 ▎ ❯ Q1  Should the endpoint send one JSON response with a kind field, and send redirects as a
 ▎       200 response body that page.tsx acts on? ✓
 ▎
-▎ A ● A 200 response like {kind: "redirect", location, permanent}. page.tsx calls
-▎     permanentRedirect() (308) or redirect(). The redirect is cached per URL like any other
-▎     result.  Recommended
-▎ B ○ Django answers with a real 301, and the Next.js fetch reads the Location header: simpler
-▎     for legacy callers, as the RFC has it.
-▎     The CmsPageModal keeps reading Location, and nothing in the legacy code changes.
-▎ C ○ Write your own answer
+▎   A ● A 200 response like {kind: "redirect", location, permanent}. page.tsx calls
+▎       permanentRedirect() (308) or redirect(). The redirect is cached per URL like any other
+▎       result.  Recommended
+▎   B ○ Django answers with a real 301, and the Next.js fetch reads the Location header:
+▎       simpler for legacy callers, as the RFC has it.
+▎       The CmsPageModal keeps reading Location, and nothing in the legacy code changes.
+▎   C ○ Write your own answer
 ▎
-▎ Recommended: A. The redirect stays inside the cached result, and the legacy CmsPageModal can
-▎ simply ignore that kind.
+▎   Recommended: A. The redirect stays inside the cached result, and the legacy CmsPageModal
+▎   can simply ignore that kind.
 ▎
-▎ Clear answer
+▎   Clear answer
 ▎
-▎ Note: Add a note
+▎   Note: Add a note
 
 
 ▎   Answers  1 of 1 answered
@@ -30,27 +30,27 @@
 
 Q1/1   alt+a for the keys                                                                                                                                   [-]
 --- styles
-1 . 2x56 3x4 2x31 .x2 1
-1 .x7 2x23 3x8 2x11 .x45 1
-1 .x94 1
-1 . 2 . 2 . 2x20 3x39 2x2 3x8 2x6 .x14 1
-1 .x5 3x19 2x10 3x10 2x47 .x3 1
-1 .x5 2x7 4x13 .x69 1
-1 . 1 . 4 .x65 3x8 .x9 5x7 . 1
-1 .x9 6x6 .x13 7x7 .x59 1
-1 .x5 4x4 3x12 4x15 3x8 4x6 8x7 4x28 .x9 1
-1 . 1 . 4 . 4x21 .x68 1
-1 .x94 1
-1 . 9x76 ax12 9x4 . 1
-1 . 9x24 .x69 1
-1 .x94 1
-1 . 4x12 .x81 1
-1 .x94 1
-1 . 4x16 .x77 1
-1x96
+.x2 1 . 2x4 1x50 3x4 1x31
+.x8 1x23 3x8 1x11
+-
+.x4 2 . 4 . 4x20 3x39 4x2 3x8 4x6
+.x8 3x19 4x10 3x10 4x47
+.x8 4x7 2x13
+.x4 2 . 2 .x65 3x8
+.x8 1x7 .x5 5x6 .x13 6x7
+.x8 2x4 3x12 2x15 3x8 2x6 7x7 2x28
+.x4 2 . 2 . 2x21
+-
+.x4 8x76 9x12 8
+.x4 8x28
+-
+.x4 2x12
+-
+.x4 2x16
+-
 3x96
-3 . bx26 .x67 3
-3 .x2 bx15 .x2 4x15 .x60 3
+3 . ax26 .x67 3
+3 .x2 ax15 .x2 2x15 .x60 3
 3x96
 -
 -
@@ -59,16 +59,15 @@ Q1/1   alt+a for the keys                                                       
 -
 -
 -
-2x6 . 4x18 .x131 4x3
+4x6 . 2x18 .x131 2x3
 --- legend
-1 fg=#d77757
-2 fg=#d77757 bold
+1 bold
+2 fg=#999999
 3 fg=#b1b9f9
-4 fg=#999999
-5 bold
-6 italic
-7 underline=single
-8 fg=#999999 bold
-9 dim
-a fg=#b1b9f9 dim
-b fg=#b1b9f9 bold
+4 fg=#d77757 bold
+5 italic
+6 underline=single
+7 fg=#999999 bold
+8 dim
+9 fg=#b1b9f9 dim
+a fg=#b1b9f9 bold

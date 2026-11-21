@@ -1,16 +1,16 @@
 # answer/claude/numbered 70x24 @0,1 (70x18)
-▎ A ○ Write your own answer
+▎   A ○ Write your own answer
 ▎
-▎ Note: Add a note
+▎   Note: Add a note
 
 
 ▎   2  Pick a license?
 ▎
-▎ MIT or Apache.
+▎   MIT or Apache.
 ▎
-▎ A ○ Write your own answer
+▎   A ○ Write your own answer
 ▎
-▎ Note: Add a note
+▎   Note: Add a note
 
 
 ▎   Answers  0 of 2 answered
@@ -18,27 +18,26 @@
 
 1/2    alt+a for the keys                                         [-]
 --- styles
-1 . 1 . 2 . 2x21 .x42 1
-1 .x68 1
-1 . 2x16 .x51 1
-1x70
-3x70
-3 . 4x20 .x47 3
-3 .x68 3
-3 .x68 3
-3 .x68 3
-3 . 2 . 2 . 2x21 .x42 3
-3 .x68 3
-3 . 2x16 .x51 3
-3x70
-3x70
-3 . 4x26 .x41 3
-3 .x2 2x22 .x44 3
-3x70
-5x6 . 2x18 .x41 2x3
+.x4 1 . 1 . 1x21
+-
+.x4 1x16
+-
+2x70
+2 .x3 1x3 3x15 .x47 2
+2 .x68 2
+2 .x68 2
+2 .x68 2
+2 .x3 1 . 1 . 1x21 .x40 2
+2 .x68 2
+2 .x3 1x16 .x49 2
+2x70
+2x70
+2 . 3x26 .x41 2
+2 .x2 1x22 .x44 2
+2x70
+4x6 . 1x18 .x41 1x3
 --- legend
-1 fg=#d77757
-2 fg=#999999
-3 dim
-4 bold
-5 fg=#d77757 bold
+1 fg=#999999
+2 dim
+3 bold
+4 fg=#d77757 bold

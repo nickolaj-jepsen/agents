@@ -14,14 +14,14 @@
 
 │    Q1  Use SQLite? ✓
 │
-│  A ○ SQLite
-│  B ● Postgres
+│    A ○ SQLite
+│    B ● Postgres
 
 
 │    Q2  Add caching? ✓
 │
-│  A ● Yes
-│  B ○ No
+│    A ● Yes
+│    B ○ No
 
 
 │    Answers  2 of 2 answered ✓ Sent
@@ -58,48 +58,49 @@ a draft for later
 . 4x2 3x2
 . 4x2 3x2
 -
-5 .x2 6x19
+5 .x4 6x4 7x13
 5
-5 .x2 7 . 7
-5 .x2 6 . 6 . 6x8
+5 .x4 6 . 6
+5 .x4 6 . 8 . 8x8
 -
 -
-5 .x2 6x20
+5 .x4 6x4 7x14
 5
-5 .x2 6 . 6 . 6x3
-5 .x2 7 . 7
+5 .x4 6 . 8 . 8x3
+5 .x4 6 . 6
 -
 -
-5 .x4 6x24 8x7
+5 .x4 7x24 9x7
 5
-5 .x2 6x19
-5 .x8 6x11
-5 .x2 6x20
-5 .x8 6x6
+5 .x2 7x19
+5 .x8 7x11
+5 .x2 7x20
+5 .x8 7x6
 -
 1x159
 1 2x5 1x153
 1 2x5 1x153
 1x159
 -
-. 9x53
-. ax67
+. ax53
+. bx67
 -
-bx159
-.x17 c
-bx159
-7x5
-7x159
+cx159
+.x17 d
+cx159
+6x5
+6x159
 --- legend
 1 bg=#213b49
 2 fg=#dee0e1 bg=#213b49
 3 bold
 4 fg=#a798d7
 5 fg=#5fa8cc
-6 fg=#5fa8cc bold
-7 fg=#7e888e
-8 fg=#68b78d
-9 fg=#ea7f81
-a fg=#9da5a9
-b fg=#6c767b
-c inverse
+6 fg=#7e888e
+7 fg=#5fa8cc bold
+8 fg=#a798d7 bold
+9 fg=#68b78d
+a fg=#ea7f81
+b fg=#9da5a9
+c fg=#6c767b
+d inverse

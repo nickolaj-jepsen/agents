@@ -1,17 +1,17 @@
 # answer/pi/cards-write-editing 70x24 @0,0 (69x24)
-│  B ○ Postgres
-│  C › DuckDB
+│    B ○ Postgres
+│    C › DuckDB
 │
-│  Note: Add a note
+│    Note: Add a note
 
 
 │    Q2  Add caching?
 │
-│  A ○ Yes
-│  B ○ No
-│  C ○ Write your own answer
+│    A ○ Yes
+│    B ○ No
+│    C ○ Write your own answer
 │
-│  Note: Add a note
+│    Note: Add a note
 
 
 │    Answers  0 of 2 answered
@@ -24,35 +24,34 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                repla
 --- styles
-1 .x2 1 . 2
-1 .x2 2x4 .x6 3
+1 .x4 2 . 2
+1 .x2 2x6 .x6 3
 1
-1 .x2 2x16
+1 .x4 2x16
 -
 -
-4 .x2 5x18
-4
-4 .x2 2 . 2
-4 .x2 2 . 2
-4 .x2 2 . 2 . 2x21
-4
-4 .x2 2x16
+2 .x4 2x4 4x12
+2
+2 .x4 2 . 2
+2 .x4 2 . 2
+2 .x4 2 . 2 . 2x21
+2
+2 .x4 2x16
 -
 -
-4 .x4 5x24
-4 .x3 2x22
+2 .x4 4x24
+2 .x3 2x22
 -
-. 6x4 . 2 .x2 2x19 .x2 4x6 . 2x5
-7x69
+. 5x4 . 2 .x2 2x19 .x2 1x6 . 2x5
+6x69
 .x17 3
-7x69
+6x69
 2x5
 2x69
 --- legend
-1 fg=#a08ed5
+1 fg=#dee0e1
 2 fg=#7e888e
 3 inverse
-4 fg=#dee0e1
-5 fg=#dee0e1 bold
-6 fg=#a798d7 bold
-7 fg=#6c767b
+4 fg=#dee0e1 bold
+5 fg=#a798d7 bold
+6 fg=#6c767b

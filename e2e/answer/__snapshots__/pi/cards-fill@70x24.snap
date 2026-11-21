@@ -1,9 +1,9 @@
 # answer/pi/cards-fill 70x24 @0,0 (69x24)
-│  C ○ Write your own answer
+│    C ○ Write your own answer
 │
-│  Clear answer
+│    Clear answer
 │
-│  Note: Add a note
+│    Note: Add a note
 
 
 │    Answers  2 of 2 answered
@@ -24,11 +24,11 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                repla
 --- styles
-1 .x2 2 . 2 . 2x21
+1 .x4 2 . 2 . 2x21
 1
-1 .x2 2x12
+1 .x2 2x14
 1
-1 .x2 2x16
+1 .x4 2x16
 -
 -
 3 .x4 4x24
@@ -39,21 +39,20 @@ a draft for later
 3 .x2 5x20
 3 .x8 5x6
 -
-. 6x6 . 2x7 .x2 2x20
-7x69
+. 3x6 . 2x7 .x2 2x20
+6x69
 -
 -
 -
-.x17 8
-7x69
+.x17 7
+6x69
 2x5
 2x69
 --- legend
 1 fg=#5fa8cc
 2 fg=#7e888e
-3 fg=#a08ed5
-4 fg=#a08ed5 bold
+3 fg=#dee0e1
+4 fg=#dee0e1 bold
 5 fg=#5fa8cc bold
-6 fg=#dee0e1
-7 fg=#6c767b
-8 inverse
+6 fg=#6c767b
+7 inverse

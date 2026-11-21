@@ -7,7 +7,7 @@ import { captionFrame } from "./terminal.ts";
 
 const body = (width: number) =>
   heading(
-    { presentation: "form", label: "Q1", title: "Where should the session store live?" },
+    { active: true, label: "Q1", title: "Where should the session store live?" },
     width - 2 * captionFrameLayout.x,
   );
 

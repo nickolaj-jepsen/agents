@@ -13,6 +13,7 @@ import type { Button } from "../../../kit/buttons/contract.ts";
 import { buttonRow } from "../../../kit/buttons/terminal.ts";
 import { digitChoice } from "../../../kit/card/contract.ts";
 import {
+  CARD_INSET,
   choice as choiceRows,
   heading as headingRows,
   note as noteRows,
@@ -129,6 +130,8 @@ export class QuestionsDialog implements Component, Focusable {
   private hoverClose?: CloseAction;
   private hoverReview?: number;
   private hoverButton?: number;
+  /** The row under the mouse: bold, while the pointer stays on the keyboard's row. */
+  private hoverRow?: number;
   private reviewOffset = 0;
   private reviewMaxOffset = 0;
   /** The footer's row, the cells of its buttons and what each does, by its place. */
@@ -578,8 +581,10 @@ export class QuestionsDialog implements Component, Focusable {
       this.hoverTab !== undefined ||
       this.hoverReview !== undefined ||
       this.hoverButton !== undefined ||
+      this.hoverRow !== undefined ||
       this.hoverClose !== undefined;
     this.hoverTab = this.hoverReview = this.hoverButton = this.hoverClose = undefined;
+    this.hoverRow = undefined;
     return changed;
   }
 
@@ -600,16 +605,21 @@ export class QuestionsDialog implements Component, Focusable {
     if (event.type === "move") {
       const item = !this.confirming && x >= 0 ? this.itemAt(x, row) : undefined;
       const review = item?.kind === "review" ? item.question : undefined;
+      const over =
+        item && !this.editing ? this.items().findIndex((other) => sameItem(other, item)) : -1;
+      const hoverRow = over < 0 ? undefined : over;
       if (
         this.hoverTab !== tab?.act ||
         this.hoverButton !== button?.start ||
         this.hoverReview !== review ||
+        this.hoverRow !== hoverRow ||
         this.hoverClose !== close
       ) {
         this.hoverClose = close;
         this.hoverTab = tab?.act;
         this.hoverButton = button?.start;
         this.hoverReview = review;
+        this.hoverRow = hoverRow;
         this.tui.requestRender();
       }
     }
@@ -646,14 +656,8 @@ export class QuestionsDialog implements Component, Focusable {
     const item = this.itemAt(x, row);
     if (!item) return undefined;
     const index = this.items().findIndex((candidate) => sameItem(candidate, item));
-    if (event.type === "move") {
-      if (!this.editing && index >= 0 && index !== this.row) {
-        this.row = index;
-        this.warning = undefined;
-        this.tui.requestRender();
-      }
-      return { handled: true };
-    }
+    // The mouse's row was marked above; only a press moves the keyboard's.
+    if (event.type === "move") return { handled: true };
     if (event.button !== "left" || (event.type !== "press" && event.type !== "click")) {
       return undefined;
     }
@@ -672,7 +676,9 @@ export class QuestionsDialog implements Component, Focusable {
         this.startEditing(field);
         return { handled: true };
       }
-      const prefix = field === "note" ? cellWidth(NOTE_LABEL) : cellWidth(this.writeInLead(index));
+      const prefix = cellWidth(
+        field === "note" ? CARD_INSET + NOTE_LABEL : this.writeInLead(index),
+      );
       return (
         this.editingInput.handleMouse?.({ ...event, x: Math.max(0, x - prefix), y: 0 }) ?? {
           handled: true,
@@ -792,7 +798,6 @@ export class QuestionsDialog implements Component, Focusable {
           label: this.tabs.length === 1 ? "Q1" : "",
           active: true,
           answered: isAnswered(draft) && !multiple && this.tabs.length === 1,
-          presentation: "form",
         },
         inner,
       ),
@@ -811,7 +816,9 @@ export class QuestionsDialog implements Component, Focusable {
     const heading = shown.map((text) => ({ text }));
     if (multiple) {
       const count = draft.picked.length + Number(Boolean(draft.text.trim()));
-      heading.push({ text: dim(count ? `${count} selected` : "Select one or more") });
+      heading.push({
+        text: dim(CARD_INSET + (count ? `${count} selected` : "Select one or more")),
+      });
     }
 
     const stackedRows = hasPreview && !split ? Math.max(2, Math.min(7, Math.floor(budget / 3))) : 0;
@@ -943,7 +950,7 @@ export class QuestionsDialog implements Component, Focusable {
             text,
             chosen,
             focused: at,
-            presentation: "form",
+            hovered: i === this.hoverRow,
             literal,
             multiple: question?.multiSelect,
             detail,
@@ -984,8 +991,8 @@ export class QuestionsDialog implements Component, Focusable {
             ? [
                 {
                   ...target(
-                    dim(NOTE_LABEL) +
-                      (this.noteInput.render(width - cellWidth(NOTE_LABEL))[0] ?? ""),
+                    dim(CARD_INSET + NOTE_LABEL) +
+                      (this.noteInput.render(width - cellWidth(CARD_INSET + NOTE_LABEL))[0] ?? ""),
                     item,
                   ),
                   hitTo: width,
@@ -993,7 +1000,17 @@ export class QuestionsDialog implements Component, Focusable {
               ]
             : draw(
                 theme,
-                noteRows({ value: note, active: true, answered, max: 3, focused: at }, width),
+                noteRows(
+                  {
+                    value: note,
+                    active: true,
+                    answered,
+                    max: 3,
+                    focused: at,
+                    hovered: i === this.hoverRow,
+                  },
+                  width,
+                ),
                 width,
               ).map((line) => target(line, item));
         return [{ text: "" }, ...content];
@@ -1040,9 +1057,11 @@ export class QuestionsDialog implements Component, Focusable {
   }
 
   private preview(width: number, room: number): string[] {
-    const option = this.question?.options[this.row];
-    if (this.previewFor !== this.row) {
-      this.previewFor = this.row;
+    // The preview follows the mouse while it is on a row, then the keyboard again.
+    const shown = this.hoverRow ?? this.row;
+    const option = this.question?.options[shown];
+    if (this.previewFor !== shown) {
+      this.previewFor = shown;
       this.previewOffset = 0;
     }
     const content = option?.preview

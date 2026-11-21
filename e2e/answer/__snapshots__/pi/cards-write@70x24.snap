@@ -1,50 +1,49 @@
 # answer/pi/cards-write 70x24 @0,0 (69x20)
 │  ❯ Q1  Use SQLite? ✓
 │
-│  A ○ SQLite
-│  B ○ Postgres
-│  C ● DuckDB
-│      embedded is fine
+│    A ○ SQLite
+│    B ○ Postgres
+│    C ● DuckDB
+│        embedded is fine
 │
-│  Clear answer
+│    Clear answer
 │
-│  Note: Add a note
+│    Note: Add a note
 
 
 │    Q2  Add caching?
 │
-│  A ○ Yes
-│  B ○ No
-│  C ○ Write you ↓ Jump to latest message · Ctrl+End
+│    A ○ Yes
+│    B ○ No
+│    C ○ Write y ↓ Jump to latest message · Ctrl+End
 
  Answer [alt+a]  Q1  1/2 answered
 ─────────────────────────────────────────────────────────────────────
 --- styles
-1 .x2 2x19
+1 .x2 2 . 3x4 2x13
 1
-1 .x2 1 . 3
-1 .x2 1 . 3
-1 .x2 1 . 3 . 1x6
-1 .x6 1x16
+1 .x4 3 . 3
+1 .x4 3 . 3
+1 .x4 3 . 4 . 4x6
+1 .x8 4x16
 1
-1 .x2 3x12
+1 .x2 3x14
 1
-1 .x2 3x16
+1 .x4 3x16
 -
 -
-4 .x2 5x18
-4
-4 .x2 3 . 3
-4 .x2 3 . 3
-4 .x2 3 . 3 . 3x9 6x37
+3 .x4 3x4 2x12
+3
+3 .x4 3 . 3
+3 .x4 3 . 3
+3 .x4 3 . 3 . 3x7 5x37
 -
-. 4x6 . 3x7 .x2 3x16
-7x69
+. 1x6 . 3x7 .x2 3x16
+6x69
 --- legend
-1 fg=#a08ed5
-2 fg=#a08ed5 bold
+1 fg=#dee0e1
+2 fg=#dee0e1 bold
 3 fg=#7e888e
-4 fg=#dee0e1
-5 fg=#dee0e1 bold
-6 fg=#dee0e1 bg=#213b49
-7 fg=#6c767b
+4 fg=#a798d7 bold
+5 fg=#dee0e1 bg=#213b49
+6 fg=#6c767b

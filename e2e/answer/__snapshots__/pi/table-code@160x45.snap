@@ -36,17 +36,17 @@
 1 .x158 1
 1 .x158 1
 1 . 6x5 .x152 1
-1 .x3 7x5 8x11 9x8 8x2 .x129 1
-1 .x3 7x5 8x9 9x10 8x2 .x129 1
+1 .x3 7x5 .x11 8x8 .x131 1
+1 .x3 7x5 .x9 8x10 .x131 1
 1 . 6x3 .x154 1
 1 .x158 1
-1 . a 2 . 3x2 ax9 .x143 1
+1 . 9 2 . 3x2 9x9 .x143 1
 1 .x2 2 . 3x2 .x152 1
 1 .x158 1
 1 .x2 2 . 3x23 .x131 1
 1 .x158 1
 1 .x158 1
-1 . 8x4 . 3x3 .x2 8x7 . 3x3 .x2 8x4 . 3x3 .x2 8x6 . 3x3 .x2 8x4 . 3x3 .x104 1
+1 . ax4 . 3x3 .x2 ax7 . 3x3 .x2 ax4 . 3x3 .x2 ax6 . 3x3 .x2 ax4 . 3x3 .x104 1
 1 . 3x60 .x97 1
 --- legend
 1 fg=#768186
@@ -56,6 +56,6 @@
 5 bold
 6 fg=#9da5a9
 7 fg=#69add0
-8 fg=#dee0e1
-9 fg=#de8d5a
-a fg=#dee0e1 bold
+8 fg=#de8d5a
+9 fg=#dee0e1 bold
+a fg=#dee0e1

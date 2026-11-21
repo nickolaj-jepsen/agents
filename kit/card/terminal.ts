@@ -47,67 +47,74 @@ export function controlStyle({
   };
 }
 
-/** A card's own colour: the keyboard's card, one with its answer, or neither. */
+/**
+ * A card's own colour. The keyboard's card is in the text colour, as one nobody has answered
+ * is: the pointer says where the keyboard is, and the accent is left to what is chosen.
+ */
 export const cardRole = ({ active, answered, sent }: CardState): Role =>
-  active ? "active" : sent ? "success" : answered ? "answered" : "text";
+  active ? "text" : sent ? "success" : answered ? "answered" : "text";
+
+/** The rail's colour: bright beside the keyboard's card, quiet beside one still to answer. */
+export const railRole = (state: CardState): Role =>
+  state.active || state.sent || state.answered ? cardRole(state) : "dim";
+
+/**
+ * The column every row of a card keeps for the focus pointer, as blank cells: what a host sets
+ * before a row of its own, such as an input, to line it up with the card's.
+ */
+export const CARD_INSET = " ".repeat(cellWidth(tokens.glyph.pointer) + 1);
+
+/** The pointer column of one row: the pointer where the keyboard is, else blank. */
+const pointerLead = (isFocused = false): Span[] =>
+  isFocused
+    ? [span(tokens.glyph.pointer, { role: "text", bold: true }), span(" ")]
+    : [span(CARD_INSET)];
 
 /** A line behind a card's rail, which still draws on a blank row. */
 export function rail(state: CardState, row: Line): Line {
-  const mark = span(tokens.glyph.rail, { role: cardRole(state) });
+  const mark = span(tokens.glyph.rail, { role: railRole(state) });
   return { ...row, spans: row.spans.length ? [mark, span(GAP), ...row.spans] : [mark] };
 }
 
-/** The question: its label, then the title hanging from it. An answered one ends in `✓`. */
+/**
+ * The question: the pointer column, its label, then the title hanging from it. An answered one
+ * ends in `✓`.
+ */
 export function heading(h: Heading, width: number): Line[] {
-  const isForm = h.presentation === "form";
-  const role: Role = isForm ? "text" : cardRole(h);
-  const label = h.label ?? "";
-  const prefix = isForm
-    ? label && label + GAP
-    : `${h.active ? tokens.glyph.pointer : " "} ${label}${GAP}`;
   const title = `${h.title}${h.answered ? ` ${tokens.glyph.done}` : ""}`;
-  return block(inline(title, { role, bold: true }), width, {
-    lead: prefix ? [span(prefix, isForm ? { role: "dim" } : { role, bold: true })] : [],
+  return block(inline(title, { role: cardRole(h), bold: true }), width, {
+    lead: [...pointerLead(h.focused), ...(h.label ? [span(h.label + GAP, { role: "dim" })] : [])],
   });
 }
 
-/** One answer: its key, its mark and its words, wrapped to hang under their first line. */
+/**
+ * One answer: the pointer column, its key, its mark and its words, wrapped to hang under their
+ * first line. Only a chosen one takes a colour: the accent, or the success colour once sent.
+ */
 export function choice(c: Choice, width: number): Line[] {
-  const { chosen = false, literal: isLiteral = false, focused = false } = c;
-  const isForm = c.presentation === "form";
-  const tone = cardRole(c);
+  const { chosen = false, literal: isLiteral = false, focused = false, hovered = false } = c;
   const marks = c.multiple ? tokens.glyph.multi : tokens.glyph.single;
-  const marker = chosen ? marks.on : isForm && isLiteral ? tokens.glyph.writeIn : marks.off;
-  const key = c.key || " ";
-  const pointer: Span[] = isForm
-    ? focused
-      ? [span(tokens.glyph.pointer, { role: "text", bold: true }), span(" ")]
-      : [span(" "), span(" ")]
-    : [];
-  const chosenRole: Role = isForm ? "accent" : tone;
+  const primaryRole: Role = c.sent ? "success" : "accent";
+  const isLit = chosen || focused || hovered;
   const label = controlStyle({
-    primary: isForm && chosen,
-    highlighted: focused,
+    primary: chosen,
+    highlighted: focused || hovered,
     rest: isLiteral ? "dim" : "text",
+    primaryRole,
   });
-  const lit: Style = !isForm && chosen ? { role: chosenRole, bold: true } : label;
   // A row nothing marks is drawn in the terminal's own colour, as its Markdown would be.
   const words = [
-    ...(isLiteral
-      ? literal(c.text, !isForm && chosen ? { role: chosenRole } : label)
-      : inline(c.text, chosen || focused ? lit : {})),
+    ...(isLiteral ? literal(c.text, label) : inline(c.text, isLit ? label : {})),
     ...(c.aside ? [span(c.aside, { role: "dim" })] : []),
   ];
-  const shortcut: Style = isForm
-    ? { role: "dim" }
-    : focused
-      ? { role: "text", underline: true }
-      : c.active || chosen
-        ? { role: tone, bold: (chosen && !isLiteral) || undefined }
-        : { role: "dim" };
-  const mark: Style =
-    chosen && (isForm || !isLiteral) ? { role: chosenRole, bold: true } : { role: "dim" };
-  const lead = [...pointer, span(key, shortcut), span(" "), span(marker, mark), span(" ")];
+  const mark: Style = chosen ? { role: primaryRole, bold: true } : { role: "dim" };
+  const lead = [
+    ...pointerLead(focused),
+    span(c.key || " ", { role: "dim" }),
+    span(" "),
+    span(chosen ? marks.on : marks.off, mark),
+    span(" "),
+  ];
   const hang = [span(" ".repeat(spansWidth(lead)))];
   return [
     ...block(words, width, { lead, hang, hit: c.hit }),
@@ -124,17 +131,18 @@ export function choice(c: Choice, width: number): Line[] {
 
 export const NOTE_LABEL = "Note: ";
 
-/** The card's note under its label, or the invitation to add one. */
+/** The card's note after the pointer column and its label, or the invitation to add one. */
 export function note(n: Note, width: number): Line[] {
-  const style = controlStyle({ highlighted: n.focused, rest: "dim" });
-  const room = width - cellWidth(NOTE_LABEL);
-  const words: Style = n.focused ? style : n.value ? { role: cardRole(n) } : { role: "dim" };
+  const isLit = n.focused || n.hovered;
+  const style = controlStyle({ highlighted: isLit, rest: "dim" });
+  const room = width - cellWidth(CARD_INSET) - cellWidth(NOTE_LABEL);
+  const words: Style = isLit ? style : n.value ? { role: cardRole(n) } : { role: "dim" };
   return clamp(n.value || "Add a note", room, { max: n.max }).map((text, i) =>
     line(
       [
-        i
-          ? span(" ".repeat(cellWidth(NOTE_LABEL)))
-          : span(NOTE_LABEL, n.focused ? style : { role: "dim" }),
+        ...(i
+          ? [span(CARD_INSET + " ".repeat(cellWidth(NOTE_LABEL)))]
+          : [...pointerLead(n.focused), span(NOTE_LABEL, isLit ? style : { role: "dim" })]),
         span(text, words),
       ],
       n.hit,
@@ -239,27 +247,22 @@ export function sectionsOf<Row>(gap: Row, ...parts: readonly Row[][]): Row[] {
 /** The nonempty sections of a card, one blank row between them. */
 export const sections = (...parts: readonly Line[][]): Line[] => sectionsOf(blank(), ...parts);
 
-/** A list of answers the keyboard moves through: `choice` rows in a form, each a control. */
+/** A list of answers the keyboard moves through: `choice` rows, each a control. */
 export function choiceList(list: ChoiceList, width: number): Line[] {
   return list.items.flatMap((item, i) =>
     choice(
       {
-        presentation: "form",
         key: item.key,
         text: item.text,
         detail: item.detail,
         chosen: list.chosen.includes(i),
-        focused: list.focus === i || list.hover === i,
+        focused: list.focus === i,
+        hovered: list.hover === i,
         multiple: list.multiple,
         literal: item.writeIn,
         hit: choiceHit(i),
       },
       width,
-    ).map((row, at) =>
-      // The pointer is the keyboard's alone: the mouse's row is bold without it.
-      at === 0 && list.hover === i && list.focus !== i
-        ? { ...row, spans: [span(" "), ...row.spans.slice(1)] }
-        : row,
     ),
   );
 }

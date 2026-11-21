@@ -1,42 +1,41 @@
 # answer/claude/open 70x24 @0,2 (70x17)
 ▎ ❯ Q1  Use SQLite?
 ▎
-▎ A ○ SQLite
-▎ B ○ Postgres
-▎ C ○ Write your own answer
+▎   A ○ SQLite
+▎   B ○ Postgres
+▎   C ○ Write your own answer
 ▎
-▎ Note: Add a note
+▎   Note: Add a note
 
 
 ▎   Q2  Add caching?
 ▎
-▎ A ○ Yes
-▎ B ○ No
-▎ C ○ Write your own answer
+▎   A ○ Yes
+▎   B ○ No
+▎   C ○ Write your own answer
 ▎
-▎ Note: Add a note
+▎   Note: Add a note
 Q1/2   alt+a for the keys                                         [-]
 --- styles
-1 . 2x17 .x50 1
-1 .x68 1
-1 . 1 . 3 .x64 1
-1 . 1 . 3 .x64 1
-1 . 1 . 3 . 3x21 .x42 1
-1 .x68 1
-1 . 3x16 .x51 1
-1x70
-4x70
-4 . 5x18 .x49 4
-4 .x68 4
-4 . 3 . 3 .x64 4
-4 . 3 . 3 .x64 4
-4 . 3 . 3 . 3x21 .x42 4
-4 .x68 4
-4 . 3x16 .x51 4
-2x6 . 3x18 .x41 3x3
+.x2 1 . 2x4 1x11
+-
+.x4 2 . 2
+.x4 2 . 2
+.x4 2 . 2 . 2x21
+-
+.x4 2x16
+-
+3x70
+3 .x3 2x4 1x12 .x49 3
+3 .x68 3
+3 .x3 2 . 2 .x62 3
+3 .x3 2 . 2 .x62 3
+3 .x3 2 . 2 . 2x21 .x40 3
+3 .x68 3
+3 .x3 2x16 .x49 3
+4x6 . 2x18 .x41 2x3
 --- legend
-1 fg=#d77757
-2 fg=#d77757 bold
-3 fg=#999999
-4 dim
-5 bold
+1 bold
+2 fg=#999999
+3 dim
+4 fg=#d77757 bold

@@ -1,20 +1,20 @@
 # answer/claude/numbered 160x45 @0,11 (160x29)
 ▎ ❯ 1  Should we use a monorepo?
 ▎
-▎ Yes or no.
+▎   Yes or no.
 ▎
-▎ A ○ Write your own answer
+▎   A ○ Write your own answer
 ▎
-▎ Note: Add a note
+▎   Note: Add a note
 
 
 ▎   2  Pick a license?
 ▎
-▎ MIT or Apache.
+▎   MIT or Apache.
 ▎
-▎ A ○ Write your own answer
+▎   A ○ Write your own answer
 ▎
-▎ Note: Add a note
+▎   Note: Add a note
 
 
 ▎   Answers  0 of 2 answered
@@ -29,27 +29,27 @@
 
 1/2    alt+a for the keys                                                                                                                                   [-]
 --- styles
-1 . 2x30 .x63 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 . 1 . 3 . 3x21 .x68 1
-1 .x94 1
-1 . 3x16 .x77 1
-1x96
-4x96
-4 . 5x20 .x73 4
-4 .x94 4
-4 .x94 4
-4 .x94 4
-4 . 3 . 3 . 3x21 .x68 4
-4 .x94 4
-4 . 3x16 .x77 4
-4x96
-4x96
-4 . 5x26 .x67 4
-4 .x2 3x22 .x70 4
-4x96
+.x2 1 . 2x3 1x25
+-
+-
+-
+.x4 2 . 2 . 2x21
+-
+.x4 2x16
+-
+3x96
+3 .x3 2x3 1x15 .x73 3
+3 .x94 3
+3 .x94 3
+3 .x94 3
+3 .x3 2 . 2 . 2x21 .x66 3
+3 .x94 3
+3 .x3 2x16 .x75 3
+3x96
+3x96
+3 . 1x26 .x67 3
+3 .x2 2x22 .x70 3
+3x96
 -
 -
 -
@@ -57,10 +57,9 @@
 -
 -
 -
-2x6 . 3x18 .x131 3x3
+4x6 . 2x18 .x131 2x3
 --- legend
-1 fg=#d77757
-2 fg=#d77757 bold
-3 fg=#999999
-4 dim
-5 bold
+1 bold
+2 fg=#999999
+3 dim
+4 fg=#d77757 bold

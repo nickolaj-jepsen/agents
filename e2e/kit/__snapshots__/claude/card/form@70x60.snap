@@ -1,6 +1,6 @@
 # kit/claude/card/form 70x60 @2,42 (66x12)
-Q1  How much of each session should be kept, once the run that
-    made it is over?
+  Q1  How much of each session should be kept, once the run that
+      made it is over?
 
 ❯ A ○ The whole transcript
   B ○ The last turn only, which is the part most people read back
@@ -8,12 +8,12 @@ Q1  How much of each session should be kept, once the run that
       履歴は保存されますが、古い出力は要約されます。 Older output
       is summarised.
   C ○ A summary of each run
-  D + Write your own answer
+  D ○ Write your own answer
 
-Note: Add a note
+  Note: Add a note
 --- styles
-1x4 2x58
-.x4 2x16
+.x2 1x4 2x58
+.x6 2x16
 -
 2 . 1 . 1 . 2x20
 .x2 1 . 1
@@ -23,7 +23,7 @@ Note: Add a note
 .x2 1 . 1 .x3 3x7 .x4 2x4
 .x2 1 . 1 . 1x21
 -
-1x16
+.x2 1x16
 --- legend
 1 fg=#999999
 2 bold

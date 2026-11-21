@@ -1,7 +1,4 @@
 # answer/pi/fill-key 70x24 @0,0 (70x24)
- Pi can explain its own features and look up its docs. Ask it how to
- use or extend Pi.
-
 
  ask
 
@@ -16,6 +13,9 @@
  - A. Yes
  - B. No
 
+
+
+
  Answer 2 questions · 2 answered · alt+a or /answer
 ──────────────────────────────────────────────────────────────────────
 Q1: A
@@ -24,35 +24,35 @@ Q2: B
 <tmp>
 0.7%/200k (auto)                                                replay
 --- styles
-. 1x69
-. 1x17
+1x70
+1 2x3 1x66
+1x70
 -
-2x70
-2 3x3 2x66
-2x70
+. 3x15
 -
-. 4x15
+. 4x2 3x2
+. 4x2 3x2
 -
-. 5x2 4x2
-. 5x2 4x2
+. 3x16
 -
-. 4x16
+. 4x2 3x2
+. 4x2 3x2
 -
-. 5x2 4x2
-. 5x2 4x2
 -
-. 5x18 1x32
+-
+-
+. 4x18 5x32
 6x70
 -
 .x5 7
 6x70
-1x5
-1x70
+5x5
+5x70
 --- legend
-1 fg=#7e888e
-2 bg=#213b49
-3 fg=#dee0e1 bg=#213b49
-4 bold
-5 fg=#a798d7
+1 bg=#213b49
+2 fg=#dee0e1 bg=#213b49
+3 bold
+4 fg=#a798d7
+5 fg=#7e888e
 6 fg=#6c767b
 7 inverse

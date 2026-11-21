@@ -1,14 +1,14 @@
 # kit/pi/caption-frame/steps 160x45 @2,2 (96x6)
 ─ ✓ 1 Storage ── ❯ 2 Retention ── Review ───────────────────────────────────────────── Close × ─
 
-  Q1  Where should the session store live?
+    Q1  Where should the session store live?
 
   Choose ↵  Note [n]
 ────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-1 . 2x2 3x9 1x4 4x2 5x11 1x4 3x6 . 1x45 . 3x7 . 1
+1 . 2 . 3x9 1x4 4 . 5x11 1x4 3x6 . 1x45 . 3x7 . 1
 -
-.x2 2x4 6x36
+.x4 2x4 6x36
 -
 .x2 5x6 . 2 .x2 3x4 . 2x3
 1x96

@@ -1,14 +1,14 @@
 # answer/claude/mouse-note 70x24 @0,1 (70x18)
-▎       Second line
+▎         Second line
 
 
 ▎   Q2  Add caching?
 ▎
-▎ A ○ Yes
-▎ B ○ No
-▎ C ○ Write your own answer
+▎   A ○ Yes
+▎   B ○ No
+▎   C ○ Write your own answer
 ▎
-▎ Note: Add a note
+▎   Note: Add a note
 
 
 ▎   Answers  0 of 2 answered
@@ -18,29 +18,28 @@
 ● Prompt dropped by a hook: The note is still waiting
 Q1/2   jk move A–B pick C write n note r review keys here         [-]
 --- styles
-1 .x7 1x11 .x50 1
-1x70
-2x70
-2 . 3x18 .x49 2
-2 .x68 2
-2 . 4 . 4 .x64 2
-2 . 4 . 4 .x64 2
-2 . 4 . 4 . 4x21 .x42 2
-2 .x68 2
-2 . 4x16 .x51 2
-2x70
-2x70
-2 . 3x26 .x41 2
-2 .x2 5x15 .x2 4x22 .x27 2
-2x70
 -
-6 . 6x51
-7x6 . 4x7 . 4x8 . 4x7 . 4x6 . 4x8 . 4x9 .x9 4x3
+-
+1x70
+1 .x3 2x4 3x12 .x49 1
+1 .x68 1
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 2 . 2x21 .x40 1
+1 .x68 1
+1 .x3 2x16 .x49 1
+1x70
+1x70
+1 . 3x26 .x41 1
+1 .x2 4x15 .x2 2x22 .x27 1
+1x70
+-
+5 . 5x51
+6x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x9 2x3
 --- legend
-1 fg=#d77757
-2 dim
+1 dim
+2 fg=#999999
 3 bold
-4 fg=#999999
-5 fg=#b1b9f9 bold
-6 fg=#ffc107
-7 fg=#d77757 bold inverse
+4 fg=#b1b9f9 bold
+5 fg=#ffc107
+6 fg=#d77757 bold inverse

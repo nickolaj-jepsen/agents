@@ -3,65 +3,64 @@
 │        clusters, 東京、大阪、名古屋 and the other regional clusters, 東京、大阪、
 │        名古屋 and the other regional clusters, given the migration window? ✓
 │
-│  A ● Canary: validate the read replicas in 東京 and compare results before
-│      promoting. validate the read replicas in 東京 and compare results before
-│      promoting. validate the read replicas in 東京 and compare results before
-│      promoting.
-│  B ○ Option B for 1
-│  C ○ Write your own answer
+│    A ● Canary: validate the read replicas in 東京 and compare results before
+│        promoting. validate the read replicas in 東京 and compare results before
+│        promoting. validate the read replicas in 東京 and compare results before
+│        promoting.
+│    B ○ Option B for 1
+│    C ○ Write your own answer
 │
-│  Clear answer
+│    Clear answer
 │
-│  Note: Keep 東京 on the old routing until the replicas catch up and the
-│        dashboards agree.
-│        Check 大阪 before widening the rollout.
+│    Note: Keep 東京 on the old routing until the replicas catch up and the
+│          dashboards agree.
+│          Check 大阪 before widening the rollout.
 
 
 │    Q2  Question number 2: pick a strategy?
 │
-│  A ○ Option A for 2
-│  B ○ Option B for 2
-│  C ○ Write your own answer
+│    A ○ Option A for 2
+│    B ○ Option B for 2
+│    C ○ Write your own answer
 │
-│  Note: Add a note                   ↓ Jump to latest message · Ctrl+End
+│    Note: Add a note                 ↓ Jump to latest message · Ctrl+End
 
   01/12   A–B pick  Write [C]  Note [n]  Review [r]  Prompt [esc]  jk move  Clear [x]
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-1 .x2 2x79
+1 .x2 2 . 3x4 2x73
 1 .x8 2x74
 1 .x8 2x69
 1
-1 .x2 2 . 2 . 2x69
-1 .x6 2x72
-1 .x6 2x72
-1 .x6 2x10
-1 .x2 1 . 3
-1 .x2 1 . 3 . 3x21
+1 .x4 3 . 4 . 4x69
+1 .x8 4x72
+1 .x8 4x72
+1 .x8 4x10
+1 .x4 3 . 3
+1 .x4 3 . 3 . 3x21
 1
-1 .x2 3x12
+1 .x2 3x14
 1
-1 .x2 3x6 1x64
-1 .x8 1x17
-1 .x8 1x39
+1 .x4 3x6 1x64
+1 .x10 1x17
+1 .x10 1x39
 -
 -
-4 .x2 5x41
-4
-4 .x2 3 . 3
-4 .x2 3 . 3
-4 .x2 3 . 3 . 3x21
-4
-4 .x2 3x34 6x37
+3 .x4 3x4 2x35
+3
+3 .x4 3 . 3
+3 .x4 3 . 3
+3 .x4 3 . 3 . 3x21
+3
+3 .x4 3x16 .x16 5x37
 -
-. 7x7 .x2 3x8 .x2 4x5 . 3x3 .x2 4x4 . 3x3 .x2 4x6 . 3x3 .x2 4x6 . 3x5 .x2 3x7 .x2 4x5 . 3x3
-8x111
+. 6x7 .x2 3x8 .x2 1x5 . 3x3 .x2 1x4 . 3x3 .x2 1x6 . 3x3 .x2 1x6 . 3x5 .x2 3x7 .x2 1x5 . 3x3
+7x111
 --- legend
-1 fg=#a08ed5
-2 fg=#a08ed5 bold
+1 fg=#dee0e1
+2 fg=#dee0e1 bold
 3 fg=#7e888e
-4 fg=#dee0e1
-5 fg=#dee0e1 bold
-6 fg=#dee0e1 bg=#213b49
-7 fg=#a08ed5 inverse
-8 fg=#6c767b
+4 fg=#a798d7 bold
+5 fg=#dee0e1 bg=#213b49
+6 fg=#dee0e1 inverse
+7 fg=#6c767b

@@ -1,14 +1,14 @@
 # kit/pi/caption-frame/title 70x60 @2,2 (66x6)
 ─ Storage ────────────────────────────────────────────── Close × ─
 
-  Q1  Where should the session store live?
+    Q1  Where should the session store live?
 
   Choose ↵  Note [n]
 ──────────────────────────────────────────────────────────────────
 --- styles
 1 . 2x7 . 1x46 . 3x7 . 1
 -
-.x2 4x4 5x36
+.x4 4x4 5x36
 -
 .x2 2x6 . 4 .x2 3x4 . 4x3
 1x66

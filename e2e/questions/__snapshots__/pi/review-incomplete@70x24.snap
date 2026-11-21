@@ -1,7 +1,7 @@
 # questions/pi/review-incomplete 70x24 @0,8 (70x14)
 ─ ❯ 1 Storage ──   2 Retention ── Review ─────────────────── Close × ─
 
-  Where should the session store live?
+    Where should the session store live?
 
   ❯ A ○ SQLite in the checkout
         One file, no service to run, and it can be deleted with the
@@ -16,7 +16,7 @@
 --- styles
 1 . 2 . 3x9 1x4 4 . 4x11 1x4 5x6 . 1x19 . 5x7 . 1
 -
-.x2 6x36
+.x4 6x36
 -
 .x2 6 . 4 . 4 . 6x22
 .x8 4x59

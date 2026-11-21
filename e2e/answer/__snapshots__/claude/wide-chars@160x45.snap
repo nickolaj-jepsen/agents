@@ -1,12 +1,12 @@
 # answer/claude/wide-chars 160x45 @0,10 (160x30)
 ▎ ❯ Q1  数据库を使いますか？ 🚀 Use émoji?
 ▎
-▎ A ○ 是的，使用 SQLite 🗃️
-▎ B ○ いいえ、Postgres 🐘
-▎ C ○ 👨‍ family ＡＢＣ
-▎ D ○ Write your own answer
+▎   A ○ 是的，使用 SQLite 🗃️
+▎   B ○ いいえ、Postgres 🐘
+▎   C ○ 👨‍ family ＡＢＣ
+▎   D ○ Write your own answer
 ▎
-▎ Note: Add a note
+▎   Note: Add a note
 
 
 ▎   Answers  0 of 1 answered
@@ -30,19 +30,19 @@
 
 Q1/1   alt+a for the keys                                                                                                                                   [-]
 --- styles
-1 . 2x40 .x53 1
-1 .x94 1
-1 . 1 . 3 .x90 1
-1 . 1 . 3 .x90 1
-1 . 1 . 3 .x90 1
-1 . 1 . 3 . 3x21 .x68 1
-1 .x94 1
-1 . 3x16 .x77 1
-1x96
-4x96
-4 . 5x26 .x67 4
-4 .x2 3x15 .x77 4
-4x96
+.x2 1 . 2x4 1x34
+-
+.x4 2 . 2
+.x4 2 . 2
+.x4 2 . 2
+.x4 2 . 2 . 2x21
+-
+.x4 2x16
+-
+3x96
+3 . 1x26 .x67 3
+3 .x2 2x15 .x77 3
+3x96
 -
 -
 -
@@ -59,10 +59,9 @@ Q1/1   alt+a for the keys                                                       
 -
 -
 -
-2x6 . 3x18 .x131 3x3
+4x6 . 2x18 .x131 2x3
 --- legend
-1 fg=#d77757
-2 fg=#d77757 bold
-3 fg=#999999
-4 dim
-5 bold
+1 bold
+2 fg=#999999
+3 dim
+4 fg=#d77757 bold

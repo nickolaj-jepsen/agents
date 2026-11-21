@@ -1,10 +1,4 @@
 # answer/pi/none 70x24 @0,0 (70x24)
- bash · ctrl+o more
- Press ctrl+o to show full startup help.
-
- Pi can explain its own features and look up its docs. Ask it how to
- use or extend Pi.
-
 
  ask
 
@@ -18,41 +12,46 @@
 
  Nothing to answer: the last turn asked no questions.
 
+
+
+
+
+
+
 ──────────────────────────────────────────────────────────────────────
 
 ──────────────────────────────────────────────────────────────────────
 <tmp>
 0.7%/200k (auto)                                                replay
 --- styles
-. 1x7 2x6 1x5
-. 2x39
--
-. 2x69
-. 2x17
--
-3x70
-3 4x3 3x66
-3x70
+1x70
+1 2x3 1x66
+1x70
 -
 -
 -
-. 5x3
-. 5x3
+. 3x3
+. 3x3
 -
 -
 -
-. 2x52
+. 4x52
 -
-6x70
-7
-6x70
-2x5
-2x70
+-
+-
+-
+-
+-
+-
+5x70
+6
+5x70
+4x5
+4x70
 --- legend
-1 fg=#9da5a9
-2 fg=#7e888e
-3 bg=#213b49
-4 fg=#dee0e1 bg=#213b49
-5 fg=#a798d7
-6 fg=#6c767b
-7 inverse
+1 bg=#213b49
+2 fg=#dee0e1 bg=#213b49
+3 fg=#a798d7
+4 fg=#7e888e
+5 fg=#6c767b
+6 inverse

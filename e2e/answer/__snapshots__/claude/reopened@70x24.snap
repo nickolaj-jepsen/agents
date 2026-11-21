@@ -1,27 +1,27 @@
 # answer/claude/reopened 70x24 @0,2 (70x10)
 ▎ ❯ Q1  Use SQLite? ✓     │ answer                                   │
 ▎                         │ 1 answer set aside: /answer brings them  │
-▎ A ○ SQLite              │ back.                                    │
-▎ B ● Postgres            ╰──────────────────────────────────────────╯
-▎ C ○ Write your own answer
+▎   A ○ SQLite            │ back.                                    │
+▎   B ● Postgres          ╰──────────────────────────────────────────╯
+▎   C ○ Write your own answer
 ▎
-▎ Clear answer
+▎   Clear answer
 ▎
-▎ Note: Keep the hosted instance.
-▎       Rotate its credentials first.
+▎   Note: Keep the hosted instance.
+▎         Rotate its credentials first.
 --- styles
-1 . 2x19 .x5 3 . 4x6 .x35 3
-1 .x25 3 .x42 3
-1 . 1 . 4 .x21 3 .x42 3
-1 . 2 . 2 . 2x8 .x12 3x44
-1 . 1 . 4 . 4x21 .x42 1
-1 .x68 1
-1 . 4x12 .x55 1
-1 .x68 1
-1 . 4x6 1x25 .x36 1
-1 .x7 1x29 .x32 1
+.x2 1 . 2x4 1x13 .x5 3 . 2x6 .x35 3
+.x26 3 .x42 3
+.x4 2 . 2 .x19 3 .x42 3
+.x4 2 . 4 . 4x8 .x10 3x44
+.x4 2 . 2 . 2x21
+-
+.x4 2x12
+-
+.x4 2x6
+-
 --- legend
-1 fg=#d77757
-2 fg=#d77757 bold
+1 bold
+2 fg=#999999
 3 dim
-4 fg=#999999
+4 fg=#d77757 bold

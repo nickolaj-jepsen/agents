@@ -1,16 +1,16 @@
 # answer/claude/write-in 70x24 @0,1 (70x18)
-▎ Clear answer
+▎   Clear answer
 ▎
-▎ Note: Add a note
+▎   Note: Add a note
 
 
 ▎   Q2  Add caching?
 ▎
-▎ A ○ Yes
-▎ B ○ No
-▎ C ○ Write your own answer
+▎   A ○ Yes
+▎   B ○ No
+▎   C ○ Write your own answer
 ▎
-▎ Note: Add a note
+▎   Note: Add a note
 
 
 ▎   Answers  1 of 2 answered
@@ -18,29 +18,28 @@
 
 Q1/2   jk move A–B pick C write n note r review keys here         [-]
 --- styles
-1 . 2x12 .x55 1
-1 .x68 1
-1 . 2x16 .x51 1
-1x70
-3x70
-3 . 4x18 .x49 3
-3 .x68 3
-3 . 2 . 2 .x64 3
-3 . 2 . 2 .x64 3
-3 . 2 . 2 . 2x21 .x42 3
-3 .x68 3
-3 . 2x16 .x51 3
-3x70
-5x70
-5 . 6x26 .x41 5
-5 .x2 6x15 .x2 2x22 .x27 5
-5x70
-7x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x9 2x3
+.x4 1x12
+-
+.x4 1x16
+-
+2x70
+2 .x3 1x4 3x12 .x49 2
+2 .x68 2
+2 .x3 1 . 1 .x62 2
+2 .x3 1 . 1 .x62 2
+2 .x3 1 . 1 . 1x21 .x40 2
+2 .x68 2
+2 .x3 1x16 .x49 2
+2x70
+4x70
+4 . 5x26 .x41 4
+4 .x2 5x15 .x2 1x22 .x27 4
+4x70
+6x6 . 1x7 . 1x8 . 1x7 . 1x6 . 1x8 . 1x9 .x9 1x3
 --- legend
-1 fg=#d77757
-2 fg=#999999
-3 dim
-4 bold
-5 fg=#b1b9f9
-6 fg=#b1b9f9 bold
-7 fg=#d77757 bold inverse
+1 fg=#999999
+2 dim
+3 bold
+4 fg=#b1b9f9
+5 fg=#b1b9f9 bold
+6 fg=#d77757 bold inverse

@@ -1,56 +1,56 @@
 # answer/claude/long-body 112x32 @0,2 (112x25)
 ▎ ❯ Q1  Keep the journal?
 ▎
-▎ Line 1 of what it hangs on.
-▎ Line 2 of what it hangs on.
-▎ Line 3 of what it hangs on.
-▎ Line 4 of what it hangs on.
-▎ Line 5 of what it hangs on.
-▎ Line 6 of what it hangs on.
-▎ Line 7 of what it hangs on.
-▎ Line 8 of what it hangs on.
-▎ Line 9 of what it hangs on.
-▎ Line 10 of what it hangs on.
-▎ Line 11 of what it hangs on.
-▎ Line 12 of what it hangs on.
-▎ Line 13 of what it hangs on.
-▎ Line 14 of what it hangs on.
-▎ Line 15 of what it hangs on.
-▎ Line 16 of what it hangs on.
-▎ Line 17 of what it hangs on.
-▎ Line 18 of what it hangs on.
-▎ Line 19 of what it hangs on.
-▎ Line 20 of what it hangs on.
-▎ Line 21 of what it hangs on.
-▎ Line 22 of what it hangs on.
+▎   Line 1 of what it hangs on.
+▎   Line 2 of what it hangs on.
+▎   Line 3 of what it hangs on.
+▎   Line 4 of what it hangs on.
+▎   Line 5 of what it hangs on.
+▎   Line 6 of what it hangs on.
+▎   Line 7 of what it hangs on.
+▎   Line 8 of what it hangs on.
+▎   Line 9 of what it hangs on.
+▎   Line 10 of what it hangs on.
+▎   Line 11 of what it hangs on.
+▎   Line 12 of what it hangs on.
+▎   Line 13 of what it hangs on.
+▎   Line 14 of what it hangs on.
+▎   Line 15 of what it hangs on.
+▎   Line 16 of what it hangs on.
+▎   Line 17 of what it hangs on.
+▎   Line 18 of what it hangs on.
+▎   Line 19 of what it hangs on.
+▎   Line 20 of what it hangs on.
+▎   Line 21 of what it hangs on.
+▎   Line 22 of what it hangs on.
 Q1/1   alt+a for the keys                                                                                   [-]
 --- styles
-1 . 2x23 .x70 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-1 .x94 1
-2x6 . 3x18 .x83 3x3
+.x2 1 . 2x4 1x17
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+3x6 . 2x18 .x83 2x3
 --- legend
-1 fg=#d77757
-2 fg=#d77757 bold
-3 fg=#999999
+1 bold
+2 fg=#999999
+3 fg=#d77757 bold

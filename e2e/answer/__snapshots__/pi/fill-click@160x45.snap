@@ -1,12 +1,5 @@
 # answer/pi/fill-click 160x45 @0,0 (160x45)
 
- ▀▀█  <ver>
- █▀ █ escape interrupt · ctrl+c/ctrl+d clear/exit · / commands · ! bash · ctrl+o more
- Press ctrl+o to show full startup help.
-
- Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.
-
-
  ask
 
 
@@ -37,6 +30,13 @@
 
 
 
+
+
+
+
+
+
+
  Answer 2 questions · 2 answered · alt+a or /answer
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 Q1: A
@@ -45,26 +45,19 @@ Q2: B
 <tmp>
 0.7%/200k (auto)                                                                                                                                          replay
 --- styles
+1x160
+1 2x3 1x156
+1x160
 -
-. 1 2x2 .x2 3x5
-. 4x2 . 5 . 3x6 6x13 3x13 6x14 3 6x12 3 6x8 3x6 6x5
-. 3x39
+. 3x15
 -
-. 3x85
+. 4x2 3x2
+. 4x2 3x2
 -
-7x160
-7 8x3 7x156
-7x160
+. 3x16
 -
-. 9x15
--
-. ax2 9x2
-. ax2 9x2
--
-. 9x16
--
-. ax2 9x2
-. ax2 9x2
+. 4x2 3x2
+. 4x2 3x2
 -
 -
 -
@@ -83,23 +76,25 @@ Q2: B
 -
 -
 -
-. ax18 3x32
-bx160
 -
-.x5 c
-bx160
-3x5
-3x160
+-
+-
+-
+-
+-
+-
+. 4x18 5x32
+6x160
+-
+.x5 7
+6x160
+5x5
+5x160
 --- legend
-1 fg=#e48a7a bg=#4f8eb3
-2 fg=#e48a7a
-3 fg=#7e888e
-4 fg=#4f8eb3
-5 fg=#eab65d
-6 fg=#9da5a9
-7 bg=#213b49
-8 fg=#dee0e1 bg=#213b49
-9 bold
-a fg=#a798d7
-b fg=#6c767b
-c inverse
+1 bg=#213b49
+2 fg=#dee0e1 bg=#213b49
+3 bold
+4 fg=#a798d7
+5 fg=#7e888e
+6 fg=#6c767b
+7 inverse

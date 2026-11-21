@@ -21,7 +21,6 @@ const ROLE: Record<Role, ThemeColor> = {
   code: "mdCode",
   link: "mdLink",
   border: "borderMuted",
-  active: "borderAccent",
   answered: "border",
 };
 

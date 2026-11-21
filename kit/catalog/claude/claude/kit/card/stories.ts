@@ -29,7 +29,7 @@ export const cardStories: KitStory[] = [
   {
     component: card,
     state: "choices",
-    about: "One of many in a form: the chosen answer in the accent with a filled mark",
+    about: "One of many: the chosen answer in the accent with a filled mark",
     settings: "choiceList({chosen: [1]})",
     extreme: true,
     lines: (width) => choiceList({ items: ITEMS, chosen: [1] }, width),
@@ -52,20 +52,20 @@ export const cardStories: KitStory[] = [
   {
     component: card,
     state: "form",
-    about: "A question in a form: its label, the answers and the note, a blank row between",
-    settings: "sections(heading, choiceList, note), presentation: form",
+    about: "A question in a form: its label, the answers and the note, the keyboard on a row",
+    settings: "sections(heading, choiceList({focus: 0}), note)",
     lines: (width) =>
       sections(
-        heading({ presentation: "form", label: "Q1", title: QUESTION }, width),
+        heading({ active: true, label: "Q1", title: QUESTION }, width),
         choiceList({ items: ITEMS, chosen: [], focus: 0 }, width),
-        note({ presentation: "form", value: "" }, width),
+        note({ active: true, value: "" }, width),
       ),
   },
   {
     component: card,
     state: "transcript",
-    about: "Cards in a transcript behind their rails: the keyboard's, and one with its answer",
-    settings: "rail(sections(heading, choice..., note)), presentation: card",
+    about: "The same cards behind their rails: the keyboard on one, and one with its answer",
+    settings: "rail(sections(heading({focused}), choice..., note))",
     lines: (width) => {
       const inner = width - 3;
       const one = (
@@ -75,7 +75,7 @@ export const cardStories: KitStory[] = [
         noted: string,
       ) =>
         sections(
-          heading({ ...state, label, title: QUESTION }, inner),
+          heading({ ...state, focused: state.active, label, title: QUESTION }, inner),
           // A pane on a narrow terminal shows few rows, so the answers here are short ones.
           [ITEMS[0], ITEMS[2], ITEMS[3]].flatMap((item, i) =>
             item

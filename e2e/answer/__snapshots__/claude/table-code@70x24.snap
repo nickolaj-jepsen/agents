@@ -1,16 +1,16 @@
 # answer/claude/table-code 70x24 @0,1 (70x18)
-▎ ├──────────┼─────────┼────────────────┤
-▎ │ Postgres │ •••     │ needs a server │
-▎ └──────────┴─────────┴────────────────┘
+▎   ├──────────┼─────────┼────────────────┤
+▎   │ Postgres │ •••     │ needs a server │
+▎   └──────────┴─────────┴────────────────┘
 ▎
-▎ const db = open("app.db");
-▎ await db.exec("select 1");
+▎   const db = open("app.db");
+▎   await db.exec("select 1");
 ▎
-▎ A ○ SQLite
-▎ B ○ Postgres
-▎ C ○ Write your own answer
+▎   A ○ SQLite
+▎   B ○ Postgres
+▎   C ○ Write your own answer
 ▎
-▎ Note: Add a note
+▎   Note: Add a note
 
 
 ▎   Answers  0 of 1 answered
@@ -18,30 +18,29 @@
 
 Q1/1   alt+a for the keys                                         [-]
 --- styles
-1 .x68 1
-1 .x68 1
-1 .x68 1
-1 .x68 1
-1 . 2x5 .x6 3x4 . 4x8 .x43 1
-1 . 2x5 .x4 3x4 . 4x10 .x43 1
-1 .x68 1
-1 . 1 . 5 .x64 1
-1 . 1 . 5 .x64 1
-1 . 1 . 5 . 5x21 .x42 1
-1 .x68 1
-1 . 5x16 .x51 1
-1x70
-6x70
-6 . 7x26 .x41 6
-6 .x2 5x15 .x51 6
-6x70
-8x6 . 5x18 .x41 5x3
+-
+-
+-
+-
+.x4 1x5 .x6 2x4 . 3x8
+.x4 1x5 .x4 2x4 . 3x10
+-
+.x4 4 . 4
+.x4 4 . 4
+.x4 4 . 4 . 4x21
+-
+.x4 4x16
+-
+5x70
+5 . 6x26 .x41 5
+5 .x2 4x15 .x51 5
+5x70
+7x6 . 4x18 .x41 4x3
 --- legend
-1 fg=#d77757
-2 fg=p4
-3 fg=p3
-4 fg=p1
-5 fg=#999999
-6 dim
-7 bold
-8 fg=#d77757 bold
+1 fg=p4
+2 fg=p3
+3 fg=p1
+4 fg=#999999
+5 dim
+6 bold
+7 fg=#d77757 bold

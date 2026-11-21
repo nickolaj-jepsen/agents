@@ -15,7 +15,6 @@ export const tokens = {
     single: { off: "○", on: "●" },
     multi: { off: "□", on: "■" },
     /** The mark of an answer the person writes themselves, while it is empty. */
-    writeIn: "+",
     ellipsis: "…",
     more: { up: "↑", down: "↓" },
     rule: "─",

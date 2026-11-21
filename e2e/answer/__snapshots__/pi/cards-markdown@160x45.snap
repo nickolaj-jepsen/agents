@@ -1,60 +1,68 @@
-# answer/pi/cards-markdown 160x45 @0,18 (159x23)
+# answer/pi/cards-markdown 160x45 @0,13 (159x28)
 │  ❯ Q1  Should the endpoint send one JSON response with a kind field, and send
 │        redirects as a 200 response body that page.tsx acts on?
 │
-│  A ○ A 200 response like {kind: "redirect", location, permanent}. page.tsx calls
-│      permanentRedirect() (308) or redirect(). The redirect is cached per URL like
-│      any other result.
-│  B ○ Django answers with a real 301, and the Next.js fetch reads the Location
-│      header: simpler for legacy callers, as the RFC has it.
-│      The CmsPageModal keeps reading Location, and nothing in the legacy code
-│      changes.
-│  C ○ Write your own answer
+│    A ○ A 200 response like {kind: "redirect", location, permanent}. page.tsx
+│        calls permanentRedirect() (308) or redirect(). The redirect is cached per
+│        URL like any other result.
+│    B ○ Django answers with a real 301, and the Next.js fetch reads the Location
+│        header: simpler for legacy callers, as the RFC has it.
+│        The CmsPageModal keeps reading Location, and nothing in the legacy code
+│        changes.
+│    C ○ Write your own answer
 │
-│  Recommended: A. The redirect stays inside the cached result, and the legacy
-│  CmsPageModal can simply ignore that kind.
+│    Recommended: A. The redirect stays inside the cached result, and the legacy
+│    CmsPageModal can simply ignore that kind.
 │
-│  Note: Add a note
+│    Note: Add a note
 
 
 │    Answers  0 of 1 answered
 │   ▸ Show question
 
+
+
+
+
+
  Answer [alt+a]  Q1  0/1 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-1 .x2 2x56 3x4 2x16
-1 .x8 2x38 3x8 2x9
+1 .x2 2 . 3x4 2x50 4x4 2x16
+1 .x8 2x38 4x8 2x9
 1
-1 .x2 1 . 4 .x21 3x39 .x2 3x8
-1 .x6 3x19 .x10 3x10
+1 .x4 3 . 3 .x21 4x39 .x2 4x8
+1 .x14 4x19 .x10 4x10
 1
-1 .x2 1 . 4 .x65 3x8
-1 .x14 5x7 .x5 6x6 .x13 7x7
-1 .x6 4x4 3x12 4x15 3x8 4x6 8x7 4x19
-1 .x6 4x8
-1 .x2 1 . 4 . 4x21
+1 .x4 3 . 3 .x65 4x8
+1 .x16 5x7 .x5 6x6 .x13 7x7
+1 .x8 3x4 4x12 3x15 4x8 3x6 8x7 3x19
+1 .x8 3x8
+1 .x4 3 . 3 . 3x21
 1
-1 .x2 4x75
-1 .x2 3x12 4x29
+1 .x4 3x75
+1 .x4 4x12 3x29
 1
-1 .x2 4x16
+1 .x4 3x16
 -
 -
-9 .x4 ax24
-9 .x3 4x15
+3 .x4 2x24
+3 .x3 3x15
 -
-. 9x6 . 4x7 .x2 4x16
-bx159
+-
+-
+-
+-
+-
+. 1x6 . 3x7 .x2 3x16
+9x159
 --- legend
-1 fg=#a08ed5
-2 fg=#a08ed5 bold
-3 fg=#a798d7
-4 fg=#7e888e
+1 fg=#dee0e1
+2 fg=#dee0e1 bold
+3 fg=#7e888e
+4 fg=#a798d7
 5 bold
 6 italic
 7 fg=#69add0 underline=single
 8 fg=#7e888e bold
-9 fg=#dee0e1
-a fg=#dee0e1 bold
-b fg=#6c767b
+9 fg=#6c767b

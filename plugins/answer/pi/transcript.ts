@@ -15,11 +15,13 @@ import type { Button } from "../../../kit/buttons/contract.ts";
 import { buttonRow } from "../../../kit/buttons/terminal.ts";
 import { digitChoice } from "../../../kit/card/contract.ts";
 import {
+  CARD_INSET,
   cardRole,
   choice as choiceRows,
   heading as headingRows,
   note as noteRows,
   NOTE_LABEL,
+  railRole,
   sectionsOf,
 } from "../../../kit/card/terminal.ts";
 import { cellWidth, span, type Span } from "../../../kit/lines.ts";
@@ -112,6 +114,9 @@ export class Transcript implements Component {
     const inner = Math.min(width - tokens.gutter, tokens.prose);
     const out: string[] = [];
     const dim = (text: string) => paintText(theme, text, { role: "dim" });
+    // A card's own rows stand after the column its parts keep for the pointer.
+    const room = inner - cellWidth(CARD_INSET);
+    const inset = (text: string) => CARD_INSET + text;
     const asRows = (lines: string[], act?: RoundAction): Row[] =>
       lines.map((text) => ({ text, act }));
     const editRows = (step: number, kind: Field["kind"], label: string): Row[] | undefined => {
@@ -135,7 +140,7 @@ export class Transcript implements Component {
         const text = state
           ? gutterLine(
               paintText(theme, tokens.glyph.rail, {
-                role: cardRole({ active: state.here, answered: state.answered }),
+                role: railRole({ active: state.here, answered: state.answered }),
               }),
               row.text,
             )
@@ -173,16 +178,20 @@ export class Transcript implements Component {
       const heading = asRows(
         draw(
           theme,
-          headingRows({ title: item.title, label: item.label, active: here, answered }, inner),
+          headingRows(
+            { title: item.title, label: item.label, active: here, focused: here, answered },
+            inner,
+          ),
           inner,
         ),
       );
       const rows: Row[] = [];
       if (item.body) {
         // The original assistant message stays above the cards, with all its Markdown intact.
-        const detail = new Markdown(item.body, 0, 0, getMarkdownTheme()).render(inner);
-        rows.push(...asRows(detail.slice(0, 3)));
-        if (detail.length > 3) rows.push({ text: dim("… full context in the message above") });
+        const detail = new Markdown(item.body, 0, 0, getMarkdownTheme()).render(room);
+        rows.push(...asRows(detail.slice(0, 3).map(inset)));
+        if (detail.length > 3)
+          rows.push({ text: dim(inset("… full context in the message above")) });
         rows.push({ text: "" });
       }
       const letters = choiceLetters(item);
@@ -190,7 +199,9 @@ export class Transcript implements Component {
         if (!active && entry.kind === "write" && !entry.isChosen) return;
         const key = letters[index];
         const editing =
-          entry.kind === "write" ? editRows(step, "write", `${key || " "} › `) : undefined;
+          entry.kind === "write"
+            ? editRows(step, "write", `${CARD_INSET}${key || " "} › `)
+            : undefined;
         if (editing) {
           rows.push(...editing);
           return;
@@ -214,7 +225,7 @@ export class Transcript implements Component {
                   text,
                   detail: entry.detail,
                   chosen: entry.isChosen,
-                  focused: active && this.hovered?.step === step && this.hovered.entry === index,
+                  hovered: active && this.hovered?.step === step && this.hovered.entry === index,
                   active: here,
                   answered,
                   literal: entry.kind === "write",
@@ -231,22 +242,24 @@ export class Transcript implements Component {
         rows.push(
           { text: "" },
           ...asRows(
-            markdownLines(theme, `Recommended: ${item.recommended}`, inner, { color: dim }, 3),
+            markdownLines(theme, `Recommended: ${item.recommended}`, room, { color: dim }, 3).map(
+              inset,
+            ),
           ),
         );
       if (active && (answered || item.accepts.includes(","))) rows.push({ text: "" });
       if (active && item.accepts.includes(","))
         rows.push(
-          ...asRows(prose(theme, inner, `Take ${item.accepts}`, {}, "dim"), {
+          ...asRows(prose(theme, room, `Take ${item.accepts}`, {}, "dim").map(inset), {
             kind: "accept",
             step,
           }),
         );
       if (answered && active)
-        rows.push({ text: dim("Clear answer"), act: { kind: "clear", step } });
+        rows.push({ text: dim(inset("Clear answer")), act: { kind: "clear", step } });
       if (active || item.note) {
         const note =
-          editRows(step, "note", NOTE_LABEL) ??
+          editRows(step, "note", CARD_INSET + NOTE_LABEL) ??
           asRows(
             draw(theme, noteRows({ value: item.note, active: here, answered }, inner), inner),
             active ? { kind: "note", step } : undefined,

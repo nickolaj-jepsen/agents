@@ -35,23 +35,21 @@
 1 .x9 2x72
 1 .x9 4x70
 1 .x9 4x57
-1 .x2 5x42
+1 .x2 2x42
 1 .x9 4x10
-1 .x2 5x42
+1 .x2 2x42
 1 .x9 4x10
-1 .x2 5x42
+1 .x2 2x42
 1 .x9 4x10
-1 .x2 5x42
+1 .x2 2x42
 1 .x9 4x10
 -
-. 2x21 .x2 6x4 . 4 .x2 7x4 . 4x3 .x2 7x4 . 4x3 .x2 7x4 . 4x3 .x2 7x4 . 4x3 .x2 7x6 . 4x5 .x2 4x7
-8x159
+. 2x21 .x2 5x4 . 4 .x2 1x4 . 4x3 .x2 1x4 . 4x3 .x2 1x4 . 4x3 .x2 1x4 . 4x3 .x2 1x6 . 4x5 .x2 4x7
+6x159
 --- legend
-1 fg=#a08ed5
-2 fg=#a08ed5 bold
+1 fg=#dee0e1
+2 fg=#dee0e1 bold
 3 fg=#5fa8cc bold
 4 fg=#7e888e
-5 fg=#dee0e1 bold
-6 fg=#a798d7 bold
-7 fg=#dee0e1
-8 fg=#6c767b
+5 fg=#a798d7 bold
+6 fg=#6c767b

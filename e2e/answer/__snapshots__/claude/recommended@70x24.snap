@@ -1,42 +1,41 @@
 # answer/claude/recommended 70x24 @0,2 (70x17)
 ▎ ❯ Q1  Should every focus default to the same bar?
 ▎
-▎ A ○ Yes, one default for every kind.  Recommended
-▎ B ○ Default by kind.
-▎ C ○ Add the bar as a second pick.
-▎ D ○ Write your own answer
+▎   A ○ Yes, one default for every kind.  Recommended
+▎   B ○ Default by kind.
+▎   C ○ Add the bar as a second pick.
+▎   D ○ Write your own answer
 ▎
-▎ Recommended: A. A per-kind table is one more thing to keep in
-▎ sync.
+▎   Recommended: A. A per-kind table is one more thing to keep in
+▎   sync.
 ▎
-▎ Note: Add a note
+▎   Note: Add a note
 
 
 ▎   Q2  Lower the per-generator target to 5-6?
 ▎
-▎ A ○ Yes. Four generators still give 20-24.
+▎   A ○ Yes. Four generators still give 20-24.
 Q1/3   alt+a for the keys                                         [-]
 --- styles
-1 . 2x49 .x18 1
-1 .x68 1
-1 . 1 . 3 .x33 3x13 .x18 1
-1 . 1 . 3 .x64 1
-1 . 1 . 3 .x64 1
-1 . 1 . 3 . 3x21 .x42 1
-1 .x68 1
-1 . 4x62 .x5 1
-1 . 4x5 .x62 1
-1 .x68 1
-1 . 3x16 .x51 1
-1x70
-4x70
-4 . 5x44 .x23 4
-4 .x68 4
-4 . 3 . 3 .x64 4
-2x6 . 3x18 .x41 3x3
+.x2 1 . 2x4 1x43
+-
+.x4 2 . 2 .x33 2x13
+.x4 2 . 2
+.x4 2 . 2
+.x4 2 . 2 . 2x21
+-
+.x4 3x62
+.x4 3x5
+-
+.x4 2x16
+-
+3x70
+3 .x3 2x4 1x38 .x23 3
+3 .x68 3
+3 .x3 2 . 2 .x62 3
+4x6 . 2x18 .x41 2x3
 --- legend
-1 fg=#d77757
-2 fg=#d77757 bold
-3 fg=#999999
-4 dim
-5 bold
+1 bold
+2 fg=#999999
+3 dim
+4 fg=#d77757 bold

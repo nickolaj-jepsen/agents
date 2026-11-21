@@ -37,32 +37,45 @@ describe("every kit story", () => {
 describe("a choice", () => {
   const item = { key: "A", text: "Write your own answer" };
 
-  test("in a form keeps a gutter for the pointer, which only the keyboard's row fills", () => {
-    const [rest] = choice({ ...item, presentation: "form" }, 60);
-    const [focused] = choice({ ...item, presentation: "form", focused: true }, 60);
+  test("keeps a column for the pointer, which only the keyboard's row fills", () => {
+    const [rest] = choice(item, 60);
+    const [focused] = choice({ ...item, focused: true }, 60);
     expect(textOf(rest!)).toBe("  A ○ Write your own answer");
     expect(textOf(focused!)).toBe("❯ A ○ Write your own answer");
     expect(focused!.spans.at(-1)).toMatchObject({ role: "text", bold: true });
   });
 
   test("is accented only when chosen, and underlined when it is the keyboard's row too", () => {
-    const [chosen] = choice({ ...item, presentation: "form", chosen: true, focused: true }, 60);
+    const [chosen] = choice({ ...item, chosen: true, focused: true }, 60);
     expect(textOf(chosen!)).toBe("❯ A ● Write your own answer");
     expect(chosen!.spans.at(-1)).toMatchObject({ role: "accent", bold: true, underline: true });
   });
 
-  test("a write-in in a form has its own mark while it is empty", () => {
-    const [row] = choice({ ...item, presentation: "form", literal: true }, 60);
-    expect(textOf(row!)).toBe("  A + Write your own answer");
+  test("a write-in is dim while it is empty, with the mark of any answer", () => {
+    const [row] = choice({ ...item, literal: true }, 60);
+    expect(textOf(row!)).toBe("  A ○ Write your own answer");
     expect(row!.spans.at(-1)).toMatchObject({ role: "dim" });
   });
 
-  test("in a transcript card has no gutter, and its detail hangs under the words", () => {
+  test("its detail hangs under the words", () => {
     const rows = choice({ ...item, detail: "One file, no service to run." }, 60);
     expect(rows.map(textOf)).toEqual([
-      "A ○ Write your own answer",
-      "    One file, no service to run.",
+      "  A ○ Write your own answer",
+      "      One file, no service to run.",
     ]);
+  });
+
+  test("looks the same on the keyboard's card as on any other: no state moves or colours it", () => {
+    const styles = (state: object) => choice({ ...item, ...state }, 60).map((row) => row.spans);
+    expect(styles({ active: true })).toEqual(styles({}));
+    expect(styles({ answered: true })).toEqual(styles({}));
+  });
+
+  test("a chosen one is in the accent, and in the success colour once its card is sent", () => {
+    const [chosen] = choice({ ...item, chosen: true }, 60);
+    const [sent] = choice({ ...item, chosen: true, sent: true }, 60);
+    expect(chosen!.spans.at(-1)).toMatchObject({ role: "accent", bold: true });
+    expect(sent!.spans.at(-1)).toMatchObject({ role: "success", bold: true });
   });
 
   test("the pointer's row is bold like the keyboard's, without its pointer", () => {
@@ -75,16 +88,20 @@ describe("a choice", () => {
 
 describe("the card's other parts", () => {
   test("a heading hangs its title from the label, and an answered one ends in a tick", () => {
-    const rows = heading(
-      { presentation: "form", label: "Q1", title: "One two three four", answered: true },
-      16,
-    );
-    expect(rows.map(textOf)).toEqual(["Q1  One two", "    three four ✓"]);
+    const rows = heading({ label: "Q1", title: "One two three four", answered: true }, 18);
+    expect(rows.map(textOf)).toEqual(["  Q1  One two", "      three four ✓"]);
   });
 
-  test("an empty note invites one, dim", () => {
+  test("a heading takes the pointer when the keyboard is on its card and on no row", () => {
+    const [row] = heading({ label: "Q1", title: "One", active: true, focused: true }, 30);
+    expect(textOf(row!)).toBe("❯ Q1  One");
+    expect(row!.spans.at(-1)).toMatchObject({ role: "text", bold: true });
+  });
+
+  test("an empty note invites one, dim, under the answers' letters", () => {
     const [row] = note({ value: "" }, 40);
-    expect(textOf(row!)).toBe("Note: Add a note");
+    expect(textOf(row!)).toBe("  Note: Add a note");
+    expect(textOf(note({ value: "", focused: true }, 40)[0]!)).toBe("❯ Note: Add a note");
   });
 
   test("steps shorten the longest name first and drop to short labels with no room", () => {

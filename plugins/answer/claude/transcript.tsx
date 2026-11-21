@@ -2,6 +2,7 @@ import { plain, view as viewOf } from "../core/forms";
 import { POSITIONS } from "./terminal";
 import type { Current, Editing, Held, View } from "./types.d.ts";
 import {
+  CARD_INSET,
   choice as cardChoice,
   heading as cardHeading,
   note as cardNote,
@@ -161,12 +162,17 @@ export function questionCard(
       press: interactive && press ? () => press() : undefined,
       width: room,
     });
+  // The terminal's own rows stand after the column the card's parts keep for the pointer.
+  const inset = (node: JSX.Element | null) =>
+    node && !kit.isNative ? <Box paddingLeft={cellWidth(CARD_INSET)}>{node}</Box> : node;
   const activate = !kit.isNative ? (
     terminal(
-      cardHeading({ ...state, label: item.label, title: item.title }, room).map((row) => ({
-        ...row,
-        hit: `${prefix}-activate`,
-      })),
+      cardHeading({ ...state, focused: isActive, label: item.label, title: item.title }, room).map(
+        (row) => ({
+          ...row,
+          hit: `${prefix}-activate`,
+        }),
+      ),
       () => interactive?.go(index),
     )
   ) : (
@@ -189,15 +195,8 @@ export function questionCard(
       width={kit.isNative ? undefined : width}
       flexDirection="column"
       borderStyle={kit.isNative ? undefined : "quote"}
-      borderColor={
-        !kit.isNative
-          ? isActive
-            ? tokens.role.accent
-            : answered
-              ? tokens.role[answerTone]
-              : undefined
-          : undefined
-      }
+      // The keyboard's card has a bright rail, not an accented one: the accent is for answers.
+      borderColor={!kit.isNative && !isActive && answered ? tokens.role[answerTone] : undefined}
       borderDimColor={(!kit.isNative && !isActive && !answered) || undefined}
       paddingX={1}
     >
@@ -205,7 +204,7 @@ export function questionCard(
         kit,
         [
           activate,
-          item.body ? <Markdown text={item.body} /> : null,
+          inset(item.body ? <Markdown text={item.body} /> : null),
           hasChoices || (!kit.isNative && (interactive || item.written)) ? (
             <Box flexDirection="column" rowGap={kit.isNative ? tokens.gui.space.xs : 0}>
               {item.entries.map((entry, i) => {
@@ -286,7 +285,7 @@ export function questionCard(
                       option
                     )}
                     {entry.detail && !isDetailInline ? (
-                      <Box paddingLeft={kit.isNative ? 1 : 4}>
+                      <Box paddingLeft={kit.isNative ? 1 : 4 + cellWidth(CARD_INSET)}>
                         <Markdown text={entry.detail} dimColor />
                       </Box>
                     ) : null}
@@ -311,9 +310,11 @@ export function questionCard(
                 : null}
             </Box>
           ) : null,
-          item.recommended ? (
-            <Markdown text={`**Recommended:** ${item.recommended}`} dimColor />
-          ) : null,
+          inset(
+            item.recommended ? (
+              <Markdown text={`**Recommended:** ${item.recommended}`} dimColor />
+            ) : null,
+          ),
           kit.isNative && item.written ? (
             <Text>
               <Text weight="semibold" {...roleProps(sent ? "success" : "note")}>
@@ -331,8 +332,14 @@ export function questionCard(
                 onPress={() => interactive.clear(index)}
               />
             ) : (
-              terminal([line([span("Clear answer", { role: "dim" })], `${prefix}-clear`)], () =>
-                interactive.clear(index),
+              terminal(
+                [
+                  line(
+                    [span(CARD_INSET), span("Clear answer", { role: "dim" })],
+                    `${prefix}-clear`,
+                  ),
+                ],
+                () => interactive.clear(index),
               )
             )
           ) : null,
@@ -346,11 +353,11 @@ export function questionCard(
                   () => interactive?.edit(index, "note"),
                 )
               : null,
-          editor ?? null,
+          inset(editor ?? null),
           !controls.length ? null : kit.isNative ? (
             actionBar(kit, controls)
           ) : (
-            <Box columnGap={tokens.gutter} flexWrap="wrap">
+            <Box columnGap={tokens.gutter} flexWrap="wrap" paddingLeft={cellWidth(CARD_INSET)}>
               {controls.map((control) => (
                 <Button
                   key={control.key}

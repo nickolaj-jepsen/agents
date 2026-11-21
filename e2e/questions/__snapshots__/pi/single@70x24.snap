@@ -1,7 +1,7 @@
 # questions/pi/single 70x24 @0,8 (70x14)
 ─ Storage ────────────────────────────────────────────────── Close × ─
 
-  Q1  Where should the session store live?
+    Q1  Where should the session store live?
 
   ❯ A ○ SQLite in the checkout
         One file, no service to run, and it can be deleted with the
@@ -16,7 +16,7 @@
 --- styles
 1 . 2x7 . 1x50 . 3x7 . 1
 -
-.x2 4x4 5x36
+.x4 4x4 5x36
 -
 .x2 5 . 4 . 4 . 5x22
 .x8 4x59

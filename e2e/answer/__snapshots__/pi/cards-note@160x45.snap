@@ -1,6 +1,5 @@
 # answer/pi/cards-note 160x45 @0,0 (159x45)
 
-
  ask
 
 
@@ -16,27 +15,28 @@
 
 │  ❯ Q1  Use SQLite? ✓
 │
-│  A ○ SQLite
-│  B ● Postgres
-│  C ○ Write your own answer
+│    A ○ SQLite
+│    B ● Postgres
+│    C ○ Write your own answer
 │
-│  Clear answer
+│    Clear answer
 │
-│  Note: keep the flag
-│        check the results
+│    Note: keep the flag
+│          check the results
 
 
 │    Q2  Add caching?
 │
-│  A ○ Yes
-│  B ○ No
-│  C ○ Write your own answer
+│    A ○ Yes
+│    B ○ No
+│    C ○ Write your own answer
 │
-│  Note: Add a note
+│    Note: Add a note
 
 
 │    Answers  1 of 2 answered
 │   [ Fill prompt ]  ▸ Show all 2 questions
+
 
  Answer [alt+a]  Q1  1/2 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -45,7 +45,6 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                                                                                                          repla
 --- styles
--
 1x159
 1 2x3 1x155
 1x159
@@ -60,34 +59,35 @@ a draft for later
 . 4x2 3x2
 . 4x2 3x2
 -
-5 .x2 6x19
+5 .x2 6 . 7x4 6x13
 5
-5 .x2 5 . 7
-5 .x2 6 . 6 . 6x8
-5 .x2 5 . 7 . 7x21
+5 .x4 7 . 7
+5 .x4 7 . 8 . 8x8
+5 .x4 7 . 7 . 7x21
 5
-5 .x2 7x12
+5 .x2 7x14
 5
-5 .x2 7x6 5x13
-5 .x8 5x17
+5 .x4 7x6 5x13
+5 .x10 5x17
 -
 -
-8 .x2 9x18
-8
-8 .x2 7 . 7
-8 .x2 7 . 7
-8 .x2 7 . 7 . 7x21
-8
-8 .x2 7x16
+7 .x4 7x4 6x12
+7
+7 .x4 7 . 7
+7 .x4 7 . 7
+7 .x4 7 . 7 . 7x21
+7
+7 .x4 7x16
 -
 -
-a .x4 bx24
-a .x3 bx15 .x2 7x22
+9 .x4 ax24
+9 .x3 ax15 .x2 7x22
 -
-. 8x6 . 7x7 .x2 7x16
-cx159
-.x17 d
-cx159
+-
+. 5x6 . 7x7 .x2 7x16
+bx159
+.x17 c
+bx159
 7x5
 7x159
 --- legend
@@ -95,12 +95,11 @@ cx159
 2 fg=#dee0e1 bg=#213b49
 3 bold
 4 fg=#a798d7
-5 fg=#a08ed5
-6 fg=#a08ed5 bold
+5 fg=#dee0e1
+6 fg=#dee0e1 bold
 7 fg=#7e888e
-8 fg=#dee0e1
-9 fg=#dee0e1 bold
-a fg=#5fa8cc
-b fg=#5fa8cc bold
-c fg=#6c767b
-d inverse
+8 fg=#a798d7 bold
+9 fg=#5fa8cc
+a fg=#5fa8cc bold
+b fg=#6c767b
+c inverse

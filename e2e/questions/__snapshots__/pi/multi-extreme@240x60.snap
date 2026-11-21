@@ -1,11 +1,11 @@
 # questions/pi/multi-extreme 240x60 @0,34 (240x24)
 ─ 保存とアーカイブ ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── Close × ─
 
-  Q1  Which parts of the complete session history should stay available across
-      machines? Include the archived sessions, the tool_result records, and the
-      full 日本語 transcript when deciding what needs to be kept. Assume one
-      machine will often be offline.
-  3 selected
+    Q1  Which parts of the complete session history should stay available across
+        machines? Include the archived sessions, the tool_result records, and the
+        full 日本語 transcript when deciding what needs to be kept. Assume one
+        machine will often be offline.
+    3 selected
 
   ❯ A ■ The complete transcript including all 日本語 tool records
         An offline copy keeps the full sequence of user and assistant messages,
@@ -26,11 +26,11 @@
 --- styles
 1 . 2x16 . 1x211 . 3x7 . 1
 -
-.x2 4x4 5x72
-.x6 5x45 6x11 5x17
-.x6 5x70
-.x6 5x30
-.x2 4x10
+.x4 4x4 5x72
+.x8 5x45 6x11 5x17
+.x8 5x70
+.x8 5x30
+.x2 4x12
 -
 .x2 5 . 4 . 2 . 7x57
 .x8 4x71

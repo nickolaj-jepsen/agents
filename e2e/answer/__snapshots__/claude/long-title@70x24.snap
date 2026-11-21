@@ -17,24 +17,24 @@
 ▎       over the lazy dog the quick brown fox jumps over the lazy
 Q1/1   alt+a for the keys                                         [-]
 --- styles
-1 . 2x63 .x4 1
-1 .x7 2x57 .x4 1
-1 .x7 2x59 .x2 1
-1 .x7 2x57 .x4 1
-1 .x7 2x57 .x4 1
-1 .x7 2x59 .x2 1
-1 .x7 2x57 .x4 1
-1 .x7 2x57 .x4 1
-1 .x7 2x59 .x2 1
-1 .x7 2x57 .x4 1
-1 .x7 2x57 .x4 1
-1 .x7 2x59 .x2 1
-1 .x7 2x57 .x4 1
-1 .x7 2x57 .x4 1
-1 .x7 2x59 .x2 1
-1 .x7 2x57 .x4 1
-2x6 . 3x18 .x41 3x3
+.x2 1 . 2x4 1x57
+.x8 1x57
+.x8 1x59
+.x8 1x57
+.x8 1x57
+.x8 1x59
+.x8 1x57
+.x8 1x57
+.x8 1x59
+.x8 1x57
+.x8 1x57
+.x8 1x59
+.x8 1x57
+.x8 1x57
+.x8 1x59
+.x8 1x57
+3x6 . 2x18 .x41 2x3
 --- legend
-1 fg=#d77757
-2 fg=#d77757 bold
-3 fg=#999999
+1 bold
+2 fg=#999999
+3 fg=#d77757 bold

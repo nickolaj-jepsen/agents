@@ -1,9 +1,9 @@
 # answer/claude/review-first 70x24 @0,1 (70x18)
-▎ A ○ Yes
-▎ B ○ No
-▎ C ○ Write your own answer
+▎   A ○ Yes
+▎   B ○ No
+▎   C ○ Write your own answer
 ▎
-▎ Note: Add a note
+▎   Note: Add a note
 
 
 ▎   Answers  1 of 2 answered
@@ -18,11 +18,11 @@
 
 Review  1/2 answered jk move enter open f fill r back keys here   [-]
 --- styles
-1 . 2 . 2 .x64 1
-1 . 2 . 2 .x64 1
-1 . 2 . 2 . 2x21 .x42 1
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 2 . 2x21 .x40 1
 1 .x68 1
-1 . 2x16 .x51 1
+1 .x3 2x16 .x49 1
 1x70
 3x70
 3 . 4x26 .x41 3

@@ -1,6 +1,4 @@
 # answer/pi/cards-editing 160x45 @0,0 (159x45)
- Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.
-
 
  ask
 
@@ -17,26 +15,28 @@
 
 │  ❯ Q1  Use SQLite? ✓
 │
-│  A ○ SQLite
-│  B ● Postgres
-│  C ○ Write your own answer
+│    A ○ SQLite
+│    B ● Postgres
+│    C ○ Write your own answer
 │
-│  Clear answer
+│    Clear answer
 │
-│  Note: draft note
+│    Note: draft note
 
 
 │    Q2  Add caching?
 │
-│  A ○ Yes
-│  B ○ No
-│  C ○ Write your own answer
+│    A ○ Yes
+│    B ○ No
+│    C ○ Write your own answer
 │
-│  Note: Add a note
+│    Note: Add a note
 
 
 │    Answers  1 of 2 answered
 │   [ Fill prompt ]  ▸ Show all 2 questions
+
+
 
  Save ↵  shift+enter newline  Cancel [esc]
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -45,63 +45,61 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                                                                                                          repla
 --- styles
-. 1x85
--
-2x159
-2 3x3 2x155
-2x159
--
-. 4x15
--
-. 5x2 4x2
-. 5x2 4x2
--
-. 4x16
--
-. 5x2 4x2
-. 5x2 4x2
--
-6 .x2 7x19
-6
-6 .x2 6 . 1
-6 .x2 7 . 7 . 7x8
-6 .x2 6 . 1 . 1x21
-6
-6 .x2 1x12
-6
-6 .x2 1x6 .x5 8
--
--
-9 .x2 ax18
-9
-9 .x2 1 . 1
-9 .x2 1 . 1
-9 .x2 1 . 1 . 1x21
-9
-9 .x2 1x16
--
--
-b .x4 cx24
-b .x3 cx15 .x2 1x22
--
-. dx4 . 1 .x2 1x19 .x2 9x6 . 1x5
-ex159
-.x8 8
-ex159
-1x5
 1x159
+1 2x3 1x155
+1x159
+-
+. 3x15
+-
+. 4x2 3x2
+. 4x2 3x2
+-
+. 3x16
+-
+. 4x2 3x2
+. 4x2 3x2
+-
+5 .x2 6 . 7x4 6x13
+5
+5 .x4 7 . 7
+5 .x4 7 . 8 . 8x8
+5 .x4 7 . 7 . 7x21
+5
+5 .x2 7x14
+5
+5 .x2 7x8 .x5 9
+-
+-
+7 .x4 7x4 6x12
+7
+7 .x4 7 . 7
+7 .x4 7 . 7
+7 .x4 7 . 7 . 7x21
+7
+7 .x4 7x16
+-
+-
+a .x4 bx24
+a .x3 bx15 .x2 7x22
+-
+-
+-
+. 8x4 . 7 .x2 7x19 .x2 5x6 . 7x5
+cx159
+.x8 9
+cx159
+7x5
+7x159
 --- legend
-1 fg=#7e888e
-2 bg=#213b49
-3 fg=#dee0e1 bg=#213b49
-4 bold
-5 fg=#a798d7
-6 fg=#a08ed5
-7 fg=#a08ed5 bold
-8 inverse
-9 fg=#dee0e1
-a fg=#dee0e1 bold
-b fg=#5fa8cc
-c fg=#5fa8cc bold
-d fg=#a798d7 bold
-e fg=#6c767b
+1 bg=#213b49
+2 fg=#dee0e1 bg=#213b49
+3 bold
+4 fg=#a798d7
+5 fg=#dee0e1
+6 fg=#dee0e1 bold
+7 fg=#7e888e
+8 fg=#a798d7 bold
+9 inverse
+a fg=#5fa8cc
+b fg=#5fa8cc bold
+c fg=#6c767b

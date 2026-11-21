@@ -1,15 +1,15 @@
 # questions/pi/preview 160x45 @0,28 (160x15)
 ─ Layout ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── Close × ─
 
-  Q1  Which table layout?
+    Q1  Which table layout?
 
   ❯ A ○ One row per event                                           Preview
         Append-only, and the history is the table.                  ```sql
     B ○ One row per session                                           create table event (
         A document per session, rewritten on every turn.                id integer primary key,
-    C + Write your own answer                                           session text not null,
+    C ○ Write your own answer                                           session text not null,
                                                                         at text not null
-  Note: Add a note                                                    );
+    Note: Add a note                                                  );
                                                                     ```
 
   Choose ↵  Note [n]
@@ -17,15 +17,15 @@
 --- styles
 1 . 2x6 . 1x141 . 3x7 . 1
 -
-.x2 4x4 5x19
+.x4 4x4 5x19
 -
 .x2 5 . 4 . 4 . 5x17 .x43 6x7
 .x8 4x42 .x18 7x6
-.x4 4 . 4 .x63 8x6 3 8x5 3x8
-.x8 4x48 .x14 3x5 9x7 3 8x7 3x5
-.x4 4 . 4 . 4x21 .x41 3x15 8x3 3 8x4 3
-.x70 3x2 8x2 3x6 8x3 3 8x4
-.x2 4x16 .x52 3x2
+.x4 4 . 4 .x63 8x6 . 8x5
+.x8 4x48 .x19 9x7 . 8x7
+.x4 4 . 4 . 4x21 .x56 8x3 . 8x4
+.x72 8x2 .x6 8x3 . 8x4
+.x4 4x16
 .x68 7x3
 -
 .x2 2x6 . 4 .x2 3x4 . 4x3

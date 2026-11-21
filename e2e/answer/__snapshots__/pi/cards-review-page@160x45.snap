@@ -23,22 +23,20 @@
 1 .x2 3x20
 1 .x2 2x42
 1 .x9 3x10
-1 .x2 4x42
+1 .x2 2x42
 1 .x9 3x10
-1 .x2 4x42
+1 .x2 2x42
 1 .x9 3x10
-1 .x2 4x42
+1 .x2 2x42
 1 .x9 3x10
-1 .x2 4x42
+1 .x2 2x42
 1 .x9 3x10
 -
-. 2x21 .x2 5x4 . 3 .x2 6x4 . 3x3 .x2 6x4 . 3x3 .x2 6x6 . 3x5 .x2 3x7
-7x159
+. 2x21 .x2 4x4 . 3 .x2 1x4 . 3x3 .x2 1x4 . 3x3 .x2 1x6 . 3x5 .x2 3x7
+5x159
 --- legend
-1 fg=#a08ed5
-2 fg=#a08ed5 bold
+1 fg=#dee0e1
+2 fg=#dee0e1 bold
 3 fg=#7e888e
-4 fg=#dee0e1 bold
-5 fg=#a798d7 bold
-6 fg=#dee0e1
-7 fg=#6c767b
+4 fg=#a798d7 bold
+5 fg=#6c767b

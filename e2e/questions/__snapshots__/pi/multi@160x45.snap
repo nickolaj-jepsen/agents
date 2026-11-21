@@ -1,32 +1,32 @@
 # questions/pi/multi 160x45 @0,29 (160x14)
 ─ Retention ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── Close × ─
 
-  Q1  How much of each session should be kept?
-  2 selected
+    Q1  How much of each session should be kept?
+    2 selected
 
     A ■ The whole transcript
     B ■ The last turn only
-  ❯ C □ A summary of each run
-    D + Write your own answer
+    C □ A summary of each run
+    D □ Write your own answer
 
-  Note: Keep local copies
+  ❯ Note: Keep local copies
 
-  Send [s]  Note [n]  space toggle
+  Send [s]  Note [n]
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
 1 . 2x9 . 1x138 . 3x7 . 1
 -
-.x2 4x4 5x40
-.x2 4x10
+.x4 4x4 5x40
+.x2 4x12
 -
 .x4 4 . 2 . 2x20
 .x4 4 . 2 . 2x18
-.x2 5 . 4 . 4 . 5x21
+.x4 4 . 4 . 5x21
 .x4 4 . 4 . 4x21
 -
-.x2 4x6 6x17
+.x2 5 . 5x23
 -
-.x2 2x4 . 4x3 .x2 3x4 . 4x3 .x2 4x12
+.x2 2x4 . 4x3 .x2 3x4 . 4x3
 1x160
 --- legend
 1 fg=#768186
@@ -34,4 +34,3 @@
 3 fg=#dee0e1
 4 fg=#7e888e
 5 fg=#dee0e1 bold
-6 fg=#a08ed5

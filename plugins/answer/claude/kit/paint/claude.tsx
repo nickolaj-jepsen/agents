@@ -20,7 +20,6 @@ const COLOR: Record<Role, string | undefined> = {
   code: "permission",
   link: undefined,
   border: undefined,
-  active: "claude",
   answered: "suggestion",
 };
 
