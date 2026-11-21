@@ -283,6 +283,8 @@ function describe(i: ImplState): string {
   return `${i.state}: ${i.exports.map((e) => `\`${e}\``).join(", ")}`;
 }
 
+const tableCell = (text: string) => text.replace(/\r?\n/g, " ").replaceAll("|", "\\|");
+
 /** `COMPONENTS.md`: components, per-harness status and features, from the manifests alone. */
 export function markdown(model: Model): string {
   const out: string[] = [
@@ -299,13 +301,13 @@ export function markdown(model: Model): string {
     out.push(
       `- status: ${surfaces.flatMap((x) => (c.status[x] ? [`${x} ${c.status[x]}`] : [])).join("; ")}`,
     );
-    out.push("", "Features:", "");
+    out.push("", "| Feature | pi | Claude Code (terminal) |", "| --- | --- | --- |");
     for (const f of c.features) {
-      const cell = (h: Harness) => {
-        const s = f.support[h];
-        return `${h} ${s.status}${s.note ? ` (${s.note})` : ""}`;
-      };
-      out.push(`- ${f.label}: ${cell("pi")}; ${cell("claude")}`);
+      const support = harnesses.map((h) => {
+        const { status, note } = f.support[h];
+        return `**${status}**${note ? ` — ${note}` : ""}`;
+      });
+      out.push(`| ${[f.label, ...support].map(tableCell).join(" | ")} |`);
     }
     out.push("");
   }

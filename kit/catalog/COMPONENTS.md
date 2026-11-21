@@ -12,12 +12,12 @@ A row of actions with their keys, the suggested one in the accent, and keyboard-
 - claude: exists: `buttonRow`
 - status: pi system; claude system; gui legacy
 
-Features:
-
-- Actions label first, the suggested one in the accent; a keyboard-only hint is dim: pi yes (an action's label and key carry its `hit`; a hint carries none); claude yes (an action's label and key carry its `hit`; a hint carries none)
-- A row with no room drops what is neither suggested nor essential, last first: pi yes; claude yes
-- A wrapped row drops nothing; words before the first entry are not a control: pi yes; claude yes
-- The pointer's control is shown: pi yes (the label is bold in the text colour; `hover` gives the cell); claude yes (the control sits on a soft fill: the engine inverts it, and the painter swaps its colours first)
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Actions label first, the suggested one in the accent; a keyboard-only hint is dim | **yes** — an action's label and key carry its `hit`; a hint carries none | **yes** — an action's label and key carry its `hit`; a hint carries none |
+| A row with no room drops what is neither suggested nor essential, last first | **yes** | **yes** |
+| A wrapped row drops nothing; words before the first entry are not a control | **yes** | **yes** |
+| The pointer's control is shown | **yes** — the label is bold in the text colour; `hover` gives the cell | **yes** — the control sits on a soft fill: the engine inverts it, and the painter swaps its colours first |
 
 ## Question card
 
@@ -27,17 +27,17 @@ A question with lettered answers and a note, and the steps and summary of a form
 - claude: exists: `heading`, `choice`, `choiceList`, `note`, `steps`, `summary`, `closing`, `rail`, `sections`
 - status: pi system; claude system; gui legacy
 
-Features:
-
-- One of many: the chosen answer in the accent with a filled mark: pi yes; claude yes
-- Several of many, with the keyboard's row marked apart from the chosen ones: pi yes; claude yes
-- A write-in row for the person's own words: pi yes; claude yes
-- The row under the pointer is shown: pi yes (the row is bold, like the keyboard's, without its pointer); claude yes (the control sits on a soft fill: the engine inverts it, and the painter swaps its colours first)
-- A question in a form: label, answers and note, a blank row between: pi yes; claude yes
-- Cards in a transcript: the keyboard's, and one that has its answer: pi yes (the kit draws the rail beside each row); claude partial (the rail is the engine's quote border, which the kit does not draw)
-- Steps of several questions on one row, then each answer and its note: pi yes; claude yes
-- A round's closing row: the count goes to the first question, Fill prompt is suggested once there is a reply: pi yes (the kit draws the rail beside the row); claude partial (the rail is the engine's quote border, which the kit does not draw)
-- Keys and clicks pick an answer: pi yes (the client wires keys and the mouse to `choiceReduce`); claude yes (the client wires keys and clicks to `choiceReduce`)
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| One of many: the chosen answer in the accent with a filled mark | **yes** | **yes** |
+| Several of many, with the keyboard's row marked apart from the chosen ones | **yes** | **yes** |
+| A write-in row for the person's own words | **yes** | **yes** |
+| The row under the pointer is shown | **yes** — the row is bold, like the keyboard's, without its pointer | **yes** — the control sits on a soft fill: the engine inverts it, and the painter swaps its colours first |
+| A question in a form: label, answers and note, a blank row between | **yes** | **yes** |
+| Cards in a transcript: the keyboard's, and one that has its answer | **yes** — the kit draws the rail beside each row | **partial** — the rail is the engine's quote border, which the kit does not draw |
+| Steps of several questions on one row, then each answer and its note | **yes** | **yes** |
+| A round's closing row: the count goes to the first question, Fill prompt is suggested once there is a reply | **yes** — the kit draws the rail beside the row | **partial** — the rail is the engine's quote border, which the kit does not draw |
+| Keys and clicks pick an answer | **yes** — the client wires keys and the mouse to `choiceReduce` | **yes** — the client wires keys and clicks to `choiceReduce` |
 
 ## Item detail
 
@@ -47,14 +47,14 @@ One item read whole: a meta line, a wrapped title, sections under dim headings o
 - claude: exists: `detail`, `detailRange`
 - status: pi system; claude system; gui legacy
 
-Features:
-
-- A dim meta line, a bold title, then prose and keyed rows under dim headings: pi yes; claude yes
-- Cut to a height, a dim `↓ 7 more` counting what is below: pi yes; claude yes
-- Scrolled by `offset`, with the window every kit component scrolls by (`scrolled`): `↑ n more` above and `↓ n more` below; `detailRange` bounds it: pi yes; claude yes
-- Under three rows it is all text: no row goes to a marker: pi yes; claude yes
-- A section under the frame's caption rule: dim words after its first cell, a short rule between several, and a control at its end, label first and its key dim, dim when it has nothing to do: pi yes (the control's spans carry its `hit`); claude yes (the control's spans carry its `hit`)
-- In a frame's body: rules across the whole width, the frame's corner after their control, and the text set in to line up with their words: pi yes; claude yes
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| A dim meta line, a bold title, then prose and keyed rows under dim headings | **yes** | **yes** |
+| Cut to a height, a dim `↓ 7 more` counting what is below | **yes** | **yes** |
+| Scrolled by `offset`, with the window every kit component scrolls by (`scrolled`): `↑ n more` above and `↓ n more` below; `detailRange` bounds it | **yes** | **yes** |
+| Under three rows it is all text: no row goes to a marker | **yes** | **yes** |
+| A section under the frame's caption rule: dim words after its first cell, a short rule between several, and a control at its end, label first and its key dim, dim when it has nothing to do | **yes** — the control's spans carry its `hit` | **yes** — the control's spans carry its `hit` |
+| In a frame's body: rules across the whole width, the frame's corner after their control, and the text set in to line up with their words | **yes** | **yes** |
 
 ## Fields
 
@@ -64,13 +64,13 @@ What a record holds, one named value each: a row per field, or side by side.
 - claude: exists: `fields`
 - status: pi system; claude system; gui legacy
 
-Features:
-
-- A row per field, the labels in one column; a long value hangs under its start: pi yes; claude yes
-- A key before each field, in the accent where the keyboard is: pi yes (the caller binds the letters); claude yes (the caller binds the letters, on buttons that draw nothing (`ring`))
-- Values side by side after their keys, wrapped whole, where rows are short: pi yes; claude yes
-- A field is a control: its row, or its cells when side by side: pi yes (the row carries the `hit`; `hovered` in `lines.ts` draws the pointer's); claude yes (a press lands on the row's Button; the engine's hover is the soft fill)
-- Read only: no keys and nothing to press: pi yes; claude yes
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| A row per field, the labels in one column; a long value hangs under its start | **yes** | **yes** |
+| A key before each field, in the accent where the keyboard is | **yes** — the caller binds the letters | **yes** — the caller binds the letters, on buttons that draw nothing (`ring`) |
+| Values side by side after their keys, wrapped whole, where rows are short | **yes** | **yes** |
+| A field is a control: its row, or its cells when side by side | **yes** — the row carries the `hit`; `hovered` in `lines.ts` draws the pointer's | **yes** — a press lands on the row's Button; the engine's hover is the soft fill |
+| Read only: no keys and nothing to press | **yes** | **yes** |
 
 ## Captioned frame
 
@@ -80,13 +80,13 @@ A form between two rules: a caption and Close in the top one, buttons above the 
 - claude: exists: `captionFrame`, `frameTop`, `captionRule`, `captionParts`
 - status: pi system; claude system; gui legacy
 
-Features:
-
-- A title in the top rule, Close at the right: pi yes; claude yes
-- The top rule alone, `captionRule`: a caption after its first cell, a short rule between its parts, a control at its end; what a detail's section rule is: pi yes; claude yes
-- A caption drawn in the room the rule has, such as the steps of a form: pi yes; claude yes
-- Close asks before it throws the answers away, in the place it stood: pi yes (Discard and Keep are controls with a `hit` each); claude yes (Discard and Keep are controls with a `hit` each)
-- The pointer's control is shown: pi yes (the control is bold in the text colour; `close.hover` names it); claude yes (the control sits on a soft fill: the engine inverts it, and the painter swaps its colours first)
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| A title in the top rule, Close at the right | **yes** | **yes** |
+| The top rule alone, `captionRule`: a caption after its first cell, a short rule between its parts, a control at its end; what a detail's section rule is | **yes** | **yes** |
+| A caption drawn in the room the rule has, such as the steps of a form | **yes** | **yes** |
+| Close asks before it throws the answers away, in the place it stood | **yes** — Discard and Keep are controls with a `hit` each | **yes** — Discard and Keep are controls with a `hit` each |
+| The pointer's control is shown | **yes** — the control is bold in the text colour; `close.hover` names it | **yes** — the control sits on a soft fill: the engine inverts it, and the painter swaps its colours first |
 
 ## Grouped list
 
@@ -96,19 +96,19 @@ Rows with a mark and a line or two each, under group rows, behind rails or bare;
 - claude: exists: `list`, `listFollow`, `listTopMax`, `listShowsWhole`
 - status: pi system; claude system; gui legacy
 
-Features:
-
-- Groups behind the card's rail: green once every row is decided, bright by the keyboard's group, whose label is in the accent: pi yes; claude yes
-- A row left alone, chosen (the accent, a filled mark) or set aside (the whole row dim); its mark a control apart from its text: pi yes (the pointer column and the mark carry `markHit`, the text `hit`); claude yes (the pointer column and the mark are a Button of their own)
-- An aside column every row keeps, blank where a row has none, so cut text lines up: pi yes; claude yes
-- Dim controls at the right of a group's row, bold under the mouse: pi yes; claude yes
-- Taller than its room: a window from `top` that `listFollow` moves only when the keyboard would leave it, its last row saying how many rows are above and below: pi yes (the wheel moves `top`; `listTopMax` bounds it); claude yes (the wheel reaches the mod as `ui.scroll` with the row under the pointer)
-- The keyboard's group row stands in for the window's first row when it is above it: pi yes; claude yes
-- A blank row between groups, without a rail: a line of the list, which a window scrolls past: pi yes; claude yes
-- No rails, where the list is not a form to complete: a group's label starts the row, and nothing says a group is decided: pi yes; claude yes
-- Rows of several lines: a text wraps under its first line up to `lines`, the window counts and follows lines, and a row its end cuts ends in `…`: pi yes; claude yes (a later line is a Button of its own with the row's `hit`)
-- Little room: rows carry their group's label, dim, and there are no group rows: pi yes; claude yes
-- The row under the pointer is shown: pi yes (the row is bold, like the keyboard's, without its pointer; `hovered` names it); claude yes (the row sits on a soft fill: the engine inverts it, and the painter swaps its colours first)
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Groups behind the card's rail: green once every row is decided, bright by the keyboard's group, whose label is in the accent | **yes** | **yes** |
+| A row left alone, chosen (the accent, a filled mark) or set aside (the whole row dim); its mark a control apart from its text | **yes** — the pointer column and the mark carry `markHit`, the text `hit` | **yes** — the pointer column and the mark are a Button of their own |
+| An aside column every row keeps, blank where a row has none, so cut text lines up | **yes** | **yes** |
+| Dim controls at the right of a group's row, bold under the mouse | **yes** | **yes** |
+| Taller than its room: a window from `top` that `listFollow` moves only when the keyboard would leave it, its last row saying how many rows are above and below | **yes** — the wheel moves `top`; `listTopMax` bounds it | **yes** — the wheel reaches the mod as `ui.scroll` with the row under the pointer |
+| The keyboard's group row stands in for the window's first row when it is above it | **yes** | **yes** |
+| A blank row between groups, without a rail: a line of the list, which a window scrolls past | **yes** | **yes** |
+| No rails, where the list is not a form to complete: a group's label starts the row, and nothing says a group is decided | **yes** | **yes** |
+| Rows of several lines: a text wraps under its first line up to `lines`, the window counts and follows lines, and a row its end cuts ends in `…` | **yes** | **yes** — a later line is a Button of its own with the row's `hit` |
+| Little room: rows carry their group's label, dim, and there are no group rows | **yes** | **yes** |
+| The row under the pointer is shown | **yes** — the row is bold, like the keyboard's, without its pointer; `hovered` names it | **yes** — the row sits on a soft fill: the engine inverts it, and the painter swaps its colours first |
 
 ## Prose
 
@@ -118,13 +118,13 @@ A text of several blocks set as lines whose rows can be counted, and the window 
 - claude: exists: `prose`
 - status: pi system; claude system; gui legacy
 
-Features:
-
-- Paragraphs, lists, ticked items, headings, quotes and rules, with inline Markdown: pi yes; claude yes
-- A table sized to the room it is given, cells wrapped, the first row bold: pi yes; claude yes (the engine's Markdown sizes a table to the terminal, not to the pane)
-- Fenced code in the code colour, a long line cut instead of wrapped: pi yes (no syntax colours; a `slot` line gives pi's own renderer the block); claude yes (no syntax colours; a `slot` line gives the engine's renderer the block)
-- A window of the lines (`scrolled` in `lines.ts`, which every window in the kit uses), its first and last row counting what is past them: pi yes (a marker with a `hit` steps the window; the caller keeps `top`); claude yes (a marker with a `hit` steps the window; the caller keeps `top`)
-- Every word quiet: pi yes; claude yes
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Paragraphs, lists, ticked items, headings, quotes and rules, with inline Markdown | **yes** | **yes** |
+| A table sized to the room it is given, cells wrapped, the first row bold | **yes** | **yes** — the engine's Markdown sizes a table to the terminal, not to the pane |
+| Fenced code in the code colour, a long line cut instead of wrapped | **yes** — no syntax colours; a `slot` line gives pi's own renderer the block | **yes** — no syntax colours; a `slot` line gives the engine's renderer the block |
+| A window of the lines (`scrolled` in `lines.ts`, which every window in the kit uses), its first and last row counting what is past them | **yes** — a marker with a `hit` steps the window; the caller keeps `top` | **yes** — a marker with a `hit` steps the window; the caller keeps `top` |
+| Every word quiet | **yes** | **yes** |
 
 ## Sheet
 
@@ -134,13 +134,13 @@ A panel laid over the screen, closed on every side: the title and Close in its t
 - claude: exists: `sheet`, `sheetHead`
 - status: pi system; claude system; gui legacy
 
-Features:
-
-- Closed on every side, the title and Close in the top edge: pi yes (an overlay anchored to the bottom, at the width of a Claude Code pane); claude no (the engine frames a pane itself, a box above the prompt or a rule beside the transcript, with its own Close; a mod draws `sheetHead` in it)
-- Close asks before it throws the work away, in the place it stood: pi yes (Discard and Keep are controls with a `hit` each); claude yes (in `sheetHead`: the question stands at the right of the title)
-- A notice in a row of its own above the buttons: pi yes; claude no (without the edges a mod sets the row itself, above its button row)
-- No bottom edge, where it stands on a rule the host draws: pi yes (on the rule over the prompt, so the sheet reads as behind it); claude no (a pane is framed by the engine, which also places it)
-- The top edge alone: the title, and the question Close asks: pi yes; claude yes
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Closed on every side, the title and Close in the top edge | **yes** — an overlay anchored to the bottom, at the width of a Claude Code pane | **no** — the engine frames a pane itself, a box above the prompt or a rule beside the transcript, with its own Close; a mod draws `sheetHead` in it |
+| Close asks before it throws the work away, in the place it stood | **yes** — Discard and Keep are controls with a `hit` each | **yes** — in `sheetHead`: the question stands at the right of the title |
+| A notice in a row of its own above the buttons | **yes** | **no** — without the edges a mod sets the row itself, above its button row |
+| No bottom edge, where it stands on a rule the host draws | **yes** — on the rule over the prompt, so the sheet reads as behind it | **no** — a pane is framed by the engine, which also places it |
+| The top edge alone: the title, and the question Close asks | **yes** | **yes** |
 
 ## Band shell
 
@@ -150,13 +150,13 @@ The wrapper of a form that takes the strip above the prompt: a divider with a ti
 - claude: exists: `bandShell`, `bandRows`, `onlyOwnRows`
 - status: pi legacy; claude legacy; gui legacy
 
-Features:
-
-- Top divider with a title on the left and a slot after it: pi yes (in the rounded border: the slot's forms are given widest first, the first that fits is drawn, its cells clickable); claude yes (the rule fills what the title and the slot leave)
-- A title and no slot: pi yes; claude yes
-- Stands as tall as its tallest state: pi yes (`bandRows` counts body rows within the terminal's rows less the transcript's, the frame's own and a minimum of four; a taller body scrolls above the footer); claude yes (`bandRows` keeps `reserved` rows for another mod; a native surface has no heights in rows)
-- Stands on the line below it: no bottom border, the keys in a last row: pi yes (`isJoined`: the answer form stands on the prompt's rule, so the two read as one); claude no (the band is a divider and rows, with no frame to join to the prompt)
-- Hides every other mod's row while open: pi no (the form replaces the editor, so nothing else shares its place); claude yes (`onlyOwnRows` in the `AbovePromptList` hook; the catalogue draws its stories through it)
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Top divider with a title on the left and a slot after it | **yes** — in the rounded border: the slot's forms are given widest first, the first that fits is drawn, its cells clickable | **yes** — the rule fills what the title and the slot leave |
+| A title and no slot | **yes** | **yes** |
+| Stands as tall as its tallest state | **yes** — `bandRows` counts body rows within the terminal's rows less the transcript's, the frame's own and a minimum of four; a taller body scrolls above the footer | **yes** — `bandRows` keeps `reserved` rows for another mod; a native surface has no heights in rows |
+| Stands on the line below it: no bottom border, the keys in a last row | **yes** — `isJoined`: the answer form stands on the prompt's rule, so the two read as one | **no** — the band is a divider and rows, with no frame to join to the prompt |
+| Hides every other mod's row while open | **no** — the form replaces the editor, so nothing else shares its place | **yes** — `onlyOwnRows` in the `AbovePromptList` hook; the catalogue draws its stories through it |
 
 ## Button row
 
@@ -166,10 +166,10 @@ Clickable actions and keyboard-only labels, with the suggested action emphasised
 - claude: exists: `buttonRow`
 - status: pi legacy; claude legacy; gui legacy
 
-Features:
-
-- Clickable actions and dim, non-interactive keyboard hints: pi yes (returns click ranges only for actions); claude yes (actions use native buttons; keyboard-only hints use plain text)
-- A row wider than its room wraps: pi yes (optional; a fixed-height row drops lower-priority entries instead); claude yes (nothing drops, as every key must stay pressable)
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Clickable actions and dim, non-interactive keyboard hints | **yes** — returns click ranges only for actions | **yes** — actions use native buttons; keyboard-only hints use plain text |
+| A row wider than its room wraps | **yes** — optional; a fixed-height row drops lower-priority entries instead | **yes** — nothing drops, as every key must stay pressable |
 
 ## Clamp
 
@@ -179,15 +179,15 @@ Wraps text to a width in cells and bounds its line count; the text component of 
 - claude: exists: `clamp`, `inlineMarkdown`
 - status: pi legacy; claude legacy; gui legacy
 
-Features:
-
-- Wrap without limit: pi yes; claude yes (the kit's own wrap, in cells; Text `wrap` still serves a plain paragraph)
-- One-line truncation, last line full before the ellipsis: pi yes; claude yes (Text `truncate-end` cuts early; the kit fills the line first)
-- At most n lines: pi yes; claude yes (Text has no maxLines; the kit cuts the lines itself)
-- Pad to n lines so rows keep one height: pi yes; claude yes
-- Line count from a text length: pi yes (a narrow pane gets more lines than a wide list); claude yes
-- Cells, not characters: pi yes (pi-tui's width functions); claude yes (`cellWidth` covers East Asian wide characters and emoji; the engine exposes no measure, so the ranges are the kit's own)
-- Inline markdown wrapped as styled runs, for a row pressed whole: pi planned (pi-tui's `Markdown` wraps and styles a paragraph; the pi kit adds nothing yet); claude yes (`inlineMarkdown`: a Button holds only strings and Text, so the kit sets code, bold, italics and links itself)
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Wrap without limit | **yes** | **yes** — the kit's own wrap, in cells; Text `wrap` still serves a plain paragraph |
+| One-line truncation, last line full before the ellipsis | **yes** | **yes** — Text `truncate-end` cuts early; the kit fills the line first |
+| At most n lines | **yes** | **yes** — Text has no maxLines; the kit cuts the lines itself |
+| Pad to n lines so rows keep one height | **yes** | **yes** |
+| Line count from a text length | **yes** — a narrow pane gets more lines than a wide list | **yes** |
+| Cells, not characters | **yes** — pi-tui's width functions | **yes** — `cellWidth` covers East Asian wide characters and emoji; the engine exposes no measure, so the ranges are the kit's own |
+| Inline markdown wrapped as styled runs, for a row pressed whole | **planned** — pi-tui's `Markdown` wraps and styles a paragraph; the pi kit adds nothing yet | **yes** — `inlineMarkdown`: a Button holds only strings and Text, so the kit sets code, bold, italics and links itself |
 
 ## Detail blocks
 
@@ -197,11 +197,11 @@ What a detail pane or panel body is made of: a section header, prose and notes.
 - claude: exists: `section`, `note`
 - status: pi legacy; claude legacy; gui legacy
 
-Features:
-
-- Bold header with a dim rule to the edge: pi yes; claude yes (there is no divider element; the rule is drawn text sized from the room it is given)
-- Prose wrapped at the measure in a wider pane: pi yes (80 columns); claude partial (no prose component: `clamp` at `tokens.prose`, as the story does)
-- Note attached to one thing, with a │ / ╰▸ gutter: pi yes; claude yes (a one-liner is `╰▸` alone; the words' colour role and italic are options)
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Bold header with a dim rule to the edge | **yes** | **yes** — there is no divider element; the rule is drawn text sized from the room it is given |
+| Prose wrapped at the measure in a wider pane | **yes** — 80 columns | **partial** — no prose component: `clamp` at `tokens.prose`, as the story does |
+| Note attached to one thing, with a │ / ╰▸ gutter | **yes** | **yes** — a one-liner is `╰▸` alone; the words' colour role and italic are options |
 
 ## Empty state
 
@@ -211,10 +211,10 @@ What a list says when there is nothing in it.
 - claude: exists: `emptyState`
 - status: pi legacy; claude legacy; gui legacy
 
-Features:
-
-- Dim text standing in for the rows: pi yes; claude yes
-- Wraps in a narrow pane: pi yes; claude yes (`clamp` joined with newlines, not Text `wrap`)
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Dim text standing in for the rows | **yes** | **yes** |
+| Wraps in a narrow pane | **yes** | **yes** — `clamp` joined with newlines, not Text `wrap` |
 
 ## Dated entries
 
@@ -224,14 +224,14 @@ A log, a history or evidence: several entries, each with a date.
 - claude: exists: `entries`
 - status: pi legacy; claude legacy; gui legacy
 
-Features:
-
-- Date column with the text hanging beside it: pi yes (from 50 columns; one blank row between entries, no bullets or gutter); claude yes (the pane's own width decides: a docked pane is about 48 columns, so a date line there; the date column shows inline and wide)
-- Date line above the text below 50 columns: pi yes; claude yes (the layout in a docked pane)
-- A single entry: pi yes; claude yes
-- Text bounded through clamp options: pi yes (`lines` is passed to `clamp`); claude yes
-- Fewer rows than it needs: cut with … or counted as ↓ n more, never a bare ellipsis: pi yes (`rows` bounds the block); claude planned (could read the pane's `scroll.bodyRows`; nothing needs a row budget yet)
-- Wide characters measured in cells: pi yes; claude yes
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Date column with the text hanging beside it | **yes** — from 50 columns; one blank row between entries, no bullets or gutter | **yes** — the pane's own width decides: a docked pane is about 48 columns, so a date line there; the date column shows inline and wide |
+| Date line above the text below 50 columns | **yes** | **yes** — the layout in a docked pane |
+| A single entry | **yes** | **yes** |
+| Text bounded through clamp options | **yes** — `lines` is passed to `clamp` | **yes** |
+| Fewer rows than it needs: cut with … or counted as ↓ n more, never a bare ellipsis | **yes** — `rows` bounds the block | **planned** — could read the pane's `scroll.bodyRows`; nothing needs a row budget yet |
+| Wide characters measured in cells | **yes** | **yes** |
 
 ## Frame
 
@@ -241,16 +241,16 @@ The border round a panel: title and count in the top, key hints in the bottom.
 - claude: exists: `paneTitle`
 - status: pi legacy; claude legacy; gui legacy
 
-Features:
-
-- Draws its own rounded border: pi yes (one border round a modal, none inside); claude no (a pane already has the engine's frame; the kit draws the title line, a band uses its own divider)
-- Open-sided form with a caption in the top rule: pi yes (two rules frame the form, with hints above the lower rule); claude partial (the kit draws the title rule; the host frames the pane)
-- Close and discard confirmation in the top rule: pi yes (Close becomes Discard and Keep in place, with hit ranges for both); claude no (the host owns the pane's close control)
-- Width class as a cap: pi yes (reading, split, dialog, wide and auto, chosen with the overlay); claude partial (`widthCap` computes the cap; Box has no `maxWidth` and the surface sizes a pane, so a mod draws to it)
-- Fits its content (auto): pi yes (within the dialog cap); claude no (a pane and a band take the width the surface gives them)
-- Title with a dim count: pi yes (in the top border); claude yes (drawn as `─ Title  count ─────` text)
-- Hints in the border: pi yes (left-aligned, the border running on); claude no (Box borders carry no text; the keys are a button row under the body (see buttons))
-- Hints drop lowest priority first, the way out stays: pi yes; claude no (the button row wraps and drops nothing)
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Draws its own rounded border | **yes** — one border round a modal, none inside | **no** — a pane already has the engine's frame; the kit draws the title line, a band uses its own divider |
+| Open-sided form with a caption in the top rule | **yes** — two rules frame the form, with hints above the lower rule | **partial** — the kit draws the title rule; the host frames the pane |
+| Close and discard confirmation in the top rule | **yes** — Close becomes Discard and Keep in place, with hit ranges for both | **no** — the host owns the pane's close control |
+| Width class as a cap | **yes** — reading, split, dialog, wide and auto, chosen with the overlay | **partial** — `widthCap` computes the cap; Box has no `maxWidth` and the surface sizes a pane, so a mod draws to it |
+| Fits its content (auto) | **yes** — within the dialog cap | **no** — a pane and a band take the width the surface gives them |
+| Title with a dim count | **yes** — in the top border | **yes** — drawn as `─ Title  count ─────` text |
+| Hints in the border | **yes** — left-aligned, the border running on | **no** — Box borders carry no text; the keys are a button row under the body (see buttons) |
+| Hints drop lowest priority first, the way out stays | **yes** | **no** — the button row wraps and drops nothing |
 
 ## Image gallery
 
@@ -260,11 +260,11 @@ Draws PNG images at their aspect ratios, with optional file links and a caption.
 - claude: exists: `fitImage`, `imageGallery`
 - status: claude legacy; gui legacy
 
-Features:
-
-- Fit landscape, portrait and unknown dimensions without distortion: pi no (The pi kit has no terminal image component.); claude yes (Terminal cells count as two pixels tall; both axes stay within 255 cells)
-- Inline PNG bytes or a local file read by the terminal: pi no (The pi kit has no terminal image component.); claude yes
-- A dim file link under each image, including long escaped paths: pi no (The pi kit has no terminal image component.); claude yes
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Fit landscape, portrait and unknown dimensions without distortion | **no** — The pi kit has no terminal image component. | **yes** — Terminal cells count as two pixels tall; both axes stay within 255 cells |
+| Inline PNG bytes or a local file read by the terminal | **no** — The pi kit has no terminal image component. | **yes** |
+| A dim file link under each image, including long escaped paths | **no** — The pi kit has no terminal image component. | **yes** |
 
 ## List
 
@@ -274,20 +274,20 @@ A grouped, scrolling list with a cursor, marks and metadata columns.
 - claude: exists: `list`, `listRow`
 - status: pi legacy; claude legacy; gui legacy
 
-Features:
-
-- Keyboard selection: pi yes (every key is the plugin's; the list moves a cursor); claude partial (Button focus and hotkeys; the arrows scroll the pane, and a mod cannot bind a plain arrow key)
-- Mouse click selects, a click on the mark toggles it: pi yes (hit-tested by the list from the overlay's mouse events); claude partial (a click presses the row, which docfix makes a toggle; free on Button)
-- Hover lights a row: pi yes (the hovered row is bold); claude planned (not documented for Button; confirm in a session before designing on it)
-- Selection pointer and accent title: pi yes (a ❯ in the gutter, no inverse video); claude no (the engine inverts the focused Button's text and offers no way to turn that off, so a pointer the kit drew would double it (tried in docfix))
-- Titles wrap and clamp: pi yes (through `clamp`; every row keeps one height); claude yes (through `clamp`)
-- Scroll window follows the cursor: pi yes (blank rows between groups drop first); claude no (a pane scrolls as a whole; there is no scroll element)
-- Whole rows only; hidden rows counted: pi yes (a dim `↑ n more` / `↓ n more` line stands in for the hidden rows); claude no (a pane scrolls as a whole, so no rows are hidden to count)
-- Groups under a header rule: pi yes (a name longer than the list wraps, its rule on the last line); claude yes (the rule is drawn text; a name longer than the list is cut with `…`)
-- Marks, several-of-many and one-of-many: pi yes (□ ■ and ○ ●); claude yes (□ ■, and ○ ● with `marks: "single"`)
-- Right-aligned metadata columns: pi yes (fixed width each; the lowest priority drops first); claude yes (a docked pane is narrow, so metadata takes its own dim line there; columns show inline and wide)
-- Colour on a field by predicate: pi yes (a threshold or state, dim otherwise); claude yes (a Cell's `role`)
-- Wide characters measured in cells: pi yes; claude yes (measured with `cellWidth`)
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Keyboard selection | **yes** — every key is the plugin's; the list moves a cursor | **partial** — Button focus and hotkeys; the arrows scroll the pane, and a mod cannot bind a plain arrow key |
+| Mouse click selects, a click on the mark toggles it | **yes** — hit-tested by the list from the overlay's mouse events | **partial** — a click presses the row, which docfix makes a toggle; free on Button |
+| Hover lights a row | **yes** — the hovered row is bold | **planned** — not documented for Button; confirm in a session before designing on it |
+| Selection pointer and accent title | **yes** — a ❯ in the gutter, no inverse video | **no** — the engine inverts the focused Button's text and offers no way to turn that off, so a pointer the kit drew would double it (tried in docfix) |
+| Titles wrap and clamp | **yes** — through `clamp`; every row keeps one height | **yes** — through `clamp` |
+| Scroll window follows the cursor | **yes** — blank rows between groups drop first | **no** — a pane scrolls as a whole; there is no scroll element |
+| Whole rows only; hidden rows counted | **yes** — a dim `↑ n more` / `↓ n more` line stands in for the hidden rows | **no** — a pane scrolls as a whole, so no rows are hidden to count |
+| Groups under a header rule | **yes** — a name longer than the list wraps, its rule on the last line | **yes** — the rule is drawn text; a name longer than the list is cut with `…` |
+| Marks, several-of-many and one-of-many | **yes** — □ ■ and ○ ● | **yes** — □ ■, and ○ ● with `marks: "single"` |
+| Right-aligned metadata columns | **yes** — fixed width each; the lowest priority drops first | **yes** — a docked pane is narrow, so metadata takes its own dim line there; columns show inline and wide |
+| Colour on a field by predicate | **yes** — a threshold or state, dim otherwise | **yes** — a Cell's `role` |
+| Wide characters measured in cells | **yes** | **yes** — measured with `cellWidth` |
 
 ## Notice
 
@@ -297,10 +297,10 @@ One line telling the person what just happened.
 - claude: exists: `notice`
 - status: pi legacy; claude legacy; gui legacy
 
-Features:
-
-- Success, warning, error and dim: pi yes (success, warning and error only for an actual state); claude yes (Text colour; `$.ui.status` is one plain line per mod, with no colour)
-- Cut to one line: pi yes; claude yes (`clamp` with {min: 1, max: 1})
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Success, warning, error and dim | **yes** — success, warning and error only for an actual state | **yes** — Text colour; `$.ui.status` is one plain line per mod, with no colour |
+| Cut to one line | **yes** | **yes** — `clamp` with {min: 1, max: 1} |
 
 ## Question card
 
@@ -310,11 +310,11 @@ A question and its choices on a left rail, with wrapped Markdown and selection m
 - claude: not possible: The Claude terminal Answer cards have their own renderer.
 - status: pi legacy
 
-Features:
-
-- Markdown headings, choices with focus and selection marks, literal write-ins, and notes: pi yes; claude planned (Reuse the native Answer card drawing when migrating the Claude kit.)
-- A neutral focus chevron, independent of the accent on checked choices: pi yes; claude planned
-- Named steps in the caption and readable answer summaries: pi yes; claude planned
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Markdown headings, choices with focus and selection marks, literal write-ins, and notes | **yes** | **planned** — Reuse the native Answer card drawing when migrating the Claude kit. |
+| A neutral focus chevron, independent of the accent on checked choices | **yes** | **planned** |
+| Named steps in the caption and readable answer summaries | **yes** | **planned** |
 
 ## Split
 
@@ -324,8 +324,8 @@ A list beside the selected row's detail, in one border, stacked on a narrow term
 - claude: not possible: a docked pane is about 48 columns, so there is no room for two panes; rows carry their own metadata line and the detail follows the list
 - status: pi legacy
 
-Features:
-
-- Two panes with a divider: pi yes (from 110 terminal columns, the list taking 55%); claude no (a docked pane is about 48 columns; the surface, not the mod, chooses where a pane goes)
-- ┬ and ┴ on the divider at every width: pi yes (hints stay left of the divider, the lowest priority dropped first, esc kept); claude no (no two-pane layout)
-- Stacked: list above detail: pi yes (below 110 columns); claude no (there is no split component to stack: a pane is the only layout, and docfix puts the evidence under its list by hand (the story))
+| Feature | pi | Claude Code (terminal) |
+| --- | --- | --- |
+| Two panes with a divider | **yes** — from 110 terminal columns, the list taking 55% | **no** — a docked pane is about 48 columns; the surface, not the mod, chooses where a pane goes |
+| ┬ and ┴ on the divider at every width | **yes** — hints stay left of the divider, the lowest priority dropped first, esc kept | **no** — no two-pane layout |
+| Stacked: list above detail | **yes** — below 110 columns | **no** — there is no split component to stack: a pane is the only layout, and docfix puts the evidence under its list by hand (the story) |
