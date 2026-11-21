@@ -225,6 +225,9 @@ export function builtinMasks(paths: string[] = []): Mask[] {
     { pattern: /\b\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?Z?)?/g, with: "<date>" },
     { pattern: /\b\d{1,2}:\d{2}(?::\d{2})?\b/g, with: "<time>" },
     { pattern: /\b\d+h \d+m\b|\b\d+m \d+s\b|\b\d+(?:\.\d+)?(?:ms|s)\b/g, with: "<elapsed>" },
+    // pi's context meter estimates the prompt's tokens, and the prompt names the paths of pi's
+    // docs: a different install (a store path, a checkout's node_modules) moves the figure.
+    { pattern: /\d+(?:\.\d+)?%(?=\/\d+k\b)/g },
   ];
 }
 
