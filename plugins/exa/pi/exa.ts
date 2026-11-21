@@ -6,17 +6,9 @@
 import { Type } from "typebox";
 import type { ExtensionAPI, ExtensionToolContext } from "@earendil-works/pi-coding-agent";
 import { readFileSync } from "node:fs";
+import { contextBudget, fetchPlan, resultCount, searchCap } from "../core/budget.ts";
 
 const API = "https://api.exa.ai";
-// A call may spend at most this share of the window or of the free context.
-const WINDOW_SHARE = 0.06;
-const FREE_SHARE = 0.25;
-const MIN_TOTAL_CHARS = 4_000;
-const MAX_TOTAL_CHARS = 120_000;
-const DEFAULT_SEARCH_CHARS = 8_000;
-const MAX_PAGE_CHARS = 30_000;
-const MIN_PAGE_CHARS = 1_500;
-
 // Exa's fee as tool-result usage, which pi counts in the session total even under codemode.
 const fee = (costUsd: number | undefined) =>
   costUsd !== undefined && costUsd > 0
@@ -55,19 +47,10 @@ interface ExaResponse {
 }
 
 /** Total chars one call may add to the context, and the window used for result counts. */
-function contextBudget(ctx: ExtensionToolContext) {
+function budgetOf(ctx: ExtensionToolContext) {
   const usage = ctx.getContextUsage();
-  const window = usage?.contextWindow ?? ctx.model?.contextWindow ?? 200_000;
-  const free = usage?.tokens == null ? window / 2 : Math.max(0, window - usage.tokens);
-  const share = Math.min(window * WINDOW_SHARE, free * FREE_SHARE) * 4;
-  return {
-    window,
-    total: Math.min(MAX_TOTAL_CHARS, Math.max(MIN_TOTAL_CHARS, Math.floor(share))),
-  };
+  return contextBudget(usage?.contextWindow ?? ctx.model?.contextWindow ?? 200_000, usage?.tokens);
 }
-
-const resultCount = (window: number) =>
-  window >= 500_000 ? 10 : window >= 150_000 ? 8 : window >= 64_000 ? 5 : 3;
 
 let apiKey: string | undefined;
 
@@ -191,13 +174,10 @@ export default function (pi: ExtensionAPI) {
       ),
     }),
     async execute(_toolCallId, params, signal, _onUpdate, ctx) {
-      const { window, total } = contextBudget(ctx);
+      const { window, total } = budgetOf(ctx);
       const mode = params.mode ?? "highlights";
       const numResults = params.numResults ?? resultCount(window);
-      const cap = Math.max(
-        1,
-        Math.min(params.maxChars ?? DEFAULT_SEARCH_CHARS, Math.floor(total / numResults)),
-      );
+      const cap = searchCap(total, numResults, params.maxChars);
       const data = await post<ExaResponse>(
         "/search",
         {
@@ -263,14 +243,9 @@ export default function (pi: ExtensionAPI) {
       ),
     }),
     async execute(_toolCallId, params, signal, _onUpdate, ctx) {
-      const { total } = contextBudget(ctx);
+      const { total } = budgetOf(ctx);
       const mode = params.mode ?? "text";
-      const pageCap = Math.max(1, Math.min(params.maxChars ?? MAX_PAGE_CHARS, MAX_PAGE_CHARS));
-      const maxPages = Math.max(
-        1,
-        Math.min(params.urls.length, Math.floor(total / Math.min(pageCap, MIN_PAGE_CHARS))),
-      );
-      const perPage = Math.max(1, Math.min(pageCap, Math.floor(total / maxPages)));
+      const { maxPages, perPage } = fetchPlan(total, params.urls.length, params.maxChars);
       const urls = params.urls.slice(0, maxPages);
       const skipped = params.urls.slice(maxPages);
 
