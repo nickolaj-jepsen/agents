@@ -1,23 +1,23 @@
 # kit/pi/item-detail/rule 160x45 @2,2 (96x9)
-↑ more
-
+↑ 4 more
 ─ Evidence 1 of 2 ── 2 days ago ─────────────────────────────────────────────────────── Next [n]
 
 Why the repo didn't say it
 The docs describe the gate as matching on the command text, and nothing says the text is not
 expanded first.
 
-↓ more
+Details
+↓ 7 more
 --- styles
-1x6
--
+1x8
 2 . 1x15 . 2x2 . 1x10 . 2x55 . 3x4 . 1x3
 -
 1x26
 -
 -
 -
-1x6
+1x7
+1x8
 --- legend
 1 fg=#7e888e
 2 fg=#768186

@@ -1,6 +1,6 @@
 # linear-issue/claude/discard 160x45 @88,0 (72x41)
 │                                                                     ✕
-│  Linear draft
+│  Linear draft                      Discard draft?  Discard ↵  Keep [k]
 │
 │  E  Honor Retry-After when the sync worker backs off after a 429
 │
@@ -26,7 +26,7 @@
 │  Source: acme/sync-worker · fix/retry-after
 │
 │  No open issue seems to cover this
-│  Discard draft?  Discard ↵  Keep [k]
+│  Create ↵  Edit text [x]  Discard [d]  □ Then open in Linear [o]
 │
 │
 │
@@ -42,9 +42,9 @@
 │
 --- styles
 1 .x69 2
-1 .x2 3x12
+1 .x2 3x12 .x22 4x14 .x10 2 .x7 2x3
 1
-1 .x2 2 .x2 4x60
+1 .x2 2 .x2 5x60
 1
 1 .x2 2 .x2 2x4
 1 .x2 2 .x2 2x6
@@ -52,23 +52,23 @@
 1 .x2 2 .x2 2x6
 1 .x2 2 .x2 2x7 .x3 2x4
 1
-1 .x48 5x3
-1 .x2 5x11
+1 .x48 6x3
+1 .x2 6x11
 1
 1
-1 .x2 2 .x6 5x11 .x36 5x3
+1 .x2 2 .x6 6x11 .x36 6x3
 1 .x2 2
-1 .x2 2 .x17 5x9
+1 .x2 2 .x17 6x9
 1
-1 .x2 4x6 . 5x11 .x2 5x13
+1 .x2 5x6 . 6x11 .x2 6x13
 1
-1 .x2 4x10 .x3 5x3 .x6 5x15
+1 .x2 5x10 .x3 6x3 .x6 6x15
 1
 1
-1 .x2 2x8 5x16 2x18
+1 .x2 2x8 6x16 2x18
 1
 1 .x2 2x33
-1 .x2 6x14 .x10 2 .x7 2x3
+1 2x65
 1
 1
 1
@@ -86,6 +86,6 @@
 1 dim
 2 fg=#999999
 3 fg=#d77757 bold
-4 bold
-5 fg=#b1b9f9
-6 fg=#ffc107
+4 fg=#ffc107
+5 bold
+6 fg=#b1b9f9

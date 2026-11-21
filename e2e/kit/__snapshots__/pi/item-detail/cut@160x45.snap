@@ -6,7 +6,7 @@ pi's permission gate cannot resolve shell variables, so cat $S/id_ed25519 reads 
 Why the repo didn't say it
 The docs describe the gate as matching on the command text, and nothing says the text is not
 expanded first.
-↓ more
+↓ 9 more
 --- styles
 1x28
 2x88
@@ -15,7 +15,7 @@ expanded first.
 1x26
 -
 -
-1x6
+1x8
 --- legend
 1 fg=#7e888e
 2 fg=#dee0e1 bold

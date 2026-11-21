@@ -14,7 +14,7 @@
 │   dependency that only the nix build
 │   supplies; an agent would report 20 fake
 │   failures.
-│   ↓ more
+│   ↓ 23 more
 │
 │   Close ↵  Apply [a]  Dismiss [d]
 --- styles
@@ -33,7 +33,7 @@
 1
 1
 1
-1 .x3 3x6
+1 .x3 3x9
 1
 1 .x3 4x5 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3
 --- legend

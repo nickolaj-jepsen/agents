@@ -1,24 +1,24 @@
 # linear-issue/claude/discard 70x24 @0,12 (70x8)
 ╭──────────────────────────────────────────────────────────────────✕─╮
+│   Linear draft                 Discard draft?  Discard ↵  Keep [k] │
+│                                                                    │
 │   E  Honor Retry-After when the sync worker backs off after a 429  │
 │   T PLT  S Todo  P Medium  L Bug                                   │
-│   The sync worker doubles its delay after every 429 and never      │
-│   reads Retry-After, so it retries sooner than the shop API allows │
-│   ↓ 13 more                                                        │
-│   Discard draft?  Discard ↵  Keep [k]                              │
+│   ↓ 15 more                                                        │
+│   Create ↵  Edit text [x]  Discard [d]  □ Then open in Linear [o]  │
 ╰────────────────────────────────────────────────────────────────────╯
 --- styles
 1x67 2 1x2
-1 .x3 2 .x2 3x60 .x2 1
+1 .x3 3x12 .x17 4x14 .x10 2 .x7 2x3 . 1
+1 .x68 1
+1 .x3 2 .x2 5x60 .x2 1
 1 .x3 2 .x6 2 .x7 2 .x9 2 .x39 1
-1 .x49 4x3 .x16 1
-1 .x9 4x11 .x48 1
 1 .x3 2x9 .x56 1
-1 .x3 5x14 .x10 2 .x7 2x3 .x30 1
+1 . 2x65 .x2 1
 1x70
 --- legend
 1 dim
 2 fg=#999999
-3 bold
-4 fg=#b1b9f9
-5 fg=#ffc107
+3 fg=#d77757 bold
+4 fg=#ffc107
+5 bold

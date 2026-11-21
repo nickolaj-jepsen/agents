@@ -21,7 +21,7 @@
 │ ─ Evidence ── 2 pieces ────────────── Read [e] ─
 │   just build printed error: derivation failed
 │   while evaluating the attribute and its
-│   ↓ more
+│   ↓ 11 more
 │
 │   Close ↵  Apply [a]  Dismiss [d]
 │
@@ -50,7 +50,7 @@
 1 . 2 . 2x8 . 2x2 . 2x8 . 2x14 .x6 2x3 . 2
 1 .x3 1x10
 1
-1 .x3 2x6
+1 .x3 2x9
 1
 1 .x9 2 .x8 2x3 .x10 2x3
 1
