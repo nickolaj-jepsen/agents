@@ -77,8 +77,11 @@ export const choiceRows = (
   width: number,
   send: ChoiceSend,
 ) =>
-  paintLines(k, choiceLines({ ...props, ...state }, width), (hit) =>
-    send({ do: "pick", index: choiceOf(hit) }),
+  paintLines(
+    k,
+    choiceLines({ ...props, ...state }, width),
+    (hit) => send({ do: "pick", index: choiceOf(hit) }),
+    width,
   );
 
 /**
