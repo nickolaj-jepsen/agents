@@ -85,6 +85,8 @@ In progress, and not ready for anyone else to use:
 - [handoff](https://nickolaj-jepsen.github.io/agents/skills/handoff/): writes a finished plan up as a self-contained handoff for another agent.
 - [land](https://nickolaj-jepsen.github.io/agents/skills/land/): takes finished work to landed commits or a PR, after checks and a review gate.
 - [run-handoff](https://nickolaj-jepsen.github.io/agents/skills/run-handoff/): builds a handoff with one subagent and worktree per item, re-verifying each.
+- [run-slices](https://nickolaj-jepsen.github.io/agents/skills/run-slices/): builds a sliced plan one slice at a time on one branch, re-checking each and escalating instead of retrying.
+- [slices](https://nickolaj-jepsen.github.io/agents/skills/slices/): writes a finished plan up as ordered slices for another agent, riskiest path first.
 - [tour](https://nickolaj-jepsen.github.io/agents/skills/tour/): walks you through a PR or a stack of them, one PR at a time. _(in progress)_
 
 ### Understand and decide

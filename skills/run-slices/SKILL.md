@@ -1,0 +1,150 @@
+---
+name: run-slices
+description: Build a plan written by /slices, unattended, on one branch — work its slices in order with one writer at a time, give each slice to a fresh worker, re-run its check yourself, escalate instead of retrying, and review the first slice and the whole branch once each. Stops only for an owner decision or an irreversible step. Use when the user asks to run, build, execute or resume a sliced plan.
+disable-model-invocation: true
+argument-hint: "[plan-dir]"
+metadata:
+  summary: "builds a sliced plan one slice at a time on one branch, re-checking each and escalating instead of retrying."
+  category: plan-build-ship
+---
+
+# run-slices
+
+- You are the lead. You decide who builds each slice, check the result yourself, and keep the run moving until the plan's "Done when" passes.
+- `SLICES.md` is the plan. Revise its Slices, Later and Interfaces as the build teaches you. Its Goal, Scope and Owner decisions change only on the owner's word, recorded there with the date.
+- `PROGRESS.md` is your state, and how you resume after a context reset.
+- The run is unattended from start to finish.
+
+## Start or resume
+
+1. **Resolve the directory.** If none is given, take the most recently modified `plans/<slug>/` holding a `SLICES.md` in the project's store, skipping `plans/history/`, and confirm it before starting. `agent-notes root --ensure` gives the store's path, and the checkout sees it as `.agents/store`.
+2. **Read `SLICES.md` in full.** Read `notes/` files only when a slice needs them.
+3. **Resume** if `PROGRESS.md` exists. Check it against git; where they disagree, git wins and you fix `PROGRESS.md`. Reuse a recorded check result only when the tree is unchanged. Continue from "Now".
+4. **First run.**
+   - Running a plan is the user asking for a worktree. Create one, branch `<slug>`, off the base in Context, with the user's worktree tooling. Never build in the primary checkout.
+   - Prepare it as Context says, then run Context's checks once. Record their durations and anything that differs from the plan's baseline.
+   - Create `PROGRESS.md` from the template below, with the plan's Open questions under "For the owner".
+
+## Loop
+
+Take the slices in order. For each one:
+
+1. **Brief a fresh worker** with the brief below, on the model its `hard` or `routine` mark calls for (see Models). Build it yourself only when the change is smaller than its brief would be.
+2. **Wait.** Start the worker in the background and end your turn; the harness wakes you when it finishes. Don't poll, sleep, arm watchers or post status. Every turn re-reads your whole context and nobody reads status mid-run: `PROGRESS.md` is the status.
+3. **Check it yourself** on the branch tip: the slice's check, then the repo's standard checks. Never take the worker's "it passes" as the result.
+   - Run them in the background with output to a file, and grep the file for failures instead of reading it.
+   - One full suite at a time on the machine. Overlapping suites fail on timeouts that look like bugs.
+   - Read `git diff --stat` for the slice and look for deleted, skipped or weakened tests.
+   - A failure that only shows under load is a defect until a cause is found.
+4. **Green:** record the slice in `PROGRESS.md`, add any interface it settled to the plan's Interfaces, and take the next slice.
+5. **Red, or the worker stopped short:**
+   - Give one repair to a fresh worker, with the failing output and what is already on the branch. Continue the same worker only if its run was short, since a long worker re-reads its whole history on every turn.
+   - If it is still red, escalate. Never send the same brief to the same model twice. In this order: ask the strong model one narrow question, with the failing output and the diff (which condition fails, and why); give the slice to the strong model; or split the slice at what is green, land that, and add the rest to the plan as a new slice.
+   - Log the route you took. A blocked slice is not a stopped run.
+6. **Answer every concern** a worker reports before the next slice: fix it now, add it to the plan as a named slice, or reject it with a reason in Decisions. Concerns carried as prose all land on the last slice.
+
+After slice 1, which is the thread or the plan's riskiest change:
+
+- Run one review of it (see Reviews). Later slices build on it.
+- Reread the remaining slices against what it taught you. Reorder, split or drop them, and log each change in Decisions.
+
+When the detailed slices run out, turn the next `Later` lines into slices: an outcome, a check you ran now, and a `hard` or `routine` mark.
+
+A **batch** is the only place workers run in parallel:
+
+- Give each member its own worktree off the branch tip, prepared as Context says, never copied from another checkout. Run at most three at once, fewer if Context says suites contend.
+- Members run focused tests only. When all have returned, stack their commits on the branch and run the checks once on the combined tree.
+- Repair a member that conflicts or fails on the combined tree, alone.
+
+A check that needs a device or a person: land the part you can check, record the open check under "For the owner", and run it when it can run. The final checks can't pass while one is open.
+
+## Worker brief
+
+Paste what the worker needs. Don't send it to read the plan: a worker carries everything it reads through every later turn.
+
+- **Where:** the worktree path and branch. Work and commit only there, in logical commits matching the repo's style; a repair is a `--fixup` of the commit it repairs. No push, and no external services beyond what the plan allows.
+- **The slice:** its text from the plan, verbatim, plus only the Owner decisions, Defaults, Interfaces, Rules and Gotchas that bear on it, and the path of its notes file if it has one.
+- **What exists:** a line or two on what earlier slices built, with paths.
+- **Checks:** the slice's check, and the focused tests to run while working. Outside a batch, it runs the full check once before reporting.
+- **When it is bigger than it looks:** if the work outgrows the slice, or the same fix has failed twice, commit what is green and report `PARTIAL` with exactly what remains. A clean partial is a good result. Commit each green step, so a turn cap or a usage limit loses nothing.
+- **Limits:** it never edits `SLICES.md` or `PROGRESS.md`, and sends no progress messages. A plan decision that blocks it is reported, not worked around.
+- **Report:** its final message, at most 15 lines. First line exactly `DONE`, `PARTIAL` or `BLOCKED`. Then the commits, the check command and the last lines of its output, what remains, concerns, and anything that contradicts the plan. Logs stay in files and the report gives their paths.
+
+Set the harness's turn cap where it has one (pi: `max_turns`): about 250 for a builder and 60 for a reviewer or a narrow question. A capped worker that returns nothing is a `PARTIAL`; read git to see what it left.
+
+## Models
+
+- **Cheap** (Claude Code `sonnet`; pi the `general-purpose` and `reviewer` roles): routine slices, repairs to them, research, and the security review.
+- **Strong** (your own model; in pi a role that accepts a model override): hard slices, escalations, and the two reviews. If the harness can't give a worker the strong model, build that slice yourself.
+- The owner's word on models overrides this. Record it in `PROGRESS.md` so a resumed lead keeps to it.
+- Name the model on every spawn, because a subagent otherwise inherits yours. pi falls back to your model silently when a role's model is unavailable, so check the model each worker reports and record it.
+
+## Reviews
+
+- Two by default: slice 1, and the whole branch against its base at the end. Add a security review after any slice that touches a trust boundary in the plan's Risks.
+- A reviewer is a fresh, read-only subagent. It gets the diff range, the `SLICES.md` path and the slice IDs, and not the workers' reports.
+- Ask it for defects, checks that pass without proving the outcome, scope drift, uncovered Risks, and owner decisions with no reachable path yet. The security reviewer gets only the boundaries and the diff, and is asked for a path by which untrusted input crosses one.
+- One round each. Fix the confirmed findings in one pass, then verify those fixes with a focused check. Run a second full review only if the fixes changed the design.
+- Above about 3,000 changed lines, cheap readers can cover areas separately for the final review. One strong reviewer still reads the whole diff and owns what crosses areas.
+
+## Stops
+
+Stop for the owner only when:
+
+- an Owner decision proves wrong, or the next step needs a decision about scope or product behaviour;
+- the next step would push, land, open a PR, call an external service the plan doesn't allow, delete work you didn't create, or stop or replace something on a device the owner uses;
+- escalation is exhausted and every path forward is a guess;
+- a stop condition in the plan's Rules fires.
+
+Everything else is yours to decide: a failed check, a worker at its cap, a default that proves wrong, a proposed interface that doesn't fit, a slice that needs splitting. Decide, log it in Decisions, and continue. Slices run in order, so there is no other work to move to and a stop costs hours.
+
+Before stopping, finish what doesn't depend on the answer. Write the question under "For the owner" and send a notification if the harness has a tool for it.
+
+## Traps
+
+- Spawn workers without a `name`. With agent teams on, a named one runs as a teammate and wakes you with an idle notice every time it pauses.
+- A worker killed by a usage limit leaves its commits. After the reset, continue with a fresh worker from the branch.
+- Stopping a subagent doesn't stop what it launched. Select its processes by `/proc/<pid>/cwd` under the worktree; `pgrep -f <text>` also matches your own shell.
+- Never pipe a rebase into another command: `git rebase … | tail` hides a conflict stop. Check `git status` afterwards.
+- A history rewrite that leaves `git rev-parse HEAD^{tree}` unchanged keeps its check results. Anything that changes the tree needs them run again.
+
+## PROGRESS.md
+
+Rewrite it; don't append. Keep it under about 150 lines. Detail lives in commits and log files, and this file links to them.
+
+```markdown
+# Progress: <slug>
+
+## Now
+
+<Branch and tip commit, the slice in flight and who has it, the next step.>
+
+## Slices
+
+| ID | Status | Commit | Check result | Built by (model, turns) | Repairs and escalations |
+
+## Decisions
+
+<Dated, one line each: defaults changed, slices revised, concerns rejected, each with its evidence.>
+
+## For the owner
+
+<Dated, with an ID (Q1…): what is needed, what was done meanwhile, and the answer once there is one.>
+
+## Surprises
+
+## Retro
+
+<Written when the run ends: what the plan got wrong or left out; which slices needed a repair or an escalation, and why; what the run cost in turns per slice, wall-clock and models.>
+```
+
+Update it once per slice and before stopping.
+
+## Finish
+
+1. If the base moved, rebase onto it once. Then run the plan's "Done when" checks on the final tree.
+2. Run the final review, and the security review if the plan has trust boundaries. Fix and verify as in Reviews.
+3. Stop every subagent still running. Fold fixups into the commits they repair, so the branch reads as logical changes. Write the retro.
+4. Report in chat: what is done, with check results; failures and skips, stated plainly; what the run cost; the retro; the branch and worktree.
+5. Ask, in one round, every unanswered question under "For the owner", with what was done meanwhile as the recommended answer. Use the harness's question tool when they fit. Build what the answers call for.
+6. Landing is the owner's call. Once the branch has landed, offer to move the plan directory to `plans/history/<slug>/`, and move it only on a yes.
