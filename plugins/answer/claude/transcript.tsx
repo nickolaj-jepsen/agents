@@ -2,13 +2,19 @@ import { plain, view as viewOf } from "../core/forms";
 import { POSITIONS } from "./terminal";
 import type { Current, Editing, Held, View } from "./types.d.ts";
 import {
+  choice as cardChoice,
+  heading as cardHeading,
+  note as cardNote,
+} from "./kit/card/terminal.ts";
+import { line, span, type Line } from "./kit/lines.ts";
+import { paintLines } from "./kit/paint/claude.tsx";
+import {
   actionBar,
   buttonRow,
   cellWidth,
   clamp,
   choice,
   icon,
-  inlineMarkdown,
   note as noteLines,
   roleProps,
   stack,
@@ -109,8 +115,6 @@ export function questionCard(
   const several = item.isSeveral;
   const width = widthCap("reading", outer.columns);
   const kit = withColumns(outer, Math.max(1, width - 4));
-  const { single, multi, pointer } = tokens.glyph;
-  const marker = several ? multi : single;
   const prefix = `question-${index}`;
   const answered = v.review[index]?.isAnswered;
   const hasChoices = item.entries.some((entry) => entry.kind !== "write");
@@ -145,39 +149,25 @@ export function questionCard(
       ]
     : [];
 
-  const heading = `${item.label}  ${item.title}`;
   const answerTone = sent ? "success" : "note";
-  const selectionTone = isActive && !kit.isNative ? "accent" : answerTone;
-  const letterTone = (chosen: boolean) => (isActive ? "accent" : chosen ? answerTone : "dim");
-  const writeMark = item.written ? single.on : single.off;
   const titleRole = roleProps(
     isActive ? "accent" : !kit.isNative && answered ? answerTone : "text",
   );
-  const pointerText = isActive ? `${pointer} ` : "  ";
-  // The heading wrapped by the kit to hang under its label, so one Button holds it whole and a
-  // click on any of its lines lands; its markdown set as the body's is.
-  const terminalHeading = (
-    <Text weight="semibold" {...titleRole}>
-      {pointerText}
-      {inlineMarkdown(kit, heading, {
-        width: kit.columns - cellWidth(pointerText) - (answered ? 3 : 0),
-        indent: cellWidth(pointerText),
-      })}
-      {answered ? <Text {...roleProps(selectionTone)}> ✓</Text> : null}
-    </Text>
-  );
+  // The terminal's card is the kit's: the lines pi paints too, each control a Button here.
+  const state = { active: isActive, answered, sent };
+  const room = kit.columns;
+  const terminal = (lines: Line[], press?: () => unknown) =>
+    paintLines(outer, lines, {
+      press: interactive && press ? () => press() : undefined,
+      width: room,
+    });
   const activate = !kit.isNative ? (
-    interactive ? (
-      <Button
-        key={`${prefix}-activate`}
-        plain
-        label={heading}
-        onPress={() => interactive.go(index)}
-      >
-        {terminalHeading}
-      </Button>
-    ) : (
-      terminalHeading
+    terminal(
+      cardHeading({ ...state, label: item.label, title: item.title }, room).map((row) => ({
+        ...row,
+        hit: `${prefix}-activate`,
+      })),
+      () => interactive?.go(index),
     )
   ) : (
     <Box columnGap={tokens.gui.across.sm} alignItems="flex-start">
@@ -220,59 +210,38 @@ export function questionCard(
             <Box flexDirection="column" rowGap={kit.isNative ? tokens.gui.space.xs : 0}>
               {item.entries.map((entry, i) => {
                 if (entry.kind === "write") return null;
-                const mark = entry.isChosen ? marker.on : marker.off;
                 const words = labelOf(entry.text);
                 const tag = entryLetter(entry) ? `${entryLetter(entry)} ` : "";
-                const recommendation = entry.isRecommended ? "  Recommended" : "";
                 // A Button's label is plain words: it draws no markdown.
                 const said = plain(words);
-                const label = `${tag}${mark} ${said}${recommendation}`;
                 const weight = entry.isChosen ? "semibold" : undefined;
                 const pick = () => interactive?.pick(index, i);
                 const key = `${prefix}-choose-${i}`;
-                const letterRole = roleProps(letterTone(entry.isChosen));
-                const markRole = roleProps(entry.isChosen ? selectionTone : "dim");
-                const choiceRole = roleProps(
-                  !kit.isNative && entry.isChosen ? selectionTone : "text",
-                );
-                const lead = cellWidth(`${tag}${mark} `);
-                const lines = { width: kit.columns - 1 - lead, indent: lead };
-                const hang = `\n${" ".repeat(lead)}`;
                 // A detail of plain paragraphs is the option's too; one with blocks keeps its
                 // Markdown under the row.
                 const isDetailInline =
                   !kit.isNative && !!entry.detail && !BLOCKS.test(entry.detail);
-                // One Text the row's Button holds whole, so a click on any of its lines picks it:
-                // the words wrapped by the kit to hang under their first line, their markdown set.
-                const option = kit.isNative ? null : (
-                  <Text>
-                    <Text weight={weight} {...choiceRole}>
-                      {tag ? (
-                        <Text weight="semibold" {...letterRole}>
-                          {tag}
-                        </Text>
-                      ) : null}
-                      <Text {...markRole}>{`${mark} `}</Text>
-                      {inlineMarkdown(kit, words, { ...lines, aside: recommendation })}
-                    </Text>
-                    {isDetailInline ? (
-                      <Text dimColor>
-                        {entry.detail.split(/\n\s*\n/).map((paragraph, p) => (
-                          <Text key={`detail${p}`}>
-                            {p ? `\n${hang}` : hang}
-                            {inlineMarkdown(kit, paragraph, { ...lines, isDim: true })}
-                          </Text>
-                        ))}
-                      </Text>
-                    ) : null}
-                  </Text>
-                );
+                const option = kit.isNative
+                  ? null
+                  : terminal(
+                      cardChoice(
+                        {
+                          ...state,
+                          key: entryLetter(entry),
+                          text: words,
+                          aside: entry.isRecommended ? "  Recommended" : undefined,
+                          detail: isDetailInline ? entry.detail : undefined,
+                          detailLines: Infinity,
+                          chosen: entry.isChosen,
+                          multiple: several,
+                          hit: key,
+                        },
+                        room,
+                      ),
+                      pick,
+                    );
                 return (
-                  <Box
-                    key={`${prefix}-option-${i}`}
-                    flexDirection="column"
-                    paddingLeft={kit.isNative ? 0 : 1}
-                  >
+                  <Box key={`${prefix}-option-${i}`} flexDirection="column">
                     {kit.isNative ? (
                       <Box flexDirection="column" rowGap={tokens.gui.space.xs}>
                         <Box
@@ -313,10 +282,6 @@ export function questionCard(
                           </Text>
                         ) : null}
                       </Box>
-                    ) : interactive ? (
-                      <Button key={key} plain label={label} onPress={pick}>
-                        {option}
-                      </Button>
                     ) : (
                       option
                     )}
@@ -328,26 +293,22 @@ export function questionCard(
                   </Box>
                 );
               })}
-              {!kit.isNative && (interactive || item.written) ? (
-                <Box paddingLeft={1}>
-                  {inlineField(
-                    kit,
-                    `${prefix}-write`,
-                    `${writeLetter(item)} ${writeMark}`,
-                    "Write your own answer",
-                    item.written,
-                    interactive && (() => interactive.edit(index, "write")),
-                    {
-                      tag: (
-                        <Text {...roleProps(letterTone(!!item.written))}>
-                          {writeLetter(item)} <Text {...roleProps("dim")}>{writeMark}</Text>
-                        </Text>
-                      ),
-                      valueRole: selectionTone,
-                    },
-                  )}
-                </Box>
-              ) : null}
+              {!kit.isNative && (interactive || item.written)
+                ? terminal(
+                    cardChoice(
+                      {
+                        ...state,
+                        key: writeLetter(item),
+                        text: item.written || "Write your own answer",
+                        literal: true,
+                        chosen: !!item.written,
+                        hit: `${prefix}-write`,
+                      },
+                      room,
+                    ),
+                    () => interactive?.edit(index, "write"),
+                  )
+                : null}
             </Box>
           ) : null,
           item.recommended ? (
@@ -362,39 +323,34 @@ export function questionCard(
             </Text>
           ) : null,
           interactive && answered ? (
-            <Box paddingLeft={kit.isNative ? 0 : 1}>
+            kit.isNative ? (
               <Button
                 key={`${prefix}-clear`}
-                plain={kit.isNative ? undefined : true}
                 dimColor
                 label="Clear answer"
                 onPress={() => interactive.clear(index)}
-              >
-                {kit.isNative ? null : <Text>Clear answer</Text>}
-              </Button>
-            </Box>
+              />
+            ) : (
+              terminal([line([span("Clear answer", { role: "dim" })], `${prefix}-clear`)], () =>
+                interactive.clear(index),
+              )
+            )
           ) : null,
-          kit.isNative ? (
-            item.note ? (
-              noteLines(kit, item.note, { role: "note" })
-            ) : null
-          ) : interactive || item.note ? (
-            <Box paddingLeft={1}>
-              {inlineField(
-                kit,
-                `${prefix}-note`,
-                "Note:",
-                item.note ? "" : "Add a note",
-                item.note,
-                interactive && (() => interactive.edit(index, "note")),
-              )}
-            </Box>
-          ) : null,
+          kit.isNative
+            ? item.note
+              ? noteLines(kit, item.note, { role: "note" })
+              : null
+            : interactive || item.note
+              ? terminal(
+                  cardNote({ ...state, value: item.note, hit: `${prefix}-note` }, room),
+                  () => interactive?.edit(index, "note"),
+                )
+              : null,
           editor ?? null,
           !controls.length ? null : kit.isNative ? (
             actionBar(kit, controls)
           ) : (
-            <Box columnGap={tokens.gutter} flexWrap="wrap" paddingLeft={1}>
+            <Box columnGap={tokens.gutter} flexWrap="wrap">
               {controls.map((control) => (
                 <Button
                   key={control.key}

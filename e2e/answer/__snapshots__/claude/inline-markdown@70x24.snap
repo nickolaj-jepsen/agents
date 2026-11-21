@@ -1,16 +1,16 @@
 # answer/claude/inline-markdown 70x24 @0,1 (70x18)
-▎      the Location header: simpler for legacy callers, as the RFC
-▎      has it.
-▎      The CmsPageModal keeps reading Location, and nothing in the
-▎      legacy code changes.
-▎  C ○ Write your own answer
+▎     the Location header: simpler for legacy callers, as the RFC
+▎     has it.
+▎     The CmsPageModal keeps reading Location, and nothing in the
+▎     legacy code changes.
+▎ C ○ Write your own answer
 ▎
 ▎ Recommended: A. The redirect stays inside the cached result, and
 ▎ the legacy CmsPageModal can simply ignore that kind.
 ▎
-▎  Clear answer
+▎ Clear answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Answers  1 of 1 answered
@@ -18,32 +18,33 @@
 
 Q1/1   alt+a for the keys                                         [-]
 --- styles
-1 .x10 2x8 .x9 3x7 .x5 4x6 .x23 1
+1 .x9 2x8 .x9 3x7 .x5 4x6 .x13 5x7 .x4 1
 1 .x68 1
-1 .x2 5x8 2x12 5x15 2x8 5x6 6x7 5x7 .x3 1
-1 .x2 5x24 .x42 1
-1 .x2 1x2 5 . 5x21 .x41 1
+1 .x5 6x4 2x12 6x15 2x8 6x6 7x7 6x7 .x4 1
+1 .x5 6x20 .x43 1
+1 . 1 . 6 . 6x21 .x42 1
 1 .x68 1
-1 . 7x65 .x2 1
-1 . 7x11 8x12 7x29 .x15 1
+1 . 8x65 .x2 1
+1 . 8x11 9x12 8x29 .x15 1
 1 .x68 1
-1 .x2 5x12 .x54 1
+1 . 6x12 .x55 1
 1 .x68 1
-1 .x2 5x5 . 5x10 .x50 1
+1 . 6x16 .x51 1
 1x70
 2x70
-2 . 9x26 .x41 2
-2 .x2 9x15 .x2 5x15 .x34 2
+2 . ax26 .x41 2
+2 .x2 ax15 .x2 6x15 .x34 2
 2x70
-ax6 . 5x18 .x41 5x3
+bx6 . 6x18 .x41 6x3
 --- legend
 1 fg=#d77757
 2 fg=#b1b9f9
 3 bold
 4 italic
-5 fg=#999999
-6 fg=#999999 bold
-7 dim
-8 fg=#b1b9f9 dim
-9 fg=#b1b9f9 bold
-a fg=#d77757 bold
+5 underline=single
+6 fg=#999999
+7 fg=#999999 bold
+8 dim
+9 fg=#b1b9f9 dim
+a fg=#b1b9f9 bold
+b fg=#d77757 bold

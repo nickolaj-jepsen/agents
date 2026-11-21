@@ -1,25 +1,25 @@
 # answer/claude/many-review 160x45 @0,1 (160x39)
-▎  C ○ Write your own answer
+▎ C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Q11  Question number 11: pick a strategy?
 ▎
-▎  A ○ Option A for 11
-▎  B ○ Option B for 11
-▎  C ○ Write your own answer
+▎ A ○ Option A for 11
+▎ B ○ Option B for 11
+▎ C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Q12  Question number 12: pick a strategy?
 ▎
-▎  A ○ Option A for 12
-▎  B ○ Option B for 12
-▎  C ○ Write your own answer
+▎ A ○ Option A for 12
+▎ B ○ Option B for 12
+▎ C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Answers  1 of 12 answered
@@ -39,51 +39,50 @@
 
 Review  1/12 answered jk move enter fill r back keys here                                                                                                   [-]
 --- styles
-1 .x2 2x3 . 2x21 .x67 1
+1 . 2 . 2 . 2x21 .x68 1
 1 .x94 1
-1 .x2 2x5 . 2x10 .x76 1
+1 . 2x16 .x77 1
 1x96
 1x96
 1 . 3x43 .x50 1
 1 .x94 1
-1 .x2 4x2 2x2 .x88 1
-1 .x2 4x2 2x2 .x88 1
-1 .x2 2x3 . 2x21 .x67 1
+1 . 2 . 2 .x90 1
+1 . 2 . 2 .x90 1
+1 . 2 . 2 . 2x21 .x68 1
 1 .x94 1
-1 .x2 2x5 . 2x10 .x76 1
+1 . 2x16 .x77 1
 1x96
 1x96
 1 . 3x43 .x50 1
 1 .x94 1
-1 .x2 4x2 2x2 .x88 1
-1 .x2 4x2 2x2 .x88 1
-1 .x2 2x3 . 2x21 .x67 1
+1 . 2 . 2 .x90 1
+1 . 2 . 2 .x90 1
+1 . 2 . 2 . 2x21 .x68 1
 1 .x94 1
-1 .x2 2x5 . 2x10 .x76 1
+1 . 2x16 .x77 1
 1x96
-5x96
-5 . 6x27 .x66 5
-5 .x2 7x17 .x2 2x16 .x57 5
-5 .x94 5
-5 .x2 2x19 .x73 5
-5 . 3x42 .x51 5
-5 .x8 2x10 .x76 5
-5 . 3x42 .x51 5
-5 .x8 2x10 .x76 5
-5 . 7x44 .x49 5
-5 .x8 7x17 .x69 5
-5 . 3x42 .x51 5
-5 .x8 2x10 .x76 5
-5 . 3x42 .x51 5
-5 .x8 2x10 .x76 5
-5x96
-6x21 . 2x7 . 8x10 . 2x6 . 2x9 .x99 2x3
+4x96
+4 . 5x27 .x66 4
+4 .x2 6x17 .x2 2x16 .x57 4
+4 .x94 4
+4 .x2 2x19 .x73 4
+4 . 3x42 .x51 4
+4 .x8 2x10 .x76 4
+4 . 3x42 .x51 4
+4 .x8 2x10 .x76 4
+4 . 6x44 .x49 4
+4 .x8 6x17 .x69 4
+4 . 3x42 .x51 4
+4 .x8 2x10 .x76 4
+4 . 3x42 .x51 4
+4 .x8 2x10 .x76 4
+4x96
+5x21 . 2x7 . 7x10 . 2x6 . 2x9 .x99 2x3
 --- legend
 1 dim
 2 fg=#999999
 3 bold
-4 fg=#999999 bold
-5 fg=#d77757
-6 fg=#d77757 bold
-7 fg=#b1b9f9 bold
-8 inverse
+4 fg=#d77757
+5 fg=#d77757 bold
+6 fg=#b1b9f9 bold
+7 inverse

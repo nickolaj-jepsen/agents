@@ -1,26 +1,26 @@
 # answer/claude/long-option 240x60 @0,10 (240x45)
 ▎ ❯ Q1  Which one?
 ▎
-▎  A ○ a very long option text that keeps going and going a very long option text that keeps
-▎      going and going a very long option text that keeps going and going a very long option
-▎      text that keeps going and going a very long option text that keeps going and going a
-▎      very long option text that keeps going and going a very long option text that keeps
-▎      going and going a very long option text that keeps going and going a very long option
-▎      text that keeps going and going a very long option text that keeps going and going a
-▎      very long option text that keeps going and going a very long option text that keeps
-▎      going and going
-▎  B ○ Short
-▎      a very long option text that keeps going and going a very long option text that keeps
-▎      going and going a very long option text that keeps going and going a very long option
-▎      text that keeps going and going a very long option text that keeps going and going a
-▎      very long option text that keeps going and going a very long option text that keeps
-▎      going and going a very long option text that keeps going and going a very long option
-▎      text that keeps going and going a very long option text that keeps going and going a
-▎      very long option text that keeps going and going a very long option text that keeps
-▎      going and going
-▎  C ○ Write your own answer
+▎ A ○ a very long option text that keeps going and going a very long option text that keeps
+▎     going and going a very long option text that keeps going and going a very long option
+▎     text that keeps going and going a very long option text that keeps going and going a
+▎     very long option text that keeps going and going a very long option text that keeps
+▎     going and going a very long option text that keeps going and going a very long option
+▎     text that keeps going and going a very long option text that keeps going and going a
+▎     very long option text that keeps going and going a very long option text that keeps
+▎     going and going
+▎ B ○ Short
+▎     a very long option text that keeps going and going a very long option text that keeps
+▎     going and going a very long option text that keeps going and going a very long option
+▎     text that keeps going and going a very long option text that keeps going and going a
+▎     very long option text that keeps going and going a very long option text that keeps
+▎     going and going a very long option text that keeps going and going a very long option
+▎     text that keeps going and going a very long option text that keeps going and going a
+▎     very long option text that keeps going and going a very long option text that keeps
+▎     going and going
+▎ C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Answers  0 of 1 answered
@@ -47,7 +47,7 @@ Q1/1   alt+a for the keys                                                       
 --- styles
 1 . 2x16 .x77 1
 1 .x94 1
-1 .x2 2x2 3x2 .x88 1
+1 . 1 . 3 .x90 1
 1 .x94 1
 1 .x94 1
 1 .x94 1
@@ -55,18 +55,18 @@ Q1/1   alt+a for the keys                                                       
 1 .x94 1
 1 .x94 1
 1 .x94 1
-1 .x2 2x2 3x2 .x88 1
-1 .x2 3x89 .x3 1
-1 .x2 3x89 .x3 1
-1 .x2 3x88 .x4 1
-1 .x2 3x87 .x5 1
-1 .x2 3x89 .x3 1
-1 .x2 3x88 .x4 1
-1 .x2 3x87 .x5 1
-1 .x2 3x19 .x73 1
-1 .x2 1x2 3 . 3x21 .x67 1
+1 . 1 . 3 .x90 1
+1 .x5 3x85 .x4 1
+1 .x5 3x85 .x4 1
+1 .x5 3x84 .x5 1
+1 .x5 3x83 .x6 1
+1 .x5 3x85 .x4 1
+1 .x5 3x84 .x5 1
+1 .x5 3x83 .x6 1
+1 .x5 3x15 .x74 1
+1 . 1 . 3 . 3x21 .x68 1
 1 .x94 1
-1 .x2 3x5 . 3x10 .x76 1
+1 . 3x16 .x77 1
 1x96
 4x96
 4 . 5x26 .x67 4

@@ -1,20 +1,20 @@
 # answer/claude/open 160x45 @0,10 (160x30)
 ▎ ❯ Q1  Use SQLite?
 ▎
-▎  A ○ SQLite
-▎  B ○ Postgres
-▎  C ○ Write your own answer
+▎ A ○ SQLite
+▎ B ○ Postgres
+▎ C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Q2  Add caching?
 ▎
-▎  A ○ Yes
-▎  B ○ No
-▎  C ○ Write your own answer
+▎ A ○ Yes
+▎ B ○ No
+▎ C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Answers  0 of 2 answered
@@ -32,20 +32,20 @@ Q1/2   alt+a for the keys                                                       
 --- styles
 1 . 2x17 .x76 1
 1 .x94 1
-1 .x2 2x2 3x2 .x88 1
-1 .x2 2x2 3x2 .x88 1
-1 .x2 1x2 3 . 3x21 .x67 1
+1 . 1 . 3 .x90 1
+1 . 1 . 3 .x90 1
+1 . 1 . 3 . 3x21 .x68 1
 1 .x94 1
-1 .x2 3x5 . 3x10 .x76 1
+1 . 3x16 .x77 1
 1x96
 4x96
 4 . 5x18 .x75 4
 4 .x94 4
-4 .x2 6x2 3x2 .x88 4
-4 .x2 6x2 3x2 .x88 4
-4 .x2 3x3 . 3x21 .x67 4
+4 . 3 . 3 .x90 4
+4 . 3 . 3 .x90 4
+4 . 3 . 3 . 3x21 .x68 4
 4 .x94 4
-4 .x2 3x5 . 3x10 .x76 4
+4 . 3x16 .x77 4
 4x96
 4x96
 4 . 5x26 .x67 4
@@ -66,4 +66,3 @@ Q1/2   alt+a for the keys                                                       
 3 fg=#999999
 4 dim
 5 bold
-6 fg=#999999 bold

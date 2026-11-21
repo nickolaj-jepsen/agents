@@ -1,22 +1,22 @@
 # answer/claude/write-cancel 160x45 @0,10 (160x30)
 ▎   Q1  Use SQLite? ✓
 ▎
-▎  A ○ SQLite
-▎  B ○ Postgres
-▎  C ● An embedded store
+▎ A ○ SQLite
+▎ B ○ Postgres
+▎ C ● An embedded store
 ▎
-▎  Clear answer
+▎ Clear answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎ ❯ Q2  Add caching?
 ▎
-▎  A ○ Yes
-▎  B ○ No
-▎  C ○ Write your own answer
+▎ A ○ Yes
+▎ B ○ No
+▎ C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Answers  1 of 2 answered
@@ -32,26 +32,26 @@ Q2/2   jk move A–B pick C write n note r review keys here                     
 --- styles
 1 . 2x19 .x74 1
 1 .x94 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 1x2 4 . 1x17 .x71 1
+1 . 3 . 3 .x90 1
+1 . 3 . 3 .x90 1
+1 . 1 . 3 . 1x17 .x72 1
 1 .x94 1
-1 .x2 4x12 .x80 1
+1 . 3x12 .x81 1
 1 .x94 1
-1 .x2 4x5 . 4x10 .x76 1
+1 . 3x16 .x77 1
 1x96
-5x96
-5 . 6x18 .x75 5
-5 .x94 5
-5 .x2 6x2 4x2 .x88 5
-5 .x2 6x2 4x2 .x88 5
-5 .x2 5x2 4 . 4x21 .x67 5
-5 .x94 5
-5 .x2 4x5 . 4x10 .x76 5
-5x96
+4x96
+4 . 5x18 .x75 4
+4 .x94 4
+4 . 4 . 3 .x90 4
+4 . 4 . 3 .x90 4
+4 . 4 . 3 . 3x21 .x68 4
+4 .x94 4
+4 . 3x16 .x77 4
+4x96
 1x96
 1 . 2x26 .x67 1
-1 .x2 2x15 .x2 4x22 .x53 1
+1 .x2 2x15 .x2 3x22 .x53 1
 1x96
 -
 -
@@ -59,12 +59,11 @@ Q2/2   jk move A–B pick C write n note r review keys here                     
 -
 -
 -
-7x6 . 4x7 . 4x8 . 4x7 . 4x6 . 4x8 . 4x9 .x99 4x3
+6x6 . 3x7 . 3x8 . 3x7 . 3x6 . 3x8 . 3x9 .x99 3x3
 --- legend
 1 fg=#b1b9f9
 2 fg=#b1b9f9 bold
-3 fg=#999999 bold
-4 fg=#999999
-5 fg=#d77757
-6 fg=#d77757 bold
-7 fg=#d77757 bold inverse
+3 fg=#999999
+4 fg=#d77757
+5 fg=#d77757 bold
+6 fg=#d77757 bold inverse

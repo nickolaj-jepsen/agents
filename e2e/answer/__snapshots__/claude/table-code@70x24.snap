@@ -6,11 +6,11 @@
 ▎ const db = open("app.db");
 ▎ await db.exec("select 1");
 ▎
-▎  A ○ SQLite
-▎  B ○ Postgres
-▎  C ○ Write your own answer
+▎ A ○ SQLite
+▎ B ○ Postgres
+▎ C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Answers  0 of 1 answered
@@ -25,23 +25,23 @@ Q1/1   alt+a for the keys                                         [-]
 1 . 2x5 .x6 3x4 . 4x8 .x43 1
 1 . 2x5 .x4 3x4 . 4x10 .x43 1
 1 .x68 1
-1 .x2 5x2 6x2 .x62 1
-1 .x2 5x2 6x2 .x62 1
-1 .x2 1x2 6 . 6x21 .x41 1
+1 . 1 . 5 .x64 1
+1 . 1 . 5 .x64 1
+1 . 1 . 5 . 5x21 .x42 1
 1 .x68 1
-1 .x2 6x5 . 6x10 .x50 1
+1 . 5x16 .x51 1
 1x70
-7x70
-7 . 8x26 .x41 7
-7 .x2 6x15 .x51 7
-7x70
-5x6 . 6x18 .x41 6x3
+6x70
+6 . 7x26 .x41 6
+6 .x2 5x15 .x51 6
+6x70
+8x6 . 5x18 .x41 5x3
 --- legend
 1 fg=#d77757
-2 fg=p12
+2 fg=p4
 3 fg=p3
 4 fg=p1
-5 fg=#d77757 bold
-6 fg=#999999
-7 dim
-8 bold
+5 fg=#999999
+6 dim
+7 bold
+8 fg=#d77757 bold

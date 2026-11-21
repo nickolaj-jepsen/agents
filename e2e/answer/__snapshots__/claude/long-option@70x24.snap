@@ -1,16 +1,16 @@
 # answer/claude/long-option 70x24 @0,1 (70x18)
-▎      option text that keeps going and going a very long option
-▎      text that keeps going and going a very long option text that
-▎      keeps going and going a very long option text that keeps
-▎      going and going a very long option text that keeps going and
-▎      going a very long option text that keeps going and going a
-▎      very long option text that keeps going and going a very long
-▎      option text that keeps going and going a very long option
-▎      text that keeps going and going a very long option text that
-▎      keeps going and going
-▎  C ○ Write your own answer
+▎     option text that keeps going and going a very long option text
+▎     that keeps going and going a very long option text that keeps
+▎     going and going a very long option text that keeps going and
+▎     going a very long option text that keeps going and going a
+▎     very long option text that keeps going and going a very long
+▎     option text that keeps going and going a very long option text
+▎     that keeps going and going a very long option text that keeps
+▎     going and going a very long option text that keeps going and
+▎     going a very long option text that keeps going and going
+▎ C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Answers  0 of 1 answered
@@ -18,18 +18,18 @@
 
 Q1/1   alt+a for the keys                                         [-]
 --- styles
-1 .x2 2x61 .x5 1
-1 .x2 2x64 .x2 1
-1 .x2 2x60 .x6 1
-1 .x2 2x64 .x2 1
-1 .x2 2x62 .x4 1
-1 .x2 2x64 .x2 1
-1 .x2 2x61 .x5 1
-1 .x2 2x64 .x2 1
-1 .x2 2x25 .x41 1
-1 .x2 1x2 2 . 2x21 .x41 1
+1 .x5 2x62 . 1
+1 .x5 2x61 .x2 1
+1 .x5 2x60 .x3 1
+1 .x5 2x58 .x5 1
+1 .x5 2x60 .x3 1
+1 .x5 2x62 . 1
+1 .x5 2x61 .x2 1
+1 .x5 2x60 .x3 1
+1 .x5 2x56 .x7 1
+1 . 1 . 2 . 2x21 .x42 1
 1 .x68 1
-1 .x2 2x5 . 2x10 .x50 1
+1 . 2x16 .x51 1
 1x70
 3x70
 3 . 4x26 .x41 3

@@ -1,38 +1,38 @@
 # answer/claude/many-review 240x60 @0,3 (240x52)
 ▎   Q9  Question number 9: pick a strategy?
 ▎
-▎  A ○ Option A for 9
-▎  B ○ Option B for 9
-▎  C ○ Write your own answer
+▎ A ○ Option A for 9
+▎ B ○ Option B for 9
+▎ C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Q10  Question number 10: pick a strategy?
 ▎
-▎  A ○ Option A for 10
-▎  B ○ Option B for 10
-▎  C ○ Write your own answer
+▎ A ○ Option A for 10
+▎ B ○ Option B for 10
+▎ C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Q11  Question number 11: pick a strategy?
 ▎
-▎  A ○ Option A for 11
-▎  B ○ Option B for 11
-▎  C ○ Write your own answer
+▎ A ○ Option A for 11
+▎ B ○ Option B for 11
+▎ C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Q12  Question number 12: pick a strategy?
 ▎
-▎  A ○ Option A for 12
-▎  B ○ Option B for 12
-▎  C ○ Write your own answer
+▎ A ○ Option A for 12
+▎ B ○ Option B for 12
+▎ C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Answers  1 of 12 answered
@@ -54,62 +54,61 @@ Review  1/12 answered jk move enter fill r back keys here                       
 --- styles
 1 . 2x41 .x52 1
 1 .x94 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 4x3 . 4x21 .x67 1
+1 . 3 . 3 .x90 1
+1 . 3 . 3 .x90 1
+1 . 3 . 3 . 3x21 .x68 1
 1 .x94 1
-1 .x2 4x5 . 4x10 .x76 1
+1 . 3x16 .x77 1
 1x96
 1x96
 1 . 2x43 .x50 1
 1 .x94 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 4x3 . 4x21 .x67 1
+1 . 3 . 3 .x90 1
+1 . 3 . 3 .x90 1
+1 . 3 . 3 . 3x21 .x68 1
 1 .x94 1
-1 .x2 4x5 . 4x10 .x76 1
+1 . 3x16 .x77 1
 1x96
 1x96
 1 . 2x43 .x50 1
 1 .x94 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 4x3 . 4x21 .x67 1
+1 . 3 . 3 .x90 1
+1 . 3 . 3 .x90 1
+1 . 3 . 3 . 3x21 .x68 1
 1 .x94 1
-1 .x2 4x5 . 4x10 .x76 1
+1 . 3x16 .x77 1
 1x96
 1x96
 1 . 2x43 .x50 1
 1 .x94 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 3x2 4x2 .x88 1
-1 .x2 4x3 . 4x21 .x67 1
+1 . 3 . 3 .x90 1
+1 . 3 . 3 .x90 1
+1 . 3 . 3 . 3x21 .x68 1
 1 .x94 1
-1 .x2 4x5 . 4x10 .x76 1
+1 . 3x16 .x77 1
 1x96
-5x96
-5 . 6x27 .x66 5
-5 .x2 7x17 .x2 4x16 .x57 5
-5 .x94 5
-5 .x2 4x19 .x73 5
-5 . 2x42 .x51 5
-5 .x8 4x10 .x76 5
-5 . 2x42 .x51 5
-5 .x8 4x10 .x76 5
-5 . 7x44 .x49 5
-5 .x8 7x17 .x69 5
-5 . 2x42 .x51 5
-5 .x8 4x10 .x76 5
-5 . 2x42 .x51 5
-5 .x8 4x10 .x76 5
-5x96
-6x21 . 4x7 . 8x10 . 4x6 . 4x9 .x179 4x3
+4x96
+4 . 5x27 .x66 4
+4 .x2 6x17 .x2 3x16 .x57 4
+4 .x94 4
+4 .x2 3x19 .x73 4
+4 . 2x42 .x51 4
+4 .x8 3x10 .x76 4
+4 . 2x42 .x51 4
+4 .x8 3x10 .x76 4
+4 . 6x44 .x49 4
+4 .x8 6x17 .x69 4
+4 . 2x42 .x51 4
+4 .x8 3x10 .x76 4
+4 . 2x42 .x51 4
+4 .x8 3x10 .x76 4
+4x96
+5x21 . 3x7 . 7x10 . 3x6 . 3x9 .x179 3x3
 --- legend
 1 dim
 2 bold
-3 fg=#999999 bold
-4 fg=#999999
-5 fg=#d77757
-6 fg=#d77757 bold
-7 fg=#b1b9f9 bold
-8 inverse
+3 fg=#999999
+4 fg=#d77757
+5 fg=#d77757 bold
+6 fg=#b1b9f9 bold
+7 inverse

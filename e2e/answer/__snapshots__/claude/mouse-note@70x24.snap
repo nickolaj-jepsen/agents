@@ -1,45 +1,46 @@
-# answer/claude/mouse-note 70x24 @0,2 (70x17)
-▎ ❯ Q1  Use SQLite?
-▎
-▎  A ○ SQLite
-▎  B ○ Postgres
-▎  C ○ Write your own answer
-▎
-▎  Note: First line
-▎        Second line
+# answer/claude/mouse-note 70x24 @0,1 (70x18)
+▎       Second line
 
 
 ▎   Q2  Add caching?
 ▎
-▎  A ○ Yes
-▎  B ○ No
-▎  C ○ Write your own answer
+▎ A ○ Yes
+▎ B ○ No
+▎ C ○ Write your own answer
 ▎
+▎ Note: Add a note
+
+
+▎   Answers  0 of 2 answered
+▎  [ Fill prompt ]  ▸ Show all 2 questions
+
+
+● Prompt dropped by a hook: The note is still waiting
 Q1/2   jk move A–B pick C write n note r review keys here         [-]
 --- styles
-1 . 2x17 .x50 1
-1 .x68 1
-1 .x2 2x2 3x2 .x62 1
-1 .x2 2x2 3x2 .x62 1
-1 .x2 1x2 3 . 3x21 .x41 1
-1 .x68 1
-1 .x2 3x5 . 4x10 .x50 1
-1 .x8 4x11 .x49 1
+1 .x7 1x11 .x50 1
 1x70
-5x70
-5 . 6x18 .x49 5
-5 .x68 5
-5 .x2 7x2 3x2 .x62 5
-5 .x2 7x2 3x2 .x62 5
-5 .x2 3x3 . 3x21 .x41 5
-5 .x68 5
-8x6 . 3x7 . 3x8 . 3x7 . 3x6 . 3x8 . 3x9 .x9 3x3
+2x70
+2 . 3x18 .x49 2
+2 .x68 2
+2 . 4 . 4 .x64 2
+2 . 4 . 4 .x64 2
+2 . 4 . 4 . 4x21 .x42 2
+2 .x68 2
+2 . 4x16 .x51 2
+2x70
+2x70
+2 . 3x26 .x41 2
+2 .x2 5x15 .x2 4x22 .x27 2
+2x70
+-
+6 . 6x51
+7x6 . 4x7 . 4x8 . 4x7 . 4x6 . 4x8 . 4x9 .x9 4x3
 --- legend
 1 fg=#d77757
-2 fg=#d77757 bold
-3 fg=#999999
-4 fg=#b1b9f9
-5 dim
-6 bold
-7 fg=#999999 bold
-8 fg=#d77757 bold inverse
+2 dim
+3 bold
+4 fg=#999999
+5 fg=#b1b9f9 bold
+6 fg=#ffc107
+7 fg=#d77757 bold inverse

@@ -1,32 +1,32 @@
 # answer/claude/recommended 160x45 @0,6 (160x34)
 ▎ ❯ Q1  Should every focus default to the same bar?
 ▎
-▎  A ○ Yes, one default for every kind.  Recommended
-▎  B ○ Default by kind.
-▎  C ○ Add the bar as a second pick.
-▎  D ○ Write your own answer
+▎ A ○ Yes, one default for every kind.  Recommended
+▎ B ○ Default by kind.
+▎ C ○ Add the bar as a second pick.
+▎ D ○ Write your own answer
 ▎
 ▎ Recommended: A. A per-kind table is one more thing to keep in sync.
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Q2  Lower the per-generator target to 5-6?
 ▎
-▎  A ○ Yes. Four generators still give 20-24.
-▎  B ○ Write your own answer
+▎ A ○ Yes. Four generators still give 20-24.
+▎ B ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Q3  What should happen to --quick?
 ▎
-▎  A ○ Drop it.
-▎  B ○ Keep it as an alias.
-▎      Scripts may still call it.
-▎  C ○ Write your own answer
+▎ A ○ Drop it.
+▎ B ○ Keep it as an alias.
+▎     Scripts may still call it.
+▎ C ○ Write your own answer
 ▎
-▎  Note: Add a note
+▎ Note: Add a note
 
 
 ▎   Answers  0 of 3 answered
@@ -36,32 +36,32 @@ Q1/3   alt+a for the keys                                                       
 --- styles
 1 . 2x49 .x44 1
 1 .x94 1
-1 .x2 2x2 3x2 .x32 3x13 .x43 1
-1 .x2 2x2 3x2 .x88 1
-1 .x2 2x2 3x2 .x88 1
-1 .x2 1x2 3 . 3x21 .x67 1
+1 . 1 . 3 .x33 3x13 .x44 1
+1 . 1 . 3 .x90 1
+1 . 1 . 3 .x90 1
+1 . 1 . 3 . 3x21 .x68 1
 1 .x94 1
 1 . 4x67 .x26 1
 1 .x94 1
-1 .x2 3x5 . 3x10 .x76 1
+1 . 3x16 .x77 1
 1x96
 4x96
 4 . 5x44 .x49 4
 4 .x94 4
-4 .x2 6x2 3x2 .x88 4
-4 .x2 3x3 . 3x21 .x67 4
+4 . 3 . 3 .x90 4
+4 . 3 . 3 . 3x21 .x68 4
 4 .x94 4
-4 .x2 3x5 . 3x10 .x76 4
+4 . 3x16 .x77 4
 4x96
 4x96
-4 . 5x28 7x7 5 .x57 4
+4 . 5x28 6x7 5 .x57 4
 4 .x94 4
-4 .x2 6x2 3x2 .x88 4
-4 .x2 6x2 3x2 .x88 4
-4 .x2 3x30 .x62 4
-4 .x2 3x3 . 3x21 .x67 4
+4 . 3 . 3 .x90 4
+4 . 3 . 3 .x90 4
+4 .x5 3x26 .x63 4
+4 . 3 . 3 . 3x21 .x68 4
 4 .x94 4
-4 .x2 3x5 . 3x10 .x76 4
+4 . 3x16 .x77 4
 4x96
 4x96
 4 . 5x26 .x67 4
@@ -74,5 +74,4 @@ Q1/3   alt+a for the keys                                                       
 3 fg=#999999
 4 dim
 5 bold
-6 fg=#999999 bold
-7 fg=#b1b9f9 bold
+6 fg=#b1b9f9
