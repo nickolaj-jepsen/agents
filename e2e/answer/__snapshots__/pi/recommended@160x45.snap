@@ -1,4 +1,5 @@
 # answer/pi/recommended 160x45 @0,0 (159x45)
+ │ Recommended: Yes. Four generators still give 20-24.
 
  ────────────────────────────────────────────────────────────────────────────────
 
@@ -35,8 +36,7 @@
 │    Note: Add a note
 
 
-│    Answers  0 of 3 answered
-│   ▸ Show all 3 questions
+│    0 of 3 answered  Fill prompt
 
  Answer [alt+a]  Q1  0/3 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -45,58 +45,60 @@
 <tmp>
 0.7%/200k (auto)                                                                                                                                          repla
 --- styles
+. 1x2 2x12 3x39
 -
 . 1x80
 -
-. 2x26 3x7 2
+. 4x26 5x7 4
 -
-. 4x2 2x2
-. 4x2 2x2
--
--
-5 .x2 6 . 4x4 6x43
-5
-5 .x4 4 . 7 .x33 7x13
-5 .x4 4 . 7
-5 .x4 4 . 7
-5 .x4 4 . 7 . 7x21
-5 .x4 7x16
-5
-5 .x4 7x67
+. 6x2 4x2
+. 6x2 4x2
 -
 -
-7 .x4 7x4 6x38
+7 .x2 8 . 6x4 8x43
 7
-7 .x4 7 . 7
-7 .x4 7 . 7 . 7x21
-7 .x4 7x16
--
--
-7 .x4 7x4 6x22 4x7 6
+7 .x4 6 . 9 .x33 9x13
+7 .x4 6 . 9
+7 .x4 6 . 9
+7 .x4 6 . 9 . 9x21
+7 .x4 9x16
 7
-7 .x4 7 . 7
-7 .x4 7 . 7
-7 .x8 7x26
-7 .x4 7 . 7 . 7x21
-7 .x4 7x16
+7 .x4 9x67
 -
 -
-7 .x4 6x24
-7 .x3 7x22
--
-. 5x6 . 7x7 .x2 7x16
-8x159
+9 .x4 9x4 8x38
 9
-8x159
-7x5
-7x159
+9 .x4 9 . 9
+9 .x4 9 . 9 . 9x21
+9 .x4 9x16
+-
+-
+9 .x4 9x4 8x22 6x7 8
+9
+9 .x4 9 . 9
+9 .x4 9 . 9
+9 .x8 9x26
+9 .x4 9 . 9 . 9x21
+9 .x4 9x16
+-
+-
+9 .x4 7x15 .x2 7x11
+-
+. 7x6 . 9x7 .x2 9x16
+ax159
+b
+ax159
+9x5
+9x159
 --- legend
 1 fg=#9da5a9
-2 bold
-3 fg=#a798d7 bold
-4 fg=#a798d7
-5 fg=#dee0e1
-6 fg=#dee0e1 bold
-7 fg=#7e888e
-8 fg=#6c767b
-9 inverse
+2 fg=#9da5a9 bold italic
+3 fg=#9da5a9 italic
+4 bold
+5 fg=#a798d7 bold
+6 fg=#a798d7
+7 fg=#dee0e1
+8 fg=#dee0e1 bold
+9 fg=#7e888e
+a fg=#6c767b
+b inverse

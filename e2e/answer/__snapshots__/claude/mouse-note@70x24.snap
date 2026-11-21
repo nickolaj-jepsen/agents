@@ -18,28 +18,29 @@
 ● Prompt dropped by a hook: The note is still waiting
 Q1/2   jk move A–B pick C write n note r review keys here         [-]
 --- styles
-.x4 1 . 1 . 1x21
-.x4 1x6
+.x4 1 . 2 . 2x21
+.x4 2x6
 -
 -
-2x70
-2 .x3 1x4 3x12 .x49 2
-2 .x68 2
-2 .x3 1 . 1 .x62 2
-2 .x3 1 . 1 .x62 2
-2 .x3 1 . 1 . 1x21 .x40 2
-2 .x3 1x16 .x49 2
-2x70
-2x70
-2 .x20 4x11 .x37 2
-2x70
+3x70
+3 .x3 2x4 4x12 .x49 3
+3 .x68 3
+3 .x3 2 . 2 .x62 3
+3 .x3 2 . 2 .x62 3
+3 .x3 2 . 2 . 2x21 .x40 3
+3 .x3 2x16 .x49 3
+3x70
+3x70
+3 .x20 5x11 .x37 3
+3x70
 -
-5 . 5x51
-6x6 . 1x7 . 1x8 . 1x7 . 1x6 . 1x8 . 1x9 .x9 1x3
+6 . 6x51
+7x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x9 2x3
 --- legend
-1 fg=#999999
-2 dim
-3 bold
-4 fg=#d77757 bold
-5 fg=#ffc107
-6 fg=#d77757 bold inverse
+1 fg=#d77757
+2 fg=#999999
+3 dim
+4 bold
+5 fg=#d77757 bold
+6 fg=#ffc107
+7 fg=#d77757 bold inverse

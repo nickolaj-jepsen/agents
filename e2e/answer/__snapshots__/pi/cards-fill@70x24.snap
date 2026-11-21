@@ -4,7 +4,7 @@
 │    Note: Add a note
 
 
-│    Q2  Add caching? ✓
+│    Q2  Add caching?
 │
 │    A ● Yes
 │    B ○ No
@@ -24,35 +24,35 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                repla
 --- styles
-1 .x4 1 . 2 . 2x8
-1 .x4 1 . 1 . 1x21
-1 .x4 1x16
+1 .x4 2 . 3 . 3x8
+1 .x4 2 . 2 . 2x21
+1 .x4 2x16
 -
 -
-1 .x4 1x4 3x12 4x2
+1 .x4 2x4 4x12
 1
-1 .x4 1 . 2 . 2x3
-1 .x4 1 . 1
-1 .x4 1 . 1 . 1x21
-1 .x4 1x16
+1 .x4 2 . 3 . 3x3
+1 .x4 2 . 2
+1 .x4 2 . 2 . 2x21
+1 .x4 2x16
 -
 -
-5 .x2 3 . 3x15 .x2 2x11
+1 .x2 4 . 4x15 .x2 3x11
 -
-. 5x6 . 1x7 .x2 1x20
+. 5x6 . 2x7 .x2 2x20
 6x69
 -
 -
 -
 .x17 7
 6x69
-1x5
-1x69
+2x5
+2x69
 --- legend
-1 fg=#7e888e
-2 fg=#a798d7 bold
-3 fg=#dee0e1 bold
-4 fg=#68b78d
+1 fg=#68b78d
+2 fg=#7e888e
+3 fg=#a798d7 bold
+4 fg=#dee0e1 bold
 5 fg=#dee0e1
 6 fg=#6c767b
 7 inverse

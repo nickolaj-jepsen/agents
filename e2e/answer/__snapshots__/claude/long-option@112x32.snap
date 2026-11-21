@@ -1,4 +1,4 @@
-# answer/claude/long-option 112x32 @0,1 (112x26)
+# answer/claude/long-option 112x32 @0,2 (112x25)
 ▎ ❯ Q1  Which one?
 ▎
 ▎   A ○ a very long option text that keeps going and going a very long option text that keeps
@@ -23,12 +23,11 @@
 
 
 ▎   0 of 1 answered  Fill prompt
-
 Q1/1   alt+a for the keys                                                                                   [-]
 --- styles
 .x2 1 . 2x4 1x10
 -
-.x4 2 . 2
+.x4 2 . 3
 -
 -
 -
@@ -36,24 +35,24 @@ Q1/1   alt+a for the keys                                                       
 -
 -
 -
-.x4 2 . 2
-.x8 2x85
-.x8 2x85
-.x8 2x84
-.x8 2x83
-.x8 2x85
-.x8 2x84
-.x8 2x83
-.x8 2x15
-.x4 2 . 2 . 2x21
-.x4 2x16
+.x4 2 . 3
+.x8 3x85
+.x8 3x85
+.x8 3x84
+.x8 3x83
+.x8 3x85
+.x8 3x84
+.x8 3x83
+.x8 3x15
+.x4 2 . 3 . 3x21
+.x4 3x16
 -
-3x96
-3 .x94 3
-3x96
-4x6 . 2x18 .x83 2x3
+4x96
+4 .x94 4
+5x6 . 3x18 .x83 3x3
 --- legend
 1 bold
-2 fg=#999999
-3 dim
-4 fg=#d77757 bold
+2 fg=#d77757
+3 fg=#999999
+4 dim
+5 fg=#d77757 bold

@@ -582,7 +582,8 @@ export class AnswerGuide implements Component, Focusable {
       const next = cell && { x: cell.start, y: event.y };
       const changed = this.hover?.x !== next?.x || this.hover?.y !== next?.y;
       this.hover = next;
-      return changed ? { render: true } : undefined;
+      // pi drops a result that is not `handled`, and its `render` with it.
+      return changed ? { handled: true, render: true } : undefined;
     }
     const action = cell?.act;
     if (!action || event.button !== "left") return undefined;

@@ -13,7 +13,7 @@
  - A. Yes
  - B. No
 
-│  ❯ Q1  Use SQLite? ✓
+│  ❯ Q1  Use SQLite?
 │
 │    A ○ SQLite
 │    B ● Postgres
@@ -59,12 +59,12 @@ a draft for later
 . 4x2 3x2
 . 4x2 3x2
 -
-5 .x2 6 . 7x4 6x11 8x2
+5 .x2 6 . 4x4 6x11
 5
-5 .x4 7 . 7
-5 .x4 7 . 9 . 9x8
-5 .x4 7 . 7 . 7x21
-5 .x2 7x8 .x5 a
+5 .x4 4 . 7
+5 .x4 4 . 8 . 8x8
+5 .x4 4 . 7 . 7x21
+5 .x2 7x8 .x5 9
 -
 -
 7 .x4 7x4 6x12
@@ -75,7 +75,7 @@ a draft for later
 7 .x4 7x16
 -
 -
-7 .x4 5x15 .x2 9x11
+7 .x4 ax15 .x2 8x11
 -
 -
 -
@@ -84,9 +84,9 @@ a draft for later
 -
 -
 -
-. 9x4 . 7 .x2 7x19 .x2 5x6 . 7x5
+. 8x4 . 7 .x2 7x19 .x2 ax6 . 7x5
 bx159
-.x8 a
+.x8 9
 bx159
 7x5
 7x159
@@ -95,10 +95,10 @@ bx159
 2 fg=#dee0e1 bg=#213b49
 3 bold
 4 fg=#a798d7
-5 fg=#dee0e1
+5 fg=#68b78d
 6 fg=#dee0e1 bold
 7 fg=#7e888e
-8 fg=#68b78d
-9 fg=#a798d7 bold
-a inverse
+8 fg=#a798d7 bold
+9 inverse
+a fg=#dee0e1
 b fg=#6c767b

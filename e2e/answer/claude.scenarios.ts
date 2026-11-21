@@ -6,7 +6,9 @@ import { says } from "./fixture.ts";
 const keys = (...names: string[]): Step[] => names.map((press) => ({ press }));
 const ask: Step[] = [{ type: "ask" }, { press: "Enter" }];
 const answer: Step[] = [{ type: "/answer" }, { press: "Enter" }];
-const round: Step[] = [...ask, { wait: /(?:^|\s)Q?1\/\d/ }, ...answer];
+// `/answer` brings the card with the keyboard into view: wait for its heading, or a tall card is
+// snapped while it still scrolls.
+const round: Step[] = [...ask, { wait: /(?:^|\s)Q?1\/\d/ }, ...answer, { wait: /▎ ❯ \S+ {2}/ }];
 const turn = (fixture: string): Scenario["start"] => ({
   hermetic: true,
   plugins: ["answer"],
@@ -217,8 +219,16 @@ export default scenarios({
     "long-option": {
       about: "long option labels and their detail wrap within the card",
       start: turn("long-option"),
+      // Tall enough for the whole card at the narrow width: a card taller than the screen ends
+      // up at a different scroll position from run to run once the terminal is resized.
+      size: [70, 44],
+      sizes: [
+        [70, 44],
+        [112, 32],
+        [160, 45],
+        [240, 60],
+      ],
       steps: round,
-      extreme: true,
     },
     "inline-markdown": {
       about: "an option's code, bold and link are set, and a click on its last line picks it",

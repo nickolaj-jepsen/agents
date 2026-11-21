@@ -29,8 +29,7 @@
 │    Note: Add a note
 
 
-│    Answers  1 of 2 answered
-│   [ Fill prompt ]  ▸ Show all 2 questions
+│    1 of 2 answered  Fill prompt
 
   1/2   A–B pick  Write [C]  Note [n]  Review [r]  Prompt [esc]  jk move  Clear [x]
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -38,6 +37,7 @@
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 <tmp>
 0.7%/200k (auto)                                                                                                                                          replay
+
 
 
 
@@ -75,15 +75,15 @@
 7 .x4 7x16
 -
 -
-5 .x4 9x24
-5 .x3 9x15 .x2 7x22
+7 .x4 9x15 .x2 8x11
 -
-. ax5 .x2 7x8 .x2 bx5 . 7x3 .x2 bx4 . 7x3 .x2 bx6 . 7x3 .x2 bx6 . 7x5 .x2 7x7 .x2 bx5 . 7x3
-cx160
-d
-cx160
+. ax5 .x2 7x8 .x2 9x5 . 7x3 .x2 9x4 . 7x3 .x2 9x6 . 7x3 .x2 9x6 . 7x5 .x2 7x7 .x2 9x5 . 7x3
+bx160
+c
+bx160
 7x5
 7x160
+-
 -
 -
 -
@@ -99,8 +99,7 @@ cx160
 6 fg=#dee0e1 bold
 7 fg=#7e888e
 8 fg=#a798d7 bold
-9 fg=#7e888e bold
+9 fg=#dee0e1
 a fg=#dee0e1 inverse
-b fg=#dee0e1
-c fg=#6c767b
-d inverse
+b fg=#6c767b
+c inverse

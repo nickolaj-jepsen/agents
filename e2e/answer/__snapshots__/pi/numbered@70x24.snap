@@ -15,7 +15,7 @@
 │    Note: Add a note
 
 
-│    Answers  0  ↓ Jump to latest message · Ctrl+End
+│    0 of 2 answered  Fill prompt
 
  Answer [alt+a]  1  0/2 answered
 ─────────────────────────────────────────────────────────────────────
@@ -40,12 +40,12 @@
 4 .x4 4x16
 -
 -
-4 .x4 2x11 5x37
+4 .x4 1x15 .x2 1x11
 -
 . 1x6 . 4x7 .x2 4x15
-6x69
-7
-6x69
+5x69
+6
+5x69
 4x5
 4x69
 --- legend
@@ -53,6 +53,5 @@
 2 fg=#dee0e1 bold
 3 fg=#a798d7
 4 fg=#7e888e
-5 fg=#dee0e1 bg=#213b49
-6 fg=#6c767b
-7 inverse
+5 fg=#6c767b
+6 inverse

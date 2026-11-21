@@ -26,32 +26,33 @@ a draft for later
 --- styles
 1 .x2 2 . 3x4 2x11
 1
-1 .x4 3 . 3
-1 .x4 3 . 3
-1 .x2 3x6 .x6 4
-1 .x4 3x16
+1 .x4 3 . 4
+1 .x4 3 . 4
+1 .x2 4x6 .x6 5
+1 .x4 4x16
 -
 -
-3 .x4 3x4 2x12
-3
-3 .x4 3 . 3
-3 .x4 3 . 3
-3 .x4 3 . 3 . 3x21
-3 .x4 3x16
+4 .x4 4x4 2x12
+4
+4 .x4 4 . 4
+4 .x4 4 . 4
+4 .x4 4 . 4 . 4x21
+4 .x4 4x16
 -
 -
-3 .x4 1x15 .x2 1x11
+4 .x4 1x15 .x2 1x11
 -
-. 5x4 . 3 .x2 3x19 .x2 1x6 . 3x5
-6x69
-.x17 4
-6x69
-3x5
-3x69
+. 6x4 . 4 .x2 4x19 .x2 1x6 . 4x5
+7x69
+.x17 5
+7x69
+4x5
+4x69
 --- legend
 1 fg=#dee0e1
 2 fg=#dee0e1 bold
-3 fg=#7e888e
-4 inverse
-5 fg=#a798d7 bold
-6 fg=#6c767b
+3 fg=#a798d7
+4 fg=#7e888e
+5 inverse
+6 fg=#a798d7 bold
+7 fg=#6c767b

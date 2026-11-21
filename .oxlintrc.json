@@ -134,7 +134,6 @@
       "files": [
         "plugins/answer/claude/answer.test.tsx",
         "plugins/answer/claude/register.tsx",
-        "plugins/answer/claude/terminal.ts",
         "plugins/answer/claude/transcript.tsx",
         "plugins/answer/pi/offer.ts",
         "plugins/answer/pi/transcript.ts",

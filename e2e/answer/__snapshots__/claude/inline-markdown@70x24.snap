@@ -18,31 +18,33 @@
 
 Q1/1   alt+a for the keys                                         [-]
 --- styles
-.x8 1x8 2x7 1x19 2x10 1x10 2x5
-.x8 2x49
-.x8 3x11
-.x4 3 . 3
-.x12 1x8 .x9 4x7 .x5 5x6 .x13 6x7
--
-.x8 3x4 1x12 3x15 1x8 3x6 7x7 3x7
-.x8 3x20
-.x4 3 . 3 . 3x21
-.x4 3x16
--
-.x4 8x64
-.x4 8x11 9x12 8x29
--
-8x70
-8 .x20 2x11 .x37 8
-8x70
-2x6 . 3x18 .x41 3x3
+1 .x7 2x8 3x7 2x19 3x10 2x10 3x5 .x2 1
+1 .x7 3x49 .x12 1
+1 .x7 4x11 .x50 1
+1 .x3 5 . 4 .x62 1
+1 .x11 2x8 .x9 6x7 .x5 7x6 .x13 8x7 .x2 1
+1 .x68 1
+1 .x7 4x4 2x12 4x15 2x8 4x6 9x7 4x7 .x2 1
+1 .x7 4x20 .x41 1
+1 .x3 5 . 4 . 4x21 .x40 1
+1 .x3 4x16 .x49 1
+1 .x68 1
+1 .x3 ax64 . 1
+1 .x3 ax11 bx12 ax29 .x13 1
+1x70
+1x70
+1 .x20 3x11 .x37 1
+1x70
+3x6 . 4x18 .x41 4x3
 --- legend
-1 fg=#b1b9f9
-2 fg=#d77757 bold
-3 fg=#999999
-4 bold
-5 italic
-6 underline=single
-7 fg=#999999 bold
-8 dim
-9 fg=#b1b9f9 dim
+1 fg=#4eba65
+2 fg=#b1b9f9
+3 fg=#d77757 bold
+4 fg=#999999
+5 fg=#d77757
+6 bold
+7 italic
+8 underline=single
+9 fg=#999999 bold
+a dim
+b fg=#b1b9f9 dim
