@@ -239,6 +239,101 @@ Layout is settled. Two actual choices:
 
 Then the last branch is left.`;
 
+// One question and no number: lettered options under a bold lead-in, a lean, a closing ask.
+const LONE_LETTERED = `Here is the tradeoff.
+
+**Your decision: where the cache lives.**
+
+- **A.** In memory. Fast, lost on restart.
+- **B.** On disk. Slower, survives restarts.
+
+I'd pick **A**, since restarts are rare.
+
+Which do you want?`;
+
+// The same with no lean: the closing question is the sign it asks.
+const LONE_LETTERED_NO_LEAN = `Two ways to cut the list.
+
+- **A.** By age.
+- **B.** By size.
+- **C.** By both.
+
+Which do you want?`;
+
+// A revised list that drops its first option and keeps the letters.
+const REVISED_OPTIONS = `Option A costs more than I said, so I'd now go another way.
+
+- **B. Keep one process per window (my recommendation).** The tools stay as they are.
+- **C. Do A anyway.** Every tool needs another way to tell windows apart.
+- **D. Leave it as new windows.**
+
+Which do you want?`;
+
+// One question at a time: a question and its recommendation, nothing to pick from.
+const ONE_AT_A_TIME = `**Should the cache live in memory?**
+
+It is small and rebuilt on start.
+
+My recommended answer: yes, since restarts are rare.`;
+
+// A report that ends on one offer: prose.
+const LONE_OFFER = "Rebased and pushed. The branch is clean.\n\nWant me to delete the old branch?";
+
+// Steps, then "Go, or corrections?": a list of statements, not a round.
+const STEPS_THEN_GO = `Plan:
+
+1. Add the parser.
+2. Wire the card.
+3. Update the docs.
+
+Go, or corrections?`;
+
+// A cue line above the list says its items are decisions.
+const DECISIONS_FOR_YOU = `Done with the spike.
+
+Decisions for you:
+
+1. Should retries be capped at three
+2. Should the log keep failed attempts`;
+
+// Alternatives, a lean and a closing choice: one question whose options are the list.
+const MENU_CLOSING = `Ways to close the gap:
+
+1. **Accept it and label it:** the smallest change.
+2. **Read the hourly report:** about an hour behind.
+3. **Use the session logs:** real time, no price table.
+
+I'd go with 1, or 1 plus 3. Which do you want?`;
+
+// A line that is itself the question, over a list of things it could do.
+const MENU_CUE_LINE = `The disk is the loose end. Want me to:
+
+1. Delete the old model?
+2. Commit the lock bump?
+3. Move on to the next model?`;
+
+// Open items stated as findings: prose.
+const STILL_OPEN = `Still open:
+
+- Drop the two docs commits?
+- Force-push or open a new PR?`;
+
+// The closer of a grilling is answered with "yes", and gets no card.
+const SHARED_UNDERSTANDING = `That empties the frontier.
+
+> **Recommended:** yes, write it up.
+
+Have we reached a shared understanding?`;
+
+// Reasons, then a recommendation paragraph: the list is not the questions.
+const REASONS_THEN_LEAN = `Why nothing simpler keeps it:
+
+1. The sandbox would need a patch.
+2. A different sandbox was ruled out.
+3. The bundle is the current design.
+
+**My recommendation:** keep it as written.`;
+
 // A numbered list that asks nothing.
 const PLAIN_LIST = `Done. What changed:
 
@@ -306,6 +401,18 @@ describe("parse", () => {
     [HEADING_BETWEEN, "round Q1[*] Q2[*]"],
     [EMOJI_ROUND, "round Q1[*] Q2[AB*A]"],
     [HEADING_OVER_QUESTIONS, "round 1[] 2[]"],
+    [LONE_LETTERED, "round Q1[AB*A]"],
+    [LONE_LETTERED_NO_LEAN, "round Q1[ABC]"],
+    [REVISED_OPTIONS, "round Q1[BCD*B]"],
+    [ONE_AT_A_TIME, "round Q1[*]"],
+    [LONE_OFFER, "null"],
+    [STEPS_THEN_GO, "null"],
+    [DECISIONS_FOR_YOU, "round 1[] 2[]"],
+    [MENU_CLOSING, "round Q1[123*1]"],
+    [MENU_CUE_LINE, "round Q1[123]"],
+    [STILL_OPEN, "null"],
+    [SHARED_UNDERSTANDING, "null"],
+    [REASONS_THEN_LEAN, "null"],
     [PLAIN_LIST, "null"],
     [FENCED_FORMAT, "null"],
   ])("each ending parses to its shape (%#)", (text, expected) => {
@@ -399,6 +506,13 @@ describe("what the cards leave out", () => {
     HEADING_BETWEEN,
     EMOJI_ROUND,
     HEADING_OVER_QUESTIONS,
+    LONE_LETTERED,
+    LONE_LETTERED_NO_LEAN,
+    REVISED_OPTIONS,
+    ONE_AT_A_TIME,
+    DECISIONS_FOR_YOU,
+    MENU_CLOSING,
+    MENU_CUE_LINE,
   ];
   const words = (text: string) => text.toLowerCase().match(/[\p{L}\p{N}_]{2,}/gu) ?? [];
 
@@ -454,6 +568,82 @@ describe("what the cards leave out", () => {
       expect(found?.starts).toEqual(startLines(text));
       expect(found?.tail).toBeGreaterThan(found?.starts.at(-1) ?? lines.length);
       expect(found?.tail).toBeLessThanOrEqual(lines.length);
+    }
+  });
+});
+
+describe("a question with no number of its own", () => {
+  test("the lead-in is the title, the closing ask stays with it, and the reply is the answer alone", () => {
+    const item = formOf(LONE_LETTERED).items[0];
+    expect(item?.title).toBe("Your decision: where the cache lives.");
+    expect(item?.unlabelled).toBe(true);
+    expect(item?.body).toContain("Which do you want?");
+    const form = formOf(LONE_LETTERED);
+    expect(reply(form, steps(form, [pick(1)]))).toBe("B");
+    expect(reply(form, steps(form, [pick(1), note("restarts happen weekly")]))).toBe(
+      "B\n    Note: restarts happen weekly",
+    );
+    expect(reply(form, steps(form, [ACCEPT]))).toBe("yes");
+    expect(reply(form, steps(form, [write("neither, use redis")]))).toBe("neither, use redis");
+  });
+
+  test("a numbered question keeps its label in the reply", () => {
+    const form = formOf(SINGLE_QUESTION);
+    expect(reply(form, steps(form, [write("no")]))).toBe("Q18: no");
+  });
+
+  test("a question and a recommendation with no options is a yes", () => {
+    const form = formOf(ONE_AT_A_TIME);
+    expect(form.items[0]?.title).toBe("Should the cache live in memory?");
+    expect(form.items[0]?.recommended).toBe("yes, since restarts are rare.");
+    expect(reply(form, steps(form, [ACCEPT]))).toBe("yes");
+  });
+
+  test("a revised list keeps its letters and the lean counts from the first of them", () => {
+    const [item] = formOf(REVISED_OPTIONS).items;
+    expect(item?.options.map((option) => option.key)).toEqual(["B", "C", "D"]);
+    expect(item?.recommendedOption).toBe(0);
+  });
+});
+
+describe("a list of alternatives", () => {
+  test("is one question whose options keep the numbers the list printed", () => {
+    const [item] = formOf(MENU_CLOSING).items;
+    expect(item?.title).toBe("I'd go with 1, or 1 plus 3. Which do you want?");
+    expect(item?.options.map((option) => option.key)).toEqual(["1", "2", "3"]);
+    expect(item?.options[0]?.text).toBe("Accept it and label it:");
+    expect(item?.options[0]?.detail).toBe("the smallest change.");
+    expect(item?.recommendedOption).toBe(0);
+    const form = formOf(MENU_CLOSING);
+    expect(reply(form, steps(form, [pick(2)]))).toBe("3");
+  });
+
+  test("several are answered through the write-in: there is no pick-several", () => {
+    const form = formOf(MENU_CLOSING);
+    expect(reply(form, steps(form, [write("1 and 3")]))).toBe("1 and 3");
+    expect(form.items[0]?.recommendedOptions).toBeUndefined();
+  });
+
+  test("a line that is the question over the list is its title", () => {
+    const [item] = formOf(MENU_CUE_LINE).items;
+    expect(item?.title).toBe("Want me to");
+    expect(item?.options.map((option) => option.text)).toEqual([
+      "Delete the old model?",
+      "Commit the lock bump?",
+      "Move on to the next model?",
+    ]);
+  });
+
+  test("every item has a start the harness can cut the message at", () => {
+    for (const text of [
+      MENU_CLOSING,
+      MENU_CUE_LINE,
+      LONE_LETTERED,
+      ONE_AT_A_TIME,
+      GRILLING_ROUND,
+    ]) {
+      const form = formOf(text);
+      expect(startLines(text)).toHaveLength(form.items.length);
     }
   });
 });

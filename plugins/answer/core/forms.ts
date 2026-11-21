@@ -12,6 +12,8 @@ export type Option = { key: string; text: string; detail: string };
 export type FormItem = {
   /** As printed ("Q3", "2"). */
   label: string;
+  /** The message printed no label for this lone question, so the reply is only the answer. */
+  unlabelled?: boolean;
   title: string;
   /** Markdown: what the item said besides its title, options and recommendation. */
   body: string;
@@ -108,7 +110,7 @@ const EMOJI_START = /^❓\s*\*\*Q([0-9]{1,3})\*\*\s*[-–—:]\s*(.*)$/;
 const OPTION = /^(\s*)(?:[-*+]\s+)?(\*\*)?\(?([A-Ha-h])[.)](\*\*)?\s+(.+)$/;
 const RECOMMENDED =
   /^\s*(?:>\s*)?(?:\**(?:(?:My )?recommend(?:ed|ation)(?: answer)?)\**\s*:\s*\**|➡️\s*)\s*(.*)$/i;
-const OWN_RECOMMENDATION = /\((?:(?:my )?recommend(?:ed|ation)|my pick)\b[^)]*\)/i;
+const OWN_RECOMMENDATION = /\([^)]*\b(?:my recommendation|recommended|my pick)\b[^)]*\)/i;
 // A letter, then punctuation or the end: "A. The format", "B, because", "**C**"; never "A small".
 const LEADING_LETTER = /^(?:option\s+)?\**\(?([A-H])\)?\**(?=$|[\s]*[.,:;)]|\s+[—–-]\s)/i;
 // Several letters leading a recommendation: "A, B and D now", "A through C", "**A** and **C**."
@@ -117,7 +119,19 @@ const LEADING_LETTERS =
 const LONE_LETTER = /(?<![A-Za-z])[A-H](?![A-Za-z])/g;
 const RANGE = /through|\bto\b|–|-/;
 const RECOMMEND_IN_TEXT =
-  /\b(?:recommend(?:ed)?:?|lean (?:toward|towards)|(?:I'd|I would) (?:go with|pick))\s+\**(?:option\s+)?([A-H])\b/;
+  /\b(?:recommend(?:ed|ation)?:?|lean (?:toward|towards)|(?:I'd|I would) (?:go with|pick|try|choose))\s+\**(?:option\s+)?([A-H])\b/;
+// The same for a numbered menu: "I'd go with 2", "my recommendation: 1".
+const RECOMMEND_NUMBER =
+  /\b(?:recommend(?:ed|ation)?:?|lean (?:toward|towards)|(?:I'd|I would) (?:go with|pick|try|start with|choose))\s+\**(?:option\s+|number\s+)?([0-9]{1,2})\b/i;
+// The line above a numbered list that says it holds decisions or questions, so its items are asks.
+const DECISION_CUE =
+  /\b(?:decisions?\s+(?:for you|to make|needed)|to decide|to confirm|need to know|choose between|questions?\s+(?:for you|before|to answer))\b[^.?!]*:?\s*$/i;
+// A line that is itself the question a numbered list answers: "Want me to:" 1. 2. 3.
+const MENU_CUE =
+  /(?:^|[.!?—–]\s+)((?:want me to|shall i|should i|do you want me to|would you like me to)\b[^?]*):\s*$/i;
+// A closing question that picks among the list above it, not one that asks to go ahead.
+const CHOOSING =
+  /\b(?:which|pick|choose|prefer|go with|start with|one of|both|either|option\s*[0-9]|[0-9]\s*(?:,|or|and|\/|\+)\s*[0-9])\b/i;
 const ROUTES: [RegExp, string][] = [
   [/\/grill-me\b|\bgrill(?:ing)? (?:it )?first\b/i, "/grill-me"],
   [/\/brainstorm\b|\bbrainstorm(?:ing)? (?:it )?first\b/i, "/brainstorm"],
@@ -279,7 +293,10 @@ function parseItem(start: Start, block: string[]): FormItem {
       continue;
     }
     const opt = OPTION.exec(line);
-    if (opt && (opt[3] ?? "").toUpperCase() === String.fromCharCode(65 + options.length)) {
+    const next = options.length
+      ? String.fromCharCode(65 + letterIndex(options[0]?.key ?? "A") + options.length)
+      : (opt?.[3] ?? "").toUpperCase();
+    if (opt && (opt[3] ?? "").toUpperCase() === next) {
       const [, lead = "", opened, rawLetter = "", closed, words = ""] = opt;
       const letter = rawLetter.toUpperCase();
       const detail: string[] = [];
@@ -318,8 +335,12 @@ function parseItem(start: Start, block: string[]): FormItem {
   if (choices.length) {
     const leading = recommended ? LEADING_LETTER.exec(recommended) : null;
     const letter = (leading ?? RECOMMEND_IN_TEXT.exec(bodyText))?.[1];
-    const index = letter ? letterIndex(letter) : (ownPick ?? -1);
-    const several = leadingLetters(recommended ?? "", choices.length);
+    // A revised list may start at B: letters count from its first option.
+    const offset = letterIndex(choices[0]?.key ?? "A");
+    const index = letter ? letterIndex(letter) - offset : (ownPick ?? -1);
+    const several = leadingLetters(recommended ?? "", choices.length + offset)
+      .map((i) => i - offset)
+      .filter((i) => i >= 0);
     if (several.length > 1) item.recommendedOptions = several;
     else if (index >= 0 && index < choices.length) item.recommendedOption = index;
   }
@@ -376,6 +397,174 @@ function parsePicks(lines: string[], run: Start[]): { form: Form; end: number } 
  */
 export type Split = { form: Form; starts: number[]; tail: number };
 
+/** The nearest line above `line` that says something, markup off, and where it was. */
+function cueAbove(lines: string[], line: number): { text: string; at: number } {
+  for (let i = line - 1; i >= Math.max(0, line - 3); i--) {
+    const text = (lines[i] ?? "").replace(/^#{1,6}\s+/, "").trim();
+    if (text) return { text: unbold(text), at: i };
+  }
+  return { text: "", at: -1 };
+}
+
+/** Where a block's first unindented paragraph after a blank line starts, -1 for none. */
+function paragraphBreak(block: string[]): number {
+  for (let i = 1; i < block.length; i++)
+    if (!(block[i - 1] ?? "").trim() && (block[i] ?? "").trim() && indent(block[i] ?? "") === 0)
+      return i;
+  return -1;
+}
+
+/** The paragraphs of some lines, split where a line is blank. */
+function paragraphs(lines: string[]): string[][] {
+  const out: string[][] = [];
+  let open: string[] = [];
+  for (const line of lines) {
+    if (line.trim()) open.push(line);
+    else if (open.length) {
+      out.push(open);
+      open = [];
+    }
+  }
+  if (open.length) out.push(open);
+  return out;
+}
+
+/**
+ * A numbered list of alternatives followed by one question that picks among them ("Which do you
+ * want?"), or under a cue that is the question ("Want me to:"), is one question whose options are
+ * the list, keyed by the numbers it printed.
+ */
+function menuOf(lines: string[], run: Start[]): Split | null {
+  const first = run[0];
+  if (!first || run.length < 2 || first.isQ) return null;
+  const last = run[run.length - 1] as Start;
+  const { block: lastBlock, end } = blockOf(lines, last, undefined);
+  const { text: cue, at: cueAt } = cueAbove(lines, first.line);
+  const cueLine = MENU_CUE.test(cue);
+  let closing: string[] = [];
+  let ownLines = lastBlock;
+  // The item's own first line is paragraph one; a closing question is a paragraph after it.
+  const trailing = paragraphs([lines[last.line] ?? "", ...lastBlock]);
+  const tailPara = trailing[trailing.length - 1];
+  if (
+    trailing.length > 1 &&
+    tailPara &&
+    indent(tailPara[0] ?? "") === 0 &&
+    !START.test(tailPara[0] ?? "")
+  ) {
+    const asked = tailPara.join(" ").trim();
+    if (asked.endsWith("?") && CHOOSING.test(asked)) {
+      closing = tailPara;
+      ownLines = lastBlock.slice(0, lastBlock.lastIndexOf(tailPara[0] ?? ""));
+    }
+  }
+  if (!closing.length && !cueLine) return null;
+  const options: Option[] = [];
+  let ownPick: number | undefined;
+  for (const [i, start] of run.entries()) {
+    const block = run[i + 1] ? blockOf(lines, start, run[i + 1]).block : ownLines;
+    const text = start.title;
+    if (OWN_RECOMMENDATION.test(text)) ownPick = i;
+    options.push({ key: String(start.n), text, detail: tidy([start.rest, ...block]) });
+  }
+  const cueWords = MENU_CUE.exec(cue)?.[1] ?? "";
+  const asked = closing.length ? unbold(tidy(closing)) : cueWords;
+  const said = RECOMMEND_NUMBER.exec(closing.join(" "));
+  const wanted = said ? options.findIndex((option) => option.key === said[1]) : (ownPick ?? -1);
+  const item: FormItem = {
+    label: "Q1",
+    unlabelled: true,
+    title: asked,
+    body: "",
+    options,
+  };
+  if (wanted >= 0) {
+    item.recommendedOption = wanted;
+    if (closing.length) item.recommended = unbold(tidy(closing));
+  }
+  return {
+    form: { kind: "round", items: [item] },
+    // The cue is the whole question only when it is a line of its own; else it stays in the head.
+    starts: [cueLine && !closing.length && cue === cueWords && cueAt >= 0 ? cueAt : first.line],
+    tail: end,
+  };
+}
+
+/** The lines outside any fence, with where each was, so a search never reads a quoted format. */
+const outsideFences = (lines: string[]): [string, number][] => {
+  let inFence = false;
+  const kept: [string, number][] = [];
+  lines.forEach((line, i) => {
+    if (FENCE.test(line)) inFence = !inFence;
+    else if (!inFence) kept.push([line, i]);
+  });
+  return kept;
+};
+
+/**
+ * One question with no number: a block of lettered options after its lead-in line, closed by
+ * a question or carrying a recommendation; or a question line followed by a recommendation line.
+ * The option-less shape asks for the recommendation, so a bare "Want me to push?" stays prose.
+ */
+function singleOf(lines: string[]): Split | null {
+  const kept = outsideFences(lines);
+  const at = (n: number) => kept[n];
+  let titleAt = -1;
+  // The first option line whose next option follows within a few lines: a lone "A." is a sentence.
+  const letterOf = (n: number) => (OPTION.exec(at(n)?.[0] ?? "")?.[3] ?? "").toUpperCase();
+  const optionAt = kept.findIndex((_, n) => {
+    const here = letterOf(n);
+    if (!here) return false;
+    for (let k = n + 1; k <= n + 8; k++)
+      if (letterOf(k) === String.fromCharCode(here.charCodeAt(0) + 1)) return true;
+    return false;
+  });
+  if (optionAt >= 0) {
+    // The nearest line above that asks, else the nearest line: a bold "Your decision" lead-in.
+    const above: number[] = [];
+    for (let up = optionAt - 1; up >= 0 && above.length < 6; up--)
+      if ((at(up)?.[0] ?? "").trim()) above.push(up);
+    titleAt = above.find((n) => /\?\**\s*$/.test(at(n)?.[0] ?? "")) ?? above[0] ?? -1;
+  } else {
+    const recAt = kept.findIndex(([line]) => RECOMMENDED.test(line));
+    if (recAt > 0)
+      for (let up = recAt - 1; up >= Math.max(0, recAt - 6); up--)
+        if ((at(up)?.[0] ?? "").trim().endsWith("?") || /\?\**\s*$/.test(at(up)?.[0] ?? "")) {
+          titleAt = up;
+          break;
+        }
+  }
+  const titleLine = titleAt >= 0 ? at(titleAt) : undefined;
+  if (!titleLine) return null;
+  const [raw, line] = titleLine;
+  const lead = raw
+    .replace(/^#{1,6}\s+/, "")
+    .replace(/^[-*+]\s+/, "")
+    .trim();
+  // A long line leads with its bold or its first sentence; the rest is the question's body.
+  const bold = /^\*\*(.+?)\*\*\s*(.*)$/.exec(lead);
+  const sentence = /^(.{20,160}?[.!?])\s+(.*)$/.exec(lead);
+  const [headWords = lead, restWords = ""] =
+    lead.length <= 160
+      ? [lead, ""]
+      : bold
+        ? [bold[1], bold[2]]
+        : sentence
+          ? [sentence[1], sentence[2]]
+          : [lead.slice(0, 160), lead.slice(160)];
+  const title = unbold(headWords.replace(/:\s*$/, ""));
+  // The closer of a grilling is answered with a plain "yes"; it gets no card.
+  if (!title || /shared understanding/i.test(title)) return null;
+  const start: Start = { line, isQ: true, n: 1, label: "Q1", title, rest: restWords ?? "" };
+  const { block, end } = blockOf(lines, start, undefined);
+  const item = parseItem(start, block);
+  item.unlabelled = true;
+  const rec = item.recommended !== undefined || item.recommendedOption !== undefined;
+  const closing = paragraphs(lines).at(-1)?.join(" ") ?? "";
+  const asks = item.options.length >= 2 ? closing.includes("?") || rec : rec;
+  return asks ? { form: { kind: "round", items: [item] }, starts: [line], tail: end } : null;
+}
+
 /** The runs worth trying, best first: the Q-labelled one, then every numbered one. */
 function candidates(starts: Start[]): Start[][] {
   const labelled = lastRun(starts.filter((start) => start.isQ));
@@ -391,18 +580,31 @@ function splitRun(text: string, lines: string[], run: Start[]): Split | null {
     const picks = parsePicks(lines, run);
     if (picks) return { form: picks.form, starts, tail: picks.end };
   }
+  // A line that is itself the question over a list of alternatives makes the list its options.
+  if (!first.isQ && MENU_CUE.test(cueAbove(lines, first.line).text)) {
+    const menu = menuOf(lines, run);
+    if (menu) return menu;
+  }
   let tail = lines.length;
   const items = run.map((start, i) => {
     const { block, end } = blockOf(lines, start, run[i + 1]);
     tail = end;
-    return parseItem(start, block);
+    // A bare list's last item stops at a paragraph of its own: what follows is the message's.
+    const cut = !first.isQ && !run[i + 1] ? paragraphBreak(block) : -1;
+    if (cut > 0) tail = start.line + 1 + cut;
+    return parseItem(start, cut > 0 ? block.slice(0, cut) : block);
   });
-  const asks =
-    text.trimEnd().endsWith("?") ||
-    items.some(
-      (item) => item.title.includes("?") || item.recommended !== undefined || item.options.length,
-    );
-  return asks ? { form: { kind: "round", items }, starts, tail } : null;
+  const signal = items.some(
+    (item) => item.title.includes("?") || item.recommended !== undefined || item.options.length,
+  );
+  // A Q label is a question on its own account; a bare numbered list needs a sign of its own,
+  // or the list above it saying it holds questions: a closing "Want me to…?" over a list of
+  // done steps is not a round.
+  const asks = first.isQ
+    ? text.trimEnd().endsWith("?") || signal
+    : signal || DECISION_CUE.test(cueAbove(lines, first.line).text);
+  if (asks) return { form: { kind: "round", items }, starts, tail };
+  return first.isQ ? null : menuOf(lines, run);
 }
 
 /** Where a message's lines went, or null when it asks nothing. */
@@ -412,7 +614,7 @@ export function split(text: string): Split | null {
     const found = splitRun(text, lines, run);
     if (found) return found;
   }
-  return null;
+  return singleOf(lines);
 }
 
 /** The round or pick list a message ends on, or null when it asks nothing. */
@@ -680,7 +882,10 @@ function roundReply(form: Form, draft: Draft): string[] {
   )
     return ["yes"];
   return rows.flatMap(({ item, answer, note }) => {
-    if (answer) return noted(saying(item.label, said(item, answer)), note);
+    if (answer) {
+      const words = said(item, answer);
+      return noted(item.unlabelled ? words : saying(item.label, words), note);
+    }
     return note ? noted(`${item.label}: ${NO_ANSWER}`, note) : [];
   });
 }

@@ -1302,7 +1302,7 @@ export const register: Register = (on) => {
             ? recommendationChoice(row.text)
             : {
                 tag: row.key || undefined,
-                label: row.key ? row.text.replace(/^[A-H][.)]\s*/, "") : row.text,
+                label: row.key ? row.text.replace(/^[A-H0-9]{1,2}[.)]\s*/, "") : row.text,
               };
         return {
           key: `e${k}`,

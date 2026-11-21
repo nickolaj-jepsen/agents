@@ -224,6 +224,39 @@ for (const surface of ["terminal", "desktop"] as const)
     await cards.unmount();
   });
 
+// Alternatives with a closing choice, and one question with no number: one card each, the reply the answer alone.
+const MENU = `Ways to close the gap:
+
+1. **Accept it and label it:** the smallest change.
+2. **Read the hourly report:** about an hour behind.
+3. **Use the session logs:** real time.
+
+I'd go with 1. Which do you want?`;
+
+test("a list of alternatives is one card that fills the prompt with the number", async ($, on) => {
+  const w = world(on);
+  let messages: Array<{ role: "assistant"; text: string; toolUses: []; uuid: string }> = [];
+  on("session.messages", () => ({ value: messages }));
+  on("session.surfaces", () => ({ value: ["terminal"] }));
+  on("ui.place", () => ({ value: { isPlaced: false, reason: "no surface in the test" } }));
+  await start($);
+  messages = [{ role: "assistant", text: MENU, toolUses: [], uuid: "menu-round" }];
+  await ends($, MENU);
+  const cards = await $.ui.mount({
+    plugin: "answer",
+    surface: "terminal",
+    component: "AssistantMessage",
+    requestId: "menu-round",
+    props: { text: MENU, isFirstOfReply: true },
+  });
+  // The numbers the list printed are the row tags, and the row's words come without them.
+  expect(await cards.find({ key: "question-0-choose-1" })).toBeDefined();
+  await cards.press({ key: "question-0-choose-1" });
+  await cards.press({ key: "round-fill" });
+  expect(w.box).toBe("2");
+  await cards.unmount();
+});
+
 test("Terminal cards can match a transcript row when the engine omits its UUID", async ($, on) => {
   world(on);
   let messages: Array<{ role: "assistant"; text: string; toolUses: [] }> = [];

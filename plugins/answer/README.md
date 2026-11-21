@@ -4,7 +4,16 @@ featured: true
 order: 4
 ---
 
-When a turn ends with numbered questions, click a choice, write your own answer, or add a note. You can leave questions unanswered. **Fill prompt** puts the reply above your draft. **Send reply**, where available, sends it without disturbing the draft.
+When a turn ends with questions, click a choice, write your own answer, or add a note. You can leave questions unanswered. **Fill prompt** puts the reply above your draft. **Send reply**, where available, sends it without disturbing the draft.
+
+What counts as a question:
+
+- Numbered questions: `**Q1. …?**`, `Question 2:`, `## Q3 — …`, or a numbered list that holds a question mark, options or a recommendation, or sits under a line such as "Decisions for you:".
+- One question with lettered options and a closing question, or a recommendation, or a question followed by "Recommended:" or "My recommended answer:". The reply is the answer alone, such as `B` or `yes`.
+- A list of alternatives followed by "Which do you want?", or under "Want me to:". It is one card whose rows keep the list's numbers; to pick several, write them in the write-in.
+- A pick list whose rows end in `build`, `/grill-me` or `/brainstorm`.
+
+A numbered list of steps or findings is not a round, and neither is a lone "Want me to…?" or a closing "Have we reached a shared understanding?": answer those in the prompt. Whatever the message says after its last question stays visible after the cards.
 
 If you send a different message, run `/answer` to reopen the round. Submitted rounds stay visible in the current transcript with a **Sent** marker.
 
