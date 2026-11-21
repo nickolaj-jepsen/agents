@@ -1,11 +1,15 @@
 ---
-about: A table with bold cells precedes a bolded question heading and a prose recommendation, with a short numbered list of confirmations at the end.
+about: A table with bold cells precedes a bolded question heading and a prose recommendation, with a short numbered list of confirmations at the end, which are questions of their own.
 kind: round
 items:
   - label: Q11
     title: Which desks can renew, and which cards block?
     recommended: true
     reason: My recommendation is this split. The desk lending rule is small and kept apart from the rota page. If any desk shows a gap you'd miss, the fix is to patch that row first, not to add a new desk to the rota.
+  - label: 1
+    title: Is the new self-serve flag `selfserve`?
+  - label: 2
+    title: "Does staff cover hold for new borrowers for you? It's the one way to see: staff shelf, the hold list, rota."
 ---
 Status: an audit-only walk-through on fines, late fees and waivers to date.
 

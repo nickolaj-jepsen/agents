@@ -4,7 +4,7 @@
  * detail and a "(recommended)" marker read the same in a round, under a lead-in and in a menu.
  */
 import type { FormItem, Option } from "../forms.ts";
-import { isOption, type Line, tidy, unbold } from "./doc.ts";
+import { dedent, isOption, type Line, textOf, tidy, unbold } from "./doc.ts";
 import { leanParagraph, leansOn, opensOn, yesNo } from "./lean.ts";
 
 /** What opens a question: the label a reply names it by, its title, and what else its line said. */
@@ -64,15 +64,19 @@ function scan(lines: Line[], lettered: boolean) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const last = found.options.at(-1);
+    const next = lettered && isOption(line) && (!last || line.mark.key === nextLetter(last.key));
+    const under = next ? continuation(lines, i) : [];
     if (line?.mark?.is === "lean") {
       const lean = leanAt(lines, i);
       found.lean = lean.text;
       i += lean.used;
-    } else if (lettered && isOption(line) && (!last || line.mark.key === nextLetter(last.key))) {
-      const under = continuation(lines, i);
-      addOption(found, line.mark.key, line.mark.text, [
+    } else if (next && (line.mark.text || under[0])) {
+      // A letter with no words of its own, `- **A.**`, takes them from the first line under it.
+      const [first, ...below] = under;
+      const lifted = !line.mark.text && first ? first : undefined;
+      addOption(found, line.mark.key, lifted ? textOf(lifted) : line.mark.text, [
         line.mark.more,
-        ...under.map((l) => l.raw.trim()),
+        ...dedent(lifted ? below : under),
       ]);
       i += under.length;
     } else if (line) found.rest.push(line.raw);

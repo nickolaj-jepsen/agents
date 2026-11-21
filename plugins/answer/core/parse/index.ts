@@ -37,7 +37,7 @@ export function split(text: string): Split | null {
   // Q-labelled questions say what they are, so they are read before any numbered list.
   const asked = lastRun(labels.filter((label) => label.mark.q));
   const numbered = lastRun(labels.filter((label) => !label.mark.q));
-  return roundOf(doc, asked) ?? listOf(doc, numbered) ?? letteredOf(doc) ?? bareOf(doc);
+  return roundOf(doc, asked, numbered) ?? listOf(doc, numbered) ?? letteredOf(doc) ?? bareOf(doc);
 }
 
 /** The round or pick list a message ends on, or null when it asks nothing. */

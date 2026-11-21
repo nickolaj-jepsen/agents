@@ -19,11 +19,17 @@ import { readQuestion } from "./question.ts";
 const DECISION_CUE =
   /\b(?:decisions?\s+(?:for you|to make|needed)|to decide|to confirm|need to know|choose between|questions?\s+(?:for you|before|to answer))\b[^.?!]*:?\s*$/i;
 
-/** The run of labels a message ends on: a run restarts where the numbering goes back. */
+/**
+ * The run of labels a message ends on. A run restarts where the numbering goes back or repeats. A
+ * label printed with a note, `Q5 (again)`, is a question come back to: it may go back, and
+ * restarts the run only when the run already holds its number.
+ */
 export function lastRun(labels: LabelLine[]): LabelLine[] {
   let run: LabelLine[] = [];
   for (const label of labels) {
-    if (label.mark.n <= (run.at(-1)?.mark.n ?? 0)) run = [];
+    const { n, again } = label.mark;
+    const back = !again && n <= (run.at(-1)?.mark.n ?? 0);
+    if (back || run.some((held) => held.mark.n === n)) run = [];
     run.push(label);
   }
   return run;
@@ -44,21 +50,19 @@ const signals = (item: FormItem) =>
 
 /**
  * Whether the items are questions. A Q-labelled run needs only the message to end on a question
- * or one item to show a sign; a bare numbered list needs half its items to ask (a `?` anywhere in
- * one counting), or the line above to say it holds questions: a closing "Want me to…?" over a list
- * of done steps is not a round.
+ * or one item to show a sign. A bare numbered list needs most of its items to ask (a `?` anywhere
+ * in one counting), or the line above to say it holds questions: a list that is half instructions
+ * or findings is prose, and so is a closing "Want me to…?" over a list of done steps.
  */
 function asks(doc: Doc, first: LabelLine, items: FormItem[]): boolean {
   if (first.mark.q) return doc.text.trimEnd().endsWith("?") || items.some(signals);
   const asking = items.filter((item) => signals(item) || item.body.includes("?")).length;
   const above = lineAbove(doc, first.at);
-  return (
-    (asking > 0 && asking * 2 >= items.length) || (!!above && DECISION_CUE.test(wordsOf(above)))
-  );
+  return asking * 2 > items.length || (!!above && DECISION_CUE.test(wordsOf(above)));
 }
 
-/** A run of labels as a round of questions, or null when it asks nothing. Prose between two items is the earlier one's own. */
-export function roundOf(doc: Doc, run: LabelLine[]): Split | null {
+/** A run of labels as questions, or null when it asks nothing. Prose between two items is the earlier one's own. */
+function read(doc: Doc, run: LabelLine[]): Split | null {
   const [first] = run;
   const last = run.at(-1);
   if (!first || !last) return null;
@@ -69,4 +73,21 @@ export function roundOf(doc: Doc, run: LabelLine[]): Split | null {
   return asks(doc, first, items)
     ? { form: { kind: "round", items }, starts: run.map((label) => label.at), tail }
     : null;
+}
+
+/**
+ * A run of labels as a round. `under` is a numbered list: when it sits under the round's last
+ * question and asks by itself ("Two checks to settle: 1. … 2. …"), its items are questions of
+ * their own after it.
+ */
+export function roundOf(doc: Doc, run: LabelLine[], under: LabelLine[] = []): Split | null {
+  const round = read(doc, run);
+  const last = run.at(-1);
+  const [first] = under;
+  const end = under.at(-1);
+  if (!round || !last || !first || !end || first.at < last.at) return round;
+  // Only a list that is the last thing the question says: one with options or a closing line
+  // after it is part of what the question describes.
+  if (linesIn(doc, runEnd(doc, end), round.tail).length) return round;
+  return (read(doc, under) && read(doc, [...run, ...under])) ?? round;
 }

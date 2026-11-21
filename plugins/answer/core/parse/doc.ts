@@ -13,6 +13,8 @@ export type Label = {
   n: number;
   /** As a reply names it: `Q3`, `2`. */
   label: string;
+  /** Printed with a note, `Q5 (again)`: a question come back to, which may be out of order. */
+  again: boolean;
   title: string;
   /** What the line said after its title. */
   rest: string;
@@ -68,15 +70,17 @@ const HEADING = /^#{1,6}\s+/;
 const BULLET = /^[-*+]\s+/;
 const QUOTE = /^>\s*/;
 
-// `**Q1. …**`, `### Q2: …`, `Q4) …`, `## Question 5: …`, `## Q6 — …`, `❓ **Q1** - **Title**: …`.
-// At most three digits, so a year or a count is no label. Group 1 opens a bold before the label;
-// 3 and 4 close it on the label, before or after its punctuation.
+// `**Q1. …**`, `### Q2: …`, `Q4) …`, `## Question 5: …`, `## Q6 — …`, `❓ **Q1** - **Title**: …`,
+// `**Q7 (revised). …**`. At most three digits, so a year or a count is no label. Group 1 opens a
+// bold before the label, 3 is a note on it, and 4 and 5 close the bold, before or after the
+// label's punctuation.
 const Q_LABEL =
-  /^(?:❓\s*)?(\*\*)?Q(?:uestion)?\s*(\d{1,3})(\*\*)?(?:[.:)]|\s*[—–-](?=\s))(\*\*)?\s+(.+)$/;
+  /^(?:❓\s*)?(\*\*)?Q(?:uestion)?\s*(\d{1,3})(\s*\([^)]*\))?(\*\*)?(?:[.:)]|\s*[—–-](?=\s))(\*\*)?\s+(.+)$/;
 // `1. …`, `**3.** …`, `### 2. **…**`, `4) …`: a dash never follows a bare number.
 const N_LABEL = /^(\*\*)?(\d{1,3})[.:)](\*\*)?\s+(.+)$/;
 // `- **A.** …`, `- **A. …**`, `A) …`, `**B.** …`, `(c) …`, `- **(a)** …`; the letter may be lower case.
-const OPTION = /^(\*\*)?\(?([A-Ha-h])[.)](\*\*)?\s+(.+)$/;
+// `- **A.**` alone has its words on the lines under it.
+const OPTION = /^(\*\*)?\(?([A-Ha-h])[.)](\*\*)?(?:\s+(.+))?$/;
 // `Recommended: A. …`, `**My recommendation:** …`, `My recommended answer: …`, `➡️ …`: group 1 is
 // what follows the label.
 const LEAN = /^\**(?:(?:My )?recommend(?:ed|ation)(?: answer)?\**\s*:\s*\**|➡️)\s*(.*)$/i;
@@ -103,7 +107,7 @@ function labelOf(line: string): Label | undefined {
   const words = line.replace(HEADING, "");
   const asked = Q_LABEL.exec(words);
   const [open, n = "", shut, after = ""] = asked
-    ? [asked[1], asked[2], asked[3] ?? asked[4], asked[5]]
+    ? [asked[1], asked[2], asked[4] ?? asked[5], asked[6]]
     : (N_LABEL.exec(words)?.slice(1) ?? []);
   const { title, rest } = titled(after, Boolean(open) && !shut);
   if (!unbold(title)) return undefined;
@@ -112,6 +116,7 @@ function labelOf(line: string): Label | undefined {
     q: Boolean(asked),
     n: Number(n),
     label: asked ? `Q${n}` : n,
+    again: Boolean(asked?.[3]),
     title: unbold(title),
     rest,
   };

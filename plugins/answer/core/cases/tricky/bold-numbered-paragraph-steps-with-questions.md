@@ -1,15 +1,6 @@
 ---
-about: Bold numbered paragraph steps where some are instructions with a code fence and others contain quoted examples or bullet questions, followed by a bullet pair and a bold-led guess, with no lettered options.
-kind: round
-items:
-  - label: 1
-    title: Run this
-  - label: 2
-    title: Paste the lane list into the chat
-  - label: 3
-    title: What does the "full lane" label show?
-  - label: 4
-    title: If it is held, what next?
+about: Bold numbered paragraph steps where half are instructions with a code fence and half are questions, followed by a bullet pair and a bold-led guess. A list that mixes instructions with questions is prose.
+kind: none
 ---
 Both lane sheets are stale, so I need you to run one more. To read the pool's live log I can read `cron` here, but the rota needs to be pulled in.
 
