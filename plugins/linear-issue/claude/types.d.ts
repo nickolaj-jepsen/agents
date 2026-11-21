@@ -32,8 +32,8 @@ export type Form = {
   projects: Option[];
   team: string;
   title: string;
-  // Bumped on Enter in the title field, which remounts it.
-  titleRevision: number;
+  // Bumped on Enter in the title's or the description's field, which remounts it.
+  fieldRevision: number;
   description: string;
   priority: number;
   state: string;
@@ -50,6 +50,7 @@ export type View = {
   step:
     | "review"
     | "title"
+    | "body"
     | "duplicate"
     | { pick: "team" | "status" | "priority" | "labels" | "project" };
   top: number;

@@ -1,4 +1,4 @@
-# linear-issue/pi/extreme 112x32 @20,2 (72x30)
+# linear-issue/pi/extreme 112x32 @20,1 (72x27)
 ╭─ Linear draft ───────────────────────────────────────────── Close × ─╮
 │                                                                      │
 │   E  同期ワーカーが 429 の後に Retry-After を無視する: honor the     │
@@ -21,14 +21,11 @@
 │   [x] Reproduce it against the stub                                  │
 │   [ ] Cap the wait at MAX_DELAY                                      │
 │   [ ] Cover the nightly reconciliation job                           │
-│                                                                      │
-│   Answer                   Today                   After             │
-│   429 with Retry-After:    waits 2 seconds, then   waits 30          │
-│   ↓ 11 more                                                          │
+│   ↓ 14 more                                                          │
 │                                                                      │
 │   PLT-212 may already cover this  Sync worker retries too fast afte… │
-│   Create… ↵  Discard [d]  □ Then open in Linear [o]                  │
-╰──────────────────────────────────────────────────────────────────────╯
+│   Create… ↵  Edit text [x]  Discard [d]  □ Then open in Linear [o]   │
+────────────────────────────────────────────────────────────────────────
 --- styles
 1x2 . 2x12 . 1x45 . 3x7 . 1x2
 1 .x70 1
@@ -52,14 +49,11 @@
 1 .x3 7x3 .x64 1
 1 .x3 6x3 .x17 4x9 .x38 1
 1 .x3 6x3 .x64 1
-1 .x70 1
-1 .x3 5x6 .x19 5x5 .x19 5x5 .x13 1
-1 .x3 4x3 .x6 4x12 .x46 1
 1 .x3 6x9 .x58 1
 1 .x70 1
 1 .x3 8x30 6x36 . 1
-1 .x3 2x7 . 6 .x2 3x7 . 6x3 .x2 3x21 . 6x3 .x18 1
-1x72
+1 .x3 2x7 . 6 .x2 3x9 . 6x3 .x2 3x7 . 6x3 .x2 3x21 . 6x3 .x3 1
+9x72
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
@@ -69,3 +63,4 @@
 6 fg=#7e888e
 7 fg=#68b78d
 8 fg=#cd9a22
+9 fg=#6c767b

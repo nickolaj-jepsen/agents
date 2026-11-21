@@ -120,6 +120,31 @@ export const region = {
     (grid) =>
       boxes(grid).find((b) => contains === undefined || matches(within(grid, b), contains)),
 
+  /**
+   * A box with no bottom edge, standing on something: its top edge (`╭─╮`), the rows both its
+   * sides run down, and the row they stop on, which shows what it stands on.
+   */
+  standing: ((grid) => {
+    const cols = grid[0]?.length ?? 0;
+    for (let y = 0; y < grid.length; y++)
+      for (let x = 0; x < cols; x++) {
+        if (ch(grid, y, x) === "" || !TOP_LEFT.includes(ch(grid, y, x))) continue;
+        let right = x + 1;
+        while (
+          right < cols &&
+          (ch(grid, y, right) === "" || !TOP_RIGHT.includes(ch(grid, y, right)))
+        )
+          right++;
+        if (right >= cols) continue;
+        let h = 1;
+        while (ch(grid, y + h, x) === "│" && ch(grid, y + h, right) === "│") h++;
+        // A closed box has its corners there: `box` finds that one.
+        if (h < 2 || BOTTOM_LEFT.includes(ch(grid, y + h, x) || " ")) continue;
+        return { x, y, w: right - x + 1, h: Math.min(grid.length - y, h + 1) };
+      }
+    return undefined;
+  }) as Region,
+
   /** Claude's pane docked as a column on the right: left-edged by a `│` that runs down from the top row. */
   sidebar: ((grid) => {
     const cols = grid[0]?.length ?? 0;

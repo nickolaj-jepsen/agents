@@ -15,7 +15,7 @@ import type { Editing, Form, Last, View } from "./types.d.ts";
 import { guiBand, guiPane } from "./gui";
 import { RING, ringMove } from "./kit/paint/claude.tsx";
 import { hasLinear, hostFor, openUrl } from "./linear.ts";
-import { terminalBand, terminalPane, titleKey } from "./terminal.tsx";
+import { fieldKey, terminalBand, terminalPane, typingOf } from "./terminal.tsx";
 import { forSurface, kitOf, paneOptions } from "./ui";
 import {
   ANCHOR,
@@ -64,6 +64,11 @@ const teams: TeamCache = new Map();
 let isSending = false;
 // The terminal's screen as it was last drawn: what an arrow steps is decided against it.
 let lastDrawn: Drawn | undefined;
+// The description as its field holds it while it is typed in. Escape takes the ring off the
+// field without a word to the mod, and the Enter after it lands on the screen: it saves this.
+let typedBody: string | undefined;
+// Whether the engine's ring is on the description's field, as far as its moves say.
+let isRingInBody = false;
 
 /** One toast per Claude Code version, when the expanded card no longer has the anchor. */
 async function warnDrift($: EngineInterface) {
@@ -180,19 +185,24 @@ async function run($: EngineInterface, effect: Effect) {
 }
 
 /** A key or a click on the terminal's screen. */
-async function send($: EngineInterface, intent: Intent, drawn = lastDrawn) {
+async function send($: EngineInterface, given: Intent, drawn = lastDrawn) {
   const v = await read($, view);
   const f = await read($, form);
+  const intent: Intent =
+    v.step === "body" && "enter" in given && typedBody !== undefined ? { text: typedBody } : given;
   const acted = act(f, v, intent, drawn, await $.clock.now());
   if (acted.view !== v) await update($, view, () => acted.view);
   for (const effect of acted.effects) await run($, effect);
-  // The engine keeps its ring by place, so it is put on the title's field when that is drawn,
-  // and back on the parked button when it goes. Denied when the pane lost the keyboard.
-  const isTyping = acted.view.step === "title";
-  if (isTyping !== (v.step === "title"))
+  // The engine keeps its ring by place, so it is put on a text field when that is drawn, and
+  // back on the parked button when it goes. Denied when the pane lost the keyboard.
+  const typing = typingOf(acted.view);
+  if (typing !== typingOf(v)) {
+    typedBody = undefined;
+    isRingInBody = typing === "body";
     await $.ui
-      .focus({ requestId: PANE, key: isTyping ? titleKey(f) : RING.park })
+      .focus({ requestId: PANE, key: typing ? fieldKey(f, typing) : RING.park })
       .catch(() => undefined);
+  }
 }
 
 export const register: Register = (on) => {
@@ -223,13 +233,12 @@ export const register: Register = (on) => {
   on("ui.close", { id: PANE }, async ($, e, next) => {
     await update($, isPaneOpen, () => false);
     await hold($, false);
-    // Escape is also the answer to Discard's question, and the way out of the title's field,
-    // which has no key of its own for it: the draft comes back as it stood.
+    // Escape is also the answer to Discard's question, and the way out of a text field, which
+    // has no key of its own for it: the draft comes back as it stood.
     await update($, view, (v) =>
-      v.isConfirming || v.step === "title"
-        ? { ...v, isConfirming: false, step: "review" as const }
-        : v,
+      v.isConfirming || typingOf(v) ? { ...v, isConfirming: false, step: "review" as const } : v,
     );
+    typedBody = undefined;
     return next(e);
   });
 
@@ -238,10 +247,26 @@ export const register: Register = (on) => {
   // that becomes a step on the screen instead, and the ring goes back.
   on("ui.focus", { requestId: PANE }, async ($, e, next) => {
     const move = ringMove(e.element, isControl);
+    const typing = typingOf(await read($, view));
+    const field = typing === "body" ? fieldKey(await read($, form), "body") : undefined;
+    // Where the ring goes while the description is typed. Its field moves between its own rows
+    // on an arrow and hands the ring on from its first and last: to the buttons under it, or
+    // to what is over it, where Escape sends the ring too, with nothing to tell the two apart.
+    // Neither may lose what was typed, so from the last row the ring goes back in, and from the
+    // first it is parked with the field as it stands: Enter then saves it, an arrow goes back
+    // in, and Escape closes the pane, as it does from any parked ring.
+    const target = (): string | undefined => {
+      if (!field || !move) return move ? RING.park : undefined;
+      const isBelow = "hit" in move && move.hit.startsWith("act:");
+      const goesIn = isRingInBody ? isBelow : "by" in move && move.by !== 0;
+      return goesIn ? field : RING.park;
+    };
+    const element = target();
+    if (field) isRingInBody = (element ?? e.element) === field;
     // An arrow while the title is typed means the ring had left the field: back to the draft.
-    if (move && "by" in move && move.by)
-      await send($, (await read($, view)).step === "title" ? { escape: true } : { move: move.by });
-    const moved = await next(move ? { ...e, element: RING.park } : e);
+    if (move && "by" in move && move.by && !field)
+      await send($, typing ? { escape: true } : { move: move.by });
+    const moved = await next(element ? { ...e, element } : e);
     // A ring that moved in the pane says the pane has the keyboard.
     if (!moved.deny) await hold($, true);
     return moved;
@@ -337,6 +362,9 @@ export const register: Register = (on) => {
           width: e.props.bodyColumns,
           rows: e.props.scroll.bodyRows,
           send: (intent, drawn) => send($, intent, drawn),
+          typed: (text) => {
+            typedBody = text;
+          },
         });
         lastDrawn = pane.drawn;
         return pane.tree;

@@ -72,6 +72,12 @@ export default scenarios({
       // The field's own hint shows once the ring is on it.
       steps: [{ press: "e" }, { wait: "Save" }, { wait: "shift+⏎" }],
     },
+    body: {
+      about: "x: the description as the Markdown it is filed as, in the engine's own field",
+      from: "draft",
+      // The field's own hint shows once the ring is on it.
+      steps: [{ press: "x" }, { wait: "Save" }, { wait: "shift+⏎" }],
+    },
     discard: {
       about: "d: the buttons' row asks before the draft goes",
       from: "draft",

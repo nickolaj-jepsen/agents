@@ -26,7 +26,7 @@
 │  Source: acme/sync-worker · fix/retry-after
 │
 │  PLT-212 may already cover this  Sync worker retries too fast after r…
-│  Create… ↵  Discard [d]  □ Then open in Linear [o]
+│  Create… ↵  Edit text [x]  Discard [d]  □ Then open in Linear [o]
 │
 │
 │
@@ -68,7 +68,7 @@
 1 .x2 2x8 6x16 2x18
 1
 1 .x2 7x30 2x39
-1 .x2 3x7 . 2 .x10 2x3 .x24 2x3
+1 .x2 3x7 . 2 .x12 2x3 .x10 2x3 .x24 2x3
 1
 1
 1

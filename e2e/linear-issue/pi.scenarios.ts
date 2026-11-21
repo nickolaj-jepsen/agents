@@ -31,13 +31,13 @@ const start = (verdict: string, draft: object = DRAFT) => ({
 export default scenarios({
   plugin: "linear-issue",
   harness: "pi",
-  // The sheet alone: its box, standing on the bottom edge.
-  region: region.box(),
+  // The sheet alone: its box, standing on the rule over the prompt.
+  region: region.standing,
   // The session's id is in the line saying where the draft came from.
   mask: [{ pattern: /session [0-9a-f-]{6,}/g, with: "session id" }],
   scenarios: {
     draft: {
-      about: "/linear with a note: the draft in a sheet on the bottom edge",
+      about: "/linear with a note: the draft in a sheet standing on the prompt's rule",
       setup: repo,
       start: start(NONE),
       steps: settled,
@@ -68,6 +68,11 @@ export default scenarios({
       about: "e: the title in pi's own field, in the row it stood in",
       from: "draft",
       steps: [{ press: "e" }, { wait: "Save" }],
+    },
+    body: {
+      about: "x: the description as the Markdown it is filed as, in pi's own editor",
+      from: "draft",
+      steps: [{ press: "x" }, { wait: "new line" }],
     },
     discard: {
       about: "d: the buttons' row asks before the draft goes",
@@ -108,11 +113,17 @@ export default scenarios({
       steps: [{ press: ["Down", "Down"] }, { wait: /↑ \d+ more/ }],
     },
     chip: {
-      about: "esc: the draft put aside, a line above the prompt",
+      about: "esc: the draft put aside, a line above the prompt with Open and Discard to press",
       from: "draft",
       // The mark alone names the line: a narrow terminal drops its "Linear draft".
       region: region.rows(/^✎/, /^✎/),
-      steps: [{ press: "Escape" }, { wait: "/linear opens it" }],
+      steps: [{ press: "Escape" }, { wait: "Open [/linear]" }],
+    },
+    armed: {
+      about: "a press on the line's Discard: it asks once more before the draft goes",
+      from: "chip",
+      region: region.rows(/^✎/, /^✎/),
+      steps: [{ click: "Discard" }, { wait: "Sure? Discard" }],
     },
     filed: {
       about: "enter: the issue filed, a row in the transcript with where it is",

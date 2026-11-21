@@ -38,8 +38,8 @@ export type Form = {
   projects: Option[];
   team: string;
   title: string;
-  /** Bumped when a title field is submitted, for a client that has to remount it. */
-  titleRevision: number;
+  /** Bumped when a text field of the draft is submitted, for a client that has to remount it. */
+  fieldRevision: number;
   description: string;
   priority: number;
   state: string;
@@ -216,7 +216,7 @@ const blankForm = (draftId: string, seed: Seed): Form => ({
   projects: [],
   team: "",
   title: "",
-  titleRevision: 0,
+  fieldRevision: 0,
   description: "",
   priority: 0,
   state: "",

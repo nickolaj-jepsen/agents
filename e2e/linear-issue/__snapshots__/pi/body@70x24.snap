@@ -1,0 +1,48 @@
+# linear-issue/pi/body 70x24 @1,1 (68x19)
+╭─ Linear draft ───────────────────────────────────────── Close × ─╮
+│                                                                  │
+│   E  Honor Retry-After when the sync worker backs off after a    │
+│      429                                                         │
+│                                                                  │
+│   ────────────────────────── ↑ 4 more ────────────────────────── │
+│   - Read `Retry-After` (seconds or an HTTP date) from the        │
+│   `429` response                                                 │
+│   - Wait at least that long, then go back to the doubling delay  │
+│   - Cap the wait at `MAX_DELAY`                                  │
+│                                                                  │
+│   **Where:** `src/sync.sh`, `src/config.sh`                      │
+│                                                                  │
+│   **Done when:** a `429` with `Retry-After: 30` makes the        │
+│   worker wait 30 seconds before its next try.                    │
+│   ────────────────────────────────────────────────────────────── │
+│                                                                  │
+│   Save ↵  Cancel [esc]  shift+enter new line                     │
+────────────────────────────────────────────────────────────────────
+--- styles
+1x2 . 2x12 . 1x41 . 3x7 . 1x2
+1 .x66 1
+1 .x3 4 .x2 5x56 .x4 1
+1 .x6 5x3 .x57 1
+1 .x66 1
+1 .x3 1x62 . 1
+1 .x66 1
+1 .x66 1
+1 .x66 1
+1 .x66 1
+1 .x66 1
+1 .x66 1
+1 .x66 1
+1 .x66 1
+1 .x46 6 .x19 1
+1 .x3 1x62 . 1
+1 .x66 1
+1 .x3 2x4 . 4 .x2 3x6 . 4x5 .x2 4x20 .x21 1
+7x68
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#dee0e1
+4 fg=#7e888e
+5 fg=#dee0e1 bold
+6 inverse
+7 fg=#6c767b

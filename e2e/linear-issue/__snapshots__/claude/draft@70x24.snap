@@ -5,7 +5,7 @@
 │   The sync worker doubles its delay after every 429 and never      │
 │   reads Retry-After, so it retries sooner than the shop API allows │
 │   ↓ 13 more                                                        │
-│   Create ↵  Discard [d]  □ Then open in Linear [o]                 │
+│   Create ↵  Edit text [x]  Discard [d]  □ Then open in Linear [o]  │
 ╰────────────────────────────────────────────────────────────────────╯
 --- styles
 1x67 2 1x2
@@ -14,7 +14,7 @@
 1 .x49 5x3 .x16 1
 1 .x9 5x11 .x48 1
 1 .x3 2x9 .x56 1
-1 .x3 6x6 . 2 .x10 2x3 .x24 2x3 .x17 1
+1 .x3 6x6 . 2 .x12 2x3 .x10 2x3 .x24 2x3 .x2 1
 1x70
 --- legend
 1 dim

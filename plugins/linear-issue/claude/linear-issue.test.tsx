@@ -578,6 +578,39 @@ test("Enter in the title keeps its text", async ($, on) => {
   await pane.unmount();
 });
 
+test("the description is typed as its Markdown: Enter saves it, in the field or once the ring has left it", async ($, on) => {
+  const w = world(on);
+  await startSession($, on);
+  await $.command.run({ ...RUN, args: "rates" });
+  await w.clock.settle();
+
+  const pane = await $.ui.mount(PANE);
+  // The field is drawn only while the description is typed; Enter saves and closes it.
+  expect(await pane.find({ key: "body-0" })).toBeUndefined();
+  await pane.press({ key: "act:edit" });
+  await pane.input({ key: "body-0", text: "Cap it.\n\n- at the gateway\n- per tenant" });
+  expect(await pane.find({ key: "body-0" })).toBeUndefined();
+  expect(await shows(pane, /at the gateway/)).toBe(true);
+
+  // Escape takes the ring off the field with no word to the mod: the Enter after it lands on
+  // the parked ring, and saves what the field held.
+  await pane.press({ key: "act:edit" });
+  await pane.input({ key: "body-1", text: "Cap it per tenant.", kind: "change" });
+  await pane.press({ key: "kit-ring" });
+  expect(await pane.find({ key: "body-1" })).toBeUndefined();
+
+  // Cancel leaves it as it was.
+  await pane.press({ key: "act:edit" });
+  await pane.input({ key: "body-2", text: "Thrown away.", kind: "change" });
+  await pane.press({ key: "act:back" });
+
+  await w.clock.advance(700);
+  await pane.press({ key: "act:create" });
+  await w.clock.settle();
+  expect(String(saved(w, "save_issue")?.description)).toMatch(/^Cap it per tenant\.\n\n---\n/);
+  await pane.unmount();
+});
+
 test("a closed issue is never offered as the duplicate", async ($, on) => {
   const w = world(on);
   w.verdict = { duplicate: { issue: "SHP-2", comment: "Seen again." } };

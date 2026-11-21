@@ -1,4 +1,4 @@
-# linear-issue/pi/priority 160x45 @44,17 (72x28)
+# linear-issue/pi/priority 160x45 @44,13 (72x28)
 ╭─ Linear draft ───────────────────────────────────────────── Close × ─╮
 │                                                                      │
 │   E  Honor Retry-After when the sync worker backs off after a 429    │
@@ -26,7 +26,7 @@
 │   ↓ 5 more                                                           │
 │                                                                      │
 │   Choose ↵  Back [esc]                                               │
-╰──────────────────────────────────────────────────────────────────────╯
+────────────────────────────────────────────────────────────────────────
 --- styles
 1x2 . 2x12 . 1x45 . 3x7 . 1x2
 1 .x70 1
@@ -55,7 +55,7 @@
 1 .x3 4x8 .x59 1
 1 .x70 1
 1 .x3 2x6 . 4 .x2 3x4 . 4x5 .x47 1
-1x72
+9x72
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
@@ -65,3 +65,4 @@
 6 fg=#a798d7
 7 fg=#a798d7 bold underline=single
 8 bold
+9 fg=#6c767b

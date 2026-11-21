@@ -24,7 +24,7 @@
 │  ↓ 26 more
 │
 │  PLT-212 may already cover this
-│  Create… ↵  Discard [d]
+│  Create… ↵  Edit text [x]  Discard [d]
 │  □ Then open in Linear [o]
 │
 --- styles
@@ -53,7 +53,7 @@
 1 .x2 2x9
 1
 1 .x2 7x30
-1 .x2 3x7 . 2 .x10 2x3
+1 .x2 3x7 . 2 .x12 2x3 .x10 2x3
 1 .x24 2x3
 1
 --- legend

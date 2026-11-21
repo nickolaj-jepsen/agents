@@ -1,30 +1,31 @@
-# linear-issue/pi/drafting 70x24 @0,13 (70x11)
-╭─ Linear draft ─────────────────────────────────────────── Close × ─╮
-│                                                                    │
-│   • Reading your teams and labels                                  │
-│     Writing the issue                                              │
-│                                                                    │
-│   From your note                                                   │
-│   the sync worker ignores Retry-After headers when it backs off    │
-│   after a 429                                                      │
-│                                                                    │
-│   Discard [d]                                                      │
-╰────────────────────────────────────────────────────────────────────╯
+# linear-issue/pi/drafting 70x24 @1,9 (68x11)
+╭─ Linear draft ───────────────────────────────────────── Close × ─╮
+│                                                                  │
+│   • Reading your teams and labels                                │
+│     Writing the issue                                            │
+│                                                                  │
+│   From your note                                                 │
+│   the sync worker ignores Retry-After headers when it backs off  │
+│   after a 429                                                    │
+│                                                                  │
+│   Discard [d]                                                    │
+────────────────────────────────────────────────────────────────────
 --- styles
-1x2 . 2x12 . 1x43 . 3x7 . 1x2
-1 .x68 1
-1 .x3 4x31 .x34 1
-1 .x3 4x2 5x17 .x46 1
-1 .x68 1
-1 .x3 5x14 .x51 1
-1 .x3 5x61 .x4 1
-1 .x3 5x11 .x54 1
-1 .x68 1
-1 .x3 3x7 . 5x3 .x54 1
-1x70
+1x2 . 2x12 . 1x41 . 3x7 . 1x2
+1 .x66 1
+1 .x3 4x31 .x32 1
+1 .x3 4x2 5x17 .x44 1
+1 .x66 1
+1 .x3 5x14 .x49 1
+1 .x3 5x61 .x2 1
+1 .x3 5x11 .x52 1
+1 .x66 1
+1 .x3 3x7 . 5x3 .x52 1
+6x68
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
 3 fg=#dee0e1
 4 fg=#dee0e1 bold
 5 fg=#7e888e
+6 fg=#6c767b

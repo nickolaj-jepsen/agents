@@ -4,12 +4,19 @@
  */
 import type { ElementTable } from "claude-code";
 
+import { chip, CHIP, draftChip } from "../core/chip.ts";
 import type { Filed, Form } from "../core/draft.ts";
-import { draw, keysOf, TITLE, type Drawn, type Intent, type View } from "../core/screen.ts";
-import type { Button } from "./kit/buttons/contract.ts";
-import { buttonRow } from "./kit/buttons/terminal.ts";
+import {
+  BODY_KEY,
+  draw,
+  keysOf,
+  TITLE,
+  type Drawn,
+  type Intent,
+  type View,
+} from "../core/screen.ts";
 import { CARD_INSET } from "./kit/card/terminal.ts";
-import { blank, line, span, spansWidth, truncate, type Line } from "./kit/lines.ts";
+import { blank, line, span, type Line } from "./kit/lines.ts";
 import { hotkeys, keysHint, paintLines, ring, stack } from "./kit/paint/claude.tsx";
 import { sheetHead } from "./kit/sheet/terminal.ts";
 import { tokens } from "./kit/tokens.ts";
@@ -17,19 +24,22 @@ import { tokens } from "./kit/tokens.ts";
 type Els = ElementTable<"terminal">;
 
 const GAP = " ".repeat(tokens.gutter);
-/** The glyph a draft put aside is marked with. */
-const DRAFT_MARK = "✎";
 
 /** The rows the pane gives to the head, and to the hint for the keyboard, not to the screen. */
 const HEAD = 2;
 const HINT = 2;
 /** From this many rows the pane has room for the head. */
 const ROOMY = 16;
-/** Below this many columns the line above the prompt drops its name for the draft's title. */
-const NARROW = 80;
+/** The rows of the description's field its two rules take. */
+const RULES = 2;
 
-/** The key the title's field is drawn under, for the hook that moves the ring onto it. */
-export const titleKey = (form: Form | null) => `title-${form?.titleRevision ?? 0}`;
+/** The step a text field is open in: the title's, or the description's. */
+export const typingOf = (view: View) =>
+  view.step === "title" || view.step === "body" ? view.step : undefined;
+
+/** The key a step's field is drawn under, for the hook that moves the ring onto it. */
+export const fieldKey = (form: Form | null, step: "title" | "body") =>
+  `${step}-${form?.fieldRevision ?? 0}`;
 
 export type PaneProps = {
   form: Form | null;
@@ -40,6 +50,8 @@ export type PaneProps = {
   rows: number;
   /** A key or a click, with the screen as it was drawn when it came. */
   send: (intent: Intent, drawn: Drawn) => unknown;
+  /** The description's field as it stands after each key: what an Enter outside it saves. */
+  typed: (text: string) => unknown;
 };
 
 /** The draft in the pane. Also gives what was drawn, for a hook that acts on it later. */
@@ -58,6 +70,7 @@ export function terminalPane(k: Els, p: PaneProps): { tree: JSX.Element; drawn: 
     // The engine's field shows a long title's start and hides what is typed past it when it
     // has one row (Claude Code 2.1.325); with more it wraps and keeps the cursor in sight.
     fieldRows: 2,
+    isFieldFlush: true,
   });
   const head = sheetHead({ width: p.width - CARD_INSET.length, title: TITLE });
   const lines: Line[] = [
@@ -68,15 +81,18 @@ export function terminalPane(k: Els, p: PaneProps): { tree: JSX.Element; drawn: 
     // The hint for the keyboard stands apart, under the buttons.
     ...(p.held ? [] : [blank()]),
   ];
-  const isTyping = p.view.step === "title" && p.form?.phase === "ready" && !p.view.isConfirming;
+  const typing = p.form?.phase === "ready" && !p.view.isConfirming ? typingOf(p.view) : undefined;
   const field = lines.find((l) => l.slot?.kind === "input")?.slot;
   const fieldRows = field?.kind === "input" ? (field.rows ?? 1) : 1;
+  const fieldWidth = field?.kind === "input" ? field.width : 0;
   const { Input } = k;
+  const rule = () =>
+    paintLines(k, [line([span(tokens.glyph.rule.repeat(fieldWidth), { role: "border" })])]);
   const tree = stack(
     k,
     // First, so the ring keeps its place whatever rows the screen draws. It stays while the
-    // title is typed: Escape takes the ring off the field without a word to the mod, and the
-    // next arrow or Enter then lands here, which leaves the field for the draft.
+    // field is typed in: Escape takes the ring off the field without a word to the mod, and the
+    // next arrow or Enter then lands here.
     ring(
       k,
       () => p.send({ enter: true }, drawn),
@@ -85,10 +101,32 @@ export function terminalPane(k: Els, p: PaneProps): { tree: JSX.Element; drawn: 
     paintLines(k, lines, {
       width: p.width,
       press: (hit) => p.send({ hit }, drawn),
-      input: isTyping ? (
+      input: !typing ? undefined : typing === "body" ? (
+        // The description as the Markdown it is filed as, between two rules that mark the
+        // field: the engine's own draws none. It stands at the pane's left edge, as the drawing
+        // has it: the engine measures a field of several lines by its pane, and set in at all
+        // it cuts each line instead of wrapping it (Claude Code 2.1.325).
+        stack(
+          k,
+          rule(),
+          <Input
+            key={fieldKey(p.form, "body")}
+            value={p.form?.description ?? ""}
+            // The key that opened it: with a label the rows hang under the first one's words.
+            label={BODY_KEY.toUpperCase()}
+            rows={Math.max(2, fieldRows - RULES)}
+            // The engine's own hint names Enter and the key for a new line.
+            submitLabel=""
+            autoFocus
+            onInput={(text) => p.typed(text)}
+            onSubmit={(text) => p.send({ text }, drawn)}
+          />,
+          rule(),
+        )
+      ) : (
         // Enter empties an Input unless the hook draws a different value, so each submit remounts it.
         <Input
-          key={titleKey(p.form)}
+          key={fieldKey(p.form, "title")}
           value={p.form?.title ?? ""}
           // Two rows: a field of one shows a long title's start and hides what is typed past
           // it (Claude Code 2.1.325); one of several keeps the cursor in sight.
@@ -99,9 +137,9 @@ export function terminalPane(k: Els, p: PaneProps): { tree: JSX.Element; drawn: 
           // The buttons under the draft say what Enter does; the field's own hint stays short.
           submitLabel=""
           autoFocus
-          onSubmit={(title) => p.send({ title }, drawn)}
+          onSubmit={(text) => p.send({ text }, drawn)}
         />
-      ) : undefined,
+      ),
     }),
     keysHint(k, p.held, false, CARD_INSET.length),
   );
@@ -124,51 +162,14 @@ export type BandProps = {
   };
 };
 
-/** A mark, what it is about cut to the room the buttons leave, and the buttons. */
-function chip(mark: Line["spans"], words: string, buttons: Button[], width: number): Line {
-  const actions = buttonRow(buttons, width)[0]?.spans ?? [];
-  const room = width - spansWidth(mark) - spansWidth(actions) - tokens.gutter;
-  return line([
-    ...mark,
-    span(truncate(words, Math.max(4, room)), { role: "text" }),
-    span(GAP),
-    ...actions,
-  ]);
-}
-
 /** The rows above the prompt: the draft put aside, with its digits, and each issue filed. */
 export function terminalBand(k: Els, p: BandProps): JSX.Element {
   const press: Record<string, () => unknown> = {};
   const lines: Line[] = [];
   if (p.draft) {
-    const what =
-      p.draft.phase === "drafting"
-        ? "being written…"
-        : p.draft.phase === "failed"
-          ? "was not written"
-          : p.draft.title || "Untitled";
-    press["chip:open"] = p.on.open;
-    press["chip:discard"] = p.on.discard;
-    lines.push(
-      chip(
-        // A narrow room keeps the title: the mark and the buttons say what the line is.
-        [
-          span(`${DRAFT_MARK} `, { role: "dim" }),
-          ...(p.width < NARROW ? [] : [span(`Linear draft${GAP}`, { bold: true })]),
-        ],
-        what,
-        [
-          { hotkey: "8", label: "Open", hit: "chip:open", essential: true },
-          {
-            hotkey: "9",
-            label: p.isArmed ? "Sure? Discard" : "Discard",
-            hit: "chip:discard",
-            essential: true,
-          },
-        ],
-        p.width,
-      ),
-    );
+    press[CHIP.open] = p.on.open;
+    press[CHIP.discard] = p.on.discard;
+    lines.push(draftChip(p.draft, p.width, { openKey: "8", discardKey: "9", isArmed: p.isArmed }));
   }
   for (const issue of p.issues) {
     const id = (verb: string) => `filed:${verb}:${issue.key}`;

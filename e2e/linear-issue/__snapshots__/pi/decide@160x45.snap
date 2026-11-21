@@ -1,4 +1,4 @@
-# linear-issue/pi/decide 160x45 @44,29 (72x16)
+# linear-issue/pi/decide 160x45 @44,25 (72x16)
 ╭─ Linear draft ───────────────────────────────────────────── Close × ─╮
 │                                                                      │
 │   PLT-212 may already cover this                                     │
@@ -14,7 +14,7 @@
 │       Honor Retry-After when the sync worker backs off after a 429   │
 │                                                                      │
 │   Send comment ↵  Back [esc]  □ Then open in Linear [o]              │
-╰──────────────────────────────────────────────────────────────────────╯
+────────────────────────────────────────────────────────────────────────
 --- styles
 1x2 . 2x12 . 1x45 . 3x7 . 1x2
 1 .x70 1
@@ -31,7 +31,7 @@
 1 .x7 6x60 .x3 1
 1 .x70 1
 1 .x3 2x12 . 6 .x2 3x4 . 6x5 .x2 3x21 . 6x3 .x14 1
-1x72
+9x72
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
@@ -41,3 +41,4 @@
 6 fg=#7e888e
 7 fg=#a798d7
 8 fg=#a798d7 bold underline=single
+9 fg=#6c767b

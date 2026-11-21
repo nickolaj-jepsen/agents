@@ -54,8 +54,11 @@ const FIELD_LABEL: Record<FieldId, string> = {
 const TITLE_KEY = "E";
 
 export type View = {
-  /** The draft, its title being typed, one field's choices, or what to do about a duplicate. */
-  step: "review" | "title" | "duplicate" | { pick: FieldId };
+  /**
+   * The draft, its title or its description being typed, one field's choices, or what to do
+   * about a duplicate.
+   */
+  step: "review" | "title" | "body" | "duplicate" | { pick: FieldId };
   /** Lines of the description scrolled past. */
   top: number;
   /** The keyboard's row among a field's choices, or the answer chosen for a duplicate. */
@@ -91,6 +94,16 @@ export type Room = {
   hasAllKeys?: boolean;
   /** Rows the client's own text field takes: more than one where it wraps what is typed. */
   fieldRows?: number;
+  /**
+   * The key that breaks a line in the client's field of several rows, for a client whose field
+   * does not name it itself.
+   */
+  newline?: string;
+  /**
+   * The client's field of several rows stands at the room's left edge and takes its whole
+   * width, for a client whose field cannot be set in.
+   */
+  isFieldFlush?: boolean;
   /** The control under the pointer, where the client reports it. */
   hover?: string;
 };
@@ -129,8 +142,8 @@ export type Intent =
   | { scroll: number }
   /** A control pressed. */
   | { hit: string }
-  /** The client's text field was submitted. */
-  | { title: string };
+  /** The client's text field was submitted: the title, or the description, as the step has it. */
+  | { text: string };
 
 const HIT = {
   title: "title",
@@ -153,6 +166,13 @@ const KEEP_KEY = "k";
  */
 const BACK_KEY = "0";
 const TICK_KEY = "1";
+/** The key that opens the description to be typed: the x of its button's "text". */
+export const BODY_KEY = "x";
+/**
+ * Rows the description's field is given at least, its rules included, while the room has them:
+ * a short draft grows to be written in.
+ */
+const FIELD_ROWS = 12;
 
 // ---- fields
 
@@ -366,6 +386,7 @@ function reviewFooter(f: Form, view: View, room: Room): Line[] {
             hit: HIT.act("create"),
             isLit: true,
           },
+          { hotkey: BODY_KEY, label: "Edit text", hit: HIT.act("edit") },
           { hotkey: "d", label: "Discard", hit: HIT.act("discard") },
           opensButton(view),
         ],
@@ -614,6 +635,47 @@ function review(f: Form, view: View, room: Room): Drawn {
   };
 }
 
+/**
+ * The description being typed, as the Markdown it is filed as: the client's own field of
+ * several rows, under the title alone so it has every row the fields and the notice gave up.
+ * The client draws the field's rules with it, since each field has its own.
+ */
+function writing(f: Form, view: View, room: Room): Drawn {
+  const footer = buttons(
+    [
+      { hotkey: "enter", label: "Save", hit: HIT.act("save"), isLit: true },
+      { hotkey: room.hasAllKeys ? "esc" : "", label: "Cancel", hit: HIT.act("back") },
+      // Enter saves, as it sends in the client's prompt: the key for a new line is the one a
+      // person would not guess.
+      ...(room.newline ? [{ hotkey: room.newline, label: "new line" }] : []),
+    ],
+    room,
+  );
+  const gap = room.rows - footer.length >= 7 ? 1 : 0;
+  const title = (max: number) => titleLines(f, room, max, false);
+  // The draft's own height, or what a field worth writing in needs, as the room allows.
+  const wanted = title(2).length + gap + FIELD_ROWS + gap + footer.length;
+  const height = Math.min(room.rows, Math.max(heightOf(f, view, room), wanted));
+  const budget = Math.max(1, height - gap - footer.length);
+  // The field keeps three rows at least: the title gives way to it, then goes.
+  const head = budget >= 6 ? [...title(budget >= 9 ? 2 : 1), ...(gap ? [blank()] : [])] : [];
+  const lead = room.isFieldFlush ? [] : [span(MARGIN)];
+  return {
+    body: [
+      ...head,
+      slotLine({
+        kind: "input",
+        lead,
+        width: Math.max(1, room.width - spansWidth(lead)),
+        rows: Math.max(1, budget - head.length),
+      }),
+      ...(gap ? [blank()] : []),
+    ],
+    footer,
+    window: { top: 0, max: 0, page: 1 },
+  };
+}
+
 /** How far along an issue is, from Linear's kind of status. */
 const STATUS: Record<string, string> = {
   triage: "In triage",
@@ -847,6 +909,7 @@ export function draw(form: Form | null, view: View, room: Room): Drawn {
     if (form.phase === "drafting") return drafting(form, view, quiet);
     if (form.phase === "failed") return failed(form, view, quiet);
     if (view.step === "duplicate") return duplicate(form, view, quiet);
+    if (view.step === "body") return writing(form, view, quiet);
     return review(form, view, quiet);
   })();
   if (room.hover === undefined) return drawn;
@@ -865,7 +928,7 @@ export function keysOf(form: Form | null, view: View): string[] {
   if (!form || form.phase === "filing") return [];
   if (view.isConfirming) return [KEEP_KEY];
   if (form.phase === "drafting" || form.phase === "failed") return ["d"];
-  if (view.step === "title") return [];
+  if (view.step === "title" || view.step === "body") return [];
   if (view.step === "duplicate") return ["a", "b", "o", BACK_KEY];
   if (typeof view.step === "object")
     return [
@@ -875,7 +938,13 @@ export function keysOf(form: Form | null, view: View): string[] {
       BACK_KEY,
       ...(isMultiple(view.step.pick) ? [TICK_KEY] : []),
     ];
-  return [TITLE_KEY.toLowerCase(), ...FIELDS.map((id) => FIELD_KEY[id].toLowerCase()), "o", "d"];
+  return [
+    TITLE_KEY.toLowerCase(),
+    ...FIELDS.map((id) => FIELD_KEY[id].toLowerCase()),
+    BODY_KEY,
+    "o",
+    "d",
+  ];
 }
 
 type Acted = { view: View; effects: Effect[] };
@@ -939,9 +1008,9 @@ export function act(
     return { view: { ...view, isConfirming: false }, effects: [] };
   }
   if (form.phase === "filing") return "escape" in intent ? hide : none;
+  const isTyping = view.step === "title" || view.step === "body";
   if (key === "d" && view.step !== "duplicate" && typeof view.step !== "object")
-    if (view.step !== "title")
-      return { view: { ...view, isConfirming: true, since: now ?? 0 }, effects: [] };
+    if (!isTyping) return { view: { ...view, isConfirming: true, since: now ?? 0 }, effects: [] };
   if (hit === HIT.act("discard"))
     return { view: { ...view, isConfirming: true, since: now ?? 0 }, effects: [] };
   if (form.phase === "drafting" || form.phase === "failed") {
@@ -994,26 +1063,29 @@ export function act(
     return none;
   }
 
-  if (view.step === "title") {
-    if ("title" in intent)
+  if (isTyping) {
+    if ("text" in intent)
       return {
-        ...to("review"),
+        ...to("review", view.step === "body" ? { top: 0 } : {}),
         effects: [
           {
             do: "set",
             patch: {
-              title: intent.title.replace(/\s*\n\s*/g, " ").trim() || form.title,
-              titleRevision: form.titleRevision + 1,
+              ...(view.step === "body"
+                ? // As typed: the description is Markdown, and its line breaks are its own.
+                  { description: intent.text.replace(/\r\n?/g, "\n").trim() }
+                : { title: intent.text.replace(/\s*\n\s*/g, " ").trim() || form.title }),
+              fieldRevision: form.fieldRevision + 1,
             },
           },
         ],
       };
     // Enter reaches the screen here only when the client's field no longer has the keyboard.
-    // What was typed goes: the next field is a new one, with the title as it is.
+    // What was typed goes: the next field is a new one, with the draft's words as they are.
     if ("escape" in intent || "enter" in intent || hit === HIT.act("back"))
       return {
         ...to("review"),
-        effects: [{ do: "set", patch: { titleRevision: form.titleRevision + 1 } }],
+        effects: [{ do: "set", patch: { fieldRevision: form.fieldRevision + 1 } }],
       };
     return none;
   }
@@ -1054,6 +1126,7 @@ export function act(
   if (hit === HIT.up) return step(-window.page);
   if (hit === HIT.down) return step(window.page);
   if (key === TITLE_KEY.toLowerCase() || hit === HIT.title) return to("title");
+  if (key === BODY_KEY || hit === HIT.act("edit")) return to("body");
   const field =
     FIELDS.find((id) => FIELD_KEY[id].toLowerCase() === key) ??
     (fieldOf(hit) as FieldId | undefined);

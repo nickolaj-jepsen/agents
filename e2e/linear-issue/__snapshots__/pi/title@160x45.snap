@@ -1,4 +1,4 @@
-# linear-issue/pi/title 160x45 @44,17 (72x28)
+# linear-issue/pi/title 160x45 @44,13 (72x28)
 ╭─ Linear draft ───────────────────────────────────────────── Close × ─╮
 │                                                                      │
 │   E  Honor Retry-After when the sync worker backs off after a 429    │
@@ -26,7 +26,7 @@
 │   Source: acme/sync-worker · fix/retry-after                         │
 │                                                                      │
 │   Save ↵  Cancel [esc]                                               │
-╰──────────────────────────────────────────────────────────────────────╯
+────────────────────────────────────────────────────────────────────────
 --- styles
 1x2 . 2x12 . 1x45 . 3x7 . 1x2
 1 .x70 1
@@ -55,7 +55,7 @@
 1 .x3 6x8 4x16 6x18 .x25 1
 1 .x70 1
 1 .x3 2x4 . 6 .x2 3x6 . 6x5 .x47 1
-1x72
+8x72
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
@@ -64,3 +64,4 @@
 5 inverse
 6 fg=#7e888e
 7 bold
+8 fg=#6c767b

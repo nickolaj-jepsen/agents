@@ -1,0 +1,22 @@
+# linear-issue/claude/body 70x24 @0,12 (70x8)
+╭──────────────────────────────────────────────────────────────────✕─╮
+│ ────────────────────────────────────────────────────────────────── │
+│ X: The sync worker doubles its delay after every `429` and never   │
+│    reads `Retry-After`, so it retries sooner than the shop API     │
+│    allows and gets limited again.                                  │
+│ ────────────────────────────────────────────────────────────────── │
+│   Save ↵  Cancel                                                   │
+╰────────────────────────────────────────────────────────────────────╯
+--- styles
+1x67 2 1x2
+1 . 2x66 . 1
+1 .x68 1
+1 .x68 1
+1 .x68 1
+1 . 2x66 . 1
+1 .x3 3x4 . 2 .x59 1
+1x70
+--- legend
+1 dim
+2 fg=#999999
+3 fg=#d77757 bold

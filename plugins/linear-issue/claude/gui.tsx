@@ -213,12 +213,12 @@ function editFields(k: Kit, f: Form, p: GuiPane) {
           // Enter empties an Input unless the hook draws a different value, so a submit
           // remounts it under a new key, keeping the text.
           <Input
-            key={`title-${f.titleRevision ?? 0}`}
+            key={`title-${f.fieldRevision ?? 0}`}
             value={f.title}
             placeholder="What to do, in a line"
             onInput={(title) => on.set({ title: oneLine(title) })}
             onSubmit={(title) =>
-              on.set({ title: oneLine(title), titleRevision: (f.titleRevision ?? 0) + 1 })
+              on.set({ title: oneLine(title), fieldRevision: (f.fieldRevision ?? 0) + 1 })
             }
           />
         ),

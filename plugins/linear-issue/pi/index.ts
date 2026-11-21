@@ -27,15 +27,17 @@ import {
   type Origin,
   type TeamCache,
 } from "../core/draft.ts";
+import { CHIP } from "../core/chip.ts";
 import { act, startView, type Drawn, type Effect, type Intent, type View } from "../core/screen.ts";
+import { DraftChip, rowsFromPrompt } from "./chip.ts";
 import { linearBridge } from "./linear.ts";
-import { DONE_MARK, DRAFT_MARK, DraftSheet, sheetOptions } from "./sheet.ts";
+import { DONE_MARK, DraftSheet, sheetOptions } from "./sheet.ts";
 
 const WIDGET = "linear-issue";
 const FILED = "linear-issue-filed";
 const GAP = " ".repeat(tokens.gutter);
-/** Below this many columns the line above the prompt drops its name for the draft's title. */
-const NARROW = 80;
+/** How long a first press on the line's Discard waits for the second, which discards. */
+const DISCARD_ARM_MS = 5000;
 
 /** What the last filed issue used, kept beside pi's own settings. */
 const lastFile = () => join(getAgentDir(), "linear-issue.json");
@@ -58,27 +60,6 @@ function textOf(content: unknown): string {
     .join("\n");
 }
 
-/** A draft put aside: its title, and how to bring it back. */
-const draftChip = (form: Form, width: number): Line => {
-  const what =
-    form.phase === "drafting"
-      ? "being written…"
-      : form.phase === "failed"
-        ? "was not written"
-        : form.title || "Untitled";
-  const hint = "/linear opens it";
-  // A narrow terminal keeps the title: the mark and the hint say what the line is.
-  const name = width < NARROW ? "" : `Linear draft${GAP}`;
-  const room = width - `${DRAFT_MARK} ${name}${GAP}${hint}`.length;
-  return line([
-    span(`${DRAFT_MARK} `, { role: "dim" }),
-    span(name, { role: "text", bold: true }),
-    span(truncate(what, Math.max(4, room)), { role: form.phase === "failed" ? "error" : "text" }),
-    span(GAP),
-    span(hint, { role: "dim" }),
-  ]);
-};
-
 /** An issue filed, as a row of the transcript: its key, its title and where it is. */
 const filedLines = (f: Filed, width: number): Line[] => [
   line([
@@ -98,29 +79,54 @@ export default function linearIssue(pi: ExtensionAPI) {
   let form: Form | null = null;
   let isSending = false;
   let view: View = startView();
-  /** The session the draft belongs to; stale once the session is replaced. */
-  let session: ExtensionContext | undefined;
-  /** The open sheet's surface and the way to close it. */
-  let open: { tui: TUI; close: () => void } | undefined;
+  /** The open sheet's way to close it. */
+  let open: { close: () => void } | undefined;
+  /** The widget above the prompt and the surface it is on, once a session has mounted it. */
+  let chip: { tui: TUI; widget: DraftChip } | undefined;
+  /** The line's Discard was pressed once, and the timer that forgets it. */
+  let isArmed = false;
+  let disarm: ReturnType<typeof setTimeout> | undefined;
 
-  const redraw = () => {
-    open?.tui.requestRender();
-    if (session) chip(session);
+  const redraw = () => chip?.tui.requestRender();
+
+  const arm = (armed: boolean) => {
+    clearTimeout(disarm);
+    disarm = armed ? setTimeout(() => arm(false), DISCARD_ARM_MS) : undefined;
+    isArmed = armed;
+    redraw();
   };
 
-  /** The line above the prompt for a draft that is not on screen. */
-  const chip = (ctx: ExtensionContext) => {
+  const discard = () => {
+    form = null;
+    view = startView(view.opens);
+    arm(false);
+    close();
+  };
+
+  /**
+   * Mounts the line above the prompt for a draft that is not on screen. It stays for the
+   * session and draws no row while there is nothing to show.
+   */
+  const mount = (ctx: ExtensionContext) => {
     if (ctx.mode !== "tui") return;
-    const shown = form && !open ? form : undefined;
-    ctx.ui.setWidget(
-      WIDGET,
-      shown
-        ? (_tui, theme) => ({
-            render: (width: number) => paint(theme, [draftChip(shown, width)], width),
-            invalidate() {},
-          })
-        : undefined,
-    );
+    ctx.ui.setWidget(WIDGET, (tui, theme) => {
+      const widget = new DraftChip(
+        theme,
+        () => (form && !open ? { form, isArmed } : undefined),
+        (hit) => {
+          if (hit === CHIP.open) {
+            arm(false);
+            show(ctx);
+          } else if (hit === CHIP.discard) {
+            // A press that lands on it by mistake cannot undo a draft: the second one discards.
+            if (isArmed) discard();
+            else arm(true);
+          }
+        },
+      );
+      chip = { tui, widget };
+      return widget;
+    });
   };
 
   const origin = async (ctx: ExtensionContext): Promise<Origin> => {
@@ -197,6 +203,7 @@ export default function linearIssue(pi: ExtensionAPI) {
     const sheet = open;
     open = undefined;
     sheet?.close();
+    redraw();
   };
 
   const openUrl = async (ctx: ExtensionContext, url: string) => {
@@ -213,15 +220,9 @@ export default function linearIssue(pi: ExtensionAPI) {
     const d = drafter(hostFor(ctx), teams);
     switch (effect.do) {
       case "hide":
-        close();
-        chip(ctx);
-        return;
+        return close();
       case "discard":
-        form = null;
-        view = startView(view.opens);
-        close();
-        chip(ctx);
-        return;
+        return discard();
       case "retry":
         return d.retry();
       case "team":
@@ -244,20 +245,32 @@ export default function linearIssue(pi: ExtensionAPI) {
         form = null;
         view = startView(effect.open);
         close();
-        chip(ctx);
         pi.appendEntry<Filed>(FILED, filed);
         if (effect.open && filed.url) await openUrl(ctx, filed.url);
       }
     }
   };
 
-  const show = (ctx: ExtensionContext) => {
+  function show(ctx: ExtensionContext) {
     if (open) return;
+    if (!chip) mount(ctx);
+    let surface: TUI | undefined;
+    // The prompt and what is under it are measured once for a render, which asks several times.
+    let measured: number | undefined;
+    const below = () => {
+      if (measured === undefined) {
+        measured = (surface && chip && rowsFromPrompt(surface, chip.widget)) || 0;
+        queueMicrotask(() => {
+          measured = undefined;
+        });
+      }
+      return measured;
+    };
     void ctx.ui
       .custom<void>(
         (tui, theme, _keys, done) => {
-          open = { tui, close: () => done() };
-          chip(ctx);
+          surface = tui;
+          open = { close: () => done() };
           return new DraftSheet(
             tui,
             theme,
@@ -270,15 +283,16 @@ export default function linearIssue(pi: ExtensionAPI) {
                   ctx.ui.notify(`linear-issue: ${errorText(error)}`, "error"),
                 );
             },
+            below,
           );
         },
-        { overlay: true, overlayOptions: () => sheetOptions(open!.tui)() },
+        { overlay: true, overlayOptions: () => sheetOptions(surface!, below) },
       )
       .finally(() => {
         open = undefined;
-        chip(ctx);
+        redraw();
       });
-  };
+  }
 
   pi.registerCommand("linear", {
     description:
@@ -288,7 +302,7 @@ export default function linearIssue(pi: ExtensionAPI) {
         ctx.ui.notify("/linear needs pi's terminal UI to show the draft", "warning");
         return;
       }
-      session = ctx;
+      arm(false);
       if (form && form.phase !== "failed") {
         // One draft at a time: the one put aside comes back.
         show(ctx);
@@ -318,14 +332,16 @@ export default function linearIssue(pi: ExtensionAPI) {
   });
 
   pi.on("session_start", (_event, ctx) => {
-    session = ctx;
+    mount(ctx);
   });
 
   pi.on("session_shutdown", async (_event, ctx) => {
     // The draft is this session's; a new one starts without it.
     form = null;
     view = startView();
+    arm(false);
     close();
+    chip = undefined;
     await linear.close(ctx);
   });
 }

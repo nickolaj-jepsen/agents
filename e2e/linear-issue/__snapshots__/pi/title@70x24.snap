@@ -1,49 +1,43 @@
-# linear-issue/pi/title 70x24 @0,2 (70x22)
-╭─ Linear draft ─────────────────────────────────────────── Close × ─╮
-│                                                                    │
-│   E  Honor Retry-After when the sync worker backs off after a 429  │
-│      ───────────────────────────────────────────────────────────── │
-│                                                                    │
-│   T  Team      Platform (PLT)                                      │
-│   S  Status    Todo                                                │
-│   P  Priority  Medium                                              │
-│   L  Labels    Bug                                                 │
-│   J  Project   None                                                │
-│                                                                    │
-│   The sync worker doubles its delay after every 429 and never      │
-│   reads Retry-After, so it retries sooner than the shop API allows │
-│   and gets limited again.                                          │
-│                                                                    │
-│   • Read Retry-After (seconds or an HTTP date) from the 429        │
-│     response                                                       │
-│   • Wait at least that long, then go back to the doubling delay    │
-│   ↓ 8 more                                                         │
-│                                                                    │
-│   Save ↵  Cancel [esc]                                             │
-╰────────────────────────────────────────────────────────────────────╯
+# linear-issue/pi/title 70x24 @1,1 (68x19)
+╭─ Linear draft ───────────────────────────────────────── Close × ─╮
+│                                                                  │
+│   E  nor Retry-After when the sync worker backs off after a 429  │
+│      ─────────────────────────────────────────────────────────── │
+│                                                                  │
+│   T  Team      Platform (PLT)                                    │
+│   S  Status    Todo                                              │
+│   P  Priority  Medium                                            │
+│   L  Labels    Bug                                               │
+│   J  Project   None                                              │
+│                                                                  │
+│   The sync worker doubles its delay after every 429 and never    │
+│   reads Retry-After, so it retries sooner than the shop API      │
+│   allows and gets limited again.                                 │
+│                                                                  │
+│   ↓ 11 more                                                      │
+│                                                                  │
+│   Save ↵  Cancel [esc]                                           │
+────────────────────────────────────────────────────────────────────
 --- styles
-1x2 . 2x12 . 1x43 . 3x7 . 1x2
-1 .x68 1
-1 .x3 4 .x62 5 . 1
-1 .x6 1x61 . 1
-1 .x68 1
-1 .x3 4 .x2 6x4 .x6 3x14 .x38 1
-1 .x3 4 .x2 6x6 .x4 3x4 .x48 1
-1 .x3 4 .x2 6x8 .x2 3x6 .x46 1
-1 .x3 4 .x2 6x6 .x4 3x3 .x49 1
-1 .x3 4 .x2 6x7 .x3 6x4 .x48 1
-1 .x68 1
-1 .x49 4x3 .x16 1
-1 .x9 4x11 .x48 1
-1 .x68 1
-1 .x68 1
-1 .x3 6 .x6 4x11 .x36 4x3 .x8 1
-1 .x68 1
-1 .x3 6 .x64 1
-1 .x3 6x8 .x57 1
-1 .x68 1
-1 .x3 2x4 . 6 .x2 3x6 . 6x5 .x45 1
-1x70
+1x2 . 2x12 . 1x41 . 3x7 . 1x2
+1 .x66 1
+1 .x3 4 .x60 5 . 1
+1 .x6 1x59 . 1
+1 .x66 1
+1 .x3 4 .x2 6x4 .x6 3x14 .x36 1
+1 .x3 4 .x2 6x6 .x4 3x4 .x46 1
+1 .x3 4 .x2 6x8 .x2 3x6 .x44 1
+1 .x3 4 .x2 6x6 .x4 3x3 .x47 1
+1 .x3 4 .x2 6x7 .x3 6x4 .x46 1
+1 .x66 1
+1 .x49 4x3 .x14 1
+1 .x9 4x11 .x46 1
+1 .x66 1
+1 .x66 1
+1 .x3 6x9 .x54 1
+1 .x66 1
+1 .x3 2x4 . 6 .x2 3x6 . 6x5 .x43 1
+7x68
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
@@ -51,3 +45,4 @@
 4 fg=#a798d7
 5 inverse
 6 fg=#7e888e
+7 fg=#6c767b

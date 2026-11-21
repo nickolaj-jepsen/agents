@@ -27,7 +27,7 @@ const FORM: Form = {
   projects: [{ value: "", label: "No project" }, option("Order sync")],
   team: "PLT",
   title: "同期ワーカーが Retry-After を無視する: honor the header in every retry path",
-  titleRevision: 0,
+  fieldRevision: 0,
   description: [
     "The sync worker never reads `Retry-After`.",
     "",
@@ -91,6 +91,7 @@ const STATES: [string, Form, Intent[]][] = [
   ["priorities open", FORM, [{ key: "p" }]],
   ["labels open, the keyboard far down", FORM, [{ key: "l" }, { move: 30 }]],
   ["the title typed", FORM, [{ key: "e" }]],
+  ["the description typed", FORM, [{ key: "x" }]],
   ["a duplicate to decide on", FORM, [{ enter: true }]],
   ["discard asked", FORM, [{ key: "d" }]],
   ["drafting", { ...FORM, phase: "drafting" }, []],
@@ -111,6 +112,8 @@ describe.each(STATES)("%s", (_name, form, intents) => {
           isActive: true,
           hasAllKeys: width % 2 === 0,
           fieldRows: 1 + (width % 2),
+          newline: width % 2 ? "shift+enter" : undefined,
+          isFieldFlush: width % 3 === 0,
         };
         const { view, form: f } = play(intents, form, room);
         const d = draw(f, view, room);
@@ -318,11 +321,59 @@ describe("keys and clicks", () => {
   });
 
   test("the title is saved as one line, and an empty one keeps what it was", () => {
-    expect(play([{ key: "e" }, { title: "Cap outage\nlatency " }]).form.title).toBe(
+    expect(play([{ key: "e" }, { text: "Cap outage\nlatency " }]).form.title).toBe(
       "Cap outage latency",
     );
-    expect(play([{ key: "e" }, { title: "  " }]).form.title).toBe(FORM.title);
+    expect(play([{ key: "e" }, { text: "  " }]).form.title).toBe(FORM.title);
     expect(play([{ key: "e" }, { escape: true }]).view.step).toBe("review");
+  });
+
+  test("x opens the description as its Markdown: saved as typed, and left as it was otherwise", () => {
+    const open = play([{ key: "x" }]);
+    expect(open.view.step).toBe("body");
+    // Every key is the field's while it is typed in.
+    expect(open.keys).toEqual([]);
+    expect(open.text.at(-1)).toMatch(/Save ↵\s+Cancel \[esc\]$/);
+    expect(play([{ hit: "act:edit" }]).view.step).toBe("body");
+    const saved = play([{ key: "x" }, { text: "First line.\r\n\r\n- a\n- b\n  " }]);
+    expect(saved.form.description).toBe("First line.\n\n- a\n- b");
+    expect(saved.view).toMatchObject({ step: "review", top: 0 });
+    expect(saved.form.fieldRevision).toBe(FORM.fieldRevision + 1);
+    expect(writes(saved.effects)).toEqual([]);
+    for (const leave of [{ escape: true }, { hit: "act:back" }, { enter: true }] as Intent[]) {
+      const left = play([{ key: "x" }, leave]);
+      expect(left.view.step).toBe("review");
+      expect(left.form.description).toBe(FORM.description);
+    }
+    // A description may be emptied.
+    expect(play([{ key: "x" }, { text: " " }]).form.description).toBe("");
+  });
+
+  test("the description's field takes the rows under the title, and names its key for a new line", () => {
+    const field = (form: Form, room: Room) => {
+      const d = draw(form, play([{ key: "x" }], form, room).view, room);
+      const slot = d.body.find((l) => l.slot?.kind === "input")?.slot;
+      if (slot?.kind !== "input") throw new Error("no field");
+      return { slot, rows: d.body.reduce((n, l) => n + rowsOf(l), 0) + d.footer.length };
+    };
+    // A long draft keeps its height: the field has what the fields and the description had.
+    const long = field(FORM, ROOM);
+    expect(long.rows).toBe(play([], FORM, ROOM).text.length);
+    expect(long.slot.rows).toBeGreaterThanOrEqual(18);
+    // A short one grows to be written in, as far as the room goes.
+    const short = { ...PLAIN, title: "Short", description: "One line." };
+    expect(field(short, { width: 68, rows: 40 }).slot.rows).toBe(12);
+    expect(field(short, { width: 68, rows: 9 }).slot.rows).toBeGreaterThanOrEqual(3);
+    // Set in like the rest, or at the room's edge for a client whose field cannot be set in.
+    expect(field(FORM, ROOM).slot.width).toBeLessThan(ROOM.width);
+    expect(field(FORM, { ...ROOM, isFieldFlush: true }).slot).toMatchObject({
+      lead: [],
+      width: ROOM.width,
+    });
+    expect(play([{ key: "x" }], FORM, { ...ROOM, newline: "shift+enter" }).text.at(-1)).toContain(
+      "shift+enter new line",
+    );
+    expect(play([{ key: "x" }]).text.at(-1)).not.toContain("new line");
   });
 
   test("discard asks in the buttons' row: Enter throws the draft away, anything else keeps it", () => {
@@ -369,7 +420,7 @@ describe("keys and clicks", () => {
   });
 
   test("the keys a client binds are the ones the screen takes", () => {
-    expect(keysOf(FORM, startView())).toEqual(["e", "t", "s", "p", "l", "j", "o", "d"]);
+    expect(keysOf(FORM, startView())).toEqual(["e", "t", "s", "p", "l", "j", "x", "o", "d"]);
     expect(play([{ key: "p" }]).keys).toEqual(["a", "b", "c", "d", "e", "0"]);
     expect(play([{ enter: true }]).keys).toEqual(["a", "b", "o", "0"]);
     expect(keysOf({ ...FORM, phase: "filing" }, startView())).toEqual([]);

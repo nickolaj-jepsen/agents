@@ -1,8 +1,8 @@
 # linear-issue/pi/chip 160x45 @0,39 (160x1)
-✎ Linear draft  Honor Retry-After when the sync worker backs off after a 429  /linear opens it
+✎ Linear draft  Honor Retry-After when the sync worker backs off after a 429  Open [/linear]  Discard
 --- styles
-1x2 2x14 3x60 .x2 1x16
+1x2 2x14 3x60 .x2 3x4 . 1x9 .x2 3x7
 --- legend
 1 fg=#7e888e
-2 fg=#dee0e1 bold
+2 bold
 3 fg=#dee0e1
