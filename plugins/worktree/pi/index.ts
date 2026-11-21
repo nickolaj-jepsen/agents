@@ -37,8 +37,16 @@ const wt = (args: string[], cwd: string) =>
   );
 
 /** A worktree's path for a name: open, reopened, or created off `base` (default: the default branch). */
-const resolveWorktree = (target: string, cwd: string, base?: string) =>
-  wt(base ? ["new", target, base] : ["new", target], cwd);
+const resolveWorktree = (target: string, cwd: string, base?: string) => {
+  // Both come from the model; one that starts with `-` would reach `wt` as an option.
+  for (const [what, value] of [
+    ["name", target],
+    ["base", base],
+  ] as const)
+    if (value?.startsWith("-"))
+      throw new Error(`The worktree ${what} can't start with "-": ${value}`);
+  return wt(base ? ["new", target, base] : ["new", target], cwd);
+};
 
 /** Writes the active branch of the conversation to a new session file rooted at `cwd`. */
 function forkInto(ctx: ExtensionCommandContext, cwd: string): string {
