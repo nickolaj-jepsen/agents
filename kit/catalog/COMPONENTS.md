@@ -139,6 +139,7 @@ Features:
 - Closed on every side, the title and Close in the top edge: pi yes (an overlay anchored to the bottom, at the width of a Claude Code pane); claude no (the engine frames a pane itself, a box above the prompt or a rule beside the transcript, with its own Close; a mod draws `sheetHead` in it)
 - Close asks before it throws the work away, in the place it stood: pi yes (Discard and Keep are controls with a `hit` each); claude yes (in `sheetHead`: the question stands at the right of the title)
 - A notice in a row of its own above the buttons: pi yes; claude no (without the edges a mod sets the row itself, above its button row)
+- No bottom edge, where it stands on a rule the host draws: pi yes (on the rule over the prompt, so the sheet reads as behind it); claude no (a pane is framed by the engine, which also places it)
 - The top edge alone: the title, and the question Close asks: pi yes; claude yes
 
 ## Band shell

@@ -75,6 +75,22 @@ export const sheetStories: KitStory[] = [
   },
   {
     component: "sheet",
+    state: "standing",
+    about: "No bottom edge: its sides run down to a rule the host draws, as behind pi's prompt",
+    settings: 'sheet({foot: "none"})',
+    width: "dialog",
+    lines: (width) =>
+      sheet({
+        width,
+        title: "Linear draft",
+        close: {},
+        body: body(sheetRoom(width)),
+        footer: footer(sheetRoom(width)),
+        foot: "none",
+      }),
+  },
+  {
+    component: "sheet",
     state: "head",
     about: "The top edge alone, for a host that frames the panel itself",
     settings: "sheetHead({title, close: {confirming: true, question}})",

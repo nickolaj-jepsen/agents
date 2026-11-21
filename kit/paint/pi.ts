@@ -39,12 +39,25 @@ export const paintSpans = (theme: Theme, spans: readonly Span[]) =>
 /** Where a control is on a painted row, in cells from its start. */
 export type Cell = { start: number; end: number; hit: string };
 
-/** A row kept for the host's text field: what is painted before and after it, and its cells. */
-export type Field = { row: number; lead: string; tail: string; width: number };
+/**
+ * The rows kept for the host's text field: what is painted before and after it on its first
+ * row (`lead`) and on those under it (`hang`), and its cells.
+ */
+export type Field = {
+  row: number;
+  rows: number;
+  lead: string;
+  hang: string;
+  tail: string;
+  width: number;
+};
 
 export type Painted = {
   lines: string[];
-  /** The rows a text field goes in: the caller sets `lead + field + tail` there. */
+  /**
+   * The rows a text field goes in: the caller sets `lead + field + tail` on the first, and
+   * `hang + field + tail` on each other row its field fills.
+   */
   fields: Field[];
   /** The control each row belongs to whole, by row. */
   hits: (string | undefined)[];
@@ -144,12 +157,13 @@ export function paintLines(
     if (l.slot?.kind === "input") {
       const lead = paintSpans(theme, l.slot.lead);
       const tail = paintSpans(theme, l.slot.tail ?? []);
-      out.fields.push({ row: out.lines.length, lead, tail, width: l.slot.width });
-      push(lead + " ".repeat(l.slot.width) + tail, undefined, []);
-      // pi's field is one row: the others it is given stay blank under it.
       const hang = l.slot.hang ? paintSpans(theme, l.slot.hang) : " ".repeat(visibleWidth(lead));
+      const rows = l.slot.rows ?? 1;
+      out.fields.push({ row: out.lines.length, rows, lead, hang, tail, width: l.slot.width });
+      push(lead + " ".repeat(l.slot.width) + tail, undefined, []);
+      // Blank until the caller sets its field in: one of a single row leaves these as they are.
       const under = hang + " ".repeat(l.slot.width) + tail;
-      for (let row = 1; row < (l.slot.rows ?? 1); row++) push(under, undefined, []);
+      for (let row = 1; row < rows; row++) push(under, undefined, []);
       continue;
     }
     if (l.slot) {

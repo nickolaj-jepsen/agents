@@ -19,8 +19,9 @@ const edge = (text: string) => span(text, { role: "border" });
 /**
  * A panel laid over the screen, closed on every side so what is under it stays apart: the
  * title and Close in its top edge, as a captioned frame has them, the body set in, and the
- * buttons above its bottom edge. A row that is one control keeps to its words: the edges
- * beside it are not part of it.
+ * buttons above its bottom edge. With no `foot` its sides run down to a rule the host draws
+ * under it, so it reads as standing behind what that rule starts. A row that is one control
+ * keeps to its words: the edges beside it are not part of it.
  */
 export function sheet(s: Sheet): Line[] {
   const { width } = s;
@@ -69,7 +70,9 @@ export function sheet(s: Sheet): Line[] {
     ...s.body.map(row),
     ...(s.notice ? [row(s.notice)] : []),
     ...(s.footer ?? []).map(row),
-    line([edge(EDGE.bottomLeft + "─".repeat(Math.max(0, width - 2)) + EDGE.bottomRight)]),
+    ...(s.foot === "none"
+      ? []
+      : [line([edge(EDGE.bottomLeft + "─".repeat(Math.max(0, width - 2)) + EDGE.bottomRight)])]),
   ];
 }
 

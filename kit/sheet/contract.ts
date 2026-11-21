@@ -14,6 +14,10 @@ export const sheetLayout = {
   chrome: 3,
 } as const;
 
+/** The rows of `sheetLayout.chrome` a sheet takes: one fewer where it has no bottom edge. */
+export const sheetChrome = (foot: Sheet["foot"] = "edge") =>
+  sheetLayout.chrome - (foot === "none" ? 1 : 0);
+
 /** The cells a body row has in a sheet `width` cells wide. */
 export const sheetRoom = (width: number) => Math.max(0, width - 2 * sheetLayout.x);
 
@@ -29,4 +33,9 @@ export type Sheet = Pick<CaptionFrame, "title" | "caption" | "close"> & {
   footer?: Line[];
   /** A row of its own between the body and the buttons. */
   notice?: Line;
+  /**
+   * What closes the sheet below: its own edge, or nothing where it stands on a rule the host
+   * draws, such as the one over pi's prompt. @default "edge"
+   */
+  foot?: "edge" | "none";
 };

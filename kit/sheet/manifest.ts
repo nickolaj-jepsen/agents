@@ -33,6 +33,13 @@ export default defineComponent({
       claude: no("without the edges a mod sets the row itself, above its button row"),
     },
     {
+      id: "standing",
+      label: "No bottom edge, where it stands on a rule the host draws",
+      story: "sheet/standing",
+      pi: yes("on the rule over the prompt, so the sheet reads as behind it"),
+      claude: no("a pane is framed by the engine, which also places it"),
+    },
+    {
       id: "head",
       label: "The top edge alone: the title, and the question Close asks",
       story: "sheet/head",
