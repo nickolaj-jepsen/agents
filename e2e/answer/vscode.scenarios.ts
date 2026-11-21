@@ -156,6 +156,15 @@ export default vscodeScenarios({
         { wait: "1/2 answered" },
       ],
     },
+    "recommend-no": {
+      about: "a recommendation of No is a choice, not an affirmative answer",
+      start: asks("recommend-no"),
+      steps: [
+        ...asked,
+        { click: /○\s+No\s+A plain reply is enough/ },
+        { wait: /●\s+No\s+A plain reply is enough/ },
+      ],
+    },
     recommended: {
       about: "a recommendation without multiple-choice options can still be accepted",
       start: asks("recommended"),

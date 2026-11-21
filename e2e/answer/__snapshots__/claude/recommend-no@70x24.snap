@@ -1,0 +1,32 @@
+# answer/claude/recommend-no 70x24 @0,7 (70x12)
+▎ ❯ Q1  Show a separate card for the closing question?
+▎
+▎   The current flow already handles the final reply.
+▎
+▎   A ● No. A plain reply is enough.
+▎   B ○ Write your own answer
+▎   Note: Add a note
+
+
+▎   1 of 1 answered  Fill prompt
+
+Q1/1   alt+a for the keys                                         [-]
+--- styles
+1 . 2 . 3x4 2x46 .x15 1
+1 .x68 1
+1 .x68 1
+1 .x68 1
+1 .x3 3 . 4 . 4x28 .x33 1
+1 .x3 3 . 5 . 5x21 .x40 1
+1 .x3 5x16 .x49 1
+1x70
+1x70
+1 .x20 4x11 .x37 1
+1x70
+4x6 . 5x18 .x41 5x3
+--- legend
+1 fg=#4eba65
+2 bold
+3 fg=#d77757
+4 fg=#d77757 bold
+5 fg=#999999

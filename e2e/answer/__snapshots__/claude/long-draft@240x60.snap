@@ -1,0 +1,15 @@
+# answer/claude/long-draft 240x60 @0,51 (240x4)
+Q1 Use SQLite?                                                                                                                                                                                                                              [-]
+Answer: 東京と大阪のデータベースを確認してから切り替えます。 Keep the hosted instance until the migration is finished; then rotate its credentials. The editor needs to wrap before the hint, even in a very ⏎ save · shift+⏎ new line
+        wide terminal. After verifying the restored checksums and confirming that the new read endpoints are stable, switch traffic.
+Save  Cancel
+--- styles
+1x14 .x222 2x3
+3x8 .x196 2x26
+.x132 4
+2x4 .x2 2x6
+--- legend
+1 fg=#d77757 bold
+2 fg=#999999
+3 bold
+4 inverse

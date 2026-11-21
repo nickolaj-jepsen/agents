@@ -16,6 +16,12 @@ const turn = (fixture: string): Scenario["start"] => ({
   turns: [...says(fixture), { text: "Reply received." }],
 });
 
+// One paragraph: continuation rows must come from wrapping, not explicit line breaks.
+const longDraft =
+  "東京と大阪のデータベースを確認してから切り替えます。 Keep the hosted instance until the migration is finished; " +
+  "then rotate its credentials. The editor needs to wrap before the hint, even in a very wide terminal. " +
+  "After verifying the restored checksums and confirming that the new read endpoints are stable, switch traffic.";
+
 const expectPrompt = (want: string) => async (session: Session) => {
   const rows = (await session.text()).split("\n");
   const start = rows.map((row) => row.startsWith("❯")).lastIndexOf(true);
@@ -143,6 +149,27 @@ export default scenarios({
         { press: "Enter" },
         { wait: /C ●\s+An embedded store/ },
         { wait: "Q1/2" },
+      ],
+    },
+    "long-draft": {
+      from: "picked",
+      about: "long notes and write-ins wrap before the editor hint without hiding the draft",
+      extreme: true,
+      region: region.rows(/^Q1 Use SQLite\?/, /^Save +Cancel$/),
+      steps: [
+        { resize: [240, 60] },
+        { press: "n" },
+        { wait: /Note:.*⏎ save/ },
+        { type: longDraft },
+        { wait: /^Note: 東京と大阪.*wrap before the hint.*⏎ save[^\n]*\n +.*switch traffic\./m },
+        { click: "Cancel" },
+        { wait: "Q1/2" },
+        { press: "c" },
+        { wait: /Answer:.*⏎ save/ },
+        { type: longDraft },
+        { wait: /^Answer: 東京と大阪.*wrap before the hint.*⏎ save[^\n]*\n +.*switch traffic\./m },
+        { resize: [70, 24] },
+        { wait: /^Answer: .*⏎ save[^\n]*\n +.*traffic\./m },
       ],
     },
     "mouse-note": {
@@ -295,6 +322,15 @@ export default scenarios({
       about: "questions with write-in answers only",
       start: turn("numbered"),
       steps: round,
+    },
+    "recommend-no": {
+      about: "a recommendation of No is a choice, not an affirmative answer",
+      start: turn("recommend-no"),
+      steps: [
+        ...round,
+        { click: "A ○ No. A plain reply is enough." },
+        { wait: "A ● No. A plain reply is enough." },
+      ],
     },
     recommended: {
       about: "recommendations and their rationale remain visible in the cards",

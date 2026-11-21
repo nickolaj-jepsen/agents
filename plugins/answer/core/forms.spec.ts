@@ -334,6 +334,19 @@ describe("apply", () => {
     );
   });
 
+  test.each(["No. A plain reply is enough.", "Not yet, wait for the results."])(
+    "a prose recommendation keeps its words in the card, review and reply: %s",
+    (recommendation) => {
+      const form = formOf(`**Q10. Show a separate card?**\n\n> **Recommended:** ${recommendation}`);
+      const draft = steps(form, [pick(0)]);
+      const current = view(form, draft);
+      expect(current.item?.entries[0]).toMatchObject({ text: recommendation, isChosen: true });
+      expect(current.item?.accepts).toBe("");
+      expect(current.review[0]?.shown).toBe(recommendation);
+      expect(reply(form, draft)).toBe(`Q10: ${recommendation}`);
+    },
+  );
+
   test("a skipped question stays out of the reply and a note rides on its answer", () => {
     const form = formOf(GRILLING_ROUND);
     // Picking the recommended letter is still the recommendation.
@@ -466,10 +479,10 @@ describe("view", () => {
     expect(itemOf(picks, newDraft(picks)).entries.every((entry) => entry.key === "")).toBe(true);
   });
 
-  test("says what a yes takes, in the reply's words", () => {
+  test("only recommendations that name options have recommended option keys", () => {
     const form = formOf(GRILLING_ROUND);
     expect(itemOf(form, newDraft(form)).accepts).toMatch(/^[A-H](, [A-H])*$/);
-    expect(itemOf(form, steps(form, [FORWARD])).accepts).toBe("yes");
+    expect(itemOf(form, steps(form, [FORWARD])).accepts).toBe("");
   });
 
   test("shows why an option is recommended", () => {

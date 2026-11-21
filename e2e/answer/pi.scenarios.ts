@@ -365,6 +365,15 @@ export default scenarios({
 
     // ---- other kinds of round, as cards
 
+    "recommend-no": {
+      about: "a recommendation of No is a choice, not an affirmative answer",
+      start: cards("recommend-no"),
+      steps: [
+        ...CARD_ASK,
+        { click: "A ○ No. A plain reply is enough." },
+        { wait: "A ● No. A plain reply is enough." },
+      ],
+    },
     recommended: {
       about: "three questions with recommendations",
       start: cards("recommended"),

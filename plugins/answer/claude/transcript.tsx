@@ -1,4 +1,4 @@
-import { plain, view as viewOf } from "../core/forms";
+import { plain, recommendationChoice, view as viewOf } from "../core/forms";
 import { POSITIONS } from "./terminal";
 import type { Current, Editing, Held, View } from "./types.d.ts";
 import {
@@ -47,8 +47,8 @@ const BLOCKS = /^\s*(?:[-*+]\s|\d+[.)]\s|#{1,6}\s|>|```|~~~|\|)/m;
 type Entry = NonNullable<View["item"]>["entries"][number];
 
 /**
- * The key a terminal card draws and binds for an entry: its own letter, `A` for a yes, which
- * never sits beside options, or by its place for a pick list's rows, which print none.
+ * The key a terminal card draws and binds: its own letter, `A` for a prose recommendation,
+ * or its place in a pick list.
  */
 export const entryLetter = (entry: Entry, index: number) =>
   entry.kind === "accept"
@@ -180,7 +180,7 @@ export function questionCard(
             <Box flexDirection="column" rowGap={kit.isNative ? tokens.gui.space.xs : 0}>
               {item.entries.map((entry, i) => {
                 if (entry.kind === "write") return null;
-                const words = labelOf(entry.text);
+                const words = entry.kind === "accept" ? entry.text : labelOf(entry.text);
                 const tag = entryLetter(entry, i) ? `${entryLetter(entry, i)} ` : "";
                 // A Button's label is plain words: it draws no markdown.
                 const said = plain(words);
@@ -498,15 +498,14 @@ function nativeQuestion(
   const editingAnswer = editor && current?.editing === "write";
   const options = item.entries.flatMap((entry, i) => {
     if (entry.kind === "write") return [];
-    const label =
+    const option =
       entry.kind === "accept"
-        ? entry.text.replace(/^(?:Yes:\s*)?(?:Yes\b[.,:]?\s*)?/i, "") || "As recommended"
-        : labelOf(entry.text);
+        ? recommendationChoice(entry.text)
+        : { tag: entry.key, label: labelOf(entry.text) };
     return [
       {
         key: `${prefix}-choose-${i}`,
-        tag: entry.kind === "accept" ? "Yes" : entry.key,
-        label,
+        ...option,
         detail:
           [entry.isRecommended ? "Recommended" : "", entry.detail.replace(/\s*\n\s*/g, " ")]
             .filter(Boolean)

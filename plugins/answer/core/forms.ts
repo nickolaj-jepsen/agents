@@ -68,9 +68,9 @@ export type ItemView = {
   recommended: string;
   /** Whether the recommendation or answer is a bundle of options. */
   isSeveral: boolean;
-  /** Whether it recommends something a yes can take. */
+  /** Whether there is a recommendation to take. */
   canAccept: boolean;
-  /** What a yes takes, as the reply says it: "B", "B, C" or "yes"; "" when it takes nothing. */
+  /** The recommended option keys, e.g. "B" or "B, C"; empty for prose recommendations. */
   accepts: string;
   note: string;
   /** The write-in answer, "" for none. */
@@ -407,7 +407,7 @@ function accepted(item: FormItem): Answer {
 type Row = { kind: "option"; index: number } | { kind: "accept" } | { kind: "write" };
 
 /**
- * What the form offers for one item: its options, or with none a yes to its recommendation,
+ * What the form offers for one item: its options, or with none its recommendation,
  * and a write-in. Beside options a recommendation is only said, never an entry of its own.
  */
 export function entries(item: FormItem): Row[] {
@@ -539,13 +539,27 @@ function isRecommended(item: FormItem, answer: Answer | null): boolean {
 
 const keyAt = (item: FormItem, index: number) => item.options[index]?.key ?? "";
 
-/** What the reply says for one answer: "yes", a letter or several, a route, or the text. */
+/** A short button label and the prose beside it on native surfaces. */
+export function recommendationChoice(text: string): { tag: string; label: string } {
+  const lead = /^(yes|no)(?:[.,:;!?]\s*|\s+[—–-]\s+|$)/i.exec(text);
+  if (!lead) return { tag: "Accept", label: text };
+  return {
+    tag: lead[1]?.toLowerCase() === "yes" ? "Yes" : "No",
+    label: text.slice(lead[0].length),
+  };
+}
+
+const recommendationText = (item: FormItem) => item.recommended || "As recommended";
+
+/** What the reply says for one answer: a recommendation, option keys, a route, or the text. */
 function said(item: FormItem, answer: Answer): string {
   if (answer.kind === "text") return answer.text;
   if (answer.kind === "options")
     return answer.indices.map((index) => keyAt(item, index)).join(", ");
   const index = answer.kind === "option" ? answer.index : item.recommendedOption;
-  return index === undefined ? "yes" : keyAt(item, index);
+  if (index !== undefined) return keyAt(item, index);
+  const recommended = recommendationText(item);
+  return recommendationChoice(recommended).tag === "Yes" ? "yes" : recommended;
 }
 
 const NO_ANSWER = "no answer yet";
@@ -569,11 +583,18 @@ const rowsOf = (form: Form, draft: Draft) =>
 
 function roundReply(form: Form, draft: Draft): string[] {
   const rows = rowsOf(form, draft);
-  if (rows.every(({ item, answer, note }) => isRecommended(item, answer) && !note) && !draft.note)
+  if (
+    !draft.note &&
+    rows.every(
+      ({ item, answer, note }) =>
+        !note &&
+        isRecommended(item, answer) &&
+        (answer?.kind !== "accept" || said(item, answer) === "yes"),
+    )
+  )
     return ["yes"];
   return rows.flatMap(({ item, answer, note }) => {
-    if (answer)
-      return noted(saying(item.label, answer.kind === "accept" ? "yes" : said(item, answer)), note);
+    if (answer) return noted(saying(item.label, said(item, answer)), note);
     return note ? noted(`${item.label}: ${NO_ANSWER}`, note) : [];
   });
 }
@@ -606,11 +627,7 @@ export function reply(form: Form, draft: Draft): string {
 function entryText(form: Form, item: FormItem, entry: Row): string {
   if (entry.kind === "write")
     return form.kind === "round" ? "Write your own answer" : "Something else";
-  if (entry.kind === "accept") {
-    const recommended = item.recommended || "as recommended";
-    // A recommendation that already says yes ("Yes. Four generators…") says it once.
-    return /^yes\b/i.test(recommended) ? recommended : `Yes: ${recommended}`;
-  }
+  if (entry.kind === "accept") return recommendationText(item);
   const option = item.options[entry.index];
   if (!option) return "";
   return form.kind === "round" ? `${option.key}. ${option.text}` : option.text;
@@ -635,7 +652,9 @@ function shown(item: FormItem, answer: Answer | null): string {
       `${said(item, answer)}: ${answer.indices.map((index) => textAt(item, index)).join("; ")}`,
     );
   const index = answer.kind === "option" ? answer.index : item.recommendedOption;
-  return index === undefined ? "yes" : plain(`${said(item, answer)}: ${textAt(item, index)}`);
+  return plain(
+    index === undefined ? said(item, answer) : `${said(item, answer)}: ${textAt(item, index)}`,
+  );
 }
 
 export function title(form: Form): string {
@@ -671,7 +690,10 @@ function itemView(form: Form, draft: Draft): ItemView | null {
     recommended: item.options.length ? (item.recommended ?? "") : "",
     isSeveral: answer ? answer.kind === "options" : item.recommendedOptions !== undefined,
     canAccept: canAccept(item),
-    accepts: canAccept(item) ? said(item, accepted(item)) : "",
+    accepts:
+      item.recommendedOption !== undefined || item.recommendedOptions
+        ? said(item, accepted(item))
+        : "",
     note: draft.notes[draft.step] ?? "",
     written: answer?.kind === "text" ? answer.text : "",
   };

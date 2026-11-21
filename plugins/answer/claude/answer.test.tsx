@@ -722,6 +722,25 @@ for (const surface of ["desktop", "vscode"] as const) {
     expect(w.box).toBe("Q1: B\nQ2: yes");
   });
 
+  test(`${surface}: a negative recommendation keeps its answer when filled`, async ($, on) => {
+    const w = world(on);
+    await start($, surface);
+    await ends(
+      $,
+      "**Q1. Show a separate card?**\n\n> **Recommended:** No. A plain reply is enough.",
+    );
+    const drawn = await form($, surface);
+    expect((await drawn.find({ type: "Button", key: "e0" }))?.props.label).toBe("No");
+    expect(await drawn.find({ type: "Text", text: "A plain reply is enough." })).toBeDefined();
+    await expectNative(drawn, { hotkeys: ACTIONS });
+    await drawn.press({ key: "e0" });
+    await drawn.press({ key: "review" });
+    expect(await drawn.find({ type: "Text", text: "No. A plain reply is enough." })).toBeDefined();
+    await drawn.press({ key: "fill" });
+    await drawn.unmount();
+    expect(w.box).toBe("Q1: No. A plain reply is enough.");
+  });
+
   test(`${surface}: the tabs, skip, the note and the review's rows are clicks too`, async ($, on) => {
     const w = world(on);
     await start($, surface);

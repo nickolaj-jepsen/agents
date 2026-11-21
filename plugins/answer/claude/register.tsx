@@ -5,6 +5,7 @@ import {
   formId,
   offer,
   hasWork,
+  recommendationChoice,
   startLines,
   step as stepForm,
   view as viewOf,
@@ -802,14 +803,8 @@ function writingMode(
       clamp(text, Math.max(1, width), { max: 1 }).join("");
     const caption = view.item ? `${view.item.label}  ${detail}` : detail;
     return (
-      <Box
-        key="writing"
-        flexDirection="column"
-        width={Math.min(kit.columns, tokens.width.reading)}
-        paddingLeft={1}
-        borderStyle="quote"
-        borderColor={tokens.role.accent}
-      >
+      // The terminal Input wraps to the band's width, not its parent's inner width.
+      <Box key="writing" flexDirection="column">
         <Text weight="semibold" {...roleProps("accent")}>
           {singleLine(caption, kit.columns - 6)}
         </Text>
@@ -1286,16 +1281,16 @@ export const register: Register = (on) => {
             body: note,
             onPress: () => choose($, row, k),
           };
-        const words =
+        const option =
           row.kind === "accept"
-            ? row.text.replace(/^(?:Yes:\s*)?(?:Yes\b[.,:]?\s*)?/i, "")
-            : row.key
-              ? row.text.replace(/^[A-H][.)]\s*/, "")
-              : row.text;
+            ? recommendationChoice(row.text)
+            : {
+                tag: row.key || undefined,
+                label: row.key ? row.text.replace(/^[A-H][.)]\s*/, "") : row.text,
+              };
         return {
           key: `e${k}`,
-          tag: row.kind === "accept" ? "Yes" : row.key || undefined,
-          label: words || "As recommended",
+          ...option,
           detail:
             [row.isRecommended ? "Recommended" : "", row.detail.replace(/\s*\n\s*/g, " ")]
               .filter(Boolean)
