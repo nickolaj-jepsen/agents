@@ -60,12 +60,12 @@ import {
   choiceOf,
   choiceReduce,
   type ChoiceIntent,
-  type ChoiceProps,
-  type ChoiceState,
-} from "../../choice/contract.ts";
-import { choiceStories } from "../../choice/stories.ts";
-import { choiceLines } from "../../choice/terminal.ts";
+  type ChoiceListState,
+} from "../../card/contract.ts";
+import { liveChoices, liveStart } from "../../card/stories.ts";
+import { choiceList } from "../../card/terminal.ts";
 import { paintLines } from "../../paint/pi.ts";
+import { kitStories } from "../../stories.ts";
 
 export type Env = { columns: number; rows: number };
 
@@ -984,34 +984,35 @@ export const stories: Story[] = [
     width: "dialog",
     make: () => pure((theme, width) => emptyState(theme, width, `${SENTENCE} ${SENTENCE}`)),
   },
-  ...choiceStories.map((s): Story => ({
-    component: "choice",
+  // The kit's own stories: the same props Claude Code's catalogue draws.
+  ...kitStories.map((s): Story => ({
+    component: s.component,
     state: s.state,
     about: s.about,
     settings: s.settings,
     extreme: s.extreme,
-    width: "reading",
-    make: () => (s.live ? choiceLive(s.props) : choicePure(s.props)),
+    width: s.width ?? "reading",
+    make: () =>
+      s.isLive
+        ? choiceLive()
+        : pure((theme, width) => paintLines(theme, s.lines(width), width).lines),
   })),
 ];
 
-const choicePure = (props: ChoiceProps): Live =>
-  pure((theme, width) => paintLines(theme, choiceLines(props, width), width).lines);
-
-/** pi draws its own focus: arrows move it, space, enter, a letter or a click pick. */
-function choiceLive(props: ChoiceProps): Live {
-  let state: ChoiceState = { chosen: props.chosen, focus: 0 };
+/** The live choice story: arrows move the focus, space, enter, a letter or a click pick. */
+function choiceLive(): Live {
+  let state: ChoiceListState = liveStart();
   let hits: (string | undefined)[] = [];
   /** The control under the pointer. pi reports no leave, so it stays until the pointer moves on. */
   let hover: string | undefined;
   const send = (intent: ChoiceIntent | undefined) => {
     if (!intent) return false;
-    state = choiceReduce(state, intent, props);
+    state = choiceReduce(state, intent, liveChoices);
     return true;
   };
   return {
     render: (theme, width) => {
-      const lines = choiceLines({ ...props, ...state, hover: choiceOf(hover) }, width);
+      const lines = choiceList({ ...liveChoices, ...state, hover: choiceOf(hover) }, width);
       const painted = paintLines(theme, lines, width);
       hits = painted.hits;
       return painted.lines;
@@ -1020,7 +1021,7 @@ function choiceLive(props: ChoiceProps): Live {
       if (matchesKey(data, Key.down)) return send({ do: "move", by: 1 });
       if (matchesKey(data, Key.up)) return send({ do: "move", by: -1 });
       if (matchesKey(data, Key.space) || matchesKey(data, Key.enter)) return send({ do: "pick" });
-      return send(choiceKey(props.items, data));
+      return send(choiceKey(liveChoices.items, data));
     },
     mouse: (event) => {
       const hit = hits[event.y];

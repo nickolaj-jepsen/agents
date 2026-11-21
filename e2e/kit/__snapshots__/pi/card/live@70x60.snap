@@ -1,0 +1,21 @@
+# kit/pi/card/live 70x60 @2,2 (66x6)
+❯ A ● The whole transcript
+  B ○ The last turn only, which is the part most people read back
+      when a run went wrong and they want to see why
+      履歴は保存されますが、古い出力は要約されます。 Older output
+      is summarised.
+  C ○ A summary of each run
+--- styles
+1x2 2 . 3 . 4x20
+.x2 2 . 2
+-
+.x6 2x59
+.x6 2x14
+.x2 2 . 2 .x3 5x7 .x4 6x4
+--- legend
+1 fg=#dee0e1 bold
+2 fg=#7e888e
+3 fg=#a798d7 bold
+4 fg=#a798d7 bold underline=single
+5 fg=#a798d7
+6 bold

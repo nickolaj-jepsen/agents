@@ -46,69 +46,34 @@ import {
   choiceOf,
   choiceReduce,
   type ChoiceIntent,
-  type ChoiceProps,
-  type ChoiceState,
-} from "./kit/choice/contract.ts";
-import { choiceStories } from "./kit/choice/stories.ts";
-import { choiceLines } from "./kit/choice/terminal.ts";
-import { paintLines } from "./kit/paint/claude.tsx";
+  type ChoiceListState,
+} from "./kit/card/contract.ts";
+import { liveChoices, liveStart } from "./kit/card/stories.ts";
+import { choiceList } from "./kit/card/terminal.ts";
+import { paintLines, ring } from "./kit/paint/claude.tsx";
+import { kitStories, storyId as kitStoryId } from "./kit/stories.ts";
 
 export type Env = { columns: number; rows: number };
-/** The address of a button that only carries a letter key and draws nothing. */
-export const KEY_PREFIX = "choice-key-";
-/** Where the engine's focus ring is kept, and the stops either side that an arrow reaches. */
-export const RING = {
-  up: "choice-ring-up",
-  park: "choice-ring",
-  down: "choice-ring-down",
-} as const;
-/** A live choice story's first state: the kit draws focus, on the first row. */
-export const choiceStart = (props: ChoiceProps): ChoiceState => ({
-  chosen: props.chosen,
-  focus: 0,
-});
+
 export type ChoiceSend = (intent: ChoiceIntent | undefined) => unknown;
 
-/** A live choice list's rows, where they are drawn: a press on a row picks it. */
-export const choiceRows = (
-  k: Kit,
-  props: ChoiceProps,
-  state: ChoiceState,
-  width: number,
-  send: ChoiceSend,
-) =>
-  paintLines(
-    k,
-    choiceLines({ ...props, ...state }, width),
-    (hit) => send({ do: "pick", index: choiceOf(hit) }),
+/** The live choice list's rows, where they are drawn: a press on a row picks it. */
+export const choiceRows = (k: Kit, state: ChoiceListState, width: number, send: ChoiceSend) =>
+  paintLines(k, choiceList({ ...liveChoices, ...state }, width), {
+    press: (hit) => send({ do: "pick", index: choiceOf(hit) }),
     width,
-  );
+  });
 
-/**
- * The keyboard's half of a live choice list, for the site that holds the keys: nothing here is
- * drawn. The engine's ring rests on the middle button, so Enter picks the row the kit drew
- * focus on; the two round it are where an arrow would take the ring, which `ui.focus` turns
- * into a move instead. The rest carry the letter keys.
- */
-export function choiceRing(k: Kit, props: ChoiceProps, send: ChoiceSend): JSX.Element {
-  const { Box, Button } = k;
-  return (
-    <Box width={0} height={0} overflow="hidden">
-      <Button key={RING.up} plain label="previous" onPress={() => undefined} />
-      <Button key={RING.park} plain autoFocus label="pick" onPress={() => send({ do: "pick" })} />
-      <Button key={RING.down} plain label="next" onPress={() => undefined} />
-      {props.items.map((item) => (
-        <Button
-          key={`${KEY_PREFIX}${item.key}`}
-          plain
-          hotkey={item.key.toLowerCase()}
-          label={item.key}
-          onPress={() => send(choiceKey(props.items, item.key))}
-        />
-      ))}
-    </Box>
+/** The live choice list's keyboard, for the site that holds the keys: Enter and the letters. */
+export const choiceRing = (k: Kit, send: ChoiceSend) =>
+  ring(
+    k,
+    () => send({ do: "pick" }),
+    liveChoices.items.map((item) => ({
+      key: item.key.toLowerCase(),
+      press: () => send(choiceKey(liveChoices.items, item.key)),
+    })),
   );
-}
 
 /** A story that reacts keeps one value in the catalogue's state and replaces it. */
 export type LiveState = { state: unknown; set: (next: unknown) => unknown };
@@ -461,19 +426,20 @@ export const renders: Record<string, Render> = {
     );
   },
 
+  // The kit's own stories: the same props pi's catalogue draws.
   ...Object.fromEntries(
-    choiceStories.map((s): [string, Render] => [
-      `choice/${s.state}`,
+    kitStories.map((s): [string, Render] => [
+      kitStoryId(s),
       (k, width, _env, live) => {
         const { Box } = k;
-        if (!s.live || !live) return paintLines(k, choiceLines(s.props, width));
-        const state = (live.state as ChoiceState | null) ?? choiceStart(s.props);
+        if (!s.isLive || !live) return paintLines(k, s.lines(width));
+        const state = (live.state as ChoiceListState | null) ?? liveStart();
         const send: ChoiceSend = (intent) =>
-          intent && live.set(choiceReduce(state, intent, s.props));
+          intent && live.set(choiceReduce(state, intent, liveChoices));
         return (
           <Box flexDirection="column">
-            {choiceRows(k, s.props, state, width, send)}
-            {choiceRing(k, s.props, send)}
+            {choiceRows(k, state, width, send)}
+            {choiceRing(k, send)}
           </Box>
         );
       },

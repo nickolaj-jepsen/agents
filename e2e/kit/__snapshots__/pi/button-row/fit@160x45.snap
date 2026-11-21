@@ -1,0 +1,8 @@
+# kit/pi/button-row/fit 160x45 @2,2 (96x1)
+Send ↵  Note [n]  Back [esc]
+--- styles
+1x4 . 2 .x2 3x4 . 2x3 .x2 3x4 . 2x5
+--- legend
+1 fg=#a798d7 bold
+2 fg=#7e888e
+3 fg=#dee0e1

@@ -1,0 +1,18 @@
+# kit/pi/card/checkboxes 160x45 @2,2 (96x6)
+  A ■ The whole transcript
+❯ B □ The last turn only, which is the part most people read back when a run went wrong and they
+      want to see why
+      履歴は保存されますが、古い出力は要約されます。 Older output is summarised.
+  C ■ A summary of each run
+  D + Write your own answer
+--- styles
+.x2 1 . 2 . 2x20
+3x2 1 . 1 . 3x90
+.x6 3x15
+.x6 1x74
+.x2 1 . 2 . 2x21
+.x2 1 . 1 . 1x21
+--- legend
+1 fg=#7e888e
+2 fg=#a798d7 bold
+3 fg=#dee0e1 bold

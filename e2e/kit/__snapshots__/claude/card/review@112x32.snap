@@ -1,0 +1,32 @@
+# kit/claude/card/review 112x32 @71,1 (41x13)
+✓ 1 Storage ── ✓ 2 Retention ── Review
+
+1  Storage
+   Postgres beside the app
+
+2  Retention
+   • The last turn only
+   • Until the disk fills
+   Note: 履歴は保存されますが、古い出力は
+         要約されます。
+
+3  Backups
+   Not answered
+--- styles
+1x2 .x9 1x6 2x11 1x4 3x6
+-
+1x3 2x7
+-
+-
+1x3 2x9
+.x3 1x2
+.x3 1x2
+.x3 1x38
+.x3 1x20
+-
+1x3 2x7
+.x3 2x12
+--- legend
+1 fg=#999999
+2 bold
+3 fg=#d77757 bold

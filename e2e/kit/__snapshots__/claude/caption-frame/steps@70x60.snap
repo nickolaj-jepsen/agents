@@ -1,0 +1,19 @@
+# kit/claude/caption-frame/steps 70x60 @2,48 (66x6)
+─ ✓ 1 Storage ── ❯ 2 Retention ── Review ─────────────── Close × ─
+
+  Q1  Where should the session store live?
+
+  Choose ↵  Note [n]
+──────────────────────────────────────────────────────────────────
+--- styles
+1 . 1x2 .x9 1x4 2x2 3x11 1x4 .x7 1x15 .x9 1
+-
+.x2 1x4 4x36
+-
+.x2 3x6 . 1 .x7 1x3
+1x66
+--- legend
+1 fg=#999999
+2 fg=#d77757
+3 fg=#d77757 bold
+4 bold

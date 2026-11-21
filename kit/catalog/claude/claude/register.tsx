@@ -7,23 +7,10 @@
 import { atom, read, update } from "claude-code";
 import type { Register } from "claude-code";
 import { stageWidth, storyId, stories, type Story } from "../stories";
-import {
-  choiceOf,
-  choiceReduce,
-  type ChoiceProps,
-  type ChoiceState,
-} from "./kit/choice/contract.ts";
-import { choiceStories } from "./kit/choice/stories.ts";
-import { keysHint } from "./kit/paint/claude.tsx";
-import {
-  choiceRing,
-  choiceRows,
-  choiceStart,
-  KEY_PREFIX,
-  renders,
-  RING,
-  type ChoiceSend,
-} from "./render";
+import { choiceOf, choiceReduce, type ChoiceListState } from "./kit/card/contract.ts";
+import { liveChoices, liveStart } from "./kit/card/stories.ts";
+import { keysHint, RING, ringMove } from "./kit/paint/claude.tsx";
+import { choiceRing, choiceRows, renders, type ChoiceSend } from "./render";
 import { kitOf, onlyOwnRows, paneOptions, withColumns } from "./ui";
 
 const PANE = "kit";
@@ -40,17 +27,17 @@ const live = atom(
   { shape: "live-1" },
 );
 
+/** The live choice story in a pane. */
+const LIVE = "card/live";
 /**
- * `/kit choice transcript`: the live choice list placed as a row of the transcript, where a
- * question card goes, with its keys in the band. The transcript keeps no focus ring, so this is
- * the arrangement a card's keyboard has to work in. Tried by hand; it has no scenario.
+ * `/kit card placed`: the live choice list placed as a row of the transcript, where a question
+ * card goes, with its keys in the band. The transcript keeps no focus ring, so this is the
+ * arrangement a card's keyboard has to work in. Tried by hand; it has no scenario.
  */
-const TRANSCRIPT = "choice/transcript";
-const PLACED = "kit-choice";
+const PLACED = "card/placed";
+const PLACED_ROW = "kit-card";
 
-/** The props of the live choice story drawn under `id`, in the pane or the transcript. */
-const liveChoice = (id: string | null): ChoiceProps | undefined =>
-  choiceStories.find((c) => c.live && (id === TRANSCRIPT || `choice/${c.state}` === id))?.props;
+const isLiveChoice = (id: string | null) => id === LIVE || id === PLACED;
 
 /**
  * Whether the site with a live choice story's keys holds the keyboard, as far as the engine
@@ -64,17 +51,15 @@ async function hold($: Parameters<typeof read>[0], held: boolean) {
   if ((await read($, keys)) !== held) await update($, keys, () => held);
 }
 
-/** The transcript story's state and the way to change it, from either site that draws it. */
-async function transcriptChoice($: Parameters<typeof read>[0]) {
-  const props = liveChoice(TRANSCRIPT);
-  if (!props || (await read($, story)) !== TRANSCRIPT) return undefined;
+/** The placed story's state and the way to change it, from either site that draws it. */
+async function placedChoice($: Parameters<typeof read>[0]) {
+  if ((await read($, story)) !== PLACED) return undefined;
   const held = await read($, live);
-  const state =
-    (held?.id === TRANSCRIPT ? (held.state as ChoiceState) : null) ?? choiceStart(props);
+  const state = (held?.id === PLACED ? (held.state as ChoiceListState) : null) ?? liveStart();
   const send: ChoiceSend = (intent) =>
     intent &&
-    update($, live, () => ({ id: TRANSCRIPT, state: choiceReduce(state, intent, props) }));
-  return { props, state, send };
+    update($, live, () => ({ id: PLACED, state: choiceReduce(state, intent, liveChoices) }));
+  return { state, send };
 }
 
 const find = (id: string | null): Story | undefined => stories.find((s) => storyId(s) === id);
@@ -105,12 +90,12 @@ export const register: Register = (on) => {
       await $.ui.close({ id: PANE }).catch(() => undefined);
       return { text: `Components and states\n${listing()}` };
     }
-    if (`${component}/${state}` === TRANSCRIPT) {
-      await update($, story, () => TRANSCRIPT);
+    if (`${component}/${state}` === PLACED) {
+      await update($, story, () => PLACED);
       await update($, live, () => null);
       await $.ui.close({ id: PANE }).catch(() => undefined);
-      const row = await $.ui.place({ id: PLACED });
-      return { text: row.isPlaced ? `Drew ${TRANSCRIPT}.` : `${TRANSCRIPT}: no row was placed` };
+      const row = await $.ui.place({ id: PLACED_ROW });
+      return { text: row.isPlaced ? `Drew ${PLACED}.` : `${PLACED}: no row was placed` };
     }
     const found = stories.filter((s) => s.component === component);
     const one = found.find((s) => s.state === state) ?? (found.length === 1 ? found[0] : undefined);
@@ -136,25 +121,22 @@ export const register: Register = (on) => {
   // focus instead, and the ring goes back.
   on("ui.focus", async ($, e, next) => {
     const id = await read($, story);
-    const props = liveChoice(id);
-    if (!props || !id) return next(e);
-    const el = e.element;
-    const by = el === RING.up ? -1 : el === RING.down ? 1 : 0;
-    const row = choiceOf(el);
-    const isOurs = !!el && el !== RING.park && (by !== 0 || row >= 0 || el.startsWith(KEY_PREFIX));
-    if (isOurs)
+    if (!id || !isLiveChoice(id)) return next(e);
+    const move = ringMove(e.element, (hit) => choiceOf(hit) >= 0);
+    if (move)
       await update($, live, (held) => {
-        const state = (held?.id === id ? (held.state as ChoiceState) : null) ?? choiceStart(props);
+        const state = (held?.id === id ? (held.state as ChoiceListState) : null) ?? liveStart();
         return {
           id,
-          state: by
-            ? choiceReduce(state, { do: "move", by }, props)
-            : row >= 0
-              ? { ...state, focus: row }
-              : state,
+          state:
+            "hit" in move
+              ? { ...state, focus: choiceOf(move.hit) }
+              : move.by
+                ? choiceReduce(state, { do: "move", by: move.by }, liveChoices)
+                : state,
         };
       });
-    const moved = await next(isOurs ? { ...e, element: RING.park } : e);
+    const moved = await next(move ? { ...e, element: RING.park } : e);
     // A ring that moved in the site says the site has the keyboard.
     if (!moved.deny) await hold($, true);
     return moved;
@@ -196,7 +178,7 @@ export const register: Register = (on) => {
       },
     );
     // A pane without the keyboard says how to give it; Escape closes this one, so it names no way back.
-    const hint = liveChoice(id) ? keysHint(els, await read($, keys)) : null;
+    const hint = isLiveChoice(id) ? keysHint(els, await read($, keys)) : null;
     return (
       <Box flexDirection="column">
         {body}
@@ -206,21 +188,21 @@ export const register: Register = (on) => {
   });
 
   on("ui.render", { component: "Placed" }, async ($, e, next) => {
-    const choice = e.props.plugin === PLUGIN ? await transcriptChoice($) : undefined;
+    const choice = e.props.plugin === PLUGIN ? await placedChoice($) : undefined;
     if (!choice) return next(e);
     const k = kitOf($.ui.resolve(e), e);
-    return choiceRows(k, choice.props, choice.state, Math.min(k.columns - 2, 96), choice.send);
+    return choiceRows(k, choice.state, Math.min(k.columns - 2, 96), choice.send);
   });
 
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
-    const choice = e.props.hasSurvey ? undefined : await transcriptChoice($);
+    const choice = e.props.hasSurvey ? undefined : await placedChoice($);
     if (choice) {
       const k = kitOf($.ui.resolve(e), e);
       const { Box } = k;
       return (
         <Box flexDirection="column">
           {keysHint(k, await read($, keys), true)}
-          {choiceRing(k, choice.props, choice.send)}
+          {choiceRing(k, choice.send)}
         </Box>
       );
     }

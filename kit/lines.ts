@@ -4,18 +4,62 @@
  * the result (`paint/pi.ts`, `paint/claude.tsx`). No host imports.
  */
 
-/** A colour role of the style. Each painter maps it to its own theme. */
-export type Role = "text" | "dim" | "accent" | "success" | "warning" | "error";
+/**
+ * A colour role of the style. Each painter maps it to its own theme.
+ * - `code` is inline code.
+ * - `border` is a rule or a frame's line.
+ * - `active` and `answered` are a question card's own: the one the keyboard is on, and one
+ *   that has its answer.
+ */
+export type Role =
+  | "text"
+  | "dim"
+  | "accent"
+  | "success"
+  | "warning"
+  | "error"
+  | "code"
+  | "border"
+  | "active"
+  | "answered";
 
-export type Span = { text: string; role?: Role; bold?: boolean; underline?: boolean };
+export type Style = { role?: Role; bold?: boolean; italic?: boolean; underline?: boolean };
 
-/** One row of cells. `hit` names the control the row belongs to: a click anywhere on it presses it. */
-export type Line = { spans: Span[]; hit?: string };
+/** A run of one style. `hit` names the control it belongs to, where a row holds several. */
+export type Span = Style & { text: string; hit?: string };
 
-export const span = (text: string, style: Omit<Span, "text"> = {}): Span => ({ text, ...style });
+/**
+ * A block a host draws itself, standing in the drawing as one line: block Markdown, which each
+ * client has a renderer for. It takes as many rows as that renderer gives it.
+ */
+export type Slot = {
+  kind: "markdown";
+  text: string;
+  /** Cells the block is set in by. */
+  indent: number;
+  /** Cells it may take, after the indent. */
+  width: number;
+  isDim?: boolean;
+  /** Rows it may take; the last of a cut block ends in `…`. */
+  max?: number;
+};
+
+/** One row of cells. `hit` names the control the whole row belongs to: a click on it presses it. */
+export type Line = { spans: Span[]; hit?: string; slot?: Slot };
+
+export const span = (text: string, style: Style & { hit?: string } = {}): Span => ({
+  text,
+  ...style,
+});
 
 export const line = (spans: Span[], hit?: string): Line =>
   hit === undefined ? { spans } : { spans, hit };
+
+/** An empty row. */
+export const blank = (): Line => ({ spans: [] });
+
+/** A host-drawn block in the drawing's flow. */
+export const slotLine = (slot: Slot): Line => ({ spans: [], slot });
 
 /** A line's characters, without its styles. */
 export const textOf = (l: Line) => l.spans.map((s) => s.text).join("");
@@ -141,5 +185,192 @@ export function wrap(text: string, width: number): string[] {
     }
     if (words.length > 0) out.push(line);
   }
+  return out;
+}
+
+/** The glyph a cut text ends in. */
+export const ELLIPSIS = "…";
+
+/** `text` cut to `width` cells with `…` when it is longer. */
+export function truncate(text: string, width: number): string {
+  if (cellWidth(text) <= width) return text;
+  return split(text, Math.max(0, width - 1))[0] + ELLIPSIS;
+}
+
+/** `text` padded with spaces to `width` cells, cut with `…` when longer. */
+export const fit = (text: string, width: number) => {
+  const cut = truncate(text, Math.max(0, width));
+  return cut + " ".repeat(Math.max(0, width - cellWidth(cut)));
+};
+
+export type ClampOptions = {
+  /** Fewer lines than this are padded with blank ones, so rows keep one height. @default 0 */
+  min?: number;
+  /** More lines than this are cut, the last filled to its end before the `…`. @default Infinity */
+  max?: number;
+};
+
+/**
+ * Plain text wrapped to `width` cells and bounded in lines: `{min: 1, max: 1}` truncates to one
+ * line; no options wraps without limit.
+ */
+export function clamp(text: string, width: number, options: ClampOptions = {}): string[] {
+  if (width < 1) return [];
+  const { min = 0, max = Infinity } = options;
+  const cap = Math.max(min, max);
+  let lines = wrap(text, width);
+  if (lines.length > cap) {
+    if (cap === 0) return [];
+    // The cut line takes the rest of the text, so it is full before the ellipsis.
+    const rest = lines.slice(cap - 1).join(" ");
+    lines = [...lines.slice(0, cap - 1), truncate(rest, width)];
+  }
+  while (lines.length < min) lines.push("");
+  return lines;
+}
+
+// `code`, **bold** or __bold__, *italic* or _italic_, and a [link](url), which keeps only its
+// words. A marker inside a word is a letter of it, as in `snake_case_name`.
+const INLINE =
+  /`([^`\n]+)`|\*\*([^*\n]+?)\*\*|(?<!\w)__([^_\n]+?)__(?!\w)|(?<![\w*])\*(?!\s)([^*\n]+?)(?<!\s)\*(?![\w*])|(?<![\w_])_(?!\s)([^_\n]+?)(?<!\s)_(?![\w_])|\[([^\]\n]+)\]\([^)\s]+\)/g;
+
+/**
+ * One paragraph of inline Markdown as spans in `style`: code takes the `code` role, bold and
+ * italic their faces over the style, and a link keeps its words. Line ends become spaces.
+ */
+export function inline(text: string, style: Style = {}): Span[] {
+  const spans: Span[] = [];
+  const flat = text.replace(/\r\n?/g, "\n").split("\n").join(" ");
+  let at = 0;
+  for (const m of flat.matchAll(INLINE)) {
+    const start = m.index ?? 0;
+    if (start > at) spans.push({ ...style, text: flat.slice(at, start) });
+    const [, code, bold, underscored, italic, slanted, link] = m;
+    if (code !== undefined) spans.push({ ...style, text: code, role: "code" });
+    else if (bold !== undefined || underscored !== undefined)
+      spans.push({ ...style, text: bold ?? underscored ?? "", bold: true });
+    else if (italic !== undefined || slanted !== undefined)
+      spans.push({ ...style, text: italic ?? slanted ?? "", italic: true });
+    else spans.push({ ...style, text: link ?? "" });
+    at = start + m[0].length;
+  }
+  if (at < flat.length) spans.push({ ...style, text: flat.slice(at) });
+  return spans;
+}
+
+/** Plain text as one span in `style`: what a person typed, which is not Markdown. */
+export const literal = (text: string, style: Style = {}): Span[] => [{ ...style, text }];
+
+const sameStyle = (a: Span, b: Span) =>
+  a.role === b.role &&
+  !a.bold === !b.bold &&
+  !a.italic === !b.italic &&
+  !a.underline === !b.underline &&
+  a.hit === b.hit;
+
+/** Spans in lines of at most `width` cells: greedy by word, a space at a break dropped. */
+export function wrapSpans(spans: readonly Span[], width: number): Span[][] {
+  const lines: Span[][] = [[]];
+  let used = 0;
+  const put = (from: Span, text: string) => {
+    const row = lines[lines.length - 1] ?? [];
+    const last = row[row.length - 1];
+    if (last && sameStyle(last, from)) last.text += text;
+    else row.push({ ...from, text });
+    used += cellWidth(text);
+  };
+  const end = () => {
+    const row = lines[lines.length - 1] ?? [];
+    while (row.length) {
+      const last = row[row.length - 1];
+      if (!last) break;
+      last.text = last.text.replace(/ +$/, "");
+      if (last.text) break;
+      row.pop();
+    }
+    lines.push([]);
+    used = 0;
+  };
+  for (const from of spans)
+    for (const paragraph of from.text.split("\n").map((p, i) => ({ p, isBreak: i > 0 }))) {
+      if (paragraph.isBreak) end();
+      for (const piece of paragraph.p.replace(/[\t ]/g, " ").split(/( +)/)) {
+        if (!piece) continue;
+        if (piece.startsWith(" ")) {
+          if (used > 0) put(from, piece);
+          continue;
+        }
+        let word = piece;
+        if (used > 0 && used + cellWidth(word) > width) end();
+        while (cellWidth(word) > width) {
+          const [head, rest] = split(word, width);
+          put(from, head);
+          end();
+          word = rest;
+        }
+        put(from, word);
+      }
+    }
+  const last = lines[lines.length - 1] ?? [];
+  const tail = last[last.length - 1];
+  if (tail) tail.text = tail.text.replace(/ +$/, "");
+  return lines;
+}
+
+/** Cells a run of spans takes. */
+export const spansWidth = (spans: readonly Span[]) =>
+  spans.reduce((n, s) => n + cellWidth(s.text), 0);
+
+export type BlockOptions = {
+  /** What the first line starts with: a label, a mark. The text hangs under where it ends. */
+  lead?: Span[];
+  /** What each later line starts with instead. @default spaces as wide as `lead` */
+  hang?: Span[];
+  /** More lines than this are cut, the last ending in `…`. @default Infinity */
+  max?: number;
+  /** The control every line belongs to. */
+  hit?: string;
+};
+
+/**
+ * Spans as lines of `width` cells: wrapped by word after a `lead`, later lines hanging under
+ * the first line's text.
+ */
+export function block(spans: readonly Span[], width: number, options: BlockOptions = {}): Line[] {
+  const lead = options.lead ?? [];
+  const hang = options.hang ?? (lead.length ? [span(" ".repeat(spansWidth(lead)))] : []);
+  const room = Math.max(1, width - spansWidth(lead));
+  let rows = wrapSpans(spans, room);
+  const max = options.max ?? Infinity;
+  if (rows.length > max) {
+    rows = rows.slice(0, Math.max(0, max));
+    const cut = rows[rows.length - 1];
+    const tail = cut?.[cut.length - 1];
+    if (cut && tail) {
+      const over = spansWidth(cut) + 1 - room;
+      if (over > 0) tail.text = split(tail.text, Math.max(0, cellWidth(tail.text) - over))[0];
+      cut.push({ ...tail, text: ELLIPSIS });
+    }
+  }
+  return rows.map((row, i) => line([...(i ? hang : lead), ...row], options.hit));
+}
+
+/** A line with each of its spans marked as part of `hit`, where the row holds other things too. */
+export const hitSpans = (spans: Span[], hit: string): Span[] => spans.map((s) => ({ ...s, hit }));
+
+/** `spans` cut to `width` cells, the last ending in `…` when they were longer. */
+export function truncateSpans(spans: readonly Span[], width: number): Span[] {
+  if (spansWidth(spans) <= width) return [...spans];
+  const out: Span[] = [];
+  let room = Math.max(0, width - 1);
+  for (const s of spans) {
+    if (room <= 0) break;
+    const [head] = split(s.text, room);
+    if (head) out.push({ ...s, text: head });
+    room -= cellWidth(head);
+    if (head.length < s.text.length) break;
+  }
+  const last = out[out.length - 1];
+  if (width > 0) out.push({ ...last, text: ELLIPSIS });
   return out;
 }

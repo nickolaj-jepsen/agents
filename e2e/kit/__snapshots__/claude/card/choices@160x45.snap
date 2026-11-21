@@ -1,0 +1,21 @@
+# kit/claude/card/choices 160x45 @89,1 (71x7)
+  A ○ The whole transcript
+  B ● The last turn only, which is the part most people read back when
+      a run went wrong and they want to see why
+      履歴は保存されますが、古い出力は要約されます。 Older output is
+      summarised.
+  C ○ A summary of each run
+  D + Write your own answer
+--- styles
+.x2 1 . 1
+.x2 1 . 2 . 2x64
+.x6 2x41
+.x6 1x62
+.x6 1x11
+.x2 1 . 1 .x3 3x7 .x4 4x4
+.x2 1 . 1 . 1x21
+--- legend
+1 fg=#999999
+2 fg=#d77757 bold
+3 fg=#b1b9f9
+4 bold

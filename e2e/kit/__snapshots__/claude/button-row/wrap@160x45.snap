@@ -1,0 +1,11 @@
+# kit/claude/button-row/wrap 160x45 @89,1 (71x3)
+2 of 3  Send ↵  Note [n]
+space toggle  Review [r]
+Back [esc]
+--- styles
+1x6 .x2 2x4 . 1 .x7 1x3
+1x12 .x9 1x3
+.x5 1x5
+--- legend
+1 fg=#999999
+2 fg=#d77757 bold

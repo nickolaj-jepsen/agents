@@ -1,0 +1,32 @@
+# kit/pi/card/review 70x60 @2,2 (66x12)
+✓ 1 Storage ── ✓ 2 Retention ── Review
+
+1  Storage
+   Postgres beside the app
+
+2  Retention
+   • The last turn only
+   • Until the disk fills
+   Note: 履歴は保存されますが、古い出力は要約されます。
+
+3  Backups
+   Not answered
+--- styles
+1x2 2x9 3x4 1x2 4x11 3x4 5x6
+-
+1x3 4x7
+-
+-
+1x3 4x9
+.x3 1x2
+.x3 1x2
+.x3 1x52
+-
+1x3 4x7
+.x3 4x12
+--- legend
+1 fg=#7e888e
+2 fg=#dee0e1
+3 fg=#768186
+4 fg=#dee0e1 bold
+5 fg=#a798d7 bold

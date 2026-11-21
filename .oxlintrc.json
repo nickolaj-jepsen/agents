@@ -1,6 +1,8 @@
 {
+  "plugins": ["unicorn", "typescript", "oxc", "react"],
   "rules": {
-    "no-control-regex": "off"
+    "no-control-regex": "off",
+    "react/jsx-key": "off"
   },
   "ignorePatterns": [
     ".agents/**",
@@ -13,5 +15,153 @@
     "kit/catalog/claude/claude/samples.ts",
     "site/dist/**",
     "site/.astro/**"
+  ],
+  "overrides": [
+    {
+      "files": ["plugins/*/pi/**", "plugins/*/claude/**", "plugins/*/core/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@earendil-works/pi-tui",
+                "importNames": [
+                  "truncateToWidth",
+                  "visibleWidth",
+                  "wrapTextWithAnsi",
+                  "sliceByColumn",
+                  "Markdown",
+                  "Text",
+                  "Box",
+                  "Container",
+                  "VStack",
+                  "HStack",
+                  "Spacer",
+                  "SelectList"
+                ],
+                "message": "Don't draw with pi-tui helpers. Measure and wrap with kit/lines.ts, paint with kit/paint/pi.ts."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["**/kit/legacy/**", "./ui"],
+                "message": "This is the legacy kit. Use the kit's components (kit/<component>/, listed in AGENTS.md) instead."
+              }
+            ]
+          }
+        ],
+        "no-restricted-properties": [
+          "error",
+          {
+            "object": "theme",
+            "property": "fg",
+            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with kit/paint/pi.ts."
+          },
+          {
+            "object": "theme",
+            "property": "bg",
+            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with kit/paint/pi.ts."
+          },
+          {
+            "object": "theme",
+            "property": "bold",
+            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with kit/paint/pi.ts."
+          },
+          {
+            "object": "theme",
+            "property": "italic",
+            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with kit/paint/pi.ts."
+          },
+          {
+            "object": "theme",
+            "property": "underline",
+            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with kit/paint/pi.ts."
+          },
+          {
+            "object": "theme",
+            "property": "strikethrough",
+            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with kit/paint/pi.ts."
+          }
+        ],
+        "react/forbid-elements": [
+          "error",
+          {
+            "forbid": [
+              {
+                "element": "Box",
+                "message": "Don't use raw elements. Compose kit components; kit/paint/claude.tsx paints them."
+              },
+              {
+                "element": "Text",
+                "message": "Don't use raw elements. Compose kit components; kit/paint/claude.tsx paints them."
+              },
+              {
+                "element": "Button",
+                "message": "Don't use raw elements. Compose kit components; kit/paint/claude.tsx paints them."
+              },
+              {
+                "element": "Markdown",
+                "message": "Don't use raw elements. Compose kit components; kit/paint/claude.tsx paints them."
+              },
+              {
+                "element": "Link",
+                "message": "Don't use raw elements. Compose kit components; kit/paint/claude.tsx paints them."
+              },
+              {
+                "element": "Image",
+                "message": "Don't use raw elements. Compose kit components; kit/paint/claude.tsx paints them."
+              },
+              {
+                "element": "Svg",
+                "message": "Don't use raw elements. Compose kit components; kit/paint/claude.tsx paints them."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["plugins/*/claude/kit/**"],
+      "rules": {
+        "no-restricted-imports": "off",
+        "no-restricted-properties": "off",
+        "react/forbid-elements": "off"
+      }
+    },
+    // Legacy files: they still draw around the kit. List only shrinks; never add a file here.
+    {
+      "files": [
+        "plugins/answer/claude/answer.test.tsx",
+        "plugins/answer/claude/register.tsx",
+        "plugins/answer/claude/terminal.ts",
+        "plugins/answer/claude/transcript.tsx",
+        "plugins/answer/pi/form.ts",
+        "plugins/answer/pi/offer.ts",
+        "plugins/answer/pi/transcript.ts",
+        "plugins/docfix/claude/evidence.tsx",
+        "plugins/docfix/claude/register.tsx",
+        "plugins/docfix/pi/evidence.ts",
+        "plugins/docfix/pi/index.ts",
+        "plugins/docfix/pi/panel.ts",
+        "plugins/git-menu/claude/register.tsx",
+        "plugins/image-preview/claude/image-preview.test.tsx",
+        "plugins/image-preview/claude/register.tsx",
+        "plugins/linear-issue/claude/gui.tsx",
+        "plugins/linear-issue/claude/linear-issue.test.tsx",
+        "plugins/linear-issue/claude/register.tsx",
+        "plugins/questions/pi/dialog.ts",
+        "plugins/spellfix/claude/band.tsx",
+        "plugins/spellfix/claude/register.tsx",
+        "plugins/spellfix/claude/spellfix.test.tsx",
+        "plugins/spellfix/pi/index.ts",
+        "plugins/transcript-tweaks/pi/condense.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": "off",
+        "no-restricted-properties": "off",
+        "react/forbid-elements": "off"
+      }
+    }
   ]
 }

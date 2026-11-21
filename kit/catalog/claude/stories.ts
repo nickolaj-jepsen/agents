@@ -6,6 +6,8 @@
  * in both.
  */
 
+import { kitStories } from "./claude/kit/stories.ts";
+
 export type Story = {
   /** `<component>/<state>`'s first half: `list` for `list/grouped`. */
   component: string;
@@ -270,13 +272,13 @@ export const stories: Story[] = [
     "bandShell(kit, {height: 9, ...})",
     { extreme: true },
   ),
-  // The choice list's stories are the kit's own (`kit/choice/stories.ts`), restated because the
-  // scenarios read this file under plain Node and a mod cannot import outside its folder.
-  pane("choice", "single", "One of many: the chosen answer in the accent with a filled mark", "", {
-    extreme: true,
-  }),
-  pane("choice", "multiple", "Several of many, with square marks", ""),
-  pane("choice", "live", "Keys and clicks pick; the engine inverts the focused row", ""),
+  // The kit's own stories, from the mod's copy of them: a mod cannot import outside its folder.
+  ...kitStories.map((s) =>
+    pane(s.component, s.state, s.about, s.settings ?? "", {
+      extreme: s.extreme,
+      width: s.width ?? "reading",
+    }),
+  ),
 ];
 
 /**

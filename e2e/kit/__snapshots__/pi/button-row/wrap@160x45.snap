@@ -1,0 +1,12 @@
+# kit/pi/button-row/wrap 160x45 @2,2 (96x3)
+2 of 3  Send ↵  Note [n]
+space toggle  Review [r]
+Back [esc]
+--- styles
+1x6 .x2 2x4 . 1 .x2 3x4 . 1x3
+1x12 .x2 3x6 . 1x3
+3x4 . 1x5
+--- legend
+1 fg=#7e888e
+2 fg=#a798d7 bold
+3 fg=#dee0e1

@@ -1,0 +1,7 @@
+# kit/claude/button-row/row 160x45 @89,1 (71x1)
+Send ↵  Note [n]  space toggle  Review [r]  Back [esc]
+--- styles
+1x4 . 2 .x7 2x3 .x2 2x12 .x9 2x3 .x7 2x5
+--- legend
+1 fg=#d77757 bold
+2 fg=#999999
