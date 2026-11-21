@@ -7,6 +7,7 @@
   "include": [
     "./**/*.ts",
     "../plugins/answer/core/forms.ts",
+    "../plugins/answer/core/parse/*.ts",
     "../plugins/docfix/core/docfix.ts",
     "../kit/**/*.ts"
   ],
