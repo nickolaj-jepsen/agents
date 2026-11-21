@@ -1,0 +1,64 @@
+# docfix/claude/narrow 110x32 @61,0 (49x28)
+│                                              ✕
+│ ─ Doc suggestions ── 0/3 ──────────── Close × ─
+│
+│ │  AGENTS.md                                1
+│ │  ❯ ○ just build is not enough to verify a …
+│ │  docs/hosts.md                            1
+│ │    ○ The legacy card was removed; the sect…
+│ │  docs/modules.md                          1
+│ │    ○ A leaf that imports a third-party mod…
+│
+│    wrong · seen 3× · 2 days ago
+│    just build is not enough to verify a pi
+│    change; the docs say it is.
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│    Close ↵  Apply [a]  Dismiss [d]
+│ ───────────────────────────────────────────────
+│
+│
+│
+--- styles
+1 .x46 2
+1 . 2 . 3x15 . 2x2 . 2x3 . 2x12 .x9 2
+1
+1 .x4 4x9 .x32 2
+1 .x4 5 . 2 . 5x38
+1 . 2 .x2 2x13 .x28 2
+1 . 2 .x4 2
+1 . 2 .x2 2x15 .x26 2
+1 . 2 .x4 2
+1
+1 .x4 2x28
+1 .x4 5x39
+1 .x4 5x27
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1 .x10 2 .x8 2x3 .x10 2x3
+1 . 2x47
+1
+1
+1
+--- legend
+1 fg=#b1b9f9
+2 fg=#999999
+3 fg=#d77757 bold
+4 fg=#d77757
+5 bold

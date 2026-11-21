@@ -1,0 +1,44 @@
+# docfix/pi/readerNext 70x24 @26,0 (44x18)
+─ Doc suggestions ── 0/2 ───────── Close × ─
+
+   missing · seen 2× · 2 days ago
+   agent-hub's unittest suite needs a
+   short TMPDIR and markdown-it-py on
+   PYTHONPATH; run it with uv, not bare
+   python.
+
+   Evidence 2 of 2 · 2026-11-0… ─ Next [n]
+
+   Why the repo didn't say it
+   Both failures look like code errors,
+   and nothing in the repo states the
+   TMPDIR requirement or the
+   ↓ more
+
+   Close ↵  Apply [a]  Dismiss [d]
+────────────────────────────────────────────
+--- styles
+1 . 2x15 . 1x2 . 3x3 . 1x9 . 4x7 . 1
+-
+.x3 3x30
+.x3 5x34
+.x3 5x34
+.x3 5x36
+.x3 5x7
+-
+.x3 3x28 . 1 . 4x4 . 3x3
+-
+.x3 3x26
+-
+-
+-
+.x3 3x6
+-
+.x3 4x5 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3
+1x44
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#7e888e
+4 fg=#dee0e1
+5 fg=#dee0e1 bold

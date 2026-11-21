@@ -1,0 +1,61 @@
+# docfix/pi/reader 112x32 @62,0 (50x26)
+─ Doc suggestions ── 0 of 2 decided ──── Close × ─
+
+   missing · seen 2× · 2 days ago
+   agent-hub's unittest suite needs a short
+   TMPDIR and markdown-it-py on PYTHONPATH; run
+   it with uv, not bare python.
+
+   Evidence 1 of 2 · <date>     ─────── Next [n]
+
+   Hit it again from a worktree: python -m
+   unittest failed 20 socket tests with AF_UNIX
+   path too long.
+
+
+
+
+
+
+
+
+
+
+
+
+   Close ↵  Apply [a]  Dismiss [d]  Back [esc]
+──────────────────────────────────────────────────
+--- styles
+1 . 2x15 . 1x2 . 3x14 . 1x4 . 4x7 . 1
+-
+.x3 3x30
+.x3 5x40
+.x3 5x44
+.x3 5x28
+-
+.x3 3x24 .x5 1x7 . 4x4 . 3x3
+-
+.x33 6x9
+.x3 6x8
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+.x3 4x5 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3 .x2 4x4 . 3x5
+1x50
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#7e888e
+4 fg=#dee0e1
+5 fg=#dee0e1 bold
+6 fg=#a798d7

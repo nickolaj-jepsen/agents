@@ -27,7 +27,7 @@ const turns: Turn[] = [
     toolCall: { name: "mcp__docfix__docfix", arguments: FILED },
   },
   { text: "Filed. The install steps in README.md are updated; nothing else was touched." },
-  // Closing drafts one prompt for every row set to apply and the demo sends it; the model resolves both.
+  // Enter drafts one prompt for every row set to apply and the demo sends it; the model resolves both.
   { toolCall: { name: "mcp__docfix__docfix", arguments: { action: "resolve", id: FILED_ID } } },
   { toolCall: { name: "mcp__docfix__docfix", arguments: { action: "resolve", id: LEGACY_ID } } },
   { text: "Both claims checked against the code and resolved; nothing is committed." },
@@ -45,15 +45,15 @@ const PI_TURNS: Turn[] = [
 ];
 
 const ask = "Point the install steps in README.md at `just dev-setup`";
-/** The first row to apply, and the next one to apply too. */
-const ROWS = [{ press: "a" }, { sleep: 1200 }, { press: "Down" }, { sleep: 1200 }, { press: "a" }];
+/** The first row to apply; the keyboard moves on by itself, and the next one is applied too. */
+const ROWS = [{ press: "a" }, { sleep: 1500 }, { press: "a" }];
 
 export default site({
   plugin: "docfix",
   demo: [
     {
       caption:
-        "The agent files a doc suggestion instead of editing a doc outside its change; /docfix lists them, and closing it drafts the ones set to apply as a prompt for you to send.",
+        "The agent files a doc suggestion instead of editing a doc outside its change; /docfix lists them, and Enter drafts the ones set to apply as a prompt for you to send.",
       project: "shop-api",
       setup,
       start: {
@@ -74,7 +74,7 @@ export default site({
         ...ROWS,
         { sleep: 2400 },
         poster,
-        { press: "Escape" },
+        { press: "Enter" },
         // The draft is taller than the prompt box, so its first line has scrolled away.
         { wait: "For each one:" },
         // The draft sits in the prompt box for a moment, to be read; then it is sent.
@@ -87,7 +87,7 @@ export default site({
     {
       harness: "pi",
       caption:
-        "pi has the same tool and panel: the agent files the suggestion, /docfix lists them, and closing it drafts the one set to apply as a prompt for you to send.",
+        "pi has the same tool and sidebar: the agent files the suggestion, /docfix lists them, and Enter drafts the one set to apply as a prompt for you to send.",
       project: "shop-api",
       setup,
       start: { hermetic: true, plugins: ["docfix"], turns: PI_TURNS },
@@ -117,7 +117,7 @@ export default site({
   stills: {
     queue: {
       caption:
-        "Suggestions are grouped by doc, each with its kind, how often agents hit it and how old it is.",
+        "Suggestions are grouped by doc; the one the keyboard is on shows under the queue with its kind, how often agents hit it, how old it is and its evidence.",
       project: "shop-api",
       setup: (ctx) => {
         checkout(ctx);
@@ -127,7 +127,7 @@ export default site({
       steps: [{ type: "/docfix" }, { press: "Enter" }, { wait: "AGENTS.md" }],
     },
     set: {
-      caption: "Set each one to apply, dismiss or skip; closing the pane carries it out.",
+      caption: "Apply or dismiss each one, or leave it; the main action says what it will do.",
       project: "shop-api",
       setup: (ctx) => {
         checkout(ctx);
@@ -139,12 +139,13 @@ export default site({
         { press: "Enter" },
         { wait: "AGENTS.md" },
         { press: "a" },
-        { press: "Down" },
+        { wait: "1 of 3" },
         { press: "d" },
+        { wait: "dismiss 1" },
       ],
     },
     pi: {
-      caption: "pi has the same panel and the same tool, from the same core.",
+      caption: "pi draws the same screen from the same core, here reading a suggestion's evidence.",
       harness: "pi",
       project: "shop-api",
       setup: (ctx) => {
@@ -157,10 +158,9 @@ export default site({
         { press: "Enter" },
         { wait: "AGENTS.md" },
         { press: "a" },
-        { press: "Down" },
-        { press: "Down" },
         { press: "d" },
-        { press: "Space" },
+        { press: "e" },
+        { wait: "Evidence 1 of" },
       ],
     },
   },

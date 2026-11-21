@@ -1,0 +1,45 @@
+# docfix/pi/hover 70x24 @26,0 (44x18)
+─ Doc suggestions ── 0/3 ───────── Close × ─
+
+│  AGENTS.md                             1
+│  ❯ ○ just build is not enough to verify…
+│  docs/hosts.md                         1
+│    ○ The legacy card was removed; the s…
+│  docs/modules.md                       1
+│    ○ A leaf that imports a third-party …
+
+   wrong · seen 3× · 2 days ago
+   just build is not enough to verify a pi
+   change; the docs say it is.
+
+
+
+
+   Close ↵  Apply [a]  Dismiss [d]
+────────────────────────────────────────────
+--- styles
+1 . 2x15 . 1x2 . 3x3 . 1x9 . 4x7 . 1
+-
+4 .x2 5x9 .x29 3
+4 .x2 6 . 3 . 6x35
+3 .x2 3x13 .x25 3
+3 .x4 3 . 6x35
+3 .x2 3x15 .x23 3
+3 .x4 3 . 4x35
+-
+.x3 3x28
+.x3 6x39
+.x3 6x27
+-
+-
+-
+-
+.x3 4x5 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3
+1x44
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#7e888e
+4 fg=#dee0e1
+5 fg=#a798d7
+6 fg=#dee0e1 bold

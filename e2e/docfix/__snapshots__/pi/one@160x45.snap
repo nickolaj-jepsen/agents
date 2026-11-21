@@ -1,0 +1,87 @@
+# docfix/pi/one 160x45 @96,0 (64x39)
+─ Doc suggestions ── 0 of 1 decided ────────────────── Close × ─
+
+│  AGENTS.md                                                 1
+│  ❯ ○ just build is not enough to verify a pi change; th…  3×
+
+   wrong · seen 3× · 2 days ago
+   just build is not enough to verify a pi change; the docs
+   say it is.
+
+   AGENTS.md: the line contradicts what the code does now.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   Close ↵  Apply [a]  Dismiss [d]  Evidence [e]
+────────────────────────────────────────────────────────────────
+--- styles
+1 . 2x15 . 1x2 . 3x14 . 1x18 . 4x7 . 1
+-
+4 .x2 5x9 .x49 3
+4 .x2 6 . 3 . 6x51 .x2 3x2
+-
+.x3 3x28
+.x3 6x56
+.x3 6x10
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+.x3 4x5 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3 .x2 4x8 . 3x3
+1x64
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#7e888e
+4 fg=#dee0e1
+5 fg=#a798d7
+6 fg=#dee0e1 bold

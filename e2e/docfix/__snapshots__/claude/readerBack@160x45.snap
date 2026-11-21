@@ -1,0 +1,90 @@
+# docfix/claude/readerBack 160x45 @88,0 (72x41)
+│                                                                     ✕
+│ ─ Doc suggestions ── 0 of 2 decided ──────────────────────── Close × ─
+│
+│ │  docs/agent-hub.md                                               1
+│ │  ❯ ○ agent-hub's unittest suite needs a short TMPDIR and mark…  2×
+│ │  docs/agents.md                                                  1
+│ │    ○ pi's permission gate cannot resolve shell variables, so cat …
+│
+│    missing · seen 2× · 2 days ago
+│    agent-hub's unittest suite needs a short TMPDIR and
+│    markdown-it-py on PYTHONPATH; run it with uv, not bare python.
+│
+│    Hit it again from a worktree: python -m unittest failed 20 socket
+│    tests with AF_UNIX path too long.
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│    Close ↵  Apply [a]  Dismiss [d]  Evidence [e]
+│ ──────────────────────────────────────────────────────────────────────
+│
+│
+│
+--- styles
+1 .x69 2
+1 . 2 . 3x15 . 2x2 . 2x14 . 2x24 .x9 2
+1
+1 .x4 4x17 .x47 2
+1 .x4 5 . 2 . 5x57 .x2 2x2
+1 . 2 .x2 2x14 .x50 2
+1 . 2 .x4 2
+1
+1 .x4 2x30
+1 .x4 5x51
+1 .x4 5x62
+1
+1 .x34 1x18
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1 .x10 2 .x8 2x3 .x10 2x3 .x11 2x3
+1 . 2x70
+1
+1
+1
+--- legend
+1 fg=#b1b9f9
+2 fg=#999999
+3 fg=#d77757 bold
+4 fg=#d77757
+5 bold

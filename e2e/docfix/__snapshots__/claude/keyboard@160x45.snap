@@ -1,0 +1,90 @@
+# docfix/claude/keyboard 160x45 @88,0 (72x41)
+│                                                                     ✕
+│ ─ Doc suggestions ── 0 of 3 decided ──────────────────────── Close × ─
+│
+│ │  AGENTS.md                                                       1
+│ │    ○ just build is not enough to verify a pi change; the docs…  3×
+│ │  docs/hosts.md                                                   1
+│ │  ❯ ○ The legacy card was removed; the section still describes…  2×
+│ │  docs/modules.md                                                 1
+│ │    ○ A leaf that imports a third-party module imports it on every…
+│
+│    stale · seen 2× · 40 days ago
+│    The legacy card was removed; the section still describes it.
+│
+│    docs/hosts.md: the line contradicts what the code does now.
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│    Close ↵  Apply [a]  Dismiss [d]  Evidence [e]
+│ ──────────────────────────────────────────────────────────────────────
+│
+│
+│
+--- styles
+1 .x69 2
+1 . 2 . 3x15 . 2x2 . 2x14 . 2x24 .x9 2
+1
+1 . 2 .x2 2x9 .x55 2
+1 . 2 .x4 2 .x60 2x2
+1 .x4 4x13 .x51 2
+1 .x4 5 . 2 . 5x57 .x2 2x2
+1 . 2 .x2 2x15 .x49 2
+1 . 2 .x4 2
+1
+1 .x4 2x29
+1 .x4 5x60
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1 .x10 2 .x8 2x3 .x10 2x3 .x11 2x3
+1 . 2x70
+1
+1
+1
+--- legend
+1 fg=#b1b9f9
+2 fg=#999999
+3 fg=#d77757 bold
+4 fg=#d77757
+5 bold

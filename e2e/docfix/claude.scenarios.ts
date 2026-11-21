@@ -12,20 +12,30 @@ const aboveFooter: Region = (grid) => ({
   h: Math.max(1, grid.length - 2),
 });
 
+/** The driver has no wheel call: an SGR mouse report, button 65 down, at a cell. */
+const wheel = (x: number, y: number, times = 3) => ({
+  run: async (s: { term: { write(data: string): unknown } }) => {
+    for (let i = 0; i < times; i++) {
+      await s.term.write(`\x1b[<65;${x};${y}M`);
+      await new Promise((r) => setTimeout(r, 150));
+    }
+  },
+});
+
 export default scenarios({
   plugin: "docfix",
   harness: "claude",
   // Hermetic: its own config with this plugin alone, so nothing of the person's setup shows.
   start: { hermetic: true, plugins: ["docfix"], turns: [], args: ["--model", "haiku"] },
-  // Below 110 columns the pane is a box over the transcript, from 110 a column beside it.
+  // Below 110 columns the pane is a box above the prompt, from 110 a column beside it.
   region: region.any(region.sidebar, region.box()),
-  // The age of a suggestion, `2d`: a fixture filed a moment ago would read `0m` or `1m`.
-  mask: [{ pattern: /(?<=\s)\d+[mhd](?=\s|$)/g, with: "age" }],
+  // When a piece of evidence was filed: the reader's evidence line shows its date.
+  mask: [{ pattern: /\b\d{4}-\d{2}-\d{2}\b/g, with: "<date>" }],
   scenarios: {
     empty: {
-      about: "/docfix in a checkout with no suggestions filed",
+      about: "/docfix in a checkout with no open suggestions: the frame and one dim line",
       setup: checkout,
-      steps: [...open, { wait: "Nothing to review" }],
+      steps: [...open, { wait: "No open suggestions" }],
     },
     one: {
       about: "/docfix with a single open suggestion",
@@ -37,13 +47,20 @@ export default scenarios({
     },
     queue: {
       about:
-        "/docfix with three open suggestions, folded, the first row's keys lit (one more is dismissed and hidden)",
+        "/docfix with three open suggestions in three docs, the keyboard on the first; at 70x24 the pane above the prompt has six rows: the caption, the keyboard's row and the footer",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx);
       },
-      steps: [...open, { wait: "AGENTS.md" }],
+      steps: [...open, { wait: "Doc suggestions" }],
       extreme: true,
+    },
+    narrow: {
+      about: "a 110-column terminal: the pane docked at 48 columns",
+      from: "queue",
+      size: [110, 32],
+      sizes: [[110, 32]],
+      fresh: true,
     },
     band: {
       about: "the count above the prompt, a draft typed (it hides the prompt's random placeholder)",
@@ -61,120 +78,158 @@ export default scenarios({
       region: region.any(region.sidebar, region.box()),
       steps: [{ click: "docfix: docs 3" }, { wait: "Doc suggestions" }],
     },
-    inline: {
-      about: "the pane inline at 100 columns",
+    hover: {
+      about: "the pointer on the second row: it sits on a soft fill, the keyboard's pointer stays",
       from: "queue",
-      size: [100, 36],
+      sizes: [[160, 45]],
+      steps: [{ hover: "The legacy card" }],
+    },
+    clicked: {
+      about: "a click on the second row puts the keyboard there; the focused suggestion follows",
+      from: "queue",
+      sizes: [[160, 45]],
+      steps: [{ click: "The legacy card" }, { wait: "stale · seen" }],
+    },
+    keyboard: {
+      about: "Down moves the keyboard to the second row",
+      from: "queue",
+      sizes: [[160, 45]],
+      fresh: true,
+      steps: [{ press: "Down" }, { wait: "stale · seen" }],
     },
     set: {
       about:
-        "a on the first row and d on the second: one claim in success, one struck through, and the line under the title says what closing does",
+        "a then d: the first applied (accent, filled mark), the second dismissed (dim), each doc decided (green rail), the main action says so",
       from: "queue",
-      // A resized session loses the pane's keyboard on a click (Claude Code 2.1.325), so start fresh.
+      sizes: [[160, 45]],
       fresh: true,
-      steps: [{ press: "a" }, { press: "Down" }, { press: "d" }],
+      // Keys sent in one write can beat the redraw, so each is a step of its own.
+      steps: [{ press: "a" }, { wait: "1 of 3" }, { press: "d" }, { wait: "dismiss 1" }],
     },
-    clicked: {
-      about: "a click on the last row's dismiss sets it; the ring stays on the first row",
+    clickedSet: {
+      about: "a click on Apply sets the keyboard's row and moves to the next row left alone",
       from: "queue",
-      steps: [{ click: { text: /dismiss(?=  skip\s*$)/m, nth: 1 } }],
+      sizes: [[160, 45]],
+      steps: [{ click: "Apply [a]" }, { wait: "1 fix" }],
     },
-    opened: {
-      about: "a click on a row's claim opens it: its claim whole and its evidence",
-      from: "queue",
-      steps: [{ click: "legacy" }],
-    },
-    hover: {
-      about: "the pointer on a row: the engine lights it as it does the focused one",
-      from: "queue",
-      steps: [{ hover: "legacy" }],
-    },
-    keyboard: {
+    confirm: {
       about:
-        "Down moves the ring past the first row's evidence line and keys onto the second row, whose keys light",
+        "a row applied, then Escape: the pane stays and Close asks in place before it throws the choice away",
       from: "queue",
-      fresh: true,
-      steps: [{ press: "Down" }],
-    },
-    dismissed: {
-      about:
-        "d on the first row, then Esc: the pane closes, a toast says one was dismissed, and the status count drops",
-      from: "queue",
-      region: aboveFooter,
-      mask: [{ pattern: /e2e-[A-Za-z0-9]{6}/g, with: "e2e-run" }],
-      // The toast is gone by the time a resize to a second size settles: one size only.
       sizes: [[160, 45]],
       fresh: true,
       steps: [
-        { press: "d" },
-        { wait: "On close: dismiss 1" },
+        { press: "a" },
+        { wait: "1 of 3" },
+        { sleep: 300 },
         { press: "Escape" },
-        { wait: "Dismissed 1" },
+        { wait: "Discard choices?" },
       ],
     },
-    submitted: {
-      about:
-        "d on the first row, then a click on submit: the pane closes, a toast says one was dismissed",
+    confirmClick: {
+      about: "a row applied, then a click on Close: the same question, in the top rule",
       from: "queue",
-      region: aboveFooter,
-      mask: [{ pattern: /e2e-[A-Za-z0-9]{6}/g, with: "e2e-run" }],
-      // The toast is gone by the time a resize to a second size settles: one size only.
       sizes: [[160, 45]],
-      fresh: true,
       steps: [
-        { press: "d" },
-        { wait: "On close: dismiss 1" },
-        { click: "[ submit ]" },
-        { wait: "Dismissed 1" },
+        { click: "Apply [a]" },
+        { wait: "1 fix" },
+        { click: "Close ×" },
+        { wait: "Keep [esc]" },
       ],
     },
     applied: {
       about:
-        "a on two rows, then Esc: the pane closes and the prompt box holds one drafted prompt, unsent",
+        "a on two rows, then Enter: the pane closes and the prompt box holds one drafted prompt, unsent",
       from: "queue",
       region: aboveFooter,
       // The debug banner above the transcript names a run folder, which wraps at 70 columns.
       mask: [{ pattern: /e2e-[A-Za-z0-9]{6}/g, with: "e2e-run" }],
+      sizes: [[160, 45]],
       fresh: true,
       steps: [
         { press: "a" },
-        // Down from the first row lands on the next row. Keys sent in one write can beat the
-        // ring's move, so each is a step of its own.
-        { press: "Down" },
+        { wait: "1 of 3" },
         { press: "a" },
-        { wait: "On close: apply 2" },
-        { press: "Escape" },
+        { wait: "Draft 2" },
+        { press: "Enter" },
         // The draft is taller than the prompt box, so its first line has scrolled away.
         { wait: "For each one" },
       ],
     },
-    evidence: {
+    dismissed: {
       about:
-        "evidence as migrated memories write it, opened: prose, a labelled paragraph, citations as a list not JSON",
+        "d, then a click on the main action: the pane closes, a toast says one was dismissed, the count drops",
+      from: "queue",
+      region: aboveFooter,
+      mask: [{ pattern: /e2e-[A-Za-z0-9]{6}/g, with: "e2e-run" }],
+      // The toast is gone by the time a resize to a second size settles: one size only.
+      sizes: [[160, 45]],
+      fresh: true,
+      steps: [
+        { press: "d" },
+        { wait: "Dismiss 1" },
+        { click: "Dismiss 1 ↵" },
+        { wait: "Dismissed 1" },
+      ],
+    },
+    reader: {
+      about:
+        "e opens the reader on a suggestion with two pieces of evidence: the reason first, what it points at as keyed rows, Next on the evidence line",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx, STRUCTURED);
       },
-      steps: [...open, { wait: "agent-hub" }, { press: "Enter" }],
-      extreme: true,
+      sizes: [[160, 45]],
+      steps: [...open, { wait: "agent-hub" }, { press: "e" }, { wait: "Evidence 1 of 2" }],
+    },
+    readerNext: {
+      about: "a click on Next in the reader: the second, migrated piece of evidence",
+      from: "reader",
+      sizes: [[160, 45]],
+      steps: [{ click: "Next [n]" }, { wait: "Evidence 2 of 2" }],
+    },
+    readerBack: {
+      about: "Escape in the reader goes back to the queue; the pane stays",
+      from: "reader",
+      sizes: [[160, 45]],
+      fresh: true,
+      steps: [{ sleep: 300 }, { press: "Escape" }, { wait: "Evidence [e]" }],
     },
     many: {
-      about: "28 suggestions, more than fit: every row folded, and the pane scrolls as a whole",
+      about:
+        "28 suggestions in 8 docs, more than fit: the keyboard's doc row on top of the window, the last row saying what is hidden",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx, MANY);
       },
-      steps: [...open, { wait: "Claim number" }],
+      sizes: [[160, 45]],
+      steps: [
+        ...open,
+        { wait: "Claim number" },
+        ...Array.from({ length: 12 }, () => [{ press: "Down" }, { sleep: 80 }]).flat(),
+        { wait: "docs above" },
+      ],
+    },
+    wheel: {
+      about: "the wheel over the queue moves its window, not the keyboard",
+      from: "many",
+      sizes: [[160, 45]],
+      fresh: true,
+      steps: [wheel(130, 8), { sleep: 300 }],
     },
     extreme: {
       about:
-        "very long claims, evidence and paths, wide characters, one unbroken word; the first row opened",
+        "very long claims, evidence and paths, wide characters, one unbroken word; the focused suggestion cut with ↓ more",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx, EXTREME);
       },
-      steps: [...open, { wait: "AGENTS.md" }, { press: "Enter" }],
-      extreme: true,
+      steps: [...open, { wait: "AGENTS.md" }],
+      sizes: [
+        [112, 32],
+        [160, 45],
+        [240, 60],
+      ],
     },
   },
 });

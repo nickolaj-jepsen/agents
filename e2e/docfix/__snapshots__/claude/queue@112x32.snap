@@ -1,0 +1,64 @@
+# docfix/claude/queue 112x32 @62,0 (50x28)
+│                                               ✕
+│ ─ Doc suggestions ── 0 of 3 decided ── Close × ─
+│
+│ │  AGENTS.md                                 1
+│ │  ❯ ○ just build is not enough to verify a p…
+│ │  docs/hosts.md                             1
+│ │    ○ The legacy card was removed; the secti…
+│ │  docs/modules.md                           1
+│ │    ○ A leaf that imports a third-party modu…
+│
+│    wrong · seen 3× · 2 days ago
+│    just build is not enough to verify a pi
+│    change; the docs say it is.
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│    Close ↵  Apply [a]  Dismiss [d]
+│ ────────────────────────────────────────────────
+│
+│
+│
+--- styles
+1 .x47 2
+1 . 2 . 3x15 . 2x2 . 2x14 . 2x2 .x9 2
+1
+1 .x4 4x9 .x33 2
+1 .x4 5 . 2 . 5x39
+1 . 2 .x2 2x13 .x29 2
+1 . 2 .x4 2
+1 . 2 .x2 2x15 .x27 2
+1 . 2 .x4 2
+1
+1 .x4 2x28
+1 .x4 5x39
+1 .x4 5x27
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1 .x10 2 .x8 2x3 .x10 2x3
+1 . 2x48
+1
+1
+1
+--- legend
+1 dim
+2 fg=#999999
+3 fg=#d77757 bold
+4 fg=#d77757
+5 bold
