@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "oxfmt": "0.75.0",
-    "oxlint": "1.91.0",
+    "oxfmt": "0.79.0",
+    "oxlint": "1.94.0",
     "shellcheck": "4.1.0"
   }
 }
