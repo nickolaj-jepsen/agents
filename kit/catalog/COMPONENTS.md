@@ -53,26 +53,28 @@ Features:
 - Cut to a height, a dim `↓ more` saying there is more: pi yes; claude yes
 - Scrolled by `offset`: `↑ more` above and `↓ more` below; `detailRange` bounds it: pi yes; claude yes
 - Under three rows it is all text: no row goes to a marker: pi yes; claude yes
-- A section under a rule with a control at its end, label first and its key dim, dim when it has nothing to do: pi yes (the control's spans carry its `hit`); claude yes (the control's spans carry its `hit`)
+- A section under the frame's caption rule: dim words after its first cell, a short rule between several, and a control at its end, label first and its key dim, dim when it has nothing to do: pi yes (the control's spans carry its `hit`); claude yes (the control's spans carry its `hit`)
+- In a frame's body: rules across the whole width, the frame's corner after their control, and the text set in to line up with their words: pi yes; claude yes
 
 ## Captioned frame
 
 A form between two rules: a caption and Close in the top one, buttons above the bottom one.
 
-- pi: exists: `captionFrame`
-- claude: exists: `captionFrame`
+- pi: exists: `captionFrame`, `captionRule`, `captionParts`
+- claude: exists: `captionFrame`, `captionRule`, `captionParts`
 - status: pi system; claude system; gui legacy
 
 Features:
 
 - A title in the top rule, Close at the right: pi yes; claude yes
+- The top rule alone, `captionRule`: a caption after its first cell, a short rule between its parts, a control at its end; what a detail's section rule is: pi yes; claude yes
 - A caption drawn in the room the rule has, such as the steps of a form: pi yes; claude yes
 - Close asks before it throws the answers away, in the place it stood: pi yes (Discard and Keep are controls with a `hit` each); claude yes (Discard and Keep are controls with a `hit` each)
 - The pointer's control is shown: pi yes (the control is bold in the text colour; `close.hover` names it); claude yes (the control sits on a soft fill: the engine inverts it, and the painter swaps its colours first)
 
 ## Grouped list
 
-Rows with a mark and one line each, under group rows, behind rails; taller than its room, a window.
+Rows with a mark and a line or two each, under group rows, behind rails or bare; taller than its room, a window.
 
 - pi: exists: `list`, `listFollow`, `listTopMax`, `listShowsWhole`
 - claude: exists: `list`, `listFollow`, `listTopMax`, `listShowsWhole`
@@ -84,9 +86,11 @@ Features:
 - A row left alone, chosen (the accent, a filled mark) or set aside (the whole row dim); its mark a control apart from its text: pi yes (the pointer column and the mark carry `markHit`, the text `hit`); claude yes (the pointer column and the mark are a Button of their own)
 - An aside column every row keeps, blank where a row has none, so cut text lines up: pi yes; claude yes
 - Dim controls at the right of a group's row, bold under the mouse: pi yes; claude yes
-- Taller than its room: a window from `top` that `listFollow` moves only when the keyboard would leave it, its last row saying what is hidden above and below: pi yes (the wheel moves `top`; `listTopMax` bounds it); claude yes (the wheel reaches the mod as `ui.scroll` with the row under the pointer)
+- Taller than its room: a window from `top` that `listFollow` moves only when the keyboard would leave it, its last row saying how many rows are above and below: pi yes (the wheel moves `top`; `listTopMax` bounds it); claude yes (the wheel reaches the mod as `ui.scroll` with the row under the pointer)
 - The keyboard's group row stands in for the window's first row when it is above it: pi yes; claude yes
-- A blank row between groups, without a rail, when the whole list and those rows fit; dense when they do not: pi yes; claude yes
+- A blank row between groups, without a rail: a line of the list, which a window scrolls past: pi yes; claude yes
+- No rails, where the list is not a form to complete: a group's label starts the row, and nothing says a group is decided: pi yes; claude yes
+- Rows of several lines: a text wraps under its first line up to `lines`, the window counts and follows lines, and a row its end cuts ends in `…`: pi yes; claude yes (a later line is a Button of its own with the row's `hit`)
 - Little room: rows carry their group's label, dim, and there are no group rows: pi yes; claude yes
 - The row under the pointer is shown: pi yes (the row is bold, like the keyboard's, without its pointer; `hovered` names it); claude yes (the row sits on a soft fill: the engine inverts it, and the painter swaps its colours first)
 

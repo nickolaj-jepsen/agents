@@ -20,8 +20,11 @@ export type DetailAction = {
 };
 
 export type DetailSection = {
-  /** A rule across the top of the section, these dim words at its start: between pieces. */
-  rule?: string;
+  /**
+   * A rule across the top of the section, these dim words at its start: between pieces. Several
+   * are set apart by a short rule, as the parts of a frame's caption are.
+   */
+  rule?: string | readonly string[];
   /** A control at the rule's end. */
   action?: DetailAction;
   /** A dim heading over the section. */
@@ -44,6 +47,12 @@ export type Detail = {
   height?: number;
   /** Rows scrolled past at the top; a dim `↑ more` says so. */
   offset?: number;
+  /**
+   * Its rules run the whole width, as a frame's top rule does with its corner after the control,
+   * and every other row is set in on both sides to line up with their words: for a detail that
+   * stands in a frame's body, drawn at the frame's width.
+   */
+  framed?: boolean;
   /** The control every row is, but a rule's that holds an action. */
   hit?: string;
   /** Under the mouse: the meta line is bold. */

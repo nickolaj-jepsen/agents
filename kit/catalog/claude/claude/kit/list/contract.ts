@@ -1,4 +1,4 @@
-/** The list's contract: rows of one line each under group rows, behind rails. No host imports. */
+/** The list's contract: rows of a line or two each under group rows, behind rails. No host imports. */
 
 /**
  * What a row is set to: left alone (`○`), chosen (`●`, in the accent) or set aside (`–`, the
@@ -7,7 +7,7 @@
 export type ListMark = "open" | "chosen" | "dropped";
 
 export type ListRow = {
-  /** Inline Markdown, cut to one row. */
+  /** Inline Markdown, cut to one row, or wrapped to the list's `lines`. */
   text: string;
   /** @default "open" */
   mark?: ListMark;
@@ -43,21 +43,27 @@ export type ListGroup = {
 export type List = {
   groups: ListGroup[];
   /**
-   * Rows the list may take. A taller list is a window from `top`; its last row says what is
-   * hidden, and the keyboard's group row stands in for its first row when it is above it.
+   * Rows the list may take. A taller list is a window from `top`; its last row says how many
+   * rows are above and below, and the keyboard's group row stands in for its first row when it
+   * is above it.
    */
   height?: number;
-  /** The window's first line, as a line of the list drawn whole. @default 0 */
+  /** The window's first line, as a line of the list drawn whole at its width. @default 0 */
   top?: number;
-  /** What a group is called on the row that says what is hidden. @default ["group", "groups"] */
-  noun?: readonly [one: string, many: string];
   /** Cells of the aside column every row keeps at its right, blank where a row has none. */
   aside?: number;
+  /**
+   * Rows a row's text may take: a longer one wraps under its first line, and the last line of a
+   * cut one ends in `…`. A flat list keeps one. @default 1
+   */
+  lines?: number;
   /** Each row carries its group's label, dim, instead of rows under group rows: for little room. */
   flat?: boolean;
-  /**
-   * A blank row between groups, without a rail, when the whole list and those rows fit `height`:
-   * whether they show depends on the list's size and the height alone, not on where the keyboard is.
-   */
+  /** A blank row between groups, without a rail: a line of the list, which a window scrolls past. */
   space?: boolean;
+  /**
+   * False for no rails, nor the cells they take: a group's label starts the row, and nothing
+   * says whether a group is decided. For a list that is not a form to complete. @default true
+   */
+  rail?: boolean;
 };

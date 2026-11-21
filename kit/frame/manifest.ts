@@ -5,7 +5,10 @@ export default defineComponent({
   name: "Captioned frame",
   purpose:
     "A form between two rules: a caption and Close in the top one, buttons above the bottom one.",
-  impl: { pi: "captionFrame", claude: "captionFrame" },
+  impl: {
+    pi: ["captionFrame", "captionRule", "captionParts"],
+    claude: ["captionFrame", "captionRule", "captionParts"],
+  },
   status: { pi: "system", claude: "system", gui: "legacy" },
   source: "frame/terminal.ts",
   features: [
@@ -13,6 +16,14 @@ export default defineComponent({
       id: "title",
       label: "A title in the top rule, Close at the right",
       story: "caption-frame/title",
+      pi: yes(),
+      claude: yes(),
+    },
+    {
+      id: "rule",
+      label:
+        "The top rule alone, `captionRule`: a caption after its first cell, a short rule between its parts, a control at its end; what a detail's section rule is",
+      story: "item-detail/rule",
       pi: yes(),
       claude: yes(),
     },

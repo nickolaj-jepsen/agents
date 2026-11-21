@@ -51,8 +51,8 @@ describe("a list", () => {
     expect(one).toMatch(/…   3×$/);
     expect(two!.indexOf("…")).toBe(one!.indexOf("…"));
     expect(three!.trimEnd()).toBe("│    ○ short");
-    expect(listShowsWhole("short", 48, 3)).toBe(true);
-    expect(listShowsWhole("x".repeat(80), 48, 3)).toBe(false);
+    expect(listShowsWhole("short", 48, { aside: 3 })).toBe(true);
+    expect(listShowsWhole("x".repeat(80), 48, { aside: 3 })).toBe(false);
   });
 
   test("marks a chosen row in the accent and a dropped one dim, the whole row", () => {
@@ -124,25 +124,110 @@ describe("a list", () => {
   });
 });
 
+describe("rows of several lines", () => {
+  const long = (n: number) => `Row ${n} with a text long enough to take a second line and a third`;
+  const wrapped = (focus: number, extra: Partial<List> = {}): List => ({
+    aside: 3,
+    lines: 2,
+    groups: Array.from({ length: 3 }, (_, g) => ({
+      label: `docs/page-${g}.md`,
+      active: Math.floor(focus / 2) === g,
+      rows: [0, 1].map((r) => ({
+        text: r ? `Row ${g * 2 + r}` : long(g * 2),
+        aside: r ? "" : "2×",
+        focused: g * 2 + r === focus,
+        hit: `row:${g * 2 + r}`,
+        markHit: `mark:${g * 2 + r}`,
+      })),
+    })),
+    ...extra,
+  });
+
+  test("a text wraps under its first line, cut at the last; the mark and the aside are the first's", () => {
+    const rows = list(wrapped(0), 44);
+    expect(rows.slice(0, 4).map(textOf)).toEqual([
+      "│  docs/page-0.md",
+      "│  ❯ ○ Row 0 with a text long enough to   2×",
+      "│      take a second line and a third",
+      "│    ○ Row 1                                ",
+    ]);
+    expect(textOf(list(wrapped(0), 36)[2]!)).toBe("│      enough to take a second…");
+    // The second line is the row's control, and not its mark's.
+    expect(rows[2]!.spans.filter((s) => s.hit).map((s) => s.hit)).toEqual(["row:0"]);
+    expect(listShowsWhole(long(0), 44, { aside: 3, lines: 2 })).toBe(true);
+    expect(listShowsWhole(long(0), 36, { aside: 3, lines: 2 })).toBe(false);
+    // Without rails the text has their cells too.
+    expect(listShowsWhole(long(0), 41, { aside: 3, lines: 2, rail: false })).toBe(true);
+    expect(listShowsWhole(long(0), 41, { aside: 3, lines: 2 })).toBe(false);
+    expect(listShowsWhole(long(0), 44, { aside: 3 })).toBe(false);
+  });
+
+  test("a list's rows are its lines, and one line a row without `lines`", () => {
+    expect(listRows(wrapped(0), 44)).toBe(12);
+    expect(listRows({ ...wrapped(0), lines: 1 }, 44)).toBe(9);
+    expect(list({ ...wrapped(0), lines: 1 }, 44)).toHaveLength(9);
+    // Flat rows are for little room: one line each.
+    expect(list({ ...wrapped(0), flat: true }, 44)).toHaveLength(6);
+  });
+
+  test("a window ends a row it cuts in `…`, and counts a row once", () => {
+    const rows = list(wrapped(0, { height: 6 }), 44).map(textOf);
+    expect(rows).toEqual([
+      "│  docs/page-0.md",
+      "│  ❯ ○ Row 0 with a text long enough to   2×",
+      "│      take a second line and a third",
+      "│    ○ Row 1                                ",
+      "",
+      "   ↓ 4 more",
+    ]);
+    const cut = list(wrapped(0, { height: 7 }), 44).map(textOf);
+    expect(cut[4]).toBe("│  docs/page-1.md");
+    expect(cut[5]).toBe("│    ○ Row 2 with a text long enough t…   2×");
+    expect(cut[6]).toBe("   ↓ 3 more");
+  });
+
+  test("a window opens on a row's first line, and keeps every line of the keyboard's row", () => {
+    // Line 2 is the end of Row 0: the window opens on Row 1 instead.
+    expect(textOf(list(wrapped(1, { height: 5, top: 2 }), 44)[0]!)).toContain("Row 1");
+    let top = 0;
+    for (let focus = 0; focus < 6; focus++) {
+      top = listFollow(wrapped(focus, { height: 6, top }), 44);
+      const rows = list(wrapped(focus, { height: 6, top }), 44).map(textOf);
+      const at = rows.findIndex((r) => r.includes("❯"));
+      expect(at, `row ${focus}`).toBeGreaterThanOrEqual(0);
+      if (focus % 2 === 0) expect(rows[at + 1], `row ${focus}`).toMatch(/^│ {6}take a second/);
+    }
+    expect(listTopMax(wrapped(0, { height: 6 }), 44)).toBe(12 - 5);
+  });
+
+  test("the keyboard's group row stands on a row's first line: its lines under it are the row, cut", () => {
+    // Top 5 is Row 2, of the keyboard's group, whose own row is above the window.
+    const rows = list(wrapped(3, { height: 5, top: 5 }), 44).map(textOf);
+    expect(rows[0]).toBe("│  docs/page-1.md");
+    expect(rows[1]).toBe("│    ○ Row 2 with a text long enough t…   2×");
+    expect(rows[2]).toContain("❯ ○ Row 3");
+    expect(rows.at(-1)).toBe("   ↑ 2 more  ↓ 2 more");
+  });
+});
+
 describe("a window", () => {
   const at = (focus: number, top: number, height = 7): List => ({
     groups: groups(focus),
     height,
     top,
-    noun: ["doc", "docs"],
   });
 
-  test("says what it hides above and below, suggestions and docs alike", () => {
+  test("says how many rows are above it and below", () => {
     const rows = list(at(7, 5), 50).map(textOf);
     expect(rows).toHaveLength(7);
-    expect(rows.at(-1)).toBe("   ↑ 3 in 1 doc  ↓ 7 in 3 docs");
+    expect(rows.at(-1)).toBe("   ↑ 3 more  ↓ 7 more");
   });
 
   test("moves only when the keyboard would leave it, keeping two rows round it", () => {
     let top = 0;
     const tops: number[] = [];
     for (let f = 0; f < 15; f++) {
-      top = listFollow(at(f, top));
+      top = listFollow(at(f, top), 50);
       tops.push(top);
     }
     // Down the list it holds still until the keyboard is two rows from its foot.
@@ -150,7 +235,7 @@ describe("a window", () => {
     expect(new Set(tops).size).toBeGreaterThan(3);
     for (let f = 1; f < 15; f++) expect(tops[f]! - tops[f - 1]!).toBeLessThanOrEqual(2);
     // Back up, it holds still again until the keyboard is two rows from its head.
-    expect(listFollow(at(12, top))).toBe(top);
+    expect(listFollow(at(12, top), 50)).toBe(top);
   });
 
   test("the keyboard's group row stands in for its first row, and nothing else moves", () => {
@@ -171,34 +256,57 @@ describe("a window", () => {
 
   test("of one row, it is the keyboard's alone; of two, no more-row", () => {
     expect(
-      list({ ...at(4, listFollow({ ...at(4, 0), height: 1 })), height: 1 }, 50).map(textOf),
+      list({ ...at(4, listFollow({ ...at(4, 0), height: 1 }, 50)), height: 1 }, 50).map(textOf),
     ).toEqual(["│  ❯ ○ Row 4"]);
     expect(list({ ...at(0, 0), height: 2 }, 50)).toHaveLength(2);
   });
 
-  test("with space, a blank row between groups when all of them fit, else dense", () => {
+  test("with space, a blank row between groups, which a window scrolls past and never opens on", () => {
     const l: List = { groups: groups(0, 3, 2), space: true };
-    const roomy = list({ ...l, height: 11 }, 50).map(textOf);
-    expect(roomy).toHaveLength(11);
-    expect(roomy[3]).toBe("");
-    expect(roomy[7]).toBe("");
-    expect(listRows({ ...l, height: 11 })).toBe(11);
-    // One row short of the gaps: dense, the same lines as without them.
-    const dense = list({ ...l, height: 10 }, 50).map(textOf);
-    expect(dense).toEqual(list({ ...l, space: false, height: 10 }, 50).map(textOf));
-    expect(listRows({ ...l, height: 10 })).toBe(9);
+    const whole = list(l, 50).map(textOf);
+    expect(whole).toHaveLength(11);
+    expect(whole[3]).toBe("");
+    expect(whole[7]).toBe("");
+    expect(listRows(l, 50)).toBe(11);
     // Where the keyboard is does not change it.
-    expect(list({ ...l, groups: groups(5, 3, 2), height: 11 }, 50)).toHaveLength(11);
+    expect(list({ ...l, groups: groups(5, 3, 2) }, 50)).toHaveLength(11);
+    // One row short: a window, the blank rows lines of it like any other.
+    const cut = list({ ...l, height: 10 }, 50).map(textOf);
+    expect(cut.slice(0, 5)).toEqual(whole.slice(0, 5));
+    expect(cut.at(-1)).toBe("   ↓ 2 more");
+    // Line 3 is the blank one: the window opens on the group's row under it.
+    expect(list({ ...l, height: 5, top: 3 }, 50).map(textOf)[0]).toBe("│  docs/page-1.md");
+    // A flat list has no groups to set apart.
+    expect(list({ ...l, flat: true }, 50)).toHaveLength(6);
+  });
+
+  test("without rails a group's label starts the row, and nothing marks a decided group", () => {
+    const l: List = { groups: [{ ...groups(1, 1)[0]!, done: true }], rail: false };
+    expect(list(l, 40).map(textOf)).toEqual([
+      "docs/page-0.md",
+      "  ○ Row 0",
+      "❯ ○ Row 1",
+      "  ○ Row 2",
+    ]);
+    const cut = list({ groups: groups(0), rail: false, height: 4 }, 40).map(textOf);
+    expect(cut.at(-1)).toBe("↓ 13 more");
+    const railed = list({ ...l, rail: true }, 40);
+    expect(railed[0]!.spans[0]).toMatchObject({ text: "│", role: "success" });
+    expect(
+      list(l, 40)
+        .flatMap((row) => row.spans)
+        .some((sp) => sp.role === "success"),
+    ).toBe(false);
   });
 
   test("flat, each row carries its doc and there are no group rows", () => {
     const rows = list({ ...at(4, 0), flat: true, height: 3 }, 50).map(textOf);
     expect(rows[0]).toBe("│    ○ docs/page-0.md › Row 0");
-    expect(rows.at(-1)).toMatch(/↓ 13 in 5 docs/);
+    expect(rows.at(-1)).toBe("   ↓ 13 more");
   });
 
   test("its top stays within the list", () => {
-    expect(listTopMax(at(0, 0))).toBe(20 - 6);
-    expect(list(at(0, 99), 50)).toEqual(list(at(0, listTopMax(at(0, 0))), 50));
+    expect(listTopMax(at(0, 0), 50)).toBe(20 - 6);
+    expect(list(at(0, 99), 50)).toEqual(list(at(0, listTopMax(at(0, 0), 50)), 50));
   });
 });

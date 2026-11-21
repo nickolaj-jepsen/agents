@@ -1,9 +1,9 @@
 /**
  * The /docfix sidebar in pi: the shared screen (`../core/screen.ts`) painted in an overlay on
- * the right, from the top down to the editor, which stays in view. Keys and the mouse go through
- * the screen's reducer; this only paints, finds the control under the pointer, and carries the
- * main action out: the dismissed ones are dismissed here, and the applied ones go to the caller,
- * which drafts the prompt.
+ * the right, from the top down to the editor, which stays in view, behind a divider that a drag
+ * moves. Keys and the mouse go through the screen's reducer; this only paints, finds the control
+ * under the pointer, and carries the main action out: the dismissed ones are dismissed here, and
+ * the applied ones go to the caller, which drafts the prompt.
  */
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import {
@@ -15,7 +15,9 @@ import {
   type TuiMouseEvent,
   type TuiMouseEventResult,
 } from "@earendil-works/pi-tui";
-import { cellAt, paintLines, type Cell } from "../../../kit/paint/pi.ts";
+import { cellAt, paintLines, paintText, type Cell } from "../../../kit/paint/pi.ts";
+import { tokens } from "../../../kit/tokens.ts";
+import { blank } from "../../../kit/lines.ts";
 import { openQueue, type Suggestion } from "../core/docfix.ts";
 import {
   decided,
@@ -39,18 +41,31 @@ export type PanelDeps = {
 /** What the sidebar closed with: the suggestions to draft a prompt for, or nothing. */
 export type PanelResult = { applied: Suggestion[] } | undefined;
 
-/** The screen's width: 64 columns or 45% of the terminal, whichever is smaller, never under 44. */
-export const sidebarWidth = (columns: number) =>
-  Math.max(44, Math.min(64, Math.floor(columns * 0.45)));
-
-/** A blank column between the transcript and the sidebar, so the two never touch. */
-const GUTTER = 1;
+/** Cells left of the screen: the divider, a blank cell on either side of it. */
+const GUTTER = 3;
+/** The divider's cell in the gutter. */
+const DIVIDER = 1;
 /** Rows under the sidebar: the editor between its rules, and the footer. */
 const BELOW = 6;
+/** The narrowest the screen is, and the least a drag leaves of the transcript beside it. */
+const NARROWEST = 44;
+const BESIDE = 20;
+
+/** The width a drag of the divider left the screen at, kept while pi runs. */
+let dragged: number | undefined;
+
+/**
+ * The screen's width: where a drag of the divider left it, else 64 columns or 45% of the
+ * terminal, whichever is smaller; never under 44, nor wider than leaves the transcript 20.
+ */
+export const sidebarWidth = (columns: number) => {
+  const widest = Math.max(NARROWEST, columns - GUTTER - BESIDE);
+  return Math.max(NARROWEST, Math.min(widest, dragged ?? Math.min(64, Math.floor(columns * 0.45))));
+};
 
 /**
  * The overlay's options: on the right from the top. Its width is read at each render, so it
- * follows the terminal when it is resized.
+ * follows the terminal when it is resized, and the divider while it is dragged.
  */
 export function sidebarOptions(columns: () => number): OverlayOptions {
   return {
@@ -78,6 +93,8 @@ export class DocsPanel implements Component {
   private cells: Cell[][] = [];
   private zones: Zones = {};
   private isBusy = false;
+  /** The pointer is on the divider, or dragging it: it is drawn bright. */
+  private grip: "over" | "dragging" | undefined;
 
   constructor(
     private readonly tui: TUI,
@@ -136,7 +153,42 @@ export class DocsPanel implements Component {
     else this.tui.requestRender();
   }
 
+  /** The divider follows the pointer: the screen takes what is right of it. */
+  private drag(screenX: number) {
+    const before = sidebarWidth(this.tui.terminal.columns);
+    dragged = this.tui.terminal.columns - screenX - (GUTTER - DIVIDER);
+    // Kept as the width it came to, so the next drag starts from what is drawn.
+    dragged = sidebarWidth(this.tui.terminal.columns);
+    return dragged !== before;
+  }
+
+  /** A press on the divider takes the pointer until it is let go; `undefined` for any other event. */
+  private handleGrip(event: TuiMouseEvent): TuiMouseEventResult | undefined {
+    if (this.grip === "dragging") {
+      if (event.type === "drag") return { handled: true, render: this.drag(event.screenX) };
+      // Let go where the divider is; the pointer's next move says otherwise.
+      this.grip = "over";
+      return { handled: true, render: true };
+    }
+    const was = this.grip;
+    // The blank cell left of the divider is not it: the last the overlay hears of a pointer that
+    // leaves for the transcript, so the divider is not left bright.
+    this.grip = event.x >= DIVIDER && event.x < GUTTER ? "over" : undefined;
+    if (!this.grip) {
+      if (was) this.tui.requestRender();
+      return undefined;
+    }
+    if (this.state.hover) this.act({ do: "hover", hit: undefined });
+    if (event.type === "press" && event.button === "left") {
+      this.grip = "dragging";
+      return { capture: true, focus: true };
+    }
+    return { handled: true, render: was !== this.grip };
+  }
+
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
+    const grip = this.handleGrip(event);
+    if (grip) return grip;
     const x = event.x - GUTTER;
     const hit = x >= 0 ? cellAt(this.cells[event.y], x)?.hit : undefined;
     // The pointer is where any event says, a press as much as a move.
@@ -157,9 +209,19 @@ export class DocsPanel implements Component {
   render(width: number): string[] {
     this.width = Math.max(1, width - GUTTER);
     const drawn = drawScreen(this.state, this.options());
-    const painted = paintLines(this.theme, drawn.lines, this.width, { fill: true });
+    // Every row of the sidebar's height, so the divider runs down to the editor.
+    const lines = [
+      ...drawn.lines,
+      ...Array.from({ length: Math.max(0, this.options().height - drawn.lines.length) }, blank),
+    ];
+    const painted = paintLines(this.theme, lines, this.width, { fill: true });
     this.cells = painted.cells;
     this.zones = drawn.zones;
-    return painted.lines.map((row) => " ".repeat(GUTTER) + row);
+    const divider = paintText(this.theme, tokens.glyph.rail, {
+      role: this.grip ? "text" : "border",
+      bold: this.grip === "dragging" || undefined,
+    });
+    const gutter = " ".repeat(DIVIDER) + divider + " ".repeat(GUTTER - DIVIDER - 1);
+    return painted.lines.map((row) => gutter + row);
   }
 }

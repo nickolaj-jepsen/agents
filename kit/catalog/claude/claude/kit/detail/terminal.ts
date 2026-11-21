@@ -1,5 +1,7 @@
 /** The detail as styled lines: the one drawing both terminals paint. */
 import { controlStyle } from "../card/terminal.ts";
+import { captionFrameLayout } from "../frame/contract.ts";
+import { captionParts, captionRule } from "../frame/terminal.ts";
 import {
   blank,
   block,
@@ -9,8 +11,6 @@ import {
   line,
   literal,
   span,
-  spansWidth,
-  truncateSpans,
   type Line,
   type Span,
 } from "../lines.ts";
@@ -31,20 +31,20 @@ function actionSpans(a: DetailAction): Span[] {
   ];
 }
 
-/** `words ── action`: a rule across the row, the words at its start and the action at its end. */
-function ruleRow(words: string, action: DetailAction | undefined, width: number): Line {
-  const end = action ? actionSpans(action) : [];
-  const room = width - spansWidth(end) - (end.length ? 1 : 0);
-  const head = truncateSpans([span(words, { role: "dim" })], Math.max(0, room - 2));
-  const rule = room - spansWidth(head) - 1;
-  const spans = [
-    ...head,
-    ...(rule > 0
-      ? [span(" "), span(tokens.glyph.rule.repeat(rule), { role: "border" })]
-      : [span(" ".repeat(Math.max(0, room - spansWidth(head))))]),
-    ...(end.length ? [span(" "), ...end] : []),
-  ];
-  return line(truncateSpans(spans, width));
+/** `─ words ── words ──── action`: the frame's rule, its words dim, across the detail. */
+function ruleRow(
+  words: string | readonly string[],
+  action: DetailAction | undefined,
+  width: number,
+  tail = 0,
+): Line {
+  const parts = (typeof words === "string" ? [words] : words).filter(Boolean);
+  return captionRule({
+    width,
+    caption: captionParts(parts.map((part) => [span(part, { role: "dim" })])),
+    end: action ? actionSpans(action) : undefined,
+    tail,
+  });
 }
 
 /** Keyed rows: the keys in one dim column, each value wrapped beside its key. */
@@ -62,12 +62,24 @@ function itemRows(items: readonly DetailItem[], width: number): Line[] {
   );
 }
 
-function section(s: DetailSection, width: number): Line[] {
+/** A row of text set in to where a framed detail's rules have their words. */
+const setIn = (row: Line, by: number): Line =>
+  by && row.spans.length ? { ...row, spans: [span(" ".repeat(by)), ...row.spans] } : row;
+
+/** The cells a framed detail's text is set in by on each side: a frame's body's. */
+const insetOf = (d: Detail) => (d.framed ? captionFrameLayout.x : 0);
+
+function section(s: DetailSection, d: Detail, width: number): Line[] {
+  const x = insetOf(d);
+  const room = Math.max(1, width - 2 * x);
   return [
-    ...(s.rule !== undefined ? [ruleRow(s.rule, s.action, width)] : []),
-    ...(s.heading ? block([span(s.heading, { role: "dim" })], width) : []),
-    ...(s.text ? s.text.split("\n").flatMap((p) => block(inline(p), width)) : []),
-    ...(s.items?.length ? itemRows(s.items, width) : []),
+    // A framed rule ends in the cell of rule a frame's corner is, in line with the text's edge.
+    ...(s.rule !== undefined ? [ruleRow(s.rule, s.action, width, x ? x - 1 : 0)] : []),
+    ...[
+      ...(s.heading ? block([span(s.heading, { role: "dim" })], room) : []),
+      ...(s.text ? s.text.split("\n").flatMap((p) => block(inline(p), room)) : []),
+      ...(s.items?.length ? itemRows(s.items, room) : []),
+    ].map((row) => setIn(row, x)),
   ];
 }
 
@@ -79,11 +91,13 @@ const TITLE = { role: "text", bold: true } as const;
 
 /** Every row of the detail, uncut. */
 function rowsOf(d: Detail, width: number): Line[] {
+  const x = insetOf(d);
+  const room = Math.max(1, width - 2 * x);
   const head = [
-    ...(d.meta ? block([span(d.meta, { role: "dim", bold: d.hovered || undefined })], width) : []),
-    ...(d.title ? block(titleSpans(d.title), width, { max: d.titleMax }) : []),
-  ];
-  const parts = [head, ...(d.sections ?? []).map((s) => section(s, width))].filter(
+    ...(d.meta ? block([span(d.meta, { role: "dim", bold: d.hovered || undefined })], room) : []),
+    ...(d.title ? block(titleSpans(d.title), room, { max: d.titleMax }) : []),
+  ].map((row) => setIn(row, x));
+  const parts = [head, ...(d.sections ?? []).map((s) => section(s, d, width))].filter(
     (part) => part.length > 0,
   );
   return parts.flatMap((part, i) => (i ? [blank(), ...part] : part));
@@ -92,7 +106,8 @@ function rowsOf(d: Detail, width: number): Line[] {
 /** Below this many rows a cut detail has no room to say so: its rows are all text. */
 const MARKED = 3;
 
-const more = (glyph: string): Line => line([span(`${glyph} more`, { role: "dim" })]);
+const more = (glyph: string, by = 0): Line =>
+  setIn(line([span(`${glyph} more`, { role: "dim" })]), by);
 
 /** The furthest `offset` can scroll a detail at `width`: 0 when it fits its height. */
 export function detailRange(d: Detail, width: number): number {
@@ -119,9 +134,9 @@ export function detail(d: Detail, width: number): Line[] {
     const isBottom = isMarked && offset + room < all.length;
     if (isBottom) room -= 1;
     rows = [
-      ...(isTop ? [more(tokens.glyph.more.up)] : []),
+      ...(isTop ? [more(tokens.glyph.more.up, insetOf(d))] : []),
       ...all.slice(offset, offset + Math.max(0, room)),
-      ...(isBottom ? [more(tokens.glyph.more.down)] : []),
+      ...(isBottom ? [more(tokens.glyph.more.down, insetOf(d))] : []),
     ].slice(0, height);
   }
   if (d.hit === undefined) return rows;

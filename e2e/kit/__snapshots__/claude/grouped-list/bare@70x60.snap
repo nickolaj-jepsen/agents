@@ -1,0 +1,25 @@
+# kit/claude/grouped-list/bare 70x60 @2,45 (66x9)
+docs/agent-hub.md
+  ● Unittest suite needs a short TMPDIR and markdown-it-py on   2×
+    the path
+  – Socket tests fail with AF_UNIX path too long
+
+docs/agents.md                              Apply all  Dismiss all
+❯ ○ pi's permission gate cannot resolve shell variables, so a   3×
+    path in one is read
+↓ 3 more
+--- styles
+1x17
+.x2 2 . 2x57 .x2 1x3
+.x4 2x8
+.x2 1 . 1x44
+-
+3x14 .x30 1x9 .x2 1x11
+4 . 1 . 4x57 .x2 1x3
+.x4 4x19
+1x8
+--- legend
+1 fg=#999999
+2 fg=#d77757 bold
+3 fg=#d77757
+4 bold

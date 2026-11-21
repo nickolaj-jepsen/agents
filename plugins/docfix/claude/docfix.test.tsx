@@ -197,7 +197,9 @@ test("the terminal pane is the shared screen: the caption, the doc, its rows and
   expect(await shows(ui, /suggestions ── 2 left/)).toBe(true);
   expect(await pointerOn(ui, ID)).toBe(true);
   expect(await shows(ui, /missing · today/)).toBe(true);
-  expect(await shows(ui, /Evidence · /)).toBe(true);
+  expect(await shows(ui, /^Evidence$/)).toBe(true);
+  // A rule the pane's whole width is over the focused suggestion; the caption's is shorter.
+  expect(await shows(ui, /^─{60,}$/)).toBe(true);
   // Every control is a plain Button under its own key; the ring and the hotkeys draw nothing.
   const keys = (await ui.findAll({ type: "Button" })).map((b) => String(b.key));
   for (const key of [
@@ -309,7 +311,7 @@ test("the reader: where it is and Back on its first row; Apply stays on its sugg
   await ui.unmount();
 });
 
-test("in a pane of six rows the rows carry their doc, and the frame has no bottom rule", async ($, on) => {
+test("in a pane of six rows the rows carry their doc, and the queue is all there is", async ($, on) => {
   engine(on);
   await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
   await $.tool.call(SUGGEST);
@@ -320,7 +322,7 @@ test("in a pane of six rows the rows carry their doc, and the frame has no botto
     surface: "terminal",
   });
   expect(await shows(ui, /AGENTS\.md › Run pnpm install/)).toBe(true);
-  // The bottom rule is the pane's whole width; the caption's rule is shorter.
+  // No focused suggestion under the queue, so no rule over one.
   expect(await shows(ui, /^─{60,}$/)).toBe(false);
   await ui.unmount();
 });

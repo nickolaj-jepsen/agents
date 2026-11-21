@@ -64,10 +64,10 @@ const many = (focus: number): ListGroup[] =>
   }));
 
 /** A window that has followed the keyboard down to row `focus`, as a client keeps it. */
-const followed = (focus: number, height: number) => {
-  const l = { groups: many(focus), height, noun: ["doc", "docs"] as const, aside: 3 };
+const followed = (focus: number, height: number, width: number) => {
+  const l = { groups: many(focus), height, aside: 3 };
   let top = 0;
-  for (let f = 0; f <= focus; f++) top = listFollow({ ...l, groups: many(f), top });
+  for (let f = 0; f <= focus; f++) top = listFollow({ ...l, groups: many(f), top }, width);
   return { ...l, top };
 };
 
@@ -85,25 +85,40 @@ export const listStories: KitStory[] = [
     component: "grouped-list",
     state: "window",
     about:
-      "Taller than its room: a window that moved only as far as the keyboard needed, its last row saying what is hidden",
-    settings: 'list({groups, height: 9, top, noun: ["doc", "docs"]})',
-    lines: (width) => list(followed(13, 9), width),
+      "Taller than its room: a window that moved only as far as the keyboard needed, its last row saying how many rows are above and below",
+    settings: "list({groups, height: 9, top})",
+    lines: (width) => list(followed(13, 9, width), width),
   },
   {
     component: "grouped-list",
     state: "sticky",
     about: "The keyboard's group row stands in for the window's first row when it is above it",
     settings: "list({groups, height: 6, top: 2})",
-    lines: (width) =>
-      list({ groups: many(4 + 3), height: 6, top: 7, noun: ["doc", "docs"], aside: 3 }, width),
+    lines: (width) => list({ groups: many(4 + 3), height: 6, top: 7, aside: 3 }, width),
   },
   {
     component: "grouped-list",
     state: "spaced",
+    about: "A blank row between groups, without a rail",
+    settings: "list({groups, space: true})",
+    lines: (width) => list({ groups: GROUPS, aside: 3, space: true }, width),
+  },
+  {
+    component: "grouped-list",
+    state: "bare",
     about:
-      "Room to spare: a blank row between groups, without a rail; with less room the same list is dense",
-    settings: "list({groups, space: true, height: 11})",
-    lines: (width) => list({ groups: GROUPS, aside: 3, space: true, height: 11 }, width),
+      "No rails, for a list that is not a form to complete: a group's label starts the row, groups a blank row apart, in a window",
+    settings: "list({groups, rail: false, space: true, lines: 2, height: 9})",
+    lines: (width) =>
+      list({ groups: GROUPS, aside: 3, rail: false, space: true, lines: 2, height: 9 }, width),
+  },
+  {
+    component: "grouped-list",
+    state: "wrapped",
+    about:
+      "Rows of two lines at most: a long text wraps under its first line, which keeps the mark and the aside; the window counts lines",
+    settings: "list({groups, lines: 2, height: 9})",
+    lines: (width) => list({ groups: GROUPS, aside: 3, lines: 2, height: 9 }, width),
   },
   {
     component: "grouped-list",

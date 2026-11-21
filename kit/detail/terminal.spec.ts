@@ -70,7 +70,7 @@ describe("a detail", () => {
       },
       40,
     );
-    expect(textOf(rows[0]!)).toBe("Evidence 1 of 2 ─────────────── Next [n]");
+    expect(textOf(rows[0]!)).toBe("─ Evidence 1 of 2 ───────────── Next [n]");
     expect(rows[0]!.hit).toBeUndefined();
     expect(
       rows[0]!.spans
@@ -79,6 +79,65 @@ describe("a detail", () => {
         .join(""),
     ).toBe("Next [n]");
     expect(detail({ meta: "m", hit: "open" }, 40)[0]!.hit).toBe("open");
+  });
+
+  test("a rule of several words has a short rule between them, as a frame's caption has", () => {
+    const rule = (width: number) =>
+      textOf(
+        detail(
+          {
+            sections: [
+              {
+                rule: ["Evidence 1 of 2", "2 days ago"],
+                action: { label: "Next", hotkey: "n", hit: "next" },
+              },
+            ],
+          },
+          width,
+        )[0]!,
+      );
+    expect(rule(50)).toBe("─ Evidence 1 of 2 ── 2 days ago ───────── Next [n]");
+    // Too narrow for its words: they are cut, and the control stays.
+    expect(rule(36)).toBe("─ Evidence 1 of 2 ── 2 d… ─ Next [n]");
+    expect(textOf(detail({ sections: [{ rule: "Evidence" }] }, 20)[0]!)).toBe(
+      "─ Evidence ─────────",
+    );
+  });
+});
+
+describe("a framed detail", () => {
+  test("its rules run the whole width and its text lines up with their words", () => {
+    const rows = detail(
+      {
+        meta: "wrong",
+        title: "A title",
+        framed: true,
+        sections: [
+          {
+            rule: ["Evidence", "today"],
+            action: { label: "Read", hotkey: "e", hit: "read" },
+            text: "Why it is wrong.",
+          },
+        ],
+      },
+      36,
+    ).map(textOf);
+    expect(rows).toEqual([
+      "  wrong",
+      "  A title",
+      "",
+      "─ Evidence ── today ───── Read [e] ─",
+      "  Why it is wrong.",
+    ]);
+  });
+
+  test("its text wraps within the frame's body, and a cut one says so in line with it", () => {
+    const d = { ...ITEM, framed: true, height: 5 };
+    const rows = detail(d, 28).map(textOf);
+    for (const row of rows) expect(row === "" || row.startsWith("  ")).toBe(true);
+    for (const row of rows) expect(row.length).toBeLessThanOrEqual(26);
+    expect(rows.at(-1)).toBe("  ↓ more");
+    expect(detailRange(d, 28)).toBe(detailRange({ ...ITEM, height: 5 }, 24));
   });
 });
 

@@ -1,0 +1,26 @@
+# kit/pi/grouped-list/bare 160x45 @2,2 (96x9)
+docs/agent-hub.md
+  ● Unittest suite needs a short TMPDIR and markdown-it-py on the path                        2×
+  – Socket tests fail with AF_UNIX path too long
+
+docs/agents.md                                                            Apply all  Dismiss all
+❯ ○ pi's permission gate cannot resolve shell variables, so a path in one is read             3×
+  ○ The hub migration plan is finished
+  ○ Agents never read the store README
+↓ 1 more
+--- styles
+1x17
+.x2 2 . 2x66 .x23 1x3
+.x2 1 . 1x44
+-
+3x14 .x60 1x9 .x2 1x11
+4 . 1 . 4x77 .x12 1x3
+.x2 1 . 5x34
+.x2 1 . 5x34
+1x8
+--- legend
+1 fg=#7e888e
+2 fg=#a798d7 bold
+3 fg=#a798d7
+4 fg=#dee0e1 bold
+5 fg=#dee0e1

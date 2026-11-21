@@ -4,14 +4,14 @@
 │  ❯ ○ Claim 8 about page 2                                                                   2×
 │  docs/page-3.md
 │    ○ Claim 9 about page 3
-   ↑ 6 in 2 docs  ↓ 23 in 6 docs
+   ↑ 6 more  ↓ 23 more
 --- styles
 1 .x2 2x14 .x57 3x9 .x2 3x11
 1 .x4 3 . 1x20
 1 .x2 4 . 3 . 4x20 .x66 3x3
 3 .x2 3x14
 3 .x4 3 . 1x20
-.x3 3x29
+.x3 3x19
 --- legend
 1 fg=#dee0e1
 2 fg=#a798d7

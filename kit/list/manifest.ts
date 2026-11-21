@@ -4,7 +4,7 @@ export default defineComponent({
   id: "grouped-list",
   name: "Grouped list",
   purpose:
-    "Rows with a mark and one line each, under group rows, behind rails; taller than its room, a window.",
+    "Rows with a mark and a line or two each, under group rows, behind rails or bare; taller than its room, a window.",
   impl: {
     pi: ["list", "listFollow", "listTopMax", "listShowsWhole"],
     claude: ["list", "listFollow", "listTopMax", "listShowsWhole"],
@@ -45,7 +45,7 @@ export default defineComponent({
     {
       id: "window",
       label:
-        "Taller than its room: a window from `top` that `listFollow` moves only when the keyboard would leave it, its last row saying what is hidden above and below",
+        "Taller than its room: a window from `top` that `listFollow` moves only when the keyboard would leave it, its last row saying how many rows are above and below",
       story: "grouped-list/window",
       pi: yes("the wheel moves `top`; `listTopMax` bounds it"),
       claude: yes("the wheel reaches the mod as `ui.scroll` with the row under the pointer"),
@@ -60,10 +60,26 @@ export default defineComponent({
     {
       id: "space",
       label:
-        "A blank row between groups, without a rail, when the whole list and those rows fit; dense when they do not",
+        "A blank row between groups, without a rail: a line of the list, which a window scrolls past",
       story: "grouped-list/spaced",
       pi: yes(),
       claude: yes(),
+    },
+    {
+      id: "bare",
+      label:
+        "No rails, where the list is not a form to complete: a group's label starts the row, and nothing says a group is decided",
+      story: "grouped-list/bare",
+      pi: yes(),
+      claude: yes(),
+    },
+    {
+      id: "lines",
+      label:
+        "Rows of several lines: a text wraps under its first line up to `lines`, the window counts and follows lines, and a row its end cuts ends in `…`",
+      story: "grouped-list/wrapped",
+      pi: yes(),
+      claude: yes("a later line is a Button of its own with the row's `hit`"),
     },
     {
       id: "flat",

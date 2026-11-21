@@ -1,7 +1,7 @@
 # kit/claude/item-detail/rule 160x45 @89,1 (71x9)
 ↑ more
 
-Evidence 1 of 2 · 2 days ago ───────────────────────────────── Next [n]
+─ Evidence 1 of 2 ── 2 days ago ────────────────────────────── Next [n]
 
 Why the repo didn't say it
 The docs describe the gate as matching on the command text, and nothing
@@ -11,7 +11,7 @@ says the text is not expanded first.
 --- styles
 1x6
 -
-1x28 . 1x33 .x6 1x3
+1 . 1x15 . 1x2 . 1x10 . 1x30 .x6 1x3
 -
 1x26
 -

@@ -55,13 +55,35 @@ export const detailStories: KitStory[] = [
           ...ITEM,
           sections: [
             {
-              rule: "Evidence 1 of 2 · 2 days ago",
+              rule: ["Evidence 1 of 2", "2 days ago"],
               action: { label: "Next", hotkey: "n", hit: "next" },
             },
             ...(ITEM.sections ?? []),
           ],
           height: 9,
           offset: 3,
+        },
+        width,
+      ),
+  },
+  {
+    component: "item-detail",
+    state: "framed",
+    about:
+      "In a frame's body: its rules run the whole width with the frame's corner after the control, and its text is set in to line up with their words",
+    settings: "detail({..., framed: true})",
+    lines: (width) =>
+      detail(
+        {
+          ...ITEM,
+          framed: true,
+          sections: [
+            {
+              rule: ["Evidence 1 of 2", "2 days ago"],
+              action: { label: "Next", hotkey: "n", hit: "next" },
+            },
+            ...(ITEM.sections ?? []).slice(0, 1),
+          ],
         },
         width,
       ),

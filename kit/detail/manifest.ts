@@ -40,10 +40,18 @@ export default defineComponent({
     {
       id: "rule",
       label:
-        "A section under a rule with a control at its end, label first and its key dim, dim when it has nothing to do",
+        "A section under the frame's caption rule: dim words after its first cell, a short rule between several, and a control at its end, label first and its key dim, dim when it has nothing to do",
       story: "item-detail/rule",
       pi: yes("the control's spans carry its `hit`"),
       claude: yes("the control's spans carry its `hit`"),
+    },
+    {
+      id: "framed",
+      label:
+        "In a frame's body: rules across the whole width, the frame's corner after their control, and the text set in to line up with their words",
+      story: "item-detail/framed",
+      pi: yes(),
+      claude: yes(),
     },
   ],
 });

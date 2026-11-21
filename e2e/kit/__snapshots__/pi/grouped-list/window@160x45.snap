@@ -7,7 +7,7 @@
 │  ❯ ○ Claim 14 about page 4                                                                  2×
 │    ○ Claim 15 about page 4
 │    ○ Claim 16 about page 4                                                                  2×
-   ↑ 9 in 3 docs  ↓ 16 in 4 docs
+   ↑ 9 more  ↓ 16 more
 --- styles
 1 .x4 1 . 2x21 .x65 1x3
 1 .x4 1 . 2x21
@@ -17,7 +17,7 @@
 2 .x2 4 . 1 . 4x21 .x65 1x3
 2 .x4 1 . 2x21
 2 .x4 1 . 2x21 .x65 1x3
-.x3 1x29
+.x3 1x19
 --- legend
 1 fg=#7e888e
 2 fg=#dee0e1

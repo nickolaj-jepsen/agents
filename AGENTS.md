@@ -21,6 +21,6 @@ Draw plugin UI with these; add one with `just kit-new <name>`.
 - `kit/card/`: A question with lettered answers and a note, and the steps and summary of a form of several.
 - `kit/detail/`: One item read whole: a meta line, a wrapped title, sections under dim headings or a rule, keyed rows, cut to a height.
 - `kit/frame/`: A form between two rules: a caption and Close in the top one, buttons above the bottom one.
-- `kit/list/`: Rows with a mark and one line each, under group rows, behind rails; taller than its room, a window.
+- `kit/list/`: Rows with a mark and a line or two each, under group rows, behind rails or bare; taller than its room, a window.
 
 <!-- kit:index:end -->

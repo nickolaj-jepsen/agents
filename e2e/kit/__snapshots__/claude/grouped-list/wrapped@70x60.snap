@@ -1,0 +1,26 @@
+# kit/claude/grouped-list/wrapped 70x60 @2,45 (66x9)
+│  docs/agent-hub.md
+│    ● Unittest suite needs a short TMPDIR and markdown-it-py   2×
+│      on the path
+│    – Socket tests fail with AF_UNIX path too long
+│  docs/agents.md                           Apply all  Dismiss all
+│  ❯ ○ pi's permission gate cannot resolve shell variables,     3×
+│      so a path in one is read
+│    ○ The hub migration plan is finished
+   ↓ 2 more
+--- styles
+1 .x2 2x17
+1 .x4 3 . 3x54 .x2 2x3
+1 .x6 3x11
+1 .x4 2 . 2x44
+.x3 4x14 .x27 2x9 .x2 2x11
+.x3 5 . 2 . 5x52 .x4 2x3
+.x7 5x24
+.x5 2
+.x3 2x8
+--- legend
+1 fg=#4eba65
+2 fg=#999999
+3 fg=#d77757 bold
+4 fg=#d77757
+5 bold

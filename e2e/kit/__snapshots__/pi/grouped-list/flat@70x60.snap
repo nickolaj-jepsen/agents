@@ -1,11 +1,11 @@
 # kit/pi/grouped-list/flat 70x60 @2,2 (66x3)
 │    ● docs/agent-hub.md › Unittest suite needs a short TMPD…   2×
 │    – docs/agent-hub.md › Socket tests fail with AF_UNIX pa…
-   ↓ 4 in 2 groups
+   ↓ 4 more
 --- styles
 1 .x4 2 . 3x20 2x34 .x2 3x3
 1 .x4 3 . 3x54
-.x3 3x15
+.x3 3x8
 --- legend
 1 fg=#68b78d
 2 fg=#a798d7 bold

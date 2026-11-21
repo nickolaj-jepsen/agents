@@ -1,11 +1,11 @@
 # kit/claude/grouped-list/flat 160x45 @89,1 (71x3)
 │    ● docs/agent-hub.md › Unittest suite needs a short TMPDIR an…   2×
 │    – docs/agent-hub.md › Socket tests fail with AF_UNIX path to…
-   ↓ 4 in 2 groups
+   ↓ 4 more
 --- styles
 1 .x4 2 . 3x20 2x39 .x2 3x3
 1 .x4 3 . 3x59
-.x3 3x15
+.x3 3x8
 --- legend
 1 fg=#4eba65
 2 fg=#d77757 bold

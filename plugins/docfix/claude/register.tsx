@@ -51,7 +51,7 @@ import {
   type ScreenState,
   WHEEL_ROWS,
 } from "../core/screen";
-import { LIST_INSET } from "./kit/list/terminal.ts";
+import { captionFrameLayout } from "./kit/frame/contract.ts";
 import { blank } from "./kit/lines.ts";
 import { keysHint, paintLines, ring, RING, ringMove } from "./kit/paint/claude.tsx";
 import { evidence } from "./evidence";
@@ -683,7 +683,9 @@ export const register: Register = (on) => {
             width,
           })}
           {/* Always a row, so the frame keeps its place; set in to the screen's left edge. */}
-          <Box paddingLeft={LIST_INSET}>{keysHint(els, held) ?? paintLines(els, [blank()])}</Box>
+          <Box paddingLeft={captionFrameLayout.x}>
+            {keysHint(els, held) ?? paintLines(els, [blank()])}
+          </Box>
           {ring(
             els,
             () => act($, { do: "main" }),

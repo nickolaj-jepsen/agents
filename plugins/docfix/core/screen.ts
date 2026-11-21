@@ -1,7 +1,8 @@
 /**
  * /docfix's terminal screen, drawn once for pi and Claude Code's terminal: the queue of
- * suggestions grouped by doc, the focused suggestion under it, the reader that shows one
- * suggestion with all its evidence, and the footer's buttons, in the kit's captioned frame. A
+ * suggestions grouped by doc, the focused suggestion under a rule at the bottom, the reader that
+ * shows one suggestion with all its evidence, and the buttons on the last row, under the kit's
+ * caption rule. A
  * pure function from the state, the width and the height to styled lines, each control with its
  * `hit`, and the reducer the keys and clicks of both clients go through.
  *
@@ -13,7 +14,7 @@ import { buttonRow } from "../claude/kit/buttons/terminal.ts";
 import type { Detail, DetailSection } from "../claude/kit/detail/contract.ts";
 import { detail, detailRange } from "../claude/kit/detail/terminal.ts";
 import { captionFrameLayout, closeOf } from "../claude/kit/frame/contract.ts";
-import { captionFrame } from "../claude/kit/frame/terminal.ts";
+import { captionFrame, captionParts, captionRoom } from "../claude/kit/frame/terminal.ts";
 import {
   blank,
   cellWidth,
@@ -28,8 +29,8 @@ import type { List, ListGroup } from "../claude/kit/list/contract.ts";
 import {
   cutLeft,
   list,
-  LIST_INSET,
   listFollow,
+  listRows,
   listShowsWhole,
   listTopMax,
 } from "../claude/kit/list/terminal.ts";
@@ -181,17 +182,22 @@ function mainLabel(s: ScreenState) {
 
 // ---- the layout
 
-const EDGE = LIST_INSET;
-const RIGHT = captionFrameLayout.x;
+/** Cells the text is set in by on both sides: where the caption rule has its words. */
+const X = captionFrameLayout.x;
 /** The seen count's column at the right of every row: `12×`. */
 const ASIDE = 3;
 /** Below this many rows the frame drops its blank row and the focused suggestion its meta line. */
 const SHORT = 20;
 /**
- * Below this many rows the queue is all there is, its rows carrying their doc, and the frame
- * has no bottom rule: Claude Code's pane above the prompt of a 24-row terminal, in its own box.
+ * Below this many rows the queue is all there is, its rows carrying their doc: Claude Code's
+ * pane above the prompt of a 24-row terminal, in its own box.
  */
 const TINY = 9;
+/**
+ * The queue's rows: the seen count's column, two lines of a claim at most, so most are read there
+ * without the reader, and no rails, since a queue is not a form with every row to decide.
+ */
+const ROWS = { aside: ASIDE, lines: 2, rail: false } as const;
 /** Rows the focused suggestion's claim and evidence each take at most, when the queue needs room. */
 const CLAIM_ROWS = 3;
 const EVIDENCE_ROWS = 3;
@@ -202,10 +208,13 @@ type Layout = {
   mode: Mode;
   /** Rows between the caption (and its blank row) and the notice row. */
   body: number;
-  /** Rows of the queue and of the focused suggestion under it, a blank row between. */
+  /**
+   * Rows of the queue, and the most the focused suggestion takes under its rule. It ends where
+   * the body does, so what it leaves, and what the queue leaves, is blank above the rule.
+   */
   list: number;
   zone: number;
-  listWidth: number;
+  /** Cells of a row of text, between the two edges. */
   innerWidth: number;
 };
 
@@ -217,46 +226,51 @@ const evidenceRows = (q: Suggestion, width: number) =>
   detail({ sections: evidenceSections(q, 0) }, width).length;
 
 /** Rows of the claim under the queue: none when the queue's row shows it whole. */
-function claimRows(q: Suggestion, l: Pick<Layout, "listWidth" | "innerWidth">) {
-  if (listShowsWhole(q.claim, l.listWidth, ASIDE)) return 0;
+function claimRows(q: Suggestion, l: Pick<Layout, "innerWidth">) {
+  if (listShowsWhole(q.claim, l.innerWidth, ROWS)) return 0;
   return Math.min(CLAIM_ROWS, detail({ title: q.claim }, l.innerWidth).length);
 }
 
-/** Rows the focused suggestion wants: the meta line, the claim, a blank row, the rule, evidence. */
-function zoneNeed(q: Suggestion, mode: Mode, l: Pick<Layout, "listWidth" | "innerWidth">) {
+/**
+ * Rows the focused suggestion wants: the meta line, the claim, a blank row, the rule, and its
+ * evidence, `evidence` rows of it at most.
+ */
+function zoneNeed(
+  q: Suggestion,
+  mode: Mode,
+  l: Pick<Layout, "innerWidth">,
+  evidence = EVIDENCE_ROWS,
+) {
   if (mode === "short") return claimRows(q, l) + 1;
-  return 1 + claimRows(q, l) + 1 + 1 + Math.min(EVIDENCE_ROWS, evidenceRows(q, l.innerWidth));
+  return 1 + claimRows(q, l) + 1 + 1 + Math.min(evidence, evidenceRows(q, l.innerWidth));
 }
 
 function layout(s: ScreenState, o: ScreenOptions): Layout {
   const mode = modeOf(o);
-  const widths = {
-    listWidth: o.width - RIGHT,
-    innerWidth: Math.max(1, o.width - EDGE - RIGHT),
-  };
-  const chrome = mode === "tiny" ? 2 : mode === "short" ? 4 : captionFrameLayout.chrome;
+  const widths = { innerWidth: Math.max(1, o.width - 2 * X) };
+  // The caption, the notice row and the buttons, and a tall screen's blank row under the caption.
+  const chrome = mode === "tiny" ? 2 : mode === "short" ? 3 : captionFrameLayout.chrome - 1;
   const body = Math.max(1, o.height - chrome);
   if (mode === "tiny") return { mode, body, list: body, zone: 0, ...widths };
-  const natural = byTarget(s.queue).reduce((n, [, rows]) => n + 1 + rows.length, 0);
-  const need = Math.max(0, ...s.queue.map((q) => zoneNeed(q, mode, widths)));
+  // Every line of the queue, the blank ones between docs too.
+  const natural = listRows(listOf(s, { mode }), widths.innerWidth);
+  const needs = (evidence?: number) =>
+    Math.max(0, ...s.queue.map((q) => zoneNeed(q, mode, widths, evidence)));
   // The queue keeps three rows at least; the focused suggestion has what it needs of the rest.
-  const zone = Math.max(1, Math.min(need, body - 1 - Math.min(3, natural)));
-  // With a blank row between docs where the whole queue and those rows fit, else dense.
-  const room = body - 1 - zone;
-  const airy = natural + byTarget(s.queue).length - 1;
-  const rows = Math.max(1, Math.min(airy <= room ? airy : natural, room));
-  // A queue that fits leaves the rest to the focused suggestion.
+  const reserve = Math.max(1, Math.min(needs(), body - 1 - Math.min(3, natural)));
+  const rows = Math.max(1, Math.min(natural, body - 1 - reserve));
+  // What a queue that fits leaves is the evidence's, as much of it as there is.
   return { mode, body, list: rows, zone: body - 1 - rows, ...widths };
 }
 
-function listOf(s: ScreenState, l: Layout): List {
+/** The queue as the kit's list, in the `list` rows the layout gives it: whole without. */
+function listOf(s: ScreenState, l: { mode: Mode; list?: number }): List {
   const at = focused(s);
   const groups: ListGroup[] = byTarget(s.queue).map(([target, rows]) => {
     const isActive = rows.some((q) => q.id === at?.id);
     return {
       label: target,
       active: isActive,
-      done: rows.every((q) => s.set[q.id]),
       hit: docHit(target),
       actions: isActive
         ? (["apply", "dismiss"] as const).map((choice) => ({
@@ -281,8 +295,7 @@ function listOf(s: ScreenState, l: Layout): List {
     groups,
     height: l.list,
     top: s.scroll.list,
-    noun: ["doc", "docs"],
-    aside: ASIDE,
+    ...ROWS,
     flat: l.mode === "tiny",
     space: true,
   };
@@ -299,18 +312,18 @@ function evidenceSections(q: Suggestion, piece: number): DetailSection[] {
   }));
 }
 
-/** `Evidence · 2 pieces`, or `Evidence · 2 days ago` with one: the focused suggestion's rule. */
+/** `Evidence ── 2 pieces`, or `Evidence ── 2 days ago` with one: the focused suggestion's rule. */
 function evidenceRule(q: Suggestion, now: number) {
   const n = q.evidence.length;
-  if (n === 0) return "No evidence filed";
-  if (n > 1) return `Evidence · ${n} pieces`;
-  return `Evidence · ${ageText(q.evidence[0]?.at ?? "", now)}`;
+  if (n === 0) return ["No evidence filed"];
+  if (n > 1) return ["Evidence", `${n} pieces`];
+  return ["Evidence", ageText(q.evidence[0]?.at ?? "", now)];
 }
 
 /**
- * The focused suggestion under the queue, in `rows` rows: its meta line, its claim when the row
- * cuts it, then the evidence rule, a control that opens the reader, and as much of the newest
- * evidence as the rows hold. The rule is drawn whatever else gives way.
+ * The focused suggestion at the bottom of the screen, in `rows` rows at most: its meta line, its
+ * claim when the queue's row cuts it, then the evidence rule, a control that opens the reader,
+ * and as much of the newest evidence as the rows hold. The rule is drawn whatever else gives way.
  */
 function focusedZone(s: ScreenState, o: ScreenOptions, l: Layout, rows: number): Line[] {
   const q = focused(s);
@@ -322,7 +335,10 @@ function focusedZone(s: ScreenState, o: ScreenOptions, l: Layout, rows: number):
     hit: BUTTONS.evidence,
     hovered: s.hover === BUTTONS.evidence,
   };
-  const rule = detail({ sections: [{ rule: evidenceRule(q, o.now), action: read }] }, l.innerWidth);
+  const rule = detail(
+    { sections: [{ rule: evidenceRule(q, o.now), action: read }], framed: true },
+    o.width,
+  );
   let head = detail(
     {
       meta: isTall ? metaText(q, o.now) : undefined,
@@ -330,8 +346,9 @@ function focusedZone(s: ScreenState, o: ScreenOptions, l: Layout, rows: number):
       titleMax: CLAIM_ROWS,
       hit: DETAIL,
       hovered: s.hover === DETAIL,
+      framed: true,
     },
-    l.innerWidth,
+    o.width,
   );
   const gap = isTall && head.length ? [blank()] : [];
   // What gives way first: the evidence, the blank row, then the claim's last rows.
@@ -342,9 +359,12 @@ function focusedZone(s: ScreenState, o: ScreenOptions, l: Layout, rows: number):
   room -= spacer.length;
   const evidence =
     isTall && room > 0
-      ? detail({ sections: evidenceSections(q, 0), height: room, hit: DETAIL }, l.innerWidth)
+      ? detail(
+          { sections: evidenceSections(q, 0), height: room, hit: DETAIL, framed: true },
+          o.width,
+        )
       : [];
-  return [...head, ...spacer, ...rule, ...evidence].map((row) => inset(row));
+  return [...head, ...spacer, ...rule, ...evidence];
 }
 
 /** `● docs/agents.md · wrong · seen 3× · 2 days ago      Back [esc]`: where the reader is. */
@@ -389,35 +409,40 @@ function readerDetail(s: ScreenState, o: ScreenOptions, l: Layout): Detail | und
   const piece = Math.min(s.reader ?? 0, Math.max(0, count - 1));
   const e = [...q.evidence].reverse()[piece];
   const view = e ? readEvidence(e) : undefined;
+  const next =
+    count > 1
+      ? {
+          label: "Next",
+          hotkey: "n",
+          hit: BUTTONS.next,
+          hovered: s.hover === BUTTONS.next,
+          isDim: piece >= count - 1,
+        }
+      : undefined;
+  // What the rule says, by the room it has: that a migration filed it and from which harness,
+  // that one did, neither, then the count in short. Narrower still, its last words are cut.
+  const room = captionRoom({
+    width: o.width,
+    end: next ? [span(`${next.label} [${next.hotkey}]`)] : [],
+    tail: 1,
+  });
+  const fits = (parts: string[]) =>
+    spansWidth(captionParts(parts.map((part) => [span(part)]))) <= room;
+  const which = count > 1 ? `Evidence ${piece + 1} of ${count}` : "Evidence";
+  const short = count > 1 ? `Evidence ${piece + 1}/${count}` : "Evidence";
+  const age = e ? ageText(e.at, o.now) : "";
+  const notes = view?.isMigrated
+    ? [...(view.by ? [`migrated from ${view.by}`] : []), "migrated"]
+    : [];
   const rule = e
-    ? [
-        count > 1 ? `Evidence ${piece + 1} of ${count}` : "Evidence",
-        ageText(e.at, o.now),
-        view?.isMigrated && view.by ? `migrated from ${view.by}` : "",
-      ]
-        .filter(Boolean)
-        .join(" · ")
-    : "No evidence filed";
+    ? ([...notes.map((note) => [which, age, note]), [which, age]].find(fits) ?? [short, age])
+    : ["No evidence filed"];
   return {
     title: q.claim,
-    sections: [
-      {
-        rule,
-        action:
-          count > 1
-            ? {
-                label: "Next",
-                hotkey: "n",
-                hit: BUTTONS.next,
-                hovered: s.hover === BUTTONS.next,
-                isDim: piece >= count - 1,
-              }
-            : undefined,
-      },
-      ...evidenceSections(q, piece),
-    ],
+    sections: [{ rule, action: next }, ...evidenceSections(q, piece)],
     height: Math.max(1, l.body - 1),
     offset: s.scroll.detail,
+    framed: true,
   };
 }
 
@@ -465,17 +490,12 @@ function tally(s: ScreenState): Span[] {
 /** The title and the tally where both fit, else the tally alone, else the title. */
 function caption(s: ScreenState, room: number): Span[] {
   const title = span(TITLE, { role: "accent", bold: true });
-  const rule = [
-    span(" "),
-    span(tokens.glyph.rule.repeat(tokens.gutter), { role: "border" }),
-    span(" "),
-  ];
-  const tiers = [[title, ...rule, ...tally(s)], tally(s), [title]];
+  const tiers = [captionParts([[title], tally(s)]), tally(s), [title]];
   return tiers.find((tier) => spansWidth(tier) <= room) ?? [];
 }
 
-/** A row set in to the screen's left edge, where the paths and the marks' pointer start. */
-const inset = (l: Line, by = EDGE): Line =>
+/** A row set in to where the text starts: the caption's words, the paths, the buttons. */
+const inset = (l: Line, by = X): Line =>
   l.spans.length ? { ...l, spans: [span(" ".repeat(by)), ...l.spans] } : l;
 
 const padTo = (rows: Line[], n: number) => [
@@ -483,7 +503,10 @@ const padTo = (rows: Line[], n: number) => [
   ...Array.from({ length: Math.max(0, n - rows.length) }, blank),
 ];
 
-/** The screen at `width` by `height` cells: every row at most `width` cells. */
+/**
+ * The screen at `width` by `height` cells: every row at most `width` cells. The buttons are its
+ * last row: what is under it, a prompt or the window's edge, closes it.
+ */
 export function drawScreen(s: ScreenState, o: ScreenOptions): Drawn {
   const setCount = s.queue.filter((q) => s.set[q.id]).length;
   const close = {
@@ -494,22 +517,18 @@ export function drawScreen(s: ScreenState, o: ScreenOptions): Drawn {
   const { width } = o;
   if (s.queue.length === 0) {
     const said = `No open suggestions${s.dismissed ? ` · ${s.dismissed} dismissed` : ""}`;
+    const body = [line([span(said, { role: "dim" })])];
+    // The caption, a blank row and the one line: no buttons, so nothing to close under them.
     return {
-      lines: captionFrame({
-        width,
-        title: TITLE,
-        close,
-        body: [inset(line([span(said, { role: "dim" })]), EDGE - RIGHT)],
-      }),
+      lines: captionFrame({ width, title: TITLE, close, body }).slice(0, captionFrameLayout.y + 1),
       zones: {},
     };
   }
   const l = layout(s, o);
-  const footer = inset(footerRow(s, l.innerWidth), EDGE - RIGHT);
-  const notice = s.notice
-    ? inset(line([span(s.notice, { role: "error" })]), EDGE - RIGHT)
-    : undefined;
-  const [top, gap, noticeRow, footerLine, bottom] = captionFrame({
+  const footer = footerRow(s, l.innerWidth);
+  const notice = s.notice ? line([span(s.notice, { role: "error" })]) : undefined;
+  // The frame's bottom rule is drawn over the focused suggestion, between it and the queue.
+  const [top, gap, noticeRow, footerLine, rule] = captionFrame({
     width,
     title: TITLE,
     caption: (room) => caption(s, room),
@@ -524,25 +543,24 @@ export function drawScreen(s: ScreenState, o: ScreenOptions): Drawn {
   const q = focused(s);
   if (s.reader !== undefined && q) {
     const d = readerDetail(s, o, l);
-    const rows = d ? detail(d, l.innerWidth).map((row) => inset(row)) : [];
+    const rows = d ? detail(d, o.width) : [];
     body = padTo([inset(readerHead(s, q, o, l.innerWidth)), ...rows], l.body);
     zones = { detail: [at + 1, at + l.body] };
   } else {
-    const rows = padTo(list(listOf(s, l), l.listWidth), l.list);
-    body =
-      l.mode === "tiny"
-        ? padTo(rows, l.body)
-        : padTo([...rows, blank(), ...focusedZone(s, o, l, l.zone)], l.body);
+    const rows = list(listOf(s, l), l.innerWidth).map((row) => inset(row));
+    // The focused suggestion ends at the notice row: the rows it does not need are the queue's side.
+    const under = l.mode === "tiny" ? [] : [rule!, ...focusedZone(s, o, l, l.zone)];
+    body = [...padTo(rows, l.body - under.length), ...under];
     zones = { list: [at, at + l.list] };
   }
   if (l.mode === "tiny")
-    // The notice, when there is one, takes the body's last row; the host's box is the edge.
+    // The notice, when there is one, takes the body's last row.
     return {
       lines: [top!, ...(notice ? [...body.slice(0, -1), noticeRow!] : body), footerLine!],
       zones,
     };
   const head = l.mode === "tall" ? [top!, gap!] : [top!];
-  return { lines: [...head, ...body, noticeRow!, footerLine!, bottom!], zones };
+  return { lines: [...head, ...body, noticeRow!, footerLine!], zones };
 }
 
 // ---- the reducer
@@ -564,7 +582,7 @@ const focusOn = (s: ScreenState, id: string | undefined): ScreenState =>
 /** The queue's window moved as little as keeps the keyboard's row in it, two rows round it. */
 const follow = (s: ScreenState, o: ScreenOptions): ScreenState => ({
   ...s,
-  scroll: { ...s.scroll, list: listFollow(listOf(s, layout(s, o))) },
+  scroll: { ...s.scroll, list: listFollow(listOf(s, layout(s, o)), o.width - 2 * X) },
 });
 
 /** The next row after `id` still left alone, round to the top; `undefined` when none is. */
@@ -591,12 +609,12 @@ const stepped = (choice: Choice | undefined): Choice | undefined =>
 function scrollBy(s: ScreenState, o: ScreenOptions, zone: "list" | "detail", by: number) {
   const l = layout(s, o);
   if (zone === "list") {
-    const max = listTopMax(listOf(s, l));
+    const max = listTopMax(listOf(s, l), l.innerWidth);
     const next = Math.max(0, Math.min(max, s.scroll.list + by));
     return { ...s, scroll: { ...s.scroll, list: next } };
   }
   const d = s.reader !== undefined ? readerDetail(s, o, l) : undefined;
-  const max = d ? detailRange(d, l.innerWidth) : 0;
+  const max = d ? detailRange(d, o.width) : 0;
   const next = Math.max(0, Math.min(max, s.scroll.detail + by));
   return { ...s, scroll: { ...s.scroll, detail: next } };
 }

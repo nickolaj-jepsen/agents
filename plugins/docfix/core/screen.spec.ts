@@ -134,6 +134,30 @@ describe("every state at every size", () => {
     }
 });
 
+describe("one grid", () => {
+  test("rules start at the edge; the caption's words, the queue, the focused suggestion and the buttons two cells in", () => {
+    for (const width of [44, 64, 100]) {
+      const o = at(width, 45);
+      for (const [name, s] of Object.entries(states(o))) {
+        const lines = texts(s, o);
+        for (const l of lines)
+          expect(l === "" || l.startsWith("─") || l.startsWith("  "), `${name}: ${l}`).toBe(true);
+        // What starts a row of text, or the words of a rule, is at one cell.
+        for (const word of ["Doc suggestions", "docs/agent-hub.md", "wrong · ", "Evidence"])
+          for (const l of lines.filter((x) => x.includes(word) && !x.includes("Back [esc]")))
+            expect(l.indexOf(word), `${name} at ${width}: ${l}`).toBe(2);
+        const buttons = lines.find((l) => l.includes("Apply [a]"));
+        if (buttons) expect(buttons).toMatch(/^ {2}\S/);
+        // And what ends one, two cells from the other edge.
+        for (const l of lines.filter((x) => /(Read \[e\]|Next \[n\]|Close ×) ─$/.test(x)))
+          expect(cellWidth(l), `${name}: ${l}`).toBe(width);
+        for (const l of lines.filter((x) => /(Dismiss all|Back \[esc\]|\d×)$/.test(x)))
+          expect(cellWidth(l), `${name}: ${l}`).toBe(width - 2);
+      }
+    }
+  });
+});
+
 describe("the footer never changes", () => {
   test("it is the main action, Apply and Dismiss, nothing else, in every state", () => {
     const o = at(64, 45);
@@ -239,23 +263,35 @@ describe("nothing jumps", () => {
 describe("the queue", () => {
   const o = at(64, 45);
 
-  test("is grouped by doc behind rails, the keyboard's path in the accent with its controls", () => {
+  test("is grouped by doc, without rails, the keyboard's path in the accent with its controls", () => {
     const { lines } = drawScreen(startState(QUEUE), o);
     const head = find(lines, "docs/agent-hub.md")!;
     expect(head.spans.find((sp) => sp.text === "docs/agent-hub.md")).toMatchObject({
       role: "accent",
     });
     expect(textOf(head)).toMatch(/Apply all  Dismiss all$/);
-    expect(textOf(find(lines, "docs/agents.md")!).trim()).toBe("│  docs/agents.md");
+    expect(textOf(find(lines, "docs/agents.md")!)).toBe("  docs/agents.md");
+    expect(lines.some((l) => textOf(l).includes("│"))).toBe(false);
     expect(textOf(find(lines, "…/")!)).toContain("style.md");
   });
 
-  test("keeps the seen count's column, blank when seen once, so the cut text lines up", () => {
+  test("a claim takes two rows at most, hanging under its first; the seen count stays on the first", () => {
     const lines = texts(startState(QUEUE), o);
-    // Latin rows: a wide character at the cut ends it a cell early.
-    const cut = lines.filter((l) => /^│ {2}[ ❯] [○●–] [ -~]*…/.test(l));
-    expect(cut.length).toBeGreaterThan(1);
-    expect(new Set(cut.map((l) => cellWidth(l.slice(0, l.indexOf("…"))))).size).toBe(1);
+    const at = lines.findIndex((l) => l.includes("○ pi's permission gate"));
+    expect(lines[at]).toMatch(/^ {4}○ pi's permission gate cannot resolve shell +3×$/);
+    // Cut on its second row, which starts under the first row's text.
+    expect(lines[at + 1]).toMatch(/^ {6}variables, .*…$/);
+    expect(lines[at + 2]).toContain("○ The hub migration plan");
+    // The column is kept, blank, by a row seen once, so the rows wrap at one width.
+    const once = lines.find((l) => l.includes("○ Socket tests"))!;
+    expect(cellWidth(once)).toBe(cellWidth(lines[at]!));
+    // A claim that fits its two rows is not said again under the queue.
+    const zone = lines.slice(lines.findIndex((l) => /^─+$/.test(l)));
+    expect(zone.some((l) => l.includes("Unittest suite"))).toBe(false);
+    const cut = texts(run(startState(QUEUE), [{ do: "press", hit: "row:b1" }], o), o);
+    expect(cut.slice(cut.findIndex((l) => /^─+$/.test(l))).join(" ")).toContain(
+      "~/.ssh/id denies.",
+    );
   });
 
   test("a row set to apply is in the accent with a filled mark; dismissed, the whole row is dim", () => {
@@ -283,9 +319,10 @@ describe("the queue", () => {
     const all = reduce(s, { do: "press", hit: "all:apply:docs/agent-hub.md" }, o).state;
     expect(all.set).toEqual({ a1: "apply", a2: "apply" });
     expect(all.focus).toBe(s.focus);
-    expect(find(drawScreen(all, o).lines, "docs/agent-hub.md")!.spans[0]).toMatchObject({
-      role: "success",
-    });
+    // What is set shows on the rows and in the caption: no colour says the doc is done.
+    const drawn = drawScreen(all, o).lines;
+    expect(textOf(drawn[0]!)).toContain("● 2 · 3 left");
+    expect(spansOf(drawn).some((sp) => sp.role === "success")).toBe(false);
     expect(reduce(all, { do: "press", hit: "all:apply:docs/agent-hub.md" }, o).state.set).toEqual(
       {},
     );
@@ -311,7 +348,7 @@ describe("the queue", () => {
       .filter((sp: Span) => sp.role === "accent")
       .map((sp) => sp.text);
     expect(accented.join("|")).toBe(
-      "Doc suggestions|● 1|docs/agent-hub.md|●|Unittest suite needs a short |TMPDIR| and markdown-|…|Draft prompt",
+      "Doc suggestions|● 1|docs/agent-hub.md|●|Unittest suite needs a short TMPDIR and|markdown-it-py|Draft prompt",
     );
   });
 
@@ -348,35 +385,40 @@ describe("the queue", () => {
     expect(lines.some((l) => l.includes("seen once"))).toBe(false);
   });
 
-  test("a blank row between docs when the whole queue and those rows fit, else dense", () => {
+  test("a blank row between docs, in a queue that fits and in a window alike", () => {
     const airy = drawScreen(startState(QUEUE), o);
     const [from, to] = airy.zones.list!;
     const rows = airy.lines.slice(from, to).map(textOf);
     expect(rows.filter((r) => r === "")).toHaveLength(2);
-    expect(rows[rows.indexOf("") + 1]).toMatch(/^│ {2}docs\/agents\.md/);
+    expect(rows[rows.indexOf("") + 1]).toBe("  docs/agents.md");
     // Moving and setting rows keeps them where they are.
     const moved = drawScreen(
       run(startState(QUEUE), [...down(3), { do: "set", choice: "apply" }], o),
       o,
     );
     expect(moved.zones).toEqual(airy.zones);
-    expect(moved.lines.map((l) => textOf(l) === "")).toEqual(
-      airy.lines.map((l) => textOf(l) === ""),
+    expect(moved.lines.slice(from, to).map((l) => textOf(l) === "")).toEqual(
+      rows.map((r) => r === ""),
     );
-    // Too little room for the gaps: dense.
-    const tight = at(64, 20);
-    const dense = drawScreen(startState(QUEUE), tight);
-    const [a, b] = dense.zones.list!;
-    expect(dense.lines.slice(a, b).filter((l) => textOf(l) === "")).toHaveLength(0);
+    // More than fits: the window has them too, each over a doc's row.
+    const many = drawScreen(startState(MANY), o);
+    const window = many.lines.slice(...many.zones.list!).map(textOf);
+    const gaps = window.flatMap((r, i) => (r === "" && i < window.length - 2 ? [i] : []));
+    expect(gaps.length).toBeGreaterThan(1);
+    for (const i of gaps) expect(window[i + 1]).toMatch(/^ {2}docs\/page-\d\.md$/);
   });
 
-  test("more-rows say suggestions and docs alike at both ends", () => {
+  test("the window's last row counts the suggestions above and below, nothing else", () => {
     const o = at(64, 24);
     const s = run(startState(MANY), down(16), o);
     const drawn = drawScreen(s, o);
     const more = textOf(drawn.lines[drawn.zones.list![1] - 1]!);
-    expect(more).toMatch(/↑ \d+ in \d+ docs?/);
-    expect(more).toMatch(/↓ \d+ in \d+ docs?/);
+    expect(more).toMatch(/^ {2}↑ \d+ more {2}↓ \d+ more$/);
+    const [up, down_] = [...more.matchAll(/\d+/g)].map((m) => Number(m[0]));
+    const shown = drawn.lines
+      .slice(...drawn.zones.list!)
+      .filter((l) => /[○●–] Claim/.test(textOf(l))).length;
+    expect(up! + down_! + shown).toBe(MANY.length);
   });
 });
 
@@ -385,18 +427,57 @@ describe("the room", () => {
     const o = at(64, 45);
     const drawn = drawScreen(run(startState(MANY), down(9), o), o);
     const [from, to] = drawn.zones.list!;
-    const zone = drawn.lines.slice(to + 1, -3).map(textOf);
+    // A rule across the screen is between the two, and the buttons are the last row.
+    expect(textOf(drawn.lines[to]!)).toBe("─".repeat(64));
+    expect(textOf(drawn.lines.at(-1)!)).toContain("Apply [a]");
+    const zone = drawn.lines.slice(to + 1, -2).map(textOf);
     expect(zone.filter((l) => l.trim()).length).toBeLessThanOrEqual(9);
-    // The queue's window is full: no blank row above its more-row.
-    expect(drawn.lines.slice(from, to - 1).every((l) => textOf(l).trim())).toBe(true);
+    // The queue's window is full, down to its more-row.
+    expect(textOf(drawn.lines[from]!)).not.toBe("");
+    expect(textOf(drawn.lines[to - 1]!)).toMatch(/↓ \d+ more$/);
+  });
+
+  test("the focused suggestion ends at the buttons: what it and the queue leave is blank above its rule", () => {
+    const o = at(64, 45);
+    const start = startState(QUEUE);
+    const [, to] = drawScreen(start, o).zones.list!;
+    for (let n = 0; n < QUEUE.length; n++) {
+      const lines = texts(run(start, down(n), o), o);
+      const rule = lines.findIndex((l) => /^─+$/.test(l));
+      expect(rule, `row ${n}`).toBeGreaterThanOrEqual(to);
+      expect(lines.slice(to, rule).every((l) => l === "")).toBe(true);
+      expect(lines[rule + 1]).toMatch(/^ {2}wrong · /);
+      // Its last row of text, the notice row, the buttons.
+      expect(lines.at(-3), `row ${n}`).not.toBe("");
+      expect(lines.at(-2)).toBe("");
+      expect(lines.at(-1)).toContain("Apply [a]");
+    }
+  });
+
+  test("the reader's rule drops words before it cuts one: who migrated it, then `of`", () => {
+    const s = run(
+      startState(QUEUE),
+      [{ do: "press", hit: "row:b1" }, { do: "reader" }, { do: "next" }],
+      at(64, 45),
+    );
+    const rule = (width: number) =>
+      texts(s, at(width, 45))
+        .find((l) => l.includes("Next [n]"))!
+        .trim();
+    expect(rule(64)).toMatch(
+      /^─ Evidence 2 of 2 ── 2 days ago ── migrated from pi ─+ Next \[n\] ─$/,
+    );
+    expect(rule(60)).toMatch(/^─ Evidence 2 of 2 ── 2 days ago ── migrated ─+ Next \[n\] ─$/);
+    expect(rule(48)).toMatch(/^─ Evidence 2 of 2 ── 2 days ago ─+ Next \[n\] ─$/);
+    expect(rule(43)).toMatch(/^─ Evidence 2\/2 ── 2 days ago ─+ Next \[n\] ─$/);
   });
 
   test("a short screen has no blank row under the caption, no meta line, and keeps the rule", () => {
     const o = at(45, 12);
     const lines = texts(startState(QUEUE), o);
-    expect(lines[1]).toMatch(/^│/);
+    expect(lines[1]).toMatch(/agent-hub\.md/);
     expect(lines.some((l) => l.includes("seen 2×"))).toBe(false);
-    expect(lines.some((l) => /Evidence · .*Read \[e\]/.test(l))).toBe(true);
+    expect(lines.some((l) => /─ Evidence ── .*Read \[e\]/.test(l))).toBe(true);
   });
 
   test("Claude Code's six-row pane: rows carry their doc, no bottom rule", () => {
@@ -428,7 +509,7 @@ describe("the reader", () => {
     );
     const row = drawScreen(s, o).lines[2]!;
     expect(textOf(row)).toMatch(
-      /^ {3}● docs\/agents\.md · wrong · seen 3× · 2 days ago +Back \[esc\]$/,
+      /^ {2}● docs\/agents\.md · wrong · seen 3× · 2 days ago +Back \[esc\]$/,
     );
     expect(row.spans.find((sp) => sp.text === "docs/agents.md")).toMatchObject({ role: "accent" });
     const dropped = run(s, [{ do: "set", choice: "dismiss" }], o);
@@ -445,14 +526,20 @@ describe("the reader", () => {
 
   test("the evidence line counts the pieces and dates them; Next stops at the last, dim", () => {
     const s = run(startState(QUEUE), [{ do: "press", hit: "row:b1" }, { do: "reader" }], o);
-    expect(texts(s, o).some((l) => /Evidence 1 of 2 · yesterday .*Next \[n\]/.test(l))).toBe(true);
+    expect(
+      texts(s, o).some((l) => /^─ Evidence 1 of 2 ── yesterday ─+ Next \[n\] ─$/.test(l)),
+    ).toBe(true);
     const last = run(s, [{ do: "next" }], o);
     const lines = drawScreen(last, o).lines;
-    expect(textOf(find(lines, "Evidence 2 of 2")!)).toMatch(/migrated from pi .*Next \[n\]/);
+    // Who it was migrated from where the rule has room, else that it was.
+    expect(textOf(find(lines, "Evidence 2 of 2")!)).toMatch(/── migrated from pi ─+ Next \[n\] ─$/);
+    expect(textOf(find(drawScreen(last, at(58, 45)).lines, "Evidence 2 of 2")!)).toMatch(
+      /── migrated ─+ Next \[n\] ─$/,
+    );
     expect(spansOf(lines).find((sp) => sp.text === "Next")).toMatchObject({ role: "dim" });
     expect(run(last, [{ do: "next" }], o).reader).toBe(1);
     const one = run(startState(QUEUE), [{ do: "reader" }], o);
-    expect(texts(one, o).some((l) => /Evidence · \d+ days? ago|Evidence · yesterday/.test(l))).toBe(
+    expect(texts(one, o).some((l) => /─ Evidence ── (\d+ days ago|yesterday) ─/.test(l))).toBe(
       true,
     );
   });
