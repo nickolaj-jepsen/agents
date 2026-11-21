@@ -1,0 +1,91 @@
+# docfix/claude/clickedSet 160x45 @88,0 (72x41)
+│                                                                     ✕
+│ ─ Doc suggestions ── ● 1 · – 0 · 2 left ──────────────────── Close × ─
+│
+│ │  AGENTS.md
+│ │    ● just build is not enough to verify a pi change; the doc…   3×
+│ │  docs/hosts.md                              Apply all  Dismiss all
+│ │  ❯ ○ The legacy card was removed; the section still describe…   2×
+│ │  docs/modules.md
+│ │    ○ A leaf that imports a third-party module imports it on …
+│
+│    stale · seen 2× · 40 days ago
+│    The legacy card was removed; the section still describes it.
+│
+│    Evidence · 40 days ago ───────────────────────────────── Read [e]
+│    docs/hosts.md: the line contradicts what the code does now.
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│    Draft prompt ↵  Apply [a]  Dismiss [d]
+│ ──────────────────────────────────────────────────────────────────────
+│
+│
+│
+--- styles
+1 .x69 2
+1 . 2 . 3x15 . 2x2 . 4x3 2x15 . 2x20 .x9 2
+1
+1 . 5 .x2 2x9
+1 . 5 .x4 3 . 3x56 .x2 2x3
+1 .x4 4x13 .x30 2x9 .x2 2x11
+1 .x4 6 . 2 . 6x56 .x2 2x3
+1 . 2 .x2 2x15
+1 . 2 .x4 2
+1
+1 .x4 2x29
+1 .x4 6x60
+1
+1 .x4 2x22 . 2x33 .x6 2x3
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1 .x4 3x12 . 2 .x8 2x3 .x10 2x3
+1 . 2x70
+1
+1
+1
+--- legend
+1 fg=#b1b9f9
+2 fg=#999999
+3 fg=#d77757 bold
+4 fg=#d77757
+5 fg=#4eba65
+6 bold

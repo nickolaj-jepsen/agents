@@ -6,17 +6,20 @@ import { checkout, EXTREME, fileSuggestions, MANY, ONE, STRUCTURED } from "./fix
 const open = [{ type: "/docfix" }, { press: "Enter" }];
 
 /**
- * The sidebar: from its top rule's caption to its bottom rule, at the right of the screen. The
- * overlay has no border of its own, so its left edge is where the caption's rule starts.
+ * The sidebar: from its top rule, which holds Close or its question, to its bottom rule, at the
+ * right of the screen. The overlay has no border of its own: its left edge is where the bottom
+ * rule starts, a blank cell before it.
  */
 const sidebar: Region = (grid) => {
-  const [top] = findText(grid, "─ Doc suggestions");
-  if (!top) return undefined;
+  const [close] = findText(grid, /Close ×|Keep \[esc\]/);
+  if (!close) return undefined;
   const cols = grid[0]?.length ?? 0;
-  for (let y = top.y + 1; y < grid.length; y++) {
-    const cells = grid[y]?.slice(top.x) ?? [];
-    if (cells.length > 10 && cells.every((c) => c.char === "─"))
-      return { x: top.x, y: top.y, w: cols - top.x, h: y - top.y + 1 };
+  for (let y = close.y + 1; y < grid.length; y++) {
+    const row = grid[y] ?? [];
+    let x = cols;
+    while (x > 0 && row[x - 1]?.char === "─") x--;
+    if (x > 0 && cols - x >= 40 && row[x - 1]?.char === " ")
+      return { x, y: close.y, w: cols - x, h: y - close.y + 1 };
   }
   return undefined;
 };
@@ -75,19 +78,20 @@ export default scenarios({
     },
     set: {
       about:
-        "a then d: the first applied (accent, filled mark), the second dismissed (dim), each doc decided (green rail), the main action says so",
+        "a then d: the first applied (accent, filled mark), the second dismissed (dim), each doc decided (green rail), the main action Draft prompt",
       from: "queue",
-      steps: [{ press: "a" }, { press: "d" }, { wait: "dismiss 1" }],
+      steps: [{ press: "a" }, { press: "d" }, { wait: "● 1 · – 1" }],
     },
     clickedSet: {
       about: "a click on Apply sets the keyboard's row and moves to the next row left alone",
       from: "queue",
-      steps: [{ click: "Apply [a]" }, { wait: "1 fix" }],
+      steps: [{ click: "Apply [a]" }, { wait: "Draft prompt" }],
     },
     confirm: {
-      about: "a row applied, then Escape: Close asks in place before it throws the choice away",
+      about:
+        "a row applied, then Escape: Close asks in place before it throws the choice away; the footer is dim",
       from: "queue",
-      steps: [{ press: "a" }, { press: "Escape" }, { wait: "Discard choices?" }],
+      steps: [{ press: "a" }, { press: "Escape" }, { wait: "Discard 1?" }],
     },
     confirmClick: {
       about: "a row applied, then a click on Close: the same question, in the top rule",
@@ -97,7 +101,7 @@ export default scenarios({
     kept: {
       about: "Keep, clicked: the question goes and the choice stays",
       from: "confirmClick",
-      steps: [{ click: "Keep [esc]" }, { wait: "1 of 3 decided" }],
+      steps: [{ click: "Keep [esc]" }, { wait: "● 1 · – 0" }],
     },
     applied: {
       about:
@@ -110,7 +114,7 @@ export default scenarios({
       about: "d, then a click on the main action: the sidebar closes and the footer count drops",
       from: "queue",
       region: region.full,
-      steps: [{ press: "d" }, { click: "Dismiss 1 ↵" }, { wait: "docs 2" }],
+      steps: [{ press: "d" }, { click: "Dismiss ↵" }, { wait: "docs 2" }],
     },
     reader: {
       about:
@@ -131,11 +135,27 @@ export default scenarios({
       about: "a click on the focused suggestion opens the reader; a click on Back leaves it",
       from: "queue",
       steps: [
-        { click: "wrong · seen" },
+        { click: "Read [e]" },
         { wait: "Back [esc]" },
         { click: "Back [esc]" },
-        { wait: "Evidence [e]" },
+        { wait: "Read [e]" },
       ],
+    },
+    readerSet: {
+      about: "a in the reader: its row set to apply, the reader stays on it; its first row says so",
+      from: "reader",
+      steps: [{ press: "a" }, { wait: "● 1 ·" }],
+    },
+    markClick: {
+      about:
+        "a click on a row's mark sets it to apply, a second to dismiss; the keyboard goes there",
+      from: "queue",
+      steps: [{ click: "○ T" }, { wait: "● 1 ·" }, { click: "● T" }, { wait: "– 1 ·" }],
+    },
+    applyAll: {
+      about: "a click on Apply all on the keyboard's doc row sets every row of the doc",
+      from: "many",
+      steps: [{ click: "Apply all" }, { wait: "● 4 ·" }],
     },
     many: {
       about:
@@ -150,7 +170,7 @@ export default scenarios({
       about:
         "A on a doc of several rows: every row applied, its rail green, the keyboard on the next doc",
       from: "many",
-      steps: [{ press: "A" }, { wait: "4 of 28 decided" }],
+      steps: [{ press: "A" }, { wait: "● 4 ·" }],
     },
     wheel: {
       about: "the wheel over the queue moves its window, not the keyboard",
@@ -172,7 +192,8 @@ export default scenarios({
       extreme: true,
     },
     short: {
-      about: "a terminal of 18 rows: the focused suggestion is its meta line and claim",
+      about:
+        "a terminal of 18 rows: no blank row under the caption; the focused suggestion is its claim and the evidence rule",
       from: "queue",
       sizes: [[100, 18]],
     },

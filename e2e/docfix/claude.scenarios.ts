@@ -47,12 +47,12 @@ export default scenarios({
     },
     queue: {
       about:
-        "/docfix with three open suggestions in three docs, the keyboard on the first; at 70x24 the pane above the prompt has six rows: the caption, the keyboard's row and the footer",
+        "/docfix with three open suggestions in three docs, the keyboard on the first; at 70x24 the pane above the prompt has six rows: the caption, two rows carrying their doc, the footer",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx);
       },
-      steps: [...open, { wait: "Doc suggestions" }],
+      steps: [...open, { wait: "Close ×" }],
       extreme: true,
     },
     narrow: {
@@ -76,7 +76,7 @@ export default scenarios({
       about: "a click on the count above the prompt opens the pane, and the count steps aside",
       from: "band",
       region: region.any(region.sidebar, region.box()),
-      steps: [{ click: "docfix: docs 3" }, { wait: "Doc suggestions" }],
+      steps: [{ click: "docfix: docs 3" }, { wait: "Close ×" }],
     },
     hover: {
       about: "the pointer on the second row: it sits on a soft fill, the keyboard's pointer stays",
@@ -99,18 +99,18 @@ export default scenarios({
     },
     set: {
       about:
-        "a then d: the first applied (accent, filled mark), the second dismissed (dim), each doc decided (green rail), the main action says so",
+        "a then d: the first applied (accent, filled mark), the second dismissed (dim), each doc decided (green rail), the main action Draft prompt",
       from: "queue",
       sizes: [[160, 45]],
       fresh: true,
       // Keys sent in one write can beat the redraw, so each is a step of its own.
-      steps: [{ press: "a" }, { wait: "1 of 3" }, { press: "d" }, { wait: "dismiss 1" }],
+      steps: [{ press: "a" }, { wait: "● 1 ·" }, { press: "d" }, { wait: "– 1 ·" }],
     },
     clickedSet: {
       about: "a click on Apply sets the keyboard's row and moves to the next row left alone",
       from: "queue",
       sizes: [[160, 45]],
-      steps: [{ click: "Apply [a]" }, { wait: "1 fix" }],
+      steps: [{ click: "Apply [a]" }, { wait: "Draft prompt" }],
     },
     confirm: {
       about:
@@ -120,10 +120,10 @@ export default scenarios({
       fresh: true,
       steps: [
         { press: "a" },
-        { wait: "1 of 3" },
+        { wait: "● 1 ·" },
         { sleep: 300 },
         { press: "Escape" },
-        { wait: "Discard choices?" },
+        { wait: "Discard 1?" },
       ],
     },
     confirmClick: {
@@ -132,7 +132,7 @@ export default scenarios({
       sizes: [[160, 45]],
       steps: [
         { click: "Apply [a]" },
-        { wait: "1 fix" },
+        { wait: "Draft prompt" },
         { click: "Close ×" },
         { wait: "Keep [esc]" },
       ],
@@ -148,9 +148,9 @@ export default scenarios({
       fresh: true,
       steps: [
         { press: "a" },
-        { wait: "1 of 3" },
+        { wait: "● 1 ·" },
         { press: "a" },
-        { wait: "Draft 2" },
+        { wait: "● 2 ·" },
         { press: "Enter" },
         // The draft is taller than the prompt box, so its first line has scrolled away.
         { wait: "For each one" },
@@ -165,12 +165,7 @@ export default scenarios({
       // The toast is gone by the time a resize to a second size settles: one size only.
       sizes: [[160, 45]],
       fresh: true,
-      steps: [
-        { press: "d" },
-        { wait: "Dismiss 1" },
-        { click: "Dismiss 1 ↵" },
-        { wait: "Dismissed 1" },
-      ],
+      steps: [{ press: "d" }, { wait: "– 1 ·" }, { click: "Dismiss ↵" }, { wait: "Dismissed 1" }],
     },
     reader: {
       about:
@@ -179,8 +174,14 @@ export default scenarios({
         checkout(ctx);
         fileSuggestions(ctx, STRUCTURED);
       },
+      steps: [...open, { wait: "agent-hub" }, { press: "e" }, { wait: "Back [esc]" }],
+    },
+    readerSet: {
+      about: "a in the reader: its row set to apply, the reader stays on it; its first row says so",
+      from: "reader",
       sizes: [[160, 45]],
-      steps: [...open, { wait: "agent-hub" }, { press: "e" }, { wait: "Evidence 1 of 2" }],
+      fresh: true,
+      steps: [{ sleep: 300 }, { press: "a" }, { wait: "● 1 ·" }],
     },
     readerNext: {
       about: "a click on Next in the reader: the second, migrated piece of evidence",
@@ -193,7 +194,7 @@ export default scenarios({
       from: "reader",
       sizes: [[160, 45]],
       fresh: true,
-      steps: [{ sleep: 300 }, { press: "Escape" }, { wait: "Evidence [e]" }],
+      steps: [{ sleep: 300 }, { press: "Escape" }, { wait: "Read [e]" }],
     },
     many: {
       about:
@@ -207,8 +208,21 @@ export default scenarios({
         ...open,
         { wait: "Claim number" },
         ...Array.from({ length: 12 }, () => [{ press: "Down" }, { sleep: 80 }]).flat(),
-        { wait: "docs above" },
+        { sleep: 300 },
       ],
+    },
+    markClick: {
+      about:
+        "a click on a row's mark sets it to apply, a second to dismiss; the keyboard goes there",
+      from: "queue",
+      sizes: [[160, 45]],
+      steps: [{ click: "○ T" }, { wait: "● 1 ·" }, { click: "● T" }, { wait: "– 1 ·" }],
+    },
+    applyAll: {
+      about: "a click on Apply all on the keyboard's doc row sets every row of the doc",
+      from: "many",
+      fresh: true,
+      steps: [{ click: "Apply all" }, { wait: "● 4 ·" }],
     },
     wheel: {
       about: "the wheel over the queue moves its window, not the keyboard",

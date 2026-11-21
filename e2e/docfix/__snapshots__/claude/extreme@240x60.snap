@@ -1,0 +1,120 @@
+# docfix/claude/extreme 240x60 @159,0 (81x56)
+│                                                                              ✕
+│ ─ Doc suggestions ── ● 0 · – 0 · 5 left ───────────────────────────── Close × ─
+│
+│ │  AGENTS.md                                           Apply all  Dismiss all
+│ │  ❯ ○ The section says the build verifies a pi change, but the build o…  12×
+│ │    ○ UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbroken…   3×
+│ │  …/several/nested/levels/and-an-equally-long-file-name-for-the-guide.md
+│ │    ○ A claim under a very long target path, so the group header must …
+│ │  docs/hosts.md
+│ │    ○ Short.
+│ │  docs/日本語のドキュメント.md
+│ │    ○ この節は古くなっています。ビルドが検証するのは型だけで、エージェ…  99+
+│
+│    wrong · seen 12× · 2 days ago
+│    The section says the build verifies a pi change, but the build only
+│    type-checks the cores and the pi halves and never starts an agent, so a
+│    panel that renders wrong still passes it. The section says the build…
+│
+│    Evidence · 2 pieces ───────────────────────────────────────────── Read [e]
+│    just build printed error: derivation failed while evaluating the attribute
+│    and its dependencies, error: derivation failed while evaluating the
+│    attribute and its dependencies, error: derivation failed while evaluating
+│    the attribute and its dependencies, error: derivation failed while
+│    evaluating the attribute and its dependencies, error: derivation failed
+│    while evaluating the attribute and its dependencies, error: derivation
+│    failed while evaluating the attribute and its dependencies,
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│    Close ↵  Apply [a]  Dismiss [d]
+│ ───────────────────────────────────────────────────────────────────────────────
+│
+│
+│
+--- styles
+1 .x78 2
+1 . 2 . 3x15 . 2x2 . 2x18 . 2x29 .x9 2
+1
+1 .x4 4x9 .x43 2x9 .x2 2x11
+1 .x4 5 . 2 . 5x65 .x2 2x3
+1 .x6 2 .x68 2x3
+1 . 2 .x2 2x70
+1 . 2 .x4 2
+1 . 2 .x2 2x13
+1 . 2 .x4 2
+1 . 2 .x2 2x28
+1 . 2 .x4 2 .x68 2x3
+1
+1 .x4 2x29
+1 .x4 5x67
+1 .x4 5x71
+1 .x4 5x69
+1
+1 .x4 2x19 . 2x45 .x6 2x3
+1 .x4 1x10
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1 .x10 2 .x8 2x3 .x10 2x3
+1 . 2x79
+1
+1
+1
+--- legend
+1 fg=#b1b9f9
+2 fg=#999999
+3 fg=#d77757 bold
+4 fg=#d77757
+5 bold

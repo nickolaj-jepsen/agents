@@ -1,0 +1,89 @@
+# docfix/pi/applyAll 160x45 @96,0 (64x39)
+─ Doc suggestions ── ● 4 · – 0 · 24 left ───────────── Close × ─
+
+│  AGENTS.md
+│    ○ Claim number 4 about AGENTS.md: the page no longe…   4×
+│    ○ Claim number 3 about AGENTS.md: the page no longe…   3×
+│    ○ Claim number 2 about AGENTS.md: the page no longe…   2×
+│    ○ Claim number 1 about AGENTS.md: the page no longe…
+│  docs/agents.md
+│    ○ Claim number 8 about docs/agents.md: the page no …   4×
+│    ○ Claim number 7 about docs/agents.md: the page no …   3×
+│    ○ Claim number 6 about docs/agents.md: the page no …   2×
+│    ○ Claim number 5 about docs/agents.md: the page no …
+│  docs/homelab.md
+│    ○ Claim number 11 about docs/homelab.md: the page n…   3×
+│    ○ Claim number 10 about docs/homelab.md: the page n…   2×
+│    ○ Claim number 9 about docs/homelab.md: the page no…
+│  docs/hosts.md                        Apply all  Dismiss all
+│    ● Claim number 12 about docs/hosts.md: the page no …   4×
+│  ❯ ● Claim number 15 about docs/hosts.md: the page no …   3×
+│    ● Claim number 14 about docs/hosts.md: the page no …   2×
+│    ● Claim number 13 about docs/hosts.md: the page no …
+│  docs/modules.md
+│    ○ Claim number 16 about docs/modules.md: the page n…   4×
+│    ○ Claim number 18 about docs/modules.md: the page n…   2×
+│    ○ Claim number 17 about docs/modules.md: the page n…
+│  docs/notes.md
+│    ○ Claim number 20 about docs/notes.md: the page no …   4×
+   ↓ 9 in 3 docs
+
+   stale · seen 3× · 9 days ago
+   Claim number 15 about docs/hosts.md: the page no longer
+   matches what the code does.
+
+   Evidence · 9 days ago ──────────────────────────── Read [e]
+   docs/hosts.md: the line contradicts what the code does now.
+
+
+   Draft prompt ↵  Apply [a]  Dismiss [d]
+────────────────────────────────────────────────────────────────
+--- styles
+1 . 2x15 . 1x2 . 3x3 4x16 . 1x13 . 5x7 . 1
+-
+4 .x2 4x9
+4 .x4 4 . 5x50 .x2 4x3
+4 .x4 4 . 5x50 .x2 4x3
+4 .x4 4 . 5x50 .x2 4x3
+4 .x4 4 . 5x50
+4 .x2 4x14
+4 .x4 4 . 5x50 .x2 4x3
+4 .x4 4 . 5x50 .x2 4x3
+4 .x4 4 . 5x50 .x2 4x3
+4 .x4 4 . 5x50
+4 .x2 4x15
+4 .x4 4 . 5x50 .x2 4x3
+4 .x4 4 . 5x50 .x2 4x3
+4 .x4 4 . 5x50
+6 .x2 3x13 .x24 7x9 .x2 4x11
+6 .x4 2 . 2x50 .x2 4x3
+6 .x2 7 . 2 . 8x50 .x2 4x3
+6 .x4 2 . 2x50 .x2 4x3
+6 .x4 2 . 2x50
+4 .x2 4x15
+4 .x4 4 . 5x50 .x2 4x3
+4 .x4 4 . 5x50 .x2 4x3
+4 .x4 4 . 5x50
+4 .x2 4x13
+4 .x4 4 . 5x50 .x2 4x3
+.x3 4x13
+-
+.x3 4x28
+.x3 7x55
+.x3 7x27
+-
+.x3 4x21 . 1x28 . 5x4 . 4x3
+-
+-
+-
+.x3 2x12 . 4 .x2 5x5 . 4x3 .x2 5x7 . 4x3
+1x64
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#a798d7
+4 fg=#7e888e
+5 fg=#dee0e1
+6 fg=#68b78d
+7 fg=#dee0e1 bold
+8 fg=#a798d7 bold underline=single

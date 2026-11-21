@@ -1,0 +1,44 @@
+# docfix/pi/readerClicked 70x24 @26,0 (44x18)
+─ ● 0 · – 0 · 3 left ───────────── Close × ─
+│  AGENTS.md        Apply all  Dismiss all
+│  ❯ ○ just build is not enough to v…   3×
+│  docs/hosts.md
+│    ○ The legacy card was removed; …   2×
+│  docs/modules.md
+│    ○ A leaf that imports a third-p…
+
+   just build is not enough to verify a pi
+   change; the docs say it is.
+   Evidence · 2 days ago ──────── Read [e]
+
+
+
+
+
+   Close ↵  Apply [a]  Dismiss [d]
+────────────────────────────────────────────
+--- styles
+1 . 2x18 . 1x13 . 3x7 . 1
+3 .x2 4x9 .x8 2x9 .x2 2x11
+3 .x2 5 . 2 . 5x30 .x2 2x3
+2 .x2 2x13
+2 .x4 2 . 3x30 .x2 2x3
+2 .x2 2x15
+2 .x4 2 . 3x30
+-
+.x3 5x39
+.x3 5x27
+.x3 2x21 . 1x8 . 3x4 . 2x3
+-
+-
+-
+-
+-
+.x3 3x5 . 2 .x2 3x5 . 2x3 .x2 3x7 . 2x3
+1x44
+--- legend
+1 fg=#768186
+2 fg=#7e888e
+3 fg=#dee0e1
+4 fg=#a798d7
+5 fg=#dee0e1 bold

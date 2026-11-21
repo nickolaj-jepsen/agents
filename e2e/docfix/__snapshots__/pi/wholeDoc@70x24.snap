@@ -1,0 +1,45 @@
+# docfix/pi/wholeDoc 70x24 @26,0 (44x18)
+─ ● 4 · – 0 · 24 left ──────────── Close × ─
+│  AGENTS.md
+│    ○ Claim number 4 about AGENTS.m…   4×
+│    ○ Claim number 3 about AGENTS.m…   3×
+│    ○ Claim number 2 about AGENTS.m…   2×
+│    ○ Claim number 1 about AGENTS.m…
+│  docs/agents.md
+│    ○ Claim number 8 about docs/age…   4×
+│    ○ Claim number 7 about docs/age…   3×
+   ↓ 22 in 7 docs
+
+   Claim number 16 about docs/modules.md:
+   the page no longer matches what the
+   code does.
+   Evidence · 16 days ago ─────── Read [e]
+
+   Draft prompt ↵  Apply [a]  Dismiss [d]
+────────────────────────────────────────────
+--- styles
+1 . 2x3 3x16 . 1x12 . 4x7 . 1
+3 .x2 3x9
+3 .x4 3 . 4x30 .x2 3x3
+3 .x4 3 . 4x30 .x2 3x3
+3 .x4 3 . 4x30 .x2 3x3
+3 .x4 3 . 4x30
+3 .x2 3x14
+3 .x4 3 . 4x30 .x2 3x3
+3 .x4 3 . 4x30 .x2 3x3
+.x3 3x14
+-
+.x3 5x38
+.x3 5x35
+.x3 5x10
+.x3 3x22 . 1x7 . 4x4 . 3x3
+-
+.x3 6x12 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3
+1x44
+--- legend
+1 fg=#768186
+2 fg=#a798d7
+3 fg=#7e888e
+4 fg=#dee0e1
+5 fg=#dee0e1 bold
+6 fg=#a798d7 bold

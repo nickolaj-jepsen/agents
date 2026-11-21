@@ -1,0 +1,92 @@
+# docfix/claude/confirmClick 160x45 @88,0 (72x41)
+│                                                                     ✕
+│ ─ ● 1 · – 0 · 2 left ───────────── Discard 1?  Discard ↵  Keep [esc] ─
+│
+│ │  AGENTS.md
+│ │    ● just build is not enough to verify a pi change; the doc…   3×
+│ │  docs/hosts.md                              Apply all  Dismiss all
+│ │  ❯ ○ The legacy card was removed; the section still describe…   2×
+│ │  docs/modules.md
+│ │    ○ A leaf that imports a third-party module imports it on …
+│
+│    stale · seen 2× · 40 days ago
+│    The legacy card was removed; the section still describes it.
+│
+│    Evidence · 40 days ago ───────────────────────────────── Read [e]
+│    docs/hosts.md: the line contradicts what the code does now.
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│    Draft prompt ↵  Apply [a]  Dismiss [d]
+│ ──────────────────────────────────────────────────────────────────────
+│
+│
+│
+--- styles
+1 .x69 2
+1 . 2 . 3x3 2x15 . 2x13 . 4x10 .x10 2 .x7 2x5 . 2
+1
+1 . 5 .x2 2x9
+1 . 5 .x4 6 . 6x56 .x2 2x3
+1 .x4 3x13 .x30 2x9 .x2 2x11
+1 .x4 7 . 2 . 7x56 .x2 2x3
+1 . 2 .x2 2x15
+1 . 2 .x4 2
+1
+1 .x4 2x29
+1 .x4 7x60
+1
+1 .x4 2x22 . 2x33 .x6 2x3
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1 .x4 2x38
+1 . 2x70
+1
+1
+1
+--- legend
+1 fg=#b1b9f9
+2 fg=#999999
+3 fg=#d77757
+4 fg=#ffc107
+5 fg=#4eba65
+6 fg=#d77757 bold
+7 bold
