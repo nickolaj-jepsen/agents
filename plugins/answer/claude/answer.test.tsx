@@ -585,20 +585,18 @@ test("a pick list is cards on a terminal: each row lettered, the write-in last",
   await cards.unmount();
 });
 
-test("on a terminal the band is the cards' key guide, never a form, on either renderer", async ($, on) => {
+test("on a terminal the band is the cards' key guide, never a form", async ($, on) => {
   const w = world(on);
   const cards = await terminalRound($, on, GRILLING);
   await cards.unmount();
-  for (const isFullscreen of [true, false]) {
-    const bar = await $.ui.mount({
-      ...BAND,
-      surface: "terminal",
-      viewport: { columns: 100, rows: 40, isFullscreen },
-    });
-    expect((await bar.find({ key: "round-current" }))?.props.label).toBe("Q1/3");
-    expect(await bar.find({ key: "answer" })).toBeUndefined();
-    await bar.unmount();
-  }
+  const guide = await $.ui.mount({
+    ...BAND,
+    surface: "terminal",
+    viewport: { columns: 100, rows: 40, isFullscreen: true },
+  });
+  expect((await guide.find({ key: "round-current" }))?.props.label).toBe("Q1/3");
+  expect(await guide.find({ key: "answer" })).toBeUndefined();
+  await guide.unmount();
   // `/answer` brings the shown card into view and leaves the band as it was.
   const run = $.command.run(RUN);
   await w.clock.advance(100);

@@ -29,7 +29,7 @@ The row after the last card counts the answered questions. Click the count to go
 
 In the editor, `Shift+Enter` adds a line and `Enter` saves. In Claude Code, click the field or focus the band before typing. In pi, `Esc` cancels editing; a click on the prompt gives it focus.
 
-Claude Code's classic renderer and pi's regular terminal mode take keys only: the terminal owns the scrollback there, so the mouse does nothing on a card and you scroll to it yourself. In Claude Code, `/answer` brings the current card into view.
+The cards are made for each client's fullscreen renderer, which is the default. pi's regular terminal mode takes keys only: the terminal owns the scrollback there, so the mouse does nothing on a card and you scroll to it yourself. Claude Code's classic renderer is not supported. In Claude Code, `/answer` brings the current card into view.
 
 To add the optional Claude Code binding, merge this entry into `~/.claude/keybindings.json`:
 

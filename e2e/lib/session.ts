@@ -187,8 +187,7 @@ export class Session {
     const session = new Session(term, o.harness, runDir, ownsRun, o.project);
     if (o.backend === "lib") track(session);
     try {
-      // A scenario that asks for the classic renderer (`CLAUDE_CODE_NO_FLICKER: "0"`) keeps it.
-      await session.waitReady(45_000, start.env?.CLAUDE_CODE_NO_FLICKER === "0");
+      await session.waitReady();
     } catch (err) {
       await session.close();
       throw err;
@@ -201,13 +200,13 @@ export class Session {
     return new Session(DaemonTerm.attach(name), harness, runDir, false);
   }
 
-  private async waitReady(timeout = 45_000, isClassic = false) {
+  private async waitReady(timeout = 45_000) {
     const h = harnesses[this.harness];
     const start = Date.now();
     let text = "";
     while (Date.now() - start < timeout) {
       text = await this.term.text().catch(() => "");
-      if (this.harness === "claude" && !isClassic && HICCUP.test(text))
+      if (this.harness === "claude" && HICCUP.test(text))
         throw new StartHiccup(`claude started in its classic renderer`);
       if (h.failed?.(text)) throw new Error(`${this.harness} failed to start; screen:\n${text}`);
       const keys = h.dialog(text);
@@ -218,12 +217,7 @@ export class Session {
         // Fullscreen keeps the prompt at the bottom; the classic renderer prints it under the banner.
         const rows = text.split("\n");
         const at = rows.findIndex((r) => r.startsWith("❯"));
-        if (
-          this.harness === "claude" &&
-          !isClassic &&
-          at >= 0 &&
-          at < (await this.term.size()).rows / 2
-        )
+        if (this.harness === "claude" && at >= 0 && at < (await this.term.size()).rows / 2)
           throw new StartHiccup("claude started in its classic renderer");
         await this.settle();
         return;
