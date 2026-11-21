@@ -20,6 +20,9 @@ The engine draws focus and hover its own way, and the [kit's painter](../../../k
 - The transcript keeps no focus ring. A card placed there takes its keys from the band, sharing one state with it.
 - A click on a transcript row hands the keyboard to the prompt, and `$.ui.focus` cannot take it back. Escape hands it back with no event at all. A mod hears the keyboard arrive (`ui.focus` in its site) and leave by typing (`prompt.edit`, `prompt.change`) or by a transcript click (`ui.press` on a `Placed`). Draw `keysHint` so the person can see where their keys go.
 - `$` may only be passed to a function declared at the top of the file or imported from the mod's own files. A helper defined inside `register` that takes `$` stops the mod from loading.
+- The `ring` draws nothing but still takes a row of the pane, so a screen drawn to the pane's height leaves it one (docfix leaves two: the keyboard hint's and the ring's). A tree taller than `bodyRows` scrolls, and the engine keeps the parked ring in view, so the top goes first.
+- With `closeOnEscape`, Escape hands the keys to the prompt even when a `ui.close` hook refuses the close. Opening the open pane again with `focus: true` (from `$.clock.after`, once the hook has answered) takes them back while the prompt is empty, as docfix does when Escape leaves its reader or asks before discarding.
+- Above the prompt of a 70x24 terminal a pane gets six body rows, whatever `rows` asks for. Draw something useful in that.
 
 ## Graphical surfaces
 

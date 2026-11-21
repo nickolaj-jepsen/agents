@@ -4,6 +4,12 @@
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.pi.tsbuildinfo",
     "types": ["node"]
   },
-  "include": ["kit/**/*.ts", "scripts/**/*.ts", "plugins/*/pi/**/*.ts", "plugins/*/core/**/*.ts"],
+  "include": [
+    "kit/**/*.ts",
+    "scripts/**/*.ts",
+    "plugins/*/pi/**/*.ts",
+    "plugins/*/core/**/*.ts",
+    "plugins/*/claude/kit/**/*.ts"
+  ],
   "exclude": ["kit/legacy/claude/ui.spec.ts", "kit/**/*.tsx"]
 }

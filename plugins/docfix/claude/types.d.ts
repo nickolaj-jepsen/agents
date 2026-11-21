@@ -19,6 +19,19 @@ export type Suggestion = {
 /** What the line under the title says when something went wrong, and in which role. */
 export type Said = { text: string; status: "success" | "warning" | "error" };
 
+/** Where the terminal screen stands (`core/screen.ts`'s state, less what other atoms hold). */
+export type View = {
+  /** The suggestion the keyboard is on. */
+  focus: string | null;
+  /** The reader's piece of evidence, while it is open. */
+  reader: number | null;
+  scroll: { list: number; detail: number };
+  /** Close asks before it throws away what is set. */
+  confirming: boolean;
+  /** How many are dismissed already, for the screen with nothing open. */
+  dismissed: number;
+};
+
 declare module "claude-code" {
   interface PluginState {
     docfix: {
@@ -36,6 +49,13 @@ declare module "claude-code" {
       showAll: boolean;
       /** One line under the title when something went wrong. */
       notice: Shaped<Said>;
+      /** The terminal screen's focus, reader, scroll and close question. */
+      view: Shaped<View>;
+      /**
+       * Whether the pane holds the keyboard, as far as the mod can tell: the engine says when the
+       * ring moves in it and when the person types in the prompt, not when Escape leaves it.
+       */
+      keys: Shaped<boolean>;
     };
   }
 }

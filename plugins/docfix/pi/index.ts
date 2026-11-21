@@ -3,7 +3,6 @@
  * What a call does to the queue is the core's (`../core/docfix.ts`), the one Claude Code's mod runs.
  */
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import {
   applyPrompt,
@@ -18,10 +17,10 @@ import {
   statusText,
   TOOL_DESCRIPTION,
   TOOL_NAME,
-  type Suggestion,
 } from "../core/docfix.ts";
-import { overlayOptions } from "../../../kit/legacy/pi/ui.ts";
-import { DocsPanel, EMPTY_TEXT } from "./panel.ts";
+import { line, span } from "../../../kit/lines.ts";
+import { draw } from "../../../kit/paint/pi.ts";
+import { DocsPanel, sidebarOptions, type PanelResult } from "./panel.ts";
 import { hasStore, isTracked, loadAll, remove, repoRoot, save, storeDir } from "./store.ts";
 
 const STATUS_KEY = "docfix";
@@ -135,7 +134,9 @@ export default function (pi: ExtensionAPI) {
       const first = result.content[0];
       const text = first?.type === "text" ? (first.text.split("\n")[0] ?? "") : "";
       const ok = (result.details as { ok?: boolean } | undefined)?.ok !== false;
-      return new Text(theme.fg(ok ? "dim" : "warning", text), 0, 0);
+      // The result's first line, dim, or in the warning colour when the call failed.
+      const row = line([span(text, { role: ok ? "dim" : "warning" })]);
+      return { render: (width: number) => draw(theme, [row], width), invalidate() {} };
     },
   });
 
@@ -156,14 +157,14 @@ export default function (pi: ExtensionAPI) {
         return;
       }
       const initial = await load();
-      const empty = openQueue(initial).length === 0;
-      const picked = await ctx.ui.custom<Suggestion[] | undefined>(
-        (tui, theme, _keybindings, done) =>
-          new DocsPanel(
+      let columns = () => process.stdout.columns || 80;
+      const picked = await ctx.ui.custom<PanelResult>(
+        (tui, theme, _keybindings, done) => {
+          columns = () => tui.terminal.columns;
+          return new DocsPanel(
             tui,
             theme,
             {
-              load,
               dismiss: async (list) => {
                 const now = new Date().toISOString();
                 for (const s of list) await save(where.dir, dismiss(s, now));
@@ -172,20 +173,16 @@ export default function (pi: ExtensionAPI) {
             },
             initial,
             done,
-          ),
-        {
-          overlay: true,
-          // One column at the reading width while there is a queue; the empty state is a small dialog.
-          overlayOptions: empty
-            ? overlayOptions("auto", EMPTY_TEXT.length + 4)
-            : overlayOptions("reading"),
+          );
         },
+        // A sidebar on the right, down to the editor, which stays in view.
+        { overlay: true, overlayOptions: sidebarOptions(() => columns()) },
       );
       await refresh(ctx);
-      if (!picked?.length) return;
+      if (!picked?.applied.length) return;
       // Drafted in the editor, after what the person already typed, not sent: they read it first.
       const draft = ctx.ui.getEditorText();
-      const text = applyPrompt(picked);
+      const text = applyPrompt(picked.applied);
       ctx.ui.setEditorText(draft.trim() ? `${draft}\n\n${text}` : text);
       ctx.ui.notify("The apply prompt is in the editor: read it, then Enter to send", "info");
     },

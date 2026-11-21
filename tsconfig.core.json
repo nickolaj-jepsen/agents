@@ -13,6 +13,6 @@
     "skipLibCheck": true,
     "types": []
   },
-  "include": ["plugins/*/core/**/*.ts"],
+  "include": ["plugins/*/core/**/*.ts", "plugins/*/claude/kit/**/*.ts"],
   "exclude": ["plugins/*/core/**/*.spec.ts"]
 }

@@ -5,7 +5,7 @@
  */
 import type { On } from "claude-code";
 import { expect, test } from "claude-code/testing";
-import type { Engine } from "claude-code/testing";
+import type { Engine, Mounted } from "claude-code/testing";
 import { expectNative } from "./checks";
 
 const ROOT = "/repo";
@@ -165,113 +165,128 @@ const COMMAND = {
   presentation: { isFullscreen: true, columns: 160 },
 } as const;
 
-test("a row set to apply or dismiss shows on the line under the title; again, it is skipped", async ($, on) => {
+const SECOND = "agents--a-second-gap";
+
+/** Two suggestions on AGENTS.md, and the terminal pane open on them. */
+async function twoOpen($: Engine, on: On) {
   const world = engine(on);
   await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
   await $.tool.call(SUGGEST);
-  await $.tool.call({ ...SUGGEST, file: "AGENTS.md", claim: "A second gap", same_as: "none" });
-  expect(await bandCount($)).toBe("2");
+  await $.tool.call({ ...SUGGEST, claim: "A second gap", same_as: "none" });
   await $.command.run(COMMAND);
+  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+  return { world, ui };
+}
+
+/** Whether a Text shows `text`: the screen's rows are runs of Text, one row each. */
+const shows = async (ui: Pick<Mounted, "find">, text: RegExp) =>
+  (await ui.find({ type: "Text", text })) !== undefined;
+
+test("the terminal pane is the shared screen: the caption, the doc, its rows and the footer", async ($, on) => {
+  const { world, ui } = await twoOpen($, on);
   // The pane shows the count itself, so the band above the prompt steps aside.
   expect(await bandCount($)).toBeUndefined();
-
-  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
-  expect(await ui.find({ type: "Text", text: /carry out apply and dismiss/ })).toBeDefined();
-  await ui.press({ key: `apply:row:${ID}` });
-  expect(await ui.find({ type: "Text", text: /On close: apply 1/ })).toBeDefined();
-  await ui.press({ key: `dismiss:row:${ID}` });
-  expect(await ui.find({ type: "Text", text: /On close: dismiss 1/ })).toBeDefined();
-  await ui.press({ key: `dismiss:row:${ID}` });
-  expect(await ui.find({ type: "Text", text: /carry out apply and dismiss/ })).toBeDefined();
-  // Setting a row does nothing yet: closing the pane carries it out (the e2e scenarios).
+  expect(await shows(ui, /0 of 2 decided/)).toBe(true);
+  expect(await shows(ui, /❯ ○ Run pnpm install --force/)).toBe(true);
+  expect(await shows(ui, /missing · seen once/)).toBe(true);
+  // Every control is a plain Button under its own key; the ring and the hotkeys draw nothing.
+  const keys = (await ui.findAll({ type: "Button" })).map((b) => String(b.key));
+  for (const key of [
+    `row:${ID}`,
+    `row:${SECOND}`,
+    "doc:AGENTS.md",
+    "detail",
+    "main",
+    "apply",
+    "dismiss",
+    "evidence",
+    "frame:close",
+    "kit-ring",
+    "kit-key-a",
+    "kit-key-d",
+    "kit-key-e",
+  ])
+    expect(keys).toContain(key);
   expect(world.fills).toHaveLength(0);
   await ui.unmount();
 });
 
-test("skip sets a row back, and the keys are drawn whatever the ring is on", async ($, on) => {
-  engine(on);
-  await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
-  await $.tool.call(SUGGEST);
-  await $.command.run(COMMAND);
-  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
-  // The engine keeps the ring at its index among the Buttons, so their number never changes.
-  const count = (await ui.findAll({ type: "Button" })).length;
-  await ui.press({ key: `apply:row:${ID}` });
-  await $.ui.focus({
-    component: "Pane",
-    requestId: "docfix",
-    element: "submit",
-    origin: { kind: "person" },
-  });
-  expect(await ui.findAll({ type: "Button" })).toHaveLength(count);
-  await ui.press({ key: `skip:row:${ID}` });
-  expect(await ui.find({ type: "Text", text: /carry out apply and dismiss/ })).toBeDefined();
+test("Apply sets the keyboard's row and moves on; the main action says what it will do", async ($, on) => {
+  const { world, ui } = await twoOpen($, on);
+  await ui.press({ key: "apply" });
+  expect(await shows(ui, /1 of 2 decided/)).toBe(true);
+  expect(await shows(ui, /● Run pnpm install/)).toBe(true);
+  expect(await shows(ui, /❯ ○ A second gap/)).toBe(true);
+  expect(await shows(ui, /^Draft 1 fix$/)).toBe(true);
+  // The hotkey on the ring's hidden button does what the footer's button does.
+  await ui.press({ key: "kit-key-d" });
+  expect(await shows(ui, /2 of 2 decided/)).toBe(true);
+  expect(await shows(ui, /Draft 1 fix, dismiss 1/)).toBe(true);
+  // Setting a row does nothing yet: the main action carries it out.
+  expect(world.fills).toHaveLength(0);
   await ui.unmount();
 });
 
-test("a folded row cuts a long claim; opening it shows the claim and its evidence whole", async ($, on) => {
-  engine(on);
-  await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
-  const claim = "A claim that runs well past one line of the pane and must not be cut. ".repeat(4);
-  const evidence = `${"x ".repeat(300)}END-OF-EVIDENCE`;
-  await $.tool.call({ ...SUGGEST, claim: claim.slice(0, 270) + " END-OF-CLAIM", evidence });
-  await $.command.run(COMMAND);
-  const ui = await $.ui.mount({
-    ...PANE,
-    props: { ...PANE.props, bodyColumns: 48 },
-    surface: "terminal",
-  });
-  expect(await ui.find({ type: "Text", text: /END-OF-EVIDENCE/ })).toBeUndefined();
-  expect(await ui.find({ type: "Text", text: /END-OF-CLAIM/ })).toBeUndefined();
-  const row = await ui.find({ type: "Button", text: /A claim that runs/ });
-  expect(row?.key).toMatch(/^row:/);
-  await ui.press({ key: String(row?.key) });
-  expect(await ui.find({ type: "Text", text: /END-OF-CLAIM/ })).toBeDefined();
-  expect(await ui.find({ type: "Text", text: /END-OF-EVIDENCE/ })).toBeDefined();
-  await ui.press({ key: String(row?.key).replace(/^row:/, "ev:") });
-  expect(await ui.find({ type: "Text", text: /END-OF-EVIDENCE/ })).toBeUndefined();
+test("the main action dismisses and drafts the prompt, and closes", async ($, on) => {
+  const { world, ui } = await twoOpen($, on);
+  await ui.press({ key: "apply" });
+  await ui.press({ key: "dismiss" });
+  await ui.press({ key: "kit-ring" });
+  expect(world.fills).toHaveLength(1);
+  expect(world.fills[0]?.text).toContain("Run pnpm install --force");
+  expect(world.fills[0]?.text).not.toContain("A second gap");
+  expect(world.files.get(`${DIR}/${SECOND}.md`)).toContain("status: dismissed");
+  expect(world.toasts.join(" ")).toContain("Dismissed 1.");
   await ui.unmount();
 });
 
-test("a doc's header is its path and a rule, with no keys of its own", async ($, on) => {
-  engine(on);
-  await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
-  await $.tool.call(SUGGEST);
-  await $.tool.call({ ...SUGGEST, claim: "A second gap", same_as: "none" });
-  await $.command.run(COMMAND);
-  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
-  expect(await ui.find({ type: "Text", text: /^AGENTS\.md ─+$/ })).toBeDefined();
-  // Only rows and the submit key are pressable: a claim, evidence and three keys a row, and submit.
-  const keys = (await ui.findAll({ type: "Button" })).map((b) => String(b.key));
-  expect(keys.filter((key) => !/^(row|ev):|^(apply|dismiss|skip):row:|^submit$/.test(key))).toEqual(
-    [],
-  );
-  expect(keys).toHaveLength(2 * 5 + 1);
+test("Close asks before it throws the choices away; Keep keeps them, Discard drafts nothing", async ($, on) => {
+  const { world, ui } = await twoOpen($, on);
+  await ui.press({ key: "apply" });
+  await ui.press({ key: "frame:close" });
+  expect(await shows(ui, /Discard choices\?/)).toBe(true);
+  await ui.press({ key: "frame:keep" });
+  expect(await shows(ui, /1 of 2 decided/)).toBe(true);
+  await ui.press({ key: "frame:close" });
+  await ui.press({ key: "frame:discard" });
+  expect(world.fills).toHaveLength(0);
+  expect(world.files.get(`${DIR}/${ID}.md`)).toContain("status: open");
   await ui.unmount();
 });
 
-test("the ring passes over a row's keys, and they follow it", async ($, on) => {
-  engine(on);
-  await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
-  await $.tool.call(SUGGEST);
-  await $.tool.call({ ...SUGGEST, claim: "A second gap", same_as: "none" });
-  await $.command.run(COMMAND);
-  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
-  const [one, two] = (await ui.findAll({ type: "Button", text: /sjusk|second gap/ })).map((r) =>
-    String(r.key),
-  );
+test("the ring's moves are the screen's: an arrow moves the keyboard, a click puts it on a row", async ($, on) => {
+  const { ui } = await twoOpen($, on);
   const move = (element: string) =>
     $.ui.focus({ component: "Pane", requestId: "docfix", element, origin: { kind: "person" } });
-  const hotkey = async (key: string) => (await ui.find({ type: "Button", key }))?.props.hotkey;
-  await move(String(one));
-  expect(await hotkey(`apply:${one}`)).toBe("a");
-  // Down onto the first row's evidence line lands the ring on the second row, keys and all.
-  await move(`ev:${String(one).replace(/^row:/, "")}`);
-  expect(await hotkey(`apply:${one}`)).toBeUndefined();
-  expect(await hotkey(`apply:${two}`)).toBe("a");
-  // Up onto the first row's keys lands it back on the first row.
-  await move(`skip:${one}`);
-  expect(await hotkey(`apply:${one}`)).toBe("a");
+  await move("kit-ring-down");
+  expect(await shows(ui, /❯ ○ A second gap/)).toBe(true);
+  await move(`row:${ID}`);
+  expect(await shows(ui, /❯ ○ Run pnpm install/)).toBe(true);
+  // A click on a footer button moves nothing: its press acts on the keyboard's row.
+  await move("apply");
+  expect(await shows(ui, /❯ ○ Run pnpm install/)).toBe(true);
+  await ui.unmount();
+});
+
+test("the reader shows the focused suggestion's evidence; Back leaves it", async ($, on) => {
+  const { ui } = await twoOpen($, on);
+  await ui.press({ key: "kit-key-e" });
+  expect(await shows(ui, /Evidence 1 of 1/)).toBe(true);
+  expect(await shows(ui, /AGENTS\.md:12 says pnpm install/)).toBe(true);
+  expect(await ui.find({ type: "Button", key: "back" })).toBeDefined();
+  await ui.press({ key: "back" });
+  expect(await shows(ui, /Evidence 1 of 1/)).toBe(false);
+  await ui.press({ key: "detail" });
+  expect(await shows(ui, /Evidence 1 of 1/)).toBe(true);
+  await ui.unmount();
+});
+
+test("the screen is drawn between its frame's two rules", async ($, on) => {
+  const { ui } = await twoOpen($, on);
+  const rows = (await ui.findAll({ type: "Text" })).filter((t) =>
+    /^─ Doc suggestions|^─{20,}$/.test(t.text),
+  );
+  expect(rows.length).toBeGreaterThanOrEqual(2);
   await ui.unmount();
 });
 

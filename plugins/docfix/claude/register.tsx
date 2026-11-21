@@ -5,10 +5,13 @@
  *
  * While any are open, a band above the prompt counts them; a click on it opens the pane.
  *
- * In the pane each suggestion is set to apply, dismiss or neither (skip), and closing the pane
+ * In the terminal the pane is the screen pi draws too (`../core/screen.ts`), painted by the kit
+ * with its own focus: each suggestion is set to apply, dismiss or neither, and the main action
  * carries that out: the dismissed ones are kept as dismissed, and the applied ones are drafted as
- * one prompt in the person's prompt box, never sent. A row starts folded, its claim cut at a few
- * lines; opening it shows the claim whole and its evidence.
+ * one prompt in the person's prompt box, never sent. Close asks before it throws the choices away.
+ *
+ * Desktop and VS Code keep their graphical pane: a row starts folded and opens to its claim and
+ * evidence, and closing the pane carries the choices out.
  */
 import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register, ToolCallResult } from "claude-code";
@@ -36,7 +39,19 @@ import {
   type Input,
   type Suggestion,
 } from "../core/docfix";
-import type { Said } from "./types.d.ts";
+import type { Said, View } from "./types.d.ts";
+import {
+  drawScreen,
+  isScreenHit,
+  keyIntent,
+  reduce,
+  zoneAt,
+  type Intent,
+  type ScreenOptions,
+  type ScreenState,
+} from "../core/screen";
+import { blank } from "./kit/lines.ts";
+import { keysHint, paintLines, ring, RING, ringMove } from "./kit/paint/claude.tsx";
 import { evidence } from "./evidence";
 import {
   actionBar,
@@ -79,6 +94,21 @@ const said = atom(
   { text: "", status: "warning" } as Said,
   { shape: "notice-4" },
 );
+
+/** The terminal screen's own state; what is set lives in `choices`, as on a graphical surface. */
+const view = atom(
+  { plugin: "docfix", key: "view" } as const,
+  {
+    focus: null,
+    reader: null,
+    scroll: { list: 0, detail: 0 },
+    confirming: false,
+    dismissed: 0,
+  } as View,
+  { shape: "view-1" },
+);
+/** Whether the pane holds the keyboard, as far as the engine says: it lights the keyboard hint. */
+const keys = atom({ plugin: "docfix", key: "keys" } as const, false, { shape: "keys-1" });
 
 const say = ($: EngineInterface, text: string, status: Said["status"] = "warning") =>
   update($, said, () => ({ text, status }));
@@ -161,7 +191,7 @@ async function refresh($: EngineInterface, where?: Place | string) {
   const all = typeof at === "string" ? [] : await loadAll($, at.dir);
   const open = openQueue(all);
   await update($, queue, () => open);
-  return open;
+  return { open, dismissed: all.length - open.length };
 }
 
 /** The width a pane is asked to open at, docked or inline; the surface caps it. */
@@ -182,24 +212,45 @@ function wantedRows(list: readonly Suggestion[]) {
   return 6 + body;
 }
 
+/** The pane as `$.ui.open` asks for it, the first time and when it takes the keyboard back. */
+const openArgs = (list: readonly Suggestion[]) =>
+  paneOptions({
+    id: PANE,
+    title: "Doc suggestions",
+    focus: true as const,
+    closeOnEscape: true as const,
+    // The terminal's screen fills the pane it is given, so an inline one asks for room.
+    rows: Math.max(wantedRows(list), 40),
+    columns: WANTED_COLUMNS,
+  });
+
+/**
+ * Takes the keyboard back for the pane after an Escape it refused to close on: the engine hands
+ * the keys to the prompt either way, and asking to open the open pane with focus brings them back
+ * while the prompt is empty.
+ */
+async function reclaim($: EngineInterface) {
+  await $.ui.open(openArgs(await read($, queue))).catch(() => undefined);
+}
+
 async function openPane($: EngineInterface) {
   await say($, "");
-  const list = await refresh($);
+  const { open: list, dismissed } = await refresh($);
   await update($, choices, () => ({}));
+  await update($, view, () => ({
+    focus: list[0]?.id ?? null,
+    reader: null,
+    scroll: { list: 0, detail: 0 },
+    confirming: false,
+    dismissed,
+  }));
+  // The ring landing on the pane's parked button says the pane has the keyboard.
+  await update($, keys, () => false);
   await update($, expanded, () => []);
   await update($, showAll, () => false);
   // The band steps aside first, so the pane is placed against the layout it will keep.
   await update($, paneShown, () => true);
-  const opened = await $.ui.open(
-    paneOptions({
-      id: PANE,
-      title: "Doc suggestions",
-      focus: true,
-      closeOnEscape: true,
-      rows: wantedRows(list),
-      columns: WANTED_COLUMNS,
-    }),
-  );
+  const opened = await $.ui.open(openArgs(list));
   if (opened.isPlaced) return;
   await update($, paneShown, () => false);
   $.ui.toast(`The doc suggestions pane can't show yet: ${opened.reason}`);
@@ -210,7 +261,10 @@ async function openPane($: EngineInterface) {
  * drafts one prompt for the applied ones in the person's prompt box, after what they typed.
  * False when the draft could not be placed: the pane then stays open, its apply rows still set.
  */
-async function settle($: EngineInterface): Promise<boolean> {
+async function settle(
+  $: EngineInterface,
+  retry = "close again to retry, or set those rows back to skip",
+): Promise<boolean> {
   const list = await read($, queue);
   const set = await read($, choices);
   const applied = list.filter((s) => set[s.id] === "apply");
@@ -241,7 +295,7 @@ async function settle($: EngineInterface): Promise<boolean> {
     if (!filled.isFilled) {
       await say(
         $,
-        `${dismissed.length > 0 ? `Dismissed ${dismissed.length}. ` : ""}The prompt box can't take the apply draft right now: close again to retry, or set those rows back to skip.`,
+        `${dismissed.length > 0 ? `Dismissed ${dismissed.length}. ` : ""}The prompt box can't take the apply draft right now: ${retry}.`,
         "error",
       );
       return false;
@@ -255,6 +309,71 @@ async function settle($: EngineInterface): Promise<boolean> {
   if (done.length > 0) $.ui.toast(done.join(" "));
   return true;
 }
+
+// ---- the terminal's screen
+
+/** Where the pane was last drawn: the graphical surfaces keep their own pane and close. */
+let paneSurface = "terminal";
+/** The screen's size as last drawn, for a key or a wheel that comes between two draws. */
+let drawnAt: ScreenOptions = { width: 80, height: 24, now: 0 };
+let drawnScreen: ReturnType<typeof drawScreen> = { lines: [], zones: {} };
+
+/** The screen's state from the atoms that hold it. */
+async function screenState($: EngineInterface): Promise<ScreenState> {
+  const v = await read($, view);
+  const noted = await read($, said);
+  return {
+    queue: await read($, queue),
+    set: await read($, choices),
+    dismissed: v.dismissed,
+    focus: v.focus ?? undefined,
+    reader: v.reader ?? undefined,
+    scroll: v.scroll,
+    confirming: v.confirming,
+    notice: noted.status === "error" && noted.text ? noted.text : undefined,
+  };
+}
+
+async function closeScreen($: EngineInterface) {
+  await update($, paneShown, () => false);
+  await update($, keys, () => false);
+  await $.ui.close({ id: PANE });
+}
+
+/**
+ * A key or a click on the screen: the reducer's next state into the atoms, then what it asks
+ * for. The main action settles first, since a close the mod raises skips its own `ui.close`.
+ */
+async function act($: EngineInterface, intent: Intent | undefined) {
+  if (!intent) return;
+  const before = await screenState($);
+  const { state, effect } = reduce(before, intent, { ...drawnAt, now: await $.clock.now() });
+  if (state.set !== before.set) await update($, choices, () => ({ ...state.set }));
+  if (state.notice === undefined && before.notice !== undefined) await say($, "");
+  await update($, view, (v) => ({
+    ...v,
+    focus: state.focus ?? null,
+    reader: state.reader ?? null,
+    scroll: state.scroll,
+    confirming: state.confirming ?? false,
+  }));
+  if (effect === "close") return closeScreen($);
+  if (effect === "submit" && (await settle($, "press Enter to try again"))) await closeScreen($);
+}
+
+/** A hotkey of the screen's, read against the state as it is when it lands. */
+async function press($: EngineInterface, key: string) {
+  await act($, keyIntent(key, await screenState($), drawnAt));
+}
+
+async function hold($: EngineInterface, held: boolean) {
+  if ((await read($, keys)) !== held) await update($, keys, () => held);
+}
+
+/** The keys the screen binds besides Enter and the arrows: one lowercase letter each. */
+const SCREEN_KEYS = ["a", "d", "e", "n", "j", "k"] as const;
+/** Rows under the screen: the keyboard hint's, and the ring's, which draws nothing. */
+const ROWS_UNDER = 2;
 
 // ---- what the focus ring stops on
 
@@ -457,15 +576,38 @@ export const register: Register = (on) => {
     return { text: "Opened the doc suggestions pane." };
   }).catch((_$, _e, next) => ({ text: `docfix: ${String(next.error)}` }));
 
-  // Closing is what carries the choices out. An unload closes without asking; a draft the prompt
-  // box refuses keeps the pane open, with the notice saying why.
+  // In the terminal, Escape or the close mark is the screen's Escape: it leaves the reader, keeps
+  // the choices when Close is asking, asks when something is set, and else closes. On a graphical
+  // surface closing is what carries the choices out; a draft the prompt box refuses keeps the pane
+  // open, with the notice saying why. An unload closes without asking.
   on("ui.close", { id: PANE }, async ($, e, next) => {
-    if (e.origin.kind !== "unload" && !(await settle($))) return { value: undefined };
+    if (e.origin.kind !== "unload") {
+      if (paneSurface === "terminal") {
+        const s = await screenState($);
+        if (s.reader !== undefined || s.confirming || s.queue.some((q) => s.set[q.id])) {
+          await act($, { do: "escape" });
+          // After the close is refused, once the engine has moved the keys to the prompt.
+          $.clock.after(50, () => void reclaim($));
+          return { value: undefined };
+        }
+      } else if (!(await settle($))) return { value: undefined };
+    }
     await update($, paneShown, () => false);
+    await update($, keys, () => false);
     return next(e);
   });
 
   on("ui.focus", { requestId: PANE }, async ($, e, next) => {
+    // The terminal's screen draws its own focus: the engine's ring stays parked on a button that
+    // draws nothing, and its moves become the screen's (`ring` and `ringMove` in the kit).
+    if (paneSurface === "terminal") {
+      const move = ringMove(e.element, isScreenHit);
+      if (move && "hit" in move) await act($, { do: "focus", hit: move.hit });
+      else if (move?.by) await act($, { do: "move", by: move.by });
+      const moved = await next(move ? { ...e, element: RING.park } : e);
+      if (!moved.deny) await hold($, true);
+      return moved;
+    }
     const element = e.element ?? null;
     const to =
       element && e.origin.kind === "person"
@@ -474,6 +616,25 @@ export const register: Register = (on) => {
     await update($, focused, () => to ?? element);
     return next(to ? { ...e, element: to } : e);
   }).catch((_$, e, next) => next(e));
+
+  // The wheel over the queue moves its window, over the focused suggestion or the reader their
+  // rows; the page keys move those. The screen fits its pane, so the engine has nothing to move.
+  on("ui.scroll", { requestId: PANE }, async ($, e, next) => {
+    if (paneSurface !== "terminal") return next(e);
+    const zone = e.pointer ? zoneAt(drawnScreen.zones, e.pointer.row) : "detail";
+    if (zone) await act($, { do: "scroll", zone, by: e.pointer ? 3 * Math.sign(e.by) : e.by });
+    return {};
+  }).catch((_$, e, next) => next(e));
+
+  // What the person types goes to the prompt, which then has the keyboard.
+  on("prompt.edit", async ($, e, next) => {
+    await hold($, false);
+    return next(e);
+  });
+  on("prompt.change", async ($, e, next) => {
+    if (e.origin.kind !== "plugin") await hold($, false);
+    return next(e);
+  });
 
   // The open count, above the prompt; a click opens the pane. A survey has the band to itself.
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
@@ -499,6 +660,33 @@ export const register: Register = (on) => {
   });
 
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
+    paneSurface = e.surface;
+    if (e.surface === "terminal") {
+      const els = $.ui.resolve(e);
+      const { Box } = els;
+      // A docked pane keeps a cell from the engine's divider; an inline one has its box's.
+      const pad = e.props.placement === "inline" ? 0 : 1;
+      const width = Math.max(20, e.props.bodyColumns - pad);
+      const now = await $.clock.now();
+      drawnAt = { width, height: Math.max(4, e.props.scroll.bodyRows - ROWS_UNDER), now };
+      const state = await screenState($);
+      drawnScreen = drawScreen(state, drawnAt);
+      const held = await read($, keys);
+      return (
+        <Box flexDirection="column" paddingLeft={pad}>
+          {paintLines(els, drawnScreen.lines, {
+            press: (hit) => act($, { do: "press", hit }),
+            width,
+          })}
+          {keysHint(els, held) ?? paintLines(els, [blank()])}
+          {ring(
+            els,
+            () => act($, { do: "main" }),
+            SCREEN_KEYS.map((key) => ({ key, press: () => press($, key) })),
+          )}
+        </Box>
+      );
+    }
     const kit = kitOf($.ui.resolve(e), e);
     const queued = await read($, queue);
     const set = await read($, choices);
