@@ -1,30 +1,92 @@
 # UI kit
 
-Use the [component catalogue](catalog/COMPONENTS.md) to check what Claude Code and pi can draw. The [rendered catalogue](https://nickolaj-jepsen.github.io/agents/dev/) adds terminal screenshots and props; use the [layout reference](../skills/agent-plugin-dev/references/style.md) to pick a pattern.
+One design system for the plugins on both clients. A terminal component is drawn once, as styled lines, and pi and Claude Code's terminal each only paint those lines, so the two cannot drift apart. Claude Desktop and VS Code get their own drawing with native controls.
 
-## Edit the source
+The [component catalogue](catalog/COMPONENTS.md) lists every component, where it is drawn and which are still on the legacy kits. The [rendered catalogue](https://nickolaj-jepsen.github.io/agents/dev/) shows them in both terminals. The [layout reference](../skills/agent-plugin-dev/references/style.md) holds the rules every component follows.
 
-- **pi:** Import `kit/pi/ui.ts` by relative path. The shipped loader doesn't resolve tsconfig aliases.
-- **Claude Code:** Edit `kit/claude/ui.tsx`, not a mod's copy. A packaged mod can't import outside its folder. Tests use `expectNative` from the copied `checks.tsx`.
+## How it fits together
 
-```bash
-just kit-sync            # update the checked-in Claude copies and shared story samples
-just kit-sync docfix     # create the kit copy for a mod that doesn't already have one
-just test                # check copies, component manifests, and unit tests
+| Part                                                    | What it holds                                                                                                                     |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| [`lines.ts`](lines.ts)                                  | The line model: spans with a colour role and a face, the control a span or row belongs to, wrapping and inline Markdown in cells. |
+| [`tokens.ts`](tokens.ts)                                | The numbers and glyphs. One edit restyles every plugin on both clients.                                                           |
+| `<component>/contract.ts`                               | What a plugin passes in and gets back. No host imports.                                                                           |
+| `<component>/terminal.ts`                               | The component as lines for a width.                                                                                               |
+| [`paint/pi.ts`](paint/pi.ts)                            | Lines as pi's themed strings, and where each control sits on its row.                                                             |
+| [`paint/claude.tsx`](paint/claude.tsx)                  | Lines as Claude Code elements: a plain `Button` per control, plus the parked focus ring, the hover fill and the keyboard hint.    |
+| [`stories.ts`](stories.ts) and `<component>/stories.ts` | One set of sample props per state, drawn by both catalogues.                                                                      |
+| [`legacy/`](legacy)                                     | The two kits from before, for what has not moved yet. Don't add to them.                                                          |
+
+A component's functions take props and a width and return `Line[]`. They never see a theme or an element, so they run the same in a test, in pi and in a Claude Code mod.
+
+## Draw with a component
+
+In pi, import by relative path (the loader resolves no aliases) and paint with the theme:
+
+```ts
+import { choiceList } from "../../../kit/card/terminal.ts";
+import { paintLines } from "../../../kit/paint/pi.ts";
+
+const painted = paintLines(theme, choiceList(props, width), width);
+// painted.lines are the rows; painted.cells say where each control is, for the mouse.
 ```
 
-Claude types are only available after `just dev-setup`; check changes in a mod with `npx tsc -p plugins/<name>/claude` as well.
+In a Claude Code mod, import from the mod's own copy and paint with the elements of the render event:
 
-## Add a component or story
+```tsx
+import { choiceList } from "./kit/card/terminal.ts";
+import { paintLines } from "./kit/paint/claude.tsx";
 
-1. Export the component from the applicable kit. Document props and non-obvious defaults on the exported types or parameters: the catalogue reads their JSDoc.
-2. Add or update the [component manifest](catalog/components/). For each harness, name the export and the story that demonstrates each supported feature. Use the manifest's unsupported status and give the reason if the harness can't implement it.
-3. Add matching `<component>/<state>` stories in [pi](catalog/pi/stories.ts) and [Claude](catalog/claude/stories.ts), plus their [scenarios](../e2e/kit/). Use the same [samples](catalog/samples.ts) and [sizes](../e2e/kit/sizes.ts) so the result can be compared.
-4. Replay and inspect the changed story:
+return paintLines(els, choiceList(props, width), { press: (hit) => pick(hit), width });
+```
 
-   ```bash
-   E2E_PNG=1 just e2e kit   # compare snapshots and write pictures
-   just catalog            # replay stories and regenerate crops and catalogue data
-   ```
+A mod can't import outside its folder, so it carries a copy of the kit as `claude/kit/`:
 
-If the snapshot change is intended, accept it with `E2E_UPDATE=1 just e2e kit`. Commit the resulting snapshots and regenerated `catalog/COMPONENTS.md`. The site data and crops are generated, not committed. Use `npm run catalog -- --check` to validate the model without replaying, or `npm run catalog -- --no-shots` to rebuild from existing screenshots.
+```bash
+just kit-sync answer   # give a mod its copy of the kit
+just kit-sync          # rewrite every copy after editing the kit
+```
+
+Its `claude/tsconfig.json` needs `"allowImportingTsExtensions": true`, since the kit's files import each other with `.ts`. `just test` fails while a copy differs from the kit.
+
+The kit keeps no state and registers no hooks. A plugin holds the state (what is chosen, where the keyboard is) and passes it in, the same way on both clients. [The catalogue mod](catalog/claude/claude/register.tsx) shows the hooks a Claude Code site needs for the kit's own focus.
+
+## Add or change a component
+
+```bash
+just kit-new status-line                   # scaffold kit/status-line/ and register its stories
+just kit-live status-line/default --harness pi   # watch it in a real session; redraws on save
+just kit-sync                              # copy the kit into the mods
+E2E_UPDATE=1 just e2e kit -t 'status-line/'      # record it in pi and Claude Code
+just test                                  # the parity check reads those snapshots
+```
+
+1. Put the types in `contract.ts` and draw in `terminal.ts`. Use roles from `lines.ts` and glyphs from `tokens.ts`, never a colour or a literal glyph. Give each control a `hit`, on its row or on its spans.
+2. Add a story per state in the component's `stories.ts`. A story is one call that returns lines for a width.
+3. Fill in `manifest.ts`: what it is for, its features, the story that shows each, and for each surface whether it is on the system. A feature on a `system` surface is supported or says why the engine can't; "not built yet" is not an answer there.
+4. Record and run the tests. [`parity.spec.ts`](parity.spec.ts) fails when a client's snapshot is not exactly the shared drawing at its width, or when the two clients differ at the same width.
+
+Test the mouse first. Hover and click every control in a real session on each client before trying a key, in every place the component is drawn: a pane, the band and the transcript differ in focus and in who holds the keyboard.
+
+To change how something looks everywhere, edit its `terminal.ts` or `tokens.ts` and record again. Both clients change together.
+
+## What still differs between the clients
+
+- **Hover.** pi reports the pointer, and the row under it gets a bold label. Claude Code inverts a `Button` under the pointer and nothing turns that off, so the painter swaps the row's colours first: the row keeps them and sits on a soft fill.
+- **Keyboard focus on Claude Code.** The engine inverts whatever its focus ring rests on. A site that wants the kit's pointer and bold label instead keeps the ring on a button that draws nothing (`ring` in the painter) and turns the ring's moves into its own focus in a `ui.focus` hook (`ringMove`).
+- **Who has the keyboard on Claude Code.** A pane or the band has it only after `ctrl+x tab` or a click there. `keysHint` draws the line that says so.
+- **The rail of a transcript card.** On Claude Code it is the engine's quote border, which also runs beside blocks the engine draws.
+- **Blocks.** Block Markdown and text entry are each host's own: a `slot` line in the drawing, or the host's input beside it.
+
+## The legacy kits
+
+`legacy/pi/` and `legacy/claude/ui.tsx` hold what has not moved. A mod still on the Claude one carries it as `claude/ui.tsx`. The lint keeps a list of the plugin files that still draw around the kit (`.oxlintrc.json`); the list only shrinks, and a file leaves it when it imports nothing from `legacy/` and styles nothing by hand.
+
+Their stories and manifests are under [`catalog/`](catalog), and the catalogue is built from both:
+
+```bash
+E2E_PNG=1 just e2e kit   # compare snapshots and write pictures
+just catalog            # replay stories and regenerate crops and catalogue data
+```
+
+Commit the snapshots and the regenerated `catalog/COMPONENTS.md`. The site data and crops are generated, not committed. `npm run catalog -- --check` validates the manifests without replaying.

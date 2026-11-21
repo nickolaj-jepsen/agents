@@ -10,6 +10,17 @@ Use `plugin-authoring` for the installed version or the [offline mod manuals](up
 - Closing a pane from the mod skips that mod's own `ui.close` hook. Do the submit or cleanup work before calling `$.ui.close`, as [docfix](../../../plugins/docfix/claude/register.tsx) does.
 - Keep state writes out of `ui.render`. If a mod shows nothing, check the session's debug log for rejected hooks or element trees. To send `Escape` then a letter in a terminal replay, put a short delay between them so the host doesn't read the sequence as Alt+letter.
 
+## The kit's own focus and hover on the terminal
+
+The engine draws focus and hover its own way, and the [kit's painter](../../../kit/paint/claude.tsx) works round each. These were observed in Claude Code 2.1.325; recheck them after upgrading.
+
+- The engine inverts the `Button` its focus ring rests on. To show the kit's pointer and bold label instead, keep the ring on a zero-size button (`ring`) and turn its moves into your own focus in a `ui.focus` hook (`ringMove`), answering `next({ ...e, element: RING.park })`. The site then owns the focus order of everything in it.
+- The engine inverts a `Button` under the pointer too. The painter gives a control's runs a `hover` with their colours swapped, so the inversion puts them back and the row sits on a fill. A `hover` on a `Text` outside a keyed `Box` makes the engine refuse the whole tree.
+- A plain `Button` with a `hotkey` prints `a: ` before its label. Bind letters on zero-size buttons instead. They are focus stops, so the same `ui.focus` hook has to move the ring off them.
+- The transcript keeps no focus ring. A card placed there takes its keys from the band, sharing one state with it.
+- A click on a transcript row hands the keyboard to the prompt, and `$.ui.focus` cannot take it back. Escape hands it back with no event at all. A mod hears the keyboard arrive (`ui.focus` in its site) and leave by typing (`prompt.edit`, `prompt.change`) or by a transcript click (`ui.press` on a `Placed`). Draw `keysHint` so the person can see where their keys go.
+- `$` may only be passed to a function declared at the top of the file or imported from the mod's own files. A helper defined inside `register` that takes `$` stops the mod from loading.
+
 ## Graphical surfaces
 
 Use the [kit](../../../kit/README.md) for Desktop and VS Code. Pass the render event to `kitOf(els, e)`; use `tui` and `gui` options for variations on one component. When a terminal layout needs a separate rendering, use `forSurface` with a kit-built GUI branch. [linear-issue](../../../plugins/linear-issue/claude/register.tsx) has an example.

@@ -4,7 +4,7 @@ For the API use the installed pi's `docs/extensions.md` and `docs/tui.md`, or th
 
 ## Debug a session
 
-Use the [terminal driver](../../../e2e/README.md#drive-a-parked-terminal-session). If the extension is missing, check startup `cap` for `[Extension issues]`. Run `goto` again after edits; saving doesn't reload the extension.
+Use the [terminal driver](../../../e2e/README.md#drive-a-parked-terminal-session). If the extension is missing, check startup `cap` for `[Extension issues]`. After an edit run `reload`, or park with `goto --watch`; saving alone doesn't reload the extension.
 
 The driver prints the run folder. Look in its `sessions/` directory for the session JSONL. After a snapshot test, use `E2E_KEEP=1` to retain it.
 
