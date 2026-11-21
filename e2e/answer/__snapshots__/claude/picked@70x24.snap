@@ -1,5 +1,5 @@
 # answer/claude/picked 70x24 @0,2 (70x17)
-▎ ❯ Q1  Use SQLite? ✓
+▎ ❯ Q1  Use SQLite?
 ▎
 ▎   A ○ SQLite
 ▎   B ● Postgres
@@ -17,28 +17,29 @@
 
 Q1/2   jk move A–B pick C write n note r review keys here         [-]
 --- styles
-.x2 1 . 2x4 1x11 3x2
--
-.x4 2 . 2
-.x4 2 . 4 . 4x8
-.x4 2 . 2 . 2x21
-.x4 2x16
--
-5x70
-5 .x3 2x4 1x12 .x49 5
-5 .x68 5
-5 .x3 2 . 2 .x62 5
-5 .x3 2 . 2 .x62 5
-5 .x3 2 . 2 . 2x21 .x40 5
-5 .x3 2x16 .x49 5
-5x70
+1 . 2 . 3x4 2x11 .x50 1
+1 .x68 1
+1 .x3 3 . 4 .x62 1
+1 .x3 3 . 5 . 5x8 .x53 1
+1 .x3 3 . 4 . 4x21 .x40 1
+1 .x3 4x16 .x49 1
+1x70
 6x70
-7x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x9 2x3
+6 .x3 4x4 2x12 .x49 6
+6 .x68 6
+6 .x3 4 . 4 .x62 6
+6 .x3 4 . 4 .x62 6
+6 .x3 4 . 4 . 4x21 .x40 6
+6 .x3 4x16 .x49 6
+6x70
+7x70
+8x6 . 4x7 . 4x8 . 4x7 . 4x6 . 4x8 . 4x9 .x9 4x3
 --- legend
-1 bold
-2 fg=#999999
-3 fg=#4eba65
-4 fg=#d77757 bold
-5 dim
-6 fg=#b1b9f9
-7 fg=#d77757 bold inverse
+1 fg=#4eba65
+2 bold
+3 fg=#d77757
+4 fg=#999999
+5 fg=#d77757 bold
+6 dim
+7 fg=#b1b9f9
+8 fg=#d77757 bold inverse

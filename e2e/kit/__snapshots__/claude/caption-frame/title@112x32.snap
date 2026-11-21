@@ -9,12 +9,13 @@
 --- styles
 1 . 2x7 . 1x21 .x9 1
 -
-.x4 1x4 3x30
-.x8 3x5
+.x4 3x4 4x30
+.x8 4x5
 -
 .x2 2x6 . 1 .x7 1x3
 1x41
 --- legend
 1 fg=#999999
 2 fg=#d77757 bold
-3 bold
+3 fg=#d77757
+4 bold

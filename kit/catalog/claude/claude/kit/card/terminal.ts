@@ -48,11 +48,14 @@ export function controlStyle({
 }
 
 /**
- * The rail's colour: bright beside the keyboard's card, quiet beside every other. A card has
- * no colour of its own: the pointer says where the keyboard is, the accent what is chosen and
- * a tick that it is answered.
+ * The rail's colour: the success colour beside a card that has its answer, else bright beside
+ * the keyboard's card and quiet beside every other.
  */
-export const railRole = (state: CardState): Role => (state.active ? "text" : "dim");
+export const railRole = (state: CardState): Role =>
+  state.answered ? "success" : state.active ? "text" : "dim";
+
+/** What a person can press on a card: in the accent on the keyboard's card, quiet elsewhere. */
+const keyRole = (state: CardState): Role => (state.active ? "accent" : "dim");
 
 /**
  * The column every row of a card keeps for the focus pointer, as blank cells: what a host sets
@@ -73,16 +76,15 @@ export function rail(state: CardState, row: Line): Line {
 }
 
 /**
- * The question: the pointer column, its label, then the title hanging from it. An answered one
- * ends in a `✓` in the success colour, as soon as it has its answer.
+ * The question: the pointer column, its label, then the title hanging from it. That it is
+ * answered is the rail's to say.
  */
 export function heading(h: Heading, width: number): Line[] {
-  const title = [
-    ...inline(h.title, { role: "text", bold: true }),
-    ...(h.answered ? [span(` ${tokens.glyph.done}`, { role: "success" })] : []),
-  ];
-  return block(title, width, {
-    lead: [...pointerLead(h.focused), ...(h.label ? [span(h.label + GAP, { role: "dim" })] : [])],
+  return block(inline(h.title, { role: "text", bold: true }), width, {
+    lead: [
+      ...pointerLead(h.focused),
+      ...(h.label ? [span(h.label + GAP, { role: keyRole(h) })] : []),
+    ],
   });
 }
 
@@ -107,7 +109,7 @@ export function choice(c: Choice, width: number): Line[] {
   const mark: Style = chosen ? { role: "accent", bold: true } : { role: "dim" };
   const lead = [
     ...pointerLead(focused),
-    span(c.key || " ", { role: "dim" }),
+    span(c.key || " ", { role: keyRole(c) }),
     span(" "),
     span(chosen ? marks.on : marks.off, mark),
     span(" "),
@@ -249,6 +251,7 @@ export function choiceList(list: ChoiceList, width: number): Line[] {
   return list.items.flatMap((item, i) =>
     choice(
       {
+        active: list.active,
         key: item.key,
         text: item.text,
         detail: item.detail,

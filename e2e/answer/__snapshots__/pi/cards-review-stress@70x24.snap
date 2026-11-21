@@ -33,13 +33,14 @@
 1 .x2 2x42
 1 .x9 4x10
 -
-. 2x21 .x2 5x4 . 4 .x2 1x4 . 4x3 .x2 1x4 . 4x3 .x2 1x4 . 4x3 .x2 1x4 . 4x2
-. 1x6 . 4x5 .x2 4x7
-6x69
+. 2x21 .x2 5x4 . 4 .x2 6x4 . 4x3 .x2 6x4 . 4x3 .x2 6x4 . 4x3 .x2 6x4 . 4x2
+. 6x6 . 4x5 .x2 4x7
+7x69
 --- legend
-1 fg=#dee0e1
+1 fg=#68b78d
 2 fg=#dee0e1 bold
 3 fg=#7e888e bold
 4 fg=#7e888e
 5 fg=#a798d7 bold
-6 fg=#6c767b
+6 fg=#dee0e1
+7 fg=#6c767b

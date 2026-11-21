@@ -1,11 +1,13 @@
-/** Fullscreen rounds live in the transcript. Pick lists and regular mode use the guided form. */
+/**
+ * A round of questions or a pick list lives in the transcript as cards, with its keys in a guide
+ * above the prompt. The cards need pi's fullscreen mode; elsewhere the round is only offered.
+ */
 import { randomUUID } from "node:crypto";
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import { contentText } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { Component, TUI } from "@earendil-works/pi-tui";
-import { hasWork, offer, step as stepForm, type View, view, viewOf } from "../core/forms.ts";
-import { AnswerForm, type FormAction, type FormResult } from "./form.ts";
+import { type Action, hasWork, offer, step as stepForm, type View, viewOf } from "../core/forms.ts";
 import { AnswerOffer } from "./offer.ts";
 import {
   AnswerGuide,
@@ -20,12 +22,11 @@ const WIDGET_KEY = "answer";
 const SHORTCUT = "alt+a";
 const ENTRY = "answer-form";
 const CARD = "answer-round";
-const GUIDED = "answer-guided";
 
 /** Only the card entry is visible. State entries update that same card by its anchor. */
 type Saved = { held: Round | null; aside?: Round | null; archived?: Round };
 
-/** What has the keys now: the prompt, as the form opens. The TUI class has it; its interface doesn't. */
+/** What has the keys now: the prompt, as the guide takes them. The TUI class has it; its interface doesn't. */
 const focusedOf = (tui: TUI): Component | null =>
   "getFocusedComponent" in tui && typeof tui.getFocusedComponent === "function"
     ? ((tui.getFocusedComponent() as Component | null) ?? null)
@@ -104,22 +105,12 @@ export default function (pi: ExtensionAPI) {
   let sending: { round: Round; reply: string } | undefined;
   const visibleCards = new Set<string>();
 
-  pi.registerFlag(GUIDED, {
-    type: "boolean",
-    description: "Use the guided answer form even in fullscreen",
-  });
   /** The signature the widget last drew. */
   let shown = "";
   let lastText = "";
-  let form: AnswerForm | undefined;
-  /** The screen the form is on, and what had the keys before it. */
-  let surface: { tui: TUI; back: Component | null } | undefined;
 
   const isTranscript = () =>
-    !!held?.anchor &&
-    visibleCards.has(held.anchor) &&
-    tui?.mode === "fullscreen" &&
-    !pi.getFlag(GUIDED);
+    !!held?.anchor && visibleCards.has(held.anchor) && tui?.mode === "fullscreen";
 
   const release = () => {
     if (guide?.focused) tui?.setFocus(promptFocus);
@@ -127,9 +118,6 @@ export default function (pi: ExtensionAPI) {
 
   const draw = (ctx: ExtensionContext) => {
     const view = viewOf(held);
-    form?.refresh(view);
-    // An open form is the widget; the offer comes back when it closes.
-    if (form) return;
     // Changing pi's renderer remounts the widgets on a new TUI without calling their factories.
     if (tui?.children.length === 0) tui = undefined;
     const next = isTranscript() ? `round:${held?.anchor}` : signature(view);
@@ -200,7 +188,6 @@ export default function (pi: ExtensionAPI) {
   const restore = (ctx: ExtensionContext) => {
     if (!hasEditor(ctx)) return;
     release();
-    form?.refresh(null);
     held = null;
     aside = null;
     filled = undefined;
@@ -256,7 +243,7 @@ export default function (pi: ExtensionAPI) {
       theme,
       () => {
         const round = rounds.get(id);
-        return round && tui?.children.length && tui.mode === "fullscreen" && !pi.getFlag(GUIDED)
+        return round && tui?.children.length && tui.mode === "fullscreen"
           ? {
               round,
               active: held?.anchor === id,
@@ -278,17 +265,13 @@ export default function (pi: ExtensionAPI) {
     lastText = lastAssistantText(event.messages);
   });
 
-  // A turn that asks nothing leaves the form: a background task's turn ends on that task's news.
+  // A turn that asks nothing leaves the round: a background task's turn ends on that task's news.
   pi.on("agent_settled", (event, ctx) => {
     if (!hasEditor(ctx) || event.aborted) return;
     const incoming = offer(held, lastText);
     if (!incoming || incoming === held) return;
     const previous = held;
-    const anchor = incoming.form.kind === "round" && !pi.getFlag(GUIDED) ? randomUUID() : undefined;
-    if (anchor) {
-      visibleCards.add(anchor);
-      pi.appendEntry(CARD, anchor);
-    }
+    const anchor = place();
     reviewFrom = 0;
     filled = undefined;
     hold(ctx, { ...incoming, anchor }, previous ?? undefined);
@@ -324,61 +307,37 @@ export default function (pi: ExtensionAPI) {
     hold(ctx, null, { ...pending.round, sent: true });
   });
 
-  /** Closes the form: the keys go back where they were, the offer returns, a reply is placed. */
-  const finish = async (ctx: ExtensionContext, opened: View, result: FormResult) => {
-    const closing = form;
-    const { tui, back } = surface ?? {};
-    form = undefined;
-    surface = undefined;
-    // Only a form that still has the keys gives them back: after a click on the prompt it is the prompt's.
-    if (tui && closing?.focused) tui.setFocus(back ?? null);
-    shown = "";
-    draw(ctx);
-    // A turn that ended while the form was up has replaced what it answered.
-    const now = viewOf(held);
-    if (!result.fill || now?.id !== opened.id || !now.reply) return;
-    submit(ctx, result.send ?? false);
-  };
+  /** A new card for a round at the end of the transcript; its anchor. */
+  function place(): string {
+    const anchor = randomUUID();
+    visibleCards.add(anchor);
+    pi.appendEntry(CARD, anchor);
+    return anchor;
+  }
 
   const open = async (ctx: ExtensionContext) => {
     if (!hasEditor(ctx)) return;
-    if (form) return surface?.tui.setFocus(form);
     if (tui?.children.length === 0) draw(ctx);
     // A round a send set aside comes back when none is held, so alt+a works as /answer does.
     adopt(ctx);
-    if (isTranscript() && guide && focusGuide()) return;
-    const answering = held;
-    const opened = answering && view(answering.form, answering.draft);
-    if (!answering || !opened) {
+    if (!held || !viewOf(held)) {
       ctx.ui.notify("Nothing to answer: the last turn asked no questions.", "info");
       return;
     }
-    // Aimed at the form that was opened, so a round that arrived meanwhile is left as it is.
-    const step = async (action: FormAction) => {
-      if (held) advance(ctx, held, action, opened.id);
-      return viewOf(held);
-    };
-    // Every question's screen, so the form stands as tall as its tallest on all of them.
-    const steps = answering.form.items.map((_, at) =>
-      view(answering.form, { ...answering.draft, step: at }),
-    );
-    ctx.ui.setWidget(WIDGET_KEY, (tui, theme) => {
-      const made = new AnswerForm(
-        tui,
-        theme,
-        opened,
-        step,
-        (result) => void finish(ctx, opened, result),
-        steps,
-      );
-      form = made;
-      surface = { tui, back: focusedOf(tui) };
-      return made;
-    });
-    if (form) surface?.tui.setFocus(form);
+    if (tui && tui.mode !== "fullscreen") {
+      ctx.ui.notify("The answer cards need pi's fullscreen mode.", "info");
+      return;
+    }
+    // A round whose card is gone from the transcript (compacted away, or stored before every
+    // round had one) gets a new card at the end.
+    if (!held.anchor || !visibleCards.has(held.anchor)) {
+      hold(ctx, { ...held, anchor: place() });
+      locate(held.draft.step);
+    }
+    if (isTranscript() && guide) focusGuide();
   };
 
-  function advance(ctx: ExtensionContext, round: Round, action: FormAction, id?: string) {
+  function advance(ctx: ExtensionContext, round: Round, action: Action, id?: string) {
     const next = stepForm(round, action, id);
     if (next !== round) hold(ctx, { ...round, ...next });
   }
@@ -513,12 +472,12 @@ export default function (pi: ExtensionAPI) {
   }
 
   pi.registerShortcut(SHORTCUT, {
-    description: "Answer the questions or pick list the last turn ended on",
+    description: "Take the keys for the questions or pick list the last turn ended on",
     handler: (ctx) => open(ctx),
   });
 
   pi.registerCommand("answer", {
-    description: "Open the question round or numbered pick list",
+    description: "Take the keys for the question round or numbered pick list",
     handler: async (_args, ctx) => open(ctx),
   });
 }

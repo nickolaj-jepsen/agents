@@ -136,7 +136,6 @@
         "plugins/answer/claude/register.tsx",
         "plugins/answer/claude/terminal.ts",
         "plugins/answer/claude/transcript.tsx",
-        "plugins/answer/pi/form.ts",
         "plugins/answer/pi/offer.ts",
         "plugins/answer/pi/transcript.ts",
         "plugins/docfix/claude/evidence.tsx",

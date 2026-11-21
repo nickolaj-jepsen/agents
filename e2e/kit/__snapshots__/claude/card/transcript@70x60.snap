@@ -8,7 +8,7 @@
 │    Note: Add a note
 
 │    Q2  How much of each session should be kept, once the run
-│        that made it is over? ✓
+│        that made it is over?
 │
 │    A ○ The whole transcript
 │    B ● A summary of each run
@@ -18,21 +18,22 @@
 .x3 1 . 2x4 1x53
 .x9 1x21
 -
-.x5 2 . 2
-.x5 2 . 2 .x3 3x7 .x4 1x4
-.x5 2 . 2 . 2x21
-.x5 2x16
+.x5 2 . 3
+.x5 2 . 3 .x3 4x7 .x4 1x4
+.x5 2 . 3 . 3x21
+.x5 3x16
 -
-2 .x4 2x4 1x53
-2 .x8 1x21 4x2
-2
-2 .x4 2 . 2
-2 .x4 2 . 5 . 5x2 3x7 5x12
-2 .x4 2 . 2 . 2x21
-2 .x4 2x6
+5 .x4 3x4 1x53
+5 .x8 1x21
+5
+5 .x4 3 . 3
+5 .x4 3 . 6 . 6x2 4x7 6x12
+5 .x4 3 . 3 . 3x21
+5 .x4 3x6
 --- legend
 1 bold
-2 fg=#999999
-3 fg=#b1b9f9
-4 fg=#4eba65
-5 fg=#d77757 bold
+2 fg=#d77757
+3 fg=#999999
+4 fg=#b1b9f9
+5 fg=#4eba65
+6 fg=#d77757 bold

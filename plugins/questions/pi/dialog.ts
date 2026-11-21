@@ -794,7 +794,6 @@ export class QuestionsDialog implements Component, Focusable {
   ): BodyRow[] {
     const { theme } = this;
     const choiceWidth = split ? Math.floor((inner - GAP.length) * tokens.splitRatio) : inner;
-    const draft = this.drafts[this.questionIndex!]!;
     const multiple = question.multiSelect === true;
     const dim = (line: string) => paintText(theme, line, { role: "dim" });
     const title = draw(
@@ -804,7 +803,6 @@ export class QuestionsDialog implements Component, Focusable {
           title: question.question,
           label: this.tabs.length === 1 ? "Q1" : "",
           active: true,
-          answered: isAnswered(draft) && !multiple && this.tabs.length === 1,
         },
         inner + INSET,
       ),
@@ -950,6 +948,7 @@ export class QuestionsDialog implements Component, Focusable {
             key,
             text,
             chosen,
+            active: true,
             focused: at,
             hovered: i === this.hoverRow,
             literal,

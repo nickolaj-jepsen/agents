@@ -25,34 +25,36 @@ a draft for later
 0.7%/200k (auto)                                                repla
 --- styles
 1
-1 .x4 2 . 2
-1 .x4 2 . 3 . 3x8
-1 .x4 2 . 2 . 2x21
-1 .x2 2x8 .x5 4
+1 .x4 2 . 3
+1 .x4 2 . 4 . 4x8
+1 .x4 2 . 3 . 3x21
+1 .x2 3x8 .x5 5
 -
 -
-2 .x4 2x4 5x12
-2
-2 .x4 2 . 2
-2 .x4 2 . 2
-2 .x4 2 . 2 . 2x21
-2 .x4 2x16
+3 .x4 3x4 6x12
+3
+3 .x4 3 . 3
+3 .x4 3 . 3
+3 .x4 3 . 3 . 3x21
+3 .x4 3x16
 -
 -
-2 .x4 6x24
-2 .x3 6x15 .x2 2x22
+1 .x4 7x24
+1 .x3 7x15 .x2 3x22
 -
-. 3x4 . 2 .x2 2x19 .x2 1x6 . 2x5
-7x69
-.x8 4
-7x69
-2x5
-2x69
+. 4x4 . 3 .x2 3x19 .x2 8x6 . 3x5
+9x69
+.x8 5
+9x69
+3x5
+3x69
 --- legend
-1 fg=#dee0e1
-2 fg=#7e888e
-3 fg=#a798d7 bold
-4 inverse
-5 fg=#dee0e1 bold
-6 fg=#7e888e bold
-7 fg=#6c767b
+1 fg=#68b78d
+2 fg=#a798d7
+3 fg=#7e888e
+4 fg=#a798d7 bold
+5 inverse
+6 fg=#dee0e1 bold
+7 fg=#7e888e bold
+8 fg=#dee0e1
+9 fg=#6c767b

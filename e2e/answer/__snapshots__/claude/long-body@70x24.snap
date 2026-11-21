@@ -33,8 +33,9 @@ Q1/1   alt+a for the keys                                         [-]
 -
 -
 -
-3x6 . 2x18 .x41 2x3
+3x6 . 4x18 .x41 4x3
 --- legend
 1 bold
-2 fg=#999999
+2 fg=#d77757
 3 fg=#d77757 bold
+4 fg=#999999

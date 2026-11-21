@@ -1,7 +1,7 @@
 # answer/pi/cards-stress 240x60 @0,0 (239x56)
 │  ❯ Q1  Which rollout should we use for 東京、大阪、名古屋 and the other regional
 │        clusters, 東京、大阪、名古屋 and the other regional clusters, 東京、大阪、
-│        名古屋 and the other regional clusters, given the migration window? ✓
+│        名古屋 and the other regional clusters, given the migration window?
 │
 │    A ● Canary: validate the read replicas in 東京 and compare results before
 │        promoting. validate the read replicas in 東京 and compare results before
@@ -58,66 +58,67 @@
 --- styles
 1 .x2 2 . 3x4 2x73
 1 .x8 2x74
-1 .x8 2x67 4x2
+1 .x8 2x67
 1
-1 .x4 3 . 5 . 5x69
-1 .x8 5x72
-1 .x8 5x72
-1 .x8 5x10
-1 .x4 3 . 3
-1 .x4 3 . 3 . 3x21
-1 .x4 3x6 1x64
-1 .x10 1x17
-1 .x10 1x39
+1 .x4 3 . 4 . 4x69
+1 .x8 4x72
+1 .x8 4x72
+1 .x8 4x10
+1 .x4 3 . 5
+1 .x4 3 . 5 . 5x21
+1 .x4 5x6 6x64
+1 .x10 6x17
+1 .x10 6x39
 -
 -
-3 .x4 3x4 2x35
-3
-3 .x4 3 . 3
-3 .x4 3 . 3
-3 .x4 3 . 3 . 3x21
-3 .x4 3x16
+5 .x4 5x4 2x35
+5
+5 .x4 5 . 5
+5 .x4 5 . 5
+5 .x4 5 . 5 . 5x21
+5 .x4 5x16
 -
 -
-3 .x4 3x4 2x35
-3
-3 .x4 3 . 3
-3 .x4 3 . 3
-3 .x4 3 . 3
-3 .x4 3 . 3
-3 .x4 3 . 3
-3 .x4 3 . 3
-3 .x4 3 . 3
-3 .x4 3 . 3
-3 .x4 3 . 3 . 3x21
-3 .x4 3x16
+5 .x4 5x4 2x35
+5
+5 .x4 5 . 5
+5 .x4 5 . 5
+5 .x4 5 . 5
+5 .x4 5 . 5
+5 .x4 5 . 5
+5 .x4 5 . 5
+5 .x4 5 . 5
+5 .x4 5 . 5
+5 .x4 5 . 5 . 5x21
+5 .x4 5x16
 -
 -
-3 .x4 3x4 2x35
-3
-3 .x4 3 . 3
-3 .x4 3 . 3
-3 .x4 3 . 3 . 3x21
-3 .x4 3x16
+5 .x4 5x4 2x35
+5
+5 .x4 5 . 5
+5 .x4 5 . 5
+5 .x4 5 . 5 . 5x21
+5 .x4 5x16
 -
 -
-3 .x4 3x4 2x35
-3
-3 .x4 3 . 3
-3 .x4 3 . 3
-3 .x4 3 . 3 . 3x21
-3 .x4 3x16
+5 .x4 5x4 2x35
+5
+5 .x4 5 . 5
+5 .x4 5 . 5
+5 .x4 5 . 5 . 5x21
+5 .x4 5x16
 -
-.x101 6x37
+.x101 7x37
 -
-. 7x7 .x2 3x8 .x2 1x5 . 3x3 .x2 1x4 . 3x3 .x2 1x6 . 3x3 .x2 1x6 . 3x5 .x2 3x7 .x2 1x5 . 3x3
-8x239
+. 8x7 .x2 5x8 .x2 6x5 . 5x3 .x2 6x4 . 5x3 .x2 6x6 . 5x3 .x2 6x6 . 5x5 .x2 5x7 .x2 6x5 . 5x3
+9x239
 --- legend
-1 fg=#dee0e1
+1 fg=#68b78d
 2 fg=#dee0e1 bold
-3 fg=#7e888e
-4 fg=#68b78d
-5 fg=#a798d7 bold
-6 fg=#dee0e1 bg=#213b49
-7 fg=#dee0e1 inverse
-8 fg=#6c767b
+3 fg=#a798d7
+4 fg=#a798d7 bold
+5 fg=#7e888e
+6 fg=#dee0e1
+7 fg=#dee0e1 bg=#213b49
+8 fg=#dee0e1 inverse
+9 fg=#6c767b

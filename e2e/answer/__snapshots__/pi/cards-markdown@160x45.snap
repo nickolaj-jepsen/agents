@@ -4,7 +4,7 @@
 │
 │    A ○ A 200 response like {kind: "redirect", location, permanent}. page.tsx
 │        calls permanentRedirect() (308) or redirect(). The redirect is cached per
-│        URL like any other result.
+│        URL like any other result.  Recommended
 │    B ○ Django answers with a real 301, and the Next.js fetch reads the Location
 │        header: simpler for legacy callers, as the RFC has it.
 │        The CmsPageModal keeps reading Location, and nothing in the legacy code
@@ -28,39 +28,39 @@
  Answer [alt+a]  Q1  0/1 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-1 .x2 2 . 3x4 2x50 4x4 2x16
-1 .x8 2x38 4x8 2x9
+1 .x2 2 . 3x4 2x50 3x4 2x16
+1 .x8 2x38 3x8 2x9
 1
-1 .x4 3 . 3 .x21 4x39 .x2 4x8
-1 .x14 4x19 .x10 4x10
-1
-1 .x4 3 . 3 .x65 4x8
+1 .x4 3 . 4 .x21 3x39 .x2 3x8
+1 .x14 3x19 .x10 3x10
+1 .x34 4x13
+1 .x4 3 . 4 .x65 3x8
 1 .x16 5x7 .x5 6x6 .x13 7x7
-1 .x8 3x4 4x12 3x15 4x8 3x6 8x7 3x19
-1 .x8 3x8
-1 .x4 3 . 3 . 3x21
-1 .x4 3x16
+1 .x8 4x4 3x12 4x15 3x8 4x6 8x7 4x19
+1 .x8 4x8
+1 .x4 3 . 4 . 4x21
+1 .x4 4x16
 1
-1 .x4 3x75
-1 .x4 4x12 3x29
+1 .x4 4x75
+1 .x4 3x12 4x29
 -
 -
-3 .x4 2x24
-3 .x3 3x15
--
--
--
+4 .x4 2x24
+4 .x3 4x15
 -
 -
 -
 -
-. 1x6 . 3x7 .x2 3x16
+-
+-
+-
+. 1x6 . 4x7 .x2 4x16
 9x159
 --- legend
 1 fg=#dee0e1
 2 fg=#dee0e1 bold
-3 fg=#7e888e
-4 fg=#a798d7
+3 fg=#a798d7
+4 fg=#7e888e
 5 bold
 6 italic
 7 fg=#69add0 underline=single

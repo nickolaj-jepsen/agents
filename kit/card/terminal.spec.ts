@@ -5,7 +5,7 @@ import { paintLines } from "../paint/pi.ts";
 import { kitStories, storyId } from "../stories.ts";
 import { choiceKey, choiceReduce, type ChoiceListState } from "./contract.ts";
 import { liveChoices } from "./stories.ts";
-import { choice, choiceList, heading, note, steps } from "./terminal.ts";
+import { choice, choiceList, heading, note, railRole, steps } from "./terminal.ts";
 
 const plain = {
   fg: (_c: string, t: string) => t,
@@ -65,10 +65,15 @@ describe("a choice", () => {
     ]);
   });
 
-  test("looks the same on the keyboard's card as on any other: no state moves or colours it", () => {
-    const styles = (state: object) => choice({ ...item, ...state }, 60).map((row) => row.spans);
-    expect(styles({ active: true })).toEqual(styles({}));
-    expect(styles({ answered: true })).toEqual(styles({}));
+  test("has its letter in the accent on the keyboard's card, and nothing else changes", () => {
+    const [rest] = choice(item, 60);
+    const [live] = choice({ ...item, active: true }, 60);
+    expect(rest!.spans.find((s) => s.text === "A")).toMatchObject({ role: "dim" });
+    expect(live!.spans.find((s) => s.text === "A")).toMatchObject({ role: "accent" });
+    expect(live!.spans.filter((s) => s.text !== "A")).toEqual(
+      rest!.spans.filter((s) => s.text !== "A"),
+    );
+    expect(choice({ ...item, answered: true }, 60)).toEqual(choice(item, 60));
   });
 
   test("a chosen one is in the accent, whatever its card's state", () => {
@@ -87,9 +92,15 @@ describe("a choice", () => {
 });
 
 describe("the card's other parts", () => {
-  test("a heading hangs its title from the label, and an answered one ends in a tick", () => {
+  test("a heading hangs its title from the label, and an answer does not change it", () => {
     const rows = heading({ label: "Q1", title: "One two three four", answered: true }, 18);
-    expect(rows.map(textOf)).toEqual(["  Q1  One two", "      three four ✓"]);
+    expect(rows.map(textOf)).toEqual(["  Q1  One two", "      three four"]);
+  });
+
+  test("the rail is green by an answered card, bright by the keyboard's, quiet by the rest", () => {
+    expect(railRole({ answered: true, active: true })).toBe("success");
+    expect(railRole({ active: true })).toBe("text");
+    expect(railRole({})).toBe("dim");
   });
 
   test("a heading takes the pointer when the keyboard is on its card and on no row", () => {

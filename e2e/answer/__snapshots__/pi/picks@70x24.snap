@@ -1,34 +1,58 @@
-# answer/pi/picks 70x24 @0,7 (70x12)
-╭─ 1 of 2  ○ 1  ○ 2 ─────────────────────────────────────────────────╮
-│ The default bar cuts the ideas you act on                          │
-│                                                                    │
-│ 2/3 · S · build                                                    │
-│                                                                    │
-│ ›1 ○ Build it (recommended)                                        │
-│                                                                    │
-│  2 ○ Something else                                                │
-│                                                                    │
-│                                                                    │
-│ Back [b]  Forward [f]  Take build [y]  Skip [s]  Review [r]        │
-│ shift+↑↓ scrolls · 1-9 or enter answers · hjkl moves · esc closes… │
+# answer/pi/picks 70x24 @0,0 (69x24)
+│  ❯ 1  The default bar cuts the ideas you act on
+│
+│    2/3 · S · build
+│
+│    A ○ Build it  Recommended
+│    B ○ Something else
+│    Note: Add a note
+│
+│    Recommended: build it
+
+
+│    2  The funnel is wide and slow for what survives
+│
+│    3/3 · M · /grill-me
+│
+│    A ○ Build it
+│    B ○ Route t ↓ Jump to latest message · Ctrl+End
+
+ Answer [alt+a]  1  0/2 answered
+─────────────────────────────────────────────────────────────────────
+
+─────────────────────────────────────────────────────────────────────
+<tmp>
+0.7%/200k (auto)                                                repla
 --- styles
-1x2 . 2x6 .x2 3 . 4 .x2 3 . 3 . 1x50
-1 . 5x41 .x26 1
-1 .x68 1
-1 .x68 1
-1 .x68 1
-1 . 6 2 . 3x2 6x8 3x14 .x40 1
-1 .x68 1
-1 .x2 2 . 3x16 .x48 1
-1 .x68 1
-1 .x68 1
-1 . 7x4 . 3x3 .x2 7x7 . 3x3 .x2 4x10 . 3x3 .x2 7x4 . 3x3 .x2 7x6 . 3x3 .x8 1
-1 . 3x65 .x2 1
+1 .x2 2 . 3x3 2x41
+1
+1
+1
+1 .x4 3 . 4 .x9 4x13
+1 .x4 3 . 4 . 4x14
+1 .x4 4x16
+1
+1 .x4 4x21
+-
+-
+4 .x4 4x3 2x45
+4
+4
+4
+4 .x4 4 . 4
+4 .x4 4 . 4 .x8 5x37
+-
+. 1x6 . 4x7 .x2 4x15
+6x69
+7
+6x69
+4x5
+4x69
 --- legend
-1 fg=#768186
-2 fg=#a798d7
-3 fg=#7e888e
-4 fg=#a798d7 bold
-5 bold
-6 fg=#dee0e1 bold
-7 fg=#dee0e1
+1 fg=#dee0e1
+2 fg=#dee0e1 bold
+3 fg=#a798d7
+4 fg=#7e888e
+5 fg=#dee0e1 bg=#213b49
+6 fg=#6c767b
+7 inverse

@@ -20,11 +20,12 @@
 1 .x8 3x10
 -
 -
-. 1x6 . 3x7 .x2 3x20
-5x159
+. 5x6 . 3x7 .x2 3x20
+6x159
 --- legend
-1 fg=#dee0e1
+1 fg=#68b78d
 2 fg=#dee0e1 bold
 3 fg=#7e888e
 4 fg=#7e888e bold
-5 fg=#6c767b
+5 fg=#dee0e1
+6 fg=#6c767b

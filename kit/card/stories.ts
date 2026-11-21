@@ -18,7 +18,12 @@ const ITEMS: ChoiceListItem[] = [
 ];
 
 /** The list the live story starts from, and what each catalogue's wiring changes. */
-export const liveChoices: ChoiceList = { items: ITEMS.slice(0, 3), chosen: [0], focus: 0 };
+export const liveChoices: ChoiceList = {
+  items: ITEMS.slice(0, 3),
+  active: true,
+  chosen: [0],
+  focus: 0,
+};
 
 /** A live choice story's first state. */
 export const liveStart = (): ChoiceListState => ({ chosen: liveChoices.chosen, focus: 0 });
@@ -56,14 +61,15 @@ export const cardStories: KitStory[] = [
     settings: "sections(heading, [choiceList({focus: 0}), note])",
     lines: (width) =>
       sections(heading({ active: true, label: "Q1", title: QUESTION }, width), [
-        ...choiceList({ items: ITEMS, chosen: [], focus: 0 }, width),
+        ...choiceList({ items: ITEMS, active: true, chosen: [], focus: 0 }, width),
         ...note({ active: true, value: "" }, width),
       ]),
   },
   {
     component: card,
     state: "transcript",
-    about: "The same cards behind their rails: the keyboard on one, and one with its answer",
+    about:
+      "The same cards behind their rails: the keyboard on one, a green rail by an answered one",
     settings: "rail(sections(heading({focused}), choice..., note))",
     lines: (width) => {
       const inner = width - 3;

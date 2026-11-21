@@ -196,7 +196,9 @@ export function questionCard(
       flexDirection="column"
       borderStyle={kit.isNative ? undefined : "quote"}
       // The keyboard's card has a bright rail, not an accented one: the accent is for answers.
-      borderDimColor={(!kit.isNative && !isActive) || undefined}
+      // An answered card has a green rail; the keyboard's is bright and the rest are quiet.
+      borderColor={!kit.isNative && answered ? tokens.role.success : undefined}
+      borderDimColor={(!kit.isNative && !isActive && !answered) || undefined}
       paddingX={1}
     >
       {stack(

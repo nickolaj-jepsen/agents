@@ -32,38 +32,39 @@ Q1/2   jk move A–B pick C write n note r review keys here                     
 --- styles
 .x2 1 . 2x4 1x11
 -
-.x4 2 . 2
-.x4 2 . 2
-.x4 2 . 2 . 2x21
-.x4 2x6
+.x4 2 . 3
+.x4 2 . 3
+.x4 2 . 3 . 3x21
+.x4 3x6
 -
 -
-3x96
-3 .x3 2x4 1x12 .x75 3
-3 .x94 3
-3 .x3 2 . 2 .x88 3
-3 .x3 2 . 2 .x88 3
-3 .x3 2 . 2 . 2x21 .x66 3
-3 .x3 2x16 .x75 3
-3x96
-3x96
-3 . 1x26 .x67 3
-3 .x2 4x15 .x2 2x22 .x53 3
-3x96
+4x96
+4 .x3 3x4 1x12 .x75 4
+4 .x94 4
+4 .x3 3 . 3 .x88 4
+4 .x3 3 . 3 .x88 4
+4 .x3 3 . 3 . 3x21 .x66 4
+4 .x3 3x16 .x75 4
+4x96
+4x96
+4 . 1x26 .x67 4
+4 .x2 5x15 .x2 3x22 .x53 4
+4x96
 -
-5 . 5x51
--
--
--
+6 . 6x51
 -
 -
 -
 -
-6x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x99 2x3
+-
+-
+-
+7x6 . 3x7 . 3x8 . 3x7 . 3x6 . 3x8 . 3x9 .x99 3x3
 --- legend
 1 bold
-2 fg=#999999
-3 dim
-4 fg=#b1b9f9 bold
-5 fg=#ffc107
-6 fg=#d77757 bold inverse
+2 fg=#d77757
+3 fg=#999999
+4 dim
+5 fg=#b1b9f9 bold
+6 fg=#ffc107
+7 fg=#d77757 bold inverse

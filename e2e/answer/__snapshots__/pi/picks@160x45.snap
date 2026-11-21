@@ -1,40 +1,102 @@
-# answer/pi/picks 160x45 @0,25 (160x15)
-╭─ 1 of 2  ○ 1  ○ 2 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ The default bar cuts the ideas you act on                                                                                                                    │
-│                                                                                                                                                              │
-│ 2/3 · S · build                                                                                                                                              │
-│                                                                                                                                                              │
-│ ›1 ○ Build it (recommended)                                                                                                                                  │
-│                                                                                                                                                              │
-│  2 ○ Something else                                                                                                                                          │
-│                                                                                                                                                              │
-│ Recommended: build it                                                                                                                                        │
-│                                                                                                                                                              │
-│                                                                                                                                                              │
-│                                                                                                                                                              │
-│ Back [b]  Forward [f]  Take build [y]  Skip [s]  Review [r]  Note [n]                                                                                        │
-│ 1-9 or enter answers · hjkl moves · esc closes, answers kept                                                                                                 │
+# answer/pi/picks 160x45 @0,0 (159x45)
+
+ ask
+
+
+ Ideas ranked:
+
+ 1. The default bar cuts the ideas you act on · 2/3 · S · build
+ 2. The funnel is wide and slow for what survives · 3/3 · M · /grill-me
+
+ Top pick: 1. Make "worth doing" the default bar.
+
+│  ❯ 1  The default bar cuts the ideas you act on
+│
+│    2/3 · S · build
+│
+│    A ○ Build it  Recommended
+│    B ○ Something else
+│    Note: Add a note
+│
+│    Recommended: build it
+
+
+│    2  The funnel is wide and slow for what survives
+│
+│    3/3 · M · /grill-me
+│
+│    A ○ Build it
+│    B ○ Route to /grill-me  Recommended
+│    C ○ Something else
+│    Note: Add a note
+│
+│    Recommended: route it to /grill-me
+
+
+│    Answers  0 of 2 answered
+│   ▸ Show all 2 questions
+
+
+
+ Answer [alt+a]  1  0/2 answered
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+<tmp>
+0.7%/200k (auto)                                                                                                                                          repla
 --- styles
-1x2 . 2x6 .x2 3 . 4 .x2 3 . 3 . 1x140
-1 . 5x41 .x116 1
-1 .x158 1
-1 .x158 1
-1 .x158 1
-1 . 6 2 . 3x2 6x8 3x14 .x130 1
-1 .x158 1
-1 .x2 2 . 3x16 .x138 1
-1 .x158 1
-1 . 3x12 .x145 1
-1 .x158 1
-1 .x158 1
-1 .x158 1
-1 . 7x4 . 3x3 .x2 7x7 . 3x3 .x2 4x10 . 3x3 .x2 7x4 . 3x3 .x2 7x6 . 3x3 .x2 7x4 . 3x3 .x88 1
-1 . 3x60 .x97 1
+1x159
+1 2x3 1x155
+1x159
+-
+-
+-
+. 3x3
+. 3x3
+-
+. 4x12
+-
+5 .x2 6 . 3x3 6x41
+5
+5
+5
+5 .x4 3 . 7 .x9 7x13
+5 .x4 3 . 7 . 7x14
+5 .x4 7x16
+5
+5 .x4 7x21
+-
+-
+7 .x4 7x3 6x45
+7
+7
+7
+7 .x4 7 . 7
+7 .x4 7 . 7 .x19 7x13
+7 .x4 7 . 7 . 7x14
+7 .x4 7x16
+7
+7 .x4 7x34
+-
+-
+7 .x4 6x24
+7 .x3 7x22
+-
+-
+-
+. 5x6 . 7x7 .x2 7x15
+8x159
+9
+8x159
+7x5
+7x159
 --- legend
-1 fg=#768186
-2 fg=#a798d7
-3 fg=#7e888e
-4 fg=#a798d7 bold
-5 bold
+1 bg=#213b49
+2 fg=#dee0e1 bg=#213b49
+3 fg=#a798d7
+4 bold
+5 fg=#dee0e1
 6 fg=#dee0e1 bold
-7 fg=#dee0e1
+7 fg=#7e888e
+8 fg=#6c767b
+9 inverse

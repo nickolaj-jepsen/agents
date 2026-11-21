@@ -8,9 +8,9 @@
  * form, or as one of several in a transcript.
  */
 export type CardState = {
-  /** The card the keyboard is on: its rail is bright. */
+  /** The card the keyboard is on: its label and its answers' letters are in the accent. */
   active?: boolean;
-  /** The card has its answer: its heading ends in a tick, wherever the keyboard is. */
+  /** The card has its answer: its rail is in the success colour, wherever the keyboard is. */
   answered?: boolean;
 };
 
@@ -100,6 +100,8 @@ export type ChoiceListState = {
 
 export type ChoiceList = ChoiceListState & {
   items: ChoiceListItem[];
+  /** The keyboard is on this list's card: the letters are in the accent. */
+  active?: boolean;
   /** Several of many instead of one of many. */
   multiple?: boolean;
   /**

@@ -1,38 +1,102 @@
-# answer/pi/recommended 160x45 @0,26 (160x14)
-╭─ 1 of 3  ○ Q1  ○ Q2  ○ Q3 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ Should every focus default to the same bar?                                                                                                                  │
-│                                                                                                                                                              │
-│ ›1 ○ A. Yes, one default for every kind. (recommended)                                                                                                       │
-│  2 ○ B. Default by kind.                                                                                                                                     │
-│  3 ○ C. Add the bar as a second pick.                                                                                                                        │
-│                                                                                                                                                              │
-│  4 ○ Write your own answer                                                                                                                                   │
-│                                                                                                                                                              │
-│ Recommended: A. A per-kind table is one more thing to keep in sync.                                                                                          │
-│                                                                                                                                                              │
-│                                                                                                                                                              │
-│ Back [b]  Forward [f]  Take A [y]  Skip [s]  Review [r]  Note [n]                                                                                            │
-│ 1-9 or enter answers · hjkl moves · esc closes, answers kept                                                                                                 │
+# answer/pi/recommended 160x45 @0,0 (159x45)
+
+ ────────────────────────────────────────────────────────────────────────────────
+
+ Q3. What should happen to --quick?
+
+ - A. Drop it.
+ - B. Keep it as an alias.
+   Scripts may still call it.
+
+│  ❯ Q1  Should every focus default to the same bar?
+│
+│    A ○ Yes, one default for every kind.  Recommended
+│    B ○ Default by kind.
+│    C ○ Add the bar as a second pick.
+│    D ○ Write your own answer
+│    Note: Add a note
+│
+│    Recommended: A. A per-kind table is one more thing to keep in sync.
+
+
+│    Q2  Lower the per-generator target to 5-6?
+│
+│    A ○ Yes. Four generators still give 20-24.
+│    B ○ Write your own answer
+│    Note: Add a note
+
+
+│    Q3  What should happen to --quick?
+│
+│    A ○ Drop it.
+│    B ○ Keep it as an alias.
+│        Scripts may still call it.
+│    C ○ Write your own answer
+│    Note: Add a note
+
+
+│    Answers  0 of 3 answered
+│   ▸ Show all 3 questions
+
+ Answer [alt+a]  Q1  0/3 answered
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+<tmp>
+0.7%/200k (auto)                                                                                                                                          repla
 --- styles
-1x2 . 2x6 .x2 3 . 4x2 .x2 3 . 3x2 .x2 3 . 3x2 . 1x132
-1 . 5x43 .x114 1
-1 .x158 1
-1 . 6 2 . 3x2 6x35 3x14 .x103 1
-1 .x2 2 . 3x2 .x152 1
-1 .x2 2 . 3x2 .x152 1
-1 .x158 1
-1 .x2 2 . 3x23 .x131 1
-1 .x158 1
-1 . 3x12 .x145 1
-1 .x158 1
-1 .x158 1
-1 . 7x4 . 3x3 .x2 7x7 . 3x3 .x2 4x6 . 3x3 .x2 7x4 . 3x3 .x2 7x6 . 3x3 .x2 7x4 . 3x3 .x92 1
-1 . 3x60 .x97 1
+-
+. 1x80
+-
+. 2x26 3x7 2
+-
+. 4x2 2x2
+. 4x2 2x2
+-
+-
+5 .x2 6 . 4x4 6x43
+5
+5 .x4 4 . 7 .x33 7x13
+5 .x4 4 . 7
+5 .x4 4 . 7
+5 .x4 4 . 7 . 7x21
+5 .x4 7x16
+5
+5 .x4 7x67
+-
+-
+7 .x4 7x4 6x38
+7
+7 .x4 7 . 7
+7 .x4 7 . 7 . 7x21
+7 .x4 7x16
+-
+-
+7 .x4 7x4 6x22 4x7 6
+7
+7 .x4 7 . 7
+7 .x4 7 . 7
+7 .x8 7x26
+7 .x4 7 . 7 . 7x21
+7 .x4 7x16
+-
+-
+7 .x4 6x24
+7 .x3 7x22
+-
+. 5x6 . 7x7 .x2 7x16
+8x159
+9
+8x159
+7x5
+7x159
 --- legend
-1 fg=#768186
-2 fg=#a798d7
-3 fg=#7e888e
-4 fg=#a798d7 bold
-5 bold
+1 fg=#9da5a9
+2 bold
+3 fg=#a798d7 bold
+4 fg=#a798d7
+5 fg=#dee0e1
 6 fg=#dee0e1 bold
-7 fg=#dee0e1
+7 fg=#7e888e
+8 fg=#6c767b
+9 inverse

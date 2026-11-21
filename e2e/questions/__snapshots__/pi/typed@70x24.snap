@@ -16,18 +16,19 @@
 -
 .x2 4x4 5x40
 -
-.x2 4 . 4
-.x2 4 . 4
-.x2 4 . 4
-4x6 .x20 6
-.x2 4x16
+.x2 4 . 6
+.x2 4 . 6
+.x2 4 . 6
+6x6 .x20 7
+.x2 6x16
 -
-.x2 2x4 . 4 .x2 3x4 . 4x5
+.x2 2x4 . 6 .x2 3x4 . 6x5
 1x70
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
 3 fg=#dee0e1
-4 fg=#7e888e
+4 fg=#a798d7
 5 fg=#dee0e1 bold
-6 inverse
+6 fg=#7e888e
+7 inverse

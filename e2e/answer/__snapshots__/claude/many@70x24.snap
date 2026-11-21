@@ -1,5 +1,5 @@
 # answer/claude/many 70x24 @0,2 (70x17)
-▎ ❯ Q3  Question number 3: pick a strategy? ✓
+▎ ❯ Q3  Question number 3: pick a strategy?
 ▎
 ▎   A ○ Option A for 3
 ▎   B ○ Option B for 3
@@ -17,27 +17,28 @@
 ▎
 Q3/12  jk move A–H pick I write n note r review keys here         [-]
 --- styles
-.x2 1 . 2x4 1x35 3x2
--
-.x4 2 . 2
-.x4 2 . 2
-.x4 2 . 2
-.x4 2 . 2
-.x4 2 . 2
-.x4 2 . 2
-.x4 2 . 2
-.x4 2 . 4 . 4x14
-.x4 2 . 2 . 2x21
-.x4 2x16
--
-5x70
-5 .x3 2x4 1x35 .x26 5
-5 .x68 5
-6x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x9 2x3
+1 . 2 . 3x4 2x35 .x26 1
+1 .x68 1
+1 .x3 3 . 4 .x62 1
+1 .x3 3 . 4 .x62 1
+1 .x3 3 . 4 .x62 1
+1 .x3 3 . 4 .x62 1
+1 .x3 3 . 4 .x62 1
+1 .x3 3 . 4 .x62 1
+1 .x3 3 . 4 .x62 1
+1 .x3 3 . 5 . 5x14 .x47 1
+1 .x3 3 . 4 . 4x21 .x40 1
+1 .x3 4x16 .x49 1
+1x70
+6x70
+6 .x3 4x4 2x35 .x26 6
+6 .x68 6
+7x6 . 4x7 . 4x8 . 4x7 . 4x6 . 4x8 . 4x9 .x9 4x3
 --- legend
-1 bold
-2 fg=#999999
-3 fg=#4eba65
-4 fg=#d77757 bold
-5 dim
-6 fg=#d77757 bold inverse
+1 fg=#4eba65
+2 bold
+3 fg=#d77757
+4 fg=#999999
+5 fg=#d77757 bold
+6 dim
+7 fg=#d77757 bold inverse

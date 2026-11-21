@@ -1,32 +1,58 @@
-# answer/pi/cards-regular 70x24 @0,8 (70x11)
-╭─ 1 of 2  ○ Q1  ○ Q2 ───────────────────────────────────────────────╮
-│ Use SQLite?                                                        │
-│                                                                    │
-│ ›1 ○ A. SQLite                                                     │
-│  2 ○ B. Postgres                                                   │
-│                                                                    │
-│  3 ○ Write your own answer                                         │
-│                                                                    │
-│                                                                    │
-│ Back [b]  Forward [f]  Skip [s]  Review [r]  Note [n]              │
-│ 1-9 or enter answers · hjkl moves · esc closes, answers kept       │
+# answer/pi/cards-regular 70x24 @0,0 (70x24)
+
+ ask
+
+
+ Q1. Use SQLite?
+
+ - A. SQLite
+ - B. Postgres
+
+ Q2. Add caching?
+
+ - A. Yes
+ - B. No
+
+
+ The answer cards need pi's fullscreen mode.
+
+ Answer 2 questions · alt+a or /answer
+──────────────────────────────────────────────────────────────────────
+
+──────────────────────────────────────────────────────────────────────
+<tmp>
+0.7%/200k (auto)                                                replay
+
 --- styles
-1x2 . 2x6 .x2 3 . 4x2 .x2 3 . 3x2 . 1x48
-1 . 5x11 .x56 1
-1 .x68 1
-1 . 6 2 . 3x2 6x9 .x53 1
-1 .x2 2 . 3x2 .x62 1
-1 .x68 1
-1 .x2 2 . 3x23 .x41 1
-1 .x68 1
-1 .x68 1
-1 . 7x4 . 3x3 .x2 7x7 . 3x3 .x2 7x4 . 3x3 .x2 7x6 . 3x3 .x2 7x4 . 3x3 .x14 1
-1 . 3x60 .x7 1
+1x70
+1 2x3 1x66
+1x70
+-
+. 3x15
+-
+. 4x2 3x2
+. 4x2 3x2
+-
+. 3x16
+-
+. 4x2 3x2
+. 4x2 3x2
+-
+-
+. 5x43
+-
+. 4x18 5x19
+6x70
+7
+6x70
+5x5
+5x70
+-
 --- legend
-1 fg=#768186
-2 fg=#a798d7
-3 fg=#7e888e
-4 fg=#a798d7 bold
-5 bold
-6 fg=#dee0e1 bold
-7 fg=#dee0e1
+1 bg=#213b49
+2 fg=#dee0e1 bg=#213b49
+3 bold
+4 fg=#a798d7
+5 fg=#7e888e
+6 fg=#6c767b
+7 inverse

@@ -1,5 +1,5 @@
 # answer/pi/cards-note 70x24 @0,0 (69x24)
-│  ❯ Q1  Use SQLite? ✓
+│  ❯ Q1  Use SQLite?
 │
 │    A ○ SQLite
 │    B ● Postgres
@@ -24,36 +24,37 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                repla
 --- styles
-1 .x2 2 . 3x4 2x11 4x2
+1 .x2 2 . 3x4 2x11
 1
-1 .x4 3 . 3
+1 .x4 3 . 4
 1 .x4 3 . 5 . 5x8
-1 .x4 3 . 3 . 3x21
-1 .x4 3x6 1x13
-1 .x10 1x17
+1 .x4 3 . 4 . 4x21
+1 .x4 4x6 6x13
+1 .x10 6x17
 -
 -
-3 .x4 3x4 2x12
-3
-3 .x4 3 . 3
-3 .x4 3 . 3
-3 .x4 3 . 3 . 3x21
-3 .x4 3x16
+4 .x4 4x4 2x12
+4
+4 .x4 4 . 4
+4 .x4 4 . 4
+4 .x4 4 . 4 . 4x21
+4 .x4 4x16
 -
-.x16 6x37
+.x16 7x37
 -
-. 1x6 . 3x7 .x2 3x16
-7x69
-.x17 8
-7x69
-3x5
-3x69
+. 6x6 . 4x7 .x2 4x16
+8x69
+.x17 9
+8x69
+4x5
+4x69
 --- legend
-1 fg=#dee0e1
+1 fg=#68b78d
 2 fg=#dee0e1 bold
-3 fg=#7e888e
-4 fg=#68b78d
+3 fg=#a798d7
+4 fg=#7e888e
 5 fg=#a798d7 bold
-6 fg=#dee0e1 bg=#213b49
-7 fg=#6c767b
-8 inverse
+6 fg=#dee0e1
+7 fg=#dee0e1 bg=#213b49
+8 fg=#6c767b
+9 inverse

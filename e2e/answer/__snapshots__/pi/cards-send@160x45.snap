@@ -12,13 +12,13 @@
  - A. Yes
  - B. No
 
-│    Q1  Use SQLite? ✓
+│    Q1  Use SQLite?
 │
 │    A ○ SQLite
 │    B ● Postgres
 
 
-│    Q2  Add caching? ✓
+│    Q2  Add caching?
 │
 │    A ● Yes
 │    B ○ No
@@ -58,19 +58,19 @@ a draft for later
 . 4x2 3x2
 . 4x2 3x2
 -
-5 .x4 5x4 6x11 7x2
+5 .x4 6x4 7x11
 5
-5 .x4 5 . 5
-5 .x4 5 . 8 . 8x8
+5 .x4 6 . 6
+5 .x4 6 . 8 . 8x8
 -
 -
-5 .x4 5x4 6x12 7x2
+5 .x4 6x4 7x12
 5
-5 .x4 5 . 8 . 8x3
-5 .x4 5 . 5
+5 .x4 6 . 8 . 8x3
+5 .x4 6 . 6
 -
 -
-5 .x4 9x24 7x7
+5 .x4 9x24 5x7
 5
 5 .x2 9x19
 5 .x8 9x11
@@ -88,16 +88,16 @@ a draft for later
 cx159
 .x17 d
 cx159
-5x5
-5x159
+6x5
+6x159
 --- legend
 1 bg=#213b49
 2 fg=#dee0e1 bg=#213b49
 3 bold
 4 fg=#a798d7
-5 fg=#7e888e
-6 fg=#dee0e1 bold
-7 fg=#68b78d
+5 fg=#68b78d
+6 fg=#7e888e
+7 fg=#dee0e1 bold
 8 fg=#a798d7 bold
 9 fg=#7e888e bold
 a fg=#ea7f81
