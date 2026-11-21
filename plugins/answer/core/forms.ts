@@ -125,7 +125,7 @@ const RECOMMEND_IN_TEXT =
 const SAID_YES_NO = /\b(?:I (?:recommend|suggest)|my recommendation is)\s+((?:yes|no)\b[^.\n]*)/i;
 // The same for a numbered menu: "I'd go with 2", "my recommendation: 1".
 const RECOMMEND_NUMBER =
-  /\b(?:recommend(?:ed|ation)?:?|lean (?:toward|towards)|(?:I'd|I would) (?:go with|pick|try|start with|choose))\s+\**(?:option\s+|number\s+)?([0-9]{1,2})\b/i;
+  /\b(?:recommend(?:ed|ation)?:?|lean (?:toward|towards)|(?:I'd|I would) (?:go with|pick|try|start with|choose|do))\s+\**(?:option\s+|number\s+)?([0-9]{1,2})\b/i;
 // The line above a numbered list that says it holds decisions or questions, so its items are asks.
 const DECISION_CUE =
   /\b(?:decisions?\s+(?:for you|to make|needed)|to decide|to confirm|need to know|choose between|questions?\s+(?:for you|before|to answer))\b[^.?!]*:?\s*$/i;
@@ -493,7 +493,16 @@ function menuOf(lines: string[], run: Start[]): Split | null {
         leanText.slice(said.index + said[0].length),
       )
     : null;
-  const numbers = said ? [said[1], ...(more?.[1]?.match(/[0-9]{1,2}/g) ?? [])] : [];
+  // "1–3" or "1 to 3" is every number from the first to the last.
+  const range = said
+    ? /^\s*(?:–|-|—|to|through)\s*([0-9]{1,2})\b/.exec(leanText.slice(said.index + said[0].length))
+    : null;
+  const spanned = range
+    ? Array.from({ length: Math.max(0, Number(range[1]) - Number(said?.[1]) + 1) }, (_, i) =>
+        String(Number(said?.[1]) + i),
+      )
+    : [];
+  const numbers = said ? [said[1], ...spanned, ...(more?.[1]?.match(/[0-9]{1,2}/g) ?? [])] : [];
   const leant = [...new Set(numbers.map((n) => options.findIndex((option) => option.key === n)))]
     .filter((index) => index >= 0)
     .sort((a, b) => a - b);
@@ -502,7 +511,8 @@ function menuOf(lines: string[], run: Start[]): Split | null {
     label: "Q1",
     unlabelled: true,
     title: asked,
-    body: "",
+    // A lean that names no option of the list is still the message's words.
+    body: lean && !leant.length && wanted < 0 ? unbold(lean) : "",
     options,
   };
   if (leant.length > 1) {
