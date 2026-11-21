@@ -6,7 +6,7 @@
 
 /**
  * A colour role of the style. Each painter maps it to its own theme.
- * - `code` is inline code.
+ * - `code` is inline code, `link` the words of a link.
  * - `border` is a rule or a frame's line.
  * - `active` and `answered` are a question card's own: the one the keyboard is on, and one
  *   that has its answer.
@@ -19,11 +19,19 @@ export type Role =
   | "warning"
   | "error"
   | "code"
+  | "link"
   | "border"
   | "active"
   | "answered";
 
-export type Style = { role?: Role; bold?: boolean; italic?: boolean; underline?: boolean };
+export type Style = {
+  role?: Role;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  /** The two colours swapped: a badge. */
+  inverse?: boolean;
+};
 
 /** A run of one style. `hit` names the control it belongs to, where a row holds several. */
 export type Span = Style & { text: string; hit?: string };
@@ -156,7 +164,30 @@ function split(text: string, cells: number): [head: string, rest: string] {
   return [text.slice(0, at), text.slice(at)];
 }
 
-/** Greedy word wrap in cells; a word longer than the width is broken, and a `\n` ends a line. */
+/**
+ * The pieces of a word a line may end between: each wide character is one, as East Asian text
+ * has no spaces to break at, and a run of narrow ones is one. A mark stays with what it marks.
+ */
+function units(word: string): string[] {
+  const out: string[] = [];
+  let run = "";
+  for (const ch of word) {
+    const w = cellsOf(ch.codePointAt(0) ?? 0);
+    if (w === 2) {
+      if (run) out.push(run);
+      run = "";
+      out.push(ch);
+    } else if (w === 0 && !run && out.length) out[out.length - 1] += ch;
+    else run += ch;
+  }
+  if (run) out.push(run);
+  return out;
+}
+
+/**
+ * Greedy word wrap in cells: a line ends at a space or between wide characters, a narrow word
+ * longer than the width is broken, and a `\n` ends a line.
+ */
 export function wrap(text: string, width: number): string[] {
   const out: string[] = [];
   for (const paragraph of text.replace(/\r\n?/g, "\n").split("\n")) {
@@ -164,24 +195,26 @@ export function wrap(text: string, width: number): string[] {
     let used = 0;
     const words = paragraph.split(/[ \t]+/).filter(Boolean);
     if (words.length === 0) out.push("");
-    for (let word of words) {
-      let w = cellWidth(word);
-      if (used > 0 && used + 1 + w <= width) {
-        line += ` ${word}`;
-        used += 1 + w;
-        continue;
+    for (const word of words) {
+      let gap = used > 0 ? 1 : 0;
+      for (let unit of units(word)) {
+        let w = cellWidth(unit);
+        if (used > 0 && used + gap + w > width) {
+          out.push(line);
+          line = "";
+          used = 0;
+          gap = 0;
+        }
+        while (w > width) {
+          const [head, rest] = split(unit, width);
+          out.push(head);
+          unit = rest;
+          w = cellWidth(unit);
+        }
+        line += (gap ? " " : "") + unit;
+        used += gap + w;
+        gap = 0;
       }
-      if (used > 0) out.push(line);
-      line = "";
-      used = 0;
-      while (w > width) {
-        const [head, rest] = split(word, width);
-        out.push(head);
-        word = rest;
-        w = cellWidth(word);
-      }
-      line = word;
-      used = w;
     }
     if (words.length > 0) out.push(line);
   }
@@ -236,7 +269,8 @@ const INLINE =
 
 /**
  * One paragraph of inline Markdown as spans in `style`: code takes the `code` role, bold and
- * italic their faces over the style, and a link keeps its words. Line ends become spaces.
+ * italic their faces over the style, and a link keeps its words, underlined. Line ends become
+ * spaces.
  */
 export function inline(text: string, style: Style = {}): Span[] {
   const spans: Span[] = [];
@@ -252,7 +286,7 @@ export function inline(text: string, style: Style = {}): Span[] {
       spans.push({ ...style, text: bold ?? underscored ?? "", bold: true });
     else if (italic !== undefined || slanted !== undefined)
       spans.push({ ...style, text: italic ?? slanted ?? "", italic: true });
-    else spans.push({ ...style, text: link ?? "" });
+    else spans.push({ ...style, text: link ?? "", role: "link", underline: true });
     at = start + m[0].length;
   }
   if (at < flat.length) spans.push({ ...style, text: flat.slice(at) });
@@ -267,6 +301,7 @@ const sameStyle = (a: Span, b: Span) =>
   !a.bold === !b.bold &&
   !a.italic === !b.italic &&
   !a.underline === !b.underline &&
+  !a.inverse === !b.inverse &&
   a.hit === b.hit;
 
 /** Spans in lines of at most `width` cells: greedy by word, a space at a break dropped. */
@@ -301,15 +336,16 @@ export function wrapSpans(spans: readonly Span[], width: number): Span[][] {
           if (used > 0) put(from, piece);
           continue;
         }
-        let word = piece;
-        if (used > 0 && used + cellWidth(word) > width) end();
-        while (cellWidth(word) > width) {
-          const [head, rest] = split(word, width);
-          put(from, head);
-          end();
-          word = rest;
+        for (let unit of units(piece)) {
+          if (used > 0 && used + cellWidth(unit) > width) end();
+          while (cellWidth(unit) > width) {
+            const [head, rest] = split(unit, width);
+            put(from, head);
+            end();
+            unit = rest;
+          }
+          put(from, unit);
         }
-        put(from, word);
       }
     }
   const last = lines[lines.length - 1] ?? [];

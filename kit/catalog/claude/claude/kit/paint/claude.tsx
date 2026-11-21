@@ -18,6 +18,7 @@ const COLOR: Record<Role, string | undefined> = {
   warning: "warning",
   error: "error",
   code: "permission",
+  link: undefined,
   border: undefined,
   active: "claude",
   answered: "suggestion",
@@ -78,6 +79,7 @@ export function paintLines(
       bold={s.bold || undefined}
       italic={s.italic || undefined}
       underline={s.underline || undefined}
+      inverse={s.inverse || undefined}
       hover={
         isControl
           ? {

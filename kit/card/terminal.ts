@@ -48,8 +48,8 @@ export function controlStyle({
 }
 
 /** A card's own colour: the keyboard's card, one with its answer, or neither. */
-export const cardRole = ({ active, answered }: CardState): Role =>
-  active ? "active" : answered ? "answered" : "text";
+export const cardRole = ({ active, answered, sent }: CardState): Role =>
+  active ? "active" : sent ? "success" : answered ? "answered" : "text";
 
 /** A line behind a card's rail, which still draws on a blank row. */
 export function rail(state: CardState, row: Line): Line {
@@ -92,9 +92,12 @@ export function choice(c: Choice, width: number): Line[] {
   });
   const lit: Style = !isForm && chosen ? { role: chosenRole, bold: true } : label;
   // A row nothing marks is drawn in the terminal's own colour, as its Markdown would be.
-  const words = isLiteral
-    ? literal(c.text, !isForm && chosen ? { role: chosenRole } : label)
-    : inline(c.text, chosen || focused ? lit : {});
+  const words = [
+    ...(isLiteral
+      ? literal(c.text, !isForm && chosen ? { role: chosenRole } : label)
+      : inline(c.text, chosen || focused ? lit : {})),
+    ...(c.aside ? [span(c.aside, { role: "dim" })] : []),
+  ];
   const shortcut: Style = isForm
     ? { role: "dim" }
     : focused

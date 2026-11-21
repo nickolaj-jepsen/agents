@@ -19,6 +19,7 @@ const ROLE: Record<Role, ThemeColor> = {
   warning: "warning",
   error: "error",
   code: "mdCode",
+  link: "mdLink",
   border: "borderMuted",
   active: "borderAccent",
   answered: "border",
@@ -30,6 +31,7 @@ export function paintSpan(theme: Theme, s: Span): string {
   if (s.bold) out = theme.bold(out);
   if (s.italic) out = theme.italic(out);
   if (s.underline) out = theme.underline(out);
+  if (s.inverse) out = theme.inverse(out);
   return out;
 }
 

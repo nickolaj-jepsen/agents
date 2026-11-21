@@ -16,6 +16,8 @@ export type CardState = {
   active?: boolean;
   /** The card has its answer. */
   answered?: boolean;
+  /** Its answer has gone to the agent: a transcript keeps the card to read back. */
+  sent?: boolean;
   /** @default "card" */
   presentation?: Presentation;
 };
@@ -36,6 +38,8 @@ export type Choice = CardState & {
   detail?: string;
   /** Rows the detail may take. @default 3 */
   detailLines?: number;
+  /** Dim words after the label, wrapped with it: that it is the recommended answer. */
+  aside?: string;
   chosen?: boolean;
   /** The keyboard's or the pointer's target, whatever is chosen. */
   focused?: boolean;
