@@ -3,52 +3,112 @@ about: A long sectioned report with bold bullets, a table and nested lists ends 
 kind: picks
 items:
   - label: 1
-    options: [build, /grill-me]
+    title: "Fix the lot tag with `bin` and `tag-to lot=a,day=b`"
+    options:
+      - key: build
+        text: Build it
+      - key: /grill-me
+        text: Route to /grill-me
     recommended: /grill-me
   - label: 2
-    options: [build]
+    title: "Lock: add a `.lock`, `tag set` with the lot, no `tag -f`"
+    options:
+      - key: build
+        text: Build it
     recommended: build
   - label: 3
-    options: [build]
+    title: "Keep `.tmp` out of this week's build log"
+    options:
+      - key: build
+        text: Build it
     recommended: build
   - label: 4
-    options: [build]
+    title: "`tag set` wait for the lid wax, set by the day lock"
+    options:
+      - key: build
+        text: Build it
     recommended: build
   - label: 5
-    options: [build, /grill-me]
+    title: "`tag set <lot>` and two runs in `rack run`"
+    options:
+      - key: build
+        text: Build it
+      - key: /grill-me
+        text: Route to /grill-me
     recommended: /grill-me
   - label: 6
-    options: [build]
+    title: "Drop `tag` and add a new lock"
+    options:
+      - key: build
+        text: Build it
     recommended: build
   - label: 7
-    options: [build, /grill-me]
+    title: "`tag set` (one lot lock, wax, bin rack, lid wash, pass run)"
+    options:
+      - key: build
+        text: Build it
+      - key: /grill-me
+        text: Route to /grill-me
     recommended: /grill-me
   - label: 8
-    options: [build]
+    title: "Pin `tag.py` and `~/.cache/lots.db` with lock 3"
+    options:
+      - key: build
+        text: Build it
     recommended: build
   - label: 9
-    options: [build]
+    title: "Add wax for lids, or wait when it's wet"
+    options:
+      - key: build
+        text: Build it
     recommended: build
   - label: 10
-    options: [build]
+    title: "Skip wax, and wait on cold wash days"
+    options:
+      - key: build
+        text: Build it
     recommended: build
   - label: 11
-    options: [build, /grill-me]
+    title: "Add tape/wax and a log that can be reread"
+    options:
+      - key: build
+        text: Build it
+      - key: /grill-me
+        text: Route to /grill-me
     recommended: /grill-me
   - label: 12
-    options: [build]
+    title: "\"tag you set\" for lid `lot` runs"
+    options:
+      - key: build
+        text: Build it
     recommended: build
   - label: 13
-    options: [build]
+    title: "Pin the lot in-place run and clear the old lock"
+    options:
+      - key: build
+        text: Build it
     recommended: build
   - label: 14
-    options: [build, /brainstorm]
+    title: "Build around the lock (tag set run or in-place job)"
+    options:
+      - key: build
+        text: Build it
+      - key: /brainstorm
+        text: Route to /brainstorm
     recommended: /brainstorm
   - label: 15
-    options: [build, /brainstorm]
+    title: "Plan a new tag log for all wash passes"
+    options:
+      - key: build
+        text: Build it
+      - key: /brainstorm
+        text: Route to /brainstorm
     recommended: /brainstorm
   - label: 16
-    options: [build]
+    title: "Rack/lot lock for `tag set -c` and lids too"
+    options:
+      - key: build
+        text: Build it
     recommended: build
 ---
 I timed this week's `press run`. It took 8.5 hours from first wash (7:3) to a final rack check (4:1). Most of that went to sorting and waiting for the bin, not to work in `press`. Most of the time lost is in the wash step, and some wash days are well over.

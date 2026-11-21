@@ -3,8 +3,22 @@ about: A bulleted preamble full of inline code, then a heading that carries the 
 kind: round
 items:
   - label: Q1
-    options: [A, B, C, D]
+    title: How should we log, and what does "clean" mean?
+    options:
+      - key: A
+        text: One log, and it is a table.
+        detail: "`log.csv` holds the rows; the code reads `ok / hold lane / retest for ph / ph + cl` as a single question, and the log is 3–5 rows per tank. One tank, one lane, and the tests that would change (the set: ph, free cl, temp, flow) stay small."
+      - key: B
+        text: "Two logs:"
+        detail: '`ph-log` (hourly) + `cl-log` (every two hours). Look at "does this pass the check", but log + log, and the staff will log in turn.'
+      - key: C
+        text: One log, but the checks are hand-run
+        detail: ("run `ph read hold`, then `cl --test`"). Slow, but that's how staff work — it re-reads from the old sheet each time.
+      - key: D
+        text: No log.
+        detail: Rows would grow, they stay, and you'd have to track which tank to test.
     recommended: A
+    reason: 'A, with one rule I want to keep while it runs the pool: the check is run *at the tank*, not read from the sheet or from the till, so there is one place the rota and the staff see "this tank has a problem". The log is `ph-cl` (with `ph-cl hold` to test, such as a retest).'
 ---
 On the first question, what I found by checking (so I don't miss what the log can hold):
 

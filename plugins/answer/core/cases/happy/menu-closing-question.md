@@ -3,8 +3,19 @@ about: "numbered alternatives and one closing choice: one card keyed by the numb
 kind: round
 items:
   - label: Q1
-    options: [1, 2, 3]
+    title: Which do you want?
+    options:
+      - key: 1
+        text: "Accept it and label it:"
+        detail: the smallest change.
+      - key: 2
+        text: "Read the hourly report:"
+        detail: about an hour behind.
+      - key: 3
+        text: "Use the session logs:"
+        detail: real time, no price table.
     recommended: 1
+    reason: I'd go with 1, or 1 plus 3.
     unlabelled: true
 ---
 Ways to close the gap:

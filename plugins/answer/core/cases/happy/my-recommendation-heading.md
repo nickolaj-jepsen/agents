@@ -3,6 +3,7 @@ about: a recommendation heading over bullets, then a bare Agree?
 kind: round
 items:
   - label: Q4
+    title: What happens when you tap an app while the VM is off?
     recommended: true
 ---
 **Q4. What happens when you tap an app while the VM is off?**

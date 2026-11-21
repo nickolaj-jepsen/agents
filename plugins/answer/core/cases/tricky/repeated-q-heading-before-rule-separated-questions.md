@@ -3,18 +3,40 @@ about: A heading repeats a later question's label before the real rule-separated
 kind: round
 items:
   - label: Q1
-    options: [A, B]
+    title: Keep `scope` on the van list, set from the driver's rota and the load?
+    options:
+      - key: A
+        text: On the van, and a van list still needs `scope` to read it.
+      - key: B
+        text: On the van only.
     recommended: A
+    reason: A. The van list has the rules that hold true, with a single rule.
   - label: Q2
-    options: [A, B]
+    title: Keep `swap`, `pack` and `drop` as they are used by the van, and treat a van with no stops as an error?
+    options:
+      - key: A
+        text: As written.
+      - key: B
+        text: "Pull them out from the van: that is a big change."
     recommended: A
+    reason: A. A van list has a flat rule.
   - label: Q3
-    options: [A, B]
+    title: Give a van a rule hook that sets the load, short of the van-wide `scope`?
+    options:
+      - key: A
+        text: "`scope: (van, load) => rows`, with `van` and the `load` set once."
+      - key: B
+        text: Set van's own as one for all.
     recommended: A
+    reason: A. It's the same as for the van, and a van can run with two.
   - label: Q4
+    title: Ship them both, with the van load only the other vans' own in the rota?
     recommended: true
+    reason: Yes. It helps to cut work down and keep one run in the pack list.
   - label: Q5
+    title: Ship it as the van's own rule (`own`), with a fresh test that van's drawn from the rota?
     recommended: true
+    reason: Yes.
 ---
 Short answer: the two routes fit well enough to the shop rota and van run. For Q1 and Q2, I put `scope` first on the van list. That keeps it in the same form as before.
 

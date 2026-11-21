@@ -3,7 +3,16 @@ about: a revised list that drops its first option and keeps the letters
 kind: round
 items:
   - label: Q1
-    options: [B, C, D]
+    title: Which do you want?
+    options:
+      - key: B
+        text: Keep one process per window.
+        detail: The tools stay as they are.
+      - key: C
+        text: Do A anyway.
+        detail: Every tool needs another way to tell windows apart.
+      - key: D
+        text: Leave it as new windows.
     recommended: B
     unlabelled: true
 ---

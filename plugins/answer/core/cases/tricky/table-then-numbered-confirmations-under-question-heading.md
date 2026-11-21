@@ -3,7 +3,9 @@ about: A table with bold cells precedes a bolded question heading and a prose re
 kind: round
 items:
   - label: Q11
+    title: Which desks can renew, and which cards block?
     recommended: true
+    reason: My recommendation is this split. The desk lending rule is small and kept apart from the rota page. If any desk shows a gap you'd miss, the fix is to patch that row first, not to add a new desk to the rota.
 ---
 Status: an audit-only walk-through on fines, late fees and waivers to date.
 

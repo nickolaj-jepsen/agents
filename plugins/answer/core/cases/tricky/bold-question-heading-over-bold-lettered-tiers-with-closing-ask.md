@@ -3,8 +3,22 @@ about: A bold question heading over bold-lettered tiers inside a bullet list, a 
 kind: round
 items:
   - label: Q1
-    options: [A, B, C]
+    title: How strict is "genuine and fit"?
+    body: |-
+      You said fit is tied to the rim width too, and your wheel list has many (24) 8+ sizes now. Three tiers:
+
+      Do you agree, or would you prefer a strict brand-only rule?
+    options:
+      - key: A
+        text: "Brand or brand-line only:"
+        detail: "road/gravel/hybrid, C++/D, rim and disc. Skip: used parts, rebuilt (road/gravel only), and bulk sets."
+      - key: B
+        text: "A same-size part is fine if it fits well:"
+        detail: for the brake pads, or cables, which is the usual case. Sets of two are fixed sizes, but most still sell on rim width.
+      - key: C
+        text: Sorted, filtered only by how it fits.
     recommended: B
+    reason: "B, with a size check. That keeps most of the shop's stock in play. Still, we ought to add a hands-on check on your parts list: wheel rims fit, tyre widths allow a large range, and chain widths match. Most of the other tiers for speed and size (brakes, for example) are hand-made, and a filter by brand would miss the point you're after."
 ---
 I read the sheet first. Your request is built on both your notes (from Friday) and the quote (with the labour line), and your `part code` column has a gap in it from the import. I'll treat that as follows: each part it needs to match on size and brand and be taken from the list (`<code> <qty>`) so `import` can read it.
 

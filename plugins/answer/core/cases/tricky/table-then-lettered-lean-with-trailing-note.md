@@ -3,7 +3,15 @@ about: A comparison table followed by bold bullet claims with nested bullets, th
 kind: round
 items:
   - label: Q1
-    options: [A, B]
+    title: Which do you want?
+    body: Either way, it is saved in the repo as `rota-gap-plan.md`. Read it with the rota open; pick the lane and mark **done**.
+    options:
+      - key: A
+        text: Close the Saturday gap (early, my recommendation).
+        detail: It runs at dawn and the end of your rota, which is quiet in winter, and each guard's own swap rule.
+      - key: B
+        text: Leave it open.
+        detail: Then the open lane stays too, to cover swims. The next lane has a late guard when I also know it's due to a staff leave.
     recommended: A
     unlabelled: true
 ---

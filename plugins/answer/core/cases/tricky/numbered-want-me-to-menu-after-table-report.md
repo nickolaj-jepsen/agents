@@ -3,7 +3,14 @@ about: A report with a heading, a comparison table with an empty header cell, bo
 kind: round
 items:
   - label: Q1
-    options: [1, 2, 3]
+    title: Want me to
+    options:
+      - key: 1
+        text: Compare `lowdrag.8-front-rear-new-set.csv` to the 9.0 batch?
+      - key: 2
+        text: Wire the loan rig so `/shop/rigs/bench/low-drag-set` is ready to run?
+      - key: 3
+        text: Or move on to week 4 tubeless, which is the run your whole team would then be on?
     unlabelled: true
 ---
 Swapped it in — and the catch is that it doesn't roll any faster.

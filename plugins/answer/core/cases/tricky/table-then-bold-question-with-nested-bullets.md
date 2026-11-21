@@ -3,6 +3,7 @@ about: A table of rows with an ellipsis cell comes before a single bold question
 kind: round
 items:
   - label: Q5
+    title: Should the grafted rows be tagged one by one, like this?
 ---
 That fixes it up, and it hides a gap in what #4 shows:
 

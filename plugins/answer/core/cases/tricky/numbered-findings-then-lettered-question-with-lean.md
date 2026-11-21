@@ -3,7 +3,17 @@ about: Seven bold numbered findings with nested bullets and bold side headings p
 kind: round
 items:
   - label: Q3
-    options: [A, B, C]
+    title: Who tags the rows, and in which sheet does it live?
+    options:
+      - key: A
+        text: Only the farm hand, from tags shown by you and read by me.
+        detail: Stored in one sheet.
+      - key: B
+        text: Both the team and the hand in the shop sheet.
+        detail: This adds a second tag and a second count.
+      - key: C
+        text: Row-by-row, by hand or by script from the map.
+        detail: I'd skip this.
     recommended: A
 ---
 The survey is done. It ran on 9 plots and found 7 gaps, of which 3 need work and 4 are minor. Here is what to know for each:

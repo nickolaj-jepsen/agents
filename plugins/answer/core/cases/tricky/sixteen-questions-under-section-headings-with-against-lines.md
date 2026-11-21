@@ -3,21 +3,74 @@ about: A long multi-question round with section headings, italic rationale lines
 kind: round
 items:
   - label: Q1
+    title: Add a short "who are you asking" note to `desk.ts`?
+    body: |-
+      Show a name, tag, date or title, so what shelf has it. Read `src/lib/desk/{lend,hold}` first, then `src/rota`, then the page `ui/desk` or `ui/rota` rows.
+
+      *Why:* the new row was one of the desk's `desk.ts` and still works with a clerk, so a late slip does not break.
     recommended: true
+    reason: Yes. It's the main row, and Q3 adds a new row to fix it up.
   - label: Q2
-    options: [A, B, C]
+    title: Use `docs/lib/desk.md` as the base, and sort the new rows back to the file?
+    body: "*Why A:* `desk.md` is read by staff, not by tools, so it's safe to read from a shelf."
+    options:
+      - key: A
+        text: Keep the file as it is, no new rows.
+      - key: B
+        text: 'Add a rule row by hand ("desk row: new row").'
+      - key: C
+        text: Pull an open row from `docs/rows`.
     recommended: A
+    reason: "A. Plus: both fix the plan and still run well, so a late row isn't the thing. B would also go late on one more."
   - label: Q3
+    title: Add a short "book sale" note to `ui/sale.ts`?
+    body: |-
+      Show who the host, the day set with one shelf, and say it's open or why not. "Sale: open day" is fine.
+
+      *Why:* it's ideal for lists that need no lock, such as `loose-box`.
     recommended: true
+    reason: Yes. It's the only check that tells us you can sort what sale is live.
   - label: Q4
-    options: [A, B, C]
+    title: When do the desk rows run that sync?
+    body: |-
+      There are 3 rows now: 4 shelves, two `rota/`, and 3 tags.
+
+      *Why A:* `rota.ts` and `desk-lock.ts` are large and can be read all at once then.
+
+      ## Part 2: sort that new work
+    options:
+      - key: A
+        text: When a card is set up, as the first step of using it.
+      - key: B
+        text: Sync every 3 days.
+      - key: C
+        text: Sale days only.
     recommended: A
+    reason: A. You want to set up new-card rows, and look at the whole desk as it stands. Option B would age badly.
   - label: Q5
-    options: [A, B]
+    title: Move the shared tags in `~/lib/desk/rules`, and set new ones in `rules.md`?
+    body: "*Why:* it has two desk's own (3 weeks so far) and `/sale`, read on one from this list."
+    options:
+      - key: A
+        text: Share the shared tags with two desks only.
+      - key: B
+        text: Add a read-only copy.
     recommended: A
+    reason: A. The tag has no rule on any desk in this plan, since a duplicate would go stale.
   - label: Q6
-    options: [A, B, C, D]
+    title: How should the sign-in run?
+    body: "*Why A:* Quick checks and no full grill. 80% of your picks are a plain A or yes, so most of it will go fast."
+    options:
+      - key: A
+        text: Round-by-round lists based on my recommendation, as in this round, with one ask for the major decisions once the list is full.
+      - key: B
+        text: The one-question card only.
+      - key: C
+        text: The desk list only.
+      - key: D
+        text: An open round with no list.
     recommended: A
+    reason: A. The point in the one-by-one grill is what lets that run so far. You also ask for a rest stop in the same round.
 ---
 Ideas and pick lists are set for sale in this first round. Each question also has the default with my recommendation, so you can say yes if you don't want to. Two things I noticed in my first pass:
 - `/sale` was a loan tab and you've left it in two places.

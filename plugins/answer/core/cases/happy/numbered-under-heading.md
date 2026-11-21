@@ -3,10 +3,16 @@ about: numbered questions after a numbered list of ideas that asks nothing
 kind: round
 items:
   - label: 1
+    title: What should it do for you?
+    body: Help you discover things, or warn you about state?
   - label: 2
+    title: Who should see it?
     recommended: true
+    reason: both. A short motd for you, the hints for the model.
   - label: 3
+    title: How much space should it take?
     recommended: true
+    reason: one to three lines, and nothing when there's nothing to say.
 ---
 ## Ideas, grouped by what they're for
 

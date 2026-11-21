@@ -3,11 +3,25 @@ about: Bulleted findings lead into bold numbered questions, where one has a reco
 kind: round
 items:
   - label: 1
+    title: What's on the rota?
+    body: Is it a fix for the desk team who you (a rule you don't want, a late slip, a lost card), or is this a tool for the sale crew?
   - label: 2
-    options: [A, B, C]
+    title: How far should the new tag go?
+    body: My view is that the test run is key here, not just the page's own tests.
+    options:
+      - key: A
+        text: Today's tag row only, no new list.
+      - key: B
+        text: Tags + rows + labels.
+      - key: C
+        text: B, and a link to `@lib/sale-tag-kit` too (or a fork) is next.
     recommended: B
+    reason: the three files are in scope — one row, `row.ts` (card tab / card row), and `tag.ts` for tags.
   - label: 3
+    title: Whom is it for?
+    body: You at the front desk with the rota, or also staff that have no tools (kids, the helpers, a lone aide on a van)?
     recommended: true
+    reason: both, but the desk view is what most users see.
 tail: Tell me just 1 and 2 if 3 is easy.
 ---
 Reading the plan and checking the three desk files: `src/loan-desk.ts`, `src/loan-desk/ui/{hold,renew,fine}.ts`, and `web/src/lib/desk/ui/{card/form.ts,list.ts,row.ts,tab/bar.ts}`.

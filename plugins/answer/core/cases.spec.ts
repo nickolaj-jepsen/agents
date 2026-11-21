@@ -8,15 +8,23 @@
  *     kind: round                     # round, picks, or none for a message that asks nothing
  *     items:
  *       - label: Q1                   # as printed ("Q1", 2)
- *         title: First question?      # optional
- *         options: [A, B, C]          # the option keys, as printed; a pick list's are build, /grill-me…
- *         recommended: A              # an option key, [A, C] for several, true for a recommendation
- *                                     # that names no option; leave out when there is none
+ *         title: First question?
+ *         body: Context under it.     # optional; what it said besides title, options and lean
+ *         options:                    # the options, as printed; a pick list's are build, /grill-me…
+ *           - key: A
+ *             text: The option's words.
+ *             detail: The lines that continued it.   # optional
+ *         recommended: A              # an option key, [A, C] for several, true for a lean that
+ *                                     # names no option; leave out when there is none
+ *         reason: A. Why.             # optional; the recommendation's own words
  *         unlabelled: true            # the message printed no label for this lone question
  *     tail: Prose after the last question.   # optional
  *     ---
  *     **Q1. First question?**
  *     ...
+ *
+ * The values are written by hand from the message, never copied from what the parser says: a
+ * case that only repeats the parser proves nothing.
  *
  * The items are what the parser must find, in order, with nothing missing and nothing extra.
  * Whatever they say, every line of the message must be drawn by the head, the items or the tail,
@@ -38,11 +46,15 @@ import { type Form, parse, startLines, tailOf } from "./forms.ts";
 /** A label or key as a person writes it in YAML: `Q1`, `A`, `2`. */
 const Key = z.union([z.string(), z.number()]).transform(String);
 
+const Option = z.strictObject({ key: Key, text: z.string(), detail: z.string().default("") });
+
 const Item = z.strictObject({
   label: Key,
-  title: z.string().optional(),
-  options: z.array(Key).default([]),
+  title: z.string(),
+  body: z.string().optional(),
+  options: z.array(Option).default([]),
   recommended: z.union([z.literal(true), Key, z.array(Key).min(2)]).optional(),
+  reason: z.string().optional(),
   unlabelled: z.literal(true).optional(),
 });
 
@@ -80,15 +92,11 @@ function readCase(path: string): Case {
   };
 }
 
-type Found = {
-  label: string;
-  options: string[];
-  recommended: true | string | string[] | undefined;
-  unlabelled: boolean;
-};
+type Item = z.output<typeof Item>;
+type Found = Omit<Item, "unlabelled"> & { unlabelled: boolean };
 
-/** What the parser found of one item, in the terms a case file states it. */
-function found(item: Form["items"][number]): Found {
+/** What the parser found of one item, in the terms a case file states it. `body` and `reason` only when the case does. */
+function found(item: Form["items"][number], want: Pick<Item, "body" | "reason">): Found {
   const keys = (indices: number[]) => indices.map((index) => item.options[index]?.key ?? "?");
   const recommended = item.recommendedOptions
     ? keys(item.recommendedOptions)
@@ -97,8 +105,11 @@ function found(item: Form["items"][number]): Found {
       : item.recommended !== undefined || undefined;
   return {
     label: item.label,
-    options: item.options.map((option) => option.key),
+    title: item.title,
+    ...(want.body !== undefined ? { body: item.body } : {}),
+    options: item.options.map(({ key, text, detail }) => ({ key, text, detail })),
     recommended,
+    ...(want.reason !== undefined ? { reason: item.recommended } : {}),
     unlabelled: item.unlabelled ?? false,
   };
 }
@@ -141,16 +152,8 @@ for (const [group, dir] of folders) {
         expect(form?.kind, front.about).toBeUndefined();
       } else {
         expect(form?.kind, front.about).toBe(front.kind);
-        const want: Found[] = front.items.map((item) => ({
-          label: item.label,
-          options: item.options,
-          recommended: item.recommended,
-          unlabelled: item.unlabelled ?? false,
-        }));
-        expect(form?.items.map(found)).toEqual(want);
-        front.items.forEach((item, i) => {
-          if (item.title !== undefined) expect(form?.items[i]?.title).toBe(item.title);
-        });
+        const want = front.items.map((item) => ({ ...item, unlabelled: item.unlabelled ?? false }));
+        expect(form?.items.map((item, i) => found(item, want[i] ?? {}))).toEqual(want);
       }
       if (front.tail !== undefined) expect(tailOf(text)).toBe(front.tail);
       if (form) {
@@ -162,7 +165,14 @@ for (const [group, dir] of folders) {
 }
 
 test("the front matter refuses what it cannot read", () => {
-  const item = { label: "Q1", options: ["A", "B"] };
+  const item = {
+    label: "Q1",
+    title: "Which?",
+    options: [
+      { key: "A", text: "One." },
+      { key: "B", text: "Two." },
+    ],
+  };
   const good = { about: "x", kind: "round", items: [item] };
   expect(Front.safeParse(good).success).toBe(true);
   // A misspelt key, a lean that is a list of one, a round with no items, a none with some.
@@ -173,10 +183,11 @@ test("the front matter refuses what it cannot read", () => {
   expect(Front.safeParse({ ...good, items: [] }).success).toBe(false);
   expect(Front.safeParse({ about: "x", kind: "none", items: [item] }).success).toBe(false);
   expect(Front.safeParse({ ...good, kind: "form" }).success).toBe(false);
+  expect(Front.safeParse({ ...good, items: [{ ...item, title: undefined }] }).success).toBe(false);
   // Numbers as a person writes them in YAML are the labels and keys they print.
-  expect(Front.parse({ ...good, items: [{ label: 2, options: [1, 2] }] })).toMatchObject({
-    items: [{ label: "2", options: ["1", "2"] }],
-  });
+  expect(
+    Front.parse({ ...good, items: [{ label: 2, title: "t", options: [{ key: 1, text: "x" }] }] }),
+  ).toMatchObject({ items: [{ label: "2", options: [{ key: "1", text: "x", detail: "" }] }] });
 });
 
 test("every group has cases", () => {

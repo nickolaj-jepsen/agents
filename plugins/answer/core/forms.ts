@@ -109,7 +109,7 @@ const EMOJI_START = /^❓\s*\*\*Q([0-9]{1,3})\*\*\s*[-–—:]\s*(.*)$/;
 // `- **A.** …`, `- **A. …**`, `A) …`, `**B.** …`, `(c) …`, `- **(a)** …`; a letter may be lower case.
 const OPTION = /^(\s*)(?:[-*+]\s+)?(\*\*)?\(?([A-Ha-h])[.)](\*\*)?\s+(.+)$/;
 const RECOMMENDED =
-  /^\s*(?:>\s*)?(?:\**(?:(?:My )?recommend(?:ed|ation)(?: answer)?)\**(?:\s*:\s*\**|\s+is\s+)|➡️\s*)\s*(.*)$/i;
+  /^\s*(?:>\s*)?(?:(?:\**(?:(?:My )?recommend(?:ed|ation)(?: answer)?)\**\s*:\s*\**|➡️\s*)\s*(.*)|(\**(?:My )?recommend(?:ed|ation)(?: answer)?\**\s+is\s+.*))$/i;
 const OWN_RECOMMENDATION = /\([^)]*\b(?:my recommendation|recommended|my pick)\b[^)]*\)/i;
 // A letter, then punctuation or the end: "A. The format", "B, because", "**C**"; never "A small".
 const LEADING_LETTER =
@@ -122,7 +122,14 @@ const RANGE = /through|\bto\b|–|-/;
 const RECOMMEND_IN_TEXT =
   /\b(?:recommend(?:ed|ation)?:?|lean (?:toward|towards)|(?:I'd|I would) (?:go with|pick|try|choose))\s+\**(?:option\s+)?([A-H])\b/;
 // "I recommend yes, it is cheap": a yes or no leaned on in a sentence of its own.
-const SAID_YES_NO = /\b(?:I (?:recommend|suggest)|my recommendation is)\s+((?:yes|no)\b[^.\n]*)/i;
+const SAID_YES_NO =
+  /\b(?:I (?:recommend|suggest)|my recommendation is)\s+((?:yes|no)\b[^.\n]*\.?)/i;
+// A parenthetical that is only the marker of the recommended option: the card already says it.
+const OPTION_MARKER = /\s*\((?:my recommendation|recommended|my pick)\)/gi;
+const BULLET = /^\s*[-*+]\s/;
+// A paragraph that opens by leaning: "I'd pick A, since…", "I lean toward C: …".
+const LEAN_START =
+  /^\**(?:I(?:'d| would| recommend| lean| suggest)\b|My (?:recommendation|pick|lean)\b)/i;
 // The same for a numbered menu: "I'd go with 2", "my recommendation: 1".
 const RECOMMEND_NUMBER =
   /\b(?:recommend(?:ed|ation)?:?|lean (?:toward|towards)|(?:I'd|I would) (?:go with|pick|try|start with|choose|do))\s+\**(?:option\s+|number\s+)?([0-9]{1,2})\b/i;
@@ -134,7 +141,7 @@ const MENU_CUE =
   /(?:^|[.!?—–]\s+)((?:want me to|shall i|should i|do you want me to|would you like me to)\b[^?]*):\s*$/i;
 // A closing question that picks among the list above it, not one that asks to go ahead.
 const CHOOSING =
-  /\b(?:which|pick|choose|prefer|go with|start with|one of|both|either|option\s*[0-9]|[0-9]\s*(?:,|or|and|\/|\+)\s*[0-9])\b/i;
+  /\b(?:which|pick|choose|prefer|go with|start with|one of|both|either|option\s*[0-9]|[0-9]\s*(?:or|\/)\s*[0-9])\b/i;
 const ROUTES: [RegExp, string][] = [
   [/\/grill-me\b|\bgrill(?:ing)? (?:it )?first\b/i, "/grill-me"],
   [/\/brainstorm\b|\bbrainstorm(?:ing)? (?:it )?first\b/i, "/brainstorm"],
@@ -276,6 +283,19 @@ function leadingLetters(recommended: string, count: number): number[] {
   return highest !== undefined && highest < count ? picked : [];
 }
 
+/** A closing paragraph as the lean it says, the question it ends on, and what follows that question. */
+function splitClosing(paragraph: string): { lean: string; ask: string; after: string } {
+  const sentences = paragraph.trim().split(/(?<=[.!?])\s+/);
+  let ask = sentences.length - 1;
+  while (ask >= 0 && !sentences[ask]?.endsWith("?")) ask--;
+  if (ask < 0) return { lean: paragraph.trim(), ask: "", after: "" };
+  return {
+    lean: sentences.slice(0, ask).join(" "),
+    ask: sentences[ask] ?? "",
+    after: sentences.slice(ask + 1).join(" "),
+  };
+}
+
 function parseItem(start: Start, block: string[]): FormItem {
   const body = start.rest ? [start.rest] : [];
   const options: Option[] = [];
@@ -292,7 +312,7 @@ function parseItem(start: Start, block: string[]): FormItem {
           i++;
           more.push((block[i] ?? "").trimStart().slice(1).trim());
         }
-      recommended = unbold([rec[1] ?? "", ...more].filter(Boolean).join(" "));
+      recommended = unbold([rec[1] ?? rec[2] ?? "", ...more].filter(Boolean).join(" "));
       continue;
     }
     const opt = OPTION.exec(line);
@@ -303,9 +323,14 @@ function parseItem(start: Start, block: string[]): FormItem {
       const [, lead = "", opened, rawLetter = "", closed, words = ""] = opt;
       const letter = rawLetter.toUpperCase();
       const detail: string[] = [];
+      // Lines indented under an option continue it; so do the bullets right under an option that
+      // is no bullet itself, up to a blank line or the next option.
+      const isBulleted = BULLET.test(line);
       for (
         let next = block[i + 1];
-        next?.trim() && indent(next) > lead.length;
+        next?.trim() &&
+        (indent(next) > lead.length ||
+          (!isBulleted && BULLET.test(next) && !OPTION.test(next) && !RECOMMENDED.test(next)));
         next = block[i + 1]
       ) {
         i++;
@@ -314,10 +339,20 @@ function parseItem(start: Start, block: string[]): FormItem {
       // `- **A. Title.** More words`: the bold part is the option, the rest its detail. A bold
       // closed after the letter (`**A.** More **words**`) leaves the words whole.
       const close = opened && !closed ? words.indexOf("**") : -1;
-      if (close > 0) detail.unshift(words.slice(close + 2).trim());
+      // What follows the bold joins on with a comma or a colon, which the detail drops.
+      const joined =
+        close > 0
+          ? words
+              .slice(close + 2)
+              .replace(/^\s*[,;:–—]\s*/, "")
+              .trim()
+          : "";
+      if (joined) detail.unshift(joined);
       // A bold inside the words is the option's own, set by a surface that draws markdown.
-      const text = close > 0 ? unbold(words.slice(0, close)) : words.trim();
-      if (OWN_RECOMMENDATION.test(text)) ownPick = options.length;
+      const said = close > 0 ? unbold(words.slice(0, close)) : words.trim();
+      if (OWN_RECOMMENDATION.test(said)) ownPick = options.length;
+      // The marker of the recommended option is said by the card, not the option's words.
+      const text = said.replace(OPTION_MARKER, "").replace(/\s+([.,;:])/g, "$1");
       options.push({ key: letter, text, detail: tidy(detail) });
       continue;
     }
@@ -327,23 +362,54 @@ function parseItem(start: Start, block: string[]): FormItem {
   const choices = options.length >= 2 ? options : [];
   if (!choices.length)
     for (const option of options) body.push(`${option.key}. ${option.text}`, option.detail);
-  const bodyText = tidy(body);
+  let bodyText = tidy(body);
+  let title = start.title;
   // A yes or no said in passing, "I recommend yes, it is cheap", is the recommendation of a
-  // question with nothing to pick from.
+  // question with nothing to pick from. In the title it ends the title: the question is what
+  // came before and what follows it is the body.
   if (recommended === undefined && !options.length) {
-    const inline = SAID_YES_NO.exec(`${start.title} ${start.rest} ${bodyText}`);
-    if (inline) recommended = unbold(inline[1] ?? "");
+    const inTitle = SAID_YES_NO.exec(title);
+    const before = inTitle ? title.slice(0, inTitle.index).trimEnd() : "";
+    if (inTitle && before.endsWith("?")) {
+      title = before;
+      recommended = unbold(inTitle[1] ?? "");
+      const after =
+        title.length < start.title.length
+          ? start.title.slice(inTitle.index + inTitle[0].length).trim()
+          : "";
+      if (after) bodyText = tidy([after, bodyText]);
+    } else {
+      const inline = SAID_YES_NO.exec(`${start.rest} ${bodyText}`);
+      if (inline) recommended = unbold(inline[1] ?? "");
+    }
+  }
+  // With options, a paragraph that only leans ("I'd pick A, since…") or leans and then asks is the
+  // recommendation's words; the ask stays in the body.
+  const lean = RECOMMEND_IN_TEXT;
+  let leanSource = "";
+  if (options.length >= 2 && recommended === undefined) {
+    const paragraphsOf = bodyText.split(/\n{2,}/);
+    for (const [k, paragraph] of paragraphsOf.entries()) {
+      const said = splitClosing(paragraph);
+      if (said.lean && !said.after && LEAN_START.test(said.lean) && lean.test(said.lean)) {
+        recommended = unbold(said.lean);
+        leanSource = said.lean;
+        paragraphsOf[k] = said.ask;
+        break;
+      }
+    }
+    if (leanSource) bodyText = paragraphsOf.filter(Boolean).join("\n\n");
   }
   const item: FormItem = {
     label: start.label,
-    title: start.title,
+    title,
     body: bodyText,
     options: choices,
   };
   if (recommended !== undefined) item.recommended = recommended;
   if (choices.length) {
     const leading = recommended ? LEADING_LETTER.exec(recommended) : null;
-    const letter = (leading ?? RECOMMEND_IN_TEXT.exec(bodyText))?.[1];
+    const letter = (leading ?? RECOMMEND_IN_TEXT.exec(leanSource || bodyText))?.[1];
     // A revised list may start at B: letters count from its first option.
     const offset = letterIndex(choices[0]?.key ?? "A");
     const index = letter ? letterIndex(letter) - offset : (ownPick ?? -1);
@@ -415,6 +481,12 @@ function cueAbove(lines: string[], line: number): { text: string; at: number } {
   return { text: "", at: -1 };
 }
 
+/** Lines with the indentation they all share taken off, and blank lines made empty. */
+function dedent(block: string[]): string[] {
+  const shared = Math.min(...block.filter((line) => line.trim()).map(indent), Infinity);
+  return block.map((line) => (line.trim() ? line.slice(Number.isFinite(shared) ? shared : 0) : ""));
+}
+
 /** Where a block's first unindented paragraph after a blank line starts, -1 for none. */
 function paragraphBreak(block: string[]): number {
   for (let i = 1; i < block.length; i++)
@@ -451,20 +523,23 @@ function menuOf(lines: string[], run: Start[]): Split | null {
   const { text: cue, at: cueAt } = cueAbove(lines, first.line);
   const cueLine = MENU_CUE.test(cue);
   let closing: string[] = [];
-  let ownLines = lastBlock;
-  // The item's own first line is paragraph one; a closing question is a paragraph after it.
-  const trailing = paragraphs([lines[last.line] ?? "", ...lastBlock]);
-  const tailPara = trailing[trailing.length - 1];
-  if (
-    trailing.length > 1 &&
-    tailPara &&
-    indent(tailPara[0] ?? "") === 0 &&
-    !START.test(tailPara[0] ?? "")
-  ) {
-    const asked = tailPara.join(" ").trim();
-    if (asked.endsWith("?") && CHOOSING.test(asked)) {
-      closing = tailPara;
-      ownLines = lastBlock.slice(0, lastBlock.lastIndexOf(tailPara[0] ?? ""));
+  // The last option is its own lines up to the first unindented paragraph after a blank line.
+  const cut = paragraphBreak(lastBlock);
+  const ownLines = cut > 0 ? lastBlock.slice(0, cut) : lastBlock;
+  const afterOwn = paragraphs(cut > 0 ? lastBlock.slice(cut) : []);
+  const closingPara = afterOwn[afterOwn.length - 1];
+  let extra = afterOwn;
+  if (closingPara && !START.test(closingPara[0] ?? "")) {
+    const said = splitClosing(closingPara.join(" "));
+    // Prose after the question only counts when the question itself asks which, so a closing
+    // "…shared understanding? If yes, I'll start with step 1" is no menu.
+    if (
+      said.ask &&
+      (!said.after || /\b(?:which|pick|choose|prefer)\b/i.test(said.ask)) &&
+      CHOOSING.test(`${said.lean} ${said.ask}`)
+    ) {
+      closing = closingPara;
+      extra = afterOwn.slice(0, -1);
     }
   }
   if (!closing.length && !cueLine) return null;
@@ -474,35 +549,36 @@ function menuOf(lines: string[], run: Start[]): Split | null {
     const block = run[i + 1] ? blockOf(lines, start, run[i + 1]).block : ownLines;
     const text = start.title;
     if (OWN_RECOMMENDATION.test(text)) ownPick = i;
-    options.push({ key: String(start.n), text, detail: tidy([start.rest, ...block]) });
+    options.push({ key: String(start.n), text, detail: tidy([start.rest, ...dedent(block)]) });
   }
   const cueWords = MENU_CUE.exec(cue)?.[1] ?? "";
-  // The closing paragraph says what it leans toward, then asks: the ask is the title.
-  const sentences = tidy(closing).split(/(?<=[.!?])\s+/);
-  let ask = sentences.length - 1;
-  while (ask > 0 && !sentences[ask]?.endsWith("?")) ask--;
-  const lean = ask > 0 ? sentences.slice(0, ask).join(" ") : "";
-  const asked = closing.length
-    ? unbold(ask > 0 ? sentences.slice(ask).join(" ") : tidy(closing))
-    : cueWords;
+  // The closing paragraph says what it leans toward, then asks: the ask alone is the title, and
+  // what follows it is the card's body.
+  const said = closing.length ? splitClosing(closing.join(" ")) : null;
+  const lean = said?.lean ?? "";
+  const asked = said ? unbold(said.ask || tidy(closing)) : cueWords;
   const leanText = closing.join(" ");
-  const said = RECOMMEND_NUMBER.exec(leanText);
+  const numberSaid = RECOMMEND_NUMBER.exec(leanText);
   // "I'd go with 1, 2 and 6": every number the lean strings together.
-  const more = said
+  const more = numberSaid
     ? /^((?:\s*(?:,\s*and|,|and|&|\+|plus)\s*[0-9]{1,2}\b)+)/.exec(
-        leanText.slice(said.index + said[0].length),
+        leanText.slice(numberSaid.index + numberSaid[0].length),
       )
     : null;
   // "1–3" or "1 to 3" is every number from the first to the last.
-  const range = said
-    ? /^\s*(?:–|-|—|to|through)\s*([0-9]{1,2})\b/.exec(leanText.slice(said.index + said[0].length))
+  const range = numberSaid
+    ? /^\s*(?:–|-|—|to|through)\s*([0-9]{1,2})\b/.exec(
+        leanText.slice(numberSaid.index + numberSaid[0].length),
+      )
     : null;
   const spanned = range
-    ? Array.from({ length: Math.max(0, Number(range[1]) - Number(said?.[1]) + 1) }, (_, i) =>
-        String(Number(said?.[1]) + i),
+    ? Array.from({ length: Math.max(0, Number(range[1]) - Number(numberSaid?.[1]) + 1) }, (_, i) =>
+        String(Number(numberSaid?.[1]) + i),
       )
     : [];
-  const numbers = said ? [said[1], ...spanned, ...(more?.[1]?.match(/[0-9]{1,2}/g) ?? [])] : [];
+  const numbers = numberSaid
+    ? [numberSaid[1], ...spanned, ...(more?.[1]?.match(/[0-9]{1,2}/g) ?? [])]
+    : [];
   const leant = [...new Set(numbers.map((n) => options.findIndex((option) => option.key === n)))]
     .filter((index) => index >= 0)
     .sort((a, b) => a - b);
@@ -511,16 +587,23 @@ function menuOf(lines: string[], run: Start[]): Split | null {
     label: "Q1",
     unlabelled: true,
     title: asked,
-    // A lean that names no option of the list is still the message's words.
-    body: lean && !leant.length && wanted < 0 ? unbold(lean) : "",
+    // What the list leaves around it is still the message's words: a block between the options and
+    // the closing paragraph, a lean that names no option of the list, and what follows the ask.
+    body: [
+      ...extra.map((paragraph) => paragraph.join("\n")),
+      lean && !leant.length && wanted < 0 ? unbold(lean) : "",
+      said?.after ?? "",
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
     options,
   };
   if (leant.length > 1) {
     item.recommendedOptions = leant;
-    item.recommended = unbold(lean || tidy(closing));
+    if (lean) item.recommended = unbold(lean);
   } else if (wanted >= 0) {
     item.recommendedOption = wanted;
-    if (closing.length) item.recommended = unbold(lean || tidy(closing));
+    if (lean) item.recommended = unbold(lean);
   }
   return {
     form: { kind: "round", items: [item] },
@@ -596,6 +679,48 @@ function singleOf(lines: string[]): Split | null {
   const title = unbold(headWords.replace(/:\s*$/, "")).replace(/^Q\s*[.:)]\s+/, "");
   // The closer of a grilling is answered with a plain "yes"; it gets no card.
   if (!title || /shared understanding/i.test(title)) return null;
+  // A lead-in that is no bold line, heading or question gives way to the closing ask: the title is
+  // the question the reader answers, and the lead-in stays in the message's head.
+  const isPlainLead =
+    optionAt >= 0 && !/^(?:#{1,6}\s|\*\*)/.test(raw.trim()) && !/\?\**\s*$/.test(raw.trim());
+  const optionLine = optionAt >= 0 ? (at(optionAt)?.[1] ?? line + 1) : line + 1;
+  if (isPlainLead) {
+    const probe: Start = {
+      line: optionLine - 1,
+      isQ: true,
+      n: 1,
+      label: "Q1",
+      title: "",
+      rest: "",
+    };
+    const { block: whole, end: wholeEnd } = blockOf(lines, probe, undefined);
+    const paras = paragraphs(whole);
+    const lastPara = paras[paras.length - 1];
+    const said = lastPara && paras.length > 1 ? splitClosing(lastPara.join(" ")) : null;
+    if (lastPara && said?.ask) {
+      // The closing paragraph without its ask: the lean it leans, then what follows the ask.
+      const block = [
+        ...whole.slice(0, whole.length - lastPara.length),
+        ...(said.lean ? [said.lean, ""] : []),
+        ...(said.after ? [said.after] : []),
+      ];
+      // The item starts on its first option, so the lead-in above it is drawn as the head.
+      const start: Start = {
+        line: optionLine,
+        isQ: true,
+        n: 1,
+        label: "Q1",
+        title: unbold(said.ask),
+        rest: "",
+      };
+      const item = parseItem(start, block);
+      item.unlabelled = true;
+      const rec = item.recommended !== undefined || item.recommendedOption !== undefined;
+      return item.options.length >= 2 || rec
+        ? { form: { kind: "round", items: [item] }, starts: [optionLine], tail: wholeEnd }
+        : null;
+    }
+  }
   const start: Start = { line, isQ: true, n: 1, label: "Q1", title, rest: restWords ?? "" };
   const { block, end } = blockOf(lines, start, undefined);
   const item = parseItem(start, block);
@@ -641,9 +766,18 @@ function splitRun(text: string, lines: string[], run: Start[]): Split | null {
   // A Q label is a question on its own account; a bare numbered list needs a sign of its own,
   // or the list above it saying it holds questions: a closing "Want me to…?" over a list of
   // done steps is not a round.
+  // A bare list is a round when at least half its items ask, a `?` anywhere in an item counting,
+  // or the line above it says it holds questions.
+  const asking = items.filter(
+    (item) =>
+      `${item.title} ${item.body}`.includes("?") ||
+      item.options.length ||
+      item.recommended !== undefined,
+  ).length;
   const asks = first.isQ
     ? text.trimEnd().endsWith("?") || signal
-    : signal || DECISION_CUE.test(cueAbove(lines, first.line).text);
+    : (asking > 0 && asking * 2 >= items.length) ||
+      DECISION_CUE.test(cueAbove(lines, first.line).text);
   if (asks) return { form: { kind: "round", items }, starts, tail };
   return first.isQ ? null : menuOf(lines, run);
 }

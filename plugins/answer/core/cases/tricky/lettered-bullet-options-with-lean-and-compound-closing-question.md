@@ -3,8 +3,16 @@ about: Unlettered bold bullets of causes come first, then a bold stance line, th
 kind: round
 items:
   - label: Q1
-    options: [A, B]
+    title: 'Your lean: fix the sync in the job.'
+    options:
+      - key: A
+        text: Guard the sync job with `lock`.
+        detail: The lock is tied to the sync job's 5-minute window. That keeps the run at one time, and the call (`sync -f now`) can then drop the rest of at the same time. The change is small and clear, and the code would be a one-line fix in `sync.ts`.
+      - key: B
+        text: The job re-reads the list on a timer,
+        detail: for the next 30 s. This is simple, and the fix is to the shop's side. But the desk still only sees the list at the same time, now or later.
     recommended: A
+    reason: I'd pick A, since that is what you said you wanted, and B leans hard on the timer for it. The fix should also cover the new large `sync -f` job with and without `lock`. If that holds up, B is the fallback.
     unlabelled: true
 ---
 The delay on `quotes` was due to a bug in my first pass. Day-5 job of the wheel truing, based on `quotes` and bench at noon. Each job then took longer, so the `stock` and `part-sync` jobs I didn't touch and the old queue-by-queue run. The cost is small. The final call is resting on you.

@@ -3,8 +3,14 @@ about: "one unnumbered question: bold lead-in, lettered options, a lean, a closi
 kind: round
 items:
   - label: Q1
-    options: [A, B]
+    title: "Your decision: where the cache lives."
+    options:
+      - key: A
+        text: In memory. Fast, lost on restart.
+      - key: B
+        text: On disk. Slower, survives restarts.
     recommended: A
+    reason: I'd pick A, since restarts are rare.
     unlabelled: true
 ---
 Here is the tradeoff.

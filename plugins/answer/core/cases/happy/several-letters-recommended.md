@@ -3,8 +3,18 @@ about: a recommendation naming several options
 kind: round
 items:
   - label: Q1
-    options: [A, B, C, D]
+    title: Which routes get a bus shelter first?
+    options:
+      - key: A
+        text: Harbour line.
+      - key: B
+        text: Market line.
+      - key: C
+        text: Hospital line.
+      - key: D
+        text: Airport line.
     recommended: [A, C]
+    reason: A and C. They carry the most riders in the rain.
 ---
 **Q1. Which routes get a bus shelter first?**
 

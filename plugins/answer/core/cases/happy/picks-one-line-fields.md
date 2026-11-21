@@ -3,10 +3,18 @@ about: a pick list in `title · size · route` form
 kind: picks
 items:
   - label: 1
-    options: [build]
+    title: The default bar cuts the ideas you act on
+    options:
+      - key: build
+        text: Build it
     recommended: build
   - label: 2
-    options: [build, /grill-me]
+    title: The funnel is wide and slow for what survives
+    options:
+      - key: build
+        text: Build it
+      - key: /grill-me
+        text: Route to /grill-me
     recommended: /grill-me
 ---
 2 findings from 4 runs, saved to `~/notes/FINDINGS.md`

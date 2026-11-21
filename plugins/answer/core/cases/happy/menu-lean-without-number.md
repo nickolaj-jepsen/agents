@@ -3,7 +3,15 @@ about: "a menu whose closing lean names no number: the words are kept, not dropp
 kind: round
 items:
   - label: Q1
-    options: [1, 2, 3]
+    title: Which do you want?
+    body: The first is free and the last is fastest, so take your pick.
+    options:
+      - key: 1
+        text: A line in the garden.
+      - key: 2
+        text: A rack by the radiator.
+      - key: 3
+        text: The tumble dryer.
     unlabelled: true
 ---
 Three ways to dry the washing:

@@ -4,7 +4,13 @@ kind: round
 items:
   - label: Q1
     title: Shall we go with this?
+    body: |-
+      1. Loan-lock desk is kept as is, and rules are re-read live.
+      2. `rota.ts` is the desk's own.
+      3. Each desk shares its lists.
+      4. `tag` has a hard rule for sale and reads `tag` from it.
     recommended: true
+    reason: 'yes. Points 1 and 2 are what we call "the safe path for desk and shelf" mean, and 3 and 4 are the low-risk ones.'
     unlabelled: true
 ---
 It works out like this: a card after an item hold is just a copy-on request, which has 6 steps left. So, an entry with `reads: [loan.md, rota.md]` reads like this:

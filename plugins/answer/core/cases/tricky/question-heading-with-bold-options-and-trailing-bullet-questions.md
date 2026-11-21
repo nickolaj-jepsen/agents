@@ -3,7 +3,19 @@ about: A heading that names the question, two bold lettered options with sub-bul
 kind: round
 items:
   - label: Q8
-    options: [A, B]
+    title: what should the shop's rule be to lend out loan bikes?
+    options:
+      - key: A
+        text: Fixed fee, set by a clear rule.
+        detail: |-
+          - Store a flat rate as `fee.loan.day`. You get a mix of day or week rates, and it works with the shop's `rates` (base + late fee), `hold` and `cap`, read from the config file.
+          - `late-fee` adds about ~5 minutes and takes no change to the form.
+          - The rate has no tax, so re-checking it is easy. Budget ½ day in the sheet, ~1 hour for `fee-calc`.
+      - key: B
+        text: Daily rate, billed by week.
+        detail: |-
+          - Set a `rate.day.eur` on the bike, and `fee-calc` stays for it.
+          - Rates are flat, but riders who keep the bike *longer* than the week would pay for a refund or a credit. That's too much work for staff.
     recommended: A
 ---
 I reviewed the fleet rules, and option A makes a small tweak to pricing:

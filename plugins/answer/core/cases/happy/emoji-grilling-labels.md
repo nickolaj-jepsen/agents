@@ -3,10 +3,20 @@ about: "the emoji form: a label closing its bold, a recommendation after an arro
 kind: round
 items:
   - label: Q1
+    title: Storage
+    body: Should the cache use SQLite?
     recommended: true
+    reason: Yes, it is one file and needs no server.
   - label: Q2
-    options: [A, B]
+    title: Eviction
+    body: Evict by age or by size?
+    options:
+      - key: A
+        text: Age.
+      - key: B
+        text: Size.
     recommended: A
+    reason: A, the simpler rule.
 ---
 ❓ **Q1** - **Storage**: Should the cache use SQLite?
 

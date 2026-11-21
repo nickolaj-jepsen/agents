@@ -3,7 +3,9 @@ about: Answered questions in prose, then one bold question set between rules wit
 kind: round
 items:
   - label: Q61
+    title: Should `lend()` be a call on the front desk only after the check?
     recommended: true
+    reason: yes, as written.
 tail: |-
   That covers the set. Here is what we have, for you to check or tell me I got wrong.
 

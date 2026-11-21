@@ -3,8 +3,14 @@ about: a recommendation that names its option and then says "for now"
 kind: round
 items:
   - label: Q2
-    options: [A, B]
+    title: Where do the opening hours live?
+    options:
+      - key: A
+        text: In the shop's own config.
+      - key: B
+        text: In a shared file for every branch.
     recommended: A
+    reason: A for now. It can move to the shared file if a second branch opens.
 ---
 **Q2. Where do the opening hours live?**
 

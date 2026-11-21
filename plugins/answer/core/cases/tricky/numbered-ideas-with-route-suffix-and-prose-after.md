@@ -3,25 +3,52 @@ about: Numbered ideas each end with a size and route suffix, followed by long pr
 kind: picks
 items:
   - label: 1
-    options: [build]
+    title: Swap the stamp pad on the desk
+    options:
+      - key: build
+        text: Build it
     recommended: build
   - label: 2
-    options: [build, /grill-me]
+    title: Rework late notices that reach wrong members
+    options:
+      - key: build
+        text: Build it
+      - key: /grill-me
+        text: Route to /grill-me
     recommended: /grill-me
   - label: 3
-    options: [build]
+    title: A new storytime sign-up page with clear waitlist
+    options:
+      - key: build
+        text: Build it
     recommended: build
   - label: 4
-    options: [build, /grill-me]
+    title: "The rota gap: fill slots with the roster, not an email chain"
+    options:
+      - key: build
+        text: Build it
+      - key: /grill-me
+        text: Route to /grill-me
     recommended: /grill-me
   - label: 5
-    options: [build]
+    title: "Sale tags: the shelf's price list is the donor's price list"
+    options:
+      - key: build
+        text: Build it
     recommended: build
   - label: 6
-    options: [build]
+    title: Point `/sale` at your daily desk-scan app
+    options:
+      - key: build
+        text: Build it
     recommended: build
   - label: 7
-    options: [build, /brainstorm]
+    title: Plan a theme for the walk-in crowd
+    options:
+      - key: build
+        text: Build it
+      - key: /brainstorm
+        text: Route to /brainstorm
     recommended: /brainstorm
 tail: |-
   The first pick is 1. The change takes about 4 lines, in one file. That uses the 2-line `swap` the pre-set pad so staff can reuse it as is. The `swap` also feeds one more, so 3 of them are safe to do now. Once that's done, `/ideas` only has the rest of them. Few are blocked.

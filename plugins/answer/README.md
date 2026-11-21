@@ -8,8 +8,8 @@ When a turn ends with questions, click a choice, write your own answer, or add a
 
 What counts as a question:
 
-- Numbered questions: `**Q1. …?**`, `Question 2:`, `## Q3 — …`, or a numbered list that holds a question mark, options or a recommendation, or sits under a line such as "Decisions for you:".
-- One question with lettered options and a closing question, or a recommendation, or a question followed by "Recommended:" or "My recommended answer:". The reply is the answer alone, such as `B` or `yes`.
+- Numbered questions: `**Q1. …?**`, `Question 2:`, `## Q3 — …`, or a numbered list where at least half the items ask (a question mark anywhere in the item, options or a recommendation), or that sits under a line such as "Decisions for you:".
+- One question with lettered options and a closing question, or a recommendation, or a question followed by "Recommended:" or "My recommended answer:". The reply is the answer alone, such as `B` or `yes`. With a plain sentence above the options, the closing question is the card's title and the sentence stays above the card.
 - A list of alternatives followed by "Which do you want?", or under "Want me to:". It is one card whose rows keep the list's numbers; to pick several, write them in the write-in.
 - A pick list whose rows end in `build`, `/grill-me` or `/brainstorm`.
 

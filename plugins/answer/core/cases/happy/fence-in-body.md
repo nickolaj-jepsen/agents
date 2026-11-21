@@ -3,8 +3,20 @@ about: a code block in the question's body holds numbered lines that are not que
 kind: round
 items:
   - label: Q1
-    options: [A, B]
+    title: Keep this order of steps?
+    body: |-
+      ```
+      1. mix the dough
+      2. rest it
+      3. bake
+      ```
+    options:
+      - key: A
+        text: Keep it.
+      - key: B
+        text: Rest it twice.
     recommended: A
+    reason: A.
 ---
 **Q1. Keep this order of steps?**
 

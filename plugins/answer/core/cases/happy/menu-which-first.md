@@ -3,7 +3,14 @@ about: numbered alternatives and a closing choice with no lean
 kind: round
 items:
   - label: Q1
-    options: [1, 2, 3]
+    title: Which should I do first?
+    options:
+      - key: 1
+        text: Repaint the fence.
+      - key: 2
+        text: Fix the gate latch.
+      - key: 3
+        text: Clear the gutters.
     unlabelled: true
 ---
 Three jobs are waiting:

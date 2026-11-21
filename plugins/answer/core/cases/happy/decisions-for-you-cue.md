@@ -2,8 +2,10 @@
 about: a cue line says the numbered items below it are decisions
 kind: round
 items:
-  - label: 1
-  - label: 2
+- label: 1
+  title: Should retries be capped at three
+- label: 2
+  title: Should the log keep failed attempts
 ---
 Done with the spike.
 

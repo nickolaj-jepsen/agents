@@ -3,12 +3,27 @@ about: "the grilling skill's own format: lettered options and a blockquoted reco
 kind: round
 items:
   - label: Q1
-    options: [A, B, C]
+    title: Should every focus default to "worth doing, ranked by payoff per effort"?
+    options:
+      - key: A
+        text: Yes, one default for every kind. Big swings become an opt-in flag.
+      - key: B
+        text: 'Default by kind: features get "worth doing", refactors keep big swings.'
+      - key: C
+        text: Add the bar as a second pick to the scope question.
     recommended: A
+    reason: A. A per-kind table is one more thing to keep in sync.
   - label: Q2
+    title: Lower the per-generator target from 8–10 ideas to 5–6?
     recommended: true
+    reason: Yes. Each run threw away about 85% of its candidates, and four generators still give 20–24.
   - label: Q3
-    options: [A, B]
+    title: What should happen to `--quick`?
+    options:
+      - key: A
+        text: Drop it.
+      - key: B
+        text: Keep it as an alias.
 ---
 The bar and the funnel are independent, so this round asks both.
 

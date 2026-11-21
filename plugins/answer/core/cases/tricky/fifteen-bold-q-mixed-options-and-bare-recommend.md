@@ -3,21 +3,61 @@ about: A long analysis with bullets and horizontal rules, followed by bold quest
 kind: round
 items:
   - label: Q1
-    options: [A, B, C]
+    title: Should lanes be held in one block of time, with the rota files `lane-a` and `lane-b` kept apart?
+    options:
+      - key: A
+        text: One block in the rota, followed by a copy of the rows (`lane/`, `till/`, `log/`, `rota.csv`). A new rule runs the rota, and the lane rows sit on the rota build.
+      - key: B
+        text: A lane row held on rota and swap to an old `rota` file, which the build runs on. Each rota rests on a swap.
+      - key: C
+        text: Run both, but limit it to rota only.
     recommended: A
+    reason: A. It's the safe way, the lane rows are all set, and one block is enough for a guard rota. `lane/old/` would be kept from rota and till.
   - label: Q2
+    title: Should `rota/old/swap.csv` go away (we need it) with `lanes.csv` and the new build file?
     recommended: true
+    reason: Yes. swap.csv is stale, and the file is not used.
   - label: Q3
-    options: [A, B]
+    title: Should lanes open with a dot next to a lane name, with the rota rows kept apart?
+    options:
+      - key: A
+        text: Open lane tag only, with a `C | π` tag on the rota.
+      - key: B
+        text: Names only, no lane tag.
     recommended: A
+    reason: A, for speed and use. Name-only rows were never kept in sync.
   - label: Q4
-    options: [A, B]
+    title: Should we look at lane six still, as one (one per lane) and as two (a lane tag in the rota, e.g. `lane-six-a`)?
+    options:
+      - key: A
+        text: Keep both.
+      - key: B
+        text: Only lane-one and lane-two, and rota/till stays read-only.
     recommended: A
+    reason: A. Lane six in the log is the main use of lane time.
   - label: Q5
-    options: [A, B, C]
+    title: Should the rota file say the same lane rule, with no extra tag and no new field?
+    body: "My text: *\"Lanes for the swim and class, and rota for the staff. It's what I put on my own list.\"* The text goes to the rota file as a note."
+    options:
+      - key: A
+        text: My text.
+      - key: B
+        text: You write it.
+      - key: C
+        text: No text, just the rota rows.
     recommended: A
+    reason: A, or B if the rota still reads as stale.
   - label: Q6
+    title: Should rota and till have an "auto" step that runs a small script with the rota for lane hold and a note?
+    body: |-
+      The step would run:
+      - Step one: `pool sync lanes … && pool log ph@…` as one line.
+      - Next: the `rota diff` file.
+      - Last: `pool log-ph/cl --dry <lane>` (note: the flag is `--dry`).
+
+      It runs on rota days and in the late shift. Other things (rota day, `ph@` log) go to a "queue" log.
     recommended: true
+    reason: Yes.
 tail: "Wait for the next round, then I will work on Q4 and Q12: the rota's lane list (a lane count of day two. late shift), and see the \"hold\" tag log."
 ---
 Booking is live; here's what I did, then the first round of questions.

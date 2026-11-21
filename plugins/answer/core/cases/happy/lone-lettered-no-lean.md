@@ -3,7 +3,14 @@ about: "unnumbered options with no lean: the closing question is the sign it ask
 kind: round
 items:
   - label: Q1
-    options: [A, B, C]
+    title: Which do you want?
+    options:
+      - key: A
+        text: By age.
+      - key: B
+        text: By size.
+      - key: C
+        text: By both.
     unlabelled: true
 ---
 Two ways to cut the list.

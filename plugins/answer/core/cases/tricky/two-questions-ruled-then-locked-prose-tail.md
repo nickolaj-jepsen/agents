@@ -3,10 +3,21 @@ about: Two bold questions in a round, separated by horizontal rules, the first w
 kind: round
 items:
   - label: Q9
-    options: [A, B, C]
+    title: 'Given the tags, build the rota in this order: shelf list, sort by price, walk-in rush, then sign-in?'
+    options:
+      - key: A
+        text: list → price → sort order → sale
+      - key: B
+        text: list → sort → price → sale desk. Do this if the team wants a quicker start than the rest.
+      - key: C
+        text: list → price → … Do this to check the tag run on the book pile first.
     recommended: A
+    reason: A. It aims to ship and is simple here. Run the tag pass on the list with the desk rota. We have two sale prints (Q6), so staff can pick up.
   - label: Q10
+    title: Should the desk give shelf tips that work for each stall with a step-by-step list you can tick on the page?
+    body: "Idea: `price tag` (which sells) and `book bin` fill a small row, so an owner can sort the wide set by title and genre, or sort and move, and see which ones go. Items that don't fit for sale (torn, out of date) only get seen."
     recommended: true
+    reason: 'yes for the tags, prices, size band and genre. That''s the "one by one" step you want a quick check for each.'
 tail: |-
   **Things you skip:**
 

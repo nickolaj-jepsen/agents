@@ -3,16 +3,13 @@ about: Bold numbered paragraph steps where some are instructions with a code fen
 kind: round
 items:
   - label: 1
+    title: Run this
   - label: 2
+    title: Paste the lane list into the chat
   - label: 3
+    title: What does the "full lane" label show?
   - label: 4
-tail: |-
-  Take this path:
-  - **Fast path:** the lane stays open, run for the first two guards. The rota works the rest on the day shift and swap.
-  - **Safe path:** the full rota. Once the lane is held, and this adds no extra cover.
-  - **My guess** may be it works: it doesn't say *what* is held for (swim or class), and it gives no sign that a hold was set. I'll note that in the rota so it's next to the list.
-
-  Once we've seen it, **drop the rota file in**. That is all.
+    title: If it is held, what next?
 ---
 Both lane sheets are stale, so I need you to run one more. To read the pool's live log I can read `cron` here, but the rota needs to be pulled in.
 

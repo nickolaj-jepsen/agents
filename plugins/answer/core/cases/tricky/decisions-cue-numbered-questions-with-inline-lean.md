@@ -3,11 +3,18 @@ about: A numbered list under a bold decisions heading holds unlabelled yes-or-no
 kind: round
 items:
   - label: 1
+    title: Should we keep the old `tag` log, with hand-fed runs as the base?
     recommended: true
+    reason: yes.
   - label: 2
+    title: Should wax tags be read-only by default, so a crew can't edit it?
+    body: Think a lot that sits on a shelf and sells on Monday.
     recommended: true
+    reason: yes.
   - label: 3
+    title: If `tag` is set on one or two, should it fall back to hand-fed runs from the old log?
     recommended: true
+    reason: yes, with an extra note the crew that sets the old `tag`.
 tail: "Still waiting on you from before: the `tag` run, the lot log, the wax row, and tape stock. If you agree with all, I'll write it up in `lots/bin-tag.md`."
 ---
 Pressing works fine, but my sweet-or-sharp blend is too close to call. I read the sheet on `bin-log-v2` and `press-run-day-1` and two more. The lots show how it goes:
