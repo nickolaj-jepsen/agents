@@ -4,40 +4,50 @@
     pkgs,
     ...
   }: let
-    media = pkgs.callPackage ./pkgs/media-environment.nix {inherit (config.packages) tui-test;};
-    pi-dev-links = pkgs.callPackage ./pkgs/pi-dev-links.nix {};
+    media = pkgs.callPackage ./pkgs/media-environment.nix {};
+    mediaPackages = media.packages ++ media.graphicsPackages ++ media.vscodePackages;
+    # A file naming every tool and path the recorders use: its store path changes with any of them,
+    # so `AGENTS_MEDIA_ENV` is the part of turbo's cache key that stands for this environment.
+    mediaEnvironment = pkgs.writeText "agents-media-environment" (
+      pkgs.lib.concatMapStringsSep "\n" toString (
+        mediaPackages
+        ++ builtins.attrValues media.graphicsEnv
+        ++ builtins.attrValues media.vscodeEnv
+        ++ [media.FONTCONFIG_FILE]
+      )
+    );
   in {
+    # The toolchain the repo pins (`.node-version`, `packageManager`, `.python-version`), for a
+    # machine that would rather get it from nix. The agents and linters come from `pnpm install`.
     devShells.default = pkgs.mkShell {
       name = "agents";
       # treefmt plus every formatter `nix fmt` runs, at the same versions.
       inputsFrom = [config.treefmt.build.devShell];
       packages = [
-        pkgs.nodejs # `npm ci`, then `just test` and `just typecheck`; it strips types, so e2e runs .ts as is
-        pkgs.just
-        pkgs.oxlint # `just lint`, at the version the flake check runs
-        pkgs.claude-code
-        pkgs.pi-coding-agent
-        pi-dev-links
-        config.packages.handoff-test
-        config.packages.tui-test # The e2e `goto` daemon
-        pkgs.pngquant # optimises the kit's crops, with oxipng
-        pkgs.oxipng
+        pkgs.nodejs_24
+        pkgs.pnpm_12
+        pkgs.uv
+        pkgs.python313
       ];
-      # This shell's `pi` is nixpkgs' bare one; the system's wrapper is what exports the
+      # uv's own Pythons are generic Linux builds, which NixOS cannot run.
+      UV_PYTHON_DOWNLOADS = "never";
+      # The `pi` in node_modules is a bare one; the system's wrapper is what exports the
       # key's location to plugins, so the exa tools would otherwise throw.
       shellHook = ''
         export PI_EXA_KEY_FILE="''${PI_EXA_KEY_FILE:-''${HOME:-}/.pi/agent/exa-api-key}"
       '';
     };
 
-    # What `just media` needs and nothing of the machine's: the agents, VS Code and its Claude
-    # extension, the fonts, the tools the scenarios call. The Pages workflow records in it; so can anyone, signed out.
+    # What `turbo run //#media` needs and nothing of the machine's: VS Code and its Claude
+    # extension, the fonts, the tools the scenarios call (the agents themselves come from
+    # node_modules). The Pages workflow records in it; so can anyone, signed out.
     devShells.media = pkgs.mkShell (media.graphicsEnv
       // media.vscodeEnv
       // {
         name = "agents-media";
-        packages = media.packages ++ media.graphicsPackages ++ media.vscodePackages ++ [pkgs.just];
-        inherit (media) PI_MONOREPO FONTCONFIG_FILE;
+        packages = mediaPackages ++ [pkgs.pnpm_12];
+        inherit (media) FONTCONFIG_FILE;
+        AGENTS_MEDIA_ENV = "${mediaEnvironment}";
       });
   };
 }

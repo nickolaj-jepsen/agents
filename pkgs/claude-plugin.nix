@@ -4,13 +4,17 @@
 {
   stdenvNoCC,
   claude-code,
-  agent-tools,
   name,
+  # The plugin's folder in the flake's source (`lib.plugins.<name>.path`).
+  src,
 }:
 stdenvNoCC.mkDerivation {
   name = "claude-code-${name}";
-  # Through agent-tools, so the plugin's own tests and type-check have passed first.
-  src = "${agent-tools}/plugins/${name}";
+  # A copy of the folder alone, so an edit elsewhere in the repo leaves the build cached.
+  src = builtins.path {
+    path = src;
+    name = "claude-code-${name}-src";
+  };
   nativeBuildInputs = [claude-code];
   buildPhase = ''
     runHook preBuild
@@ -19,6 +23,8 @@ stdenvNoCC.mkDerivation {
     claude plugin test .
     runHook postBuild
   '';
+  # What a mod loads: the rest of the folder (package.json, tsconfigs, tests, the pi half) is the
+  # repo's own.
   installPhase = ''
     runHook preInstall
     mkdir -p $out

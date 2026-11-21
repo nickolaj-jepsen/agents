@@ -11,7 +11,6 @@
       imports = [
         ./formatter.nix
         ./devshell.nix
-        ./packages.nix
       ];
       systems = [
         "x86_64-linux"
@@ -25,15 +24,10 @@
         skillsDir = ./skills;
         dirs = dir: lib.filterAttrs (_: type: type == "directory") (builtins.readDir dir);
       in {
-        # The plugin sources (pi halves checked against the consumer's `pi-coding-agent`) and tui-test.
-        overlays.default = final: _prev: {
-          agent-tools = final.callPackage ./pkgs/agent-tools/package.nix {};
-          tui-test = final.callPackage ./pkgs/tui-test/package.nix {};
-        };
-        overlays.tools = self.overlays.default;
-
         lib = {
           # A plugin's folder decides its halves; `agentTools.subagents` loads the pi half in subagents too.
+          # `path` is a string into the flake's own source: a pi half imports `../../kit`, which a path
+          # literal's copy of the plugin folder alone would not hold.
           plugins = lib.mapAttrs (name: _: let
             dir = pluginsDir + "/${name}";
             pkg = lib.optionalAttrs (builtins.pathExists (dir + "/package.json")) (lib.importJSON (dir + "/package.json"));
@@ -41,22 +35,20 @@
             claude = builtins.pathExists (dir + "/.claude-plugin/plugin.json");
             pi = pkg ? pi;
             subagents = pkg.agentTools.subagents or false;
-            path = dir;
+            path = "${self}/plugins/${name}";
           }) (dirs pluginsDir);
 
           # One folder per skill, each with a SKILL.md.
           skills = lib.mapAttrs (name: _: skillsDir + "/${name}") (dirs skillsDir);
 
-          # One plugin's Claude half, checked against the claude-code that runs it; `agentTools`'s
-          # own tests have run first.
+          # One plugin's Claude half, validated and tested against the claude-code that runs it.
           mkClaudePlugin = {
             pkgs,
             claude-code,
-            agentTools ? pkgs.agent-tools,
           }: name:
             pkgs.callPackage ./pkgs/claude-plugin.nix {
               inherit claude-code name;
-              agent-tools = agentTools;
+              src = self.lib.plugins.${name}.path;
             };
         };
       };
@@ -70,7 +62,8 @@
     };
 
   inputs = {
-    # master: the newest claude-code and pi-coding-agent to check the plugins against.
+    # master: the newest VS Code and Claude extension for the media shell; a consumer's own nixpkgs
+    # supplies the claude-code that `lib.mkClaudePlugin` checks against.
     nixpkgs.url = "github:nixos/nixpkgs/master";
 
     flake-parts.url = "github:hercules-ci/flake-parts";

@@ -1,10 +1,8 @@
-# The recording environment shared by `nix develop .#media` and the site-media derivations.
-# Keeping the tools and fonts together makes a local replay match the sandboxed recording.
+# The recording environment of `nix develop .#media`, which `turbo run //#media` runs in: the tools,
+# fonts and VS Code the recorders call. The agents themselves come from node_modules.
 {
   buildEnv,
   cage,
-  callPackage,
-  claude-code,
   dejavu_fonts,
   ffmpeg-full,
   ffmpeg-headless,
@@ -18,14 +16,12 @@
   stdenv,
   makeFontsConf,
   nerd-fonts,
-  nodejs,
+  nodejs_24,
   noto-fonts-cjk-sans,
   oxipng,
-  pi-coding-agent,
   pngquant,
   runCommand,
   runtimeShell,
-  tui-test,
   unifont,
   util-linux,
   vscode,
@@ -37,7 +33,6 @@
   xauth,
   xvfb-run,
 }: let
-  piMonorepo = "${pi-coding-agent}/lib/node_modules/pi-monorepo";
   hunspellEn = hunspell.withDicts (dicts: [dicts.en_US]);
   # nixpkgs' `code`, as a build can run it. It ends in Microsoft's launcher, whose
   # `#!/usr/bin/env sh` finds no /usr/bin/env in a build, so the shell is handed it instead. And
@@ -87,21 +82,17 @@
   };
 in {
   packages = [
-    (callPackage ./pi-dev-links.nix {inherit pi-coding-agent;})
-    nodejs
+    nodejs_24 # `.node-version`: it strips types, so the recorders run as .ts
     git
     which
     fontconfig # fc-list, which the captures read the fonts from
-    tui-test
-    claude-code
-    pi-coding-agent
     ffmpeg-headless
     pngquant
     oxipng
     hunspellEn # spellfix
   ];
 
-  # Only the plugin media runner uses these; the component catalogue still uses tui-test.
+  # Only the plugin media runner uses these; the component catalogue records through tui-test.
   graphicsPackages = lib.optionals stdenv.hostPlatform.isLinux [kitty xauth xvfb-run];
   graphicsEnv = lib.optionalAttrs stdenv.hostPlatform.isLinux {
     CAST_FFMPEG = lib.getExe ffmpeg-full;
@@ -111,10 +102,10 @@ in {
   # The VS Code pictures (`site-vscode`): VS Code and its Claude Code extension from this nixpkgs,
   # and cage for a display. The driver takes them from these variables instead of the machine's
   # `code`, `~/.vscode/extensions` and `nix run nixpkgs#cage` (e2e/lib/vscode.ts). The extension
-  # runs the `claude` it bundles, of its own version, not `claude-code` above.
+  # runs the `claude` it bundles, of its own version, not the workspace's.
   vscodePackages =
     [
-      nodejs
+      nodejs_24
       git
       which
       pngquant
@@ -131,8 +122,6 @@ in {
     E2E_VSCODE_FONTCONFIG_FILE = vscodeFonts;
   };
 
-  # What `pi-dev-links` links into node_modules for the kit's pi stories.
-  PI_MONOREPO = piMonorepo;
   FONTCONFIG_FILE = makeFontsConf {
     fontDirectories = [
       nerd-fonts.hack
