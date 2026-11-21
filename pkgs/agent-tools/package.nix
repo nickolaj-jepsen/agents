@@ -22,6 +22,10 @@
       # A plugin's README.md is content, read by the readme check, not by this one.
       (lib.fileset.difference ../../plugins (lib.fileset.fileFilter (file: file.name == "README.md") ../../plugins))
       ../../kit
+      # The kit's tests hold its index in AGENTS.md to the manifests, and each client's recorded
+      # stories to the shared drawing.
+      ../../AGENTS.md
+      (lib.fileset.fileFilter (file: file.hasExt "snap") ../../e2e/kit)
       # The e2e harness's sources, so `tsc -b` checks them; the tests need a real agent and never run here.
       (lib.fileset.fileFilter (file: file.hasExt "ts") ../../e2e)
       ../../e2e/tsconfig.json
