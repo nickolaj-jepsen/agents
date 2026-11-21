@@ -12,3 +12,6 @@ site/.astro/
 site/media/
 # The site's content model, written by `npm run site-data` from the markdown this repo holds.
 site/data/
+
+# Turborepo
+.turbo
