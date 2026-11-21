@@ -10,6 +10,7 @@ import {
   span,
   spansWidth,
   truncate,
+  truncateSpans,
   type Line,
   type Role,
   type Span,
@@ -20,6 +21,7 @@ import {
   choiceHit,
   type CardState,
   type Choice,
+  type Closing,
   type ChoiceList,
   type Heading,
   type Note,
@@ -147,6 +149,35 @@ export function note(n: Note, width: number): Line[] {
       n.hit,
     ),
   );
+}
+
+export const FILL_LABEL = "Fill prompt";
+
+/**
+ * The row after a round's last card: the pointer column, then how many questions have an
+ * answer, which goes to the first question, and Fill prompt, a button whose key (Enter on this
+ * step) is not printed. Fill takes the accent only when there is a reply to fill; once the round
+ * is sent the row says so instead. With no room beside the count, Fill goes under it.
+ */
+export function closing(c: Closing, width: number): Line[] {
+  const { hits } = c;
+  const count = span(`${c.answered} of ${c.total} answered`, {
+    ...controlStyle({ highlighted: c.focused || c.hovered === "count" }),
+    ...(hits ? { hit: hits.count } : {}),
+  });
+  const head = [
+    ...pointerLead(c.focused),
+    count,
+    ...(c.sent ? [span(` ${tokens.glyph.done} Sent`, { role: "success" })] : []),
+  ];
+  if (!hits || c.sent) return [line(truncateSpans(head, width))];
+  const fill = span(FILL_LABEL, {
+    ...controlStyle({ primary: c.canFill, highlighted: c.hovered === "fill" }),
+    hit: hits.fill,
+  });
+  if (spansWidth(head) + tokens.gutter + cellWidth(FILL_LABEL) <= width)
+    return [line([...head, span(GAP), fill])];
+  return [line(truncateSpans(head, width)), line(truncateSpans([span(CARD_INSET), fill], width))];
 }
 
 /**

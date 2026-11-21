@@ -1,0 +1,48 @@
+# answer/pi/cards-count-click 70x24 @0,0 (69x20)
+│  ❯ Q1  Question number 1: pick a strategy?
+│
+│    A ○ Option A for 1
+│    B ○ Option B for 1
+│    C ○ Write your own answer
+│    Note: Add a note
+
+
+│    Q2  Question number 2: pick a strategy?
+│
+│    A ○ Option A for 2
+│    B ○ Option B for 2
+│    C ○ Write your own answer
+│    Note: Add a note
+
+
+│    Q3  Questio ↓ Jump to latest message · Ctrl+End
+
+ Answer [alt+a]  Q1  0/12 answered
+─────────────────────────────────────────────────────────────────────
+--- styles
+1 .x2 2 . 3x4 2x35
+1
+1 .x4 3 . 3
+1 .x4 3 . 3
+1 .x4 3 . 3 . 3x21
+1 .x4 3x16
+-
+-
+3 .x4 3x4 2x35
+3
+3 .x4 3 . 3
+3 .x4 3 . 3
+3 .x4 3 . 3 . 3x21
+3 .x4 3x16
+-
+-
+3 .x4 3x4 2x7 4x37
+-
+. 1x6 . 3x7 .x2 3x17
+5x69
+--- legend
+1 fg=#dee0e1
+2 fg=#dee0e1 bold
+3 fg=#7e888e
+4 fg=#dee0e1 bg=#213b49
+5 fg=#6c767b

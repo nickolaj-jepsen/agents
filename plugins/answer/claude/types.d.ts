@@ -129,8 +129,7 @@ export type Current = {
    * is not told, so the actions that take them say so themselves.
    */
   hasKeys?: boolean;
-  /** The terminal review cursor and the question the review opened from. */
-  reviewCursor?: number;
+  /** The question the last step was opened from, where `r` goes back to. */
   reviewFrom?: number;
   /**
    * A field shown above the prompt that has not received keyboard focus yet.

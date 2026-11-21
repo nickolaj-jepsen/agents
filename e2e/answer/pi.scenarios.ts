@@ -18,7 +18,7 @@ const withoutScrollbar =
   };
 const promptRule = /^─{20,}/;
 const CARD = withoutScrollbar(region.rows(/^│\s+(?:❯ )?Q1  /, promptRule));
-const REVIEW = withoutScrollbar(region.rows(/^│\s+Answers /, promptRule));
+const REVIEW = withoutScrollbar(region.rows(/^│\s+(?:❯ )?\d+ of \d+ answered/, promptRule));
 const FULL_CARD = withoutScrollbar(region.full);
 
 export default scenarios({
@@ -101,8 +101,12 @@ export default scenarios({
         { press: "k" },
         { wait: "❯ Q1  Use SQLite?" },
         { press: "r" },
-        { wait: "Answers  2 of 2 answered" },
-        { wait: "Hide questions" },
+        { wait: "❯ 2 of 2 answered" },
+        // From the last step, k goes back to the last question and j comes back.
+        { press: "k" },
+        { wait: "❯ Q2  Add caching?" },
+        { press: "j" },
+        { wait: "❯ 2 of 2 answered" },
       ],
     },
     "cards-guide-buttons": {
@@ -122,28 +126,6 @@ export default scenarios({
         { wait: "Note: Check the migration" },
         { wait: "a draft for later" },
       ],
-    },
-    "cards-review-click": {
-      from: "cards-click",
-      about: "the review expands and collapses without taking the keys",
-      region: REVIEW,
-      steps: [
-        { click: "Show all 2 questions" },
-        { wait: "Unanswered" },
-        { wait: "Answer [alt+a]" },
-        { click: "Hide questions" },
-        { wait: "Unanswered", gone: true },
-        { wait: "Show all 2 questions" },
-        { wait: "a draft for later" },
-        { click: "Show all 2 questions" },
-        { wait: "Hide questions" },
-      ],
-    },
-    "cards-review-row": {
-      from: "cards-keys",
-      about: "a review row takes you back to its question",
-      region: CARD,
-      steps: [{ click: "B: Postgres" }, { wait: "❯ Q1  Use SQLite?" }],
     },
     "cards-write-editing": {
       from: "cards-open",
@@ -211,7 +193,7 @@ export default scenarios({
       region: FULL_CARD,
       steps: [
         { press: "s" },
-        { wait: "Answers  2 of 2 answered ✓ Sent" },
+        { wait: "2 of 2 answered ✓ Sent" },
         { wait: "a draft for later" },
         { wait: "Q2: A" },
       ],
@@ -294,57 +276,35 @@ export default scenarios({
         { wait: "Check 大阪" },
       ],
     },
-    "cards-review-closed": {
-      from: "cards-stress",
-      about: "the folded summary keeps the fill and expand controls visible",
-      region: REVIEW,
-      sizes: [[160, 45]],
-      steps: [
-        { press: "r" },
-        { wait: "Hide questions" },
-        { click: "Hide questions" },
-        { wait: "Show all 12 questions" },
-        { wait: "Hide questions", gone: true },
-      ],
-    },
     "cards-review-stress": {
       from: "cards-stress",
-      about:
-        "a review that fits whole rows on short screens, including a multilingual answer and note",
+      about: "the closing row of a twelve-question round, with a long multilingual round note",
       region: REVIEW,
       extreme: true,
       steps: [
         { press: "r" },
-        { wait: /Questions 1.[2-5] of 12/ },
-        { press: "j" },
-        { wait: "Open ↵" },
+        { wait: "❯ 1 of 12 answered" },
+        { press: "n" },
+        { wait: "Save ↵" },
+        {
+          paste:
+            "Roll 東京 and 大阪 out together once the replicas agree, and keep the old routing a week longer.",
+        },
+        { press: "Enter" },
+        { wait: "Save ↵", gone: true },
+        { wait: "Roll 東京" },
       ],
     },
-    "cards-review-page": {
-      about: "page buttons and j/k move the selection; Enter opens its question",
+    "cards-count-click": {
+      about: "a click on the closing row's count goes to the first question, at the round's top",
       start: cards("many"),
-      region: REVIEW,
+      region: CARD,
       steps: [
         ...CARD_ASK,
         { press: "Ctrl+End" },
-        { wait: "Show all 12 questions" },
-        { click: "Show all 12 questions" },
-        { wait: /Questions 1.5 of 12/ },
-        { click: "Next" },
-        { wait: "❯ Q6" },
-        { click: "Previous" },
-        { wait: "❯ Q1" },
-        { press: "Alt+a" },
-        { press: "k" },
-        { wait: "❯ Q12" },
-        { press: "j" },
-        { wait: "❯ Q1" },
-        { press: "j" },
-        { wait: "❯ Q2" },
-        { press: "Enter" },
-        { wait: "02/12" },
-        { press: "r" },
-        { wait: "Hide questions" },
+        { hover: "0 of 12 answered" },
+        { click: "0 of 12 answered" },
+        { wait: "❯ Q1  Question number 1" },
       ],
     },
     "cards-reference": {

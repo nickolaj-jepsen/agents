@@ -21,13 +21,11 @@ import {
   type Gaps,
 } from "./terminal";
 import {
+  closingRow,
   controlBar,
   questionCard,
   nativeRound,
-  reviewTarget,
-  REVIEW_PAGE,
   ROUND_FOCUS,
-  terminalReview,
   entryLetter,
   writeLetter,
   type RoundActions,
@@ -130,7 +128,6 @@ const over = (c: Current | null, held: Held): Current => {
     writer: isSameItem ? c?.writer : undefined,
     hasKeys: isSameForm ? (c?.hasKeys ?? false) : false,
     pending: isSameItem ? c?.pending : undefined,
-    reviewCursor: isSameForm ? c?.reviewCursor : undefined,
     reviewFrom: isSameForm ? c?.reviewFrom : undefined,
   };
 };
@@ -732,7 +729,6 @@ function roundActions(
         const c = await read($, current);
         if (c?.transcript !== id) return;
         if (index === c.view.count) return toggleReview($, id, surface);
-        if (c.view.isReview && surface === "terminal") return openReviewQuestion($, id, index);
         await moveRound($, id, surface, index);
         if (c.view.isReview && surface === "desktop")
           await $.ui
@@ -756,25 +752,26 @@ function roundActions(
     accept: (question) => press(() => changeRound($, id, question, { do: "accept" })),
     fill: () => press(() => replyToRound($, id, surface, "fill")),
     send: () => press(() => replyToRound($, id, surface, "send")),
-    focusReview: (index) =>
-      press(async () => {
-        const c = await update($, current, (was) =>
-          was?.transcript === id && was.view.isReview ? { ...was, reviewCursor: index } : was,
-        );
-        if (c?.transcript === id && c.view.isReview) await revealReview($, id, c);
-      }),
+    top: () => press(() => toTop($, id, surface)),
   };
+}
+
+/** The first question, scrolled to the top of the round. */
+async function toTop($: EngineInterface, id: string, surface: RoundEditor["surface"]) {
+  const c = await changeRound($, id, 0);
+  // A surface that cannot scroll there still has the question.
+  if (surface === "terminal" && c?.transcript === id && !c.writer)
+    await revealRound($, id, 0, "start").catch(() => undefined);
 }
 
 async function revealReview($: EngineInterface, id: string, c: Current) {
   const round = (await read($, transcript))[id];
   const requestId = round?.anchors[c.view.count] ?? round?.anchors[0];
   if (!requestId) return;
-  if (c.reviewCursor !== undefined) {
-    const to = { key: reviewTarget(c.view, c.reviewCursor) };
-    const result = await $.ui.scroll({ to, block: "nearest" });
-    if (!result?.deny) return;
-  }
+  const closing = await $.ui
+    .scroll({ to: { key: "round-closing" }, block: "nearest" })
+    .catch(() => undefined);
+  if (closing && !closing.deny) return;
   // Some surfaces cannot scroll a fallback AssistantMessage row.
   await $.ui.scroll({ to: { requestId }, block: "start" }).catch(() => undefined);
 }
@@ -783,7 +780,6 @@ async function toggleReview(
   $: EngineInterface,
   id: string,
   surface: RoundEditor["surface"] = "terminal",
-  fromNext = false,
 ) {
   const c = await update($, current, (was) => {
     if (was?.transcript !== id || was.writer) return was;
@@ -792,7 +788,6 @@ async function toggleReview(
     return {
       ...over(was, stepForm(was.held, { do: "go", step: was.view.count })),
       reviewFrom: was.view.step,
-      reviewCursor: fromNext ? undefined : was.reviewCursor,
     };
   });
   if (c?.transcript !== id || c.writer || surface !== "terminal") return;
@@ -801,55 +796,27 @@ async function toggleReview(
   } else await revealRound($, id, c.view.step);
 }
 
-async function openReviewQuestion($: EngineInterface, id: string, index: number) {
-  await update($, current, (c) =>
-    c?.transcript === id && c.view.isReview && !c.writer
-      ? { ...c, reviewCursor: index, reviewFrom: index }
-      : c,
-  );
-  await moveRound($, id, "terminal", index);
-}
-
+/**
+ * A key on the last step: `k` goes back to the last question, `n` writes the round's note, Enter
+ * fills the prompt.
+ */
 async function pressReview($: EngineInterface, id: string, c: Current, key: string) {
-  const first = c.view.reply ? -1 : 0;
-  if (key === "k" && (c.reviewCursor ?? first) === first)
-    return moveRound($, id, "terminal", c.view.count - 1);
-  if (key === "j" || key === "k") {
-    const moved = await update($, current, (was) =>
-      was?.transcript === id && was.view.isReview && !was.writer
-        ? {
-            ...was,
-            reviewCursor: Math.max(
-              was.view.reply ? -1 : 0,
-              Math.min(
-                was.view.count - 1,
-                (was.reviewCursor ?? (was.view.reply ? -1 : 0)) + (key === "j" ? 1 : -1),
-              ),
-            ),
-          }
-        : was,
-    );
-    if (moved?.transcript === id && moved.view.isReview) await revealReview($, id, moved);
-    return;
-  }
+  if (key === "k") return moveRound($, id, "terminal", c.view.count - 1);
+  if (key === "n") return writeRound($, id, c.view.count, NOTE, "terminal");
   if (!c.hasKeys) return;
-  if (c.view.reply && (key === "f" || (key === "enter" && (c.reviewCursor ?? -1) < 0)))
+  if (c.view.reply && (key === "f" || key === "enter"))
     return replyToRound($, id, "terminal", "fill");
-  if (key === "enter") return openReviewQuestion($, id, c.reviewCursor ?? 0);
+  if (key === "enter") return toTop($, id, "terminal");
 }
 
 /**
- * What a digit presses: the row at that place on screen, counting from the top of what is drawn.
- * On the review that is the page's row; on a question, an option or the write-in. A click on the
- * row does the same, so a number answers wherever the letters do.
+ * What a digit presses: the row at that place on screen, counting from the top of what is drawn:
+ * an option or the write-in. A click on the row does the same, so a number answers wherever the
+ * letters do. The last step has no rows to number.
  */
 async function pressRowAt($: EngineInterface, id: string, c: Current, at: number) {
   const { view } = c;
-  if (view.isReview) {
-    const start = Math.floor(Math.max(0, c.reviewCursor ?? 0) / REVIEW_PAGE) * REVIEW_PAGE;
-    if (at >= REVIEW_PAGE || start + at >= view.count) return;
-    return openReviewQuestion($, id, start + at);
-  }
+  if (view.isReview) return;
   const entry = view.item?.entries[at];
   if (!entry) return;
   if (entry.kind === "write") return writeRound($, id, view.step, WRITE, "terminal");
@@ -863,7 +830,7 @@ async function pressRoundKey($: EngineInterface, id: string, key: string) {
   const at = rowOf(key);
   if (at >= 0) return pressRowAt($, id, c, at);
   if (c.view.isReview) return pressReview($, id, c, key);
-  if (key === "j" && c.view.step === c.view.count - 1) return toggleReview($, id, "terminal", true);
+  if (key === "j" && c.view.step === c.view.count - 1) return toggleReview($, id, "terminal");
   if (key === "j" || key === "k")
     return moveRound($, id, "terminal", (view) =>
       Math.max(0, Math.min(view.count - 1, view.step + (key === "j" ? 1 : -1))),
@@ -1037,7 +1004,7 @@ function roundBody(
   sent = false,
 ) {
   return index === held.form.items.length
-    ? terminalReview(
+    ? closingRow(
         kit,
         viewOf(held.form, held.draft),
         current,

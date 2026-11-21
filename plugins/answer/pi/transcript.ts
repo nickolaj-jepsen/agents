@@ -17,6 +17,7 @@ import { digitChoice } from "../../../kit/card/contract.ts";
 import {
   CARD_INSET,
   choice as choiceRows,
+  closing as closingRows,
   heading as headingRows,
   note as noteRows,
   NOTE_LABEL,
@@ -24,16 +25,15 @@ import {
   sectionsOf,
 } from "../../../kit/card/terminal.ts";
 import { cellWidth, span, type Span } from "../../../kit/lines.ts";
-import { draw, markdownLines, paintedWidth, paintLine, paintText } from "../../../kit/paint/pi.ts";
+import { draw, markdownLines, paintLine, paintLines, paintText } from "../../../kit/paint/pi.ts";
 import { tokens, widthCap } from "../../../kit/tokens.ts";
-// No kit part yet: the band's hit map, the gutter note, prose, and `clamp`, which breaks CJK text
+// No kit part yet: the band's hit map, the gutter, prose, and `clamp`, which breaks CJK text
 // between characters where the kit's wraps at spaces only.
 import {
   bandAct,
   cellAt,
   clamp as clampPainted,
   gutterLine,
-  note,
   prose,
   type BandRow,
 } from "../../../kit/legacy/pi/ui.ts";
@@ -44,14 +44,13 @@ export type RoundAction =
   | { kind: "pick"; step: number; entry: number }
   | { kind: "go" | "note" | "clear" | "accept"; step: number }
   | { kind: "move"; delta: -1 | 1 }
-  | { kind: "review-cursor"; index: number }
-  | { kind: "fill" | "send" | "review" | "review-toggle" | "review-open" | "release" | "focus" };
+  /** Back to the first question, scrolled to the top of the round. */
+  | { kind: "top" }
+  | { kind: "fill" | "send" | "review" | "release" | "focus" };
 
 type Row = BandRow<RoundAction> & { editorWidth?: number };
 type Field = { kind: "write" | "note"; step: number; editor: Editor };
 type Item = NonNullable<View["item"]>;
-const REVIEW_PAGE = 5;
-export const firstReviewStop = (v: View) => (v.reply ? -1 : 0);
 
 const choiceLetters = (item: Item): string[] => {
   const unused = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].filter(
@@ -65,8 +64,8 @@ export class Transcript implements Component {
   private hits = new Map<number, Row>();
   private stops: number[] = [];
   private ends: number[] = [];
-  private reviewSelection?: [number, number];
-  private hovered?: Extract<RoundAction, { kind: "pick" }>;
+  /** The control under the mouse. */
+  private hovered?: RoundAction;
   private input?: { field: Field; first: number; x: number; width: number; height: number };
 
   constructor(
@@ -75,8 +74,6 @@ export class Transcript implements Component {
       | {
           round: Round;
           active: boolean;
-          terminalRows: number;
-          reviewCursor?: number;
           field?: Field;
         }
       | undefined,
@@ -93,15 +90,10 @@ export class Transcript implements Component {
     return start === undefined || end === undefined ? undefined : [start, end];
   }
 
-  selection(): [number, number] | undefined {
-    return this.reviewSelection;
-  }
-
   render(columns: number): string[] {
     this.hits.clear();
     this.stops = [];
     this.ends = [];
-    this.reviewSelection = undefined;
     this.input = undefined;
     const state = this.read();
     if (!state || columns < 20) return [];
@@ -109,7 +101,6 @@ export class Transcript implements Component {
     const { theme } = this;
     // Match the assistant transcript's left inset and leave room for Pi's scrollbar.
     const width = widthCap("reading", columns - tokens.gutter);
-    const indent = " ".repeat(tokens.gutter);
     const inner = Math.min(width - tokens.gutter, tokens.prose);
     const out: string[] = [];
     const dim = (text: string) => paintText(theme, text, { role: "dim" });
@@ -228,7 +219,11 @@ export class Transcript implements Component {
                   detail: entry.detail,
                   aside: entry.isRecommended ? "  Recommended" : undefined,
                   chosen: entry.isChosen,
-                  hovered: active && this.hovered?.step === step && this.hovered.entry === index,
+                  hovered:
+                    active &&
+                    this.hovered?.kind === "pick" &&
+                    this.hovered.step === step &&
+                    this.hovered.entry === index,
                   active: here,
                   multiple: item.isSeveral,
                   literal: entry.kind === "write",
@@ -262,163 +257,78 @@ export class Transcript implements Component {
         rows.push(
           ...(editRows(step, "note", CARD_INSET + NOTE_LABEL) ??
             asRows(
-              draw(theme, noteRows({ value: item.note, active: here, answered }, inner), inner),
+              draw(
+                theme,
+                noteRows(
+                  {
+                    value: item.note,
+                    active: here,
+                    answered,
+                    hovered: this.hovered?.kind === "note" && this.hovered.step === step,
+                  },
+                  inner,
+                ),
+                inner,
+              ),
               active ? { kind: "note", step } : undefined,
             )),
         );
       section(step, heading, sectionsOf<Row>({ text: "" }, rows, more), { here, answered });
     }
 
-    const open = active && current.isReview;
-    const cursor = state.reviewCursor ?? firstReviewStop(current);
-    const tone = (active: boolean, done: boolean, s: string, bold = false) =>
-      paintText(theme, s, { role: active || !done ? "text" : "dim", bold: bold || undefined });
-    const title = `Answers  ${current.answered} of ${current.count} answered`;
-    const sent = round.sent
-      ? paintText(theme, ` ${tokens.glyph.done} Sent`, { role: "success" })
-      : "";
-    const heading = asRows(
-      clampPainted(`  ${tone(open, current.answered > 0, title, true)}${sent}`, inner),
-    );
-    // Keep independent targets on the same line, wrapping only between controls.
-    const controls = (leading: string, buttons: { text: string; act: RoundAction }[]) => {
-      const rows: Row[] = [];
-      let row: Row = { text: leading, cells: [] };
-      for (const button of buttons) {
-        if (paintedWidth(row.text + indent + button.text) > inner && row.text.trim()) {
-          rows.push(row);
-          row = { text: " ", cells: [] };
-        }
-        if (row.text.trim()) row.text += indent;
-        const start = paintedWidth(row.text);
-        const text = clampPainted(button.text, inner - start, { max: 1 })[0] ?? "";
-        row.text += text;
-        row.cells!.push({ start, end: paintedWidth(row.text), act: button.act });
-      }
-      rows.push(row);
-      return rows;
-    };
-    if (active) {
-      const toggle = open
-        ? "▾ Hide questions"
-        : `▸ Show ${current.count === 1 ? "question" : `all ${current.count} questions`}`;
-      heading.push(
-        ...controls(" ", [
-          ...(current.reply
-            ? [
-                {
-                  text: tone(
-                    open && cursor < 0,
-                    true,
-                    `[ ${open && cursor < 0 ? tokens.glyph.pointer + " " : ""}Fill prompt ]`,
-                    true,
-                  ),
-                  act: { kind: "fill" } as const,
-                },
-              ]
-            : []),
-          { text: dim(toggle), act: { kind: "review-toggle" } },
-        ]),
-      );
-    }
-
-    const review: Row[] = [];
-    let selected: [number, number] | undefined;
-    if (open || round.sent) {
-      const labelWidth = Math.max(...current.review.map((row) => cellWidth(row.label)));
-      const entries = current.review.map((row, step) => {
-        const here = open && step === cursor;
-        const ink = (text: string) => tone(here, row.isAnswered, text, true);
-        const action: RoundAction | undefined = open ? { kind: "go", step } : undefined;
-        const prefix =
-          `${here ? tokens.glyph.pointer : " "} ${row.label}` +
-          " ".repeat(labelWidth - cellWidth(row.label) + tokens.gutter);
-        const pad = " ".repeat(cellWidth(prefix));
-        const textWidth = inner - cellWidth(prefix);
-        const lines = [
-          ...asRows(
-            clampPainted(
-              `${row.title}${row.isAnswered ? ` ${tokens.glyph.done}` : ""}`,
-              textWidth,
+    // The row after the last card: the count goes back to the first question, Fill puts the
+    // reply in the prompt, and the round's note stands under it once it has words.
+    const last = active && current.isReview;
+    const ends: RoundAction[] = [
+      { kind: "top" },
+      { kind: "fill" },
+      { kind: "note", step: current.count },
+    ];
+    const hovered = this.hovered;
+    const editingNote = editRows(current.count, "note", CARD_INSET + NOTE_LABEL);
+    const closed = paintLines(
+      theme,
+      [
+        ...closingRows(
+          {
+            answered: current.answered,
+            total: current.count,
+            focused: last,
+            hovered:
+              hovered?.kind === "top" ? "count" : hovered?.kind === "fill" ? "fill" : undefined,
+            canFill: !!current.reply,
+            sent: round.sent,
+            hits: active ? { count: "0", fill: "1" } : undefined,
+          },
+          inner,
+        ),
+        ...(current.note && !editingNote
+          ? noteRows(
               {
-                max: 3,
+                value: current.note,
+                active: last,
+                hovered: hovered?.kind === "note" && hovered.step === current.count,
+                hit: active ? "2" : undefined,
               },
-            ).map((line, i) => ink((i ? pad : prefix) + line)),
-            action,
-          ),
-          ...asRows(
-            clampPainted(row.isAnswered ? row.shown : "Unanswered", textWidth, { max: 3 }).map(
-              (line) => pad + (row.isAnswered ? ink(line) : dim(line)),
-            ),
-            action,
-          ),
-        ];
-        if (row.note)
-          lines.push(
-            ...asRows(
-              prose(theme, textWidth, `Note: ${row.note}`, { max: 2 }, "dim").map(
-                (line) => pad + line,
-              ),
-              action,
-            ),
-          );
-        return lines;
-      });
-
-      let start = 0;
-      let end = entries.length;
-      if (open) {
-        // Keep entries whole on short screens. Leave room for the guide, prompt, and Pi chrome.
-        const budget = Math.max(1, state.terminalRows - heading.length - 11);
-        const pages = [0];
-        let used = 0;
-        for (const [i, lines] of entries.entries()) {
-          const first = pages.at(-1)!;
-          if (i > first && (used + lines.length > budget || i - first === REVIEW_PAGE)) {
-            pages.push(i);
-            used = 0;
-          }
-          used += lines.length;
-        }
-        let page = 0;
-        while ((pages[page + 1] ?? Infinity) <= cursor) page++;
-        start = pages[page]!;
-        end = pages[page + 1] ?? entries.length;
-        const previous = pages[page - 1];
-        if (pages.length > 1)
-          review.push(
-            ...controls(dim(` Questions ${start + 1}–${end} of ${current.count}`), [
-              ...(previous === undefined
-                ? []
-                : [{ text: "Previous", act: { kind: "review-cursor", index: previous } as const }]),
-              ...(end < entries.length
-                ? [{ text: "Next", act: { kind: "review-cursor", index: end } as const }]
-                : []),
-            ]),
-          );
-      }
-      for (let step = start; step < end; step++) {
-        const first = review.length;
-        review.push(...entries[step]!);
-        if (open && step === cursor) selected = [first, review.length];
-      }
-      const roundNote = editRows(current.count, "note", "Round note: ");
-      if (roundNote || current.note) {
-        review.push(
-          { text: "" },
-          ...(roundNote ??
-            asRows(
-              note(theme, inner, current.note),
-              open ? { kind: "note", step: current.count } : undefined,
-            )),
-        );
-      }
-    }
-    section(current.count, heading, review, { here: open, answered: current.answered > 0 });
-    if (selected) {
-      const body = this.stops[current.count]! + heading.length + 1;
-      this.reviewSelection = [body + selected[0], body + selected[1]];
-    }
+              inner,
+            )
+          : []),
+      ],
+      inner,
+    );
+    const closingRow: Row[] = closed.lines.map((text, i) => ({
+      text,
+      cells: closed.cells[i]?.map(({ start, end, hit }) => ({
+        start,
+        end,
+        act: ends[Number(hit)]!,
+      })),
+    }));
+    section(current.count, [...closingRow, ...(editingNote ?? [])], [], {
+      here: last,
+      // The rail says what a card's does: answered once every question is.
+      answered: current.answered === current.count,
+    });
     return out;
   }
 
@@ -446,10 +356,10 @@ export class Transcript implements Component {
     const action =
       event.x < 1 + tokens.gutter ? undefined : bandAct({ hits: this.hits }, event.x, event.y);
     if (event.type === "move") {
-      const next = action?.kind === "pick" ? action : undefined;
-      const changed = this.hovered?.step !== next?.step || this.hovered?.entry !== next?.entry;
-      this.hovered = next;
-      return changed ? { render: true } : undefined;
+      const changed = JSON.stringify(this.hovered) !== JSON.stringify(action);
+      this.hovered = action;
+      // pi drops a result that is not `handled`, and its `render` with it.
+      return changed ? { handled: true, render: true } : undefined;
     }
     if (!action || event.button !== "left") return undefined;
     if (event.type === "click") this.onAction(action);
@@ -473,7 +383,6 @@ export class AnswerGuide implements Component, Focusable {
     private readonly tui: TUI,
     private readonly theme: Theme,
     private readonly read: () => Held | null,
-    private readonly reviewCursor: () => number | undefined,
     private readonly onAction: (action: RoundAction) => void,
     private readonly onResize: () => void,
   ) {}
@@ -520,7 +429,7 @@ export class AnswerGuide implements Component, Focusable {
     if (data === "n") return { kind: "note", step: v.step };
     if (data === "j" || data === "k") return { kind: "move", delta: data === "j" ? 1 : -1 };
     if (v.isReview) {
-      if (matchesKey(data, "enter")) return { kind: "review-open" };
+      if (matchesKey(data, "enter")) return v.reply ? { kind: "fill" } : { kind: "top" };
       if (v.reply && data === "f") return { kind: "fill" };
       if (v.reply && data === "s") return { kind: "send" };
     }
@@ -600,15 +509,14 @@ export class AnswerGuide implements Component, Focusable {
           action(write, "Write", { kind: "pick", step: v.step, entry: letters.indexOf(write) }),
         );
     } else {
-      const cursor = this.reviewCursor() ?? firstReviewStop(v);
+      // The last step offers the reply; with none yet, Enter goes back to the first question.
       hints.push({
-        ...action("enter", cursor < 0 ? "Fill" : "Open", { kind: "review-open" }),
+        ...(v.reply
+          ? action("enter", "Fill", { kind: "fill" })
+          : action("enter", "First question", { kind: "top" })),
         isLit: true,
       });
-      if (v.reply) {
-        if (cursor >= 0) hints.push(action("f", "Fill", { kind: "fill" }));
-        hints.push(action("s", "Send", { kind: "send" }));
-      }
+      if (v.reply) hints.push(action("s", "Send", { kind: "send" }));
     }
     hints.push(
       action("n", "Note", { kind: "note", step: v.step }),
@@ -713,13 +621,7 @@ export function reveal(
   if (offset === undefined || !span) return false;
   const start = offset + span[0];
   const end = offset + span[1] - scroll.viewportHeight;
-  const selection = card.selection();
-  if (align === "nearest" && selection && end > start) {
-    // Keep the header in view when it fits; scroll to the selected row for tall pages.
-    const first = offset + selection[0];
-    const last = offset + selection[1] - scroll.viewportHeight;
-    scroll.scrollTo(Math.max(start, Math.min(first, last)));
-  } else if (align === "nearest" && end <= start) {
+  if (align === "nearest" && end <= start) {
     const top = Math.max(end, Math.min(start, scroll.scrollTop));
     if (top !== scroll.scrollTop) scroll.scrollTo(top);
   } else {

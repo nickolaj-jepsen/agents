@@ -1,0 +1,20 @@
+# kit/pi/card/closing 70x60 @2,2 (66x6)
+│    0 of 3 answered  Fill prompt
+
+│  ❯ 2 of 3 answered  Fill prompt
+│    Note: Ship the 東京 cluster last.
+
+│    3 of 3 answered ✓ Sent
+--- styles
+1 .x4 2x15 .x2 2x11
+-
+2 .x2 3 . 3x15 .x2 4x11
+2 .x4 1x6 2x27
+-
+1 .x4 2x15 5x7
+--- legend
+1 fg=#7e888e
+2 fg=#dee0e1
+3 fg=#dee0e1 bold
+4 fg=#a798d7 bold
+5 fg=#68b78d

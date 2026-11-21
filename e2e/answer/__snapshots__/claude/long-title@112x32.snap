@@ -1,4 +1,5 @@
 # answer/claude/long-title 112x32 @0,1 (112x26)
+▎       dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over the
 ▎       lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps over
 ▎       the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox jumps
 ▎       over the lazy dog the quick brown fox jumps over the lazy dog the quick brown fox
@@ -21,11 +22,11 @@
 ▎   Note: Add a note
 
 
-▎   Answers  0 of 1 answered
-▎  ▸ Show question
+▎   0 of 1 answered  Fill prompt
 
 Q1/1   alt+a for the keys                                                                                   [-]
 --- styles
+.x8 1x82
 .x8 1x83
 .x8 1x82
 .x8 1x81
@@ -42,19 +43,17 @@ Q1/1   alt+a for the keys                                                       
 .x8 1x81
 .x8 1x34
 -
-.x4 2 . 3
-.x4 2 . 3
-.x4 2 . 3 . 3x21
-.x4 3x16
+.x4 2 . 2
+.x4 2 . 2
+.x4 2 . 2 . 2x21
+.x4 2x16
 -
-4x96
-4 . 1x26 .x67 4
-4 .x2 3x15 .x77 4
-4x96
-5x6 . 3x18 .x83 3x3
+3x96
+3 .x94 3
+3x96
+4x6 . 2x18 .x83 2x3
 --- legend
 1 bold
-2 fg=#d77757
-3 fg=#999999
-4 dim
-5 fg=#d77757 bold
+2 fg=#999999
+3 dim
+4 fg=#d77757 bold

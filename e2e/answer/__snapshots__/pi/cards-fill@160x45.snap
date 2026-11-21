@@ -1,5 +1,7 @@
 # answer/pi/cards-fill 160x45 @0,0 (159x45)
 
+ ask
+
 
  Q1. Use SQLite?
 
@@ -11,7 +13,7 @@
  - A. Yes
  - B. No
 
-│    Q1  Use SQLite?
+│    Q1  Use SQLite? ✓
 │
 │    A ○ SQLite
 │    B ● Postgres
@@ -19,7 +21,7 @@
 │    Note: Add a note
 
 
-│    Q2  Add caching?
+│    Q2  Add caching? ✓
 │
 │    A ● Yes
 │    B ○ No
@@ -27,13 +29,11 @@
 │    Note: Add a note
 
 
-│    Answers  2 of 2 answered
-│   [ ❯ Fill prompt ]  ▾ Hide questions
-│
-│    Q1  Use SQLite? ✓
-│        B: Postgres
-│    Q2  Add caching? ✓
-│        A: Yes
+│  ❯ 2 of 2 answered  Fill prompt
+
+
+
+
 
  Answer [alt+a]  Review  2/2 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -46,40 +46,40 @@ a draft for later
 0.7%/200k (auto)                                                                                                                                          repla
 --- styles
 1x159
+1 2x3 1x155
+1x159
 -
-. 2x15
+. 3x15
 -
-. 3x2 2x2
-. 3x2 2x2
+. 4x2 3x2
+. 4x2 3x2
 -
-. 2x16
+. 3x16
 -
-. 3x2 2x2
-. 3x2 2x2
+. 4x2 3x2
+. 4x2 3x2
 -
-4 .x4 5x4 6x11
-4
-4 .x4 5 . 5
-4 .x4 5 . 7 . 7x8
-4 .x4 5 . 5 . 5x21
-4 .x4 5x16
--
--
-4 .x4 5x4 6x12
-4
-4 .x4 5 . 7 . 7x3
-4 .x4 5 . 5
-4 .x4 5 . 5 . 5x21
-4 .x4 5x16
+5 .x4 5x4 6x11 7x2
+5
+5 .x4 5 . 5
+5 .x4 5 . 8 . 8x8
+5 .x4 5 . 5 . 5x21
+5 .x4 5x16
 -
 -
-4 .x4 6x24
-4 .x3 6x17 .x2 5x16
-4
-4 .x2 8x19
-4 .x8 8x11
-4 .x2 8x20
-4 .x8 8x6
+5 .x4 5x4 6x12 7x2
+5
+5 .x4 5 . 8 . 8x3
+5 .x4 5 . 5
+5 .x4 5 . 5 . 5x21
+5 .x4 5x16
+-
+-
+9 .x2 6 . 6x15 .x2 8x11
+-
+-
+-
+-
 -
 . 9x6 . 5x7 .x2 5x20
 ax159
@@ -92,13 +92,13 @@ ax159
 5x159
 --- legend
 1 bg=#213b49
-2 bold
-3 fg=#a798d7
-4 fg=#68b78d
+2 fg=#dee0e1 bg=#213b49
+3 bold
+4 fg=#a798d7
 5 fg=#7e888e
 6 fg=#dee0e1 bold
-7 fg=#a798d7 bold
-8 fg=#7e888e bold
+7 fg=#68b78d
+8 fg=#a798d7 bold
 9 fg=#dee0e1
 a fg=#6c767b
 b inverse

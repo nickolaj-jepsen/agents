@@ -1,4 +1,4 @@
-# answer/pi/cards-long 112x32 @0,4 (111x24)
+# answer/pi/cards-long 112x32 @0,5 (111x23)
 │  ❯ Q1  Which one?
 │
 │    A ○ a very long option text that keeps going and going a very long option text
@@ -18,15 +18,14 @@
 │    Note: Add a note
 
 
-│    Answers  0 of 1 answered
-│   ▸ Show question
+│    0 of 1 answered  Fill prompt
 
  Answer [alt+a]  Q1  0/1 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
 1 .x2 2 . 3x4 2x10
 1
-1 .x4 3 . 4
+1 .x4 3 . 3
 1
 1
 1
@@ -35,22 +34,20 @@
 1
 1
 1
-1 .x4 3 . 4
-1 .x8 4x74
-1 .x8 4x71
-1 .x8 4x69
-1 .x4 3 . 4 . 4x21
-1 .x4 4x16
+1 .x4 3 . 3
+1 .x8 3x74
+1 .x8 3x71
+1 .x8 3x69
+1 .x4 3 . 3 . 3x21
+1 .x4 3x16
 -
 -
-4 .x4 2x24
-4 .x3 4x15
+3 .x4 1x15 .x2 1x11
 -
-. 1x6 . 4x7 .x2 4x16
-5x111
+. 1x6 . 3x7 .x2 3x16
+4x111
 --- legend
 1 fg=#dee0e1
 2 fg=#dee0e1 bold
-3 fg=#a798d7
-4 fg=#7e888e
-5 fg=#6c767b
+3 fg=#7e888e
+4 fg=#6c767b

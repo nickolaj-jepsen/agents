@@ -1,0 +1,86 @@
+# answer/claude/count-click 160x45 @0,2 (160x38)
+▎ ❯ Q1  Question number 1: pick a strategy?
+▎
+▎   A ○ Option A for 1
+▎   B ○ Option B for 1
+▎   C ○ Write your own answer
+▎   Note: Add a note
+
+
+▎   Q2  Question number 2: pick a strategy?
+▎
+▎   A ○ Option A for 2
+▎   B ○ Option B for 2
+▎   C ○ Write your own answer
+▎   Note: Add a note
+
+
+▎   Q3  Question number 3: pick a strategy? ✓
+▎
+▎   A ○ Option A for 3
+▎   B ○ Option B for 3
+▎   C ○ Option C for 3
+▎   D ○ Option D for 3
+▎   E ○ Option E for 3
+▎   F ○ Option F for 3
+▎   G ○ Option G for 3
+▎   H ● Option H for 3
+▎   I ○ Write your own answer
+▎   Note: Add a note
+
+
+▎   Q4  Question number 4: pick a strategy?
+▎
+▎   A ○ Option A for 4
+▎   B ○ Option B for 4
+▎   C ○ Write your own answer
+▎   Note: Add a note
+
+Q1/12  alt+a for the keys                                                                                                                                   [-]
+--- styles
+.x2 1 . 2x4 1x35
+-
+.x4 2 . 2
+.x4 2 . 2
+.x4 2 . 2 . 2x21
+.x4 2x16
+-
+3x96
+3 .x3 2x4 1x35 .x52 3
+3 .x94 3
+3 .x3 2 . 2 .x88 3
+3 .x3 2 . 2 .x88 3
+3 .x3 2 . 2 . 2x21 .x66 3
+3 .x3 2x16 .x75 3
+3x96
+3x96
+3 .x3 2x4 1x35 4x2 .x50 3
+3 .x94 3
+3 .x3 2 . 2 .x88 3
+3 .x3 2 . 2 .x88 3
+3 . 5x2 6 5 6 5x87 . 3
+3 .x3 2 . 2 .x88 3
+3 .x3 2 . 2 .x88 3
+3 .x3 2 . 2 .x88 3
+3 .x3 2 . 2 .x88 3
+3 .x3 2 . 7 . 7x14 .x73 3
+3 .x3 2 . 2 . 2x21 .x66 3
+3 .x3 2x16 .x75 3
+3x96
+3x96
+3 .x3 2x4 1x35 .x52 3
+3 .x94 3
+3 .x3 2 . 2 .x88 3
+3 .x3 2 . 2 .x88 3
+3 .x3 2 . 2 . 2x21 .x66 3
+3 .x3 2x16 .x75 3
+3x96
+7x6 . 2x18 .x131 2x3
+--- legend
+1 bold
+2 fg=#999999
+3 dim
+4 fg=#4eba65
+5 fg=#373737 bg=#ffffff inverse
+6 fg=#373737 bg=#999999 inverse
+7 fg=#d77757 bold

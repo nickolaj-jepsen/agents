@@ -1,0 +1,41 @@
+# answer/claude/count-click 70x24 @0,2 (70x17)
+▎ ❯ Q1  Question number 1: pick a strategy?
+▎
+▎   A ○ Option A for 1
+▎   B ○ Option B for 1
+▎   C ○ Write your own answer
+▎   Note: Add a note
+
+
+▎   Q2  Question number 2: pick a strategy?
+▎
+▎   A ○ Option A for 2
+▎   B ○ Option B for 2
+▎   C ○ Write your own answer
+▎   Note: Add a note
+
+
+Q1/12  alt+a for the keys                                         [-]
+--- styles
+.x2 1 . 2x4 1x35
+-
+.x4 2 . 2
+.x4 2 . 2
+.x4 2 . 2 . 2x21
+.x4 2x16
+-
+3x70
+3 .x3 2x4 1x35 .x26 3
+3 .x68 3
+3 .x3 2 . 2 .x62 3
+3 .x3 2 . 2 .x62 3
+3 .x3 2 . 2 . 2x21 .x40 3
+3 .x3 2x16 .x49 3
+3x70
+3x70
+4x6 . 2x18 .x41 2x3
+--- legend
+1 bold
+2 fg=#999999
+3 dim
+4 fg=#d77757 bold

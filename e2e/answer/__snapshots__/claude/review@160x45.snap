@@ -1,36 +1,33 @@
 # answer/claude/review 160x45 @0,27 (160x13)
-▎   Answers  1 of 2 answered
-▎  [ ❯ Fill prompt ]  ▾ Hide questions
-▎
-▎   Q1  Use SQLite? ✓
-▎       B: Postgres
-▎       Note: Keep the hosted instance.
-▎             Rotate its credentials first.
-▎   Q2  Add caching?
-▎       Unanswered
+▎ ❯ 1 of 2 answered  Fill prompt
 
 
 
-Review  1/2 answered jk move enter fill r back keys here                                                                                                    [-]
+
+
+
+
+
+
+
+
+Review  1/2 answered jk move enter fill n note r back keys here                                                                                             [-]
 --- styles
-1 . 2x26 .x67 1
-1 .x2 3x17 .x2 4x16 .x57 1
-1 .x94 1
-1 . 3x19 .x74 1
-1 .x7 3x11 .x76 1
-1 .x7 4x5 . 5x25 .x56 1
-1 .x13 5x29 .x52 1
-1 . 6x18 .x75 1
-1 .x7 4x10 .x77 1
-1x96
+.x2 1 . 1x15 .x2 2x11
 -
 -
-2x20 . 4x7 . 7x10 . 4x6 . 4x9 .x100 4x3
+-
+-
+-
+-
+-
+-
+-
+-
+-
+2x20 . 3x7 . 4x10 . 3x6 . 3x6 . 3x9 .x93 3x3
 --- legend
-1 fg=#d77757
+1 bold
 2 fg=#d77757 bold
-3 fg=#b1b9f9 bold
-4 fg=#999999
-5 fg=#b1b9f9
-6 bold
-7 inverse
+3 fg=#999999
+4 inverse

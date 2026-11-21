@@ -4,8 +4,10 @@ import type { Current, Editing, Held, View } from "./types.d.ts";
 import {
   CARD_INSET,
   choice as cardChoice,
+  closing as cardClosing,
   heading as cardHeading,
   note as cardNote,
+  railRole,
 } from "./kit/card/terminal.ts";
 import type { Line } from "./kit/lines.ts";
 import { paintLines } from "./kit/paint/claude.tsx";
@@ -13,7 +15,6 @@ import {
   actionBar,
   buttonRow,
   cellWidth,
-  clamp,
   choice,
   icon,
   note as noteLines,
@@ -34,7 +35,8 @@ export type RoundActions = {
   accept: (question: number) => unknown;
   fill: () => unknown;
   send: () => unknown;
-  focusReview?: (index: number) => unknown;
+  /** Back to the first question, scrolled to the top of the round. */
+  top: () => unknown;
 };
 
 const labelOf = (text: string) => text.replace(/^[A-H][.)]\s*/, "");
@@ -58,41 +60,6 @@ export function writeLetter(item: NonNullable<View["item"]>) {
     ),
   );
   return String.fromCharCode(last + 1);
-}
-
-function inlineField(
-  kit: Kit,
-  key: string,
-  label: string,
-  placeholder: string,
-  value: string,
-  press?: () => unknown,
-  style?: { tag: JSX.Element; valueRole: "accent" | "note" | "success" },
-) {
-  const { Box, Text, Button } = kit;
-  const content = value || placeholder;
-  const field = <Text {...roleProps(value ? (style?.valueRole ?? "note") : "dim")}>{content}</Text>;
-  const tag = style?.tag ?? <Text {...roleProps("dim")}>{label}</Text>;
-  if (press && !content.includes("\n") && cellWidth(content) + cellWidth(label) + 2 <= kit.columns)
-    return (
-      <Button key={key} plain label={`${label} ${content}`} onPress={press}>
-        <Text>
-          {tag} {field}
-        </Text>
-      </Button>
-    );
-  return (
-    <Box key={`${key}-line`} columnGap={1} alignItems="flex-start">
-      {press ? (
-        <Button key={key} plain label={label} onPress={press}>
-          {tag}
-        </Button>
-      ) : (
-        tag
-      )}
-      <Box flexShrink={1}>{field}</Box>
-    </Box>
-  );
 }
 
 export function questionCard(
@@ -371,153 +338,73 @@ export function questionCard(
   );
 }
 
-// Group rows so Claude's spacing between transcript entries is not repeated on every row.
-const reviewHeading = "review-heading";
-const reviewRow = (index: number) => `review-row-${index}`;
-
-export function reviewTarget(view: View, cursor: number | undefined) {
-  return cursor === undefined || cursor < 0 || cursor >= view.count
-    ? reviewHeading
-    : reviewRow(cursor);
-}
-
-export function terminalReview(
+/**
+ * The row after the last card, the kit's: the count goes back to the first question, Fill prompt
+ * puts the reply in the prompt, and the round's note stands under it once it has words.
+ */
+export function closingRow(
   outer: Kit,
   view: View,
   current: Current | null,
   actions: RoundActions | undefined,
   sent: boolean,
 ) {
-  const { Box, Text, Button } = outer;
+  const { Box } = outer;
   const width = widthCap("reading", outer.columns);
-  const kit = withColumns(outer, Math.max(1, width - 4));
-  const open = current?.view.isReview === true;
-  const cursor = current?.reviewCursor ?? (view.reply ? -1 : 0);
-  const answerTone = sent ? "success" : "note";
-  const cardTone = open ? "accent" : view.answered ? answerTone : "text";
-  const title = `Answers  ${view.answered} of ${view.count} answered`;
-  const pageSize = REVIEW_PAGE;
-  const start = open ? Math.floor(Math.max(0, cursor) / pageSize) * pageSize : 0;
-  const end = Math.min(start + pageSize, view.count);
-  const toggle = open
-    ? "Hide questions"
-    : `Show ${view.count === 1 ? "question" : `all ${view.count} questions`}`;
-  const header = (
-    <Box key={reviewHeading} flexDirection="column">
-      <Text weight="semibold" {...roleProps(cardTone)}>
-        {`  ${title}`}
-        {sent ? <Text {...roleProps("success")}> ✓ Sent</Text> : null}
-      </Text>
-      {actions ? (
-        <Box columnGap={tokens.gutter} flexWrap="wrap" paddingLeft={1}>
-          {view.reply ? (
-            <Button
-              key="review-fill"
-              variant="primary"
-              label={open && cursor < 0 ? `${tokens.glyph.pointer} Fill prompt` : "Fill prompt"}
-              onPress={actions.fill}
-            />
-          ) : null}
-          <Button key="review-toggle" label={toggle} plain onPress={() => actions.go(view.count)}>
-            <Text dimColor>{`${open ? "▾" : "▸"} ${toggle}`}</Text>
-          </Button>
-        </Box>
-      ) : null}
-    </Box>
-  );
-  const rowAt = (row: View["review"][number], i: number) => {
-    const selected = open && cursor === i;
-    const prefix = `${selected ? tokens.glyph.pointer : " "} ${row.label.padEnd(cellWidth(`Q${view.count}`))}  `;
-    const indent = cellWidth(prefix);
-    const textWidth = Math.max(1, kit.columns - indent);
-    const tone = selected ? "accent" : row.isAnswered ? answerTone : "text";
-    const [first, ...rest] = clamp(`${row.title}${row.isAnswered ? " ✓" : ""}`, textWidth);
-    const heading = (
-      <Text weight="semibold" {...roleProps(tone)}>
-        {prefix}
-        {first}
-      </Text>
-    );
-    return (
-      <Box key={reviewRow(i)} flexDirection="column">
-        {actions ? (
-          <Button
-            key={`${reviewRow(i)}-jump`}
-            plain
-            label={`${row.label} ${row.title}`}
-            onPress={() => actions.go(i)}
-          >
-            {heading}
-          </Button>
-        ) : (
-          heading
-        )}
-        <Box flexDirection="column" paddingLeft={indent}>
-          {rest.length ? (
-            <Text weight="semibold" {...roleProps(tone)}>
-              {rest.join("\n")}
-            </Text>
-          ) : null}
-          <Text
-            weight={row.isAnswered ? "semibold" : undefined}
-            {...roleProps(row.isAnswered ? tone : "dim")}
-          >
-            {row.isAnswered ? clamp(row.shown, textWidth).join("\n") : "Unanswered"}
-          </Text>
-          {row.note
-            ? inlineField(
-                withColumns(kit, textWidth),
-                `${reviewRow(i)}-note`,
-                "Note:",
-                "",
-                row.note,
-              )
-            : null}
-        </Box>
-      </Box>
-    );
-  };
+  const room = Math.max(1, width - 4);
+  const isActive = current?.view.isReview === true;
+  const isNoting =
+    isActive && (current.writer ? current.editing === "note" : current.pending?.field === "note");
+  const press = (hit: string) =>
+    hit === CLOSING.count
+      ? actions?.top()
+      : hit === CLOSING.fill
+        ? actions?.fill()
+        : actions?.edit(view.count, "note");
+  const lines = [
+    ...cardClosing(
+      {
+        answered: view.answered,
+        total: view.count,
+        // While its note is written the pointer stands on the note.
+        focused: isActive && !isNoting,
+        canFill: !!view.reply,
+        sent,
+        hits: actions ? { count: CLOSING.count, fill: CLOSING.fill } : undefined,
+      },
+      room,
+    ),
+    ...(view.note || isNoting
+      ? cardNote(
+          {
+            active: isActive,
+            value: view.note,
+            focused: isNoting,
+            hit: actions ? CLOSING.note : undefined,
+          },
+          room,
+        )
+      : []),
+  ];
+  // The rail is a card's: answered once every question is, bright while the keyboard is here.
+  const rail = railRole({ active: isActive, answered: view.answered === view.count });
   return (
     <Box
+      key="round-closing"
       width={width}
-      borderStyle="quote"
-      borderColor={cardTone === "text" ? undefined : tokens.role[cardTone]}
-      borderDimColor={!open && !view.answered}
-      paddingX={1}
       flexDirection="column"
+      borderStyle="quote"
+      borderColor={rail === "success" ? tokens.role.success : undefined}
+      borderDimColor={rail === "dim" || undefined}
+      paddingX={1}
     >
-      {header}
-      {open || sent ? (
-        <Box paddingTop={1} flexDirection="column">
-          {open && view.count > pageSize ? (
-            <Box columnGap={tokens.gutter} paddingLeft={1}>
-              <Text dimColor>{`Questions ${start + 1}–${end} of ${view.count}`}</Text>
-              {start > 0 && actions?.focusReview ? (
-                <Button
-                  key="review-prev"
-                  plain
-                  label="Previous"
-                  onPress={() => actions.focusReview?.(start - pageSize)}
-                />
-              ) : null}
-              {end < view.count && actions?.focusReview ? (
-                <Button
-                  key="review-next"
-                  plain
-                  label="Next"
-                  onPress={() => actions.focusReview?.(end)}
-                />
-              ) : null}
-            </Box>
-          ) : null}
-          {(open ? view.review.slice(start, end) : view.review).map((row, i) =>
-            rowAt(row, start + i),
-          )}
-        </Box>
-      ) : null}
+      {paintLines(outer, lines, { press: actions ? press : undefined, width: room })}
     </Box>
   );
 }
+
+/** The closing row's controls, as the painter names their Buttons. */
+export const CLOSING = { count: "round-count", fill: "round-fill", note: "round-note" } as const;
 
 /** An answer or note under the choices, aligned without forcing the editor to one line. */
 function nativeQuestionField(kit: Kit, kind: "write" | "note", body: JSX.Element) {
@@ -989,8 +876,6 @@ export function nativeRound(
 }
 
 export const ROUND_FOCUS = "round-current";
-/** The rows one page of the review holds, so a digit answers a row of the page on screen. */
-export const REVIEW_PAGE = 5;
 const binding = (key: string) => `round-key-${key}`;
 const shortcuts = "abcdefghijklmnopqrstuvwxyz";
 /**
@@ -1052,7 +937,8 @@ export function controlBar(
       </Box>
     );
   if (view.isReview) {
-    const action = view.reply && (current.reviewCursor ?? -1) < 0 ? "fill" : "open";
+    // The last step offers the reply; with none yet, Enter goes back to the first question.
+    const action = view.reply ? "fill" : "first question";
     return (
       <Box columnGap={1}>
         <Text {...roleProps("accent")} weight="semibold">
@@ -1070,7 +956,7 @@ export function controlBar(
               isLit: true,
               autoFocus: true,
             },
-            ...(view.reply && action !== "fill" ? [hint("f", "fill")] : []),
+            hint("n", "note"),
             hint("r", "back"),
           ],
           true,

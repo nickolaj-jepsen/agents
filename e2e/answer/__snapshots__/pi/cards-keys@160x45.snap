@@ -1,32 +1,30 @@
 # answer/pi/cards-keys 160x45 @0,30 (159x11)
-│    Answers  2 of 2 answered
-│   [ ❯ Fill prompt ]  ▾ Hide questions
-│
-│    Q1  Use SQLite? ✓
-│        B: Postgres
-│    Q2  Add caching? ✓
-│        A: Yes
+│  ❯ 2 of 2 answered  Fill prompt
+
+
+
+
+
+
 
 
  Review  2/2 answered  Fill ↵  Send [s]  Note [n]  Back [r]  Prompt [esc]  jk move
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-1 .x4 2x24
-1 .x3 2x17 .x2 3x16
-1
-1 .x2 4x19
-1 .x8 4x11
-1 .x2 4x20
-1 .x8 4x6
+1 .x2 2 . 2x15 .x2 3x11
 -
 -
-. 2x20 .x2 5x4 . 3 .x2 6x4 . 3x3 .x2 6x4 . 3x3 .x2 6x4 . 3x3 .x2 6x6 . 3x5 .x2 3x7
-7x159
+-
+-
+-
+-
+-
+-
+. 2x20 .x2 3x4 . 4 .x2 1x4 . 4x3 .x2 1x4 . 4x3 .x2 1x4 . 4x3 .x2 1x6 . 4x5 .x2 4x7
+5x159
 --- legend
-1 fg=#68b78d
+1 fg=#dee0e1
 2 fg=#dee0e1 bold
-3 fg=#7e888e
-4 fg=#7e888e bold
-5 fg=#a798d7 bold
-6 fg=#dee0e1
-7 fg=#6c767b
+3 fg=#a798d7 bold
+4 fg=#7e888e
+5 fg=#6c767b

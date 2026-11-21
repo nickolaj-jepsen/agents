@@ -1,6 +1,16 @@
 import { defineComponent, partial, yes } from "../catalog/manifest.ts";
 
-const parts = ["heading", "choice", "choiceList", "note", "steps", "summary", "rail", "sections"];
+const parts = [
+  "heading",
+  "choice",
+  "choiceList",
+  "note",
+  "steps",
+  "summary",
+  "closing",
+  "rail",
+  "sections",
+];
 
 export default defineComponent({
   id: "card",
@@ -61,6 +71,14 @@ export default defineComponent({
       story: "card/review",
       pi: yes(),
       claude: yes(),
+    },
+    {
+      id: "closing",
+      label:
+        "A round's closing row: the count goes to the first question, Fill prompt is suggested once there is a reply",
+      story: "card/closing",
+      pi: yes("the kit draws the rail beside the row"),
+      claude: partial("the rail is the engine's quote border, which the kit does not draw"),
     },
     {
       id: "live",

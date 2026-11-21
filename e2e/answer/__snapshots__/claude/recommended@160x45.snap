@@ -1,4 +1,4 @@
-# answer/claude/recommended 160x45 @0,9 (160x31)
+# answer/claude/recommended 160x45 @0,10 (160x30)
 ▎ ❯ Q1  Should every focus default to the same bar?
 ▎
 ▎   A ○ Yes, one default for every kind.  Recommended
@@ -26,46 +26,43 @@
 ▎   Note: Add a note
 
 
-▎   Answers  0 of 3 answered
-▎  ▸ Show all 3 questions
+▎   0 of 3 answered  Fill prompt
 
 Q1/3   alt+a for the keys                                                                                                                                   [-]
 --- styles
 .x2 1 . 2x4 1x43
 -
-.x4 2 . 3 .x33 3x13
-.x4 2 . 3
-.x4 2 . 3
-.x4 2 . 3 . 3x21
-.x4 3x16
+.x4 2 . 2 .x33 2x13
+.x4 2 . 2
+.x4 2 . 2
+.x4 2 . 2 . 2x21
+.x4 2x16
 -
-.x4 4x67
+.x4 3x67
 -
-4x96
-4 .x3 3x4 1x38 .x49 4
-4 .x94 4
-4 .x3 3 . 3 .x88 4
-4 .x3 3 . 3 . 3x21 .x66 4
-4 .x3 3x16 .x75 4
-4x96
-4x96
-4 .x3 3x4 1x22 5x7 1 .x57 4
-4 .x94 4
-4 .x3 3 . 3 .x88 4
-4 .x3 3 . 3 .x88 4
-4 .x7 3x26 .x61 4
-4 .x3 3 . 3 . 3x21 .x66 4
-4 .x3 3x16 .x75 4
-4x96
-4x96
-4 . 1x26 .x67 4
-4 .x2 3x22 .x70 4
-4x96
-6x6 . 3x18 .x131 3x3
+3x96
+3 .x3 2x4 1x38 .x49 3
+3 .x94 3
+3 .x3 2 . 2 .x88 3
+3 .x3 2 . 2 . 2x21 .x66 3
+3 .x3 2x16 .x75 3
+3x96
+3x96
+3 .x3 2x4 1x22 4x7 1 .x57 3
+3 .x94 3
+3 .x3 2 . 2 .x88 3
+3 .x3 2 . 2 .x88 3
+3 .x7 2x26 .x61 3
+3 .x3 2 . 2 . 2x21 .x66 3
+3 .x3 2x16 .x75 3
+3x96
+3x96
+3 .x94 3
+3x96
+5x6 . 2x18 .x131 2x3
 --- legend
 1 bold
-2 fg=#d77757
-3 fg=#999999
-4 dim
-5 fg=#b1b9f9
-6 fg=#d77757 bold
+2 fg=#999999
+3 dim
+4 fg=#b1b9f9
+5 fg=#d77757 bold

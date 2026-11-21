@@ -1,4 +1,5 @@
 # answer/pi/cards-write-editing 70x24 @0,0 (69x24)
+│  ❯ Q1  Use SQLite?
 │
 │    A ○ SQLite
 │    B ○ Postgres
@@ -14,8 +15,7 @@
 │    Note: Add a note
 
 
-│    Answers  0 of 2 answered
-│   ▸ Show all 2 questions
+│    0 of 2 answered  Fill prompt
 
  Save ↵  shift+enter newline  Cancel [esc]
 ─────────────────────────────────────────────────────────────────────
@@ -24,14 +24,15 @@ a draft for later
 <tmp>
 0.7%/200k (auto)                                                repla
 --- styles
+1 .x2 2 . 3x4 2x11
 1
-1 .x4 2 . 3
-1 .x4 2 . 3
+1 .x4 3 . 3
+1 .x4 3 . 3
 1 .x2 3x6 .x6 4
 1 .x4 3x16
 -
 -
-3 .x4 3x4 5x12
+3 .x4 3x4 2x12
 3
 3 .x4 3 . 3
 3 .x4 3 . 3
@@ -39,20 +40,18 @@ a draft for later
 3 .x4 3x16
 -
 -
-3 .x4 5x24
-3 .x3 3x22
+3 .x4 1x15 .x2 1x11
 -
-. 6x4 . 3 .x2 3x19 .x2 1x6 . 3x5
-7x69
+. 5x4 . 3 .x2 3x19 .x2 1x6 . 3x5
+6x69
 .x17 4
-7x69
+6x69
 3x5
 3x69
 --- legend
 1 fg=#dee0e1
-2 fg=#a798d7
+2 fg=#dee0e1 bold
 3 fg=#7e888e
 4 inverse
-5 fg=#dee0e1 bold
-6 fg=#a798d7 bold
-7 fg=#6c767b
+5 fg=#a798d7 bold
+6 fg=#6c767b

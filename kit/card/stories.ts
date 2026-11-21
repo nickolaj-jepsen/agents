@@ -1,8 +1,18 @@
 /** The question card's stories. No host imports. */
 import { blank } from "../lines.ts";
 import type { KitStory } from "../stories.ts";
-import type { ChoiceList, ChoiceListItem, ChoiceListState } from "./contract.ts";
-import { choice, choiceList, heading, note, rail, sections, steps, summary } from "./terminal.ts";
+import type { CardState, ChoiceList, ChoiceListItem, ChoiceListState } from "./contract.ts";
+import {
+  choice,
+  choiceList,
+  closing,
+  heading,
+  note,
+  rail,
+  sections,
+  steps,
+  summary,
+} from "./terminal.ts";
 
 const QUESTION = "How much of each session should be kept, once the run that made it is over?";
 
@@ -101,6 +111,29 @@ export const cardStories: KitStory[] = [
         ...one({ active: true }, "Q1", -1, ""),
         blank(),
         ...one({ answered: true }, "Q2", 1, "Keep local copies as well"),
+      ];
+    },
+  },
+  {
+    component: card,
+    state: "closing",
+    about:
+      "The row after a round's last card: the count and Fill prompt, the round's note, and a sent round",
+    settings: "rail(closing({answered, total, focused, canFill, hits}), note), closing({sent})",
+    lines: (width) => {
+      const inner = width - 3;
+      const hits = { count: "count", fill: "fill" };
+      const behind = (state: CardState, rows: ReturnType<typeof closing>) =>
+        rows.map((row) => rail(state, row));
+      return [
+        ...behind({}, closing({ answered: 0, total: 3, hits }, inner)),
+        blank(),
+        ...behind({ active: true }, [
+          ...closing({ answered: 2, total: 3, focused: true, canFill: true, hits }, inner),
+          ...note({ active: true, value: "Ship the 東京 cluster last.", hit: "note" }, inner),
+        ]),
+        blank(),
+        ...behind({ answered: true }, closing({ answered: 3, total: 3, sent: true }, inner)),
       ];
     },
   },

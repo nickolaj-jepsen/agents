@@ -212,17 +212,20 @@ test("Terminal cards can match a transcript row when the engine omits its UUID",
     requestId: "assistant-row",
     props: { text: GRILLING, isFirstOfReply: true },
   });
-  expect(await cards.find({ type: "Text", text: /Answers\s+0 of 3 answered/ })).toBeDefined();
+  const count = async () => (await cards.find({ key: "round-count" }))?.props.label;
+  expect(await count()).toBe("0 of 3 answered");
   await cards.press({ key: "question-0-choose-1" });
-  expect(await cards.find({ type: "Text", text: /Answers\s+1 of 3 answered/ })).toBeDefined();
+  expect(await count()).toBe("1 of 3 answered");
 
   // Filling the prompt doesn't mark the round as sent.
-  await cards.press({ key: "review-fill" });
+  await cards.press({ key: "round-fill" });
   expect(await cards.find({ type: "Text", text: /✓ Sent/ })).toBeUndefined();
   await cards.press({ key: "question-0-choose-0" });
   await $.prompt.submit({ text: "Q1: B", origin: { kind: "composer" }, wait: false });
+  // The sent round's row says so and offers nothing more: no count to press, no Fill.
   expect(await cards.find({ type: "Text", text: /✓ Sent/ })).toBeDefined();
-  expect(await cards.find({ type: "Text", text: /B: Default by kind\.$/ })).toBeDefined();
+  expect(await cards.find({ key: "round-count" })).toBeUndefined();
+  expect(await cards.find({ key: "round-fill" })).toBeUndefined();
   await cards.unmount();
 });
 
@@ -759,9 +762,38 @@ test("in the round editor a digit answers the shown card's row, as its letter do
     requestId: "assistant-row",
     props: { text: GRILLING, isFirstOfReply: true },
   });
-  expect(await cards.find({ type: "Text", text: /Answers\s+1 of 3 answered/ })).toBeDefined();
-  await cards.press({ key: "review-fill" });
+  expect((await cards.find({ key: "round-count" }))?.props.label).toBe("1 of 3 answered");
+  await cards.press({ key: "round-fill" });
   expect(w.box).toBe("Q1: B");
+  await cards.unmount();
+});
+
+test("the closing row's count goes back to the first question and scrolls to the round's top", async ($, on) => {
+  world(on);
+  let messages: Array<{ role: "assistant"; text: string; toolUses: [] }> = [];
+  on("session.messages", () => ({ value: messages }));
+  on("session.surfaces", () => ({ value: ["terminal"] }));
+  on("ui.place", () => ({ value: { isPlaced: false, reason: "no surface in the test" } }));
+  await start($);
+  messages = [{ role: "assistant", text: GRILLING, toolUses: [] }];
+  await ends($, GRILLING);
+  const bar = await band($);
+  await bar.press({ key: "round-key-r" });
+  expect((await bar.find({ key: "round-current" }))?.props.label).toBe("Review  0/3 answered");
+  await bar.unmount();
+  const cards = await $.ui.mount({
+    plugin: "answer",
+    surface: "terminal",
+    component: "AssistantMessage",
+    requestId: "assistant-row",
+    props: { text: GRILLING, isFirstOfReply: true },
+  });
+  // Its scroll to the round's top is the engine's, seen in a real session (`count-click`).
+  await cards.press({ key: "round-count" });
+  const again = await band($);
+  expect(await again.find({ key: "round-current" })).toBeDefined();
+  expect((await again.find({ key: "round-current" }))?.props.label).toBe("Q1/3");
+  await again.unmount();
   await cards.unmount();
 });
 

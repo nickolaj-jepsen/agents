@@ -1,4 +1,5 @@
 # answer/claude/table-code 70x24 @0,1 (70x18)
+▎   ├──────────┼─────────┼────────────────┤
 ▎   │ SQLite   │ •••     │ embedded       │
 ▎   ├──────────┼─────────┼────────────────┤
 ▎   │ Postgres │ •••     │ needs a server │
@@ -13,8 +14,7 @@
 ▎   Note: Add a note
 
 
-▎   Answers  0 of 1 answered
-▎  ▸ Show question
+▎   0 of 1 answered  Fill prompt
 
 Q1/1   alt+a for the keys                                         [-]
 --- styles
@@ -23,25 +23,23 @@ Q1/1   alt+a for the keys                                         [-]
 -
 -
 -
+-
 .x4 1x5 .x6 2x4 . 3x8
 .x4 1x5 .x4 2x4 . 3x10
 -
-.x4 4 . 5
-.x4 4 . 5
-.x4 4 . 5 . 5x21
-.x4 5x16
+.x4 4 . 4
+.x4 4 . 4
+.x4 4 . 4 . 4x21
+.x4 4x16
 -
-6x70
-6 . 7x26 .x41 6
-6 .x2 5x15 .x51 6
-6x70
-8x6 . 5x18 .x41 5x3
+5x70
+5 .x68 5
+5x70
+6x6 . 4x18 .x41 4x3
 --- legend
 1 fg=p4
 2 fg=p3
 3 fg=p1
-4 fg=#d77757
-5 fg=#999999
-6 dim
-7 bold
-8 fg=#d77757 bold
+4 fg=#999999
+5 dim
+6 fg=#d77757 bold

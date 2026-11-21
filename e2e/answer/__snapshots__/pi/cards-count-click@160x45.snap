@@ -1,0 +1,90 @@
+# answer/pi/cards-count-click 160x45 @0,0 (159x41)
+│  ❯ Q1  Question number 1: pick a strategy?
+│
+│    A ○ Option A for 1
+│    B ○ Option B for 1
+│    C ○ Write your own answer
+│    Note: Add a note
+
+
+│    Q2  Question number 2: pick a strategy?
+│
+│    A ○ Option A for 2
+│    B ○ Option B for 2
+│    C ○ Write your own answer
+│    Note: Add a note
+
+
+│    Q3  Question number 3: pick a strategy?
+│
+│    A ○ Option A for 3
+│    B ○ Option B for 3
+│    C ○ Option C for 3
+│    D ○ Option D for 3
+│    E ○ Option E for 3
+│    F ○ Option F for 3
+│    G ○ Option G for 3
+│    H ○ Option H for 3
+│    I ○ Write your own answer
+│    Note: Add a note
+
+
+│    Q4  Question number 4: pick a strategy?
+│
+│    A ○ Option A for 4
+│    B ○ Option B for 4
+│    C ○ Write your own answer
+│    Note: Add a note
+
+                                                              ↓ Jump to latest message · Ctrl+End
+
+ Answer [alt+a]  Q1  0/12 answered
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+--- styles
+1 .x2 2 . 3x4 2x35
+1
+1 .x4 3 . 3
+1 .x4 3 . 3
+1 .x4 3 . 3 . 3x21
+1 .x4 3x16
+-
+-
+3 .x4 3x4 2x35
+3
+3 .x4 3 . 3
+3 .x4 3 . 3
+3 .x4 3 . 3 . 3x21
+3 .x4 3x16
+-
+-
+3 .x4 3x4 2x35
+3
+3 .x4 3 . 3
+3 .x4 3 . 3
+3 .x4 3 . 3
+3 .x4 3 . 3
+3 .x4 3 . 3
+3 .x4 3 . 3
+3 .x4 3 . 3
+3 .x4 3 . 3
+3 .x4 3 . 3 . 3x21
+3 .x4 3x16
+-
+-
+3 .x4 3x4 2x35
+3
+3 .x4 3 . 3
+3 .x4 3 . 3
+3 .x4 3 . 3 . 3x21
+3 .x4 3x16
+-
+.x61 4x37
+-
+. 1x6 . 3x7 .x2 3x17
+5x159
+--- legend
+1 fg=#dee0e1
+2 fg=#dee0e1 bold
+3 fg=#7e888e
+4 fg=#dee0e1 bg=#213b49
+5 fg=#6c767b

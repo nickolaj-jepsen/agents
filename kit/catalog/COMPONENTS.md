@@ -23,8 +23,8 @@ Features:
 
 A question with lettered answers and a note, and the steps and summary of a form of several.
 
-- pi: exists: `heading`, `choice`, `choiceList`, `note`, `steps`, `summary`, `rail`, `sections`
-- claude: exists: `heading`, `choice`, `choiceList`, `note`, `steps`, `summary`, `rail`, `sections`
+- pi: exists: `heading`, `choice`, `choiceList`, `note`, `steps`, `summary`, `closing`, `rail`, `sections`
+- claude: exists: `heading`, `choice`, `choiceList`, `note`, `steps`, `summary`, `closing`, `rail`, `sections`
 - status: pi system; claude system; gui legacy
 
 Features:
@@ -36,6 +36,7 @@ Features:
 - A question in a form: label, answers and note, a blank row between: pi yes; claude yes
 - Cards in a transcript: the keyboard's, and one that has its answer: pi yes (the kit draws the rail beside each row); claude partial (the rail is the engine's quote border, which the kit does not draw)
 - Steps of several questions on one row, then each answer and its note: pi yes; claude yes
+- A round's closing row: the count goes to the first question, Fill prompt is suggested once there is a reply: pi yes (the kit draws the rail beside the row); claude partial (the rail is the engine's quote border, which the kit does not draw)
 - Keys and clicks pick an answer: pi yes (the client wires keys and the mouse to `choiceReduce`); claude yes (the client wires keys and clicks to `choiceReduce`)
 
 ## Captioned frame

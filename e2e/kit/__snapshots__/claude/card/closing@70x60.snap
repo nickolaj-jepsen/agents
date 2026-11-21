@@ -1,0 +1,19 @@
+# kit/claude/card/closing 70x60 @2,48 (66x6)
+│    0 of 3 answered  Fill prompt
+
+│  ❯ 2 of 3 answered  Fill prompt
+│    Note: Ship the 東京 cluster last.
+
+│    3 of 3 answered ✓ Sent
+--- styles
+1
+-
+.x3 2 . 2x15 .x2 3x11
+.x5 1x6
+-
+1 .x19 4x7
+--- legend
+1 fg=#999999
+2 bold
+3 fg=#d77757 bold
+4 fg=#4eba65

@@ -1,56 +1,20 @@
-# answer/pi/cards-review-stress 160x45 @0,18 (159x23)
-│    Answers  1 of 12 answered
-│   [ Fill prompt ]  ▾ Hide questions
-│
-│   Questions 1–5 of 12  Next
-│  ❯ Q1   Which rollout should we use for 東京、大阪、名古屋 and the other regional
-│         clusters, 東京、大阪、名古屋 and the other regional clusters, 東京、大阪
-│         、名古屋 and the other regional clusters, given the migration window? ✓
-│         A: Canary: validate the read replicas in 東京 and compare results before
-│         promoting. validate the read replicas in 東京 and compare results before
-│         promoting. validate the read replicas in 東京 and compare results before…
-│         Note: Keep 東京 on the old routing until the replicas catch up and the
-│         dashboards agree. Check 大阪 before widening the rollout.
-│    Q2   Question number 2: pick a strategy?
-│         Unanswered
-│    Q3   Question number 3: pick a strategy?
-│         Unanswered
-│    Q4   Question number 4: pick a strategy?
-│         Unanswered
-│    Q5   Question number 5: pick a strategy?
-│         Unanswered
+# answer/pi/cards-review-stress 160x45 @0,35 (159x6)
+│  ❯ 1 of 12 answered  Fill prompt
+│    Note: Roll 東京 and 大阪 out together once the replicas agree, and keep the
+│          old routing a week longer.
 
- Review  1/12 answered  Open ↵  Fill [f]  Send [s]  Note [n]  Back [r]  Prompt [esc]  jk move
+ Review  1/12 answered  Fill ↵  Send [s]  Note [n]  Back [r]  Prompt [esc]  jk move
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 --- styles
-1 .x4 2x25
-1 .x3 3x15 .x2 4x16
-1
-1 .x2 4x20
-1 .x2 2x80
-1 .x2 2x79
-1 .x2 2x78
-1 .x9 2x72
-1 .x9 2x72
-1 .x9 2x72
-1 .x9 4x70
-1 .x9 4x57
-1 .x2 2x42
-1 .x9 4x10
-1 .x2 2x42
-1 .x9 4x10
-1 .x2 2x42
-1 .x9 4x10
-1 .x2 2x42
-1 .x9 4x10
+1 .x2 2 . 2x16 .x2 3x11
+1 .x4 4x6 1x69
+1 .x10 1x26
 -
-. 2x21 .x2 5x4 . 4 .x2 6x4 . 4x3 .x2 6x4 . 4x3 .x2 6x4 . 4x3 .x2 6x4 . 4x3 .x2 6x6 . 4x5 .x2 4x7
-7x159
+. 2x21 .x2 3x4 . 4 .x2 1x4 . 4x3 .x2 1x4 . 4x3 .x2 1x4 . 4x3 .x2 1x6 . 4x5 .x2 4x7
+5x159
 --- legend
-1 fg=#68b78d
+1 fg=#dee0e1
 2 fg=#dee0e1 bold
-3 fg=#7e888e bold
+3 fg=#a798d7 bold
 4 fg=#7e888e
-5 fg=#a798d7 bold
-6 fg=#dee0e1
-7 fg=#6c767b
+5 fg=#6c767b

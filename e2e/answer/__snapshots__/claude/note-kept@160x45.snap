@@ -1,5 +1,5 @@
 # answer/claude/note-kept 160x45 @0,10 (160x30)
-▎ ❯ Q1  Use SQLite?
+▎ ❯ Q1  Use SQLite? ✓
 ▎
 ▎   A ○ SQLite
 ▎   B ● Postgres
@@ -16,8 +16,8 @@
 ▎   Note: Add a note
 
 
-▎   Answers  1 of 2 answered
-▎  [ Fill prompt ]  ▸ Show all 2 questions
+▎   1 of 2 answered  Fill prompt
+
 
 
 
@@ -30,26 +30,25 @@
 
 Q1/2   jk move A–B pick C write n note r review keys here                                                                                                   [-]
 --- styles
-1 . 2 . 3x4 2x11 .x76 1
-1 .x94 1
-1 .x3 3 . 4 .x88 1
-1 .x3 3 . 5 . 5x8 .x79 1
-1 .x3 3 . 4 . 4x21 .x66 1
-1 .x3 4x6 .x85 1
-1 .x94 1
-1x96
-6x96
-6 .x3 4x4 2x12 .x75 6
-6 .x94 6
-6 .x3 4 . 4 .x88 6
-6 .x3 4 . 4 .x88 6
-6 .x3 4 . 4 . 4x21 .x66 6
-6 .x3 4x16 .x75 6
-6x96
-7x96
-7 . 8x26 .x67 7
-7 .x2 8x15 .x2 4x22 .x53 7
-7x96
+.x2 1 . 2x4 1x11 3x2
+-
+.x4 2 . 2
+.x4 2 . 4 . 4x8
+.x4 2 . 2 . 2x21
+.x4 2x6
+-
+-
+5x96
+5 .x3 2x4 1x12 .x75 5
+5 .x94 5
+5 .x3 2 . 2 .x88 5
+5 .x3 2 . 2 .x88 5
+5 .x3 2 . 2 . 2x21 .x66 5
+5 .x3 2x16 .x75 5
+5x96
+5x96
+5 .x20 4x11 .x63 5
+5x96
 -
 -
 -
@@ -59,14 +58,12 @@ Q1/2   jk move A–B pick C write n note r review keys here                     
 -
 -
 -
-9x6 . 4x7 . 4x8 . 4x7 . 4x6 . 4x8 . 4x9 .x99 4x3
+-
+6x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x99 2x3
 --- legend
-1 fg=#4eba65
-2 bold
-3 fg=#d77757
-4 fg=#999999
-5 fg=#d77757 bold
-6 dim
-7 fg=#b1b9f9
-8 fg=#b1b9f9 bold
-9 fg=#d77757 bold inverse
+1 bold
+2 fg=#999999
+3 fg=#4eba65
+4 fg=#d77757 bold
+5 dim
+6 fg=#d77757 bold inverse

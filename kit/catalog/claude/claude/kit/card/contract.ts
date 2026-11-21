@@ -83,6 +83,30 @@ export type Summary = {
   hit?: string;
 };
 
+/**
+ * The row after a round's last card: how many questions have an answer, and the way to send
+ * them on. Its note, the whole round's, is a `note` under it.
+ */
+export type Closing = {
+  /** Questions with an answer. */
+  answered: number;
+  /** Questions in the round. */
+  total: number;
+  /** The keyboard is on this step: the pointer stands on the row and the count is bold. */
+  focused?: boolean;
+  /** The control under the mouse. */
+  hovered?: "count" | "fill";
+  /** There is a reply to fill the prompt with: Fill prompt is the suggested action. */
+  canFill?: boolean;
+  /** The round was sent: the row says so. */
+  sent?: boolean;
+  /**
+   * The controls' ids: the count, which goes to the first question, and Fill prompt. Without
+   * them the row is only the count, for a round that can no longer be answered.
+   */
+  hits?: { count: string; fill: string };
+};
+
 export type ChoiceListItem = {
   key: string;
   text: string;

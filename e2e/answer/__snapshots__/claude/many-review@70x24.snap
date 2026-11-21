@@ -1,41 +1,44 @@
-# answer/claude/many-review 70x24 @0,3 (70x16)
-▎   Answers  1 of 12 answered
-▎  [ ❯ Fill prompt ]  ▾ Hide questions
+# answer/claude/many-review 70x24 @0,1 (70x18)
 ▎
-▎  Questions 1–5 of 12  Next
-▎   Q1   Question number 1: pick a strategy?
-▎        Unanswered
-▎   Q2   Question number 2: pick a strategy?
-▎        Unanswered
-▎   Q3   Question number 3: pick a strategy? ✓
-▎        H: Option H for 3
-▎   Q4   Question number 4: pick a strategy?
-▎        Unanswered
-▎   Q5   Question number 5: pick a strategy?
-▎        Unanswered
+▎   A ○ Option A for 11
+▎   B ○ Option B for 11
+▎   C ○ Write your own answer
+▎   Note: Add a note
 
-Review  1/12 answered jk move enter fill r back keys here         [-]
+
+▎   Q12  Question number 12: pick a strategy?
+▎
+▎   A ○ Option A for 12
+▎   B ○ Option B for 12
+▎   C ○ Write your own answer
+▎   Note: Add a note
+
+
+▎ ❯ 1 of 12 answered  Fill prompt
+
+Review  1/12 answered jk move enter fill n note r back keys here  [-]
 --- styles
-1 . 2x27 .x40 1
-1 .x2 3x17 .x2 4x16 .x31 1
 1 .x68 1
-1 .x2 4x19 .x47 1
-1 . 5x42 .x25 1
-1 .x8 4x10 .x50 1
-1 . 5x42 .x25 1
-1 .x8 4x10 .x50 1
-1 . 3x44 .x23 1
-1 .x8 3x17 .x43 1
-1 . 5x42 .x25 1
-1 .x8 4x10 .x50 1
-1 . 5x42 .x25 1
-1 .x8 4x10 .x50 1
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 2 . 2x21 .x40 1
+1 .x3 2x16 .x49 1
 1x70
-2x21 . 4x7 . 6x10 . 4x6 . 4x9 .x9 4x3
+1x70
+1 .x3 2x5 3x36 .x24 1
+1 .x68 1
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 2 . 2x21 .x40 1
+1 .x3 2x16 .x49 1
+1x70
+-
+.x2 3 . 3x16 .x2 4x11
+-
+4x21 . 2x7 . 5x10 . 2x6 . 2x6 . 2x9 .x2 2x3
 --- legend
-1 fg=#d77757
-2 fg=#d77757 bold
-3 fg=#b1b9f9 bold
-4 fg=#999999
-5 bold
-6 inverse
+1 dim
+2 fg=#999999
+3 bold
+4 fg=#d77757 bold
+5 inverse

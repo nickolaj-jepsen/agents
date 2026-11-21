@@ -5,7 +5,7 @@ import { paintLines } from "../paint/pi.ts";
 import { kitStories, storyId } from "../stories.ts";
 import { choiceKey, choiceReduce, type ChoiceListState } from "./contract.ts";
 import { liveChoices } from "./stories.ts";
-import { choice, choiceList, heading, note, railRole, steps } from "./terminal.ts";
+import { choice, choiceList, closing, heading, note, railRole, steps } from "./terminal.ts";
 
 const plain = {
   fg: (_c: string, t: string) => t,
@@ -124,6 +124,56 @@ describe("the card's other parts", () => {
     expect(textOf(steps(all, 60)!)).toBe("✓ 1 Storage ── ❯ 2 Retention ── Review");
     expect(textOf(steps(all, 20)!)).toBe("✓1 ─ ❯2 ─ Review");
     expect(steps(all, 6)).toBeUndefined();
+  });
+});
+
+describe("a round's closing row", () => {
+  const hits = { count: "count", fill: "fill" };
+
+  test("lines its count up with the answers' letters, and takes the pointer on its step", () => {
+    const [rest] = closing({ answered: 2, total: 3, hits }, 60);
+    const [focused] = closing({ answered: 2, total: 3, hits, focused: true }, 60);
+    expect(textOf(rest!)).toBe("  2 of 3 answered  Fill prompt");
+    expect(textOf(focused!)).toBe("❯ 2 of 3 answered  Fill prompt");
+    expect(textOf(choice({ key: "A", text: "x" }, 60)[0]!).indexOf("A")).toBe(2);
+  });
+
+  test("the count is a control, bold under the keyboard or the mouse and never accented", () => {
+    const countOf = (state: object) =>
+      closing({ answered: 1, total: 3, hits, ...state }, 60)[0]!.spans.find(
+        (s) => s.hit === "count",
+      );
+    expect(countOf({})).toMatchObject({ role: "text", text: "1 of 3 answered" });
+    expect(countOf({})?.bold).toBeUndefined();
+    expect(countOf({ focused: true })).toMatchObject({ role: "text", bold: true });
+    expect(countOf({ hovered: "count", canFill: true })).toMatchObject({
+      role: "text",
+      bold: true,
+    });
+  });
+
+  test("Fill prompt takes the accent only when there is a reply, and prints no key", () => {
+    const fillOf = (state: object) =>
+      closing({ answered: 1, total: 3, hits, ...state }, 60)[0]!.spans.filter(
+        (s) => s.hit === "fill",
+      );
+    expect(fillOf({})).toEqual([{ text: "Fill prompt", role: "text", hit: "fill" }]);
+    expect(fillOf({ canFill: true })).toEqual([
+      { text: "Fill prompt", role: "accent", bold: true, hit: "fill" },
+    ]);
+    expect(fillOf({ hovered: "fill" })[0]).toMatchObject({ role: "text", bold: true });
+  });
+
+  test("a sent round says so in the success colour and offers nothing", () => {
+    const rows = closing({ answered: 3, total: 3, sent: true, hits, canFill: true }, 60);
+    expect(rows.map(textOf)).toEqual(["  3 of 3 answered ✓ Sent"]);
+    expect(rows[0]!.spans.at(-1)).toMatchObject({ role: "success" });
+    expect(rows[0]!.spans.some((s) => s.hit === "fill")).toBe(false);
+  });
+
+  test("with no room beside the count, Fill goes under it", () => {
+    const rows = closing({ answered: 12, total: 12, hits }, 24);
+    expect(rows.map(textOf)).toEqual(["  12 of 12 answered", "  Fill prompt"]);
   });
 });
 

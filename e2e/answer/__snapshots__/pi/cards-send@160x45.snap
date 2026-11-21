@@ -1,4 +1,5 @@
 # answer/pi/cards-send 160x45 @0,0 (159x45)
+
  ask
 
 
@@ -12,24 +13,19 @@
  - A. Yes
  - B. No
 
-│    Q1  Use SQLite?
+│    Q1  Use SQLite? ✓
 │
 │    A ○ SQLite
 │    B ● Postgres
 
 
-│    Q2  Add caching?
+│    Q2  Add caching? ✓
 │
 │    A ● Yes
 │    B ○ No
 
 
-│    Answers  2 of 2 answered ✓ Sent
-│
-│    Q1  Use SQLite? ✓
-│        B: Postgres
-│    Q2  Add caching? ✓
-│        A: Yes
+│    2 of 2 answered ✓ Sent
 
 
  Q1: B
@@ -39,12 +35,17 @@
  Error: fixture-provider: turn 1 requested but 1 exist
  If this looks like a pi bug, /bug sends a report to the developers.
 
+
+
+
+
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 a draft for later
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 <tmp>
 0.7%/200k (auto)                                                                                                                                          repla
 --- styles
+1x159
 1 2x3 1x155
 1x159
 -
@@ -58,24 +59,19 @@ a draft for later
 . 4x2 3x2
 . 4x2 3x2
 -
-5 .x4 6x4 7x11
+5 .x4 5x4 6x11 7x2
 5
-5 .x4 6 . 6
-5 .x4 6 . 8 . 8x8
+5 .x4 5 . 5
+5 .x4 5 . 8 . 8x8
 -
 -
-5 .x4 6x4 7x12
+5 .x4 5x4 6x12 7x2
 5
-5 .x4 6 . 8 . 8x3
-5 .x4 6 . 6
+5 .x4 5 . 8 . 8x3
+5 .x4 5 . 5
 -
 -
-5 .x4 9x24 5x7
-5
-5 .x2 9x19
-5 .x8 9x11
-5 .x2 9x20
-5 .x8 9x6
+5 .x4 9x15 7x7
 -
 1x159
 1 2x5 1x153
@@ -85,21 +81,25 @@ a draft for later
 . ax53
 . bx67
 -
+-
+-
+-
+-
 cx159
 .x17 d
 cx159
-6x5
-6x159
+5x5
+5x159
 --- legend
 1 bg=#213b49
 2 fg=#dee0e1 bg=#213b49
 3 bold
 4 fg=#a798d7
-5 fg=#68b78d
-6 fg=#7e888e
-7 fg=#dee0e1 bold
+5 fg=#7e888e
+6 fg=#dee0e1 bold
+7 fg=#68b78d
 8 fg=#a798d7 bold
-9 fg=#7e888e bold
+9 fg=#dee0e1
 a fg=#ea7f81
 b fg=#9da5a9
 c fg=#6c767b
