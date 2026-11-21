@@ -169,7 +169,9 @@ export function ageText(iso: string, now: number): string {
 
 /** `wrong · seen 3× · 2 days ago`: the kind in a word, how often, how long ago. */
 export const metaText = (q: Suggestion, now: number) =>
-  `${q.kind} · seen ${seen(q) > 1 ? `${seen(q)}×` : "once"} · ${ageText(q.updated, now)}`;
+  [q.kind, seen(q) > 1 ? `seen ${seen(q)}×` : "", ageText(q.updated, now)]
+    .filter(Boolean)
+    .join(" · ");
 
 /** The main action: one of three, by what it will do. */
 function mainLabel(s: ScreenState) {
@@ -239,9 +241,12 @@ function layout(s: ScreenState, o: ScreenOptions): Layout {
   const need = Math.max(0, ...s.queue.map((q) => zoneNeed(q, mode, widths)));
   // The queue keeps three rows at least; the focused suggestion has what it needs of the rest.
   const zone = Math.max(1, Math.min(need, body - 1 - Math.min(3, natural)));
-  const listRows = Math.max(1, Math.min(natural, body - 1 - zone));
+  // With a blank row between docs where the whole queue and those rows fit, else dense.
+  const room = body - 1 - zone;
+  const airy = natural + byTarget(s.queue).length - 1;
+  const rows = Math.max(1, Math.min(airy <= room ? airy : natural, room));
   // A queue that fits leaves the rest to the focused suggestion.
-  return { mode, body, list: listRows, zone: body - 1 - listRows, ...widths };
+  return { mode, body, list: rows, zone: body - 1 - rows, ...widths };
 }
 
 function listOf(s: ScreenState, l: Layout): List {
@@ -279,6 +284,7 @@ function listOf(s: ScreenState, l: Layout): List {
     noun: ["doc", "docs"],
     aside: ASIDE,
     flat: l.mode === "tiny",
+    space: true,
   };
 }
 
@@ -442,13 +448,18 @@ function footerRow(s: ScreenState, room: number): Line {
   return hover ? (buttonRow(keys, room, { hover })[0] ?? plain) : plain;
 }
 
-/** `● 3 · – 2 · 23 left`, in the rows' own glyphs: dim, what is set to apply in the accent. */
+/**
+ * `● 3 · – 2 · 23 left`, in the rows' own glyphs, the parts that are not zero: dim, what is set to
+ * apply in the accent.
+ */
 function tally(s: ScreenState): Span[] {
   const { apply, dismiss, left } = counts(s);
-  return [
-    span(`${tokens.glyph.single.on} ${apply}`, { role: apply ? "accent" : "dim" }),
-    span(` · ${tokens.glyph.dropped} ${dismiss} · ${left} left`, { role: "dim" }),
+  const parts = [
+    ...(apply ? [span(`${tokens.glyph.single.on} ${apply}`, { role: "accent" as const })] : []),
+    ...(dismiss ? [span(`${tokens.glyph.dropped} ${dismiss}`, { role: "dim" as const })] : []),
+    ...(left ? [span(`${left} left`, { role: "dim" as const })] : []),
   ];
+  return parts.flatMap((part, i) => (i ? [span(" · ", { role: "dim" }), part] : [part]));
 }
 
 /** The title and the tally where both fit, else the tally alone, else the title. */

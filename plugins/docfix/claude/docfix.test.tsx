@@ -194,9 +194,9 @@ test("the terminal pane is the shared screen: the caption, the doc, its rows and
   const { world, ui } = await twoOpen($, on);
   // The pane shows the count itself, so the band above the prompt steps aside.
   expect(await bandCount($)).toBeUndefined();
-  expect(await shows(ui, /● 0 · – 0 · 2 left/)).toBe(true);
+  expect(await shows(ui, /suggestions ── 2 left/)).toBe(true);
   expect(await pointerOn(ui, ID)).toBe(true);
-  expect(await shows(ui, /missing · seen once/)).toBe(true);
+  expect(await shows(ui, /missing · today/)).toBe(true);
   expect(await shows(ui, /Evidence · /)).toBe(true);
   // Every control is a plain Button under its own key; the ring and the hotkeys draw nothing.
   const keys = (await ui.findAll({ type: "Button" })).map((b) => String(b.key));
@@ -226,12 +226,12 @@ test("the terminal pane is the shared screen: the caption, the doc, its rows and
 test("Apply sets the keyboard's row and moves on; the main action is Draft prompt", async ($, on) => {
   const { world, ui } = await twoOpen($, on);
   await ui.press({ key: "apply" });
-  expect(await shows(ui, /● 1 · – 0 · 1 left/)).toBe(true);
+  expect(await shows(ui, /● 1 · 1 left/)).toBe(true);
   expect(await pointerOn(ui, SECOND)).toBe(true);
   expect(await shows(ui, /^Draft prompt$/)).toBe(true);
   // The hotkey on the ring's hidden button does what the footer's button does.
   await ui.press({ key: "kit-key-d" });
-  expect(await shows(ui, /– 1 · 0 left/)).toBe(true);
+  expect(await shows(ui, /suggestions ── ● 1 · – 1 ─/)).toBe(true);
   // Setting a row does nothing yet: the main action carries it out.
   expect(world.fills).toHaveLength(0);
   await ui.unmount();
@@ -241,13 +241,13 @@ test("a click on a mark steps it, and Apply all sets the doc", async ($, on) => 
   const { ui } = await twoOpen($, on);
   await ui.press({ key: `mark:${SECOND}` });
   expect(await pointerOn(ui, SECOND)).toBe(true);
-  expect(await shows(ui, /● 1 · – 0/)).toBe(true);
+  expect(await shows(ui, /● 1 · 1 left/)).toBe(true);
   await ui.press({ key: `mark:${SECOND}` });
-  expect(await shows(ui, /● 0 · – 1/)).toBe(true);
+  expect(await shows(ui, /– 1 · 1 left/)).toBe(true);
   await ui.press({ key: "all:apply:AGENTS.md" });
-  expect(await shows(ui, /● 2 · – 0 · 0 left/)).toBe(true);
+  expect(await shows(ui, /suggestions ── ● 2 ─/)).toBe(true);
   await ui.press({ key: "all:apply:AGENTS.md" });
-  expect(await shows(ui, /● 0 · – 0 · 2 left/)).toBe(true);
+  expect(await shows(ui, /suggestions ── 2 left/)).toBe(true);
   await ui.unmount();
 });
 
@@ -272,7 +272,7 @@ test("Close asks before it throws the choices away; Keep keeps them, Discard dra
   // The footer is dim and inert while the question is up.
   expect(await ui.find({ type: "Button", key: "main" })).toBeUndefined();
   await ui.press({ key: "frame:keep" });
-  expect(await shows(ui, /● 1 · – 0 · 1 left/)).toBe(true);
+  expect(await shows(ui, /● 1 · 1 left/)).toBe(true);
   await ui.press({ key: "frame:close" });
   await ui.press({ key: "frame:discard" });
   expect(world.fills).toHaveLength(0);
@@ -297,7 +297,7 @@ test("the ring's moves are the screen's: an arrow moves the keyboard, a click pu
 test("the reader: where it is and Back on its first row; Apply stays on its suggestion", async ($, on) => {
   const { ui } = await twoOpen($, on);
   await ui.press({ key: "kit-key-e" });
-  expect(await shows(ui, /○ AGENTS\.md · missing · seen once/)).toBe(true);
+  expect(await shows(ui, /○ AGENTS\.md · missing · today/)).toBe(true);
   expect(await shows(ui, /AGENTS\.md:12 says pnpm install/)).toBe(true);
   expect(await ui.find({ type: "Button", key: "back" })).toBeDefined();
   await ui.press({ key: "apply" });

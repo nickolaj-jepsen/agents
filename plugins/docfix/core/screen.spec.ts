@@ -325,6 +325,49 @@ describe("the queue", () => {
       o,
     );
     expect(texts(s, o)[0]).toContain("● 1 · – 1 · 3 left");
+    // Only the parts that are not zero.
+    expect(texts(startState(QUEUE), o)[0]).toMatch(/── 5 left ─/);
+    const all = run(
+      startState(QUEUE),
+      [
+        { do: "press", hit: "all:apply:docs/agent-hub.md" },
+        { do: "press", hit: "all:dismiss:docs/agents.md" },
+        {
+          do: "press",
+          hit: "all:apply:skills/agent-plugin-dev/references/a-very-long-folder-name/style.md",
+        },
+      ],
+      o,
+    );
+    expect(texts(all, o)[0]).toMatch(/── ● 3 · – 2 ─/);
+  });
+
+  test("the meta line leaves out a suggestion seen once", () => {
+    const lines = texts(run(startState(QUEUE), [{ do: "press", hit: "row:a2" }], o), o);
+    expect(lines.some((l) => l.trim() === "wrong · 2 days ago")).toBe(true);
+    expect(lines.some((l) => l.includes("seen once"))).toBe(false);
+  });
+
+  test("a blank row between docs when the whole queue and those rows fit, else dense", () => {
+    const airy = drawScreen(startState(QUEUE), o);
+    const [from, to] = airy.zones.list!;
+    const rows = airy.lines.slice(from, to).map(textOf);
+    expect(rows.filter((r) => r === "")).toHaveLength(2);
+    expect(rows[rows.indexOf("") + 1]).toMatch(/^│ {2}docs\/agents\.md/);
+    // Moving and setting rows keeps them where they are.
+    const moved = drawScreen(
+      run(startState(QUEUE), [...down(3), { do: "set", choice: "apply" }], o),
+      o,
+    );
+    expect(moved.zones).toEqual(airy.zones);
+    expect(moved.lines.map((l) => textOf(l) === "")).toEqual(
+      airy.lines.map((l) => textOf(l) === ""),
+    );
+    // Too little room for the gaps: dense.
+    const tight = at(64, 20);
+    const dense = drawScreen(startState(QUEUE), tight);
+    const [a, b] = dense.zones.list!;
+    expect(dense.lines.slice(a, b).filter((l) => textOf(l) === "")).toHaveLength(0);
   });
 
   test("more-rows say suggestions and docs alike at both ends", () => {

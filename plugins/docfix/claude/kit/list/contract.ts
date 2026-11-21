@@ -55,4 +55,9 @@ export type List = {
   aside?: number;
   /** Each row carries its group's label, dim, instead of rows under group rows: for little room. */
   flat?: boolean;
+  /**
+   * A blank row between groups, without a rail, when the whole list and those rows fit `height`:
+   * whether they show depends on the list's size and the height alone, not on where the keyboard is.
+   */
+  space?: boolean;
 };
