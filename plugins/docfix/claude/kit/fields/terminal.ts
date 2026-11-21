@@ -19,7 +19,9 @@ const GAP = " ".repeat(tokens.gutter);
 /** What a person can press: in the accent where the keyboard is, quiet elsewhere. */
 const keyRole = (isActive = false): Role => (isActive ? "accent" : "dim");
 
-const valueRole = (f: Field): Role => (f.empty ? "dim" : "text");
+const valueRole = (f: Field): Role => (f.empty && !f.hovered ? "dim" : "text");
+
+const valueStyle = (f: Field) => ({ role: valueRole(f), bold: f.hovered || undefined });
 
 /**
  * One value each, named: a row per field with its key, its label and what it holds, the labels
@@ -39,7 +41,7 @@ export function fields(all: readonly Field[], width: number, options: FieldsOpti
         [
           span(lead, { role: f.key ? keyRole(active) : "dim", hit: f.hit }),
           span(" ", { hit: f.hit }),
-          span(f.value, { role: valueRole(f), hit: f.hit }),
+          span(f.value, { ...valueStyle(f), hit: f.hit }),
         ],
         width,
       );
@@ -66,7 +68,7 @@ export function fields(all: readonly Field[], width: number, options: FieldsOpti
       ...label,
       span(" ".repeat(labelled - spansWidth(label)) + GAP),
     ];
-    return block(literal(f.value, { role: valueRole(f) }), width, {
+    return block(literal(f.value, valueStyle(f)), width, {
       lead,
       max: valueLines,
       hit: f.hit,

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { textOf, widthOf, type Line } from "../claude/kit/lines.ts";
+import { sheetHead } from "../claude/kit/sheet/terminal.ts";
 import type { Form } from "./draft.ts";
 import {
   act,
@@ -79,7 +80,9 @@ function play(intents: Intent[], form: Form = FORM, room: Room = ROOM) {
       if (e.do === "set") f = { ...f, ...e.patch };
     }
   }
-  return { view, form: f, effects, text: screen(f, view, room), keys: keysOf(f, view) };
+  const { close } = draw(f, view, room);
+  const head = textOf(sheetHead({ width: room.width, title: "Linear", close }));
+  return { view, form: f, effects, text: screen(f, view, room), head, keys: keysOf(f, view) };
 }
 
 const writes = (effects: Effect[]) =>
@@ -376,14 +379,16 @@ describe("keys and clicks", () => {
     expect(play([{ key: "x" }]).text.at(-1)).not.toContain("new line");
   });
 
-  test("discard asks in the buttons' row: Enter throws the draft away, anything else keeps it", () => {
+  test("discard asks in the head's corner, as Close does: Enter throws the draft away, anything else keeps it", () => {
     const asked = play([{ key: "d" }]);
     expect(asked.effects).toEqual([]);
-    expect(asked.text.at(-1)).toMatch(/Discard draft\?\s+Discard ↵\s+Keep \[esc\]/);
-    expect(asked.text.join("\n")).not.toContain("Create");
-    expect(play([{ key: "d" }], FORM, { ...ROOM, hasAllKeys: false }).text.at(-1)).toContain(
-      "Keep [k]",
-    );
+    expect(asked.head).toMatch(/Discard draft\?\s+Discard ↵\s+Keep \[esc\]$/);
+    expect(play([]).head).not.toContain("Discard");
+    // The buttons under the draft stand quiet while it asks: dim, and none of them a control.
+    const quiet = draw(FORM, asked.view, ROOM).footer.flatMap((l) => l.spans);
+    expect(quiet.length).toBeGreaterThan(0);
+    expect(quiet.every((sp) => sp.role === "dim" && sp.hit === undefined)).toBe(true);
+    expect(play([{ key: "d" }], FORM, { ...ROOM, hasAllKeys: false }).head).toContain("Keep [k]");
     expect(play([{ key: "d" }, { enter: true }]).effects).toEqual([{ do: "discard" }]);
     expect(play([{ key: "d" }, { escape: true }])).toMatchObject({
       effects: [],

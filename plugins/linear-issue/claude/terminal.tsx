@@ -58,7 +58,8 @@ export type PaneProps = {
 export function terminalPane(k: Els, p: PaneProps): { tree: JSX.Element; drawn: Drawn } {
   // A pane above the prompt is a few rows high, and the engine frames it: the head gives its
   // two rows to the draft there.
-  const hasHead = p.rows >= ROOMY;
+  // While Discard asks, its question stands in the head, which a short pane then shows too.
+  const hasHead = p.rows >= ROOMY || p.view.isConfirming;
   const drawn = draw(p.form, p.view, {
     width: p.width,
     // The hint for the keyboard, and the blank row over it, show only while it is needed.
@@ -72,7 +73,7 @@ export function terminalPane(k: Els, p: PaneProps): { tree: JSX.Element; drawn: 
     fieldRows: 2,
     isFieldFlush: true,
   });
-  const head = sheetHead({ width: p.width - CARD_INSET.length, title: TITLE });
+  const head = sheetHead({ width: p.width - CARD_INSET.length, title: TITLE, close: drawn.close });
   const lines: Line[] = [
     ...(hasHead ? [{ ...head, spans: [span(CARD_INSET), ...head.spans] }, blank()] : []),
     ...drawn.body,

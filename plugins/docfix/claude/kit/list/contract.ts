@@ -1,4 +1,5 @@
 /** The list's contract: rows of a line or two each under group rows, behind rails. No host imports. */
+import type { Button } from "../buttons/contract.ts";
 
 /**
  * What a row is set to: left alone (`○`), chosen (`●`, in the accent) or set aside (`–`, the
@@ -23,9 +24,6 @@ export type ListRow = {
   markHit?: string;
 };
 
-/** A dim control at the right of a group's row, bold under the mouse. */
-export type ListAction = { label: string; hit: string; hovered?: boolean };
-
 export type ListGroup = {
   /** A path or a name. A long one is cut from the left, since a path is read from its end. */
   label: string;
@@ -36,8 +34,8 @@ export type ListGroup = {
   rows: ListRow[];
   /** The control the group's label is. */
   hit?: string;
-  /** Controls at the right of the group's row. */
-  actions?: ListAction[];
+  /** Controls at the right of the group's row, quiet until the pointer is on one; no key is shown. */
+  actions?: Button[];
 };
 
 export type List = {

@@ -11,6 +11,13 @@ export type Button = {
   isLit?: boolean;
   /** Kept when a single row has to drop entries. */
   essential?: boolean;
+  /** Under the pointer: bold, as `hover` in the row's options makes it. */
+  hovered?: boolean;
+  /**
+   * Dim until the pointer is on it: a control beside what it acts on, such as a group's, or one
+   * with nothing to do now.
+   */
+  isQuiet?: boolean;
 };
 
 export type ButtonRowOptions = {

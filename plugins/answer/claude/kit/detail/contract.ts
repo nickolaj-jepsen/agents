@@ -1,4 +1,5 @@
 /** The detail's contract: one item read whole, cut to a height. No host imports. */
+import type { Button } from "../buttons/contract.ts";
 
 /** A row of what an item points at: a dim key, and the value hanging beside it. */
 export type DetailItem = {
@@ -8,30 +9,19 @@ export type DetailItem = {
   isQuote?: boolean;
 };
 
-/** A control at the end of a section's rule, label first with its key dim after it. */
-export type DetailAction = {
-  label: string;
-  hotkey: string;
-  hit: string;
-  /** Under the mouse: bold. */
-  hovered?: boolean;
-  /** Nothing to do now, as Next on the last piece: dim. */
-  isDim?: boolean;
-};
-
 export type DetailSection = {
   /**
    * A rule across the top of the section, these dim words at its start: between pieces. Several
    * are set apart by a short rule, as the parts of a frame's caption are.
    */
   rule?: string | readonly string[];
-  /** A control at the rule's end. */
-  action?: DetailAction;
+  /** A control at the rule's end, label first with its key dim after it. */
+  action?: Button;
   /** A dim heading over the section. */
   heading?: string;
-  /** Prose in inline Markdown; each `\n` starts a line. */
+  /** Markdown, set as `prose` sets it. */
   text?: string;
-  /** Keyed rows: what the item points at. */
+  /** Keyed rows: what the item points at, drawn as `fields` without keys. */
   items?: DetailItem[];
 };
 

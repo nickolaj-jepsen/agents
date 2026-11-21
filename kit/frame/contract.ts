@@ -37,6 +37,8 @@ export type CaptionFrame = {
     hover?: CloseAction;
     /** What the question says, where there is room for it. @default "Discard answers?" */
     question?: string;
+    /** The key Keep answers to, where Escape never reaches the frame. @default "esc" */
+    keep?: string;
   };
   /** Lines laid out for `width - 2 * captionFrameLayout.x` cells. */
   body: Line[];

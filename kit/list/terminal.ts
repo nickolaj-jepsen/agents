@@ -8,6 +8,7 @@ import {
   hitSpans,
   inline,
   line,
+  moreText,
   span,
   spansWidth,
   truncate,
@@ -17,7 +18,9 @@ import {
   type Style,
 } from "../lines.ts";
 import { tokens } from "../tokens.ts";
-import type { List, ListAction, ListGroup, ListRow } from "./contract.ts";
+import type { Button } from "../buttons/contract.ts";
+import { buttonRow } from "../buttons/terminal.ts";
+import type { List, ListGroup, ListRow } from "./contract.ts";
 
 const GAP = " ".repeat(tokens.gutter);
 
@@ -87,11 +90,11 @@ function spread(left: Span[], right: Span[], width: number): Span[] {
   return right.length ? [...cut, span(" ".repeat(Math.max(1, pad))), ...right] : cut;
 }
 
-const actionSpans = (actions: readonly ListAction[]): Span[] =>
-  actions.flatMap((a, i) => [
-    ...(i ? [span(GAP)] : []),
-    span(a.label, { role: a.hovered ? "text" : "dim", bold: a.hovered || undefined, hit: a.hit }),
-  ]);
+const actionSpans = (actions: readonly Button[]): Span[] =>
+  buttonRow(
+    actions.map((a) => ({ ...a, hotkey: "", isQuiet: true })),
+    Number.MAX_SAFE_INTEGER,
+  )[0]?.spans ?? [];
 
 /** A line behind its group's rail, or as it is where the list draws none. */
 const behind = (l: List, state: { active?: boolean; answered?: boolean }, row: Line): Line =>
@@ -304,8 +307,8 @@ export function list(l: List, width: number): Line[] {
   const up = rowsIn(entries.slice(0, w.top + (stands && !under ? 1 : 0)));
   const down = rowsIn(entries.slice(w.top + w.rows));
   const text = [
-    up ? `${tokens.glyph.more.up} ${up} more` : "",
-    down ? `${tokens.glyph.more.down} ${down} more` : "",
+    up ? moreText(tokens.glyph.more.up, up) : "",
+    down ? moreText(tokens.glyph.more.down, down) : "",
   ]
     .filter(Boolean)
     .join(GAP);

@@ -17,7 +17,6 @@ import { captionFrameLayout, closeOf } from "../claude/kit/frame/contract.ts";
 import { captionFrame, captionParts, captionRoom } from "../claude/kit/frame/terminal.ts";
 import {
   blank,
-  cellWidth,
   line,
   span,
   spansWidth,
@@ -275,6 +274,7 @@ function listOf(s: ScreenState, l: { mode: Mode; list?: number }): List {
       actions: isActive
         ? (["apply", "dismiss"] as const).map((choice) => ({
             label: choice === "apply" ? "Apply all" : "Dismiss all",
+            hotkey: "",
             hit: allHit(choice, target),
             hovered: s.hover === allHit(choice, target),
           }))
@@ -416,7 +416,7 @@ function readerDetail(s: ScreenState, o: ScreenOptions, l: Layout): Detail | und
           hotkey: "n",
           hit: BUTTONS.next,
           hovered: s.hover === BUTTONS.next,
-          isDim: piece >= count - 1,
+          isQuiet: piece >= count - 1,
         }
       : undefined;
   // What the rule says, by the room it has: that a migration filed it and from which harness,
@@ -463,14 +463,8 @@ function footerRow(s: ScreenState, room: number): Line {
     const row = buttonRow(keys, room)[0] ?? line([]);
     return line(row.spans.map(({ text }) => span(text, { role: "dim" })));
   }
-  const plain = buttonRow(keys, room)[0] ?? line([]);
-  let x = 0;
-  let hover: { x: number; y: number } | undefined;
-  for (const sp of plain.spans) {
-    if (s.hover && sp.hit === s.hover && !hover) hover = { x, y: 0 };
-    x += cellWidth(sp.text);
-  }
-  return hover ? (buttonRow(keys, room, { hover })[0] ?? plain) : plain;
+  const hovered = keys.map((k) => ({ ...k, hovered: k.hit !== undefined && k.hit === s.hover }));
+  return buttonRow(hovered, room)[0] ?? line([]);
 }
 
 /**
@@ -606,7 +600,7 @@ function docEntry(s: ScreenState, target: string): string | undefined {
 const stepped = (choice: Choice | undefined): Choice | undefined =>
   choice === undefined ? "apply" : choice === "apply" ? "dismiss" : undefined;
 
-function scrollBy(s: ScreenState, o: ScreenOptions, zone: "list" | "detail", by: number) {
+function scrollZone(s: ScreenState, o: ScreenOptions, zone: "list" | "detail", by: number) {
   const l = layout(s, o);
   if (zone === "list") {
     const max = listTopMax(listOf(s, l), l.innerWidth);
@@ -647,7 +641,7 @@ export function reduce(
   const isReading = s.reader !== undefined;
   switch (intent.do) {
     case "move": {
-      if (isReading) return done(scrollBy(s, o, "detail", intent.by));
+      if (isReading) return done(scrollZone(s, o, "detail", intent.by));
       const ids = order(s);
       const at = ids.indexOf(q?.id ?? "");
       const to = ids[Math.max(0, Math.min(ids.length - 1, at + intent.by))];
@@ -684,7 +678,7 @@ export function reduce(
       return done({ ...s, reader: s.reader + 1, scroll: { ...s.scroll, detail: 0 } });
     }
     case "scroll":
-      return done(scrollBy(s, o, intent.zone, intent.by));
+      return done(scrollZone(s, o, intent.zone, intent.by));
     case "main":
       return done(s, isAnySet(s) ? "submit" : "close");
     case "close":

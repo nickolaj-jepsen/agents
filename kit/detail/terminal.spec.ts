@@ -49,12 +49,12 @@ describe("a detail", () => {
     expect(rows[4]!.spans[0]).toMatchObject({ role: "dim" });
   });
 
-  test("cut to a height ends in a dim ↓ more; scrolled, it starts with ↑ more", () => {
+  test("cut to a height, its edges count what is out of sight, as every kit window does", () => {
     const cut = detail({ ...ITEM, height: 4 }, 24).map(textOf);
-    expect(cut).toEqual(["wrong · seen 3×", "A title that wraps onto", "a second row", "↓ more"]);
+    expect(cut).toEqual(["wrong · seen 3×", "A title that wraps onto", "a second row", "↓ 7 more"]);
     const max = detailRange({ ...ITEM, height: 4 }, 24);
     const end = detail({ ...ITEM, height: 4, offset: max }, 24).map(textOf);
-    expect(end).toEqual(["↑ more", "", "path   a/b.nix", "quote  “said so”"]);
+    expect(end).toEqual(["↑ 7 more", "", "path   a/b.nix", "quote  “said so”"]);
     expect(detail({ ...ITEM, height: 4, offset: max + 5 }, 24)).toEqual(
       detail({ ...ITEM, height: 4, offset: max }, 24),
     );
@@ -136,7 +136,7 @@ describe("a framed detail", () => {
     const rows = detail(d, 28).map(textOf);
     for (const row of rows) expect(row === "" || row.startsWith("  ")).toBe(true);
     for (const row of rows) expect(row.length).toBeLessThanOrEqual(26);
-    expect(rows.at(-1)).toBe("  ↓ more");
+    expect(rows.at(-1)).toBe("  ↓ 6 more");
     expect(detailRange(d, 28)).toBe(detailRange({ ...ITEM, height: 5 }, 24));
   });
 });
@@ -158,7 +158,9 @@ describe("a detail with little room", () => {
 
   test("a control with nothing to do now is dim", () => {
     const [row] = detail(
-      { sections: [{ rule: "E", action: { label: "Next", hotkey: "n", hit: "n", isDim: true } }] },
+      {
+        sections: [{ rule: "E", action: { label: "Next", hotkey: "n", hit: "n", isQuiet: true } }],
+      },
       30,
     );
     expect(row!.spans.find((s) => s.text === "Next")).toMatchObject({ role: "dim" });

@@ -36,6 +36,8 @@ export type DraftChip = {
   discardKey: string;
   /** Discard was pressed once: the next press throws the draft away. */
   isArmed: boolean;
+  /** The control under the pointer, where the client reports it. */
+  hover?: string;
 };
 
 /** A draft put aside: its title, Open and Discard. */
@@ -54,12 +56,19 @@ export function draftChip(form: Form, width: number, o: DraftChip): Line {
     ],
     what,
     [
-      { hotkey: o.openKey, label: "Open", hit: CHIP.open, essential: true },
+      {
+        hotkey: o.openKey,
+        label: "Open",
+        hit: CHIP.open,
+        essential: true,
+        hovered: o.hover === CHIP.open,
+      },
       {
         hotkey: o.discardKey,
         label: o.isArmed ? "Sure? Discard" : "Discard",
         hit: CHIP.discard,
         essential: true,
+        hovered: o.hover === CHIP.discard,
       },
     ],
     width,

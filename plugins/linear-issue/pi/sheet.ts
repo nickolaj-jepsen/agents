@@ -15,7 +15,7 @@ import {
   type TuiMouseEvent,
   type TuiMouseEventResult,
 } from "@earendil-works/pi-tui";
-import { closeHit } from "../../../kit/frame/contract.ts";
+import { closeOf } from "../../../kit/frame/contract.ts";
 import {
   cellAt,
   fitPainted,
@@ -169,7 +169,7 @@ export class DraftSheet implements Component, Focusable {
     const lines = sheet({
       width,
       title: TITLE,
-      close: { hover: this.hover === closeHit("close") ? "close" : undefined },
+      close: { ...drawn.close, hover: closeOf(this.hover) },
       body: drawn.body,
       notice: drawn.notice,
       footer: drawn.footer,

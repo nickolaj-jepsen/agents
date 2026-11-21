@@ -5,7 +5,6 @@
  */
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import type { Component, TUI, TuiMouseEvent, TuiMouseEventResult } from "@earendil-works/pi-tui";
-import { hovered } from "../../../kit/lines.ts";
 import { cellAt, paintLines, type Cell } from "../../../kit/paint/pi.ts";
 import { draftChip } from "../core/chip.ts";
 import type { Form } from "../core/draft.ts";
@@ -40,8 +39,9 @@ export class DraftChip implements Component {
       // Discard is the mouse's here: a key typed at the prompt is the prompt's.
       discardKey: "",
       isArmed: state.isArmed,
+      hover: this.hover,
     });
-    const painted = paintLines(this.theme, hovered([drawn], this.hover), width);
+    const painted = paintLines(this.theme, [drawn], width);
     this.cells = painted.cells[0] ?? [];
     return painted.lines;
   }

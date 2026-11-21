@@ -18,14 +18,15 @@ export default defineComponent({
     },
     {
       id: "cut",
-      label: "Cut to a height, a dim `↓ more` saying there is more",
+      label: "Cut to a height, a dim `↓ 7 more` counting what is below",
       story: "item-detail/cut",
       pi: yes(),
       claude: yes(),
     },
     {
       id: "scroll",
-      label: "Scrolled by `offset`: `↑ more` above and `↓ more` below; `detailRange` bounds it",
+      label:
+        "Scrolled by `offset`, with the window every kit component scrolls by (`scrolled`): `↑ n more` above and `↓ n more` below; `detailRange` bounds it",
       story: "item-detail/rule",
       pi: yes(),
       claude: yes(),

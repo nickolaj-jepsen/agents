@@ -13,8 +13,8 @@ const row = (text: string, mark: ListMark = "open", aside = "", focused = false)
 });
 
 const actions = [
-  { label: "Apply all", hit: "all:apply" },
-  { label: "Dismiss all", hit: "all:dismiss" },
+  { label: "Apply all", hotkey: "", hit: "all:apply" },
+  { label: "Dismiss all", hotkey: "", hit: "all:dismiss" },
 ];
 
 const GROUPS: ListGroup[] = [

@@ -10,6 +10,8 @@ export type Field = {
   empty?: boolean;
   /** The control its row belongs to. Without one it is only read. */
   hit?: string;
+  /** Under the pointer: its value bold in the text colour. */
+  hovered?: boolean;
 };
 
 export type FieldsOptions = {

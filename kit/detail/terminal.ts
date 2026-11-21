@@ -1,40 +1,29 @@
 /** The detail as styled lines: the one drawing both terminals paint. */
-import { controlStyle } from "../card/terminal.ts";
+import { buttonRow } from "../buttons/terminal.ts";
+import type { Button } from "../buttons/contract.ts";
+import { fields } from "../fields/terminal.ts";
 import { captionFrameLayout } from "../frame/contract.ts";
 import { captionParts, captionRule } from "../frame/terminal.ts";
 import {
   blank,
   block,
-  cellWidth,
-  fit,
   inline,
-  line,
-  literal,
+  scrolled,
   span,
   type Line,
+  type Scrolled,
   type Span,
 } from "../lines.ts";
-import { tokens } from "../tokens.ts";
-import type { Detail, DetailAction, DetailItem, DetailSection } from "./contract.ts";
+import { prose } from "../prose/terminal.ts";
+import type { Detail, DetailItem, DetailSection } from "./contract.ts";
 
-const GAP = " ".repeat(tokens.gutter);
-
-/** An action at a rule's end: its label, then its key dim, as a button row draws one. */
-function actionSpans(a: DetailAction): Span[] {
-  return [
-    span(a.label, {
-      ...(a.isDim ? { role: "dim" as const } : controlStyle({ highlighted: a.hovered })),
-      hit: a.hit,
-    }),
-    span(" ", { hit: a.hit }),
-    span(`[${a.hotkey}]`, { role: "dim", hit: a.hit }),
-  ];
-}
+/** An action at a rule's end, drawn as a button row draws one. */
+const actionSpans = (a: Button): Span[] => buttonRow([a], Number.MAX_SAFE_INTEGER)[0]?.spans ?? [];
 
 /** `─ words ── words ──── action`: the frame's rule, its words dim, across the detail. */
 function ruleRow(
   words: string | readonly string[],
-  action: DetailAction | undefined,
+  action: Button | undefined,
   width: number,
   tail = 0,
 ): Line {
@@ -48,19 +37,15 @@ function ruleRow(
 }
 
 /** Keyed rows: the keys in one dim column, each value wrapped beside its key. */
-function itemRows(items: readonly DetailItem[], width: number): Line[] {
-  const keys = Math.min(
-    Math.max(...items.map((item) => cellWidth(item.key))),
-    Math.max(4, Math.floor(width / 3)),
+const itemRows = (items: readonly DetailItem[], width: number): Line[] =>
+  fields(
+    items.map((item) => ({
+      label: item.key,
+      value: item.isQuote ? `“${item.value}”` : item.value,
+    })),
+    width,
+    { valueLines: Infinity },
   );
-  const hang = [span(" ".repeat(keys + tokens.gutter))];
-  return items.flatMap((item) =>
-    block(literal(item.isQuote ? `“${item.value}”` : item.value, { role: "text" }), width, {
-      lead: [span(fit(item.key, keys), { role: "dim" }), span(GAP)],
-      hang,
-    }),
-  );
-}
 
 /** A row of text set in to where a framed detail's rules have their words. */
 const setIn = (row: Line, by: number): Line =>
@@ -77,7 +62,7 @@ function section(s: DetailSection, d: Detail, width: number): Line[] {
     ...(s.rule !== undefined ? [ruleRow(s.rule, s.action, width, x ? x - 1 : 0)] : []),
     ...[
       ...(s.heading ? block([span(s.heading, { role: "dim" })], room) : []),
-      ...(s.text ? s.text.split("\n").flatMap((p) => block(inline(p), room)) : []),
+      ...(s.text ? prose(s.text, room) : []),
       ...(s.items?.length ? itemRows(s.items, room) : []),
     ].map((row) => setIn(row, x)),
   ];
@@ -106,39 +91,29 @@ function rowsOf(d: Detail, width: number): Line[] {
 /** Below this many rows a cut detail has no room to say so: its rows are all text. */
 const MARKED = 3;
 
-const more = (glyph: string, by = 0): Line =>
-  setIn(line([span(`${glyph} more`, { role: "dim" })]), by);
+/** The window a detail's height shows of its rows, from `offset`. */
+function windowOf(d: Detail, all: readonly Line[]): Scrolled<Line> {
+  const height = d.height ?? Infinity;
+  if (all.length <= height) return { rows: [...all], top: 0, max: 0 };
+  if (height < MARKED) {
+    const max = all.length - height;
+    const top = Math.max(0, Math.min(max, d.offset ?? 0));
+    return { rows: all.slice(top, top + height), top, max };
+  }
+  return scrolled(all, { rows: height, top: d.offset, inset: insetOf(d) });
+}
 
 /** The furthest `offset` can scroll a detail at `width`: 0 when it fits its height. */
-export function detailRange(d: Detail, width: number): number {
-  const all = rowsOf(d, width).length;
-  const height = d.height ?? Infinity;
-  if (all <= height) return 0;
-  return Math.max(0, all - height + (height < MARKED ? 0 : 1));
-}
+export const detailRange = (d: Detail, width: number): number => windowOf(d, rowsOf(d, width)).max;
 
 /**
  * One item read whole: a dim meta line, a bold title, then sections, each under a dim heading
- * or a rule, of prose and of keyed rows, a blank row between. Taller than `height`, it is cut,
- * and a dim `↑ more` and `↓ more` say what is out of sight, where it has three rows or more.
+ * or a rule, of prose and of keyed rows, a blank row between. Taller than `height`, it is a
+ * window from `offset`, and where it has three rows or more its edges count what is out of sight
+ * (`↑ 3 more`, `↓ 12 more`), as every window in the kit does.
  */
 export function detail(d: Detail, width: number): Line[] {
-  const all = rowsOf(d, width);
-  const height = d.height ?? Infinity;
-  let rows = all;
-  if (all.length > height) {
-    const offset = Math.max(0, Math.min(detailRange(d, width), d.offset ?? 0));
-    const isMarked = height >= MARKED;
-    const isTop = offset > 0 && isMarked;
-    let room = height - (isTop ? 1 : 0);
-    const isBottom = isMarked && offset + room < all.length;
-    if (isBottom) room -= 1;
-    rows = [
-      ...(isTop ? [more(tokens.glyph.more.up, insetOf(d))] : []),
-      ...all.slice(offset, offset + Math.max(0, room)),
-      ...(isBottom ? [more(tokens.glyph.more.down, insetOf(d))] : []),
-    ].slice(0, height);
-  }
+  const { rows } = windowOf(d, rowsOf(d, width));
   if (d.hit === undefined) return rows;
   return rows.map((row) => (row.spans.some((s) => s.hit) ? row : { ...row, hit: d.hit }));
 }

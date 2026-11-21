@@ -17,7 +17,7 @@ import {
   type Style,
 } from "../lines.ts";
 import { tokens } from "../tokens.ts";
-import type { ProseOptions, Scroll, Scrolled } from "./contract.ts";
+import type { ProseOptions } from "./contract.ts";
 
 const GAP = " ".repeat(tokens.gutter);
 
@@ -189,53 +189,3 @@ export function prose(text: string, width: number, { isDim = false }: ProseOptio
   while (out.length && !out[out.length - 1]?.spans.length) out.pop();
   return out;
 }
-
-/** What a marker says of the lines past its edge. */
-const marker = (glyph: string, count: number, hit: string | undefined): Line =>
-  line([span(`${glyph} ${count} more`, { role: "dim" })], hit);
-
-/**
- * The window of `lines` a room `rows` high shows, from `top`. Where lines are cut off, the
- * window's first or last row says how many, and steps the window when it is a control. A line
- * keeps its row as the window moves from the start.
- */
-export function scrolled(lines: readonly Line[], scroll: Scroll): Scrolled<Line> {
-  const rows = Math.max(0, Math.floor(scroll.rows));
-  if (lines.length <= rows || rows < 1) return { rows: lines.slice(0, rows), top: 0, max: 0 };
-  // One row cannot show a line and say there are more: it says how many there are.
-  if (rows === 1)
-    return { rows: [marker(tokens.glyph.more.down, lines.length, undefined)], top: 0, max: 0 };
-  if (rows === 2) {
-    // No room for a marker at each edge: one line, and the count of the side with more to it.
-    const at = Math.max(0, Math.min(lines.length - 1, Math.floor(scroll.top ?? 0)));
-    const line = lines.slice(at, at + 1);
-    const after = lines.length - at - 1;
-    return {
-      rows: after
-        ? [...line, marker(tokens.glyph.more.down, after, scroll.hits?.down)]
-        : [marker(tokens.glyph.more.up, at, scroll.hits?.up), ...line],
-      top: at,
-      max: lines.length - 1,
-    };
-  }
-  // Scrolled as far as it goes, the up marker and the last `rows - 1` lines show.
-  const max = lines.length - rows;
-  const top = Math.max(0, Math.min(max, Math.floor(scroll.top ?? 0)));
-  const from = top > 0 ? top + 1 : 0;
-  const room = rows - (top > 0 ? 1 : 0);
-  const isCut = from + room < lines.length;
-  const to = from + room - (isCut ? 1 : 0);
-  return {
-    rows: [
-      ...(top > 0 ? [marker(tokens.glyph.more.up, from, scroll.hits?.up)] : []),
-      ...lines.slice(from, to),
-      ...(isCut ? [marker(tokens.glyph.more.down, lines.length - to, scroll.hits?.down)] : []),
-    ],
-    top,
-    max,
-  };
-}
-
-/** `top` after a step of `by` lines, for a window that was drawn with `scrolled`. */
-export const scrollBy = (window: Pick<Scrolled<unknown>, "top" | "max">, by: number) =>
-  Math.max(0, Math.min(window.max, window.top + by));

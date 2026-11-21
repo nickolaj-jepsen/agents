@@ -59,13 +59,19 @@ export function buttonRow(
     }
     const start = spansWidth(spans) + (spans.length ? tokens.gutter : 0);
     if (start >= width) break;
-    const isHovered = hover?.y === rows.length && hover.x >= start && hover.x < start + chip.width;
+    const isHovered =
+      chip.hovered ||
+      (hover?.y === rows.length && hover.x >= start && hover.x < start + chip.width);
     const entry: Span[] =
       chip.hit === undefined
         ? [span(`${chip.shortcut} ${chip.label}`, { role: "dim" })]
         : [
             span(chip.label, {
-              ...controlStyle({ primary: chip.isLit, highlighted: isHovered }),
+              ...controlStyle({
+                primary: chip.isLit,
+                highlighted: isHovered,
+                rest: chip.isQuiet ? "dim" : "text",
+              }),
               hit: chip.hit,
             }),
             ...(chip.shortcut

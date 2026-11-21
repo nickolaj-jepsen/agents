@@ -50,8 +50,8 @@ One item read whole: a meta line, a wrapped title, sections under dim headings o
 Features:
 
 - A dim meta line, a bold title, then prose and keyed rows under dim headings: pi yes; claude yes
-- Cut to a height, a dim `↓ more` saying there is more: pi yes; claude yes
-- Scrolled by `offset`: `↑ more` above and `↓ more` below; `detailRange` bounds it: pi yes; claude yes
+- Cut to a height, a dim `↓ 7 more` counting what is below: pi yes; claude yes
+- Scrolled by `offset`, with the window every kit component scrolls by (`scrolled`): `↑ n more` above and `↓ n more` below; `detailRange` bounds it: pi yes; claude yes
 - Under three rows it is all text: no row goes to a marker: pi yes; claude yes
 - A section under the frame's caption rule: dim words after its first cell, a short rule between several, and a control at its end, label first and its key dim, dim when it has nothing to do: pi yes (the control's spans carry its `hit`); claude yes (the control's spans carry its `hit`)
 - In a frame's body: rules across the whole width, the frame's corner after their control, and the text set in to line up with their words: pi yes; claude yes
@@ -114,8 +114,8 @@ Features:
 
 A text of several blocks set as lines whose rows can be counted, and the window a short room shows of it.
 
-- pi: exists: `prose`, `scrolled`, `scrollBy`
-- claude: exists: `prose`, `scrolled`, `scrollBy`
+- pi: exists: `prose`
+- claude: exists: `prose`
 - status: pi system; claude system; gui legacy
 
 Features:
@@ -123,7 +123,7 @@ Features:
 - Paragraphs, lists, ticked items, headings, quotes and rules, with inline Markdown: pi yes; claude yes
 - A table sized to the room it is given, cells wrapped, the first row bold: pi yes; claude yes (the engine's Markdown sizes a table to the terminal, not to the pane)
 - Fenced code in the code colour, a long line cut instead of wrapped: pi yes (no syntax colours; a `slot` line gives pi's own renderer the block); claude yes (no syntax colours; a `slot` line gives the engine's renderer the block)
-- A window of the lines, its first and last row counting what is past them: pi yes (a marker with a `hit` steps the window; the caller keeps `top`); claude yes (a marker with a `hit` steps the window; the caller keeps `top`)
+- A window of the lines (`scrolled` in `lines.ts`, which every window in the kit uses), its first and last row counting what is past them: pi yes (a marker with a `hit` steps the window; the caller keeps `top`); claude yes (a marker with a `hit` steps the window; the caller keeps `top`)
 - Every word quiet: pi yes; claude yes
 
 ## Sheet

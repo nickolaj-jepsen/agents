@@ -5,7 +5,7 @@ export default defineComponent({
   name: "Prose",
   purpose:
     "A text of several blocks set as lines whose rows can be counted, and the window a short room shows of it.",
-  impl: { pi: ["prose", "scrolled", "scrollBy"], claude: ["prose", "scrolled", "scrollBy"] },
+  impl: { pi: "prose", claude: "prose" },
   status: { pi: "system", claude: "system", gui: "legacy" },
   source: "prose/terminal.ts",
   features: [
@@ -32,7 +32,8 @@ export default defineComponent({
     },
     {
       id: "window",
-      label: "A window of the lines, its first and last row counting what is past them",
+      label:
+        "A window of the lines (`scrolled` in `lines.ts`, which every window in the kit uses), its first and last row counting what is past them",
       story: "prose/window",
       pi: yes("a marker with a `hit` steps the window; the caller keeps `top`"),
       claude: yes("a marker with a `hit` steps the window; the caller keeps `top`"),

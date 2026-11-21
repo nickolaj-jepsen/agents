@@ -9,13 +9,14 @@ import { choiceHit, choiceOf, type ChoiceListItem } from "../claude/kit/card/con
 import { CARD_INSET, choice, choiceList } from "../claude/kit/card/terminal.ts";
 import { fieldHit, fieldOf, type Field } from "../claude/kit/fields/contract.ts";
 import { fields } from "../claude/kit/fields/terminal.ts";
-import { closeHit, closeOf } from "../claude/kit/frame/contract.ts";
+import { closeOf } from "../claude/kit/frame/contract.ts";
 import {
   blank,
   block,
   cellWidth,
   clamp,
-  hovered,
+  scrollBy,
+  scrolled,
   inline,
   line,
   literal,
@@ -26,7 +27,7 @@ import {
   type Line,
   type Span,
 } from "../claude/kit/lines.ts";
-import { prose, scrollBy, scrolled } from "../claude/kit/prose/terminal.ts";
+import { prose } from "../claude/kit/prose/terminal.ts";
 import { tokens } from "../claude/kit/tokens.ts";
 import { labelOf, PRIORITIES, type Form, type Option } from "./draft.ts";
 
@@ -113,9 +114,17 @@ export type Drawn = {
   /** Over the buttons, under a blank row of its own: a duplicate found, or the search for one. */
   notice?: Line;
   footer: Line[];
+  /**
+   * Close as the head draws it: while Discard asks, the question stands there, in the corner,
+   * and the buttons under the draft are quiet.
+   */
+  close: { confirming: boolean; question: string; keep: string };
   /** The description's window as drawn, for the next step of it. */
   window: { top: number; max: number; page: number };
 };
+
+/** What a step draws: the screen less the head, which `draw` adds. */
+type Screen = Omit<Drawn, "close">;
 
 /**
  * What a key or a click asks of the client; the view's own changes are already made. Only
@@ -200,7 +209,7 @@ const chosenOf = (f: Form, id: FieldId): string[] =>
           ? f.labelIds
           : [f.project];
 
-function fieldRows(f: Form): Field[] {
+function fieldRows(f: Form, hover?: string): Field[] {
   const chosen = f.labels.filter((l) => f.labelIds.includes(l.value)).map((l) => l.label);
   const values: Record<FieldId, { value: string; empty?: boolean }> = {
     team: { value: labelOf(f.teams, f.team) ?? f.team },
@@ -218,6 +227,7 @@ function fieldRows(f: Form): Field[] {
     key: FIELD_KEY[id],
     label: FIELD_LABEL[id],
     hit: fieldHit(id),
+    hovered: hover === fieldHit(id),
     ...values[id],
   }));
 }
@@ -248,7 +258,9 @@ type Entry = Button | false | undefined;
 const buttons = (all: Entry[], room: Room, lead: Span[] = []): Line[] =>
   setAll(
     buttonRow(
-      all.filter((b): b is Button => Boolean(b)),
+      all
+        .filter((b): b is Button => Boolean(b))
+        .map((b) => ({ ...b, hovered: b.hit !== undefined && b.hit === room.hover })),
       innerOf(room),
       { wrap: true, lead },
     ),
@@ -277,7 +289,13 @@ const said = (text: string, role: "dim" | "error" | "text" | "warning" = "dim"):
 const titleLines = (f: Form, room: Room, max: number, isActive?: boolean): Line[] =>
   setAll(
     block(literal(f.title || "Untitled", { role: "text", bold: true }), innerOf(room), {
-      lead: [span(TITLE_KEY, { role: keyRole(isActive) }), span(GAP)],
+      lead: [
+        span(
+          TITLE_KEY,
+          room.hover === HIT.title ? { role: "text", bold: true } : { role: keyRole(isActive) },
+        ),
+        span(GAP),
+      ],
       max,
       hit: HIT.title,
     }),
@@ -308,7 +326,7 @@ function noticeOf(f: Form, room: Room): Line {
     return set(
       line(
         [
-          span(words, { role: "warning" }),
+          span(words, { role: "warning", bold: room.hover === HIT.duplicate || undefined }),
           ...(left > 8 ? [span(GAP + truncate(title, left), { role: "dim" })] : []),
         ],
         HIT.duplicate,
@@ -352,28 +370,8 @@ const ticked = (lines: Line[]): Line[] =>
     ),
   }));
 
-/**
- * The question Discard asks, in the row it was pressed in: while it stands, it is the only
- * thing Enter answers.
- */
-const confirmFooter = (room: Room): Line[] =>
-  buttons(
-    [
-      { hotkey: "enter", label: "Discard", hit: closeHit("discard"), essential: true },
-      {
-        hotkey: room.hasAllKeys ? "esc" : KEEP_KEY,
-        label: "Keep",
-        hit: closeHit("keep"),
-        essential: true,
-      },
-    ],
-    room,
-    [span(DISCARD_PROMPT, { role: "warning" })],
-  );
-
 function reviewFooter(f: Form, view: View, room: Room): Line[] {
   if (f.phase === "filing") return sending();
-  if (view.isConfirming) return confirmFooter(room);
   return [
     ...errorLines(f, room),
     ...ticked(
@@ -432,7 +430,7 @@ const noticed = (f: Form, l: Layout) =>
  */
 function inlineFields(f: Form, room: Room, isActive?: boolean, isTight = false): Line[] {
   // Side by side, a team is its key: its name is in the row it has to itself in a taller room.
-  const all = fieldRows(f).map((row) =>
+  const all = fieldRows(f, room.hover).map((row) =>
     row.hit === fieldHit("team") ? { ...row, value: f.team } : row,
   );
   const whole = fields(all, innerOf(room), { active: isActive, inline: true });
@@ -451,13 +449,13 @@ function headOf(f: Form, room: Room, l: Layout, reserved: number, open?: FieldId
   const rows = open
     ? // A room short of rows keeps only the field whose choices are open.
       fields(
-        fieldRows(f).filter((row) => !l.isInline || row.hit === fieldHit(open)),
+        fieldRows(f, room.hover).filter((row) => !l.isInline || row.hit === fieldHit(open)),
         innerOf(room),
         { active: isActive },
       )
     : l.isInline
       ? inlineFields(f, room, isActive, l.isTight)
-      : fields(fieldRows(f), innerOf(room), { active: isActive });
+      : fields(fieldRows(f, room.hover), innerOf(room), { active: isActive });
   // The title takes every row it wants that the fields and what is under them do not need.
   // In the tightest room it leaves one row, kept to say the description is there.
   const cue = l.isTight && !open && f.description.trim() ? 1 : 0;
@@ -516,6 +514,7 @@ function choicesOf(f: Form, id: FieldId, view: View, room: Room): Line[] {
       })),
       chosen: options.flatMap((o, i) => (chosen.includes(o.value) ? [i] : [])),
       focus: view.focus,
+      hover: choiceOf(room.hover) >= 0 ? choiceOf(room.hover) : undefined,
       multiple: isMultiple(id),
       active: room.isActive,
     },
@@ -546,22 +545,20 @@ const pickFooter = (id: FieldId, room: Room): Line[] =>
         room,
       );
 
-function review(f: Form, view: View, room: Room): Drawn {
+function review(f: Form, view: View, room: Room): Screen {
   const isTyping = view.step === "title";
   const open = typeof view.step === "object" ? view.step.pick : undefined;
-  const footer = view.isConfirming
-    ? confirmFooter(room)
-    : isTyping
-      ? buttons(
-          [
-            { hotkey: "enter", label: "Save", hit: HIT.act("save"), isLit: true },
-            { hotkey: room.hasAllKeys ? "esc" : "", label: "Cancel", hit: HIT.act("back") },
-          ],
-          room,
-        )
-      : open
-        ? pickFooter(open, room)
-        : reviewFooter(f, view, room);
+  const footer = isTyping
+    ? buttons(
+        [
+          { hotkey: "enter", label: "Save", hit: HIT.act("save"), isLit: true },
+          { hotkey: room.hasAllKeys ? "esc" : "", label: "Cancel", hit: HIT.act("back") },
+        ],
+        room,
+      )
+    : open
+      ? pickFooter(open, room)
+      : reviewFooter(f, view, room);
   // The notice is the draft's own: a step inside it gives that row to what it shows.
   const isOwn = !isTyping && !open;
   let hasNotice = isOwn;
@@ -604,6 +601,7 @@ function review(f: Form, view: View, room: Room): Drawn {
     rows: textRows,
     top: view.top,
     hits: { up: HIT.up, down: HIT.down },
+    hovered: room.hover === HIT.up ? "up" : room.hover === HIT.down ? "down" : undefined,
   });
 
   if (isTyping) {
@@ -640,7 +638,7 @@ function review(f: Form, view: View, room: Room): Drawn {
  * several rows, under the title alone so it has every row the fields and the notice gave up.
  * The client draws the field's rules with it, since each field has its own.
  */
-function writing(f: Form, view: View, room: Room): Drawn {
+function writing(f: Form, view: View, room: Room): Screen {
   const footer = buttons(
     [
       { hotkey: "enter", label: "Save", hit: HIT.act("save"), isLit: true },
@@ -691,36 +689,34 @@ const ANSWERS = 2;
  * The page a duplicate is decided on. What Enter sends is always in sight: both answers and the
  * comment come first, and what the issue says of itself gives way to them row by row.
  */
-function duplicate(f: Form, view: View, room: Room): Drawn {
+function duplicate(f: Form, view: View, room: Room): Screen {
   const d = f.duplicate;
   if (!d) return review(f, { ...view, step: "review" }, room);
   const footer =
     f.phase === "filing"
       ? sending()
-      : view.isConfirming
-        ? confirmFooter(room)
-        : [
-            ...errorLines(f, room),
-            ...ticked(
-              buttons(
-                [
-                  {
-                    hotkey: "enter",
-                    label: view.focus === 0 ? "Send comment" : "Create issue",
-                    hit: HIT.act("send"),
-                    isLit: true,
-                  },
-                  {
-                    hotkey: room.hasAllKeys ? "esc" : BACK_KEY,
-                    label: "Back",
-                    hit: HIT.act("back"),
-                  },
-                  opensButton(view),
-                ],
-                room,
-              ),
+      : [
+          ...errorLines(f, room),
+          ...ticked(
+            buttons(
+              [
+                {
+                  hotkey: "enter",
+                  label: view.focus === 0 ? "Send comment" : "Create issue",
+                  hit: HIT.act("send"),
+                  isLit: true,
+                },
+                {
+                  hotkey: room.hasAllKeys ? "esc" : BACK_KEY,
+                  label: "Back",
+                  hit: HIT.act("back"),
+                },
+                opensButton(view),
+              ],
+              room,
             ),
-          ];
+          ),
+        ];
   const inner = innerOf(room);
   // A blank row over the buttons, while the room has one to give.
   const gap = room.rows - footer.length >= 7 ? 1 : 0;
@@ -735,6 +731,7 @@ function duplicate(f: Form, view: View, room: Room): Drawn {
         chosen: view.focus === index,
         focused: view.focus === index,
         active: room.isActive,
+        hovered: room.hover === choiceHit(index),
         hit: choiceHit(index),
       },
       room.width,
@@ -836,7 +833,7 @@ function withSeed(lines: Line[], f: Form, room: Room, footerRows: number): Line[
   ];
 }
 
-function drafting(f: Form, view: View, room: Room): Drawn {
+function drafting(f: Form, view: View, room: Room): Screen {
   const step = (label: string, state: "done" | "now" | "next"): Line =>
     set(
       line([
@@ -850,9 +847,7 @@ function drafting(f: Form, view: View, room: Room): Drawn {
       ]),
     );
   const isWriting = f.stage === "writing";
-  const footer = view.isConfirming
-    ? confirmFooter(room)
-    : buttons([{ hotkey: "d", label: "Discard", hit: HIT.act("discard") }], room);
+  const footer = buttons([{ hotkey: "d", label: "Discard", hit: HIT.act("discard") }], room);
   return {
     body: withSeed(
       [
@@ -868,16 +863,14 @@ function drafting(f: Form, view: View, room: Room): Drawn {
   };
 }
 
-function failed(f: Form, view: View, room: Room): Drawn {
-  const footer = view.isConfirming
-    ? confirmFooter(room)
-    : buttons(
-        [
-          { hotkey: "enter", label: "Try again", hit: HIT.act("retry"), isLit: true },
-          { hotkey: "d", label: "Discard", hit: HIT.act("discard") },
-        ],
-        room,
-      );
+function failed(f: Form, view: View, room: Room): Screen {
+  const footer = buttons(
+    [
+      { hotkey: "enter", label: "Try again", hit: HIT.act("retry"), isLit: true },
+      { hotkey: "d", label: "Discard", hit: HIT.act("discard") },
+    ],
+    room,
+  );
   return {
     body: withSeed(
       [
@@ -898,28 +891,35 @@ function failed(f: Form, view: View, room: Room): Drawn {
 /** The screen for `form` in `room`. */
 export function draw(form: Form | null, view: View, room: Room): Drawn {
   // While Discard asks, no key but its answer does anything: the keys stand quiet.
-  const quiet: Room = view.isConfirming ? { ...room, isActive: false } : room;
-  const drawn = ((): Drawn => {
+  const quiet: Room = view.isConfirming ? { ...room, isActive: false, hover: undefined } : room;
+  const calm: View = { ...view, isConfirming: false };
+  const drawn = ((): Screen => {
     if (!form)
       return {
         body: [said("No Linear draft open.")],
         footer: [],
         window: { top: 0, max: 0, page: 1 },
       };
-    if (form.phase === "drafting") return drafting(form, view, quiet);
-    if (form.phase === "failed") return failed(form, view, quiet);
-    if (view.step === "duplicate") return duplicate(form, view, quiet);
-    if (view.step === "body") return writing(form, view, quiet);
-    return review(form, view, quiet);
+    if (form.phase === "drafting") return drafting(form, calm, quiet);
+    if (form.phase === "failed") return failed(form, calm, quiet);
+    if (view.step === "duplicate") return duplicate(form, calm, quiet);
+    if (view.step === "body") return writing(form, calm, quiet);
+    return review(form, calm, quiet);
   })();
-  if (room.hover === undefined) return drawn;
   return {
     ...drawn,
-    body: hovered(drawn.body, room.hover),
-    notice: drawn.notice && hovered([drawn.notice], room.hover)[0],
-    footer: hovered(drawn.footer, room.hover),
+    footer: view.isConfirming ? stilled(drawn.footer) : drawn.footer,
+    close: {
+      confirming: view.isConfirming,
+      question: DISCARD_PROMPT,
+      keep: room.hasAllKeys ? "esc" : KEEP_KEY,
+    },
   };
 }
+
+/** Rows that stand quiet while a question elsewhere waits for its answer: dim, and no controls. */
+const stilled = (lines: readonly Line[]): Line[] =>
+  lines.map((l) => line(l.spans.map(({ text }) => span(text, { role: "dim" }))));
 
 // ---- acting
 

@@ -3,6 +3,7 @@
  * terminal are both cell grids, so a component is drawn once, here, and each client only paints
  * the result (`paint/pi.ts`, `paint/claude.tsx`). No host imports.
  */
+import { tokens } from "./tokens.ts";
 
 /**
  * A colour role of the style. Each painter maps it to its own theme.
@@ -430,28 +431,85 @@ export const padding = (spans: readonly Span[], width: number): Span[] => {
   return room > 0 ? [span(" ".repeat(room))] : [];
 };
 
-const isWords = (s: Span) => s.role === undefined || s.role === "text" || s.role === "accent";
+/** What a window's marker says of the rows past its edge: `↓ 3 more`. */
+export const moreText = (glyph: string, count: number) => `${glyph} ${count} more`;
+
+export type Scroll = {
+  /** Rows the window has, its markers included. */
+  rows: number;
+  /** Lines scrolled past. Read the one that applies back from `Scrolled.top`. */
+  top?: number;
+  /** The controls its markers are: each steps the window. Without them they are only read. */
+  hits?: { up: string; down: string };
+  /** The marker under the pointer: bold, as a control is. */
+  hovered?: "up" | "down";
+  /** Cells the markers are set in by, to stand under the lines' words. @default 0 */
+  inset?: number;
+};
+
+export type Scrolled<Row> = {
+  rows: Row[];
+  /** `top` as it applies: within what there is to scroll. */
+  top: number;
+  /** The furthest `top` goes. Zero when everything shows. */
+  max: number;
+};
 
 /**
- * `lines` with the control `hit` drawn as the one under the pointer, for a client that reports
- * it: its words bold in the text colour, its accent kept and underlined, its key left quiet. A
- * control of quiet words alone takes the text colour whole.
+ * The window of `lines` a room `rows` high shows, from `top`. Where lines are cut off, the
+ * window's first or last row says how many, and steps the window when it is a control. A line
+ * keeps its row as the window moves from the start.
  */
-export function hovered(lines: readonly Line[], hit: string | undefined): Line[] {
-  if (hit === undefined) return [...lines];
-  const mine = (l: Line, s: Span) => (s.hit ?? l.hit) === hit && s.text.trim() !== "";
-  const hasWords = lines.some((l) => l.spans.some((s) => mine(l, s) && isWords(s)));
-  return lines.map((l) =>
-    l.hit !== hit && !l.spans.some((s) => s.hit === hit)
-      ? l
-      : {
-          ...l,
-          spans: l.spans.map((s) => {
-            if (!mine(l, s)) return s;
-            if (s.role === "accent") return { ...s, bold: true, underline: true };
-            if (!hasWords || isWords(s)) return { ...s, role: "text" as const, bold: true };
-            return s;
-          }),
-        },
-  );
+export function scrolled(lines: readonly Line[], scroll: Scroll): Scrolled<Line> {
+  const rows = Math.max(0, Math.floor(scroll.rows));
+  const marker = (side: "up" | "down", count: number, hit: string | undefined): Line => {
+    const glyph = tokens.glyph.more[side];
+    const isHovered = hit !== undefined && scroll.hovered === side;
+    return line(
+      [
+        ...(scroll.inset ? [span(" ".repeat(scroll.inset))] : []),
+        span(moreText(glyph, count), {
+          role: isHovered ? "text" : "dim",
+          bold: isHovered || undefined,
+        }),
+      ],
+      hit,
+    );
+  };
+  if (lines.length <= rows || rows < 1) return { rows: lines.slice(0, rows), top: 0, max: 0 };
+  // One row cannot show a line and say there are more: it says how many there are.
+  if (rows === 1) return { rows: [marker("down", lines.length, undefined)], top: 0, max: 0 };
+  if (rows === 2) {
+    // No room for a marker at each edge: one line, and the count of the side with more to it.
+    const at = Math.max(0, Math.min(lines.length - 1, Math.floor(scroll.top ?? 0)));
+    const shown = lines.slice(at, at + 1);
+    const after = lines.length - at - 1;
+    return {
+      rows: after
+        ? [...shown, marker("down", after, scroll.hits?.down)]
+        : [marker("up", at, scroll.hits?.up), ...shown],
+      top: at,
+      max: lines.length - 1,
+    };
+  }
+  // Scrolled as far as it goes, the up marker and the last `rows - 1` lines show.
+  const max = lines.length - rows;
+  const top = Math.max(0, Math.min(max, Math.floor(scroll.top ?? 0)));
+  const from = top > 0 ? top + 1 : 0;
+  const room = rows - (top > 0 ? 1 : 0);
+  const isCut = from + room < lines.length;
+  const to = from + room - (isCut ? 1 : 0);
+  return {
+    rows: [
+      ...(top > 0 ? [marker("up", from, scroll.hits?.up)] : []),
+      ...lines.slice(from, to),
+      ...(isCut ? [marker("down", lines.length - to, scroll.hits?.down)] : []),
+    ],
+    top,
+    max,
+  };
 }
+
+/** `top` after a step of `by` lines, for a window that was drawn with `scrolled`. */
+export const scrollBy = (window: Pick<Scrolled<unknown>, "top" | "max">, by: number) =>
+  Math.max(0, Math.min(window.max, window.top + by));

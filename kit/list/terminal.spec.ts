@@ -99,8 +99,8 @@ describe("a list", () => {
             label: "docs/a.md",
             hit: "doc",
             actions: [
-              { label: "Apply all", hit: "all:apply", hovered: true },
-              { label: "Dismiss all", hit: "all:dismiss" },
+              { label: "Apply all", hotkey: "", hit: "all:apply", hovered: true },
+              { label: "Dismiss all", hotkey: "", hit: "all:dismiss" },
             ],
             rows: [],
           },

@@ -13,11 +13,11 @@ import {
   type Span,
 } from "../lines.ts";
 import { tokens } from "../tokens.ts";
-import { captionFrameLayout, closeHit, type CaptionFrame, type CloseAction } from "./contract.ts";
+import { captionFrameLayout, closeHit, type CaptionFrame } from "./contract.ts";
 
-const confirmButtons: Button[] = [
+const confirmButtons = (keep: string): Button[] => [
   { label: "Discard", hotkey: "enter", hit: closeHit("discard"), essential: true },
-  { label: "Keep", hotkey: "esc", hit: closeHit("keep"), essential: true },
+  { label: "Keep", hotkey: keep, hit: closeHit("keep"), essential: true },
 ];
 
 /**
@@ -26,7 +26,12 @@ const confirmButtons: Button[] = [
  */
 export function closeSpans(
   width: number,
-  { confirming, hover, question = "Discard answers?" }: NonNullable<CaptionFrame["close"]>,
+  {
+    confirming,
+    hover,
+    question = "Discard answers?",
+    keep = "esc",
+  }: NonNullable<CaptionFrame["close"]>,
 ): Span[] | undefined {
   const room = width - 7;
   if (!confirming) {
@@ -40,7 +45,7 @@ export function closeSpans(
     ];
   }
   const buttonsWidth =
-    cellWidth(`Discard ${tokens.glyph.enter}`) + tokens.gutter + cellWidth("Keep [esc]");
+    cellWidth(`Discard ${tokens.glyph.enter}`) + tokens.gutter + cellWidth(`Keep [${keep}]`);
   if (room < buttonsWidth) return undefined;
   const prompt = question;
   // The question goes before the caption: while it is asked, it is what the frame is about.
@@ -48,16 +53,11 @@ export function closeSpans(
     room >= buttonsWidth + tokens.gutter + cellWidth(prompt)
       ? [span(prompt, { role: "warning" })]
       : [];
-  const row = buttonRow(confirmButtons, room, { lead })[0];
-  if (!row) return undefined;
-  const hovered = hover as CloseAction | undefined;
-  let at = 0;
-  for (const s of row.spans) {
-    if (hovered && s.hit === closeHit(hovered))
-      return buttonRow(confirmButtons, room, { lead, hover: { x: at, y: 0 } })[0]?.spans;
-    at += cellWidth(s.text);
-  }
-  return row.spans;
+  const buttons = confirmButtons(keep).map((b) => ({
+    ...b,
+    hovered: hover !== undefined && b.hit === closeHit(hover),
+  }));
+  return buttonRow(buttons, room, { lead })[0]?.spans;
 }
 
 /** Cells a title needs to be worth cutting into. */
