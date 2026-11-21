@@ -1,7 +1,6 @@
 /** A pick list: numbered rows that each end on how to take them, "build" or a skill to route them to. */
 import type { FormItem, Option } from "../forms.ts";
-import { type Doc, indent, RULE, type Split, unbold } from "./lines.ts";
-import type { Start } from "./starts.ts";
+import { type Doc, type Label, type Line, type LabelLine, type Split, unbold } from "./doc.ts";
 
 // How a row ends: `· build`, `· /grill-me first`, `· brainstorm it first`, or a line that is only "build it".
 const ROUTES: [RegExp, string][] = [
@@ -12,51 +11,44 @@ const ROUTES: [RegExp, string][] = [
 
 const routeOf = (line: string) => ROUTES.find(([pattern]) => pattern.test(line))?.[1];
 
-/** The row at `start`: its own lines (the start and those indented under it) and where the next line is. */
-function rowLines(doc: Doc, start: Start): { own: string[]; next: number } {
-  const own = [doc.lines[start.line] ?? ""];
-  let next = start.line + 1;
-  for (; next < doc.lines.length; next++) {
-    const line = doc.lines[next] ?? "";
-    if (!line.trim() || indent(line) < 2) break;
-    own.push(line);
-  }
-  return { own, next };
+/** A row's own lines: the one it starts on and those indented under it. */
+function rowLines(doc: Doc, start: Line): Line[] {
+  const under = doc.lines.slice(start.at + 1);
+  const end = under.findIndex((line) => line.kind === "blank" || line.indent < 2);
+  return [start, ...(end < 0 ? under : under.slice(0, end))];
 }
 
-/** The pick list a run is, or null when a row does not end on a route; the prose between rows stays with the row before. */
-export function picksOf(doc: Doc, run: Start[]): Split | null {
+/** One row as an item: build it, or the route its last line names. Prose up to the next row stays with it. */
+function rowOf(label: Label, own: Line[], between: Line[], route: string): FormItem {
+  // `<title> · <size> · <next>` keeps its fields beside the title.
+  const [title = "", ...fields] = [label.title, label.rest].filter(Boolean).join(" ").split(" · ");
+  const said = between.filter((line) => line.kind !== "blank" && line.kind !== "rule");
+  const body = [fields.join(" · "), ...[...own.slice(1), ...said].map((line) => line.raw.trim())];
+  const options: Option[] = [{ key: "build", text: "Build it", detail: "" }];
+  if (route !== "build") options.push({ key: route, text: `Route to ${route}`, detail: "" });
+  return {
+    label: label.label,
+    title: unbold(title),
+    body: body.filter(Boolean).join("\n"),
+    options,
+    recommended: route === "build" ? "build it" : `route it to ${route}`,
+    recommendedOption: options.length - 1,
+  };
+}
+
+/** The pick list a run of numbered rows is, or null when a row does not end on a route. */
+export function picksOf(doc: Doc, run: LabelLine[]): Split | null {
   const items: FormItem[] = [];
   let tail = doc.lines.length;
-  for (const [index, start] of run.entries()) {
-    const { own, next } = rowLines(doc, start);
-    const route = routeOf(own.at(-1) ?? "");
+  for (const [i, start] of run.entries()) {
+    const own = rowLines(doc, start);
+    const route = routeOf(own.at(-1)?.raw ?? "");
     if (!route) return null;
-    const following = run[index + 1];
-    if (!following) tail = next;
-    const between = following ? doc.lines.slice(next, following.line) : [];
-    // `<title> · <size> · <next>` keeps its fields beside the title.
-    const [title = "", ...fields] = [start.title, start.rest]
-      .filter(Boolean)
-      .join(" ")
-      .split(" · ");
-    const detail = [
-      fields.join(" · "),
-      ...own.slice(1).map((line) => line.trim()),
-      ...between.filter((line) => line.trim() && !RULE.test(line)).map((line) => line.trim()),
-    ].filter(Boolean);
-    const build = route === "build";
-    const options: Option[] = [{ key: "build", text: "Build it", detail: "" }];
-    if (!build) options.push({ key: route, text: `Route to ${route}`, detail: "" });
-    items.push({
-      label: start.label,
-      title: unbold(title),
-      body: detail.join("\n"),
-      options,
-      recommended: build ? "build it" : `route it to ${route}`,
-      recommendedOption: build ? 0 : 1,
-    });
+    const rowEnd = start.at + own.length;
+    const next = run[i + 1]?.at;
+    if (next === undefined) tail = rowEnd;
+    items.push(rowOf(start.mark, own, doc.lines.slice(rowEnd, next ?? rowEnd), route));
   }
-  const form = { kind: "picks" as const, items };
-  return items.length ? { form, starts: run.map((start) => start.line), tail } : null;
+  const starts = run.map((start) => start.at);
+  return items.length ? { form: { kind: "picks", items }, starts, tail } : null;
 }

@@ -1,36 +1,27 @@
 /**
- * Recommendations: the words an agent leans with, and which options they name. Options are
- * named by their keys, letters or numbers alike, so one reader serves a lettered list and a menu.
+ * How a recommendation is worded, and which options its words name. Options are named by their
+ * keys, letters or numbers alike, so one reader serves a lettered list and a numbered one.
  */
-import { splitClosing, tidy, unbold } from "./lines.ts";
+import { splitClosing, tidy, unbold } from "./doc.ts";
 
-// `Recommended: A. …`, `**My recommendation:** …`, `➡️ …`, `> Recommendation: …`: group 1 is what follows the
-// label. `My recommendation is …` has no colon: group 2 is the whole line, label kept, since it reads as a sentence.
-export const RECOMMENDED =
-  /^\s*(?:>\s*)?(?:(?:\**(?:(?:My )?recommend(?:ed|ation)(?: answer)?)\**\s*:\s*\**|➡️\s*)\s*(.*)|(\**(?:My )?recommend(?:ed|ation)(?: answer)?\**\s+is\s+.*))$/i;
-
-// A paragraph that opens by leaning: "I'd pick A, since…", "I lean toward C: …".
+// A paragraph that opens by leaning: "I'd pick A, since…", "I lean toward C: …", "If you want one, I'd go with 2".
 const LEAN_START =
-  /^\**(?:I(?:'d| would| recommend| lean| suggest)\b|My (?:recommendation|pick|lean)\b)/i;
+  /^(?:If\b[^.?!\n]*?,\s+)?(?:I(?:'d| would| recommend| lean| suggest)\b|My (?:recommendation|pick|lean)\b)/i;
 // Words that lean, ahead of the key they lean on: "I'd go with 2", "recommend: B".
 const LEAN_WORDS =
   /\b(?:recommend(?:ed|ation)?:?|lean toward(?:s)?|(?:I'd|I would) (?:go with|pick|try|start with|choose|do))\s+/gi;
 // "I recommend yes, it is cheap": a yes or no leaned on in a sentence of its own.
 const YES_NO = /\b(?:I (?:recommend|suggest)|my recommendation is)\s+((?:yes|no)\b[^.\n]*\.?)/i;
 
+// What strings keys together: "A, B and D", "A through C", "1–3".
+const LINK = String.raw`\s*(?:,\s*and|,|and|&|\+|plus|through|to|–|-)\s*`;
 // A dash is a range between keys ("A–C", "1-3"), but an em dash only ever sets a reason apart: "C — A is the mechanics".
 const SPAN = /through|\bto\b|[–-]/;
-const LINK = String.raw`(?:,\s*and|,|and|&|\+|plus|through|to|–|-)`;
-// What may follow a key that opens a recommendation: "A. The format", "B, because", "C for now", never "A small".
+// What may follow a lone key that opens a recommendation: "A. The format", "B, because", "C for now", never "A small".
 const OPENING_END = /^(?:$|\s*[.,:;)]|\s+[—–-]\s|\s+(?:for now|first|initially|to start|today)\b)/;
+const EDGE = "(?![A-Za-z0-9])";
 
-const escape = (key: string) => key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-/** The keys a chain strings on after the first: ", B and D", "–C", " through C". */
-const chainAfter = (text: string, any: string) =>
-  new RegExp(String.raw`^(?:\s*${LINK}\s*\**(?:${any})\**(?![A-Za-z0-9]))+`).exec(text)?.[0];
-
-/** Where keys sit among `keys`. Two joined by a dash or "through" are everything between them, unless they run backwards ("C – A is…"). */
+/** Where the named keys sit among `keys`. Two joined as a span are everything between them, unless they run backwards ("C – A is…"). */
 function indicesOf(named: string[], keys: string[], span: boolean): number[] {
   const at = named
     .map((key) => keys.findIndex((k) => k.toLowerCase() === key.toLowerCase()))
@@ -42,56 +33,44 @@ function indicesOf(named: string[], keys: string[], span: boolean): number[] {
 }
 
 /**
- * The options a text opens on: "A", "(a)", "Option 2", "A, B and D", "A through C", "1–3".
- * `strict` is for the text of a recommendation, where a lone key must be followed by punctuation
- * and may be lower case ("(a)"); in the words after a lean word ("I'd go with A") a lower case
- * "a" is a word, and the key need only end.
+ * The options a text with no bold marks opens on: "A", "(a)", "Option 2", "A, B and D", "A through
+ * C", "1–3". `strict` is for the words of a recommendation, where a lone key must be followed by
+ * punctuation and may be lower case ("(a)"); after a lean word ("I'd go with A") a lower case "a"
+ * is a word, and the key need only end. The keys strung on after the first are always as printed.
  */
 function opening(text: string, keys: string[], strict: boolean): number[] {
   // Longest first, so "11" is not read as "1" twice.
   const any = [...keys]
     .sort((a, b) => b.length - a.length)
-    .map(escape)
+    .map((key) => key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
     .join("|");
   const first = new RegExp(
-    String.raw`^\**(?:option\s+|number\s+)?\(?(${any})(?![A-Za-z0-9])`,
+    String.raw`^(?:option\s+|number\s+)?\(?(${any})${EDGE}`,
     strict ? "i" : "",
   ).exec(text);
   if (!first) return [];
   const rest = text.slice(first[0].length);
-  const closed = rest.replace(/^\)?\**/, "");
-  const chain = chainAfter(closed, any);
-  if (strict && !chain && !OPENING_END.test(rest) && !OPENING_END.test(closed)) return [];
-  const more = chain?.match(new RegExp(String.raw`(?<![A-Za-z0-9])(?:${any})(?![A-Za-z0-9])`, "g"));
-  return indicesOf([first[1] ?? "", ...(more ?? [])], keys, chain ? SPAN.test(chain) : false);
+  const chain = new RegExp(`^(?:${LINK}(?:${any})${EDGE})+`).exec(rest.replace(/^\)/, ""))?.[0];
+  if (strict && !chain && !OPENING_END.test(rest)) return [];
+  const linked = chain?.match(new RegExp(`(?<![A-Za-z0-9])(?:${any})${EDGE}`, "g")) ?? [];
+  return indicesOf([first[1] ?? "", ...linked], keys, SPAN.test(chain ?? ""));
 }
 
 /** The options a recommendation's own words open on. */
-export const opensOn = (recommended: string, keys: string[]) => opening(recommended, keys, true);
+export const opensOn = (recommended: string, keys: string[]) =>
+  opening(unbold(recommended), keys, true);
 
 /** The options a text leans on in passing: "I'd go with 1, 2 and 6". */
 export function leansOn(text: string, keys: string[]): number[] {
-  for (const lean of text.matchAll(LEAN_WORDS)) {
-    const named = opening(text.slice(lean.index + lean[0].length), keys, false);
+  const said = text.replaceAll("**", "");
+  for (const lean of said.matchAll(LEAN_WORDS)) {
+    const named = opening(said.slice(lean.index + lean[0].length), keys, false);
     if (named.length) return named;
   }
   return [];
 }
 
-/** The Recommended line at `block[i]`, with the quote lines that go on with it; `end` is the last line it used. */
-export function recommendedAt(block: string[], i: number): { text: string; end: number } | null {
-  const line = block[i] ?? "";
-  const match = RECOMMENDED.exec(line);
-  if (!match) return null;
-  const more: string[] = [];
-  let end = i;
-  if (line.trimStart().startsWith(">"))
-    while ((block[end + 1] ?? "").trimStart().startsWith(">"))
-      more.push((block[++end] ?? "").trimStart().slice(1).trim());
-  return { text: unbold([match[1] ?? match[2] ?? "", ...more].filter(Boolean).join(" ")), end };
-}
-
-/** What a question's text says besides its lean, once the lean is taken out. */
+/** What a question says once its lean is taken out of its words. */
 export type Leaning = { lean: string; title: string; body: string };
 
 /**
@@ -102,10 +81,10 @@ export function leanParagraph(title: string, body: string, keys: string[]): Lean
   const paras = body.split(/\n{2,}/);
   for (const [i, para] of paras.entries()) {
     const said = splitClosing(para);
-    const leans = said.before && LEAN_START.test(said.before) && leansOn(said.before, keys).length;
-    if (!leans || said.after) continue;
+    const lean = unbold(said.before);
+    if (said.after || !LEAN_START.test(lean) || !leansOn(lean, keys).length) continue;
     paras[i] = said.ask;
-    return { lean: unbold(said.before), title, body: paras.filter(Boolean).join("\n\n") };
+    return { lean, title, body: paras.filter(Boolean).join("\n\n") };
   }
   return null;
 }

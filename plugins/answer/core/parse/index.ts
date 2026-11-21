@@ -1,33 +1,43 @@
 /**
- * Reading what an agent's last message asks. `split` is the entry, and it tries two things:
+ * Reading what an agent's last message asks, in three layers:
  *
- * - the runs of numbered or Q-labelled starts (`starts`), best first, each through `runs`, which
- *   reads a run as a pick list (`picks`), a menu of alternatives with one question (`menu`), or a
- *   round of questions;
- * - failing that, one lettered question with no number (`lone`).
- *
- * A round's questions, and the lone one, are read by `item`: options, recommendation, body. `lean`
- * knows how a recommendation reads and which options it names; `lines` is what they all share.
+ * - `doc`: what each line is. Every line is matched once, into a kind and a mark (a label, a
+ *   lettered option, a recommendation), and nothing above looks at markup again.
+ * - `question`: one question from where it opens and the lines under it: options, recommendation,
+ *   body. `lean` knows how a recommendation is worded and which options it names.
+ * - the shapes, which only find which lines are questions: `round` (several labelled ones),
+ *   `picks` (a pick list) and `single` (one question with no label). `split` below is the order
+ *   they are tried in.
  *
  * The three parts of a message, head, items and tail, cover every line: nothing an agent wrote
  * goes unshown. Parsing is lenient on purpose: a false positive costs a hint the person ignores.
  */
 import type { Form } from "../forms.ts";
-import { type Split, RULE, readDoc, tidy } from "./lines.ts";
-import { loneOf } from "./lone.ts";
-import { runOf } from "./runs.ts";
-import { candidates, findStarts } from "./starts.ts";
+import { type Doc, isLabel, type LabelLine, readDoc, type Split, tidy } from "./doc.ts";
+import { picksOf } from "./picks.ts";
+import { lastRun, roundOf } from "./round.ts";
+import { bareOf, letteredOf, menuOf } from "./single.ts";
 
 export type { Split };
+
+/**
+ * A numbered list, as the first of: a pick list; alternatives under a line that is the question
+ * ("Want me to:"); questions; alternatives that a closing question picks from.
+ */
+function listOf(doc: Doc, run: LabelLine[]): Split | null {
+  return (
+    picksOf(doc, run) ?? menuOf(doc, run, true) ?? roundOf(doc, run) ?? menuOf(doc, run, false)
+  );
+}
 
 /** Where a message's lines went, or null when it asks nothing. */
 export function split(text: string): Split | null {
   const doc = readDoc(text);
-  for (const run of candidates(findStarts(doc))) {
-    const found = runOf(doc, run);
-    if (found) return found;
-  }
-  return loneOf(doc);
+  const labels = doc.lines.filter(isLabel);
+  // Q-labelled questions say what they are, so they are read before any numbered list.
+  const asked = lastRun(labels.filter((label) => label.mark.q));
+  const numbered = lastRun(labels.filter((label) => !label.mark.q));
+  return roundOf(doc, asked) ?? listOf(doc, numbered) ?? letteredOf(doc) ?? bareOf(doc);
 }
 
 /** The round or pick list a message ends on, or null when it asks nothing. */
@@ -41,6 +51,6 @@ export function tailOf(text: string): string {
   const found = split(text);
   if (!found) return "";
   const lines = readDoc(text).lines.slice(found.tail);
-  while (lines.length && (!lines[0]?.trim() || RULE.test(lines[0] ?? ""))) lines.shift();
-  return tidy(lines);
+  const from = lines.findIndex((line) => line.kind !== "blank" && line.kind !== "rule");
+  return from < 0 ? "" : tidy(lines.slice(from).map((line) => line.raw));
 }
