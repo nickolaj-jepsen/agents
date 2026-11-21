@@ -1,41 +1,41 @@
-# docfix/pi/readerClicked 70x24 @26,0 (44x18)
-─ Doc suggestions ── 3 left ────── Close × ─
-│  AGENTS.md        Apply all  Dismiss all
-│  ❯ ○ just build is not enough to v…   3×
-
-│  docs/hosts.md
-│    ○ The legacy card was removed; …   2×
-
-│  docs/modules.md
-│    ○ A leaf that imports a third-p…
-
-   just build is not enough to verify a pi
-   change; the docs say it is.
-   Evidence · 2 days ago ──────── Read [e]
-
-
-
-   Close ↵  Apply [a]  Dismiss [d]
-────────────────────────────────────────────
+# docfix/pi/readerClicked 70x24 @24,0 (46x18)
+│ ─ Doc suggestions ── 3 left ────── Close × ─
+│   AGENTS.md         Apply all  Dismiss all
+│   ❯ ○ just build is not enough to       3×
+│       verify a pi change; the docs…
+│
+│   docs/hosts.md
+│     ○ The legacy card was removed;      2×
+│       the section still describes it.
+│
+│
+│   ↓ 1 more
+│
+│ ────────────────────────────────────────────
+│   just build is not enough to verify a pi
+│   change; the docs say it is.
+│ ─ Evidence ── 2 days ago ──────── Read [e] ─
+│
+│   Close ↵  Apply [a]  Dismiss [d]
 --- styles
-1 . 2x15 . 1x2 . 3x6 . 1x6 . 4x7 . 1
-4 .x2 5x9 .x8 3x9 .x2 3x11
-4 .x2 6 . 3 . 6x30 .x2 3x3
--
-3 .x2 3x13
-3 .x4 3 . 4x30 .x2 3x3
--
-3 .x2 3x15
-3 .x4 3 . 4x30
--
-.x3 6x39
-.x3 6x27
-.x3 3x21 . 1x8 . 4x4 . 3x3
--
--
--
-.x3 4x5 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3
-1x44
+1 . 1 . 2x15 . 1x2 . 3x6 . 1x6 . 4x7 . 1
+1 .x3 5x9 .x9 3x9 .x2 3x11
+1 .x3 6 . 3 . 6x27 .x6 3x3
+1 .x7 6x29
+1
+1 .x3 3x13
+1 .x5 3 . 4x28 .x5 3x3
+1 .x7 4x31
+1
+1
+1 .x3 3x8
+1
+1 . 1x44
+1 .x3 6x39
+1 .x3 6x27
+1 . 1 . 3x8 . 1x2 . 3x10 . 1x8 . 4x4 . 3x3 . 1
+1
+1 .x3 4x5 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold

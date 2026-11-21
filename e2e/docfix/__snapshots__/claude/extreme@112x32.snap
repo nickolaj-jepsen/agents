@@ -2,28 +2,28 @@
 │                                               ✕
 │ ─ Doc suggestions ── 5 left ────────── Close × ─
 │
-│ │  AGENTS.md            Apply all  Dismiss all
-│ │  ❯ ○ The section says the build verifi…  12×
-│ │    ○ UnbrokenUnbrokenUnbrokenUnbrokenU…   3×
-│ │  …an-equally-long-file-name-for-the-guide.md
-│ │    ○ A claim under a very long target …
-│ │  docs/hosts.md
-│ │    ○ Short.
-│ │  docs/日本語のドキュメント.md
-│ │    ○ この節は古くなっています。ビルド…   99+
+│   AGENTS.md             Apply all  Dismiss all
+│   ❯ ○ The section says the build verifies  12×
+│       a pi change, but the build only…
+│     ○ UnbrokenUnbrokenUnbrokenUnbrokenUnb   3×
+│       rokenUnbrokenUnbrokenUnbrokenUnbro…
 │
-│    wrong · seen 12× · 2 days ago
-│    The section says the build verifies a pi
-│    change, but the build only type-checks the
-│    cores and the pi halves and never starts a…
-│
-│    Evidence · 2 pieces ────────────── Read [e]
-│    just build printed error: derivation failed
-│    while evaluating the attribute and its
-│    ↓ more
-│
-│    Close ↵  Apply [a]  Dismiss [d]
+│   …-an-equally-long-file-name-for-the-guide.md
+│     ○ A claim under a very long target
+│       path, so the group header must be…
+│   ↓ 2 more
 │ ────────────────────────────────────────────────
+│   wrong · seen 12× · 2 days ago
+│   The section says the build verifies a pi
+│   change, but the build only type-checks the
+│   cores and the pi halves and never starts an…
+│
+│ ─ Evidence ── 2 pieces ────────────── Read [e] ─
+│   just build printed error: derivation failed
+│   while evaluating the attribute and its
+│   ↓ more
+│
+│   Close ↵  Apply [a]  Dismiss [d]
 │
 │
 │
@@ -31,28 +31,28 @@
 1 .x47 2
 1 . 2 . 3x15 . 2x2 . 2x6 . 2x10 .x9 2
 1
-1 .x4 4x9 .x12 2x9 .x2 2x11
-1 .x4 5 . 2 . 5x34 .x2 2x3
-1 .x6 2 .x37 2x3
-1 . 2 .x2 2x43
-1 . 2 .x4 2
-1 . 2 .x2 2x13
-1 . 2 .x4 2
-1 . 2 .x2 2x28
-1 . 2 .x4 2 .x37 2x3
+1 .x3 4x9 .x13 2x9 .x2 2x11
+1 .x3 5 . 2 . 5x35 .x2 2x3
+1 .x7 5x32
+1 .x5 2 .x38 2x3
 1
-1 .x4 2x29
-1 .x4 5x40
-1 .x4 5x42
-1 .x4 5x43
 1
-1 .x4 2x19 . 2x14 .x6 2x3
-1 .x4 1x10
+1 .x3 2x44
+1 .x5 2
 1
-1 .x4 2x6
-1
-1 .x10 2 .x8 2x3 .x10 2x3
+1 .x3 2x8
 1 . 2x48
+1 .x3 2x29
+1 .x3 5x40
+1 .x3 5x42
+1 .x3 5x44
+1
+1 . 2 . 2x8 . 2x2 . 2x8 . 2x14 .x6 2x3 . 2
+1 .x3 1x10
+1
+1 .x3 2x6
+1
+1 .x9 2 .x8 2x3 .x10 2x3
 1
 1
 1

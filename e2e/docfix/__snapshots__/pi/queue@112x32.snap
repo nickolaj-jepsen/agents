@@ -1,57 +1,57 @@
-# docfix/pi/queue 112x32 @62,0 (50x26)
-─ Doc suggestions ── 3 left ──────────── Close × ─
-
-│  AGENTS.md              Apply all  Dismiss all
-│  ❯ ○ just build is not enough to verify …   3×
-
-│  docs/hosts.md
-│    ○ The legacy card was removed; the se…   2×
-
-│  docs/modules.md
-│    ○ A leaf that imports a third-party m…
-
-   wrong · seen 3× · 2 days ago
-   just build is not enough to verify a pi
-   change; the docs say it is.
-
-   Evidence · 2 days ago ────────────── Read [e]
-   AGENTS.md: the line contradicts what the code
-   does now.
-
-
-
-
-
-
-   Close ↵  Apply [a]  Dismiss [d]
-──────────────────────────────────────────────────
+# docfix/pi/queue 112x32 @60,0 (52x26)
+│ ─ Doc suggestions ── 3 left ──────────── Close × ─
+│
+│   AGENTS.md               Apply all  Dismiss all
+│   ❯ ○ just build is not enough to verify a    3×
+│       pi change; the docs say it is.
+│
+│   docs/hosts.md
+│     ○ The legacy card was removed; the        2×
+│       section still describes it.
+│
+│   docs/modules.md
+│     ○ A leaf that imports a third-party
+│       module imports it on every host; the…
+│
+│
+│
+│
+│
+│ ──────────────────────────────────────────────────
+│   wrong · seen 3× · 2 days ago
+│
+│ ─ Evidence ── 2 days ago ────────────── Read [e] ─
+│   AGENTS.md: the line contradicts what the code
+│   does now.
+│
+│   Close ↵  Apply [a]  Dismiss [d]
 --- styles
-1 . 2x15 . 1x2 . 3x6 . 1x12 . 4x7 . 1
--
-4 .x2 5x9 .x14 3x9 .x2 3x11
-4 .x2 6 . 3 . 6x36 .x2 3x3
--
-3 .x2 3x13
-3 .x4 3 . 4x36 .x2 3x3
--
-3 .x2 3x15
-3 .x4 3 . 4x36
--
-.x3 3x28
-.x3 6x39
-.x3 6x27
--
-.x3 3x21 . 1x14 . 4x4 . 3x3
--
--
--
--
--
--
--
--
-.x3 4x5 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3
-1x50
+1 . 1 . 2x15 . 1x2 . 3x6 . 1x12 . 4x7 . 1
+1
+1 .x3 5x9 .x15 3x9 .x2 3x11
+1 .x3 6 . 3 . 6x36 .x3 3x3
+1 .x7 6x30
+1
+1 .x3 3x13
+1 .x5 3 . 4x32 .x7 3x3
+1 .x7 4x27
+1
+1 .x3 3x15
+1 .x5 3 . 4x33
+1 .x7 4x37
+1
+1
+1
+1
+1
+1 . 1x50
+1 .x3 3x28
+1
+1 . 1 . 3x8 . 1x2 . 3x10 . 1x14 . 4x4 . 3x3 . 1
+1
+1
+1
+1 .x3 4x5 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold

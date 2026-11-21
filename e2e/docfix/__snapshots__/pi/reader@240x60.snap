@@ -1,113 +1,113 @@
-# docfix/pi/reader 240x60 @176,0 (64x54)
-─ Doc suggestions ── 2 left ────────────────────────── Close × ─
-
-   ○ docs/agent-hub.md · missing · seen 2× · 2 da…  Back [esc]
-   agent-hub's unittest suite needs a short TMPDIR and
-   markdown-it-py on PYTHONPATH; run it with uv, not bare
-   python.
-
-   Evidence 1 of 2 · 2 days ago ───────────────────── Next [n]
-
-   Hit it again from a worktree: python -m unittest failed 20
-   socket tests with AF_UNIX path too long.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   Close ↵  Apply [a]  Dismiss [d]
-────────────────────────────────────────────────────────────────
+# docfix/pi/reader 240x60 @174,0 (66x54)
+│ ─ Doc suggestions ── 2 left ────────────────────────── Close × ─
+│
+│   ○ docs/agent-hub.md · missing · seen 2× · 2 day…  Back [esc]
+│   agent-hub's unittest suite needs a short TMPDIR and
+│   markdown-it-py on PYTHONPATH; run it with uv, not bare
+│   python.
+│
+│ ─ Evidence 1 of 2 ── 2 days ago ───────────────────── Next [n] ─
+│
+│   Hit it again from a worktree: python -m unittest failed 20
+│   socket tests with AF_UNIX path too long.
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│   Close ↵  Apply [a]  Dismiss [d]
 --- styles
-1 . 2x15 . 1x2 . 3x6 . 1x26 . 4x7 . 1
--
-.x3 3 . 4x17 3x28 .x2 4x4 . 3x5
-.x3 5x51
-.x3 5x54
-.x3 5x7
--
-.x3 3x28 . 1x21 . 4x4 . 3x3
--
-.x33 6x18
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
-.x3 4x5 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3
-1x64
+1 . 1 . 2x15 . 1x2 . 3x6 . 1x26 . 4x7 . 1
+1
+1 .x3 3 . 4x17 3x29 .x2 4x4 . 3x5
+1 .x3 5x51
+1 .x3 5x54
+1 .x3 5x7
+1
+1 . 1 . 3x15 . 1x2 . 3x10 . 1x21 . 4x4 . 3x3 . 1
+1
+1 .x33 6x18
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1 .x3 4x5 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold

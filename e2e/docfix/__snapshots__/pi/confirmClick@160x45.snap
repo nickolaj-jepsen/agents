@@ -1,89 +1,88 @@
-# docfix/pi/confirmClick 160x45 @96,0 (64x39)
-─ ● 1 · 2 left ───────────── Discard 1?  Discard ↵  Keep [esc] ─
-
-│  AGENTS.md
-│    ● just build is not enough to verify a pi change; t…   3×
-
-│  docs/hosts.md                        Apply all  Dismiss all
-│  ❯ ○ The legacy card was removed; the section still de…   2×
-
-│  docs/modules.md
-│    ○ A leaf that imports a third-party module imports …
-
-   stale · seen 2× · 40 days ago
-   The legacy card was removed; the section still describes
-   it.
-
-   Evidence · 40 days ago ─────────────────────────── Read [e]
-   docs/hosts.md: the line contradicts what the code does now.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   Draft prompt ↵  Apply [a]  Dismiss [d]
-────────────────────────────────────────────────────────────────
+# docfix/pi/confirmClick 160x45 @94,0 (66x39)
+│ ─ ● 1 · 2 left ───────────── Discard 1?  Discard ↵  Keep [esc] ─
+│
+│   AGENTS.md
+│     ● just build is not enough to verify a pi change; the   3×
+│       docs say it is.
+│
+│   docs/hosts.md                         Apply all  Dismiss all
+│   ❯ ○ The legacy card was removed; the section still        2×
+│       describes it.
+│
+│   docs/modules.md
+│     ○ A leaf that imports a third-party module imports it
+│       on every host; the page should say that module mus…
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│ ────────────────────────────────────────────────────────────────
+│   stale · seen 2× · 40 days ago
+│
+│ ─ Evidence ── 40 days ago ─────────────────────────── Read [e] ─
+│   docs/hosts.md: the line contradicts what the code does now.
+│
+│   Draft prompt ↵  Apply [a]  Dismiss [d]
 --- styles
-1 . 2x3 3x9 . 1x13 . 4x10 .x2 5x7 . 3 .x2 5x4 . 3x5 . 1
--
-6 .x2 3x9
-6 .x4 7 . 7x50 .x2 3x3
--
-5 .x2 2x13 .x24 3x9 .x2 3x11
-5 .x2 8 . 3 . 8x50 .x2 3x3
--
-3 .x2 3x15
-3 .x4 3 . 5x50
--
-.x3 3x29
-.x3 8x56
-.x3 8x3
--
-.x3 3x22 . 1x27 . 5x4 . 3x3
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
-.x3 3x38
-1x64
+1 . 1 . 2x3 3x9 . 1x13 . 4x10 .x2 5x7 . 3 .x2 5x4 . 3x5 . 1
+1
+1 .x3 3x9
+1 .x5 6 . 6x51 .x2 3x3
+1 .x7 6x15
+1
+1 .x3 2x13 .x25 3x9 .x2 3x11
+1 .x3 7 . 3 . 7x46 .x7 3x3
+1 .x7 7x13
+1
+1 .x3 3x15
+1 .x5 3 . 5x51
+1 .x7 5x51
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1 . 1x64
+1 .x3 3x29
+1
+1 . 1 . 3x8 . 1x2 . 3x11 . 1x27 . 5x4 . 3x3 . 1
+1
+1
+1 .x3 3x38
 --- legend
 1 fg=#768186
 2 fg=#a798d7
 3 fg=#7e888e
 4 fg=#cd9a22
 5 fg=#dee0e1
-6 fg=#68b78d
-7 fg=#a798d7 bold
-8 fg=#dee0e1 bold
+6 fg=#a798d7 bold
+7 fg=#dee0e1 bold

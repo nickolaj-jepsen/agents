@@ -6,22 +6,19 @@ import { checkout, EXTREME, fileSuggestions, MANY, ONE, STRUCTURED } from "./fix
 const open = [{ type: "/docfix" }, { press: "Enter" }];
 
 /**
- * The sidebar: from its top rule, which holds Close or its question, to its bottom rule, at the
- * right of the screen. The overlay has no border of its own: its left edge is where the bottom
- * rule starts, a blank cell before it.
+ * The sidebar: from its divider to the right of the screen, and from its caption rule, which
+ * holds Close or its question, down as far as the divider runs: to the editor.
  */
 const sidebar: Region = (grid) => {
   const [close] = findText(grid, /Close ×|Keep \[esc\]/);
   if (!close) return undefined;
   const cols = grid[0]?.length ?? 0;
-  for (let y = close.y + 1; y < grid.length; y++) {
-    const row = grid[y] ?? [];
-    let x = cols;
-    while (x > 0 && row[x - 1]?.char === "─") x--;
-    if (x > 0 && cols - x >= 40 && row[x - 1]?.char === " ")
-      return { x, y: close.y, w: cols - x, h: y - close.y + 1 };
-  }
-  return undefined;
+  let x = close.x;
+  while (x > 0 && grid[close.y]?.[x]?.char !== "│") x--;
+  if (grid[close.y]?.[x]?.char !== "│") return undefined;
+  let end = close.y;
+  while (grid[end + 1]?.[x]?.char === "│") end++;
+  return { x, y: close.y, w: cols - x, h: end - close.y + 1 };
 };
 
 /** The driver has no wheel call: an SGR mouse report, button 65 down and 64 up, at a cell. */
@@ -31,6 +28,19 @@ const wheel = (down: boolean, x: number, y: number, times = 3) => ({
       await s.term.write(`\x1b[<${down ? 65 : 64};${x};${y}M`);
       await new Promise((r) => setTimeout(r, 150));
     }
+  },
+});
+
+/** A drag with the left button from one cell to another of a row, as SGR mouse reports. */
+const drag = (from: number, to: number, y: number) => ({
+  run: async (s: { term: { write(data: string): unknown } }) => {
+    const step = from < to ? 1 : -1;
+    await s.term.write(`\x1b[<0;${from};${y}M`);
+    for (let x = from + step; x !== to + step; x += step) {
+      await s.term.write(`\x1b[<32;${x};${y}M`);
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    await s.term.write(`\x1b[<0;${to};${y}m`);
   },
 });
 
@@ -78,7 +88,7 @@ export default scenarios({
     },
     set: {
       about:
-        "a then d: the first applied (accent, filled mark), the second dismissed (dim), each doc decided (green rail), the main action Draft prompt",
+        "a then d: the first applied (accent, filled mark), the second dismissed (dim), the main action Draft prompt",
       from: "queue",
       steps: [{ press: "a" }, { press: "d" }, { wait: "● 1 · – 1" }],
     },
@@ -159,7 +169,7 @@ export default scenarios({
     },
     many: {
       about:
-        "28 suggestions in 8 docs, more than fit: the keyboard's doc row on top of the window, the last row saying what is hidden",
+        "28 suggestions in 8 docs, more than fit: the keyboard's doc row on top of the window, the last row counting the suggestions above and below",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx, MANY);
@@ -167,8 +177,7 @@ export default scenarios({
       steps: [...open, { wait: "Claim number" }, { press: Array(12).fill("Down") }],
     },
     wholeDoc: {
-      about:
-        "A on a doc of several rows: every row applied, its rail green, the keyboard on the next doc",
+      about: "A on a doc of several rows: every row applied, the keyboard on the next doc",
       from: "many",
       steps: [{ press: "A" }, { wait: "● 4 ·" }],
     },
@@ -180,6 +189,16 @@ export default scenarios({
       size: [160, 45],
       sizes: [[160, 45]],
       steps: [wheel(true, 130, 8), { sleep: 300 }],
+    },
+    resized: {
+      about:
+        "the divider dragged twenty cells left: the sidebar is that much wider, and the divider bright under the pointer",
+      from: "queue",
+      // The width a drag leaves stays for the session, so this has its own.
+      fresh: true,
+      size: [160, 45],
+      sizes: [[160, 45]],
+      steps: [drag(95, 75, 10), { sleep: 300 }],
     },
     extreme: {
       about:

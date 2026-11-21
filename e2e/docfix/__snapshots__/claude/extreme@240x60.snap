@@ -2,32 +2,22 @@
 │                                                                              ✕
 │ ─ Doc suggestions ── 5 left ───────────────────────────────────────── Close × ─
 │
-│ │  AGENTS.md                                           Apply all  Dismiss all
-│ │  ❯ ○ The section says the build verifies a pi change, but the build o…  12×
-│ │    ○ UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbroken…   3×
+│   AGENTS.md                                            Apply all  Dismiss all
+│   ❯ ○ The section says the build verifies a pi change, but the build      12×
+│       only type-checks the cores and the pi halves and never starts an…
+│     ○ UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUn   3×
+│       brokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnb…
 │
-│ │  …/several/nested/levels/and-an-equally-long-file-name-for-the-guide.md
-│ │    ○ A claim under a very long target path, so the group header must …
+│   …/with/several/nested/levels/and-an-equally-long-file-name-for-the-guide.md
+│     ○ A claim under a very long target path, so the group header must be
+│       cut.
 │
-│ │  docs/hosts.md
-│ │    ○ Short.
+│   docs/hosts.md
+│     ○ Short.
 │
-│ │  docs/日本語のドキュメント.md
-│ │    ○ この節は古くなっています。ビルドが検証するのは型だけで、エージェ…  99+
-│
-│    wrong · seen 12× · 2 days ago
-│    The section says the build verifies a pi change, but the build only
-│    type-checks the cores and the pi halves and never starts an agent, so a
-│    panel that renders wrong still passes it. The section says the build…
-│
-│    Evidence · 2 pieces ───────────────────────────────────────────── Read [e]
-│    just build printed error: derivation failed while evaluating the attribute
-│    and its dependencies, error: derivation failed while evaluating the
-│    attribute and its dependencies, error: derivation failed while evaluating
-│    the attribute and its dependencies, error: derivation failed while
-│    evaluating the attribute and its dependencies, error: derivation failed
-│    while evaluating the attribute and its dependencies, error: derivation
-│    failed while evaluating the attribute and its dependencies,
+│   docs/日本語のドキュメント.md
+│     ○ この節は古くなっています。ビルドが検証するのは型だけで、エージェン  99+
+│       トを起動しないことを書き足す必要があります。全角文字と半角文字が…
 │
 │
 │
@@ -46,12 +36,22 @@
 │
 │
 │
-│
-│
-│
-│
-│    Close ↵  Apply [a]  Dismiss [d]
 │ ───────────────────────────────────────────────────────────────────────────────
+│   wrong · seen 12× · 2 days ago
+│   The section says the build verifies a pi change, but the build only
+│   type-checks the cores and the pi halves and never starts an agent, so a
+│   panel that renders wrong still passes it. The section says the build…
+│
+│ ─ Evidence ── 2 pieces ───────────────────────────────────────────── Read [e] ─
+│   just build printed error: derivation failed while evaluating the attribute
+│   and its dependencies, error: derivation failed while evaluating the
+│   attribute and its dependencies, error: derivation failed while evaluating
+│   the attribute and its dependencies, error: derivation failed while
+│   evaluating the attribute and its dependencies, error: derivation failed
+│   while evaluating the attribute and its dependencies, error: derivation
+│   failed while evaluating the attribute and its dependencies,
+│
+│   Close ↵  Apply [a]  Dismiss [d]
 │
 │
 │
@@ -59,26 +59,21 @@
 1 .x78 2
 1 . 2 . 3x15 . 2x2 . 2x6 . 2x41 .x9 2
 1
-1 .x4 4x9 .x43 2x9 .x2 2x11
-1 .x4 5 . 2 . 5x65 .x2 2x3
-1 .x6 2 .x68 2x3
+1 .x3 4x9 .x44 2x9 .x2 2x11
+1 .x3 5 . 2 . 5x62 .x6 2x3
+1 .x7 5x65
+1 .x5 2 .x69 2x3
 1
-1 . 2 .x2 2x70
-1 . 2 .x4 2
 1
-1 . 2 .x2 2x13
-1 . 2 .x4 2
+1 .x3 2x75
+1 .x5 2
 1
-1 . 2 .x2 2x28
-1 . 2 .x4 2 .x68 2x3
 1
-1 .x4 2x29
-1 .x4 5x67
-1 .x4 5x71
-1 .x4 5x69
+1 .x3 2x13
+1 .x5 2
 1
-1 .x4 2x19 . 2x45 .x6 2x3
-1 .x4 1x10
+1 .x3 2x28
+1 .x5 2 .x69 2x3
 1
 1
 1
@@ -98,17 +93,22 @@
 1
 1
 1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1 .x10 2 .x8 2x3 .x10 2x3
 1 . 2x79
+1 .x3 2x29
+1 .x3 5x67
+1 .x3 5x71
+1 .x3 5x69
+1
+1 . 2 . 2x8 . 2x2 . 2x8 . 2x45 .x6 2x3 . 2
+1 .x3 1x10
+1
+1
+1
+1
+1
+1
+1
+1 .x9 2 .x8 2x3 .x10 2x3
 1
 1
 1

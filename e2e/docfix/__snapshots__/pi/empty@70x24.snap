@@ -1,17 +1,41 @@
-# docfix/pi/empty 70x24 @26,0 (44x6)
-─ Doc suggestions ──────────────── Close × ─
-
-   No open suggestions
-
-
-────────────────────────────────────────────
+# docfix/pi/empty 70x24 @24,0 (46x18)
+│ ─ Doc suggestions ──────────────── Close × ─
+│
+│   No open suggestions
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
 --- styles
-1 . 2x15 . 1x16 . 3x7 . 1
--
-.x3 4x19
--
--
-1x44
+1 . 1 . 2x15 . 1x16 . 3x7 . 1
+1
+1 .x3 4x19
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold

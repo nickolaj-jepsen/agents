@@ -1,18 +1,18 @@
 # docfix/claude/bandClicked 70x24 @0,12 (70x7)
 ╭──────────────────────────────────────────────────────────────────✕─╮
 │ ─ Doc suggestions ── 3 left ──────────────────────────── Close × ─ │
-│ │  ❯ ○ AGENTS.md › just build is not enough to verify a pi…   3×   │
-│ │    ○ docs/hosts.md › The legacy card was removed; the se…   2×   │
-│    Close ↵  Apply [a]  Dismiss [d]                                 │
-│    Keys here  ctrl+x tab                                           │
+│   ❯ ○ AGENTS.md › just build is not enough to verify a pi …   3×   │
+│     ○ docs/hosts.md › The legacy card was removed; the sec…   2×   │
+│   Close ↵  Apply [a]  Dismiss [d]                                  │
+│   Keys here  ctrl+x tab                                            │
 ╰────────────────────────────────────────────────────────────────────╯
 --- styles
 1x67 2 1x2
 1 . 2 . 3x15 . 2x2 . 2x6 . 2x28 .x9 2 . 1
-1 .x4 4 . 2 . 2x12 4x40 .x2 2x3 .x3 1
-1 . 2 .x4 2 . 2x16 .x38 2x3 .x3 1
-1 .x10 2 .x8 2x3 .x10 2x3 .x33 1
-1 .x4 4x10 5x12 .x42 1
+1 .x3 4 . 2 . 2x12 4x41 .x2 2x3 .x3 1
+1 .x5 2 . 2x16 .x39 2x3 .x3 1
+1 .x9 2 .x8 2x3 .x10 2x3 .x34 1
+1 .x3 4x10 5x12 .x43 1
 1x70
 --- legend
 1 dim

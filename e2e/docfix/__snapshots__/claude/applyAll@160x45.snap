@@ -2,41 +2,41 @@
 │                                                                     ✕
 │ ─ Doc suggestions ── ● 4 · 24 left ───────────────────────── Close × ─
 │
-│ │  AGENTS.md
-│ │    ○ Claim number 4 about AGENTS.md: the page no longer matc…   4×
-│ │    ○ Claim number 3 about AGENTS.md: the page no longer matc…   3×
-│ │    ○ Claim number 2 about AGENTS.md: the page no longer matc…   2×
-│ │    ○ Claim number 1 about AGENTS.md: the page no longer matc…
-│ │  docs/agents.md
-│ │    ○ Claim number 8 about docs/agents.md: the page no longer…   4×
-│ │    ○ Claim number 7 about docs/agents.md: the page no longer…   3×
-│ │    ○ Claim number 6 about docs/agents.md: the page no longer…   2×
-│ │    ○ Claim number 5 about docs/agents.md: the page no longer…
-│ │  docs/homelab.md
-│ │    ○ Claim number 11 about docs/homelab.md: the page no long…   3×
-│ │    ○ Claim number 10 about docs/homelab.md: the page no long…   2×
-│ │    ○ Claim number 9 about docs/homelab.md: the page no longe…
-│ │  docs/hosts.md                              Apply all  Dismiss all
-│ │    ● Claim number 12 about docs/hosts.md: the page no longer…   4×
-│ │  ❯ ● Claim number 15 about docs/hosts.md: the page no longer…   3×
-│ │    ● Claim number 14 about docs/hosts.md: the page no longer…   2×
-│ │    ● Claim number 13 about docs/hosts.md: the page no longer…
-│ │  docs/modules.md
-│ │    ○ Claim number 16 about docs/modules.md: the page no long…   4×
-│ │    ○ Claim number 18 about docs/modules.md: the page no long…   2×
-│ │    ○ Claim number 17 about docs/modules.md: the page no long…
+│     ○ Claim number 1 about AGENTS.md: the page no longer
+│       matches what the code does.
 │
-│    ↓ 10 in 3 docs
+│   docs/agents.md
+│     ○ Claim number 8 about docs/agents.md: the page no longer     4×
+│       matches what the code does.
+│     ○ Claim number 7 about docs/agents.md: the page no longer     3×
+│       matches what the code does.
+│     ○ Claim number 6 about docs/agents.md: the page no longer     2×
+│       matches what the code does.
+│     ○ Claim number 5 about docs/agents.md: the page no longer
+│       matches what the code does.
 │
-│    stale · seen 3× · 9 days ago
-│    Claim number 15 about docs/hosts.md: the page no longer matches
-│    what the code does.
+│   docs/homelab.md
+│     ○ Claim number 11 about docs/homelab.md: the page no longer   3×
+│       matches what the code does.
+│     ○ Claim number 10 about docs/homelab.md: the page no longer   2×
+│       matches what the code does.
+│     ○ Claim number 9 about docs/homelab.md: the page no longer
+│       matches what the code does.
 │
-│    Evidence · 9 days ago ────────────────────────────────── Read [e]
-│    docs/hosts.md: the line contradicts what the code does now.
-│
-│    Draft prompt ↵  Apply [a]  Dismiss [d]
+│   docs/hosts.md                               Apply all  Dismiss all
+│   ❯ ● Claim number 12 about docs/hosts.md: the page no longer     4×
+│       matches what the code does.
+│     ● Claim number 15 about docs/hosts.md: the page no longer     3×
+│       matches what the code does.
+│     ● Claim number 14 about docs/hosts.md: the page no longer …   2×
+│   ↑ 3 more  ↓ 14 more
 │ ──────────────────────────────────────────────────────────────────────
+│   stale · seen 4× · 33 days ago
+│
+│ ─ Evidence ── 33 days ago ───────────────────────────────── Read [e] ─
+│   docs/hosts.md: the line contradicts what the code does now.
+│
+│   Draft prompt ↵  Apply [a]  Dismiss [d]
 │
 │
 │
@@ -44,41 +44,41 @@
 1 .x69 2
 1 . 2 . 3x15 . 2x2 . 4x3 2x10 . 2x25 .x9 2
 1
-1 . 2 .x2 2x9
-1 . 2 .x4 2 .x59 2x3
-1 . 2 .x4 2 .x59 2x3
-1 . 2 .x4 2 .x59 2x3
-1 . 2 .x4 2
-1 . 2 .x2 2x14
-1 . 2 .x4 2 .x59 2x3
-1 . 2 .x4 2 .x59 2x3
-1 . 2 .x4 2 .x59 2x3
-1 . 2 .x4 2
-1 . 2 .x2 2x15
-1 . 2 .x4 2 .x59 2x3
-1 . 2 .x4 2 .x59 2x3
-1 . 2 .x4 2
-1 . 5 .x2 4x13 .x30 2x9 .x2 2x11
-1 . 5 .x4 3 . 3x56 .x2 2x3
-1 . 5 .x2 6 . 3 . 7x56 .x2 2x3
-1 . 5 .x4 3 . 3x56 .x2 2x3
-1 . 5 .x4 3 . 3x56
-1 . 2 .x2 2x15
-1 . 2 .x4 2 .x59 2x3
-1 . 2 .x4 2 .x59 2x3
-1 . 2 .x4 2
-1
-1 .x4 2x14
-1
-1 .x4 2x28
-1 .x4 6x63
-1 .x4 6x19
-1
-1 .x4 2x21 . 2x34 .x6 2x3
+1 .x5 2
 1
 1
-1 .x4 3x12 . 2 .x8 2x3 .x10 2x3
+1 .x3 2x14
+1 .x5 2 .x60 2x3
+1
+1 .x5 2 .x60 2x3
+1
+1 .x5 2 .x60 2x3
+1
+1 .x5 2
+1
+1
+1 .x3 2x15
+1 .x5 2 .x60 2x3
+1
+1 .x5 2 .x60 2x3
+1
+1 .x5 2
+1
+1
+1 .x3 4x13 .x31 2x9 .x2 2x11
+1 .x3 5 . 3 . 6x55 .x4 2x3
+1 .x7 6x27
+1 .x5 3 . 3x55 .x4 2x3
+1 .x7 3x27
+1 .x5 3 . 3x57 .x2 2x3
+1 .x3 2x19
 1 . 2x70
+1 .x3 2x29
+1
+1 . 2 . 2x8 . 2x2 . 2x11 . 2x33 .x6 2x3 . 2
+1
+1
+1 .x3 3x12 . 2 .x8 2x3 .x10 2x3
 1
 1
 1
@@ -87,6 +87,5 @@
 2 fg=#999999
 3 fg=#d77757 bold
 4 fg=#d77757
-5 fg=#4eba65
-6 bold
-7 fg=#d77757 bold underline=single
+5 bold
+6 fg=#d77757 bold underline=single

@@ -99,7 +99,7 @@ export default scenarios({
     },
     set: {
       about:
-        "a then d: the first applied (accent, filled mark), the second dismissed (dim), each doc decided (green rail), the main action Draft prompt",
+        "a then d: the first applied (accent, filled mark), the second dismissed (dim), the main action Draft prompt",
       from: "queue",
       sizes: [[160, 45]],
       fresh: true,
@@ -198,7 +198,7 @@ export default scenarios({
     },
     many: {
       about:
-        "28 suggestions in 8 docs, more than fit: the keyboard's doc row on top of the window, the last row saying what is hidden",
+        "28 suggestions in 8 docs, more than fit: the keyboard's doc row on top of the window, the last row counting the suggestions above and below",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx, MANY);

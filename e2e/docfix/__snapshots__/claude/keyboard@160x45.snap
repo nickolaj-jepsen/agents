@@ -2,20 +2,17 @@
 │                                                                     ✕
 │ ─ Doc suggestions ── 3 left ──────────────────────────────── Close × ─
 │
-│ │  AGENTS.md
-│ │    ○ just build is not enough to verify a pi change; the doc…   3×
+│   AGENTS.md
+│     ○ just build is not enough to verify a pi change; the docs    3×
+│       say it is.
 │
-│ │  docs/hosts.md                              Apply all  Dismiss all
-│ │  ❯ ○ The legacy card was removed; the section still describe…   2×
+│   docs/hosts.md                               Apply all  Dismiss all
+│   ❯ ○ The legacy card was removed; the section still describes    2×
+│       it.
 │
-│ │  docs/modules.md
-│ │    ○ A leaf that imports a third-party module imports it on …
-│
-│    stale · seen 2× · 40 days ago
-│    The legacy card was removed; the section still describes it.
-│
-│    Evidence · 40 days ago ───────────────────────────────── Read [e]
-│    docs/hosts.md: the line contradicts what the code does now.
+│   docs/modules.md
+│     ○ A leaf that imports a third-party module imports it on
+│       every host; the page should say that module must be iner…
 │
 │
 │
@@ -33,10 +30,13 @@
 │
 │
 │
-│
-│
-│    Close ↵  Apply [a]  Dismiss [d]
 │ ──────────────────────────────────────────────────────────────────────
+│   stale · seen 2× · 40 days ago
+│
+│ ─ Evidence ── 40 days ago ───────────────────────────────── Read [e] ─
+│   docs/hosts.md: the line contradicts what the code does now.
+│
+│   Close ↵  Apply [a]  Dismiss [d]
 │
 │
 │
@@ -44,19 +44,16 @@
 1 .x69 2
 1 . 2 . 3x15 . 2x2 . 2x6 . 2x32 .x9 2
 1
-1 . 2 .x2 2x9
-1 . 2 .x4 2 .x59 2x3
+1 .x3 2x9
+1 .x5 2 .x60 2x3
 1
-1 .x4 4x13 .x30 2x9 .x2 2x11
-1 .x4 5 . 2 . 5x56 .x2 2x3
 1
-1 . 2 .x2 2x15
-1 . 2 .x4 2
+1 .x3 4x13 .x31 2x9 .x2 2x11
+1 .x3 5 . 2 . 5x56 .x3 2x3
+1 .x7 5x3
 1
-1 .x4 2x29
-1 .x4 5x60
-1
-1 .x4 2x22 . 2x33 .x6 2x3
+1 .x3 2x15
+1 .x5 2
 1
 1
 1
@@ -75,10 +72,13 @@
 1
 1
 1
-1
-1
-1 .x10 2 .x8 2x3 .x10 2x3
 1 . 2x70
+1 .x3 2x29
+1
+1 . 2 . 2x8 . 2x2 . 2x11 . 2x33 .x6 2x3 . 2
+1
+1
+1 .x9 2 .x8 2x3 .x10 2x3
 1
 1
 1

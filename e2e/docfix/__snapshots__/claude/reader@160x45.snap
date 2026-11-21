@@ -2,16 +2,14 @@
 │                                                                     ✕
 │ ─ Doc suggestions ── 2 left ──────────────────────────────── Close × ─
 │
-│    ○ docs/agent-hub.md · missing · seen 2× · 2 days ago   Back [esc]
-│    agent-hub's unittest suite needs a short TMPDIR and
-│    markdown-it-py on PYTHONPATH; run it with uv, not bare python.
+│   ○ docs/agent-hub.md · missing · seen 2× · 2 days ago    Back [esc]
+│   agent-hub's unittest suite needs a short TMPDIR and markdown-it-py
+│   on PYTHONPATH; run it with uv, not bare python.
 │
-│    Evidence 1 of 2 · 2 days ago ─────────────────────────── Next [n]
+│ ─ Evidence 1 of 2 ── 2 days ago ─────────────────────────── Next [n] ─
 │
-│    Hit it again from a worktree: python -m unittest failed 20 socket
-│    tests with AF_UNIX path too long.
-│
-│
+│   Hit it again from a worktree: python -m unittest failed 20 socket
+│   tests with AF_UNIX path too long.
 │
 │
 │
@@ -35,8 +33,10 @@
 │
 │
 │
-│    Close ↵  Apply [a]  Dismiss [d]
-│ ──────────────────────────────────────────────────────────────────────
+│
+│
+│
+│   Close ↵  Apply [a]  Dismiss [d]
 │
 │
 │
@@ -44,15 +44,13 @@
 1 .x69 2
 1 . 2 . 3x15 . 2x2 . 2x6 . 2x32 .x9 2
 1
-1 .x4 2 .x18 2x33 .x8 2x5
-1 .x4 4x51
-1 .x4 4x62
+1 .x3 2 .x18 2x33 .x9 2x5
+1 .x3 4x66
+1 .x3 4x47
 1
-1 .x4 2x28 . 2x27 .x6 2x3
+1 . 2 . 2x15 . 2x2 . 2x10 . 2x27 .x6 2x3 . 2
 1
-1 .x34 5x18
-1
-1
+1 .x33 5x18
 1
 1
 1
@@ -77,8 +75,10 @@
 1
 1
 1
-1 .x10 2 .x8 2x3 .x10 2x3
-1 . 2x70
+1
+1
+1
+1 .x9 2 .x8 2x3 .x10 2x3
 1
 1
 1

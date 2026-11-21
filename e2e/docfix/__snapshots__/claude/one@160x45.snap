@@ -2,15 +2,9 @@
 │                                                                     ✕
 │ ─ Doc suggestions ── 1 left ──────────────────────────────── Close × ─
 │
-│ │  AGENTS.md                                  Apply all  Dismiss all
-│ │  ❯ ○ just build is not enough to verify a pi change; the doc…   3×
-│
-│    wrong · seen 3× · 2 days ago
-│    just build is not enough to verify a pi change; the docs say it
-│    is.
-│
-│    Evidence · 2 days ago ────────────────────────────────── Read [e]
-│    AGENTS.md: the line contradicts what the code does now.
+│   AGENTS.md                                   Apply all  Dismiss all
+│   ❯ ○ just build is not enough to verify a pi change; the docs    3×
+│       say it is.
 │
 │
 │
@@ -35,8 +29,14 @@
 │
 │
 │
-│    Close ↵  Apply [a]  Dismiss [d]
+│
 │ ──────────────────────────────────────────────────────────────────────
+│   wrong · seen 3× · 2 days ago
+│
+│ ─ Evidence ── 2 days ago ────────────────────────────────── Read [e] ─
+│   AGENTS.md: the line contradicts what the code does now.
+│
+│   Close ↵  Apply [a]  Dismiss [d]
 │
 │
 │
@@ -44,14 +44,9 @@
 1 .x69 2
 1 . 2 . 3x15 . 2x2 . 2x6 . 2x32 .x9 2
 1
-1 .x4 4x9 .x34 2x9 .x2 2x11
-1 .x4 5 . 2 . 5x56 .x2 2x3
-1
-1 .x4 2x28
-1 .x4 5x63
-1 .x4 5x3
-1
-1 .x4 2x21 . 2x34 .x6 2x3
+1 .x3 4x9 .x35 2x9 .x2 2x11
+1 .x3 5 . 2 . 5x56 .x3 2x3
+1 .x7 5x10
 1
 1
 1
@@ -77,8 +72,13 @@
 1
 1
 1
-1 .x10 2 .x8 2x3 .x10 2x3
 1 . 2x70
+1 .x3 2x28
+1
+1 . 2 . 2x8 . 2x2 . 2x10 . 2x34 .x6 2x3 . 2
+1
+1
+1 .x9 2 .x8 2x3 .x10 2x3
 1
 1
 1

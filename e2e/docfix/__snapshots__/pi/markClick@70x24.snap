@@ -1,47 +1,46 @@
-# docfix/pi/markClick 70x24 @26,0 (44x18)
-─ – 1 · 2 left ─────────────────── Close × ─
-│  AGENTS.md
-│    ○ just build is not enough to v…   3×
-
-│  docs/hosts.md    Apply all  Dismiss all
-│  ❯ – The legacy card was removed; …   2×
-
-│  docs/modules.md
-│    ○ A leaf that imports a third-p…
-
-   The legacy card was removed; the
-   section still describes it.
-   Evidence · 40 days ago ─────── Read [e]
-
-
-
-   Dismiss ↵  Apply [a]  Dismiss [d]
-────────────────────────────────────────────
+# docfix/pi/markClick 70x24 @24,0 (46x18)
+│ ─ – 1 · 2 left ─────────────────── Close × ─
+│   AGENTS.md
+│     ○ just build is not enough to       3×
+│       verify a pi change; the docs…
+│
+│   docs/hosts.md     Apply all  Dismiss all
+│   ❯ – The legacy card was removed;      2×
+│       the section still describes it.
+│
+│
+│   ↓ 1 more
+│
+│
+│
+│ ────────────────────────────────────────────
+│ ─ Evidence ── 40 days ago ─────── Read [e] ─
+│
+│   Dismiss ↵  Apply [a]  Dismiss [d]
 --- styles
-1 . 2x12 . 1x19 . 3x7 . 1
-2 .x2 2x9
-2 .x4 2 . 3x30 .x2 2x3
--
-4 .x2 5x13 .x4 2x9 .x2 2x11
-4 .x2 6 . 2 . 7x30 .x2 2x3
--
-2 .x2 2x15
-2 .x4 2 . 3x30
--
-.x3 6x32
-.x3 6x27
-.x3 2x22 . 1x7 . 3x4 . 2x3
--
--
--
-.x3 8x7 . 2 .x2 3x5 . 2x3 .x2 3x7 . 2x3
-1x44
+1 . 1 . 2x12 . 1x19 . 3x7 . 1
+1 .x3 2x9
+1 .x5 2 . 3x27 .x6 2x3
+1 .x7 3x29
+1
+1 .x3 4x13 .x5 2x9 .x2 2x11
+1 .x3 5 . 2 . 6x28 .x5 2x3
+1 .x7 6x31
+1
+1
+1 .x3 2x8
+1
+1
+1
+1 . 1x44
+1 . 1 . 2x8 . 1x2 . 2x11 . 1x7 . 3x4 . 2x3 . 1
+1
+1 .x3 7x7 . 2 .x2 3x5 . 2x3 .x2 3x7 . 2x3
 --- legend
 1 fg=#768186
 2 fg=#7e888e
 3 fg=#dee0e1
-4 fg=#68b78d
-5 fg=#a798d7
-6 fg=#dee0e1 bold
-7 fg=#7e888e bold
-8 fg=#a798d7 bold
+4 fg=#a798d7
+5 fg=#dee0e1 bold
+6 fg=#7e888e bold
+7 fg=#a798d7 bold

@@ -2,19 +2,13 @@
 │                                                                     ✕
 │ ─ Doc suggestions ── 2 left ──────────────────────────────── Close × ─
 │
-│ │  docs/agent-hub.md                          Apply all  Dismiss all
-│ │  ❯ ○ agent-hub's unittest suite needs a short TMPDIR and mar…   2×
+│   docs/agent-hub.md                           Apply all  Dismiss all
+│   ❯ ○ agent-hub's unittest suite needs a short TMPDIR and         2×
+│       markdown-it-py on PYTHONPATH; run it with uv, not bare…
 │
-│ │  docs/agents.md
-│ │    ○ pi's permission gate cannot resolve shell variables, so…
-│
-│    missing · seen 2× · 2 days ago
-│    agent-hub's unittest suite needs a short TMPDIR and
-│    markdown-it-py on PYTHONPATH; run it with uv, not bare python.
-│
-│    Evidence · 2 pieces ──────────────────────────────────── Read [e]
-│    Hit it again from a worktree: python -m unittest failed 20 socket
-│    tests with AF_UNIX path too long.
+│   docs/agents.md
+│     ○ pi's permission gate cannot resolve shell variables, so
+│       cat $S/id_ed25519_ao reads what cat ~/.ssh/id_ed25519_ao…
 │
 │
 │
@@ -33,10 +27,16 @@
 │
 │
 │
-│
-│
-│    Close ↵  Apply [a]  Dismiss [d]
 │ ──────────────────────────────────────────────────────────────────────
+│   missing · seen 2× · 2 days ago
+│   agent-hub's unittest suite needs a short TMPDIR and markdown-it-py
+│   on PYTHONPATH; run it with uv, not bare python.
+│
+│ ─ Evidence ── 2 pieces ──────────────────────────────────── Read [e] ─
+│   Hit it again from a worktree: python -m unittest failed 20 socket
+│   tests with AF_UNIX path too long.
+│
+│   Close ↵  Apply [a]  Dismiss [d]
 │
 │
 │
@@ -44,18 +44,12 @@
 1 .x69 2
 1 . 2 . 3x15 . 2x2 . 2x6 . 2x32 .x9 2
 1
-1 .x4 4x17 .x26 2x9 .x2 2x11
-1 .x4 5 . 2 . 5x56 .x2 2x3
+1 .x3 4x17 .x27 2x9 .x2 2x11
+1 .x3 5 . 2 . 5x51 .x8 2x3
+1 .x7 5x55
 1
-1 . 2 .x2 2x14
-1 . 2 .x4 2
-1
-1 .x4 2x30
-1 .x4 5x51
-1 .x4 5x62
-1
-1 .x4 2x19 . 2x36 .x6 2x3
-1 .x34 1x18
+1 .x3 2x14
+1 .x5 2
 1
 1
 1
@@ -75,10 +69,16 @@
 1
 1
 1
-1
-1
-1 .x10 2 .x8 2x3 .x10 2x3
 1 . 2x70
+1 .x3 2x30
+1 .x3 5x66
+1 .x3 5x47
+1
+1 . 2 . 2x8 . 2x2 . 2x8 . 2x36 .x6 2x3 . 2
+1 .x33 1x18
+1
+1
+1 .x9 2 .x8 2x3 .x10 2x3
 1
 1
 1

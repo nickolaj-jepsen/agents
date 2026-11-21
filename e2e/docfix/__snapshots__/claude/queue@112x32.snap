@@ -2,28 +2,28 @@
 │                                               ✕
 │ ─ Doc suggestions ── 3 left ────────── Close × ─
 │
-│ │  AGENTS.md            Apply all  Dismiss all
-│ │  ❯ ○ just build is not enough to verif…   3×
+│   AGENTS.md             Apply all  Dismiss all
+│   ❯ ○ just build is not enough to verify    3×
+│       a pi change; the docs say it is.
 │
-│ │  docs/hosts.md
-│ │    ○ The legacy card was removed; the …   2×
+│   docs/hosts.md
+│     ○ The legacy card was removed; the      2×
+│       section still describes it.
 │
-│ │  docs/modules.md
-│ │    ○ A leaf that imports a third-party…
-│
-│    wrong · seen 3× · 2 days ago
-│    just build is not enough to verify a pi
-│    change; the docs say it is.
-│
-│    Evidence · 2 days ago ──────────── Read [e]
-│    AGENTS.md: the line contradicts what the
-│    code does now.
+│   docs/modules.md
+│     ○ A leaf that imports a third-party
+│       module imports it on every host;…
 │
 │
 │
-│
-│    Close ↵  Apply [a]  Dismiss [d]
 │ ────────────────────────────────────────────────
+│   wrong · seen 3× · 2 days ago
+│
+│ ─ Evidence ── 2 days ago ──────────── Read [e] ─
+│   AGENTS.md: the line contradicts what the
+│   code does now.
+│
+│   Close ↵  Apply [a]  Dismiss [d]
 │
 │
 │
@@ -31,28 +31,28 @@
 1 .x47 2
 1 . 2 . 3x15 . 2x2 . 2x6 . 2x10 .x9 2
 1
-1 .x4 4x9 .x12 2x9 .x2 2x11
-1 .x4 5 . 2 . 5x34 .x2 2x3
+1 .x3 4x9 .x13 2x9 .x2 2x11
+1 .x3 5 . 2 . 5x34 .x3 2x3
+1 .x7 5x32
 1
-1 . 2 .x2 2x13
-1 . 2 .x4 2 .x37 2x3
+1 .x3 2x13
+1 .x5 2 .x38 2x3
 1
-1 . 2 .x2 2x15
-1 . 2 .x4 2
 1
-1 .x4 2x28
-1 .x4 5x39
-1 .x4 5x27
-1
-1 .x4 2x21 . 2x12 .x6 2x3
+1 .x3 2x15
+1 .x5 2
 1
 1
 1
 1
-1
-1
-1 .x10 2 .x8 2x3 .x10 2x3
 1 . 2x48
+1 .x3 2x28
+1
+1 . 2 . 2x8 . 2x2 . 2x10 . 2x12 .x6 2x3 . 2
+1
+1
+1
+1 .x9 2 .x8 2x3 .x10 2x3
 1
 1
 1

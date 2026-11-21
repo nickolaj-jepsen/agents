@@ -2,41 +2,41 @@
 │                                                                     ✕
 │ ─ Doc suggestions ── 2 left ──────────────────────────────── Close × ─
 │
-│    ○ docs/agent-hub.md · missing · seen 2× · 2 days ago   Back [esc]
-│    agent-hub's unittest suite needs a short TMPDIR and
-│    markdown-it-py on PYTHONPATH; run it with uv, not bare python.
+│   ○ docs/agent-hub.md · missing · seen 2× · 2 days ago    Back [esc]
+│   agent-hub's unittest suite needs a short TMPDIR and markdown-it-py
+│   on PYTHONPATH; run it with uv, not bare python.
 │
-│    Evidence 2 of 2 · 12 days ago · migrated from pi ─────── Next [n]
+│ ─ Evidence 2 of 2 ── 12 days ago ── migrated from pi ────── Next [n] ─
 │
-│    Why the repo didn't say it
-│    Both failures look like code errors, and nothing in the repo
-│    states the TMPDIR requirement or the markdown-it-py dependency
-│    that only the nix build supplies; an agent would report 20 fake
-│    failures.
+│   Why the repo didn't say it
+│   Both failures look like code errors, and nothing in the repo
+│   states the TMPDIR requirement or the markdown-it-py dependency
+│   that only the nix build supplies; an agent would report 20 fake
+│   failures.
 │
-│    Details
-│    From pkgs/agent-hub: TMPDIR=<tmp>   PYTHONPATH=. uv run --quiet
-│    --with markdown-it-py python -m unittest discover -s tests -p
-│    'test_*.py'.
-│    Without a short TMPDIR the socket tests fail with "OSError:
-│    AF_UNIX path too long" inside a long worktree path; without
-│    markdown-it-py the render/features imports fail.
-│    Baseline: 470 tests, 1 skipped.
+│   Details
+│   From pkgs/agent-hub: TMPDIR=<tmp>   PYTHONPATH=. uv run --quiet
+│   --with markdown-it-py python -m unittest discover -s tests -p
+│   'test_*.py'.
+│   Without a short TMPDIR the socket tests fail with "OSError:
+│   AF_UNIX path too long" inside a long worktree path; without
+│   markdown-it-py the render/features imports fail.
+│   Baseline: 470 tests, 1 skipped.
 │
-│    Points at
-│    path     pkgs/agent-hub/package.nix
-│    command  TMPDIR=<tmp>   PYTHONPATH=. uv run --quiet --with
-│             markdown-it-py python -m unittest discover -s tests -p
-│             'test_*.py'
-│    quote    “if it happens again, just wait a bit and try again”
-│    symbol   dmsSession
-│
-│
+│   Points at
+│   path     pkgs/agent-hub/package.nix
+│   command  TMPDIR=<tmp>   PYTHONPATH=. uv run --quiet --with
+│            markdown-it-py python -m unittest discover -s tests -p
+│            'test_*.py'
+│   quote    “if it happens again, just wait a bit and try again”
+│   symbol   dmsSession
 │
 │
 │
-│    Close ↵  Apply [a]  Dismiss [d]
-│ ──────────────────────────────────────────────────────────────────────
+│
+│
+│
+│   Close ↵  Apply [a]  Dismiss [d]
 │
 │
 │
@@ -44,41 +44,41 @@
 1 .x69 2
 1 . 2 . 3x15 . 2x2 . 2x6 . 2x32 .x9 2
 1
-1 .x4 2 .x18 2x33 .x8 2x5
-1 .x4 4x51
-1 .x4 4x62
+1 .x3 2 .x18 2x33 .x9 2x5
+1 .x3 4x66
+1 .x3 4x47
 1
-1 .x4 2x48 . 2x7 . 2x4 . 2x3
+1 . 2 . 2x15 . 2x2 . 2x11 . 2x2 . 2x16 . 2x6 . 2x4 . 2x3 . 2
 1
-1 .x4 2x26
-1
-1
+1 .x3 2x26
 1
 1
 1
-1 .x4 2x7
 1
 1
+1 .x3 2x7
 1
 1
 1
 1
 1
 1
-1 .x4 2x9
-1 .x4 2x7
-1 .x4 2x7
 1
 1
-1 .x4 2x7
-1 .x4 2x7
+1 .x3 2x9
+1 .x3 2x7
+1 .x3 2x7
+1
+1
+1 .x3 2x7
+1 .x3 2x7
 1
 1
 1
 1
 1
-1 .x10 2 .x8 2x3 .x10 2x3
-1 . 2x70
+1
+1 .x9 2 .x8 2x3 .x10 2x3
 1
 1
 1

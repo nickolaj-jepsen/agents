@@ -1,0 +1,87 @@
+# docfix/pi/resized 160x45 @74,0 (86x39)
+│ ─ Doc suggestions ── 3 left ────────────────────────────────────────────── Close × ─
+│
+│   AGENTS.md                                                 Apply all  Dismiss all
+│   ❯ ○ just build is not enough to verify a pi change; the docs say it is.       3×
+│
+│   docs/hosts.md
+│     ○ The legacy card was removed; the section still describes it.              2×
+│
+│   docs/modules.md
+│     ○ A leaf that imports a third-party module imports it on every host; the
+│       page should say that module must be inert when the feature is off.
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│ ────────────────────────────────────────────────────────────────────────────────────
+│   wrong · seen 3× · 2 days ago
+│
+│ ─ Evidence ── 2 days ago ──────────────────────────────────────────────── Read [e] ─
+│   AGENTS.md: the line contradicts what the code does now.
+│
+│   Close ↵  Apply [a]  Dismiss [d]
+--- styles
+1 . 2 . 3x15 . 2x2 . 4x6 . 2x46 . 1x7 . 2
+1
+1 .x3 5x9 .x49 4x9 .x2 4x11
+1 .x3 6 . 4 . 6x67 .x6 4x3
+1
+1 .x3 4x13
+1 .x5 4 . 1x60 .x13 4x3
+1
+1 .x3 4x15
+1 .x5 4 . 1x70
+1 .x7 1x66
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1 . 2x84
+1 .x3 4x28
+1
+1 . 2 . 4x8 . 2x2 . 4x10 . 2x48 . 1x4 . 4x3 . 2
+1
+1
+1 .x3 1x5 . 4 .x2 1x5 . 4x3 .x2 1x7 . 4x3
+--- legend
+1 fg=#dee0e1
+2 fg=#768186
+3 fg=#a798d7 bold
+4 fg=#7e888e
+5 fg=#a798d7
+6 fg=#dee0e1 bold

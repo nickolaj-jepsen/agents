@@ -1,17 +1,17 @@
 # docfix/claude/reader 70x24 @0,12 (70x7)
 ╭──────────────────────────────────────────────────────────────────✕─╮
 │ ─ Doc suggestions ── 2 left ──────────────────────────── Close × ─ │
-│    ○ docs/agent-hub.md · missing · seen 2× · 2 days…  Back [esc]   │
-│    agent-hub's unittest suite needs a short TMPDIR and             │
-│    Close ↵  Apply [a]  Dismiss [d]                                 │
+│   ○ docs/agent-hub.md · missing · seen 2× · 2 days …  Back [esc]   │
+│   agent-hub's unittest suite needs a short TMPDIR and              │
+│   Close ↵  Apply [a]  Dismiss [d]                                  │
 │                                                                    │
 ╰────────────────────────────────────────────────────────────────────╯
 --- styles
 1x67 2 1x2
 1 . 2 . 3x15 . 2x2 . 2x6 . 2x28 .x9 2 . 1
-1 .x4 2 .x18 2x30 .x7 2x5 .x3 1
-1 .x4 4x51 .x13 1
-1 .x10 2 .x8 2x3 .x10 2x3 .x33 1
+1 .x3 2 .x18 2x31 .x7 2x5 .x3 1
+1 .x3 4x51 .x14 1
+1 .x9 2 .x8 2x3 .x10 2x3 .x34 1
 1 .x68 1
 1x70
 --- legend

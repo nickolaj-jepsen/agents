@@ -1,88 +1,87 @@
-# docfix/pi/set 160x45 @96,0 (64x39)
-─ Doc suggestions ── ● 1 · – 1 · 1 left ────────────── Close × ─
-
-│  AGENTS.md
-│    ● just build is not enough to verify a pi change; t…   3×
-
-│  docs/hosts.md
-│    – The legacy card was removed; the section still de…   2×
-
-│  docs/modules.md                      Apply all  Dismiss all
-│  ❯ ○ A leaf that imports a third-party module imports …
-
-   missing · 9 days ago
-   A leaf that imports a third-party module imports it on
-   every host; the page should say that module must be inert
-   when the feature is off.
-
-   Evidence · 9 days ago ──────────────────────────── Read [e]
-   docs/modules.md: the line contradicts what the code does
-   now.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   Draft prompt ↵  Apply [a]  Dismiss [d]
-────────────────────────────────────────────────────────────────
+# docfix/pi/set 160x45 @94,0 (66x39)
+│ ─ Doc suggestions ── ● 1 · – 1 · 1 left ────────────── Close × ─
+│
+│   AGENTS.md
+│     ● just build is not enough to verify a pi change; the   3×
+│       docs say it is.
+│
+│   docs/hosts.md
+│     – The legacy card was removed; the section still        2×
+│       describes it.
+│
+│   docs/modules.md                       Apply all  Dismiss all
+│   ❯ ○ A leaf that imports a third-party module imports it
+│       on every host; the page should say that module mus…
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│ ────────────────────────────────────────────────────────────────
+│   missing · 9 days ago
+│   A leaf that imports a third-party module imports it on every
+│   host; the page should say that module must be inert when the
+│   feature is off.
+│
+│ ─ Evidence ── 9 days ago ──────────────────────────── Read [e] ─
+│   docs/modules.md: the line contradicts what the code does
+│   now.
+│
+│   Draft prompt ↵  Apply [a]  Dismiss [d]
 --- styles
-1 . 2x15 . 1x2 . 3x3 4x15 . 1x14 . 5x7 . 1
--
-6 .x2 4x9
-6 .x4 2 . 2x50 .x2 4x3
--
-6 .x2 4x13
-6 .x4 4 . 4x50 .x2 4x3
--
-5 .x2 3x15 .x22 4x9 .x2 4x11
-5 .x2 7 . 4 . 7x50
--
-.x3 4x20
-.x3 7x54
-.x3 7x57
-.x3 7x24
--
-.x3 4x21 . 1x28 . 5x4 . 4x3
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
--
-.x3 2x12 . 4 .x2 5x5 . 4x3 .x2 5x7 . 4x3
-1x64
+1 . 1 . 2x15 . 1x2 . 3x3 4x15 . 1x14 . 5x7 . 1
+1
+1 .x3 4x9
+1 .x5 2 . 2x51 .x2 4x3
+1 .x7 2x15
+1
+1 .x3 4x13
+1 .x5 4 . 4x46 .x7 4x3
+1 .x7 4x13
+1
+1 .x3 3x15 .x23 4x9 .x2 4x11
+1 .x3 6 . 4 . 6x51
+1 .x7 6x51
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1 . 1x64
+1 .x3 4x20
+1 .x3 6x60
+1 .x3 6x60
+1 .x3 6x15
+1
+1 . 1 . 4x8 . 1x2 . 4x10 . 1x28 . 5x4 . 4x3 . 1
+1
+1
+1
+1 .x3 2x12 . 4 .x2 5x5 . 4x3 .x2 5x7 . 4x3
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
 3 fg=#a798d7
 4 fg=#7e888e
 5 fg=#dee0e1
-6 fg=#68b78d
-7 fg=#dee0e1 bold
+6 fg=#dee0e1 bold
