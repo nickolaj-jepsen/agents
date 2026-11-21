@@ -1,39 +1,67 @@
-# answer/claude/picks 160x45 @0,28 (160x14)
-──   1 of 2   ○ 1   ○ 2   r: review   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  [-]
+# answer/claude/picks 160x45 @0,11 (160x29)
+▎   1  The default bar cuts the ideas you act on
+▎
+▎   2/3 · S · build
+▎
+▎   A ○ Build it  Recommended
+▎   B ○ Something else
+▎   Note: Add a note
+▎
+▎   Recommended: build it
 
-The default bar cuts the ideas you act on
-2/3 · S · build
 
-1: ○ Build it (recommended)
-w: ○ ✎ Something else
+▎ ❯ 2  The funnel is wide and slow for what survives ✓
+▎
+▎   3/3 · M · /grill-me
+▎
+▎   A ○ Build it
+▎   B ○ Route to /grill-me  Recommended
+▎   C ● Fold it into the funnel
+▎   Note: Add a note
+▎
+▎   Recommended: route it to /grill-me
 
-Recommended: build it
+
+▎   1 of 2 answered  Fill prompt
 
 
-h: back   l: next   y: take build   s: skip   n: note   q: quit
 
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+2/2    jk move A–B pick C write n note r review keys here                                                                                                   [-]
 --- styles
-1x2 .x3 2x6 .x3 1x2 3 .x3 1x3 .x3 4 1x8 .x3 1x116 .x2 1x3
+1 .x3 2x3 3x41 .x47 1
+1 .x94 1
+1 .x94 1
+1 .x94 1
+1 .x3 2 . 2 .x9 2x13 .x66 1
+1 .x3 2 . 2 . 2x14 .x73 1
+1 .x3 2x16 .x75 1
+1 .x94 1
+1 .x3 1x21 .x70 1
+1x96
 -
-2x41
+.x2 3 . 2x3 3x45 4x2
 -
 -
-5 6x12 7x14
-4 1x20
 -
-2x12
+.x4 2 . 2
+.x4 2 . 2 .x19 2x13
+.x4 2 . 5 . 5x23
+.x4 2x16
+-
+.x4 1x34
+-
+1x96
+1 .x20 5x11 .x63 1
+1x96
 -
 -
-4 1x6 .x3 4 1x6 .x3 4 .x15 4 1x6 .x3 4 1x6 .x3 4 1x6
 -
-8x160
+6x6 . 2x7 . 2x8 . 2x7 . 2x6 . 2x8 . 2x9 .x99 2x3
 --- legend
-1 fg=#999999
-2 bold
-3 fg=#d77757
-4 fg=#b1b9f9
-5 fg=#b1b9f9 inverse
-6 inverse
-7 fg=#999999 inverse
-8 fg=#888888
+1 dim
+2 fg=#999999
+3 bold
+4 fg=#4eba65
+5 fg=#d77757 bold
+6 fg=#d77757 bold inverse

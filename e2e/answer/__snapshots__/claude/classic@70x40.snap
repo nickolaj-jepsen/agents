@@ -1,0 +1,47 @@
+# answer/claude/classic 70x40 @0,9 (70x19)
+▎   Q1  Use SQLite? ✓
+▎
+▎   A ○ SQLite
+▎   B ● Postgres
+▎   C ○ Write your own answer
+▎   Note: Add a note
+
+
+▎   Q2  Add caching? ✓
+▎
+▎   A ● Yes
+▎   B ○ No
+▎   C ○ Write your own answer
+▎   Note: Add a note
+
+
+▎ ❯ 2 of 2 answered  Fill prompt
+
+Review  2/2 answered jk move enter fill n note r back keys here   [-]
+--- styles
+1 .x3 2x2 .x2 3x3 . 3x7 4x2 .x48 1
+1
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 5 . 5x8 .x53 1
+1 .x3 2 . 2 . 2x5 . 2x4 . 2x3 . 2x6 .x40 1
+1 .x3 2x5 . 2x3 . 2 . 2x4 .x49 1
+1
+1
+1 .x3 2x2 .x2 3x3 . 3x8 4x2 .x47 1
+1
+1 .x3 2 . 5 . 5x3 .x58 1
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 2 . 2x5 . 2x4 . 2x3 . 2x6 .x40 1
+1 .x3 2x5 . 2x3 . 2 . 2x4 .x49 1
+1
+-
+.x2 3 . 3 . 3x2 . 3 . 3x8 .x2 5x4 . 5x6
+-
+5x6 .x2 5x3 . 5x8 . 2x2 . 2x4 . 6x10 . 2 . 2x4 . 2 . 2x4 . 2x4 . 2x4 .x3 2x3
+--- legend
+1 dim
+2 fg=#999999
+3 bold
+4 fg=#4eba65
+5 fg=#d77757 bold
+6 inverse

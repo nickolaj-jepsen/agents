@@ -281,6 +281,29 @@ export default scenarios({
         { wait: "Q1/12" },
       ],
     },
+    classic: {
+      about: "the classic renderer shows the same cards, driven by the band's keys",
+      start: { ...turn("two-q"), env: { CLAUDE_CODE_NO_FLICKER: "0" } },
+      // The main screen does not take the mouse: the keys drive the cards there.
+      size: [70, 40],
+      sizes: [[70, 40]],
+      steps: [
+        ...ask,
+        { wait: /❯\s+Q1\s+Use SQLite/ },
+        ...keys("Alt+a", "2"),
+        { wait: "B ● Postgres" },
+        { press: "j" },
+        { wait: /❯\s+Q2\s+Add caching/ },
+        { press: "a" },
+        { wait: /2 of 2 answered/ },
+        { press: "r" },
+        { wait: /❯ 2 of 2 answered/ },
+        // The main screen updates a row in place and may leave a blank cell in either style; a
+        // redraw of the whole screen makes the snapshot the same every run.
+        { press: "Ctrl+l" },
+        { wait: /❯ 2 of 2 answered/ },
+      ],
+    },
     numbered: {
       about: "questions with write-in answers only",
       start: turn("numbered"),
@@ -298,10 +321,22 @@ export default scenarios({
       steps: [...ask, { wait: "Tests pass" }, ...answer, { wait: "Nothing to answer" }],
     },
     picks: {
-      about: "a numbered pick list still opens in the band",
+      about: "a numbered pick list is cards too, answered with the mouse",
       start: turn("picks"),
-      region: region.rows(/\[-\]$/, /^─+$/),
-      steps: [...ask, { wait: /Pick|Answer 2/ }, ...keys("Alt+a", "Enter"), { wait: /r: review/ }],
+      size: [96, 34],
+      steps: [
+        ...ask,
+        { wait: /❯\s+1\s+The default bar/ },
+        { click: "B ○ Route to /grill-me" },
+        { wait: "B ● Route to /grill-me" },
+        { click: "C ○ Something else" },
+        { wait: "Answer: Write your own answer" },
+        { click: "Answer: Write your own answer" },
+        { wait: /Answer:.*⏎ save/ },
+        { type: "Fold it into the funnel" },
+        { press: "Enter" },
+        { wait: /C ●\s+Fold it into the funnel/ },
+      ],
     },
   },
 });

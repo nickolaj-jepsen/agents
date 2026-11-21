@@ -47,16 +47,19 @@ const BLOCKS = /^\s*(?:[-*+]\s|\d+[.)]\s|#{1,6}\s|>|```|~~~|\|)/m;
 type Entry = NonNullable<View["item"]>["entries"][number];
 
 /**
- * The key a terminal card draws and binds for an entry: its own letter, or `A` for a yes, which
- * never sits beside options.
+ * The key a terminal card draws and binds for an entry: its own letter, `A` for a yes, which
+ * never sits beside options, or by its place for a pick list's rows, which print none.
  */
-export const entryLetter = (entry: Entry) => (entry.kind === "accept" ? "A" : entry.key);
+export const entryLetter = (entry: Entry, index: number) =>
+  entry.kind === "accept"
+    ? "A"
+    : entry.key || (entry.kind === "option" ? String.fromCharCode(65 + index) : "");
 
 export function writeLetter(item: NonNullable<View["item"]>) {
   const last = Math.max(
     64,
-    ...item.entries.map((entry) =>
-      /^[A-H]$/.test(entryLetter(entry)) ? entryLetter(entry).charCodeAt(0) : 64,
+    ...item.entries.map((entry, i) =>
+      /^[A-H]$/.test(entryLetter(entry, i)) ? entryLetter(entry, i).charCodeAt(0) : 64,
     ),
   );
   return String.fromCharCode(last + 1);
@@ -178,7 +181,7 @@ export function questionCard(
               {item.entries.map((entry, i) => {
                 if (entry.kind === "write") return null;
                 const words = labelOf(entry.text);
-                const tag = entryLetter(entry) ? `${entryLetter(entry)} ` : "";
+                const tag = entryLetter(entry, i) ? `${entryLetter(entry, i)} ` : "";
                 // A Button's label is plain words: it draws no markdown.
                 const said = plain(words);
                 const weight = entry.isChosen ? "semibold" : undefined;
@@ -199,7 +202,7 @@ export function questionCard(
                       cardChoice(
                         {
                           ...state,
-                          key: entryLetter(entry),
+                          key: entryLetter(entry, i),
                           text: words,
                           aside: entry.isRecommended ? "  Recommended" : undefined,
                           detail: isDetailInline ? entry.detail : undefined,
@@ -271,7 +274,11 @@ export function questionCard(
                       {
                         ...state,
                         key: writeLetter(item),
-                        text: item.written || "Write your own answer",
+                        // A pick list's says "Something else".
+                        text:
+                          item.written ||
+                          item.entries.find((entry) => entry.kind === "write")?.text ||
+                          "Write your own answer",
                         literal: true,
                         chosen: !!item.written,
                         hit: `${prefix}-write`,
@@ -904,9 +911,9 @@ export function controlBar(
   const item = view.item;
   const letters =
     item?.entries
-      .flatMap((entry) =>
-        entry.kind === "accept" || (entry.kind === "option" && /^[A-H]$/.test(entry.key))
-          ? [entryLetter(entry)]
+      .flatMap((entry, i) =>
+        entry.kind !== "write" && /^[A-H]$/.test(entryLetter(entry, i))
+          ? [entryLetter(entry, i)]
           : [],
       )
       .sort() ?? [];

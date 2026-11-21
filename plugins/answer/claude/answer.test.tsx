@@ -119,6 +119,9 @@ function world(on: On, draft = ""): World {
 
 type Surface = "terminal" | "desktop" | "vscode";
 
+/** Where the form a band opens is drawn: only a graphical surface has one. */
+const FORM: Surface = "desktop";
+
 const start = ($: Engine, surface: Surface = "terminal") =>
   $.session.start({ cwd: "/", surface, isInteractive: true });
 
@@ -134,16 +137,16 @@ const pick = (
   key: string,
 ) => drawn.press({ key });
 
-/** The form's one row, while it is folded. */
-const hint = async ($: Engine, surface: Surface = "terminal") => {
+/** The form's one row, while it is folded: its words, beside its button. */
+const hint = async ($: Engine, surface: Surface = FORM) => {
   const drawn = await band($, surface);
-  const found = await drawn.find({ key: "answer" });
+  const found = (await drawn.find({ key: "answer" })) ? await offerSays(drawn) : undefined;
   await drawn.unmount();
-  return found?.text;
+  return found;
 };
 
 /** The band with the form open in it, as `/answer` opens it. */
-const form = async ($: Engine, surface: Surface = "terminal") => {
+const form = async ($: Engine, surface: Surface = FORM) => {
   await $.command.run(RUN);
   return band($, surface);
 };
@@ -273,225 +276,6 @@ const LIST = {
   surface: "terminal",
 } as const;
 
-test("the offer sits beside the other rows; the open form has the band to itself", async ($, on) => {
-  world(on);
-  // What core is left to stack.
-  let stacked: string[] = [];
-  on("ui.render", { component: "AbovePromptList", plugin: "*" }, (_, e) => {
-    stacked = e.props.rows.map((r) => r.plugin);
-    return { type: "Box", props: {}, children: [] };
-  });
-  await ends($, GRILLING);
-  await (await $.ui.mount(LIST)).unmount();
-  expect(stacked).toEqual(["neighbour", "answer"]);
-  await $.command.run(RUN);
-  await (await $.ui.mount(LIST)).unmount();
-  expect(stacked).toEqual(["answer"]);
-});
-
-test("a draft that crowds the form is set aside while it is open, and a second fill takes the first one's place", async ($, on) => {
-  const draft = "and keep it short\nplease";
-  const w = world(on, draft);
-  await start($);
-  await ends($, GRILLING);
-  // The band has few rows here, as under a tall prompt box on a small terminal.
-  const drawn = await $.ui.mount({
-    ...BAND,
-    props: { ...BAND.props, maxRows: 10 },
-    surface: "terminal",
-  });
-  await drawn.press({ key: "answer" });
-  expect(w.box).toBe("");
-  await drawn.press({ key: "quit" });
-  expect(w.box).toBe(draft);
-  await drawn.press({ key: "answer" });
-  await pick(w, drawn, "e1");
-  await drawn.press({ key: "review" });
-  await drawn.press({ key: "fill" });
-  expect(w.box).toBe(`Q1: B\n\n${draft}`);
-  // Reopened, the reply and the draft are out of the way again.
-  await drawn.press({ key: "answer" });
-  expect(w.box).toBe("");
-  await drawn.press({ key: "fill" });
-  expect(w.box).toBe(`Q1: B\n\n${draft}`);
-  await drawn.unmount();
-});
-
-test("a draft the form has room beside stays in the prompt", async ($, on) => {
-  const w = world(on, "and keep it short\nplease");
-  await start($);
-  await ends($, GRILLING);
-  const drawn = await band($);
-  await drawn.press({ key: "answer" });
-  expect(w.box).toBe("and keep it short\nplease");
-  await drawn.unmount();
-});
-
-test("a pick opens its note, a press on the taken answer goes on, and the review fills the prompt", async ($, on) => {
-  const w = world(on, "and keep it short");
-  await ends($, GRILLING);
-  const drawn = await band($);
-  await drawn.press({ key: "answer" });
-  // Q1: B, which stays for its note; Enter there goes on.
-  await pick(w, drawn, "e1");
-  expect(await drawn.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
-  await typeIn(drawn, "note", "but keep the flag");
-  // Q2 has a recommendation and no options: it is the first entry. A second press goes on.
-  expect((await drawn.find({ key: "e0" }))?.text).toContain("Yes. Four generators");
-  await pick(w, drawn, "e0");
-  expect(await drawn.find({ type: "Text", text: /^Lower the per-generator/ })).toBeDefined();
-  await pick(w, drawn, "e0");
-  // Q3's write-in is a row like its options until it is picked; then it is a field.
-  expect((await drawn.find({ key: "e2" }))?.text).toContain("Write your own answer");
-  await pick(w, drawn, "e2");
-  await typeIn(drawn, "write", "drop it");
-  const reply = "Q1: B\n    Note: but keep the flag\nQ2: yes\nQ3: drop it";
-  expect((await drawn.findAll({ type: "Text" })).some((t) => t.text === reply)).toBe(true);
-  await drawn.press({ key: "fill" });
-  // Filled, the form folds back to its row.
-  expect(await drawn.find({ key: "answer" })).toBeDefined();
-  await drawn.unmount();
-
-  expect(w.box).toBe(`${reply}\n\nand keep it short`);
-});
-
-test("skip, back and forward move without answering; closing keeps the answers", async ($, on) => {
-  const w = world(on);
-  await start($);
-  await ends($, GRILLING);
-  const drawn = await form($);
-  await drawn.press({ key: "skip" });
-  await drawn.press({ key: "back" });
-  expect(await drawn.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
-  await drawn.press({ key: "next" });
-  await pick(w, drawn, "e0");
-  await typeIn(drawn, "note", "");
-  expect(await drawn.find({ type: "Text", text: /^What should happen to/ })).toBeDefined();
-  await drawn.press({ key: "quit" });
-  expect((await drawn.find({ key: "answer" }))?.text).toContain("1 of 3");
-  await drawn.unmount();
-
-  await $.prompt.submit({ text: "something else", wait: false, origin: { kind: "composer" } });
-  expect(await hint($)).toBeUndefined();
-});
-
-test("the mouse alone answers: buttons keep what a field held, and a click on an option's detail picks it", async ($, on) => {
-  const w = world(on);
-  await start($);
-  await ends($, GRILLING);
-  const drawn = await form($);
-  expect(
-    await drawn.find({ type: "Markdown", text: /Recommended:.*A\. A per-kind table/ }),
-  ).toBeDefined();
-  // The strip jumps to Q3, whose second option carries its detail inside the button.
-  await drawn.press({ key: "q2" });
-  expect((await drawn.find({ key: "e1" }))?.text).toContain("Scripts may still call it.");
-  await pick(w, drawn, "e2");
-  await typeIn(drawn, "write", "drop it", "change");
-  await drawn.press({ key: "next" });
-  expect(await drawn.find({ type: "Text", text: /^Not answered: Q1, Q2\./ })).toBeDefined();
-  await drawn.press({ key: "item0" });
-  await pick(w, drawn, "e0");
-  // A note typed and never entered is kept by the button that leaves.
-  await drawn.press({ key: "q0" });
-  await drawn.press({ key: "note-add" });
-  await typeIn(drawn, "note", "for now", "change");
-  await drawn.press({ key: "next" });
-  expect(await drawn.find({ type: "Text", text: /^Lower the per-generator/ })).toBeDefined();
-  await drawn.press({ key: "review" });
-  await drawn.press({ key: "note" });
-  await typeIn(drawn, "note", "thanks", "change");
-  await drawn.press({ key: "fill" });
-  await drawn.unmount();
-  expect(w.box).toBe("Q1: A\n    Note: for now\nQ3: drop it\nOverall: thanks");
-});
-
-test("yes takes the recommendation and goes on", async ($, on) => {
-  world(on);
-  await start($);
-  await ends($, GRILLING);
-  const drawn = await form($);
-  // The key says what it takes.
-  expect((await drawn.find({ key: "accept" }))?.props.label).toBe("take A");
-  await drawn.press({ key: "accept" });
-  expect((await drawn.find({ key: "q0" }))?.text).toContain("✓");
-  expect(await drawn.find({ type: "Text", text: /^Lower the per-generator/ })).toBeDefined();
-  // Q3 recommends nothing, so it offers no yes.
-  await drawn.press({ key: "next" });
-  expect(await drawn.find({ key: "accept" })).toBeUndefined();
-  await drawn.unmount();
-});
-
-test("the form stands as tall as its tallest question, on every one of them", async ($, on) => {
-  world(on);
-  await start($);
-  await ends($, GRILLING);
-  const drawn = await form($);
-  const heightOf = async () =>
-    (await drawn.findAll({ type: "Box" }))
-      .map((box) => box.props.minHeight)
-      .find((height): height is number => typeof height === "number");
-  // Q1 is the tallest: a title, three options, the write-in, its recommendation and the keys.
-  const tallest = await heightOf();
-  expect(tallest).toBeGreaterThan(8);
-  await drawn.press({ key: "next" });
-  expect(await heightOf()).toBe(tallest);
-  await drawn.press({ key: "review" });
-  expect(await heightOf()).toBe(tallest);
-  await drawn.unmount();
-});
-
-test("a long body gives way to the entries when the band is short", async ($, on) => {
-  world(on);
-  await start($);
-  await ends($, LONG);
-  await $.command.run(RUN);
-  const short = await $.ui.mount({
-    ...BAND,
-    props: { ...BAND.props, maxRows: 16 },
-    surface: "terminal",
-  });
-  expect(await short.find({ type: "Text", text: /^… more above$/ })).toBeDefined();
-  expect(await short.find({ key: "e1" })).toBeDefined();
-  await short.unmount();
-  const tall = await band($);
-  expect(await tall.find({ type: "Text", text: /^… more above$/ })).toBeUndefined();
-  expect(await tall.find({ type: "Markdown", text: /Line 12 of what it hangs on/ })).toBeDefined();
-  await tall.unmount();
-});
-
-test("a press on an answer opens its note; a press on it again goes on", async ($, on) => {
-  const w = world(on);
-  await start($);
-  await ends($, GRILLING);
-  const drawn = await form($);
-  await pick(w, drawn, "e1");
-  expect(await field(drawn, "note")).toBeDefined();
-  expect(await drawn.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
-  await pick(w, drawn, "e1");
-  expect(await drawn.find({ type: "Text", text: /^Lower the per-generator/ })).toBeDefined();
-  // Its tab says it is answered, and back on it the answer offers a note.
-  expect((await drawn.find({ key: "q0" }))?.text).toContain("✓");
-  await drawn.press({ key: "q0" });
-  expect((await drawn.find({ key: "e1" }))?.text).toContain("●");
-  expect(await drawn.find({ key: "note-add" })).toBeDefined();
-  await drawn.unmount();
-});
-
-test("the review names each question and shows what its answer says in plain words", async ($, on) => {
-  const w = world(on);
-  await start($);
-  await ends($, GRILLING);
-  const drawn = await form($);
-  await pick(w, drawn, "e1");
-  await drawn.press({ key: "review" });
-  const row = await drawn.find({ key: "item0" });
-  expect(row?.text).toContain("Should every focus default to the same bar?");
-  expect(row?.text).toContain("→ B: Default by kind.");
-  expect(await drawn.find({ type: "Text", text: /^The reply:$/ })).toBeDefined();
-  await drawn.unmount();
-});
-
 test("send on the review submits the reply as a message and drops the round, keeping the draft", async ($, on) => {
   const w = world(on, "and keep it short");
   await start($);
@@ -530,8 +314,8 @@ test("a new round replaces the one before it, answers and all", async ($, on) =>
   await pick(w, drawn, "e1");
   await drawn.unmount();
   await ends($, MINE);
-  expect(await hint($)).toContain("Pick from 2 items");
-  expect(await hint($)).toContain("0 of 2");
+  // Nothing of the round before is carried over: the offer counts no answers.
+  expect(await hint($)).toBe("Pick from 2 items");
 });
 
 test("a resumed session gets the round its last reply ended on, unless the person spoke after it", async ($, on) => {
@@ -548,12 +332,18 @@ test("a resumed session gets the round its last reply ended on, unless the perso
     { role: "assistant", text: "Noted.", toolUses: [] },
   ];
   on("session.messages", () => ({ value: said }));
+  const guide = async () => {
+    const bar = await band($, "terminal");
+    const found = await bar.find({ key: "round-current" });
+    await bar.unmount();
+    return found?.props.label;
+  };
   await start($);
-  expect(await hint($)).toContain("Answer 3 questions");
+  expect(await guide()).toBe("Q1/3");
   await $.prompt.submit({ text: "never mind", wait: false, origin: { kind: "composer" } });
   said = [...said, { role: "user", text: "never mind", toolUses: [] }];
   await $.command.run(RUN);
-  expect(await hint($)).toBeUndefined();
+  expect(await guide()).toBeUndefined();
 });
 
 test("a send sets an answered round aside, and /answer brings it back with its answers", async ($, on) => {
@@ -573,8 +363,8 @@ test("a send sets an answered round aside, and /answer brings it back with its a
   expect(w.toasts[0]).toMatch(/^1 answer set aside/);
   // The round comes back as it was left: its answer marked, its first question showing.
   const back = await form($);
-  expect((await back.find({ key: "q0" }))?.text).toContain("✓");
-  expect(await back.find({ type: "Text", text: /^Should every focus default/ })).toBeDefined();
+  expect((await back.find({ key: "q0" }))?.props.label).toContain("✓");
+  expect(await asking(back, /Should every focus default/)).toBeDefined();
   await back.unmount();
 });
 
@@ -590,7 +380,7 @@ test("sending the reply the form filled answers the round", async ($, on) => {
   const w = world(on, "and keep it short");
   await start($);
   await ends($, GRILLING);
-  const drawn = await band($);
+  const drawn = await band($, FORM);
   await drawn.press({ key: "answer" });
   await pick(w, drawn, "e1");
   await drawn.press({ key: "review" });
@@ -620,7 +410,7 @@ test("a command's send sets the round aside too, and the aside wins over the tra
   // The transcript keeps the round behind the command, which `recover` reads as a fresh one.
   said = [...said, { role: "user", text: "<command-name>/help</command-name>", toolUses: [] }];
   const back = await form($);
-  expect((await back.find({ key: "q0" }))?.text).toContain("✓");
+  expect((await back.find({ key: "q0" }))?.props.label).toContain("✓");
   await back.unmount();
 });
 
@@ -640,7 +430,7 @@ test("a send the engine refuses keeps the round and its answers", async ($, on) 
   expect(w.toasts[0]).toMatch(/didn't send/);
   // The round the hook dropped before the refusal is back, its answer with it.
   await drawn.press({ key: "quit" });
-  expect((await drawn.find({ key: "answer" }))?.text).toContain("1 of 3");
+  expect(await offerSays(drawn)).toContain("1 of 3");
   await drawn.unmount();
 });
 
@@ -694,51 +484,6 @@ const ACTIONS = ["skip", "note", "accept", "next", "send"];
 /** The question shown: its title, as the form's markdown heading draws it. */
 const asking = (drawn: Pick<Mounted, "find">, title: RegExp) =>
   drawn.find({ type: "Markdown", text: title });
-
-test("a digit answers the row at its place on screen, the write-in's place included", async ($, on) => {
-  const w = world(on);
-  await start($);
-  await ends($, GRILLING);
-  const drawn = await form($);
-  // The aliases take no cells: the card reads as it always has, and its letters still press it.
-  expect((await drawn.find({ key: "digits" }))?.props).toMatchObject({
-    width: 0,
-    height: 0,
-    overflow: "hidden",
-  });
-  expect((await drawn.find({ key: "e0" }))?.props.hotkey).toBe("a");
-  expect((await drawn.find({ key: "d0" }))?.props.hotkey).toBe("1");
-  expect((await drawn.find({ key: "d1" }))?.props.hotkey).toBe("2");
-  expect((await drawn.find({ key: "d2" }))?.props.hotkey).toBe("3");
-  // The second row's number picks what its letter does.
-  await pick(w, drawn, "d1");
-  expect((await drawn.find({ key: "e1" }))?.text).toContain("●");
-  await drawn.press({ key: "review" });
-  expect(await drawn.find({ type: "Text", text: /→ B: Default by kind\./ })).toBeDefined();
-  // Q2 has one row and the write-in: the write-in's own place opens it.
-  await drawn.press({ key: "q1" });
-  await pick(w, drawn, "d1");
-  expect(await field(drawn, "write")).toBeDefined();
-  await typeIn(drawn, "write", "no");
-  await drawn.press({ key: "review" });
-  await drawn.press({ key: "fill" });
-  await drawn.unmount();
-  expect(w.box).toBe("Q1: B\nQ2: no");
-});
-
-test("a pick list's rows keep their own digits, and its write-in takes the next", async ($, on) => {
-  const w = world(on);
-  await start($);
-  await ends($, MINE);
-  const drawn = await form($);
-  // `Build it` is already pressed by `1`, so it takes no second button on the same key.
-  expect((await drawn.find({ key: "e0" }))?.props.hotkey).toBe("1");
-  expect(await drawn.find({ key: "d0" })).toBeUndefined();
-  expect((await drawn.find({ key: "d1" }))?.props.hotkey).toBe("2");
-  await pick(w, drawn, "d1");
-  expect(await field(drawn, "write")).toBeDefined();
-  await drawn.unmount();
-});
 
 test("in the round editor a digit answers the shown card's row, as its letter does", async ($, on) => {
   const w = world(on);
@@ -795,6 +540,91 @@ test("the closing row's count goes back to the first question and scrolls to the
   expect((await again.find({ key: "round-current" }))?.props.label).toBe("Q1/3");
   await again.unmount();
   await cards.unmount();
+});
+
+/** A terminal session whose transcript holds `text`, as the last reply; its round's cards. */
+async function terminalRound($: Engine, on: On, text: string) {
+  on("session.messages", () => ({ value: [{ role: "assistant", text, toolUses: [] }] }));
+  on("session.surfaces", () => ({ value: ["terminal"] }));
+  on("ui.place", () => ({ value: { isPlaced: false, reason: "no surface in the test" } }));
+  await start($);
+  await ends($, text);
+  return $.ui.mount({
+    plugin: "answer",
+    surface: "terminal",
+    component: "AssistantMessage",
+    requestId: "assistant-row",
+    props: { text, isFirstOfReply: true },
+  });
+}
+
+test("a pick list is cards on a terminal: each row lettered, the write-in last", async ($, on) => {
+  const w = world(on);
+  const cards = await terminalRound($, on, MINE);
+  // Its rows print no letter of their own; the card gives them one by their place.
+  expect((await cards.find({ key: "question-0-choose-0" }))?.props.label).toMatch(
+    /^\s*A ○ Build it/,
+  );
+  expect((await cards.find({ key: "question-0-write" }))?.props.label).toMatch(
+    /^\s*B ○ Something else/,
+  );
+  expect((await cards.find({ key: "question-1-choose-1" }))?.props.label).toMatch(
+    /^\s*B ○ Route to \/grill-me/,
+  );
+  await cards.press({ key: "question-0-choose-0" });
+  await cards.press({ key: "question-1-choose-1" });
+  await cards.press({ key: "round-fill" });
+  expect(w.box).toBe("do 1\n2 → /grill-me");
+  // Its letters are the band's keys too.
+  const bar = await band($);
+  await bar.press({ key: "round-key-a" });
+  await bar.unmount();
+  expect((await cards.find({ key: "question-1-choose-0" }))?.props.label).toMatch(
+    /^\s*A ● Build it/,
+  );
+  await cards.unmount();
+});
+
+test("on a terminal the band is the cards' key guide, never a form, on either renderer", async ($, on) => {
+  const w = world(on);
+  const cards = await terminalRound($, on, GRILLING);
+  await cards.unmount();
+  for (const isFullscreen of [true, false]) {
+    const bar = await $.ui.mount({
+      ...BAND,
+      surface: "terminal",
+      viewport: { columns: 100, rows: 40, isFullscreen },
+    });
+    expect((await bar.find({ key: "round-current" }))?.props.label).toBe("Q1/3");
+    expect(await bar.find({ key: "answer" })).toBeUndefined();
+    await bar.unmount();
+  }
+  // `/answer` brings the shown card into view and leaves the band as it was.
+  const run = $.command.run(RUN);
+  await w.clock.advance(100);
+  await run;
+  const bar = await band($);
+  expect(await bar.find({ key: "round-current" })).toBeDefined();
+  expect(await bar.find({ key: "e0" })).toBeUndefined();
+  await bar.unmount();
+});
+
+test("while the band writes a note it has the band to itself", async ($, on) => {
+  world(on);
+  // What core is left to stack, once asked: the band's own mount stacks its rows too.
+  let stacked: string[] | undefined;
+  on("ui.render", { component: "AbovePromptList", plugin: "*" }, (_, e, next) => {
+    if (!stacked) return next(e);
+    stacked = e.props.rows.map((r) => r.plugin);
+    return { type: "Box", props: {}, children: [] };
+  });
+  await (await terminalRound($, on, GRILLING)).unmount();
+  const bar = await band($);
+  await bar.press({ key: "round-key-n" });
+  await bar.unmount();
+  stacked = [];
+  await (await $.ui.mount(LIST)).unmount();
+  expect(stacked).toEqual(["answer"]);
 });
 
 // A graphical surface draws the form from the kit's patterns, not the terminal's rows: the offer

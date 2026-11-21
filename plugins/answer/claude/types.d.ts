@@ -137,8 +137,6 @@ export type Current = {
   pending?: { from: number; field: NonNullable<Editing>; isWarned?: true };
   /** Drawn as the form, not its one row. */
   isOpen: boolean;
-  /** The prompt's text, set aside while the form is open; null with none. */
-  stash: string | null;
   /** The reply the last fill put in the prompt, so the next one takes its place. */
   filled: string | null;
   /** The answers placed in the prompt, which may differ from the latest picks. */

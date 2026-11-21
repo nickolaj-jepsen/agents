@@ -9,17 +9,7 @@ import {
   step as stepForm,
   view as viewOf,
 } from "../core/forms";
-import {
-  fitBody,
-  GAPS,
-  heightOf,
-  keyRows,
-  keysOf,
-  KEY_CELLS,
-  positionOf,
-  rowOf,
-  type Gaps,
-} from "./terminal";
+import { rowOf } from "./terminal";
 import {
   closingRow,
   controlBar,
@@ -33,33 +23,22 @@ import {
 import type { Action, Current, Editing, Entry, Held, RoundEditor, View } from "./types.d.ts";
 import {
   actionBar,
-  bandRows,
-  bandShell,
-  buttonRow,
-  cellWidth,
   choice,
   clamp,
   excerpt,
   fieldRow,
-  forSurface,
-  inlineMarkdown,
   kitOf,
   list,
-  note as noteLines,
-  noteText,
   onlyOwnRows,
   paneTitle,
   prose,
-  RESERVED_ROWS,
   roleProps,
-  rowsOf,
   stack,
   statusBand,
   tokens,
   type Kit,
   type Action as ActionSpec,
   type ChoiceOption,
-  type KeyChip,
   type ListItem,
 } from "./ui";
 
@@ -103,8 +82,6 @@ let band: string | undefined;
 /** When a note was last asked for; the press that picked its answer moves the ring just after. */
 let askedAt = 0;
 const CLICK_MS = 500;
-/** The band's rows and columns when it last drew: what the prompt box leaves it. */
-let room: { rows: number; columns: number } | undefined;
 const transcriptRows = new Map<string, string>();
 
 const complain = ($: EngineInterface, error: unknown) =>
@@ -121,7 +98,6 @@ const over = (c: Current | null, held: Held): Current => {
     editing: isSameItem ? (c?.editing ?? null) : null,
     isBodyOpen: isSameItem ? (c?.isBodyOpen ?? false) : false,
     isOpen: isSameForm ? (c?.isOpen ?? false) : false,
-    stash: isSameForm ? (c?.stash ?? null) : null,
     filled: isSameForm ? (c?.filled ?? null) : null,
     filledRound: isSameForm ? c?.filledRound : undefined,
     transcript: isSameForm ? c?.transcript : undefined,
@@ -243,24 +219,11 @@ async function accept($: EngineInterface) {
   if (await step($, { do: "accept" })) await move($, { do: "next" });
 }
 
-/**
- * Opens the form. The band shares its half of the screen with the prompt box, so a draft of
- * several lines that leaves the form short of its height is set aside until it folds.
- */
+/** Opens the graphical form and hands it the ring. */
 async function open($: EngineInterface) {
   const c = await read($, current);
   if (!c) return;
-  const box = await $.prompt.read();
-  const isCramped =
-    room !== undefined &&
-    room.rows - RESERVED_ROWS < heightOf(c, room.columns, 1) &&
-    rowsOf(box.text, room.columns) >= 2;
-  const isTaken = isCramped && (await $.prompt.fill({ text: "", mode: "replace" })).isFilled;
-  await edit($, (was) => ({
-    ...was,
-    isOpen: true,
-    stash: isTaken ? box.text : was.stash,
-  }));
+  await edit($, (was) => ({ ...was, isOpen: true }));
   await focus($, home(c.view));
 }
 
@@ -286,25 +249,10 @@ const asideNotice = (answered: number) =>
     ? `${answered} answer${answered === 1 ? "" : "s"} set aside: /answer brings them back.`
     : "Answers set aside: /answer brings them back.";
 
-/** Folds the form back to its row, the answers kept, and hands the prompt its text back. */
+/** Folds the form back to its row, the answers kept. */
 async function close($: EngineInterface) {
   typed = null;
-  const c = await read($, current);
-  if (!c) return;
-  if (c.stash !== null) {
-    const box = await $.prompt.read();
-    await $.prompt.fill({
-      text: placeReply(box.text, c.stash),
-      mode: "replace",
-    });
-  }
-  await edit($, (was) => ({
-    ...was,
-    isOpen: false,
-    editing: null,
-    stash: null,
-    pending: undefined,
-  }));
+  await edit($, (was) => ({ ...was, isOpen: false, editing: null, pending: undefined }));
 }
 
 /**
@@ -322,7 +270,7 @@ const isNotPerson = (text: string) =>
  * past any turn something other than the person started, as a live session keeps a round
  * through those. One the person has spoken after is left alone.
  */
-async function recover($: EngineInterface, graphical = false) {
+async function recover($: EngineInterface) {
   if (await read($, current)) return;
   const messages = await $.session.messages();
   if (!Array.isArray(messages)) return;
@@ -330,10 +278,7 @@ async function recover($: EngineInterface, graphical = false) {
     if (message.role === "assistant") {
       const held = message.text ? offer(null, message.text) : null;
       if (!held) continue;
-      const id =
-        graphical && held.form.kind === "round"
-          ? await captureRound($, held, message.text, formId(held.form), message, false)
-          : undefined;
+      const id = await captureRound($, held, message.text, formId(held.form), message, false);
       await update($, current, (c) => c ?? { ...over(null, held), transcript: id });
       return;
     }
@@ -341,8 +286,11 @@ async function recover($: EngineInterface, graphical = false) {
   }
 }
 
-/** `/answer`: opens the form, or folds it when it is already up; a round set aside comes back. */
-async function toggle($: EngineInterface, fullscreen = false) {
+/**
+ * `/answer`: on a terminal it brings the shown question's card into view; on a graphical surface
+ * it opens the form, or folds it when it is already up. A round set aside comes back.
+ */
+async function toggle($: EngineInterface) {
   let c = await read($, current);
   if (c?.writer) return;
   // The aside comes first: `recover` would find the round on the other side of the send that set
@@ -363,19 +311,21 @@ async function toggle($: EngineInterface, fullscreen = false) {
     $.ui.toast("Nothing to answer: the last turn asked no questions.");
     return;
   }
-  if (c.transcript && fullscreen) {
+  const surfaces: readonly string[] = await $.session.surfaces().catch(() => []);
+  if (!surfaces.includes("terminal")) await (c.isOpen ? close($) : open($));
+  else if (!c.transcript) $.ui.toast("The round's message is not in the transcript to answer.");
+  else {
     await $.clock.sleep(60);
-    await revealRound($, c.transcript, c.view.step, "start");
-  } else await (c.isOpen ? close($) : open($));
+    await revealRound($, c.transcript, c.view.step, "start").catch(() => undefined);
+  }
 }
 
 /** Writes the reply into the prompt for the person to send: above their draft, in place of an earlier fill. */
 async function fill($: EngineInterface, text: string): Promise<boolean> {
   const c = await read($, current);
   const box = await $.prompt.read();
-  const held = [c?.stash, box.text].filter(Boolean).join("\n\n");
   const { isFilled } = await $.prompt.fill({
-    text: placeReply(ownDraft(held, c?.filled ?? null), text),
+    text: placeReply(ownDraft(box.text, c?.filled ?? null), text),
     mode: "replace",
   });
   if (isFilled) {
@@ -387,7 +337,6 @@ async function fill($: EngineInterface, text: string): Promise<boolean> {
             ...was,
             isOpen: false,
             editing: null,
-            stash: null,
             filled: text,
             filledRound: c.transcript ? c.held : undefined,
             // Filling hands the prompt the keys; the guide must not keep promising them.
@@ -408,7 +357,7 @@ async function send($: EngineInterface, text: string): Promise<boolean> {
   const c = await read($, current);
   if (!c) return false;
   const box = await $.prompt.read();
-  const draft = c.stash !== null ? ownDraft(c.stash, c.filled) : ownDraft(box.text, c.filled);
+  const draft = ownDraft(box.text, c.filled);
   typed = null;
   await update($, current, () => null);
   await $.prompt.fill({ text: "", mode: "replace" }).catch(() => undefined);
@@ -432,23 +381,6 @@ async function send($: EngineInterface, text: string): Promise<boolean> {
   if (draft) await $.prompt.fill({ text: draft, mode: "replace" }).catch(() => undefined);
   return true;
 }
-
-/**
- * The key that answers an entry: the option's own letter, `w` for the write-in, a digit for
- * anything else (a pick list's rows, a yes). The letter `h` is the back key, so option H goes
- * by the ring and the pointer.
- */
-function hotkeyOf(row: Entry, index: number): string | undefined {
-  if (row.kind === "write") return "w";
-  if (row.key) return /^[A-Ga-g]$/.test(row.key) ? row.key.toLowerCase() : undefined;
-  return index < 9 ? String(index + 1) : undefined;
-}
-
-/** An entry's words: its letter is drawn as its key, so the printed `B.` is left off. */
-const labelOf = (row: Entry, index: number) =>
-  hotkeyOf(row, index) === row.key.toLowerCase() && row.key
-    ? row.text.replace(/^[A-Ga-g][.)]\s*/, "")
-    : row.text;
 
 // Claude Code 2.1.325 returns the transcript without row IDs and rejects ranged reads.
 async function recentMessages(
@@ -576,7 +508,7 @@ async function changeRound(
     );
     if (action && typeof action === "object" && "letter" in action) {
       const entry = here.view.item?.entries.findIndex(
-        (row) => row.kind !== "write" && entryLetter(row) === action.letter,
+        (row, i) => row.kind !== "write" && entryLetter(row, i) === action.letter,
       );
       return entry === undefined || entry < 0
         ? here
@@ -840,7 +772,7 @@ async function pressRoundKey($: EngineInterface, id: string, key: string) {
     return writeRound($, id, c.view.step, WRITE, "terminal");
   if (
     c.view.item?.entries.some(
-      (entry) => entry.kind !== "write" && entryLetter(entry) === key.toUpperCase(),
+      (entry, i) => entry.kind !== "write" && entryLetter(entry, i) === key.toUpperCase(),
     )
   )
     return changeRound($, id, (view) => view.step, {
@@ -1024,9 +956,7 @@ export const register: Register = (on) => {
       })
       .catch((error) => complain($, `/answer not registered: ${String(error)}`));
     const started = await next(e);
-    await recover($, e.surface === "desktop" || e.surface === "vscode").catch((error) =>
-      complain($, error),
-    );
+    await recover($).catch((error) => complain($, error));
     return started;
   });
 
@@ -1037,10 +967,9 @@ export const register: Register = (on) => {
     const previous = await read($, current);
     if (previous?.writer) return next(e);
     const incoming = offer(null, e.answer);
-    const id =
-      incoming?.form.kind === "round"
-        ? await captureRound($, incoming, e.answer, e.turnId).catch((error) => complain($, error))
-        : undefined;
+    const id = incoming
+      ? await captureRound($, incoming, e.answer, e.turnId).catch((error) => complain($, error))
+      : undefined;
     if (incoming && previous && previous.transcript !== id) await freezeRound($, previous);
     await update($, current, (c) => {
       const held = offer(c?.held ?? null, e.answer);
@@ -1096,21 +1025,17 @@ export const register: Register = (on) => {
       const fromFill = c.filled && (text === c.filled || text.startsWith(`${c.filled}\n`));
       await freezeRound($, c, (fromFill ? c.filledRound : undefined) ?? c.held);
     }
-    // A draft set aside for the open form outlives the message sent past it.
-    const draft = c.stash === null ? "" : ownDraft(c.stash, c.filled);
-    if (draft) await $.prompt.fill({ text: draft, mode: "replace" }).catch(() => undefined);
     return sent;
   }).catch((_$, e, next) => (next.called ? undefined : next(e)));
 
-  on("command.run", { command: "answer" }, async ($, e) => {
-    await toggle($, e.presentation?.isFullscreen);
+  on("command.run", { command: "answer" }, async ($) => {
+    await toggle($);
     return {};
   });
 
   on("ui.render", { component: "AssistantMessage" }, async ($, e, next) => {
     const surface = e.surface;
     if (surface !== "terminal" && surface !== "desktop" && surface !== "vscode") return next(e);
-    if (surface === "terminal" && e.viewport?.isFullscreen === false) return next(e);
     if (e.props.isSummary) return next(e);
     const match = await findRound($, surface, e.requestId, e.props.text);
     if (!match) return next(e);
@@ -1142,8 +1067,7 @@ export const register: Register = (on) => {
   });
 
   on("ui.render", { component: "Placed" }, async ($, e, next) => {
-    if (e.surface !== "terminal" || e.viewport?.isFullscreen === false || e.props.plugin !== PLUGIN)
-      return next(e);
+    if (e.surface !== "terminal" || e.props.plugin !== PLUGIN) return next(e);
     const match = Object.entries(await read($, transcript)).find(([, round]) =>
       round.anchors.includes(e.requestId),
     );
@@ -1168,10 +1092,11 @@ export const register: Register = (on) => {
     if (!c) return next(e);
     band = e.requestId;
     const els = $.ui.resolve(e);
-    const { Box, Text, Button, Markdown } = els;
+    const { Box } = els;
     const kit = kitOf(els, e);
-    if (c.transcript) {
-      if (e.surface === "terminal" && e.viewport?.isFullscreen !== false) {
+    if (e.surface === "terminal") {
+      if (!c.transcript) return next(e);
+      {
         if (c.writer?.surface === "terminal")
           return writingMode($, kit, c, $.ui.resolve(e).Input, e.props.maxRows) ?? next(e);
         const id = c.transcript;
@@ -1199,8 +1124,8 @@ export const register: Register = (on) => {
           (key) => pressRoundKey($, id, key),
         );
       }
-      if ((e.surface === "desktop" || e.surface === "vscode") && !c.isOpen) return next(e);
     }
+    if (c.transcript && !c.isOpen) return next(e);
     const { view, editing } = c;
     const back = () => leave($, (shown) => ({ do: "go", step: shown - 1 }));
     const forward = () => leave($, (shown) => ({ do: "go", step: shown + 1 }));
@@ -1225,538 +1150,214 @@ export const register: Register = (on) => {
       },
     };
 
-    // The terminal's drawing is the mod's own, to the cell; a graphical surface's is the kit's.
-    return forSurface(kit, {
-      tui: () => {
-        room = { rows: e.props.maxRows, columns: e.props.bodyColumns };
-        /** The kept note as drawn: the gutter dim, the words as the note's own colour. */
-        const noteRows = (text: string, indent = 0) =>
-          noteLines(kit, text, { indent, role: "note", italic: true });
-        if (!c.isOpen)
-          return (
-            <Button key="answer" plain autoFocus onPress={() => open($)}>
-              <Text {...roleProps("accent")}>{view.title}</Text>
-              <Text dimColor>
-                {`  ${view.answered} of ${view.count}  ${CHORD} then Enter, or /answer`}
-              </Text>
-            </Button>
-          );
-
-        const columns = e.props.bodyColumns;
-        // A short band gives up its blank rows, the one under the divider first, before it gives up
-        // the question's title.
-        const gaps: Gaps =
-          GAPS.find((g) => heightOf(c, columns, g) <= e.props.maxRows - RESERVED_ROWS) ?? 0;
-        const gap = gaps >= 1 ? 1 : 0;
-        /** A field and the mark that leads its text. */
-        const field = (
-          key: typeof WRITE | typeof NOTE,
-          lead: JSX.Element,
-          placeholder: string,
-          value: string,
-          submitLabel: string,
-          onSubmit: (text: string) => unknown,
-        ) =>
-          "Input" in els ? (
-            <Box>
-              {lead}
-              <els.Input
-                key={keyOf(key)}
-                autoFocus
-                placeholder={placeholder}
-                value={value}
-                submitLabel={submitLabel}
-                onInput={(text) => {
-                  typed = { field: key, text };
-                }}
-                onSubmit={(text) => onSubmit(text)}
-              />
-            </Box>
-          ) : null;
-        const noteLead = (
-          <Text {...roleProps("note")} italic>
-            {`${tokens.glyph.noteEnd} `}
-          </Text>
-        );
-        const keys = buttonRow(
-          kit,
-          keysOf(c).map(({ hotkey, label, kind, isLit }): KeyChip => ({
-            id: kind,
-            hotkey,
-            label,
-            press: () => press[kind]?.(),
-            isLit,
-          })),
-        );
-        const unanswered = view.review.filter((row) => !row.isAnswered).map((row) => row.label);
-        const height = heightOf(c, columns, gaps);
-        const panelRows = bandRows(height, e.props.maxRows);
-        // The rule that parts the form from the chat, and on it every question: which are
-        // answered, which is shown, and a click to go to one.
-        const stops = view.review.reduce((n, row) => n + cellWidth(row.label) + 5, 0);
-        const questions = [
-          ...view.review.map((row, i) => (
-            <Button
-              key={`q${i}`}
-              plain
-              dimColor={i !== view.step}
-              onPress={() => leave($, () => ({ do: "go", step: i }))}
-            >
-              {/* The mark leads, so it reads as its own label's. */}
-              {row.isAnswered ? (
-                <Text {...roleProps("success")}>{`${tokens.glyph.done} `}</Text>
-              ) : (
-                <Text dimColor>{`${tokens.glyph.single.off} `}</Text>
-              )}
-              {i === view.step ? <Text {...roleProps("accent")}>{row.label}</Text> : row.label}
-            </Button>
-          )),
-          <Button
-            key="review"
-            plain
-            dimColor={!view.isReview}
-            hotkey="r"
-            label="review"
-            onPress={() => leave($, () => ({ do: "review" }))}
-          />,
-        ];
-        const shell = (body: JSX.Element, isRoomy = gaps === 2) =>
-          bandShell(kit, {
-            tui: { isRoomy, columns, height, maxRows: e.props.maxRows },
-            title: view.isReview ? "Review" : `${view.step + 1} of ${view.count}`,
-            right: { nodes: questions, width: stops + "r: review".length },
-            onClose: () => close($),
-            body,
-            // Last, so the keys keep their row whatever the body holds.
-            footer: keys,
-          });
-
-        if (!view.item) {
-          const missing = `Not answered: ${unanswered.join(", ")}. Its row goes back to it.`;
-          const wide = Math.max(1, columns - KEY_CELLS);
-          // A question and its answer share a line when they fit; else the answer is under it.
-          const lines = view.review.map((row) => {
-            const answer = `→ ${row.shown}`;
-            const question = `${row.label}  ${row.title}`;
-            const isOne = cellWidth(`${question}  ${answer}`) <= wide;
-            return {
-              row,
-              isOne,
-              question: clamp(question, wide, { min: 1, max: 1 })[0] ?? "",
-              answer: isOne ? [answer] : clamp(answer, wide, { min: 1, max: 2 }),
-            };
-          });
-          const listRows =
-            lines.reduce(
-              (n, line) =>
-                n +
-                (line.isOne ? 1 : 1 + line.answer.length) +
-                (line.row.note
-                  ? rowsOf(noteText(line.row.note, " ".repeat(KEY_CELLS)), columns)
-                  : 0),
-              0,
-            ) + (unanswered.length ? rowsOf(missing, columns) : 0);
-          // The divider, the list, the button and the keys always show; then the reply as far as
-          // the band has room: whole under a blank row, one line, or not at all.
-          const fixed = 1 + listRows + 1 + (editing === NOTE ? 1 : 0) + keyRows(keysOf(c), columns);
-          const left = e.props.maxRows - RESERVED_ROWS - fixed;
-          const replyAll = rowsOf(view.reply || "(nothing answered yet)", columns) + 1;
-          const level = left >= replyAll + 2 ? "full" : left >= 1 ? "line" : "none";
-          // A blank row under the divider too, once the whole reply fits with it.
-          const isRoomy = level === "full" && left >= replyAll + 3;
-          const reply = view.reply || "(nothing answered yet)";
-          return shell(
-            <Box flexDirection="column" rowGap={level === "full" ? gap : 0}>
-              <Box flexDirection="column">
-                {lines.map(({ row, isOne, question, answer }, i) => (
-                  <Box key={`row${i}`} flexDirection="column">
-                    <Button
-                      key={`item${i}`}
-                      plain
-                      hotkey={i < 9 ? String(i + 1) : undefined}
-                      onPress={() => leave($, () => ({ do: "go", step: i }))}
-                    >
-                      {question}
-                      <Text dimColor={!row.isAnswered}>
-                        {isOne
-                          ? `  ${answer[0]}`
-                          : answer
-                              .map((line, n) => `\n${" ".repeat(KEY_CELLS + (n ? 2 : 0))}${line}`)
-                              .join("")}
-                      </Text>
-                    </Button>
-                    {row.note ? noteRows(row.note, KEY_CELLS) : null}
-                  </Box>
-                ))}
-                {unanswered.length ? <Text {...roleProps("warning")}>{missing}</Text> : null}
-              </Box>
-              {editing === NOTE
-                ? field(
-                    NOTE,
-                    noteLead,
-                    "A note on the whole round, Enter to keep",
-                    view.note,
-                    "keep",
-                    (t) => keepNote($, t),
-                  )
-                : null}
-              {/* Above the reply, so the ring on the button never scrolls the questions out of view. */}
-              <Button
-                key="fill"
-                variant="primary"
-                autoFocus={editing ? undefined : true}
-                label="fill the prompt"
-                onPress={() => press.fill?.()}
-              />
-              {level === "full" ? (
-                <Box flexDirection="column">
-                  <Text dimColor>The reply:</Text>
-                  <Text>{reply}</Text>
-                </Box>
-              ) : level === "line" ? (
-                <Text dimColor>
-                  {
-                    clamp(`The reply: ${reply.replace(/\n\s*/g, "  ")}`, columns, {
-                      min: 1,
-                      max: 1,
-                    })[0]
-                  }
-                </Text>
-              ) : null}
-            </Box>,
-            isRoomy,
-          );
-        }
-
-        const { item } = view;
-        const several = item.isSeveral;
-        const laid = fitBody(c, item, panelRows, columns, gaps);
-        // The write-in is always last.
-        const writeIn = item.entries.length - 1;
-        const chosen = item.entries.findIndex((row) => row.isChosen);
-        // A note sits under the answer it is about; with none yet, under the entries.
-        const noteAt = chosen >= 0 && chosen < writeIn ? chosen : writeIn - 1;
-        // An answered question with no note offers one as a row, for a click to open.
-        const note =
-          editing === NOTE ? (
-            <Box paddingLeft={3}>
-              {field(
-                NOTE,
-                noteLead,
-                "A note on this answer, or Enter to go on",
-                item.note,
-                "next",
-                (t) => keepNote($, t),
-              )}
-            </Box>
-          ) : item.note ? (
-            <Box paddingLeft={3}>
-              <Button key="note-line" plain onPress={() => ask($, NOTE)}>
-                {noteRows(item.note)}
-              </Button>
-            </Box>
-          ) : chosen >= 0 ? (
-            <Box paddingLeft={3}>
-              <Button key="note-add" plain dimColor onPress={() => ask($, NOTE)}>
-                {`${tokens.glyph.noteEnd} add a note`}
-              </Button>
-            </Box>
-          ) : null;
-        /** One-of-many rows are ○ ●, several-of-many □ ■, as the kit has them. */
-        const markOf = (row: Entry) => {
-          const glyph = several && row.kind === "option" ? tokens.glyph.multi : tokens.glyph.single;
-          return row.isChosen ? glyph.on : glyph.off;
-        };
-        const entry = (row: Entry, k: number) => (
-          <Button
-            key={`e${k}`}
-            plain
-            // The write-in waits dim until it holds an answer.
-            dimColor={row.kind === "write" && !item.written}
-            hotkey={hotkeyOf(row, k)}
-            autoFocus={!editing && k === item.start ? true : undefined}
-            onPress={() => choose($, row, k)}
-          >
-            {`${markOf(row)} `}
-            {row.kind === "write"
-              ? `✎ ${item.written || row.text}`
-              : inlineMarkdown(kit, labelOf(row, k))}
-            {row.isRecommended ? <Text dimColor> (recommended)</Text> : null}
-            {/* Inside the button, so a click on any of the option's lines picks it. */}
-            {row.detail ? (
-              <Text
-                dimColor
-              >{`\n${" ".repeat(KEY_CELLS)}${row.detail.replace(/\n/g, `\n${" ".repeat(KEY_CELLS)}`)}`}</Text>
-            ) : null}
-          </Button>
-        );
-        const option = entry;
-        /**
-         * A digit answers the row at its place on screen, as the row's own letter does: the
-         * write-in's place included. They are drawn in a box of no cells, so the card reads as it
-         * always has; a row without a letter (a pick list's, a yes) is already pressed by its
-         * digit, and takes no second one.
-         */
-        const aliases = (
-          <Box key="digits" width={0} height={0} overflow="hidden">
-            {item.entries.map((row, k) => {
-              const digit = positionOf(k);
-              if (!digit || hotkeyOf(row, k) === digit) return null;
-              return (
-                <Button
-                  key={`d${k}`}
-                  plain
-                  label={digit}
-                  hotkey={digit}
-                  onPress={() => choose($, row, k)}
-                />
-              );
-            })}
+    // A graphical surface's form, the kit's.
+    {
+      const { inset } = tokens.gui.across;
+      /** A block not already set in by the kit: its left edge lines up with the rest. */
+      const block = (key: string, node: JSX.Element | null) =>
+        node ? (
+          <Box key={key} flexDirection="column" paddingX={inset}>
+            {node}
           </Box>
-        );
-        return shell(
-          <Box flexDirection="column" rowGap={gap}>
-            <Box flexDirection="column">
-              <Text weight="semibold">{item.title}</Text>
-              {laid.body ? <Markdown key="body" text={laid.body} /> : null}
-              {laid.isCut ? <Text dimColor>… more above</Text> : null}
-            </Box>
-            <Box flexDirection="column">
-              {item.entries.slice(0, writeIn).map((row, k) => (
-                <Box key={`row${k}`} flexDirection="column">
-                  {option(row, k)}
-                  {k === noteAt ? note : null}
-                </Box>
-              ))}
-              {noteAt < 0 ? note : null}
-              {/* The write-in is a row like the others until it is written in. */}
-              {editing === WRITE
-                ? field(
-                    WRITE,
-                    <Text>{"✎ "}</Text>,
-                    "Write your own answer",
-                    item.written,
-                    "save",
-                    (t) => move($, { do: "write", text: t }),
-                  )
-                : item.entries.slice(writeIn).map((row) => option(row, writeIn))}
-              {aliases}
-            </Box>
-            {item.recommended ? (
-              <Markdown key="recommended" text={`**Recommended:** ${item.recommended}`} />
-            ) : null}
-          </Box>,
-        );
-      },
-      gui: () => {
-        const { inset } = tokens.gui.across;
-        /** A block not already set in by the kit: its left edge lines up with the rest. */
-        const block = (key: string, node: JSX.Element | null) =>
-          node ? (
-            <Box key={key} flexDirection="column" paddingX={inset}>
-              {node}
-            </Box>
-          ) : null;
-        /**
-         * A field, always drawn where it belongs, so a click lands in it: a press that reveals one
-         * leaves the focus on the press. It says no word for its Enter, so the surface draws no
-         * button of its own beside it.
-         */
-        const field = (
-          key: typeof WRITE | typeof NOTE,
-          placeholder: string,
-          value: string,
-          onSubmit: (text: string) => unknown,
-        ) =>
-          "Input" in els ? (
-            <els.Input
-              key={keyOf(key)}
-              placeholder={placeholder}
-              value={value}
-              onInput={(text) => {
-                typed = { field: key, text };
-              }}
-              onSubmit={(text) => onSubmit(text)}
-            />
-          ) : null;
+        ) : null;
+      /**
+       * A field, always drawn where it belongs, so a click lands in it: a press that reveals one
+       * leaves the focus on the press. It says no word for its Enter, so the surface draws no
+       * button of its own beside it.
+       */
+      const field = (
+        key: typeof WRITE | typeof NOTE,
+        placeholder: string,
+        value: string,
+        onSubmit: (text: string) => unknown,
+      ) =>
+        "Input" in els ? (
+          <els.Input
+            key={keyOf(key)}
+            placeholder={placeholder}
+            value={value}
+            onInput={(text) => {
+              typed = { field: key, text };
+            }}
+            onSubmit={(text) => onSubmit(text)}
+          />
+        ) : null;
 
-        if (!c.isOpen)
-          return statusBand(kit, {
-            key: "answer",
-            text: view.title,
-            hint: view.kind === "picks" ? "pick" : "answer",
-            gui: {
-              text: view.answered
-                ? `${view.title}, ${view.answered} of ${view.count} answered`
-                : view.title,
-              icon: "question",
-              tone: "neutral",
-            },
-            onPress: () => open($),
-          });
-
-        // One tab per question, marked once answered, and the review: the current one filled.
-        // The way out keeps the far edge.
-        const toolbar = paneTitle(kit, "", undefined, {
+      if (!c.isOpen)
+        return statusBand(kit, {
+          key: "answer",
+          text: view.title,
+          hint: view.kind === "picks" ? "pick" : "answer",
           gui: {
-            tabs: [
-              ...view.review.map((row, i): ActionSpec => ({
-                key: `q${i}`,
-                label: row.isAnswered ? `${tokens.glyph.done} ${row.label}` : row.label,
-                isPrimary: !view.isReview && i === view.step,
-                onPress: () => leave($, () => ({ do: "go", step: i })),
-              })),
-              {
-                key: "review",
-                label: "review",
-                isPrimary: view.isReview,
-                onPress: () => leave($, () => ({ do: "review" })),
-              },
-            ],
-            actions: [{ key: "quit", label: "close", onPress: () => close($) }],
+            text: view.answered
+              ? `${view.title}, ${view.answered} of ${view.count} answered`
+              : view.title,
+            icon: "question",
+            tone: "neutral",
           },
-        });
-        /** An action of the row at the foot: its key is the press's name. */
-        const act = (key: string, label: string, extra: Partial<ActionSpec> = {}): ActionSpec => ({
-          key,
-          label,
-          onPress: () => press[key]?.(),
-          ...extra,
+          onPress: () => open($),
         });
 
-        if (!view.item) {
-          // Each question on one line: its answer, the question beside it, a press to go back to it.
-          const rows = view.review.map((row, i): ListItem => ({
-            key: `item${i}`,
-            title: row.isAnswered ? row.shown : "Not answered",
-            detail: row.title,
-            icon: row.isAnswered ? "success" : "pending",
-            iconTone: row.isAnswered ? "success" : "neutral",
-            action: row.isAnswered ? "Change" : "Answer",
-            meta: row.note ? [{ text: `Note: ${row.note}`, width: 0 }] : undefined,
-            onPress: () => leave($, () => ({ do: "go", step: i })),
-          }));
-          return stack(
-            kit,
-            [
-              toolbar,
-              list(kit, [{ title: "", rows }]),
-              block(
-                "round-note",
-                field(NOTE, "Add a note on the whole round", view.note, (t) => keepNote($, t)),
-              ),
-              actionBar(kit, [
-                act("send", "send", {
-                  hotkey: "s",
-                  isPrimary: Boolean(view.reply),
-                }),
-                act("fill", "fill the prompt"),
-              ]),
-            ],
-            { gui: { gap: "sm" } },
-          );
-        }
+      // One tab per question, marked once answered, and the review: the current one filled.
+      // The way out keeps the far edge.
+      const toolbar = paneTitle(kit, "", undefined, {
+        gui: {
+          tabs: [
+            ...view.review.map((row, i): ActionSpec => ({
+              key: `q${i}`,
+              label: row.isAnswered ? `${tokens.glyph.done} ${row.label}` : row.label,
+              isPrimary: !view.isReview && i === view.step,
+              onPress: () => leave($, () => ({ do: "go", step: i })),
+            })),
+            {
+              key: "review",
+              label: "review",
+              isPrimary: view.isReview,
+              onPress: () => leave($, () => ({ do: "review" })),
+            },
+          ],
+          actions: [{ key: "quit", label: "close", onPress: () => close($) }],
+        },
+      });
+      /** An action of the row at the foot: its key is the press's name. */
+      const act = (key: string, label: string, extra: Partial<ActionSpec> = {}): ActionSpec => ({
+        key,
+        label,
+        onPress: () => press[key]?.(),
+        ...extra,
+      });
 
-        const { item } = view;
-        const several = item.isSeveral;
-        const isChosen = item.entries.some((row) => row.isChosen);
-        // With this one answered and every other too, the way on is the review.
-        const onward = {
-          key: "next",
-          label: view.answered === view.count ? "Review" : "Next",
-          onPress: () => leave($, () => ({ do: "next" })),
-        };
-        const note = field(NOTE, "Add a note", item.note, (t) => keepNote($, t));
-        // A single answer opens in place with its note under it; several, or none yet, keep the
-        // note under the answers once there is one or it was asked for.
-        const isNoteLoose =
-          (several && isChosen) || (!isChosen && (editing === NOTE || !!item.note));
-        const options = item.entries.map((row, k): ChoiceOption => {
-          if (row.kind === "write")
-            return {
-              key: `e${k}`,
-              label: row.text,
-              icon: "write",
-              field:
-                field(WRITE, row.text, item.written, (t) => move($, { do: "write", text: t })) ??
-                undefined,
-              isOn: row.isChosen,
-              body: note,
-              onPress: () => choose($, row, k),
-            };
-          const words =
-            row.kind === "accept"
-              ? row.text.replace(/^(?:Yes:\s*)?(?:Yes\b[.,:]?\s*)?/i, "")
-              : row.key
-                ? row.text.replace(/^[A-H][.)]\s*/, "")
-                : row.text;
-          return {
-            key: `e${k}`,
-            tag: row.kind === "accept" ? "Yes" : row.key || undefined,
-            label: words || "As recommended",
-            detail:
-              [row.isRecommended ? "Recommended" : "", row.detail.replace(/\s*\n\s*/g, " ")]
-                .filter(Boolean)
-                .join("  ·  ") || undefined,
-            isOn: row.isChosen,
-            body: note,
-            onPress: () => choose($, row, k),
-          };
-        });
-        const body = [item.body, item.recommended ? `**Recommended:** ${item.recommended}` : ""]
-          .filter(Boolean)
-          .join("\n\n");
+      if (!view.item) {
+        // Each question on one line: its answer, the question beside it, a press to go back to it.
+        const rows = view.review.map((row, i): ListItem => ({
+          key: `item${i}`,
+          title: row.isAnswered ? row.shown : "Not answered",
+          detail: row.title,
+          icon: row.isAnswered ? "success" : "pending",
+          iconTone: row.isAnswered ? "success" : "neutral",
+          action: row.isAnswered ? "Change" : "Answer",
+          meta: row.note ? [{ text: `Note: ${row.note}`, width: 0 }] : undefined,
+          onPress: () => leave($, () => ({ do: "go", step: i })),
+        }));
         return stack(
           kit,
           [
             toolbar,
-            <Box key="question" flexDirection="column">
-              {block("title", prose(kit, `**${item.title.replace(/\*\*/g, "")}**`))}
-              {excerpt(kit, {
-                key: "body",
-                text: body,
-                isOpen: c.isBodyOpen,
-                toggleKey: "more",
-                onToggle: () => edit($, (was) => ({ ...was, isBodyOpen: !was.isBodyOpen })),
-              })}
-            </Box>,
-            choice(kit, options, {
-              key: "options",
-              isMulti: several,
-              gui: { layout: "rows", onward },
-            }),
-            isNoteLoose && note
-              ? fieldRow(kit, {
-                  key: "note-row",
-                  icon: "note",
-                  alt: "Note",
-                  field: note,
-                })
-              : null,
+            list(kit, [{ title: "", rows }]),
+            block(
+              "round-note",
+              field(NOTE, "Add a note on the whole round", view.note, (t) => keepNote($, t)),
+            ),
             actionBar(kit, [
-              act("skip", "skip", { hotkey: "s" }),
-              ...(isChosen || isNoteLoose ? [] : [act("note", "add note", { hotkey: "n" })]),
-              // One press takes a recommendation of several options; one is a press on its row.
-              ...(item.canAccept && item.accepts.includes(",")
-                ? [act("accept", `take ${item.accepts}`, { hotkey: "y" })]
-                : []),
-              // A single answer's way on is on its own row; several have theirs here.
-              ...(several
-                ? [
-                    {
-                      ...onward,
-                      hotkey: "l",
-                      isPrimary: isChosen,
-                      onPress: onward.onPress,
-                    },
-                  ]
-                : []),
+              act("send", "send", {
+                hotkey: "s",
+                isPrimary: Boolean(view.reply),
+              }),
+              act("fill", "fill the prompt"),
             ]),
           ],
           { gui: { gap: "sm" } },
         );
-      },
-    });
+      }
+
+      const { item } = view;
+      const several = item.isSeveral;
+      const isChosen = item.entries.some((row) => row.isChosen);
+      // With this one answered and every other too, the way on is the review.
+      const onward = {
+        key: "next",
+        label: view.answered === view.count ? "Review" : "Next",
+        onPress: () => leave($, () => ({ do: "next" })),
+      };
+      const note = field(NOTE, "Add a note", item.note, (t) => keepNote($, t));
+      // A single answer opens in place with its note under it; several, or none yet, keep the
+      // note under the answers once there is one or it was asked for.
+      const isNoteLoose = (several && isChosen) || (!isChosen && (editing === NOTE || !!item.note));
+      const options = item.entries.map((row, k): ChoiceOption => {
+        if (row.kind === "write")
+          return {
+            key: `e${k}`,
+            label: row.text,
+            icon: "write",
+            field:
+              field(WRITE, row.text, item.written, (t) => move($, { do: "write", text: t })) ??
+              undefined,
+            isOn: row.isChosen,
+            body: note,
+            onPress: () => choose($, row, k),
+          };
+        const words =
+          row.kind === "accept"
+            ? row.text.replace(/^(?:Yes:\s*)?(?:Yes\b[.,:]?\s*)?/i, "")
+            : row.key
+              ? row.text.replace(/^[A-H][.)]\s*/, "")
+              : row.text;
+        return {
+          key: `e${k}`,
+          tag: row.kind === "accept" ? "Yes" : row.key || undefined,
+          label: words || "As recommended",
+          detail:
+            [row.isRecommended ? "Recommended" : "", row.detail.replace(/\s*\n\s*/g, " ")]
+              .filter(Boolean)
+              .join("  ·  ") || undefined,
+          isOn: row.isChosen,
+          body: note,
+          onPress: () => choose($, row, k),
+        };
+      });
+      const body = [item.body, item.recommended ? `**Recommended:** ${item.recommended}` : ""]
+        .filter(Boolean)
+        .join("\n\n");
+      return stack(
+        kit,
+        [
+          toolbar,
+          <Box key="question" flexDirection="column">
+            {block("title", prose(kit, `**${item.title.replace(/\*\*/g, "")}**`))}
+            {excerpt(kit, {
+              key: "body",
+              text: body,
+              isOpen: c.isBodyOpen,
+              toggleKey: "more",
+              onToggle: () => edit($, (was) => ({ ...was, isBodyOpen: !was.isBodyOpen })),
+            })}
+          </Box>,
+          choice(kit, options, {
+            key: "options",
+            isMulti: several,
+            gui: { layout: "rows", onward },
+          }),
+          isNoteLoose && note
+            ? fieldRow(kit, {
+                key: "note-row",
+                icon: "note",
+                alt: "Note",
+                field: note,
+              })
+            : null,
+          actionBar(kit, [
+            act("skip", "skip", { hotkey: "s" }),
+            ...(isChosen || isNoteLoose ? [] : [act("note", "add note", { hotkey: "n" })]),
+            // One press takes a recommendation of several options; one is a press on its row.
+            ...(item.canAccept && item.accepts.includes(",")
+              ? [act("accept", `take ${item.accepts}`, { hotkey: "y" })]
+              : []),
+            // A single answer's way on is on its own row; several have theirs here.
+            ...(several
+              ? [
+                  {
+                    ...onward,
+                    hotkey: "l",
+                    isPrimary: isChosen,
+                    onPress: onward.onPress,
+                  },
+                ]
+              : []),
+          ]),
+        ],
+        { gui: { gap: "sm" } },
+      );
+    }
   });
 
   // The open form has the band to itself: the other plugins' rows wait until it folds.

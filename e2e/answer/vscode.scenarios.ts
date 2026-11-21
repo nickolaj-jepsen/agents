@@ -146,14 +146,14 @@ export default vscodeScenarios({
       steps: [...asked, { wait: "Question number 12" }, { wait: "Review answers", gone: true }],
     },
     picks: {
-      about: "a numbered list still opens from its offer above the prompt",
+      about: "a numbered pick list is cards in the transcript, as a round is",
       start: asks("picks"),
       steps: [
-        { type: "ask" },
-        { press: "Enter" },
-        { wait: "Pick from 2 items" },
-        { click: "Pick" },
+        ...asked,
         { wait: "default bar" },
+        { click: /○\s+Route to \/grill-me/ },
+        { wait: /●\s+Route to \/grill-me/ },
+        { wait: "1/2 answered" },
       ],
     },
     recommended: {
