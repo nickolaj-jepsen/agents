@@ -5,8 +5,8 @@ import { choiceHit, type ChoiceProps } from "./contract.ts";
 
 /**
  * One row per item: a focus gutter, the key, the mark and the label, wrapped to hang under its
- * first line. Focus is a neutral pointer and a bold label; accent and a filled mark are the
- * chosen answer's alone.
+ * first line. Focus is a neutral pointer and a bold label, hover a bold label alone; accent and
+ * a filled mark are the chosen answer's.
  * @param width The room in cells.
  */
 export function choiceLines(props: ChoiceProps, width: number): Line[] {
@@ -17,8 +17,10 @@ export function choiceLines(props: ChoiceProps, width: number): Line[] {
     const lead = `${tokens.glyph.pointer} ${item.key} ${marks.off} `;
     const pad = span(" ".repeat(cellWidth(lead)));
     const inner = Math.max(1, width - cellWidth(lead));
-    const role: Role = chosen ? "accent" : item.writeIn ? "dim" : "text";
-    const label = { role, bold: chosen || focused };
+    // The keyboard's row and the pointer's read alike: bold, in the text colour, never the accent.
+    const lit = focused || props.hover === i;
+    const role: Role = chosen ? "accent" : item.writeIn && !lit ? "dim" : "text";
+    const label = { role, bold: chosen || lit };
     const hit = choiceHit(i);
     return [
       ...wrap(item.text, inner).map((text, row) =>

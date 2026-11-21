@@ -23,6 +23,13 @@ describe("the choice list's drawing", () => {
     }
   });
 
+  test("the pointer's row is bold like the keyboard's, without its pointer or the accent", () => {
+    const props = choiceStories[0]!.props;
+    const [writeIn] = choiceLines({ ...props, chosen: [], hover: 3 }, 60).slice(-1);
+    expect(textOf(writeIn!).startsWith("  D ")).toBe(true);
+    expect(writeIn!.spans.at(-1)).toMatchObject({ role: "text", bold: true });
+  });
+
   test("pi's measure has the last word: a line it counts wider is cut", () => {
     const [cut] = paintLines(plain, [{ spans: [{ text: "x".repeat(50) }] }], 20).lines;
     expect(visibleWidth(cut ?? "")).toBe(20);

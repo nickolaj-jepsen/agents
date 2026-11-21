@@ -1011,8 +1011,8 @@ function choiceLive(props: ChoiceProps): Live {
   };
   return {
     render: (theme, width) => {
-      const lines = choiceLines({ ...props, ...state }, width);
-      const painted = paintLines(theme, lines, width, hover);
+      const lines = choiceLines({ ...props, ...state, hover: choiceOf(hover) }, width);
+      const painted = paintLines(theme, lines, width);
       hits = painted.hits;
       return painted.lines;
     },

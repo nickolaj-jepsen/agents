@@ -34,10 +34,20 @@ const HOVER_FILL = "userMessageBackground";
 export function keysHint(k: Els, held: boolean, canLeave = false): JSX.Element | null {
   const { Box, Text } = k;
   if (held && !canLeave) return null;
+  // The way that applies reads as an action: a bold label and its key on a keycap, the fill a
+  // hovered row sits on. The other stays, dim, since the mod may be wrong about which applies.
   const way = (label: string, key: string, isLit: boolean) => (
-    <Text key={key} dimColor={!isLit || undefined}>
-      <Text bold={isLit || undefined}>{label}</Text>
-      {` ${key}`}
+    <Text key={key}>
+      <Text bold={isLit || undefined} dimColor={!isLit || undefined}>
+        {`${label} `}
+      </Text>
+      <Text
+        backgroundColor={isLit ? HOVER_FILL : undefined}
+        bold={isLit || undefined}
+        dimColor={!isLit || undefined}
+      >
+        {isLit ? ` ${key} ` : key}
+      </Text>
     </Text>
   );
   return (

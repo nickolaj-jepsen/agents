@@ -19,6 +19,11 @@ export type ChoiceState = {
 
 export type ChoiceProps = ChoiceState & {
   items: ChoiceItem[];
+  /**
+   * The row under the pointer, where the client reports it: its label is drawn bold. Claude
+   * Code's engine styles its own hover and reports none, so its painter sets a fill instead.
+   */
+  hover?: number;
   /** Several of many (`□ ■`) instead of one of many (`○ ●`). */
   multiple?: boolean;
 };
