@@ -267,6 +267,35 @@ async function expand(band: Pick<Mounted, "press">, w: World) {
 
 const saved = (w: World, tool: string) => w.calls.find((c) => c.tool === tool)?.args;
 
+/** Whether the terminal's drawing says `words` somewhere. */
+const shows = async (site: Pick<Mounted, "find">, words: RegExp) =>
+  (await site.find({ type: "Text", text: words })) !== undefined;
+
+/**
+ * Opens a field of the terminal's draft and presses the choice that reads `words`, or the one
+ * at `index`: a kit choice list under the field's row, each row keyed `choice:<n>`.
+ */
+async function pick(
+  pane: Pick<Mounted, "find" | "press">,
+  w: World,
+  field: string,
+  words: RegExp,
+  index?: number,
+) {
+  await pane.press({ key: `field:${field}` });
+  // The choices are drawn by the redraw the press asks for.
+  await w.clock.settle();
+  for (let i = index ?? 0; i < 30; i++) {
+    const row = await pane.find({ key: `choice:${i}` });
+    if (!row) break;
+    if (index !== undefined || words.test(String(row.props.label ?? ""))) {
+      await pane.press({ key: `choice:${i}` });
+      return;
+    }
+  }
+  throw new Error(`no choice of ${field} reads ${String(words)}`);
+}
+
 test(
   "the button shows in the expanded card only, before Dismiss",
   { plugins: [YSK] },
@@ -322,13 +351,18 @@ test(
     expect(w.prompts[0]).toContain("One-off /ask questions now cost more");
 
     const pane = await $.ui.mount(PANE);
-    expect((await pane.find({ key: "title-0" }))?.props.value).toBe("Cap get_rate outage latency");
-    expect((await pane.find({ key: "status" }))?.props.value).toBe("MSC-todo");
-    expect(await pane.find({ key: "label-MSC-bug" })).toBeDefined();
+    expect(await shows(pane, /Cap get_rate outage latency/)).toBe(true);
+    expect(await shows(pane, /Status\s+Todo/)).toBe(true);
+    expect(await shows(pane, /Labels\s+Bug/)).toBe(true);
 
-    await pane.select({ key: "priority", value: "2" });
-    await pane.input({ key: "title-0", text: "Cap outage latency", kind: "change" });
-    await pane.press({ key: "create" });
+    // A field's row opens its choices under it; one of them picks and closes them.
+    await pick(pane, w, "priority", /High/);
+    expect(await shows(pane, /Priority\s+High/)).toBe(true);
+    await pane.press({ key: "title" });
+    await pane.input({ key: "title-0", text: "Cap outage latency", kind: "submit" });
+    // A press right after the screen changed is not taken: a moment passes first.
+    await w.clock.advance(700);
+    await pane.press({ key: "act:create" });
     await w.clock.settle();
     expect(saved(w, "save_issue")).toEqual({
       team: "MSC",
@@ -345,11 +379,11 @@ test(
     expect((await band.find({ type: "Text", text: /MSC-900/ }))?.text).toContain(
       "Cap outage latency",
     );
-    await band.press({ key: "open-MSC-900" });
+    await band.press({ key: "filed:open:MSC-900" });
     await w.clock.settle();
     expect(w.runs).toContainEqual(["xdg-open", "https://linear.app/x/issue/MSC-900/cap"]);
-    await band.press({ key: "dismiss-MSC-900" });
-    expect(await band.find({ key: "open-MSC-900" })).toBeUndefined();
+    await band.press({ key: "filed:dismiss:MSC-900" });
+    expect(await band.find({ key: "filed:open:MSC-900" })).toBeUndefined();
     await band.unmount();
   },
 );
@@ -364,12 +398,12 @@ test(
     await w.clock.settle();
 
     const pane = await $.ui.mount(PANE);
-    await pane.select({ key: "team", value: "SHP" });
+    await pick(pane, w, "team", /SHP/);
     await w.clock.settle();
-    expect((await pane.find({ key: "status" }))?.props.value).toBe("SHP-todo");
-    expect(await pane.find({ key: "label-SHP-bug" })).toBeDefined();
-    await pane.select({ key: "project", value: "SHP-p" });
-    await pane.press({ key: "create" });
+    expect(await shows(pane, /Labels\s+Bug/)).toBe(true);
+    await pick(pane, w, "project", /./, 1);
+    await w.clock.advance(700);
+    await pane.press({ key: "act:create" });
     await w.clock.settle();
     expect(saved(w, "save_issue")).toMatchObject({
       team: "SHP",
@@ -399,7 +433,17 @@ test("an open issue the search finds can be commented on instead", async ($, on)
   await w.clock.settle();
 
   const pane = await $.ui.mount(PANE);
-  await pane.press({ key: "comment" });
+  // With a duplicate found, the lit button goes to the page that decides on it: nothing is
+  // filed before the comment is read, and the other answer there files the issue anyway.
+  expect(await shows(pane, /Create…/)).toBe(true);
+  await w.clock.advance(700);
+  await pane.press({ key: "act:create" });
+  await w.clock.settle();
+  expect(await pane.find({ key: "choice:1" })).toBeDefined();
+  expect(saved(w, "save_comment")).toBeUndefined();
+  expect(saved(w, "save_issue")).toBeUndefined();
+  await w.clock.advance(700);
+  await pane.press({ key: "act:send" });
   await w.clock.settle();
   expect(saved(w, "save_comment")).toEqual({ issueId: "SHP-1", body: "Seen again in rates.py." });
   expect(saved(w, "save_issue")).toBeUndefined();
@@ -425,7 +469,7 @@ test("/linear right after start waits for the Linear server to connect", async (
   await w.clock.advance(2000);
 
   const pane = await $.ui.mount(PANE);
-  expect((await pane.find({ key: "title-0" }))?.props.value).toBe("Cap get_rate outage latency");
+  expect(await shows(pane, /Cap get_rate outage latency/)).toBe(true);
   await pane.unmount();
 });
 
@@ -439,7 +483,11 @@ test("an open draft is reopened by /linear until Discard drops it", async ($, on
   expect(w.prompts).toHaveLength(1);
 
   const pane = await $.ui.mount(PANE);
-  await pane.press({ key: "discard" });
+  // Discard asks in the head before the draft goes.
+  await pane.press({ key: "act:discard" });
+  expect(await shows(pane, /Discard draft\?/)).toBe(true);
+  await w.clock.advance(700);
+  await pane.press({ key: "frame:discard" });
   await w.clock.settle();
   await pane.unmount();
   await $.command.run({ ...RUN, args: "something else" });
@@ -455,17 +503,20 @@ test("a pasted multi-line title is filed as one line, without a removed label", 
   await w.clock.settle();
 
   const pane = await $.ui.mount(PANE);
-  await pane.input({ key: "title-0", text: "Cap outage\nlatency", kind: "change" });
-  await pane.press({ key: "label-MSC-bug" });
-  expect(await pane.find({ key: "label-MSC-bug" })).toBeUndefined();
-  await pane.press({ key: "create" });
+  await pane.press({ key: "title" });
+  await pane.input({ key: "title-0", text: "Cap outage\nlatency", kind: "submit" });
+  await pick(pane, w, "labels", /Bug/);
+  await pane.press({ key: "act:done" });
+  expect(await shows(pane, /Labels\s+None/)).toBe(true);
+  await w.clock.advance(700);
+  await pane.press({ key: "act:create" });
   await w.clock.settle();
   expect(saved(w, "save_issue")).toMatchObject({ title: "Cap outage latency" });
   expect(saved(w, "save_issue")).not.toHaveProperty("labels");
   await pane.unmount();
 });
 
-test("a description taller than its box says so and is filed whole", async ($, on) => {
+test("a description taller than its room scrolls and is filed whole", async ($, on) => {
   const w = world(on);
   const long = Array.from({ length: 60 }, (_, i) => `Line ${i}`).join("\n");
   w.draft = { ...DRAFT, description: long };
@@ -474,9 +525,14 @@ test("a description taller than its box says so and is filed whole", async ($, o
   await w.clock.settle();
 
   const pane = await $.ui.mount(PANE);
-  expect(await pane.find({ type: "Text", text: /Description continues/ })).toBeDefined();
-  expect(await pane.find({ key: "create" })).toBeDefined();
-  await pane.press({ key: "create" });
+  expect(await shows(pane, /↓ \d+ more/)).toBe(true);
+  expect(await shows(pane, /Line 59/)).toBe(false);
+  // The row that counts what is below steps the window; an arrow does too.
+  await pane.press({ key: "scroll:down" });
+  expect(await shows(pane, /↑ \d+ more/)).toBe(true);
+  expect(await pane.find({ key: "act:create" })).toBeDefined();
+  await w.clock.advance(700);
+  await pane.press({ key: "act:create" });
   await w.clock.settle();
   expect(String(saved(w, "save_issue")?.description)).toContain("Line 59");
   await pane.unmount();
@@ -488,9 +544,10 @@ test("the last filed team is the next draft's fallback", async ($, on) => {
   await $.command.run({ ...RUN, args: "rates" });
   await w.clock.settle();
   const pane = await $.ui.mount(PANE);
-  await pane.select({ key: "team", value: "SHP" });
+  await pick(pane, w, "team", /SHP/);
   await w.clock.settle();
-  await pane.press({ key: "create" });
+  await w.clock.advance(700);
+  await pane.press({ key: "act:create" });
   await w.clock.settle();
   await pane.unmount();
 
@@ -501,7 +558,7 @@ test("the last filed team is the next draft's fallback", async ($, on) => {
   expect(defaults).toContain("team: SHP");
   expect(defaults).toContain("priority: Low");
   const again = await $.ui.mount(PANE);
-  expect((await again.find({ key: "team" }))?.props.value).toBe("SHP");
+  expect(await shows(again, /Team\s+.*SHP/)).toBe(true);
   await again.unmount();
 });
 
@@ -512,8 +569,12 @@ test("Enter in the title keeps its text", async ($, on) => {
   await w.clock.settle();
 
   const pane = await $.ui.mount(PANE);
+  // The field is drawn only while the title is typed; Enter saves and closes it.
+  expect(await pane.find({ key: "title-0" })).toBeUndefined();
+  await pane.press({ key: "title" });
   await pane.input({ key: "title-0", text: "Cap outage latency", kind: "submit" });
-  expect((await pane.find({ key: "title-1" }))?.props.value).toBe("Cap outage latency");
+  expect(await pane.find({ key: "title-0" })).toBeUndefined();
+  expect(await shows(pane, /Cap outage latency/)).toBe(true);
   await pane.unmount();
 });
 
@@ -525,8 +586,9 @@ test("a closed issue is never offered as the duplicate", async ($, on) => {
   await w.clock.settle();
 
   const pane = await $.ui.mount(PANE);
-  expect(await pane.find({ key: "comment" })).toBeUndefined();
-  expect(await pane.find({ key: "create" })).toBeDefined();
+  expect(await pane.find({ key: "duplicate" })).toBeUndefined();
+  expect(await shows(pane, /No open issue seems to cover this/)).toBe(true);
+  expect(await pane.find({ key: "act:create" })).toBeDefined();
   await pane.unmount();
 });
 
@@ -537,7 +599,11 @@ test("Create & open files the issue and opens it", async ($, on) => {
   await w.clock.settle();
 
   const pane = await $.ui.mount(PANE);
-  await pane.press({ key: "create-open" });
+  // Whether it is opened after is a box to tick; only the lit button files.
+  await pane.press({ key: "act:opens" });
+  expect(saved(w, "save_issue")).toBeUndefined();
+  await w.clock.advance(700);
+  await pane.press({ key: "act:create" });
   await w.clock.settle();
   expect(saved(w, "save_issue")).toMatchObject({ title: "Cap get_rate outage latency" });
   expect(w.runs).toContainEqual(["xdg-open", "https://linear.app/x/issue/MSC-900/cap"]);

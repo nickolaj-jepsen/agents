@@ -1,0 +1,30 @@
+# linear-issue/pi/drafting 160x45 @44,34 (72x11)
+╭─ Linear draft ───────────────────────────────────────────── Close × ─╮
+│                                                                      │
+│   • Reading your teams and labels                                    │
+│     Writing the issue                                                │
+│                                                                      │
+│   From your note                                                     │
+│   the sync worker ignores Retry-After headers when it backs off      │
+│   after a 429                                                        │
+│                                                                      │
+│   Discard [d]                                                        │
+╰──────────────────────────────────────────────────────────────────────╯
+--- styles
+1x2 . 2x12 . 1x45 . 3x7 . 1x2
+1 .x70 1
+1 .x3 4x31 .x36 1
+1 .x3 4x2 5x17 .x48 1
+1 .x70 1
+1 .x3 5x14 .x53 1
+1 .x3 5x61 .x6 1
+1 .x3 5x11 .x56 1
+1 .x70 1
+1 .x3 3x7 . 5x3 .x56 1
+1x72
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#dee0e1
+4 fg=#dee0e1 bold
+5 fg=#7e888e

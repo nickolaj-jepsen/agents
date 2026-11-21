@@ -1,0 +1,30 @@
+# linear-issue/pi/failed 160x45 @44,34 (72x11)
+╭─ Linear draft ───────────────────────────────────────────── Close × ─╮
+│                                                                      │
+│   The draft was not written                                          │
+│   Linear MCP unavailable or signed out, re-authenticate with /mcp    │
+│                                                                      │
+│   From your note                                                     │
+│   the sync worker ignores Retry-After headers when it backs off      │
+│   after a 429                                                        │
+│                                                                      │
+│   Try again ↵  Discard [d]                                           │
+╰──────────────────────────────────────────────────────────────────────╯
+--- styles
+1x2 . 2x12 . 1x45 . 3x7 . 1x2
+1 .x70 1
+1 .x3 4x25 .x42 1
+1 .x3 3x63 .x4 1
+1 .x70 1
+1 .x3 5x14 .x53 1
+1 .x3 5x61 .x6 1
+1 .x3 5x11 .x56 1
+1 .x70 1
+1 .x3 2x9 . 5 .x2 3x7 . 5x3 .x43 1
+1x72
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#dee0e1
+4 fg=#ea7f81 bold
+5 fg=#7e888e

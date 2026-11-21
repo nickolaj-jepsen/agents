@@ -1,0 +1,11 @@
+# linear-issue/pi/filed 70x24 @0,1 (70x2)
+✓ PLT-431  Honor Retry-After when the sync worker backs off after a 4…
+  https://linear.app/example/issue/PLT-431
+--- styles
+1x2 2x7 .x2 3x59
+4x42
+--- legend
+1 fg=#68b78d
+2 fg=#dee0e1 bold
+3 fg=#dee0e1
+4 fg=#69add0

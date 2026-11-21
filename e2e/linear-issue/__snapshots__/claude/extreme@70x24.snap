@@ -1,0 +1,25 @@
+# linear-issue/claude/extreme 70x24 @0,12 (70x8)
+╭──────────────────────────────────────────────────────────────────✕─╮
+│   E  同期ワーカーが 429 の後に Retry-After を無視する: honor the   │
+│      header in every retry path, including the nightly…            │
+│   T PLT  S Todo  P Medium  L Bug, Area/reliability, Docs           │
+│   ↓ 26 more                                                        │
+│   PLT-212 may already cover this  Sync worker retries too fast af… │
+│   Create… ↵  Discard [d]  □ Then open in Linear [o]                │
+╰────────────────────────────────────────────────────────────────────╯
+--- styles
+1x67 2 1x2
+1 .x3 3 .x2 4x59 .x3 1
+1 .x6 4x50 .x12 1
+1 .x3 3 .x6 3 .x7 3 .x9 3 .x39 1
+1 .x3 2x9 .x56 1
+1 .x3 5x30 2x34 . 1
+1 .x3 6x7 . 2 .x10 2x3 .x24 2x3 .x16 1
+1x70
+--- legend
+1 dim
+2 fg=#999999
+3 fg=#d77757
+4 bold
+5 fg=#ffc107
+6 fg=#d77757 bold

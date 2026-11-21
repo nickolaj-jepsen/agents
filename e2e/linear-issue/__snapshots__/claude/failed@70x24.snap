@@ -1,0 +1,19 @@
+# linear-issue/claude/failed 70x24 @0,13 (70x6)
+╭──────────────────────────────────────────────────────────────────✕─╮
+│   The draft was not written                                        │
+│   Linear MCP unavailable or signed out, re-authenticate with /mcp  │
+│                                                                    │
+│   Try again ↵  Discard [d]                                         │
+╰────────────────────────────────────────────────────────────────────╯
+--- styles
+1x67 2 1x2
+1 .x3 3x25 .x40 1
+1 .x68 1
+1 .x68 1
+1 .x3 4x9 . 2 .x10 2x3 .x41 1
+1x70
+--- legend
+1 dim
+2 fg=#999999
+3 fg=#ff6b80 bold
+4 fg=#d77757 bold

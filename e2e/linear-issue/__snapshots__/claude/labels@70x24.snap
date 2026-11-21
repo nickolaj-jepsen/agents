@@ -1,0 +1,25 @@
+# linear-issue/claude/labels 70x24 @0,12 (70x8)
+╭──────────────────────────────────────────────────────────────────✕─╮
+│   L  Labels  Bug, Feature                                          │
+│        A ■ Bug                                                     │
+│      ❯ B ■ Feature                                                 │
+│        C □ Improvement                                             │
+│      ↓ 3 more                                                      │
+│   Done ↵  Tick [1]                                                 │
+╰────────────────────────────────────────────────────────────────────╯
+--- styles
+1x67 2 1x2
+1 .x3 2 .x2 2x6 .x56 1
+1 .x8 3 . 4 . 4x3 .x53 1
+1 .x6 5 . 3 . 4 . 6x7 .x49 1
+1 .x8 3 . 2 .x57 1
+1 .x6 2x8 .x54 1
+1 .x3 4x4 . 2 .x7 2x3 .x49 1
+1x70
+--- legend
+1 dim
+2 fg=#999999
+3 fg=#d77757
+4 fg=#d77757 bold
+5 bold
+6 fg=#d77757 bold underline=single

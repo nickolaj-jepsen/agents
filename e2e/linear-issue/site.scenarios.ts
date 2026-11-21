@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { LISTED, linearMcp } from "../lib/linear-mcp.ts";
 import type { Step } from "../lib/scenario.ts";
 import type { SetupContext } from "../lib/session.ts";
-import { poster, site, slow, slowPress } from "../lib/site.ts";
+import { poster, site, slow } from "../lib/site.ts";
 
 const NOTE = "the sync worker ignores Retry-After headers when it backs off after a 429";
 const TITLE = "Honor Retry-After when the sync worker backs off after a 429";
@@ -75,14 +75,14 @@ const DRAFTED: Step[] = [
   LINEAR_UP,
   { type: `/linear ${NOTE}` },
   { press: "Enter" },
-  { wait: "Create & open", timeout: 60_000 },
+  { wait: "Then open in Linear", timeout: 60_000 },
 ];
 
 export default site({
   plugin: "linear-issue",
   demo: {
     caption:
-      "/linear drafts an issue from a note: team, priority, status, labels and a description you can edit. Esc hides the draft to a chip, 8 brings it back.",
+      "/linear drafts an issue from a note: a title, lettered fields that open under their row, and a description. Esc puts the draft aside, 8 brings it back.",
     project: "sync-worker",
     setup: repo,
     start: start(NONE),
@@ -90,29 +90,34 @@ export default site({
       { sleep: 500 },
       slow(`/linear ${NOTE}`),
       { press: "Enter" },
-      { wait: "Create & open", timeout: 60_000 },
+      { wait: "Then open in Linear", timeout: 60_000 },
       { sleep: 2800 },
       poster,
-      // The title field has the focus: cut its ending and write another.
-      slowPress("Backspace", "backs off after a 429".length),
-      { sleep: 600 },
-      slow("retries after a 429"),
-      { sleep: 1200 },
-      // The first Esc leaves the field, the second hides the draft.
+      // A field's letter opens its choices under it; a choice's letter picks.
+      { press: "p" },
+      { sleep: 1400 },
+      { press: "b" },
+      { sleep: 1400 },
+      // The title, in the engine's own field.
+      { press: "e" },
+      { sleep: 900 },
+      slow(" first"),
+      { sleep: 900 },
+      { press: "Enter" },
+      { sleep: 1400 },
+      // Esc puts the draft aside; 8 brings it back.
       { press: "Escape" },
-      { sleep: 1200 },
-      { press: "Escape" },
-      { wait: /Linear draft: .*8: Open/ },
+      { wait: /Linear draft.*Open \[8\]/ },
       { sleep: 2200 },
       { press: "8" },
-      { wait: "Create & open" },
+      { wait: "Then open in Linear" },
       { sleep: 2800 },
     ],
   },
   stills: {
     draft: {
       caption:
-        "The draft arrives filled in: title, team, priority, status, labels and a description. Every field is editable.",
+        "The draft arrives filled in: title, team, status, priority, labels and a description. A field's letter opens its choices; Enter creates the issue.",
       project: "sync-worker",
       setup: repo,
       start: start(NONE),
@@ -120,23 +125,19 @@ export default site({
     },
     duplicate: {
       caption:
-        "When an open issue already covers it, the draft offers a comment on that issue instead of a second one.",
+        "When an open issue may already cover it, the draft says so, and Enter goes to the choice between a comment there and the new issue.",
       project: "sync-worker",
       setup: repo,
       start: start(DUPLICATE),
-      steps: [...DRAFTED, { wait: "Comment on PLT-212", timeout: 30_000 }],
+      steps: [...DRAFTED, { wait: "may already cover this", timeout: 30_000 }],
     },
     chip: {
-      caption: "Esc hides the draft to a chip above the prompt; 8 reopens it, 9 twice discards it.",
+      caption:
+        "Esc puts the draft aside as a line above the prompt; 8 reopens it, 9 twice discards it.",
       project: "sync-worker",
       setup: repo,
       start: start(NONE),
-      steps: [
-        ...DRAFTED,
-        { press: "Escape" },
-        { press: "Escape" },
-        { wait: /Linear draft: .*8: Open/ },
-      ],
+      steps: [...DRAFTED, { press: "Escape" }, { wait: /Linear draft.*Open \[8\]/ }],
     },
   },
   vscode: {

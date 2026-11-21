@@ -1,0 +1,54 @@
+# linear-issue/pi/extreme 70x24 @0,2 (70x22)
+╭─ Linear draft ─────────────────────────────────────────── Close × ─╮
+│                                                                    │
+│   E  同期ワーカーが 429 の後に Retry-After を無視する: honor the   │
+│      header in every retry path, including the nightly             │
+│      reconciliation job and the manual resync command              │
+│                                                                    │
+│   T  Team      Platform (PLT)                                      │
+│   S  Status    Todo                                                │
+│   P  Priority  Medium                                              │
+│   L  Labels    Bug, Area/reliability, Docs                         │
+│   J  Project   None                                                │
+│                                                                    │
+│   The sync worker doubles its delay after every 429 and never      │
+│   reads Retry-After, so it retries sooner than the shop API allows │
+│   and gets limited again. 再試行が早すぎるため、制限が解除されませ │
+│   ん。                                                             │
+│                                                                    │
+│   ↓ 21 more                                                        │
+│                                                                    │
+│   PLT-212 may already cover this  Sync worker retries too fast af… │
+│   Create… ↵  Discard [d]  □ Then open in Linear [o]                │
+╰────────────────────────────────────────────────────────────────────╯
+--- styles
+1x2 . 2x12 . 1x43 . 3x7 . 1x2
+1 .x68 1
+1 .x3 4 .x2 5x59 .x3 1
+1 .x6 5x49 .x13 1
+1 .x6 5x48 .x14 1
+1 .x68 1
+1 .x3 4 .x2 6x4 .x6 3x14 .x38 1
+1 .x3 4 .x2 6x6 .x4 3x4 .x48 1
+1 .x3 4 .x2 6x8 .x2 3x6 .x46 1
+1 .x3 4 .x2 6x6 .x4 3x27 .x25 1
+1 .x3 4 .x2 6x7 .x3 6x4 .x48 1
+1 .x68 1
+1 .x49 4x3 .x16 1
+1 .x9 4x11 .x48 1
+1 .x68 1
+1 .x68 1
+1 .x68 1
+1 .x3 6x9 .x56 1
+1 .x68 1
+1 .x3 7x30 6x34 . 1
+1 .x3 2x7 . 6 .x2 3x7 . 6x3 .x2 3x21 . 6x3 .x16 1
+1x70
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#dee0e1
+4 fg=#a798d7
+5 fg=#dee0e1 bold
+6 fg=#7e888e
+7 fg=#cd9a22

@@ -1,0 +1,66 @@
+# linear-issue/claude/extreme 112x32 @70,0 (42x28)
+│                                       ✕
+│  Linear draft
+│
+│  E  同期ワーカーが 429 の後に
+│     Retry-After を無視する: honor the
+│     header in every retry path,
+│     including the nightly reconciliation
+│     job and the manual resync command
+│
+│  T  Team      Platform (PLT)
+│  S  Status    Todo
+│  P  Priority  Medium
+│  L  Labels    Bug, Area/reliability,
+│               Docs
+│  J  Project   None
+│
+│  The sync worker doubles its delay after
+│  every 429 and never reads Retry-After,
+│  so it retries sooner than the shop API
+│  allows and gets limited again. 再試行が
+│  早すぎるため、制限が解除されません。
+│
+│  ↓ 26 more
+│
+│  PLT-212 may already cover this
+│  Create… ↵  Discard [d]
+│  □ Then open in Linear [o]
+│
+--- styles
+1 .x39 2
+1 .x2 3x12
+1
+1 .x2 4 .x2 5x25
+1 .x5 5x33
+1 .x5 5x27
+1 .x5 5x36
+1 .x5 5x33
+1
+1 .x2 4 .x2 2x4
+1 .x2 4 .x2 2x6
+1 .x2 4 .x2 2x8
+1 .x2 4 .x2 2x6
+1
+1 .x2 4 .x2 2x7 .x3 2x4
+1
+1
+1 .x8 6x3 .x17 6x11
+1
+1
+1
+1
+1 .x2 2x9
+1
+1 .x2 7x30
+1 .x2 3x7 . 2 .x10 2x3
+1 .x24 2x3
+1
+--- legend
+1 dim
+2 fg=#999999
+3 fg=#d77757 bold
+4 fg=#d77757
+5 bold
+6 fg=#b1b9f9
+7 fg=#ffc107

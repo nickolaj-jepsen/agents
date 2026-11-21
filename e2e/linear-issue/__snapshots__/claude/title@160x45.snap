@@ -1,0 +1,91 @@
+# linear-issue/claude/title 160x45 @88,0 (72x41)
+│                                                                     ✕
+│  Linear draft
+│
+│  E: Honor Retry-After when the sync worker backs off after a 429
+│
+│     ──────────────────────────────────────────────────────────────────
+│
+│  T  Team      Platform (PLT)
+│  S  Status    Todo
+│  P  Priority  Medium
+│  L  Labels    Bug
+│  J  Project   None
+│
+│  The sync worker doubles its delay after every 429 and never reads
+│  Retry-After, so it retries sooner than the shop API allows and gets
+│  limited again.
+│
+│  • Read Retry-After (seconds or an HTTP date) from the 429 response
+│  • Wait at least that long, then go back to the doubling delay
+│  • Cap the wait at MAX_DELAY
+│
+│  Where: src/sync.sh, src/config.sh
+│
+│  Done when: a 429 with Retry-After: 30 makes the worker wait 30
+│  seconds before its next try.
+│  ↓ 2 more
+│
+│  Save ↵  Cancel
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+--- styles
+1 .x69 2
+1 .x2 3x12
+1
+1
+1
+1 .x5 2x66
+1
+1 .x2 4 .x2 2x4
+1 .x2 4 .x2 2x6
+1 .x2 4 .x2 2x8
+1 .x2 4 .x2 2x6
+1 .x2 4 .x2 2x7 .x3 2x4
+1
+1 .x48 5x3
+1 .x2 5x11
+1
+1
+1 .x2 2 .x6 5x11 .x36 5x3
+1 .x2 2
+1 .x2 2 .x17 5x9
+1
+1 .x2 6x6 . 5x11 .x2 5x13
+1
+1 .x2 6x10 .x3 5x3 .x6 5x15
+1
+1 .x2 2x8
+1
+1 .x2 3x4 . 2
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+--- legend
+1 dim
+2 fg=#999999
+3 fg=#d77757 bold
+4 fg=#d77757
+5 fg=#b1b9f9
+6 bold

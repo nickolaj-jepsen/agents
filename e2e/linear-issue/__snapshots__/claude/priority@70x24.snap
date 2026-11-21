@@ -1,0 +1,25 @@
+# linear-issue/claude/priority 70x24 @0,12 (70x8)
+╭──────────────────────────────────────────────────────────────────✕─╮
+│   P  Priority  Medium                                              │
+│        A ○ Urgent                                                  │
+│        B ○ High                                                    │
+│      ❯ C ● Medium                                                  │
+│      ↓ 2 more                                                      │
+│   Choose ↵  Back [0]                                               │
+╰────────────────────────────────────────────────────────────────────╯
+--- styles
+1x67 2 1x2
+1 .x3 2 .x2 2x8 .x54 1
+1 .x8 3 . 2 .x57 1
+1 .x8 3 . 2 .x57 1
+1 .x6 4 . 3 . 5 . 6x6 .x50 1
+1 .x6 2x8 .x54 1
+1 .x3 5x6 . 2 .x7 2x3 .x47 1
+1x70
+--- legend
+1 dim
+2 fg=#999999
+3 fg=#d77757
+4 bold
+5 fg=#d77757 bold
+6 fg=#d77757 bold underline=single

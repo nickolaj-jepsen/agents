@@ -1,0 +1,89 @@
+# linear-issue/claude/failed 160x45 @88,0 (72x41)
+│                                                                     ✕
+│  Linear draft
+│
+│  The draft was not written
+│  Linear MCP unavailable or signed out, re-authenticate with /mcp
+│
+│  From your note
+│  the sync worker ignores Retry-After headers when it backs off after a
+│  429
+│
+│  Try again ↵  Discard [d]
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+--- styles
+1 .x69 2
+1 .x2 3x12
+1
+1 .x2 4x25
+1
+1
+1 .x2 2x14
+1 .x2 2x69
+1 .x2 2x3
+1
+1 .x2 3x9 . 2 .x10 2x3
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+--- legend
+1 dim
+2 fg=#999999
+3 fg=#d77757 bold
+4 fg=#ff6b80 bold
