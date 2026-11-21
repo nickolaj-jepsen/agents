@@ -1,11 +1,11 @@
 # Agent notes
 
-Plugins for Claude Code and pi, and installable skills, distributed as a flake. Start with the [developer guide](docs/development.md) for plugin layout, checks, packaging and site changes. Home-manager loads this flake; that configuration lives outside this repo.
+Plugins for Claude Code and pi, and installable skills, distributed as a flake. Start with the [developer guide](docs/development.md) for setup, plugin layout, checks, packaging and site changes. Home-manager loads this flake; that configuration lives outside this repo.
 
-- Use `just` for repo commands. Run `just fmt` before handing back changes. `just test` is the quick check; `just check` runs the flake checks.
-- Don't edit the root README directly. Run `just readme` after editing plugin or skill frontmatter or `docs/_intro.md` or `docs/_install.md`. It fails if any plugin folder lacks a `README.md`.
-- Stage new files before running flake commands; otherwise Nix won't see them.
-- Edit the kit source, not a mod's copy. Run `just kit-sync` after changing the kit, the legacy Claude kit or shared catalogue samples. See [the kit guide](kit/README.md).
+- Use turbo for repo commands: `pnpm turbo run <task>`, with the tasks listed in `turbo.json`. Run `pnpm turbo run fmt` before handing back changes. `pnpm turbo run test` is the quick check; `pnpm turbo run check` is the gate CI runs.
+- Don't edit the root README directly. Run `pnpm turbo run readme` after editing plugin or skill frontmatter or `docs/_intro.md` or `docs/_install.md`. It fails if any plugin folder lacks a `README.md`.
+- Stage new files before running nix commands; otherwise Nix won't see them. `nix fmt` formats the nix files, which `fmt` leaves alone, and `pnpm turbo run check:nix` checks them; `check` doesn't run it.
+- Edit the kit source, not a mod's copy. Run `pnpm turbo run kit-sync` after changing the kit, the legacy Claude kit or shared catalogue samples. See [the kit guide](kit/README.md).
 - For changes to what a plugin draws, or to its keys, mouse or focus, use the [agent-plugin-dev skill](skills/agent-plugin-dev/SKILL.md) and look at a real session before handing back.
 - Plugin UI follows the house rules in [the layout reference](skills/agent-plugin-dev/references/style.md). They hold for every plugin: a design that breaks one needs the owner's approval first, and each reviewer gets the page with the design.
 - Keep test sessions isolated. Fixture git must ignore the user's config and hooks; keep the agent's notes and worktrees under the run folder. Use `setupContext` and `runEnv` in `e2e/lib/setup.ts`.
@@ -16,7 +16,7 @@ Plugins for Claude Code and pi, and installable skills, distributed as a flake. 
 
 ## Kit components
 
-Draw plugin UI with these; add one with `just kit-new <name>`.
+Draw plugin UI with these; add one with `pnpm turbo run kit-new -- <name>`.
 
 - `kit/buttons/`: A row of actions with their keys, the suggested one in the accent, and keyboard-only hints.
 - `kit/card/`: A question with lettered answers and a note, and the steps and summary of a form of several.

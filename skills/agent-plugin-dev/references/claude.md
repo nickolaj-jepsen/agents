@@ -46,11 +46,10 @@ These quirks were observed in the VS Code extension at 2.1.327. Recheck them aft
 
 Use `await $.ui.mount({ ...PANE, surface })` for `vscode` and `desktop`. Exercise actions with `ui.press({ key })` and call the kit's `expectNative` from `./checks`. This tests the element tree, not how the host closes a pane or transfers focus. Use the VS Code driver below and check [Desktop](../../../e2e/README.md#claude-desktop) by hand.
 
-If a wrapper injects flags before `plugin test` and Claude reports “not run from this spelling,” use the dev shell's Claude binary:
+If a wrapper injects flags before `plugin test` and Claude reports “not run from this spelling,” use the repo's pinned Claude, which the `test:claude` task runs with a scratch `HOME`:
 
 ```bash
-test_home=$(mktemp -d)  # keep test config out of your real home
-nix develop -c bash -c 'cd plugins/docfix && HOME="$1" claude plugin test .' -- "$test_home"  # test one mod
+pnpm turbo run test:claude --filter=@nickolaj-jepsen/docfix  # validate and test one mod
 ```
 
 ### Looking at a graphical screen

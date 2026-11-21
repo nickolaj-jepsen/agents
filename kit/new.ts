@@ -1,5 +1,5 @@
 /**
- * `just kit-new <name>`: scaffolds a kit component, `kit/<name>/`, and registers its stories in
+ * `turbo run kit-new -- <name>`: scaffolds a kit component, `kit/<name>/`, and registers its stories in
  * `kit/stories.ts`. Refuses a name that is not kebab-case or already exists.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -110,6 +110,6 @@ console.log(`kit-new: created kit/${name}/ and registered its stories in kit/sto
 
 Next:
   1. Draw it in kit/${name}/terminal.ts; fill in the story, the manifest and the spec.
-  2. just kit-sync
-  3. E2E_UPDATE=1 just e2e kit -t '${name}/'
-  4. just test   (the parity check fails with "no snapshot" until step 3)`);
+  2. pnpm turbo run kit-sync
+  3. pnpm turbo run e2e:update --filter=@agents/e2e-kit -- -t '${name}/'
+  4. pnpm turbo run test --filter=@agents/kit   (the parity check fails with "no snapshot" until step 3)`);

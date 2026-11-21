@@ -1,6 +1,6 @@
 /**
- * The repo's content for the pages: `site/data/content.json`, which `npm run site-data` writes
- * from `scripts/content.ts` (and `just site` runs first), plus the URLs the pages link with. The
+ * The repo's content for the pages: `site/data/content.json`, which `turbo run site-data` writes
+ * from `scripts/content.ts` (the site's `dev` and `build` tasks run it first), plus the URLs the pages link with. The
  * pages read no file outside this folder, so the site builds from its own tree.
  */
 import type { Content, Doc, Plugin, Skill } from "../../../scripts/content.ts";
@@ -84,9 +84,9 @@ export const pluginInstall = (p: Plugin) =>
     .filter((h) => p.install[h])
     .map((h) => ({ h, label: HARNESS[h], command: p.install[h]! }));
 
-/** Said under a Claude install: what the flake checks and a marketplace install doesn't. */
+/** Said under a Claude install: what CI checks and a marketplace install doesn't. */
 export const CLAUDE_NOTE =
-  "Checked against Claude Code from nixpkgs master; a newer Claude Code can break it before the next check.";
+  "Checked against the Claude Code version the repo pins; a newer Claude Code can break it before the next check.";
 
 /** A skill's install: one command, and the other ways behind "More ways". */
 export const skillInstall = (s: Skill) => ({

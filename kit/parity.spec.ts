@@ -2,7 +2,7 @@
  * Both terminals paint the one drawing: every recorded snapshot of a kit story, in pi and in
  * Claude Code, holds exactly the shared lines at the width it was given, and each client
  * paints a role one way. Reads `e2e/kit/__snapshots__`, so it checks what real sessions drew;
- * a story with no snapshot yet fails, which is the reminder to record it (`just e2e kit`).
+ * a story with no snapshot yet fails, which is the reminder to record it (`turbo run e2e:update --filter=@agents/e2e-kit`).
  */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -60,7 +60,10 @@ const cellStyles = (l: Line) =>
 describe.each(kitStories.map((s) => ({ id: storyId(s), story: s })))("$id", ({ story }) => {
   test.each(clients)("%s holds the shared drawing at every size", (client) => {
     const snaps = read(client, story.component, story.state);
-    expect(snaps.length, "no snapshot: run `E2E_UPDATE=1 just e2e kit`").toBeGreaterThan(0);
+    expect(
+      snaps.length,
+      "no snapshot: run `pnpm turbo run e2e:update --filter=@agents/e2e-kit`",
+    ).toBeGreaterThan(0);
     for (const snap of snaps) {
       const lines = story.lines(snap.width);
       expect(snap.text, `${client} ${snap.size}`).toEqual(lines.map((l) => textOf(l).trimEnd()));

@@ -43,11 +43,11 @@ return paintLines(els, choiceList(props, width), { press: (hit) => pick(hit), wi
 A mod can't import outside its folder, so it carries a copy of the kit as `claude/kit/`:
 
 ```bash
-just kit-sync answer   # give a mod its copy of the kit
-just kit-sync          # rewrite every copy after editing the kit
+pnpm turbo run kit-sync -- answer  # give a mod its copy of the kit
+pnpm turbo run kit-sync            # rewrite every copy after editing the kit
 ```
 
-Its `claude/tsconfig.json` needs `"allowImportingTsExtensions": true`, since the kit's files import each other with `.ts`. `just test` fails while a copy differs from the kit.
+Its `claude/tsconfig.json` needs `"allowImportingTsExtensions": true`, since the kit's files import each other with `.ts`. `pnpm turbo run test` fails while a copy differs from the kit.
 
 A screen both halves of a plugin draw is written once, in the plugin's `core/`, and imports the kit from the mod's copy (`../claude/kit/`): that folder is the one both the mod and the pi extension can reach. [linear-issue's screen](../plugins/linear-issue/core/screen.ts) is the example: it returns lines and decides what a key does, and each half only paints and delivers keys.
 
@@ -56,12 +56,14 @@ The kit keeps no state and registers no hooks. A plugin holds the state (what is
 ## Add or change a component
 
 ```bash
-just kit-new status-line                   # scaffold kit/status-line/ and register its stories
-just kit-live status-line/default --harness pi   # watch it in a real session; redraws on save
-just kit-sync                              # copy the kit into the mods
-E2E_UPDATE=1 just e2e kit -t 'status-line/'      # record it in pi and Claude Code
-just test                                  # the parity check reads those snapshots
+pnpm turbo run kit-new -- status-line                                    # scaffold kit/status-line/ and register its stories
+pnpm turbo run kit-live --ui=tui -- status-line/default --harness pi     # watch it in a real session; redraws on save
+pnpm turbo run kit-sync                                                  # copy the kit into the mods
+pnpm turbo run e2e:update --filter=@agents/e2e-kit -- -t 'status-line/'  # record it in pi and Claude Code
+pnpm turbo run test --filter=@agents/kit                                 # the parity check reads those snapshots
 ```
+
+`kit-live` is an interactive task: the [replay guide](../e2e/README.md#live-mode) says how to type into it.
 
 1. Put the types in `contract.ts` and draw in `terminal.ts`. Use roles from `lines.ts` and glyphs from `tokens.ts`, never a colour or a literal glyph. Give each control a `hit`, on its row or on its spans.
 2. Add a story per state in the component's `stories.ts`. A story is one call that returns lines for a width.
@@ -88,8 +90,8 @@ To change how something looks everywhere, edit its `terminal.ts` or `tokens.ts` 
 Their stories and manifests are under [`catalog/`](catalog), and the catalogue is built from both:
 
 ```bash
-E2E_PNG=1 just e2e kit   # compare snapshots and write pictures
-just catalog            # replay stories and regenerate crops and catalogue data
+E2E_PNG=1 pnpm turbo run e2e --filter=@agents/e2e-kit --force  # compare snapshots and write pictures
+pnpm turbo run catalog                                         # replay stories and regenerate crops and catalogue data
 ```
 
-Commit the snapshots and the regenerated `catalog/COMPONENTS.md`. The site data and crops are generated, not committed. `npm run catalog -- --check` validates the manifests without replaying.
+Commit the snapshots and the regenerated `catalog/COMPONENTS.md`. The site data and crops are generated, not committed. `pnpm turbo run catalog -- --check` validates the manifests without replaying.

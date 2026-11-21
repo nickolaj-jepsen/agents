@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { here, loadModel, markdown, withIndex, type Model } from "./model.ts";
 
-// As `npm run catalog -- --check`: no PNG, no network. The compiler reading the kits is slow on a
+// As `turbo run catalog -- --check`: no PNG, no network. The compiler reading the kits is slow on a
 // cold build, hence the timeout.
 describe("component manifests", () => {
   let model: Model;
@@ -17,11 +17,11 @@ describe("component manifests", () => {
 
   it("match the committed COMPONENTS.md", () => {
     const committed = readFileSync(join(here, "COMPONENTS.md"), "utf8");
-    expect(markdown(model), "run `npm run catalog -- --no-shots`").toBe(committed);
+    expect(markdown(model), "run `turbo run catalog -- --no-shots`").toBe(committed);
   });
 
   it("match the kit index in AGENTS.md", () => {
     const agents = readFileSync(join(here, "../../AGENTS.md"), "utf8");
-    expect(withIndex(agents, model), "run `npm run catalog -- --no-shots`").toBe(agents);
+    expect(withIndex(agents, model), "run `turbo run catalog -- --no-shots`").toBe(agents);
   });
 });

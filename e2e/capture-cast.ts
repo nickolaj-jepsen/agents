@@ -276,7 +276,7 @@ try {
     const requireGraphics = args[0] === "--require-graphics";
     const [cast, prefix, ...extra] = args.slice(requireGraphics ? 1 : 0);
     if (!cast || !prefix || extra.length)
-      throw new Error("usage: just capture-cast <trusted.cast> <output-prefix>");
+      throw new Error("usage: turbo run capture-cast -- <trusted.cast> <output-prefix>");
     if (process.platform !== "linux") throw new Error("cast capture requires Linux");
     capture(resolve(cast), resolve(prefix), requireGraphics);
   }

@@ -1,5 +1,5 @@
 /**
- * `node e2e/site.ts [plugin...]` (`just site-shots`): plays the site scenarios of each plugin and
+ * `node e2e/site.ts [plugin...]` (`turbo run site-shots`): plays the site scenarios of each plugin and
  * writes its media under `site/media/<plugin>/`. See "Site media" in e2e/README.md.
  *
  * A plugin whose run fails keeps its old files: the media are staged in a folder of their own and

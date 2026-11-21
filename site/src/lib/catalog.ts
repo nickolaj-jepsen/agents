@@ -1,5 +1,5 @@
 /**
- * The UI kit's catalogue for the /dev/components/ pages: `data/kit.json` (the model `npm run catalog`
+ * The UI kit's catalogue for the /dev/components/ pages: `data/kit.json` (the model `turbo run catalog`
  * writes) joined with the crops it keeps in `site/media/kit/crops.json`.
  */
 import type { ComponentModel, Model, StoryModel } from "../../../kit/catalog/model.ts";
@@ -93,7 +93,7 @@ export const differs = (f: Component["features"][number]) =>
 export function whyNot(c: Component, s: Story, h: Harness): string {
   if (c.impl[h].state === "none") return `not possible: ${s.missing[h] ?? c.impl[h].reason ?? ""}`;
   if (!s.by[h]) return "no story yet";
-  return "no render yet (just catalog)";
+  return "no render yet (turbo run catalog)";
 }
 
 export const STATUS_GLYPH = {

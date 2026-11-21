@@ -1,5 +1,5 @@
 /**
- * `just kit-sync [plugin...]`: rewrites every copy of the kit's sources and removes what a copy
+ * `turbo run kit-sync [-- plugin...]`: rewrites every copy of the kit's sources and removes what a copy
  * holds that the kit no longer has. A plugin named gets a copy of the kit. See `copies.ts`.
  */
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";

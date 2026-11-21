@@ -5,7 +5,7 @@
  *
  * This file is the source of truth. The engine cannot import outside a plugin's folder, so
  * every mod that uses it carries a verbatim copy at `claude/ui.tsx`: edit this one and run
- * `just kit-sync`; `kit/legacy/claude/ui.spec.ts` fails while a copy differs.
+ * `turbo run kit-sync`; `kit/legacy/claude/ui.spec.ts` fails while a copy differs.
  */
 import type { ElementTable, ImageSource, RenderNode } from "claude-code";
 

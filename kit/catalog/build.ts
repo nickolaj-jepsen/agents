@@ -1,13 +1,13 @@
 /**
  * Builds the catalogue's data from the component manifests and each kit's source:
  * `COMPONENTS.md` (what agents read, committed), `site/data/kit.json` (what the site reads) and the
- * stories' crops. The last two are not committed: the Pages workflow writes them (`just media`).
+ * stories' crops. The last two are not committed: the Pages workflow writes them (`turbo run media`).
  *
- *   npm run catalog                play the kit scenarios in PNG mode, then write all three; fail
- *                                  on a manifest problem or a scenario that no longer matches
- *   npm run catalog -- --no-shots  write all three from the PNGs already there, if any
- *   npm run catalog -- --check     no PNGs needed: fail on a problem or a stale COMPONENTS.md or
- *                                  AGENTS.md index (the block between its `kit:index` markers)
+ *   turbo run catalog                  play the kit scenarios in PNG mode, then write all three; fail
+ *                                      on a manifest problem or a scenario that no longer matches
+ *   turbo run catalog -- --no-shots    write all three from the PNGs already there, if any
+ *   turbo run catalog -- --check       no PNGs needed: fail on a problem or a stale COMPONENTS.md or
+ *                                      AGENTS.md index (the block between its `kit:index` markers)
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -57,14 +57,16 @@ if (check) {
   let stale = false;
   if (agentsNow !== agentsWanted) {
     console.error(
-      `catalog: ${agents} has a stale kit index; run \`npm run catalog -- --no-shots\``,
+      `catalog: ${agents} has a stale kit index; run \`turbo run catalog -- --no-shots\``,
     );
     stale = true;
   }
   for (const k of ["components"] as const) {
     const current = existsSync(outputs[k]) ? readFileSync(outputs[k], "utf8") : "";
     if (current !== wanted[k]) {
-      console.error(`catalog: ${outputs[k]} is out of date; run \`npm run catalog -- --no-shots\``);
+      console.error(
+        `catalog: ${outputs[k]} is out of date; run \`turbo run catalog -- --no-shots\``,
+      );
       stale = true;
     }
   }

@@ -10,7 +10,9 @@ async function main() {
     .filter((file) => file.endsWith(".md"))
     .map((file) => file.slice(0, -3));
   if (process.argv.length > 3 || !fixtures.includes(fixture))
-    throw new Error(`Usage: just answer-demo [fixture]\nFixtures: ${fixtures.join(", ")}`);
+    throw new Error(
+      `Usage: turbo run answer-demo --ui=tui -- [fixture]\nFixtures: ${fixtures.join(", ")}`,
+    );
 
   const answer = message(fixture);
   const form = offer(null, answer)?.form;

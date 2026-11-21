@@ -3,7 +3,7 @@
  * fixtures (`setup`) and stubbed turns, played by `lib/vscode.ts` instead of a terminal.
  *
  * A file `e2e/<plugin>/vscode.scenarios.ts` default-exports `vscodeScenarios({...})`. Nothing
- * here is a regression test: there are no snapshots, and `npm run e2e` does not read these files.
+ * here is a regression test: there are no snapshots, and `turbo run e2e` does not read these files.
  */
 import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";

@@ -1,6 +1,6 @@
 /**
  * The house style's graphical rules as test assertions, for a mod's `claude plugin test`. Copied
- * into each mod beside `ui.tsx` as `claude/checks.tsx` by `just kit-sync`, since a test cannot
+ * into each mod beside `ui.tsx` as `claude/checks.tsx` by `turbo run kit-sync`, since a test cannot
  * import outside its mod's folder; edit this source, never a copy. A `.tsx` file so the pi
  * build's `tsc -b`, which has no Claude types, leaves it out.
  */

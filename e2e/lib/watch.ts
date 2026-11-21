@@ -61,7 +61,7 @@ export const relevant = (harness: HarnessName, files: string[]) =>
 export const touchesScenario = (r: Resolved, files: string[]) =>
   files.some((f) => f.startsWith(`e2e/${r.plugin}/`));
 
-/** `just kit-sync`, in a process of its own so it reads the kit as it is now. Its lines, if any. */
+/** `turbo run kit-sync`, in a process of its own so it reads the kit as it is now. Its lines, if any. */
 export async function syncKit(): Promise<string[]> {
   try {
     const { stdout } = await run(process.execPath, [join(checkoutRoot, "kit/sync.ts")], {
