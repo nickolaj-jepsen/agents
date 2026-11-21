@@ -15,6 +15,8 @@ export type DetailAction = {
   hit: string;
   /** Under the mouse: bold. */
   hovered?: boolean;
+  /** Nothing to do now, as Next on the last piece: dim. */
+  isDim?: boolean;
 };
 
 export type DetailSection = {
@@ -35,6 +37,8 @@ export type Detail = {
   meta?: string;
   /** Inline Markdown, bold and wrapped. */
   title?: string;
+  /** Rows the title may take; the last of a cut one ends in `…`. */
+  titleMax?: number;
   sections?: DetailSection[];
   /** Rows it may take: a longer detail is cut, and a dim `↓ more` says so. */
   height?: number;

@@ -49,7 +49,9 @@ import {
   type Intent,
   type ScreenOptions,
   type ScreenState,
+  WHEEL_ROWS,
 } from "../core/screen";
+import { LIST_INSET } from "./kit/list/terminal.ts";
 import { blank } from "./kit/lines.ts";
 import { keysHint, paintLines, ring, RING, ringMove } from "./kit/paint/claude.tsx";
 import { evidence } from "./evidence";
@@ -621,8 +623,10 @@ export const register: Register = (on) => {
   // rows; the page keys move those. The screen fits its pane, so the engine has nothing to move.
   on("ui.scroll", { requestId: PANE }, async ($, e, next) => {
     if (paneSurface !== "terminal") return next(e);
-    const zone = e.pointer ? zoneAt(drawnScreen.zones, e.pointer.row) : "detail";
-    if (zone) await act($, { do: "scroll", zone, by: e.pointer ? 3 * Math.sign(e.by) : e.by });
+    const reading = (await read($, view)).reader !== null;
+    const zone = e.pointer ? zoneAt(drawnScreen.zones, e.pointer.row) : reading ? "detail" : "list";
+    const by = e.pointer ? WHEEL_ROWS * Math.sign(e.by) : e.by;
+    if (zone) await act($, { do: "scroll", zone, by });
     return {};
   }).catch((_$, e, next) => next(e));
 
@@ -678,7 +682,8 @@ export const register: Register = (on) => {
             press: (hit) => act($, { do: "press", hit }),
             width,
           })}
-          {keysHint(els, held) ?? paintLines(els, [blank()])}
+          {/* Always a row, so the frame keeps its place; set in to the screen's left edge. */}
+          <Box paddingLeft={LIST_INSET}>{keysHint(els, held) ?? paintLines(els, [blank()])}</Box>
           {ring(
             els,
             () => act($, { do: "main" }),

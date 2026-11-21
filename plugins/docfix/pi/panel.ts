@@ -28,6 +28,7 @@ import {
   type ScreenOptions,
   type ScreenState,
   type Zones,
+  WHEEL_ROWS,
 } from "../core/screen.ts";
 
 export type PanelDeps = {
@@ -46,8 +47,6 @@ export const sidebarWidth = (columns: number) =>
 const GUTTER = 1;
 /** Rows under the sidebar: the editor between its rules, and the footer. */
 const BELOW = 6;
-/** Rows one wheel notch moves a zone. */
-const WHEEL = 3;
 
 /**
  * The overlay's options: on the right from the top. Its width is read at each render, so it
@@ -146,7 +145,7 @@ export class DocsPanel implements Component {
     if (event.type === "wheel") {
       const zone = zoneAt(this.zones, event.y);
       if (zone && event.wheelDelta)
-        this.act({ do: "scroll", zone, by: Math.sign(event.wheelDelta) * WHEEL });
+        this.act({ do: "scroll", zone, by: Math.sign(event.wheelDelta) * WHEEL_ROWS });
       return { handled: true };
     }
     if (event.button !== "left") return { handled: true };

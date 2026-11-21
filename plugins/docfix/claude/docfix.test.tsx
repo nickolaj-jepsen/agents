@@ -167,39 +167,51 @@ const COMMAND = {
 
 const SECOND = "agents--a-second-gap";
 
-/** Two suggestions on AGENTS.md, and the terminal pane open on them. */
+/** Two suggestions on AGENTS.md, and the terminal pane open on them, tall enough for every zone. */
 async function twoOpen($: Engine, on: On) {
   const world = engine(on);
   await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
   await $.tool.call(SUGGEST);
   await $.tool.call({ ...SUGGEST, claim: "A second gap", same_as: "none" });
   await $.command.run(COMMAND);
-  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+  const ui = await $.ui.mount({
+    ...PANE,
+    props: { ...PANE.props, scroll: { offset: 0, bodyRows: 40 } },
+    surface: "terminal",
+  });
   return { world, ui };
 }
 
-/** Whether a Text shows `text`: the screen's rows are runs of Text, one row each. */
+/** Whether a Text shows `text`: a row is runs of Text, a control's its own. */
 const shows = async (ui: Pick<Mounted, "find">, text: RegExp) =>
   (await ui.find({ type: "Text", text })) !== undefined;
+
+/** The keyboard's row: its pointer and mark are a control of their own, `mark:<id>`. */
+const pointerOn = async (ui: Pick<Mounted, "find">, id: string) =>
+  /❯/.test((await ui.find({ type: "Button", key: `mark:${id}` }))?.text ?? "");
 
 test("the terminal pane is the shared screen: the caption, the doc, its rows and the footer", async ($, on) => {
   const { world, ui } = await twoOpen($, on);
   // The pane shows the count itself, so the band above the prompt steps aside.
   expect(await bandCount($)).toBeUndefined();
-  expect(await shows(ui, /0 of 2 decided/)).toBe(true);
-  expect(await shows(ui, /❯ ○ Run pnpm install --force/)).toBe(true);
+  expect(await shows(ui, /● 0 · – 0 · 2 left/)).toBe(true);
+  expect(await pointerOn(ui, ID)).toBe(true);
   expect(await shows(ui, /missing · seen once/)).toBe(true);
+  expect(await shows(ui, /Evidence · /)).toBe(true);
   // Every control is a plain Button under its own key; the ring and the hotkeys draw nothing.
   const keys = (await ui.findAll({ type: "Button" })).map((b) => String(b.key));
   for (const key of [
     `row:${ID}`,
+    `mark:${ID}`,
     `row:${SECOND}`,
     "doc:AGENTS.md",
+    "all:apply:AGENTS.md",
+    "all:dismiss:AGENTS.md",
     "detail",
+    "evidence",
     "main",
     "apply",
     "dismiss",
-    "evidence",
     "frame:close",
     "kit-ring",
     "kit-key-a",
@@ -211,19 +223,31 @@ test("the terminal pane is the shared screen: the caption, the doc, its rows and
   await ui.unmount();
 });
 
-test("Apply sets the keyboard's row and moves on; the main action says what it will do", async ($, on) => {
+test("Apply sets the keyboard's row and moves on; the main action is Draft prompt", async ($, on) => {
   const { world, ui } = await twoOpen($, on);
   await ui.press({ key: "apply" });
-  expect(await shows(ui, /1 of 2 decided/)).toBe(true);
-  expect(await shows(ui, /● Run pnpm install/)).toBe(true);
-  expect(await shows(ui, /❯ ○ A second gap/)).toBe(true);
-  expect(await shows(ui, /^Draft 1 fix$/)).toBe(true);
+  expect(await shows(ui, /● 1 · – 0 · 1 left/)).toBe(true);
+  expect(await pointerOn(ui, SECOND)).toBe(true);
+  expect(await shows(ui, /^Draft prompt$/)).toBe(true);
   // The hotkey on the ring's hidden button does what the footer's button does.
   await ui.press({ key: "kit-key-d" });
-  expect(await shows(ui, /2 of 2 decided/)).toBe(true);
-  expect(await shows(ui, /Draft 1 fix, dismiss 1/)).toBe(true);
+  expect(await shows(ui, /– 1 · 0 left/)).toBe(true);
   // Setting a row does nothing yet: the main action carries it out.
   expect(world.fills).toHaveLength(0);
+  await ui.unmount();
+});
+
+test("a click on a mark steps it, and Apply all sets the doc", async ($, on) => {
+  const { ui } = await twoOpen($, on);
+  await ui.press({ key: `mark:${SECOND}` });
+  expect(await pointerOn(ui, SECOND)).toBe(true);
+  expect(await shows(ui, /● 1 · – 0/)).toBe(true);
+  await ui.press({ key: `mark:${SECOND}` });
+  expect(await shows(ui, /● 0 · – 1/)).toBe(true);
+  await ui.press({ key: "all:apply:AGENTS.md" });
+  expect(await shows(ui, /● 2 · – 0 · 0 left/)).toBe(true);
+  await ui.press({ key: "all:apply:AGENTS.md" });
+  expect(await shows(ui, /● 0 · – 0 · 2 left/)).toBe(true);
   await ui.unmount();
 });
 
@@ -244,9 +268,11 @@ test("Close asks before it throws the choices away; Keep keeps them, Discard dra
   const { world, ui } = await twoOpen($, on);
   await ui.press({ key: "apply" });
   await ui.press({ key: "frame:close" });
-  expect(await shows(ui, /Discard choices\?/)).toBe(true);
+  expect(await shows(ui, /Discard 1\?/)).toBe(true);
+  // The footer is dim and inert while the question is up.
+  expect(await ui.find({ type: "Button", key: "main" })).toBeUndefined();
   await ui.press({ key: "frame:keep" });
-  expect(await shows(ui, /1 of 2 decided/)).toBe(true);
+  expect(await shows(ui, /● 1 · – 0 · 1 left/)).toBe(true);
   await ui.press({ key: "frame:close" });
   await ui.press({ key: "frame:discard" });
   expect(world.fills).toHaveLength(0);
@@ -259,34 +285,43 @@ test("the ring's moves are the screen's: an arrow moves the keyboard, a click pu
   const move = (element: string) =>
     $.ui.focus({ component: "Pane", requestId: "docfix", element, origin: { kind: "person" } });
   await move("kit-ring-down");
-  expect(await shows(ui, /❯ ○ A second gap/)).toBe(true);
+  expect(await pointerOn(ui, SECOND)).toBe(true);
   await move(`row:${ID}`);
-  expect(await shows(ui, /❯ ○ Run pnpm install/)).toBe(true);
+  expect(await pointerOn(ui, ID)).toBe(true);
   // A click on a footer button moves nothing: its press acts on the keyboard's row.
   await move("apply");
-  expect(await shows(ui, /❯ ○ Run pnpm install/)).toBe(true);
+  expect(await pointerOn(ui, ID)).toBe(true);
   await ui.unmount();
 });
 
-test("the reader shows the focused suggestion's evidence; Back leaves it", async ($, on) => {
+test("the reader: where it is and Back on its first row; Apply stays on its suggestion", async ($, on) => {
   const { ui } = await twoOpen($, on);
   await ui.press({ key: "kit-key-e" });
-  expect(await shows(ui, /Evidence 1 of 1/)).toBe(true);
+  expect(await shows(ui, /○ AGENTS\.md · missing · seen once/)).toBe(true);
   expect(await shows(ui, /AGENTS\.md:12 says pnpm install/)).toBe(true);
   expect(await ui.find({ type: "Button", key: "back" })).toBeDefined();
+  await ui.press({ key: "apply" });
+  expect(await shows(ui, /● AGENTS\.md · missing/)).toBe(true);
   await ui.press({ key: "back" });
-  expect(await shows(ui, /Evidence 1 of 1/)).toBe(false);
-  await ui.press({ key: "detail" });
-  expect(await shows(ui, /Evidence 1 of 1/)).toBe(true);
+  expect(await ui.find({ type: "Button", key: "back" })).toBeUndefined();
+  await ui.press({ key: "evidence" });
+  expect(await ui.find({ type: "Button", key: "back" })).toBeDefined();
   await ui.unmount();
 });
 
-test("the screen is drawn between its frame's two rules", async ($, on) => {
-  const { ui } = await twoOpen($, on);
-  const rows = (await ui.findAll({ type: "Text" })).filter((t) =>
-    /^─ Doc suggestions|^─{20,}$/.test(t.text),
-  );
-  expect(rows.length).toBeGreaterThanOrEqual(2);
+test("in a pane of six rows the rows carry their doc, and the frame has no bottom rule", async ($, on) => {
+  engine(on);
+  await $.session.start({ cwd: ROOT, surface: "terminal", isInteractive: true });
+  await $.tool.call(SUGGEST);
+  await $.command.run(COMMAND);
+  const ui = await $.ui.mount({
+    ...PANE,
+    props: { ...PANE.props, placement: "inline", scroll: { offset: 0, bodyRows: 6 } },
+    surface: "terminal",
+  });
+  expect(await shows(ui, /AGENTS\.md › Run pnpm install/)).toBe(true);
+  // The bottom rule is the pane's whole width; the caption's rule is shorter.
+  expect(await shows(ui, /^─{60,}$/)).toBe(false);
   await ui.unmount();
 });
 

@@ -20,11 +20,19 @@ import {
   line,
   span,
   spansWidth,
+  truncateSpans,
   type Line,
   type Span,
 } from "../claude/kit/lines.ts";
 import type { List, ListGroup } from "../claude/kit/list/contract.ts";
-import { list, LIST_INSET, listRange, listShowsWhole } from "../claude/kit/list/terminal.ts";
+import {
+  cutLeft,
+  list,
+  LIST_INSET,
+  listFollow,
+  listShowsWhole,
+  listTopMax,
+} from "../claude/kit/list/terminal.ts";
 import { tokens } from "../claude/kit/tokens.ts";
 import {
   byTarget,
@@ -50,7 +58,10 @@ export type ScreenState = {
   focus?: string;
   /** The reader is open on the focused suggestion, at this piece of evidence (0 the newest). */
   reader?: number;
-  /** Rows the wheel moved the queue's window and the focused suggestion (or the reader). */
+  /**
+   * `list`: the queue window's first line, which moves only when the keyboard would leave the
+   * window, or by the wheel. `detail`: rows the reader is scrolled.
+   */
   scroll: { list: number; detail: number };
   /** Close asks before it throws away what is set. */
   confirming?: boolean;
@@ -66,8 +77,8 @@ export type ScreenOptions = {
   /** Now, in ms: how old a suggestion is. */
   now: number;
   /**
-   * The client binds Shift+A and Shift+D apart from a and d, so whole doc has keys. Claude Code's
-   * hotkeys are one lowercase letter (Shift+a is a), so it has none there.
+   * The client binds Shift+A and Shift+D apart from a and d, so whole doc has keys besides the
+   * doc row's controls. Claude Code's hotkeys are one lowercase letter (Shift+a is a).
    */
   wholeDoc?: boolean;
 };
@@ -87,7 +98,8 @@ export type Effect =
 export type Intent =
   | { do: "move"; by: number }
   | { do: "set"; choice: Choice }
-  | { do: "doc"; choice: Choice }
+  /** Every row of a doc, the keyboard's unless `target` names one; `stay` keeps the keyboard. */
+  | { do: "doc"; choice: Choice; target?: string; stay?: boolean }
   | { do: "reader" }
   | { do: "back" }
   | { do: "next" }
@@ -112,7 +124,9 @@ export const startState = (queue: readonly Suggestion[], dismissed = 0): ScreenS
 // ---- controls
 
 export const rowHit = (id: string) => `row:${id}`;
+export const markHit = (id: string) => `mark:${id}`;
 export const docHit = (target: string) => `doc:${target}`;
+export const allHit = (choice: Choice, target: string) => `all:${choice}:${target}`;
 export const DETAIL = "detail";
 export const BUTTONS = {
   main: "main",
@@ -138,7 +152,7 @@ const counts = (s: ScreenState) => {
   for (const q of s.queue)
     if (s.set[q.id] === "apply") apply++;
     else if (s.set[q.id] === "dismiss") dismiss++;
-  return { apply, dismiss };
+  return { apply, dismiss, left: s.queue.length - apply - dismiss };
 };
 
 const DAY = 86_400_000;
@@ -157,98 +171,120 @@ export function ageText(iso: string, now: number): string {
 export const metaText = (q: Suggestion, now: number) =>
   `${q.kind} · seen ${seen(q) > 1 ? `${seen(q)}×` : "once"} · ${ageText(q.updated, now)}`;
 
-/** The main action's words, longest first: what it will do. */
-function mainLabels(s: ScreenState): string[] {
+/** The main action: one of three, by what it will do. */
+function mainLabel(s: ScreenState) {
   const { apply, dismiss } = counts(s);
-  const fixes = `${apply} ${apply === 1 ? "fix" : "fixes"}`;
-  if (apply && dismiss)
-    return [
-      `Draft ${fixes}, dismiss ${dismiss}`,
-      `Draft ${apply}, dismiss ${dismiss}`,
-      `Carry out ${apply + dismiss}`,
-    ];
-  if (apply) return [`Draft ${fixes}`, `Draft ${apply}`];
-  if (dismiss) return [`Dismiss ${dismiss}`];
-  return ["Close"];
+  return apply ? "Draft prompt" : dismiss ? "Dismiss" : "Close";
 }
 
 // ---- the layout
 
 const EDGE = LIST_INSET;
 const RIGHT = captionFrameLayout.x;
-/** The screen counts as short below this many rows: the evidence is in the reader alone. */
-const SHORT = 30;
+/** The seen count's column at the right of every row: `12×`. */
+const ASIDE = 3;
+/** Below this many rows the frame drops its blank row and the focused suggestion its meta line. */
+const SHORT = 20;
 /**
- * Below this many rows the frame drops its blank row and its notice row, and the queue is all
- * there is: Claude Code's pane above the prompt of a 24-row terminal has six.
+ * Below this many rows the queue is all there is, its rows carrying their doc, and the frame
+ * has no bottom rule: Claude Code's pane above the prompt of a 24-row terminal, in its own box.
  */
-const TINY = 12;
+const TINY = 9;
+/** Rows the focused suggestion's claim and evidence each take at most, when the queue needs room. */
+const CLAIM_ROWS = 3;
+const EVIDENCE_ROWS = 3;
+
+type Mode = "tiny" | "short" | "tall";
 
 type Layout = {
+  mode: Mode;
+  /** Rows between the caption (and its blank row) and the notice row. */
   body: number;
-  isShort: boolean;
-  isTiny: boolean;
   /** Rows of the queue and of the focused suggestion under it, a blank row between. */
   list: number;
-  detail: number;
+  zone: number;
   listWidth: number;
   innerWidth: number;
 };
 
+const modeOf = (o: ScreenOptions): Mode =>
+  o.height < TINY ? "tiny" : o.height < SHORT ? "short" : "tall";
+
+/** Rows of the evidence text a suggestion has at `width`, uncut. */
+const evidenceRows = (q: Suggestion, width: number) =>
+  detail({ sections: evidenceSections(q, 0) }, width).length;
+
+/** Rows of the claim under the queue: none when the queue's row shows it whole. */
+function claimRows(q: Suggestion, l: Pick<Layout, "listWidth" | "innerWidth">) {
+  if (listShowsWhole(q.claim, l.listWidth, ASIDE)) return 0;
+  return Math.min(CLAIM_ROWS, detail({ title: q.claim }, l.innerWidth).length);
+}
+
+/** Rows the focused suggestion wants: the meta line, the claim, a blank row, the rule, evidence. */
+function zoneNeed(q: Suggestion, mode: Mode, l: Pick<Layout, "listWidth" | "innerWidth">) {
+  if (mode === "short") return claimRows(q, l) + 1;
+  return 1 + claimRows(q, l) + 1 + 1 + Math.min(EVIDENCE_ROWS, evidenceRows(q, l.innerWidth));
+}
+
 function layout(s: ScreenState, o: ScreenOptions): Layout {
-  const isTiny = o.height < TINY;
-  const body = Math.max(1, o.height - (isTiny ? 3 : captionFrameLayout.chrome));
-  const isShort = o.height < SHORT;
-  if (isTiny)
-    return {
-      body,
-      isShort,
-      isTiny,
-      list: body,
-      detail: 0,
-      listWidth: o.width - RIGHT,
-      innerWidth: Math.max(1, o.width - EDGE - RIGHT),
-    };
-  const natural = byTarget(s.queue).reduce((n, [, rows]) => n + 1 + rows.length, 0);
-  const least = isShort ? 4 : Math.max(8, Math.floor(body * 0.4));
-  const room = body - 1 - least;
-  const rows = natural <= room ? natural : Math.max(Math.min(natural, 3), room);
-  const listRows = Math.max(1, Math.min(rows, body - 2));
-  return {
-    body,
-    isShort,
-    isTiny,
-    list: listRows,
-    detail: Math.max(0, body - listRows - 1),
+  const mode = modeOf(o);
+  const widths = {
     listWidth: o.width - RIGHT,
     innerWidth: Math.max(1, o.width - EDGE - RIGHT),
   };
+  const chrome = mode === "tiny" ? 2 : mode === "short" ? 4 : captionFrameLayout.chrome;
+  const body = Math.max(1, o.height - chrome);
+  if (mode === "tiny") return { mode, body, list: body, zone: 0, ...widths };
+  const natural = byTarget(s.queue).reduce((n, [, rows]) => n + 1 + rows.length, 0);
+  const need = Math.max(0, ...s.queue.map((q) => zoneNeed(q, mode, widths)));
+  // The queue keeps three rows at least; the focused suggestion has what it needs of the rest.
+  const zone = Math.max(1, Math.min(need, body - 1 - Math.min(3, natural)));
+  const listRows = Math.max(1, Math.min(natural, body - 1 - zone));
+  // A queue that fits leaves the rest to the focused suggestion.
+  return { mode, body, list: listRows, zone: body - 1 - listRows, ...widths };
 }
 
 function listOf(s: ScreenState, l: Layout): List {
   const at = focused(s);
-  const groups: ListGroup[] = byTarget(s.queue).map(([target, rows]) => ({
-    label: target,
-    count: String(rows.length),
-    active: rows.some((q) => q.id === at?.id),
-    done: rows.every((q) => s.set[q.id]),
-    hit: docHit(target),
-    rows: rows.map((q) => ({
-      text: q.claim,
-      mark: s.set[q.id] === "apply" ? "chosen" : s.set[q.id] === "dismiss" ? "dropped" : "open",
-      aside: repeats(q),
-      focused: q.id === at?.id,
-      hovered: s.hover === rowHit(q.id),
-      hit: rowHit(q.id),
-    })),
-  }));
-  return { groups, height: l.list, scroll: s.scroll.list, noun: ["doc", "docs"] };
+  const groups: ListGroup[] = byTarget(s.queue).map(([target, rows]) => {
+    const isActive = rows.some((q) => q.id === at?.id);
+    return {
+      label: target,
+      active: isActive,
+      done: rows.every((q) => s.set[q.id]),
+      hit: docHit(target),
+      actions: isActive
+        ? (["apply", "dismiss"] as const).map((choice) => ({
+            label: choice === "apply" ? "Apply all" : "Dismiss all",
+            hit: allHit(choice, target),
+            hovered: s.hover === allHit(choice, target),
+          }))
+        : undefined,
+      rows: rows.map((q) => ({
+        text: q.claim,
+        mark: s.set[q.id] === "apply" ? "chosen" : s.set[q.id] === "dismiss" ? "dropped" : "open",
+        // The column is three cells: a hundred sightings and more read as `99+`.
+        aside: seen(q) > 99 ? "99+" : repeats(q),
+        focused: q.id === at?.id,
+        hovered: s.hover === rowHit(q.id) || s.hover === markHit(q.id),
+        hit: rowHit(q.id),
+        markHit: markHit(q.id),
+      })),
+    };
+  });
+  return {
+    groups,
+    height: l.list,
+    top: s.scroll.list,
+    noun: ["doc", "docs"],
+    aside: ASIDE,
+    flat: l.mode === "tiny",
+  };
 }
 
-/** The newest piece of evidence, or the reader's, as sections in the order the core gives. */
+/** A piece of evidence as sections in the order the core gives: the reason first. */
 function evidenceSections(q: Suggestion, piece: number): DetailSection[] {
-  const pieces = [...q.evidence].reverse();
-  const e = pieces[piece];
+  const e = [...q.evidence].reverse()[piece];
   if (!e) return [];
   return evidenceBlocks(readEvidence(e)).map((b) => ({
     heading: b.heading || undefined,
@@ -257,22 +293,89 @@ function evidenceSections(q: Suggestion, piece: number): DetailSection[] {
   }));
 }
 
-/** The focused suggestion under the queue: its meta line, its claim, its newest evidence. */
-function focusedDetail(s: ScreenState, o: ScreenOptions, l: Layout): Detail | undefined {
-  const q = focused(s);
-  if (!q) return undefined;
-  return {
-    meta: metaText(q, o.now),
-    title: listShowsWhole(q.claim, l.listWidth, repeats(q)) ? undefined : q.claim,
-    sections: l.isShort ? [] : evidenceSections(q, 0),
-    height: l.detail,
-    offset: s.scroll.detail,
-    hit: DETAIL,
-    hovered: s.hover === DETAIL,
-  };
+/** `Evidence · 2 pieces`, or `Evidence · 2 days ago` with one: the focused suggestion's rule. */
+function evidenceRule(q: Suggestion, now: number) {
+  const n = q.evidence.length;
+  if (n === 0) return "No evidence filed";
+  if (n > 1) return `Evidence · ${n} pieces`;
+  return `Evidence · ${ageText(q.evidence[0]?.at ?? "", now)}`;
 }
 
-/** The reader: the focused suggestion whole, with one piece of evidence at a time. */
+/**
+ * The focused suggestion under the queue, in `rows` rows: its meta line, its claim when the row
+ * cuts it, then the evidence rule, a control that opens the reader, and as much of the newest
+ * evidence as the rows hold. The rule is drawn whatever else gives way.
+ */
+function focusedZone(s: ScreenState, o: ScreenOptions, l: Layout, rows: number): Line[] {
+  const q = focused(s);
+  if (!q || rows < 1) return [];
+  const isTall = l.mode === "tall";
+  const read = {
+    label: "Read",
+    hotkey: "e",
+    hit: BUTTONS.evidence,
+    hovered: s.hover === BUTTONS.evidence,
+  };
+  const rule = detail({ sections: [{ rule: evidenceRule(q, o.now), action: read }] }, l.innerWidth);
+  let head = detail(
+    {
+      meta: isTall ? metaText(q, o.now) : undefined,
+      title: claimRows(q, l) ? q.claim : undefined,
+      titleMax: CLAIM_ROWS,
+      hit: DETAIL,
+      hovered: s.hover === DETAIL,
+    },
+    l.innerWidth,
+  );
+  const gap = isTall && head.length ? [blank()] : [];
+  // What gives way first: the evidence, the blank row, then the claim's last rows.
+  let room = rows - rule.length;
+  head = head.slice(0, Math.max(0, room));
+  room -= head.length;
+  const spacer = gap.slice(0, Math.max(0, room));
+  room -= spacer.length;
+  const evidence =
+    isTall && room > 0
+      ? detail({ sections: evidenceSections(q, 0), height: room, hit: DETAIL }, l.innerWidth)
+      : [];
+  return [...head, ...spacer, ...rule, ...evidence].map((row) => inset(row));
+}
+
+/** `● docs/agents.md · wrong · seen 3× · 2 days ago      Back [esc]`: where the reader is. */
+function readerHead(s: ScreenState, q: Suggestion, o: ScreenOptions, width: number): Line {
+  const choice = s.set[q.id];
+  const style =
+    choice === "apply"
+      ? ({ role: "accent", bold: true } as const)
+      : choice === "dismiss"
+        ? ({ role: "dim" } as const)
+        : ({ role: "text" } as const);
+  const glyph =
+    choice === "apply"
+      ? tokens.glyph.single.on
+      : choice === "dismiss"
+        ? tokens.glyph.dropped
+        : tokens.glyph.single.off;
+  const back = [
+    span("Back", {
+      role: "text",
+      bold: s.hover === BUTTONS.back || undefined,
+      hit: BUTTONS.back,
+    }),
+    span(" ", { hit: BUTTONS.back }),
+    span("[esc]", { role: "dim", hit: BUTTONS.back }),
+  ];
+  const room = width - spansWidth(back) - tokens.gutter;
+  const mark = span(glyph, choice ? style : { role: "dim" });
+  const meta = span(` · ${metaText(q, o.now)}`, { role: "dim" });
+  // The path is the row's title: the meta line's end gives way first.
+  const path = span(cutLeft(q.target, Math.max(1, room - 2)), style);
+  const left = truncateSpans([mark, span(" "), path, meta], Math.max(0, room));
+  const pad = width - spansWidth(left) - spansWidth(back);
+  return line([...left, span(" ".repeat(Math.max(1, pad))), ...back]);
+}
+
+/** The reader under its head row: the claim whole, then one piece of evidence. */
 function readerDetail(s: ScreenState, o: ScreenOptions, l: Layout): Detail | undefined {
   const q = focused(s);
   if (!q) return undefined;
@@ -280,65 +383,55 @@ function readerDetail(s: ScreenState, o: ScreenOptions, l: Layout): Detail | und
   const piece = Math.min(s.reader ?? 0, Math.max(0, count - 1));
   const e = [...q.evidence].reverse()[piece];
   const view = e ? readEvidence(e) : undefined;
-  const rule = view
+  const rule = e
     ? [
-        `Evidence ${piece + 1} of ${count}`,
-        view.when,
-        view.isMigrated && view.by ? `migrated from ${view.by}` : "",
+        count > 1 ? `Evidence ${piece + 1} of ${count}` : "Evidence",
+        ageText(e.at, o.now),
+        view?.isMigrated && view.by ? `migrated from ${view.by}` : "",
       ]
         .filter(Boolean)
         .join(" · ")
     : "No evidence filed";
   return {
-    meta: metaText(q, o.now),
     title: q.claim,
     sections: [
       {
         rule,
         action:
           count > 1
-            ? { label: "Next", hotkey: "n", hit: BUTTONS.next, hovered: s.hover === BUTTONS.next }
+            ? {
+                label: "Next",
+                hotkey: "n",
+                hit: BUTTONS.next,
+                hovered: s.hover === BUTTONS.next,
+                isDim: piece >= count - 1,
+              }
             : undefined,
       },
       ...evidenceSections(q, piece),
     ],
-    height: l.body,
+    height: Math.max(1, l.body - 1),
     offset: s.scroll.detail,
   };
 }
 
-function footerButtons(s: ScreenState, o: ScreenOptions, room: number): Button[] {
-  const width = (b: Pick<Button, "label" | "hotkey">) =>
-    cellWidth(`${b.label} [${b.hotkey}]`) + tokens.gutter;
-  const rest: Button[] = [
+/** The footer: the main action, then Apply and Dismiss. Dim and inert while Close asks. */
+function footerRow(s: ScreenState, room: number): Line {
+  const keys: Button[] = [
+    {
+      hotkey: "enter",
+      label: mainLabel(s),
+      hit: BUTTONS.main,
+      isLit: isAnySet(s),
+      essential: true,
+    },
     { hotkey: "a", label: "Apply", hit: BUTTONS.apply, essential: true },
     { hotkey: "d", label: "Dismiss", hit: BUTTONS.dismiss, essential: true },
   ];
-  const third: Button =
-    s.reader === undefined
-      ? { hotkey: "e", label: "Evidence", hit: BUTTONS.evidence }
-      : { hotkey: "esc", label: "Back", hit: BUTTONS.back };
-  const restWidth = rest.reduce((n, b) => n + width(b), 0);
-  // The main action says as much as fits beside the other buttons: first with the third one,
-  // which then stays put, else beside Apply and Dismiss alone.
-  const labels = mainLabels(s);
-  const fits = (label: string, beside: number) =>
-    cellWidth(`${label} ${tokens.glyph.enter}`) + beside <= room;
-  const main =
-    labels.find((label) => fits(label, restWidth + width(third))) ??
-    labels.find((label) => fits(label, restWidth)) ??
-    labels[labels.length - 1]!;
-  return [
-    { hotkey: "enter", label: main, hit: BUTTONS.main, isLit: isAnySet(s), essential: true },
-    ...rest,
-    third,
-    ...(o.wholeDoc ? [{ hotkey: "A/D", label: "whole doc" }] : []),
-  ];
-}
-
-/** The footer's row, the control under the mouse drawn as such. */
-function footerRow(s: ScreenState, o: ScreenOptions, room: number): Line {
-  const keys = footerButtons(s, o, room);
+  if (s.confirming) {
+    const row = buttonRow(keys, room)[0] ?? line([]);
+    return line(row.spans.map(({ text }) => span(text, { role: "dim" })));
+  }
   const plain = buttonRow(keys, room)[0] ?? line([]);
   let x = 0;
   let hover: { x: number; y: number } | undefined;
@@ -349,20 +442,25 @@ function footerRow(s: ScreenState, o: ScreenOptions, room: number): Line {
   return hover ? (buttonRow(keys, room, { hover })[0] ?? plain) : plain;
 }
 
-/** `Doc suggestions ── 3 of 28 decided`: the title and how far the person got, where it fits. */
+/** `● 3 · – 2 · 23 left`, in the rows' own glyphs: dim, what is set to apply in the accent. */
+function tally(s: ScreenState): Span[] {
+  const { apply, dismiss, left } = counts(s);
+  return [
+    span(`${tokens.glyph.single.on} ${apply}`, { role: apply ? "accent" : "dim" }),
+    span(` · ${tokens.glyph.dropped} ${dismiss} · ${left} left`, { role: "dim" }),
+  ];
+}
+
+/** The title and the tally where both fit, else the tally alone, else the title. */
 function caption(s: ScreenState, room: number): Span[] {
   const title = span(TITLE, { role: "accent", bold: true });
-  const decided = s.queue.filter((q) => s.set[q.id]).length;
   const rule = [
     span(" "),
     span(tokens.glyph.rule.repeat(tokens.gutter), { role: "border" }),
     span(" "),
   ];
-  const tiers = [
-    [title, ...rule, span(`${decided} of ${s.queue.length} decided`, { role: "dim" })],
-    [title, ...rule, span(`${decided}/${s.queue.length}`, { role: "dim" })],
-  ];
-  return tiers.find((tier) => spansWidth(tier) <= room) ?? [title];
+  const tiers = [[title, ...rule, ...tally(s)], tally(s), [title]];
+  return tiers.find((tier) => spansWidth(tier) <= room) ?? [];
 }
 
 /** A row set in to the screen's left edge, where the paths and the marks' pointer start. */
@@ -376,10 +474,11 @@ const padTo = (rows: Line[], n: number) => [
 
 /** The screen at `width` by `height` cells: every row at most `width` cells. */
 export function drawScreen(s: ScreenState, o: ScreenOptions): Drawn {
+  const setCount = s.queue.filter((q) => s.set[q.id]).length;
   const close = {
     confirming: s.confirming,
     hover: closeOf(s.hover),
-    question: "Discard choices?",
+    question: `Discard ${setCount}?`,
   };
   const { width } = o;
   if (s.queue.length === 0) {
@@ -395,7 +494,7 @@ export function drawScreen(s: ScreenState, o: ScreenOptions): Drawn {
     };
   }
   const l = layout(s, o);
-  const footer = inset(footerRow(s, o, l.innerWidth), EDGE - RIGHT);
+  const footer = inset(footerRow(s, l.innerWidth), EDGE - RIGHT);
   const notice = s.notice
     ? inset(line([span(s.notice, { role: "error" })]), EDGE - RIGHT)
     : undefined;
@@ -408,32 +507,31 @@ export function drawScreen(s: ScreenState, o: ScreenOptions): Drawn {
     footer,
     notice,
   });
-  const at = l.isTiny ? 1 : captionFrameLayout.y;
+  const at = l.mode === "tall" ? captionFrameLayout.y : 1;
   let body: Line[];
   let zones: Zones;
-  if (s.reader !== undefined) {
+  const q = focused(s);
+  if (s.reader !== undefined && q) {
     const d = readerDetail(s, o, l);
-    body = padTo(
-      (d ? detail(d, l.innerWidth) : []).map((row) => inset(row)),
-      l.body,
-    );
-    zones = { detail: [at, at + l.body] };
+    const rows = d ? detail(d, l.innerWidth).map((row) => inset(row)) : [];
+    body = padTo([inset(readerHead(s, q, o, l.innerWidth)), ...rows], l.body);
+    zones = { detail: [at + 1, at + l.body] };
   } else {
     const rows = padTo(list(listOf(s, l), l.listWidth), l.list);
-    const d = l.isTiny ? undefined : focusedDetail(s, o, l);
-    const under = d ? detail(d, l.innerWidth).map((row) => inset(row)) : [];
-    body = padTo(l.isTiny ? rows : [...rows, blank(), ...under], l.body);
-    zones = l.isTiny
-      ? { list: [at, at + l.list] }
-      : { list: [at, at + l.list], detail: [at + l.list + 1, at + l.body] };
+    body =
+      l.mode === "tiny"
+        ? padTo(rows, l.body)
+        : padTo([...rows, blank(), ...focusedZone(s, o, l, l.zone)], l.body);
+    zones = { list: [at, at + l.list] };
   }
-  if (l.isTiny)
-    // The notice, when there is one, takes the body's last row.
+  if (l.mode === "tiny")
+    // The notice, when there is one, takes the body's last row; the host's box is the edge.
     return {
-      lines: [top!, ...(notice ? [...body.slice(0, -1), noticeRow!] : body), footerLine!, bottom!],
+      lines: [top!, ...(notice ? [...body.slice(0, -1), noticeRow!] : body), footerLine!],
       zones,
     };
-  return { lines: [top!, gap!, ...body, noticeRow!, footerLine!, bottom!], zones };
+  const head = l.mode === "tall" ? [top!, gap!] : [top!];
+  return { lines: [...head, ...body, noticeRow!, footerLine!, bottom!], zones };
 }
 
 // ---- the reducer
@@ -441,7 +539,7 @@ export function drawScreen(s: ScreenState, o: ScreenOptions): Drawn {
 /** Every suggestion's id, in the order the queue draws them. */
 const order = (s: ScreenState) => byTarget(s.queue).flatMap(([, rows]) => rows.map((q) => q.id));
 
-/** `s` with the keyboard on `id`: its windows back where the keyboard puts them. */
+/** `s` with the keyboard on `id`; the queue's window stays where it is. */
 const focusOn = (s: ScreenState, id: string | undefined): ScreenState =>
   id === undefined || id === s.focus
     ? s
@@ -449,8 +547,14 @@ const focusOn = (s: ScreenState, id: string | undefined): ScreenState =>
         ...s,
         focus: id,
         reader: s.reader === undefined ? undefined : 0,
-        scroll: { list: 0, detail: 0 },
+        scroll: { ...s.scroll, detail: 0 },
       };
+
+/** The queue's window moved as little as keeps the keyboard's row in it, two rows round it. */
+const follow = (s: ScreenState, o: ScreenOptions): ScreenState => ({
+  ...s,
+  scroll: { ...s.scroll, list: listFollow(listOf(s, layout(s, o))) },
+});
 
 /** The next row after `id` still left alone, round to the top; `undefined` when none is. */
 function nextOpen(s: ScreenState, id: string | undefined): string | undefined {
@@ -469,14 +573,18 @@ function docEntry(s: ScreenState, target: string): string | undefined {
   return (rows.find((q) => !s.set[q.id]) ?? rows[0])?.id;
 }
 
+/** A click on a mark steps it: left alone, apply, dismiss, left alone. */
+const stepped = (choice: Choice | undefined): Choice | undefined =>
+  choice === undefined ? "apply" : choice === "apply" ? "dismiss" : undefined;
+
 function scrollBy(s: ScreenState, o: ScreenOptions, zone: "list" | "detail", by: number) {
   const l = layout(s, o);
   if (zone === "list") {
-    const range = listRange(listOf(s, l));
-    const next = Math.max(range.min, Math.min(range.max, s.scroll.list + by));
+    const max = listTopMax(listOf(s, l));
+    const next = Math.max(0, Math.min(max, s.scroll.list + by));
     return { ...s, scroll: { ...s.scroll, list: next } };
   }
-  const d = s.reader !== undefined ? readerDetail(s, o, l) : focusedDetail(s, o, l);
+  const d = s.reader !== undefined ? readerDetail(s, o, l) : undefined;
   const max = d ? detailRange(d, l.innerWidth) : 0;
   const next = Math.max(0, Math.min(max, s.scroll.detail + by));
   return { ...s, scroll: { ...s.scroll, detail: next } };
@@ -507,40 +615,44 @@ export function reduce(
     return done({ ...s, confirming: false });
   }
   const q = focused(s);
+  const isReading = s.reader !== undefined;
   switch (intent.do) {
     case "move": {
-      if (s.reader !== undefined) return done(scrollBy(s, o, "detail", intent.by));
+      if (isReading) return done(scrollBy(s, o, "detail", intent.by));
       const ids = order(s);
       const at = ids.indexOf(q?.id ?? "");
-      return done(focusOn(s, ids[Math.max(0, Math.min(ids.length - 1, at + intent.by))]));
+      const to = ids[Math.max(0, Math.min(ids.length - 1, at + intent.by))];
+      return done(follow(focusOn(s, to), o));
     }
     case "set": {
       if (!q) return done(s);
       const wasSet = s.set[q.id] === intent.choice;
       const next = { ...s, set: toggleChoice(s.set, [q.id], intent.choice), notice: undefined };
-      return done(wasSet ? next : focusOn(next, nextOpen(next, q.id) ?? q.id));
+      // The reader stays on its suggestion; the queue moves on to the next one left alone.
+      if (wasSet || isReading) return done(next);
+      return done(follow(focusOn(next, nextOpen(next, q.id) ?? q.id), o));
     }
     case "doc": {
-      if (!q) return done(s);
-      const ids = s.queue.filter((r) => r.target === q.target).map((r) => r.id);
+      const target = intent.target ?? q?.target;
+      if (target === undefined) return done(s);
+      const ids = s.queue.filter((r) => r.target === target).map((r) => r.id);
       const wasSet = ids.every((id) => s.set[id] === intent.choice);
       const next = { ...s, set: toggleChoice(s.set, ids, intent.choice), notice: undefined };
-      if (wasSet) return done(next);
-      const last = ids[ids.length - 1];
-      return done(focusOn(next, nextOpen(next, last) ?? q.id));
+      if (wasSet || intent.stay || isReading) return done(next);
+      return done(follow(focusOn(next, nextOpen(next, ids[ids.length - 1]) ?? q?.id), o));
     }
     case "reader":
-      return done(
-        s.reader === undefined
-          ? { ...s, reader: 0, scroll: { ...s.scroll, detail: 0 } }
-          : { ...s, reader: undefined, scroll: { ...s.scroll, detail: 0 } },
-      );
+      return done({
+        ...s,
+        reader: isReading ? undefined : 0,
+        scroll: { ...s.scroll, detail: 0 },
+      });
     case "back":
       return done({ ...s, reader: undefined, scroll: { ...s.scroll, detail: 0 } });
     case "next": {
       const count = q?.evidence.length ?? 0;
-      if (s.reader === undefined || count < 2) return done(s);
-      return done({ ...s, reader: (s.reader + 1) % count, scroll: { ...s.scroll, detail: 0 } });
+      if (s.reader === undefined || s.reader >= count - 1) return done(s);
+      return done({ ...s, reader: s.reader + 1, scroll: { ...s.scroll, detail: 0 } });
     }
     case "scroll":
       return done(scrollBy(s, o, intent.zone, intent.by));
@@ -549,16 +661,28 @@ export function reduce(
     case "close":
       return isAnySet(s) ? done({ ...s, confirming: true, hover: undefined }) : done(s, "close");
     case "escape":
-      if (s.reader !== undefined) return reduce(s, { do: "back" }, o);
+      if (isReading) return reduce(s, { do: "back" }, o);
       return reduce(s, { do: "close" }, o);
     case "focus":
     case "press": {
       const { hit } = intent;
-      const row = idOf(hit, "row:");
-      if (row !== undefined) return done(focusOn(s, row));
+      // A click puts the keyboard where it lands; the window stays under the pointer.
+      const row = idOf(hit, "row:") ?? idOf(hit, "mark:");
+      if (row !== undefined) {
+        const there = focusOn(s, row);
+        if (intent.do === "focus" || !hit.startsWith("mark:")) return done(there);
+        const choice = stepped(there.set[row]);
+        const set = { ...there.set };
+        if (choice) set[row] = choice;
+        else delete set[row];
+        return done({ ...there, set, notice: undefined });
+      }
       const doc = idOf(hit, "doc:");
       if (doc !== undefined) return done(focusOn(s, docEntry(s, doc)));
       if (intent.do === "focus") return done(s);
+      const all = /^all:(apply|dismiss):(.*)$/.exec(hit);
+      if (all)
+        return reduce(s, { do: "doc", choice: all[1] as Choice, target: all[2], stay: true }, o);
       const action: Record<string, Intent> = {
         [DETAIL]: { do: "reader" },
         [BUTTONS.main]: { do: "main" },
@@ -575,10 +699,10 @@ export function reduce(
   }
 }
 
-/** A step the page keys take: the focused suggestion's rows less one, so a line stays in view. */
+/** A step the page keys take: a window less one row, so a line stays in view. */
 const page = (s: ScreenState, o: ScreenOptions) => {
   const l = layout(s, o);
-  return Math.max(1, (s.reader === undefined ? l.detail : l.body) - 2);
+  return Math.max(1, (s.reader === undefined ? l.list : l.body - 1) - 2);
 };
 
 /**
@@ -590,6 +714,7 @@ export function keyIntent(key: string, s: ScreenState, o: ScreenOptions): Intent
     if (key === "enter") return { do: "press", hit: "frame:discard" };
     return { do: "press", hit: "frame:keep" };
   }
+  const zone = s.reader === undefined ? "list" : "detail";
   switch (key) {
     case "up":
     case "k":
@@ -598,9 +723,9 @@ export function keyIntent(key: string, s: ScreenState, o: ScreenOptions): Intent
     case "j":
       return { do: "move", by: 1 };
     case "pageup":
-      return { do: "scroll", zone: "detail", by: -page(s, o) };
+      return { do: "scroll", zone, by: -page(s, o) };
     case "pagedown":
-      return { do: "scroll", zone: "detail", by: page(s, o) };
+      return { do: "scroll", zone, by: page(s, o) };
     case "enter":
       return { do: "main" };
     case "escape":
@@ -628,6 +753,9 @@ export function zoneAt(zones: Zones, y: number): "list" | "detail" | undefined {
   return undefined;
 }
 
+/** Rows one notch of the wheel moves a zone. */
+export const WHEEL_ROWS = 3;
+
 /** The ids the main action carries out, apply and dismiss apart. */
 export function decided(s: ScreenState) {
   return {
@@ -638,8 +766,6 @@ export function decided(s: ScreenState) {
 
 /** Every control's `hit` the screen draws, for a client that asks whether one is its own. */
 export const isScreenHit = (hit: string) =>
-  hit.startsWith("row:") ||
-  hit.startsWith("doc:") ||
-  hit.startsWith("frame:") ||
+  /^(row|mark|doc|all|frame):/.test(hit) ||
   hit === DETAIL ||
   (Object.values(BUTTONS) as string[]).includes(hit);

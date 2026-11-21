@@ -40,9 +40,9 @@ function closeSpans(
     cellWidth(`Discard ${tokens.glyph.enter}`) + tokens.gutter + cellWidth("Keep [esc]");
   if (room < buttonsWidth) return undefined;
   const prompt = question;
-  // The longer prompt only when there is still room for a caption.
+  // The question goes before the caption: while it is asked, it is what the frame is about.
   const lead =
-    room >= buttonsWidth + tokens.gutter + cellWidth(prompt) + 7
+    room >= buttonsWidth + tokens.gutter + cellWidth(prompt)
       ? [span(prompt, { role: "warning" })]
       : [];
   const row = buttonRow(confirmButtons, room, { lead })[0];
@@ -56,6 +56,9 @@ function closeSpans(
   }
   return row.spans;
 }
+
+/** Cells a title needs to be worth cutting into. */
+const MIN_TITLE = 8;
 
 /** An inline form between two rules: a caption and Close in the top one, the body set in. */
 export function captionFrame(f: CaptionFrame): Line[] {
@@ -72,7 +75,11 @@ export function captionFrame(f: CaptionFrame): Line[] {
   const actionStart = action ? width - spansWidth(action) - 2 : width;
   const limit = Math.max(0, (action ? actionStart - 1 : width) - captionFrameLayout.reserved);
   const content = typeof f.caption === "function" ? f.caption(limit) : f.caption;
-  const label = truncateSpans(content ?? [span(f.title, { role: "accent", bold: true })], limit);
+  // A title cut to a few letters says nothing: below that it goes.
+  const label =
+    content || limit >= MIN_TITLE
+      ? truncateSpans(content ?? [span(f.title, { role: "accent", bold: true })], limit)
+      : [];
   const head = spansWidth(label) ? [rule(1), span(" "), ...label, span(" ")] : [];
   const end = action ? actionStart - 1 : width;
   return [
