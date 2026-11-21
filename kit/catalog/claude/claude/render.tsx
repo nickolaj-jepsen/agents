@@ -46,6 +46,7 @@ import {
   choiceOf,
   choiceReduce,
   type ChoiceIntent,
+  type ChoiceProps,
   type ChoiceState,
 } from "./kit/choice/contract.ts";
 import { choiceStories } from "./kit/choice/stories.ts";
@@ -55,6 +56,17 @@ import { paintLines } from "./kit/paint/claude.tsx";
 export type Env = { columns: number; rows: number };
 /** The address of a button that only carries a letter key and draws nothing. */
 export const KEY_PREFIX = "choice-key-";
+/** Where the engine's focus ring is kept, and the stops either side that an arrow reaches. */
+export const RING = {
+  up: "choice-ring-up",
+  park: "choice-ring",
+  down: "choice-ring-down",
+} as const;
+/** A live choice story's first state: the kit draws focus, on the first row. */
+export const choiceStart = (props: ChoiceProps): ChoiceState => ({
+  chosen: props.chosen,
+  focus: 0,
+});
 /** A story that reacts keeps one value in the catalogue's state and replaces it. */
 export type LiveState = { state: unknown; set: (next: unknown) => unknown };
 type Render = (k: Kit, width: number, env: Env, live?: LiveState) => JSX.Element | null;
@@ -412,7 +424,7 @@ export const renders: Record<string, Render> = {
       (k, width, _env, live) => {
         const { Box, Button } = k;
         if (!s.live || !live) return paintLines(k, choiceLines(s.props, width));
-        const state = (live.state as ChoiceState | null) ?? { chosen: s.props.chosen };
+        const state = (live.state as ChoiceState | null) ?? choiceStart(s.props);
         const send = (intent: ChoiceIntent | undefined) =>
           intent && live.set(choiceReduce(state, intent, s.props));
         return (
@@ -420,7 +432,19 @@ export const renders: Record<string, Render> = {
             {paintLines(k, choiceLines({ ...s.props, ...state }, width), (hit) =>
               send({ do: "pick", index: choiceOf(hit) }),
             )}
+            {/* Nothing here is drawn. The engine's ring rests on the middle button, so Enter
+                picks the row the kit drew focus on; the two round it are where an arrow would
+                take the ring, which `ui.focus` turns into a move instead. */}
             <Box width={0} height={0} overflow="hidden">
+              <Button key={RING.up} plain label="previous" onPress={() => undefined} />
+              <Button
+                key={RING.park}
+                plain
+                autoFocus
+                label="pick"
+                onPress={() => send({ do: "pick" })}
+              />
+              <Button key={RING.down} plain label="next" onPress={() => undefined} />
               {s.props.items.map((item) => (
                 <Button
                   key={`${KEY_PREFIX}${item.key}`}

@@ -7,8 +7,9 @@
 import { atom, read, update } from "claude-code";
 import type { Register } from "claude-code";
 import { stageWidth, storyId, stories, type Story } from "../stories";
-import { choiceHit } from "./kit/choice/contract.ts";
-import { KEY_PREFIX, renders } from "./render";
+import { choiceOf, choiceReduce, type ChoiceState } from "./kit/choice/contract.ts";
+import { choiceStories } from "./kit/choice/stories.ts";
+import { choiceStart, KEY_PREFIX, renders, RING } from "./render";
 import { kitOf, onlyOwnRows, paneOptions, withColumns } from "./ui";
 
 const PANE = "kit";
@@ -69,11 +70,31 @@ export const register: Register = (on) => {
     return { text: `Drew ${storyId(one)}.` };
   });
 
-  // The buttons that carry a story's letter keys draw nothing, so the ring never rests on one:
-  // past the last row it wraps to the first.
-  on("ui.focus", { requestId: PANE }, ($, e, next) =>
-    next(e.element?.startsWith(KEY_PREFIX) ? { ...e, element: choiceHit(0) } : e),
-  );
+  // A live choice story draws its own focus, as pi does, so the engine's ring (which inverts
+  // what it rests on) is kept on a button that draws nothing. An arrow tries to move the ring
+  // to the stop before or after it, and a click to the row clicked: each becomes the kit's
+  // focus instead, and the ring goes back.
+  on("ui.focus", { requestId: PANE }, async ($, e, next) => {
+    const id = await read($, story);
+    const s = choiceStories.find((c) => c.live && `choice/${c.state}` === id);
+    const el = e.element;
+    if (!s || !id || !el || el === RING.park) return next(e);
+    const by = el === RING.up ? -1 : el === RING.down ? 1 : 0;
+    const row = choiceOf(el);
+    if (!by && row < 0 && !el.startsWith(KEY_PREFIX)) return next(e);
+    await update($, live, (held) => {
+      const state = (held?.id === id ? (held.state as ChoiceState) : null) ?? choiceStart(s.props);
+      return {
+        id,
+        state: by
+          ? choiceReduce(state, { do: "move", by }, s.props)
+          : row >= 0
+            ? { ...state, focus: row }
+            : state,
+      };
+    });
+    return next({ ...e, element: RING.park });
+  });
 
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
     const els = $.ui.resolve(e);

@@ -15,9 +15,9 @@ const snapshots = join(import.meta.dirname, "../../e2e/kit/__snapshots__");
 const clients = ["pi", "claude"] as const;
 type Client = (typeof clients)[number];
 
-/** What each client starts a story with: pi draws its own focus, Claude Code's engine draws it. */
-const initial = (client: Client, props: ChoiceProps, live: boolean): ChoiceProps =>
-  live && client === "pi" ? { ...props, focus: 0 } : props;
+/** What a story starts with: a live one has the kit's own focus on its first row, in both clients. */
+const initial = (props: ChoiceProps, live: boolean): ChoiceProps =>
+  live ? { ...props, focus: 0 } : props;
 
 type Snap = { size: string; width: number; text: string[]; styles: string[][] };
 
@@ -59,14 +59,13 @@ const cellRoles = (l: Line) =>
   );
 
 describe.each(choiceStories)("choice/$state", (story) => {
-  const drawn = (client: Client, width: number) =>
-    choiceLines(initial(client, story.props, !!story.live), width);
+  const drawn = (width: number) => choiceLines(initial(story.props, !!story.live), width);
 
   test.each(clients)("%s holds the shared drawing at every size", (client) => {
     const snaps = read(client, story.state);
     expect(snaps.length).toBeGreaterThan(0);
     for (const snap of snaps) {
-      const lines = drawn(client, snap.width);
+      const lines = drawn(snap.width);
       expect(snap.text, `${client} ${snap.size}`).toEqual(lines.map((l) => textOf(l).trimEnd()));
       // A role is one style and a style one role, whatever the client's colours are.
       const styleOf = new Map<string, string>();
@@ -89,8 +88,6 @@ describe.each(choiceStories)("choice/$state", (story) => {
     const pairs = (pi ?? []).flatMap((a) =>
       (claude ?? []).filter((b) => b.width === a.width).map((b) => [a, b] as const),
     );
-    // A live story starts with pi's pointer on the first row, which the engine draws on Claude.
-    if (story.live) return;
     expect(pairs.length).toBeGreaterThan(0);
     for (const [a, b] of pairs) expect(a.text, `${a.size} and ${b.size}`).toEqual(b.text);
   });
