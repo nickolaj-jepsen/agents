@@ -7,9 +7,22 @@
 import { atom, read, update } from "claude-code";
 import type { Register } from "claude-code";
 import { stageWidth, storyId, stories, type Story } from "../stories";
-import { choiceOf, choiceReduce, type ChoiceState } from "./kit/choice/contract.ts";
+import {
+  choiceOf,
+  choiceReduce,
+  type ChoiceProps,
+  type ChoiceState,
+} from "./kit/choice/contract.ts";
 import { choiceStories } from "./kit/choice/stories.ts";
-import { choiceStart, KEY_PREFIX, renders, RING } from "./render";
+import {
+  choiceRing,
+  choiceRows,
+  choiceStart,
+  KEY_PREFIX,
+  renders,
+  RING,
+  type ChoiceSend,
+} from "./render";
 import { kitOf, onlyOwnRows, paneOptions, withColumns } from "./ui";
 
 const PANE = "kit";
@@ -25,6 +38,31 @@ const live = atom(
   null as { id: string; state: unknown } | null,
   { shape: "live-1" },
 );
+
+/**
+ * `/kit choice transcript`: the live choice list placed as a row of the transcript, where a
+ * question card goes, with its keys in the band. The transcript keeps no focus ring, so this is
+ * the arrangement a card's keyboard has to work in. Tried by hand; it has no scenario.
+ */
+const TRANSCRIPT = "choice/transcript";
+const PLACED = "kit-choice";
+
+/** The props of the live choice story drawn under `id`, in the pane or the transcript. */
+const liveChoice = (id: string | null): ChoiceProps | undefined =>
+  choiceStories.find((c) => c.live && (id === TRANSCRIPT || `choice/${c.state}` === id))?.props;
+
+/** The transcript story's state and the way to change it, from either site that draws it. */
+async function transcriptChoice($: Parameters<typeof read>[0]) {
+  const props = liveChoice(TRANSCRIPT);
+  if (!props || (await read($, story)) !== TRANSCRIPT) return undefined;
+  const held = await read($, live);
+  const state =
+    (held?.id === TRANSCRIPT ? (held.state as ChoiceState) : null) ?? choiceStart(props);
+  const send: ChoiceSend = (intent) =>
+    intent &&
+    update($, live, () => ({ id: TRANSCRIPT, state: choiceReduce(state, intent, props) }));
+  return { props, state, send };
+}
 
 const find = (id: string | null): Story | undefined => stories.find((s) => storyId(s) === id);
 
@@ -52,6 +90,13 @@ export const register: Register = (on) => {
       await $.ui.close({ id: PANE }).catch(() => undefined);
       return { text: `Components and states\n${listing()}` };
     }
+    if (`${component}/${state}` === TRANSCRIPT) {
+      await update($, story, () => TRANSCRIPT);
+      await update($, live, () => null);
+      await $.ui.close({ id: PANE }).catch(() => undefined);
+      const row = await $.ui.place({ id: PLACED });
+      return { text: row.isPlaced ? `Drew ${TRANSCRIPT}.` : `${TRANSCRIPT}: no row was placed` };
+    }
     const found = stories.filter((s) => s.component === component);
     const one = found.find((s) => s.state === state) ?? (found.length === 1 ? found[0] : undefined);
     if (!one) {
@@ -74,20 +119,20 @@ export const register: Register = (on) => {
   // what it rests on) is kept on a button that draws nothing. An arrow tries to move the ring
   // to the stop before or after it, and a click to the row clicked: each becomes the kit's
   // focus instead, and the ring goes back.
-  on("ui.focus", { requestId: PANE }, async ($, e, next) => {
+  on("ui.focus", async ($, e, next) => {
     const id = await read($, story);
-    const s = choiceStories.find((c) => c.live && `choice/${c.state}` === id);
+    const props = liveChoice(id);
     const el = e.element;
-    if (!s || !id || !el || el === RING.park) return next(e);
+    if (!props || !id || !el || el === RING.park) return next(e);
     const by = el === RING.up ? -1 : el === RING.down ? 1 : 0;
     const row = choiceOf(el);
     if (!by && row < 0 && !el.startsWith(KEY_PREFIX)) return next(e);
     await update($, live, (held) => {
-      const state = (held?.id === id ? (held.state as ChoiceState) : null) ?? choiceStart(s.props);
+      const state = (held?.id === id ? (held.state as ChoiceState) : null) ?? choiceStart(props);
       return {
         id,
         state: by
-          ? choiceReduce(state, { do: "move", by }, s.props)
+          ? choiceReduce(state, { do: "move", by }, props)
           : row >= 0
             ? { ...state, focus: row }
             : state,
@@ -116,7 +161,25 @@ export const register: Register = (on) => {
     return <Box flexDirection="column">{body}</Box>;
   });
 
+  on("ui.render", { component: "Placed" }, async ($, e, next) => {
+    const choice = e.props.plugin === PLUGIN ? await transcriptChoice($) : undefined;
+    if (!choice) return next(e);
+    const k = kitOf($.ui.resolve(e), e);
+    return choiceRows(k, choice.props, choice.state, Math.min(k.columns - 2, 96), choice.send);
+  });
+
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
+    const choice = e.props.hasSurvey ? undefined : await transcriptChoice($);
+    if (choice) {
+      const k = kitOf($.ui.resolve(e), e);
+      const { Box, Text } = k;
+      return (
+        <Box flexDirection="column">
+          <Text dimColor>{`${TRANSCRIPT}: the band has the keys after ctrl+x tab`}</Text>
+          {choiceRing(k, choice.props, choice.send)}
+        </Box>
+      );
+    }
     const s = find(await read($, story));
     if (e.props.hasSurvey || !s || s.surface !== "band") return next(e);
     const els = $.ui.resolve(e);

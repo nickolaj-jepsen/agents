@@ -67,6 +67,46 @@ export const choiceStart = (props: ChoiceProps): ChoiceState => ({
   chosen: props.chosen,
   focus: 0,
 });
+export type ChoiceSend = (intent: ChoiceIntent | undefined) => unknown;
+
+/** A live choice list's rows, where they are drawn: a press on a row picks it. */
+export const choiceRows = (
+  k: Kit,
+  props: ChoiceProps,
+  state: ChoiceState,
+  width: number,
+  send: ChoiceSend,
+) =>
+  paintLines(k, choiceLines({ ...props, ...state }, width), (hit) =>
+    send({ do: "pick", index: choiceOf(hit) }),
+  );
+
+/**
+ * The keyboard's half of a live choice list, for the site that holds the keys: nothing here is
+ * drawn. The engine's ring rests on the middle button, so Enter picks the row the kit drew
+ * focus on; the two round it are where an arrow would take the ring, which `ui.focus` turns
+ * into a move instead. The rest carry the letter keys.
+ */
+export function choiceRing(k: Kit, props: ChoiceProps, send: ChoiceSend): JSX.Element {
+  const { Box, Button } = k;
+  return (
+    <Box width={0} height={0} overflow="hidden">
+      <Button key={RING.up} plain label="previous" onPress={() => undefined} />
+      <Button key={RING.park} plain autoFocus label="pick" onPress={() => send({ do: "pick" })} />
+      <Button key={RING.down} plain label="next" onPress={() => undefined} />
+      {props.items.map((item) => (
+        <Button
+          key={`${KEY_PREFIX}${item.key}`}
+          plain
+          hotkey={item.key.toLowerCase()}
+          label={item.key}
+          onPress={() => send(choiceKey(props.items, item.key))}
+        />
+      ))}
+    </Box>
+  );
+}
+
 /** A story that reacts keeps one value in the catalogue's state and replaces it. */
 export type LiveState = { state: unknown; set: (next: unknown) => unknown };
 type Render = (k: Kit, width: number, env: Env, live?: LiveState) => JSX.Element | null;
@@ -422,39 +462,15 @@ export const renders: Record<string, Render> = {
     choiceStories.map((s): [string, Render] => [
       `choice/${s.state}`,
       (k, width, _env, live) => {
-        const { Box, Button } = k;
+        const { Box } = k;
         if (!s.live || !live) return paintLines(k, choiceLines(s.props, width));
         const state = (live.state as ChoiceState | null) ?? choiceStart(s.props);
-        const send = (intent: ChoiceIntent | undefined) =>
+        const send: ChoiceSend = (intent) =>
           intent && live.set(choiceReduce(state, intent, s.props));
         return (
           <Box flexDirection="column">
-            {paintLines(k, choiceLines({ ...s.props, ...state }, width), (hit) =>
-              send({ do: "pick", index: choiceOf(hit) }),
-            )}
-            {/* Nothing here is drawn. The engine's ring rests on the middle button, so Enter
-                picks the row the kit drew focus on; the two round it are where an arrow would
-                take the ring, which `ui.focus` turns into a move instead. */}
-            <Box width={0} height={0} overflow="hidden">
-              <Button key={RING.up} plain label="previous" onPress={() => undefined} />
-              <Button
-                key={RING.park}
-                plain
-                autoFocus
-                label="pick"
-                onPress={() => send({ do: "pick" })}
-              />
-              <Button key={RING.down} plain label="next" onPress={() => undefined} />
-              {s.props.items.map((item) => (
-                <Button
-                  key={`${KEY_PREFIX}${item.key}`}
-                  plain
-                  hotkey={item.key.toLowerCase()}
-                  label={item.key}
-                  onPress={() => send(choiceKey(s.props.items, item.key))}
-                />
-              ))}
-            </Box>
+            {choiceRows(k, s.props, state, width, send)}
+            {choiceRing(k, s.props, send)}
           </Box>
         );
       },
