@@ -10,29 +10,30 @@ import {
   type TUI,
   type TuiMouseEvent,
   type TuiMouseEventResult,
-  visibleWidth,
 } from "@earendil-works/pi-tui";
+import type { Button } from "../../../kit/buttons/contract.ts";
+import { buttonRow } from "../../../kit/buttons/terminal.ts";
+import { digitChoice } from "../../../kit/card/contract.ts";
+import {
+  cardRole,
+  choice as choiceRows,
+  heading as headingRows,
+  note as noteRows,
+  NOTE_LABEL,
+  sectionsOf,
+} from "../../../kit/card/terminal.ts";
+import { cellWidth, span, type Span } from "../../../kit/lines.ts";
+import { draw, markdownLines, paintedWidth, paintLine, paintText } from "../../../kit/paint/pi.ts";
+import { tokens, widthCap } from "../../../kit/tokens.ts";
+// No kit part yet: the band's hit map, the gutter note, prose, and `clamp`, which breaks CJK text
+// between characters where the kit's wraps at spaces only.
 import {
   bandAct,
-  buttonRow,
-  type KeyChip,
-  CARD_NOTE_LABEL,
-  cardChoice,
-  cardHeading,
-  cardNote,
-  cardRail,
-  cardSections,
-  cardTone as questionTone,
   cellAt,
-  clamp,
-  digitChoice,
+  clamp as clampPainted,
   gutterLine,
-  markdownLines,
   note,
-  paint,
   prose,
-  tokens,
-  widthCap,
   type BandRow,
 } from "../../../kit/legacy/pi/ui.ts";
 import { type Held, type View, view, viewOf } from "../core/forms.ts";
@@ -110,15 +111,15 @@ export class Transcript implements Component {
     const indent = " ".repeat(tokens.gutter);
     const inner = Math.min(width - tokens.gutter, tokens.prose);
     const out: string[] = [];
-    const dim = (text: string) => paint(theme, "dim", text);
+    const dim = (text: string) => paintText(theme, text, { role: "dim" });
     const asRows = (lines: string[], act?: RoundAction): Row[] =>
       lines.map((text) => ({ text, act }));
     const editRows = (step: number, kind: Field["kind"], label: string): Row[] | undefined => {
       if (!field || field.step !== step || field.kind !== kind) return undefined;
-      const width = inner - visibleWidth(label);
+      const width = inner - cellWidth(label);
       const lines = field.editor.render(width).slice(1, -1);
       return lines.map((line, i) => ({
-        text: dim(i ? " ".repeat(visibleWidth(label)) : label) + line,
+        text: dim(i ? " ".repeat(cellWidth(label)) : label) + line,
         editorWidth: width,
       }));
     };
@@ -132,8 +133,13 @@ export class Transcript implements Component {
       this.stops[step] = out.length;
       const append = (row: Row) => {
         const text = state
-          ? cardRail(theme, state.here, state.answered, row.text)
-          : gutterLine(dim(tokens.border.v), row.text);
+          ? gutterLine(
+              paintText(theme, tokens.glyph.rail, {
+                role: cardRole({ active: state.here, answered: state.answered }),
+              }),
+              row.text,
+            )
+          : gutterLine(dim(tokens.glyph.rail), row.text);
         if (row.editorWidth !== undefined && field) {
           if (this.input) this.input.height++;
           else
@@ -155,7 +161,7 @@ export class Transcript implements Component {
         }
         out.push(text);
       };
-      cardSections<Row>({ text: "" }, heading, body).forEach(append);
+      sectionsOf<Row>({ text: "" }, heading, body).forEach(append);
       this.ends[step] = out.length;
     };
     const current = view(round.form, round.draft);
@@ -164,7 +170,13 @@ export class Transcript implements Component {
       if (!item) continue;
       const here = active && current.step === step;
       const answered = current.review[step]?.isAnswered ?? false;
-      const heading = asRows(cardHeading(theme, inner, item.title, item.label, here, answered));
+      const heading = asRows(
+        draw(
+          theme,
+          headingRows({ title: item.title, label: item.label, active: here, answered }, inner),
+          inner,
+        ),
+      );
       const rows: Row[] = [];
       if (item.body) {
         // The original assistant message stays above the cards, with all its Markdown intact.
@@ -194,16 +206,23 @@ export class Transcript implements Component {
           : undefined;
         rows.push(
           ...asRows(
-            cardChoice(theme, inner, {
-              key: key ?? "",
-              text,
-              detail: entry.detail,
-              chosen: entry.isChosen,
-              focused: active && this.hovered?.step === step && this.hovered.entry === index,
-              active: here,
-              answered,
-              literal: entry.kind === "write",
-            }),
+            draw(
+              theme,
+              choiceRows(
+                {
+                  key: key ?? "",
+                  text,
+                  detail: entry.detail,
+                  chosen: entry.isChosen,
+                  focused: active && this.hovered?.step === step && this.hovered.entry === index,
+                  active: here,
+                  answered,
+                  literal: entry.kind === "write",
+                },
+                inner,
+              ),
+              inner,
+            ),
             action,
           ),
         );
@@ -227,12 +246,12 @@ export class Transcript implements Component {
         rows.push({ text: dim("Clear answer"), act: { kind: "clear", step } });
       if (active || item.note) {
         const note =
-          editRows(step, "note", CARD_NOTE_LABEL) ??
+          editRows(step, "note", NOTE_LABEL) ??
           asRows(
-            cardNote(theme, inner, item.note, here, answered),
+            draw(theme, noteRows({ value: item.note, active: here, answered }, inner), inner),
             active ? { kind: "note", step } : undefined,
           );
-        section(step, heading, cardSections<Row>({ text: "" }, rows, note), { here, answered });
+        section(step, heading, sectionsOf<Row>({ text: "" }, rows, note), { here, answered });
       } else {
         section(step, heading, rows, { here, answered });
       }
@@ -240,24 +259,29 @@ export class Transcript implements Component {
 
     const open = active && current.isReview;
     const cursor = state.reviewCursor ?? firstReviewStop(current);
-    const tone = (s: string) => questionTone(theme, open, current.answered > 0, s);
+    const tone = (active: boolean, done: boolean, s: string, bold = false) =>
+      paintText(theme, s, { role: cardRole({ active, answered: done }), bold: bold || undefined });
     const title = `Answers  ${current.answered} of ${current.count} answered`;
-    const sent = round.sent ? theme.fg("success", ` ${tokens.glyph.done} Sent`) : "";
-    const heading = asRows(clamp(`  ${theme.bold(tone(title))}${sent}`, inner));
+    const sent = round.sent
+      ? paintText(theme, ` ${tokens.glyph.done} Sent`, { role: "success" })
+      : "";
+    const heading = asRows(
+      clampPainted(`  ${tone(open, current.answered > 0, title, true)}${sent}`, inner),
+    );
     // Keep independent targets on the same line, wrapping only between controls.
     const controls = (leading: string, buttons: { text: string; act: RoundAction }[]) => {
       const rows: Row[] = [];
       let row: Row = { text: leading, cells: [] };
       for (const button of buttons) {
-        if (visibleWidth(row.text + indent + button.text) > inner && row.text.trim()) {
+        if (paintedWidth(row.text + indent + button.text) > inner && row.text.trim()) {
           rows.push(row);
           row = { text: " ", cells: [] };
         }
         if (row.text.trim()) row.text += indent;
-        const start = visibleWidth(row.text);
-        const text = clamp(button.text, inner - start, { max: 1 })[0] ?? "";
+        const start = paintedWidth(row.text);
+        const text = clampPainted(button.text, inner - start, { max: 1 })[0] ?? "";
         row.text += text;
-        row.cells!.push({ start, end: visibleWidth(row.text), act: button.act });
+        row.cells!.push({ start, end: paintedWidth(row.text), act: button.act });
       }
       rows.push(row);
       return rows;
@@ -271,13 +295,11 @@ export class Transcript implements Component {
           ...(current.reply
             ? [
                 {
-                  text: theme.bold(
-                    questionTone(
-                      theme,
-                      open && cursor < 0,
-                      true,
-                      `[ ${open && cursor < 0 ? tokens.glyph.pointer + " " : ""}Fill prompt ]`,
-                    ),
+                  text: tone(
+                    open && cursor < 0,
+                    true,
+                    `[ ${open && cursor < 0 ? tokens.glyph.pointer + " " : ""}Fill prompt ]`,
+                    true,
                   ),
                   act: { kind: "fill" } as const,
                 },
@@ -291,25 +313,29 @@ export class Transcript implements Component {
     const review: Row[] = [];
     let selected: [number, number] | undefined;
     if (open || round.sent) {
-      const labelWidth = Math.max(...current.review.map((row) => visibleWidth(row.label)));
+      const labelWidth = Math.max(...current.review.map((row) => cellWidth(row.label)));
       const entries = current.review.map((row, step) => {
         const here = open && step === cursor;
-        const ink = (text: string) => theme.bold(questionTone(theme, here, row.isAnswered, text));
+        const ink = (text: string) => tone(here, row.isAnswered, text, true);
         const action: RoundAction | undefined = open ? { kind: "go", step } : undefined;
         const prefix =
           `${here ? tokens.glyph.pointer : " "} ${row.label}` +
-          " ".repeat(labelWidth - visibleWidth(row.label) + tokens.gutter);
-        const pad = " ".repeat(visibleWidth(prefix));
-        const textWidth = inner - visibleWidth(prefix);
+          " ".repeat(labelWidth - cellWidth(row.label) + tokens.gutter);
+        const pad = " ".repeat(cellWidth(prefix));
+        const textWidth = inner - cellWidth(prefix);
         const lines = [
           ...asRows(
-            clamp(`${row.title}${row.isAnswered ? ` ${tokens.glyph.done}` : ""}`, textWidth, {
-              max: 3,
-            }).map((line, i) => ink((i ? pad : prefix) + line)),
+            clampPainted(
+              `${row.title}${row.isAnswered ? ` ${tokens.glyph.done}` : ""}`,
+              textWidth,
+              {
+                max: 3,
+              },
+            ).map((line, i) => ink((i ? pad : prefix) + line)),
             action,
           ),
           ...asRows(
-            clamp(row.isAnswered ? row.shown : "Unanswered", textWidth, { max: 3 }).map(
+            clampPainted(row.isAnswered ? row.shown : "Unanswered", textWidth, { max: 3 }).map(
               (line) => pad + (row.isAnswered ? ink(line) : dim(line)),
             ),
             action,
@@ -513,7 +539,7 @@ export class AnswerGuide implements Component, Focusable {
     this.hits.clear();
     const v = viewOf(this.read());
     if (!v) return [];
-    const dim = (text: string) => paint(this.theme, "dim", text);
+    const dim = (text: string) => paintText(this.theme, text, { role: "dim" });
     const label = v.isReview ? "Review" : (v.item?.label ?? "Answer");
     if (columns < 20) return [];
     const size = `${columns}x${this.tui.terminal.rows}`;
@@ -522,27 +548,26 @@ export class AnswerGuide implements Component, Focusable {
     const gap = " ".repeat(tokens.gutter);
     if (this.field) {
       if (!this.focused) return this.offer(columns, "Resume editing", "");
-      return this.shortcuts(columns, [
-        {
-          hotkey: "enter",
-          label: "Save",
-          act: () => this.handleInput("\r"),
-          isLit: true,
-        },
-        { hotkey: "shift+enter", label: "newline" },
-        { hotkey: "esc", label: "Cancel", act: () => this.finishEdit() },
-      ]);
+      return this.shortcuts(
+        columns,
+        [
+          { hotkey: "enter", label: "Save", hit: "key:0", isLit: true },
+          { hotkey: "shift+enter", label: "newline" },
+          { hotkey: "esc", label: "Cancel", hit: "key:1" },
+        ],
+        [() => this.handleInput("\r"), () => this.finishEdit()],
+      );
     }
     const progressText = `${label}  ${v.answered}/${v.count} answered`;
     const progress = dim(progressText);
     if (!this.focused) return this.offer(columns, "Answer", `${gap}${progress}`);
-    const hint = (hotkey: string, label: string): KeyChip<() => void> => ({ hotkey, label });
-    const action = (hotkey: string, label: string, act: RoundAction): KeyChip<() => void> => ({
-      hotkey,
-      label,
-      act: () => this.onAction(act),
-    });
-    const hints: KeyChip<() => void>[] = [];
+    const acts: (() => void)[] = [];
+    const hint = (hotkey: string, label: string): Button => ({ hotkey, label });
+    const action = (hotkey: string, label: string, act: RoundAction): Button => {
+      acts.push(() => this.onAction(act));
+      return { hotkey, label, hit: `key:${acts.length - 1}` };
+    };
+    const hints: Button[] = [];
     if (v.item) {
       const item = v.item;
       const letters = choiceLetters(item);
@@ -585,33 +610,50 @@ export class AnswerGuide implements Component, Focusable {
       hints.push(action("y", "Take recommendation", { kind: "accept", step: v.step }));
     const digits = String(v.count).length;
     const stop = `${String(v.step + 1).padStart(digits, "0")}/${v.count}`;
-    const badge = questionTone(
-      this.theme,
-      true,
-      false,
-      v.isReview ? this.theme.bold(progressText) : this.theme.inverse(` ${stop} `),
-    );
-    return this.shortcuts(columns, hints, badge);
+    const role = cardRole({ active: true, answered: false });
+    return this.shortcuts(columns, hints, acts, [
+      v.isReview
+        ? span(progressText, { role, bold: true })
+        : span(` ${stop} `, { role, inverse: true }),
+    ]);
   }
 
-  private shortcuts(columns: number, keys: KeyChip<() => void>[], lead?: string): string[] {
-    return buttonRow(this.theme, columns - 1, keys, { wrap: true, lead, hover: this.hover }).map(
-      (row, y) => {
-        this.hits.set(y, row);
-        return ` ${row.text}`;
-      },
-    );
+  /** The buttons as rows, and what each does: `acts` by the number in its `hit`. */
+  private shortcuts(
+    columns: number,
+    keys: Button[],
+    acts: (() => void)[],
+    lead?: Span[],
+  ): string[] {
+    return buttonRow(keys, columns - 1, { wrap: true, lead, hover: this.hover }).map((row, y) => {
+      const { text, cells } = paintLine(this.theme, row, columns - 1);
+      this.hits.set(y, {
+        text,
+        cells: cells.map((cell) => ({
+          start: cell.start,
+          end: cell.end,
+          act: acts[Number(cell.hit.slice(4))]!,
+        })),
+      });
+      return ` ${text}`;
+    });
   }
 
   private offer(columns: number, label: string, suffix: string): string[] {
+    const act = () => this.onAction({ kind: "focus" });
     const [row] = buttonRow(
-      this.theme,
+      [{ hotkey: "alt+a", label, hit: "key:0", essential: true }],
       columns - 1,
-      [{ hotkey: "alt+a", label, act: () => this.onAction({ kind: "focus" }), essential: true }],
-      { hover: this.hover },
+      {
+        hover: this.hover,
+      },
     );
-    this.hits.set(0, row!);
-    return clamp(` ${row!.text}${suffix}`, columns, { max: 1 });
+    const painted = paintLine(this.theme, row!, columns - 1);
+    this.hits.set(0, {
+      text: painted.text,
+      cells: painted.cells.map((cell) => ({ start: cell.start, end: cell.end, act })),
+    });
+    return clampPainted(` ${painted.text}${suffix}`, columns, { max: 1 });
   }
 
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
