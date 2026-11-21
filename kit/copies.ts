@@ -25,7 +25,7 @@ const apart = new Set(["legacy", "catalog"]);
 
 /**
  * The kit's files a mod carries, relative to `kit/`: every `.ts` and `.tsx` but tests, pi's
- * painter and this tooling. Stories go to the catalogue mod alone.
+ * painter, the manifests (they import the catalogue) and this tooling. Stories go to the catalogue mod alone.
  */
 export function kitFiles(withStories: boolean): string[] {
   const walk = (dir: string): string[] =>
@@ -40,6 +40,7 @@ export function kitFiles(withStories: boolean): string[] {
         !file.endsWith(".spec.ts") &&
         !/(^|\/)pi\.ts$/.test(file) &&
         !["copies.ts", "sync.ts", "parity.ts", "new.ts"].includes(file) &&
+        !file.endsWith("/manifest.ts") &&
         (withStories || !file.endsWith("stories.ts")),
     )
     .sort();

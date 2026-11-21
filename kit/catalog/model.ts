@@ -5,14 +5,25 @@
 import { existsSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { extractKit, referencedTypes, type ExportApi, type TypeApi } from "./extract.ts";
+import { kitStories } from "../stories.ts";
+import {
+  extractKit,
+  referencedTypes,
+  type ExportApi,
+  type KitApi,
+  type TypeApi,
+} from "./extract.ts";
 import {
   exportsOf,
   harnesses,
+  isNone,
+  surfaces,
   storyOf,
   type Component,
   type Harness,
   type Support,
+  type Surface,
+  type SurfaceStatus,
 } from "./manifest.ts";
 
 export const here = dirname(fileURLToPath(import.meta.url));
@@ -50,6 +61,10 @@ export type ComponentModel = {
   name: string;
   purpose: string;
   impl: Record<Harness, ImplState>;
+  /** Per surface the component is implemented on: `legacy` unless the manifest says `system`. */
+  status: Partial<Record<Surface, SurfaceStatus>>;
+  /** The file under `kit/` that draws it on a `system` terminal, when the manifest names one. */
+  source?: string;
   features: FeatureModel[];
   api: Record<Harness, { exports: ExportApi[]; types: TypeApi[] } | null>;
   stories: StoryModel[];
@@ -78,18 +93,38 @@ async function storiesOf(harness: Harness): Promise<Map<string, Meta> | undefine
   return new Map(mod.stories.map((s) => [`${s.component}/${s.state}`, s]));
 }
 
-async function manifests(): Promise<Component[]> {
+const load = async (file: string) =>
+  ((await import(pathToFileURL(file).href)) as { default: Component }).default;
+
+/** A kit component's own `manifest.ts` first, then the legacy kits' `components/*.ts`. */
+async function manifests(): Promise<{ c: Component; where: string }[]> {
+  const folders = readdirSync(kitRoot, { withFileTypes: true })
+    .filter(
+      (d) =>
+        d.isDirectory() && d.name !== "catalog" && existsSync(join(kitRoot, d.name, "manifest.ts")),
+    )
+    .map((d) => d.name)
+    .sort();
   const dir = join(here, "components");
   const files = readdirSync(dir)
     .filter((f) => f.endsWith(".ts") && !f.endsWith(".spec.ts"))
     .sort();
-  return Promise.all(
-    files.map(
-      async (f) =>
-        ((await import(pathToFileURL(join(dir, f)).href)) as { default: Component }).default,
-    ),
-  );
+  return Promise.all([
+    ...folders.map(async (d) => ({
+      c: await load(join(kitRoot, d, "manifest.ts")),
+      where: `${d}/manifest`,
+    })),
+    ...files.map(async (f) => ({
+      c: await load(join(dir, f)),
+      where: `components/${f.slice(0, -3)}`,
+    })),
+  ]);
 }
+
+/** The kit's own stories, which a `system` surface draws. */
+const systemStories = new Map<string, Meta>(
+  kitStories.map((s) => [`${s.component}/${s.state}`, s]),
+);
 
 export async function loadModel(): Promise<Model> {
   const problems: string[] = [];
@@ -109,10 +144,27 @@ export async function loadModel(): Promise<Model> {
 
   const list = await manifests();
   const seen = new Set<string>();
-  const components: ComponentModel[] = list.map((c) => {
-    const where = `components/${c.id}`;
+  const components: ComponentModel[] = list.map(({ c, where }) => {
     if (seen.has(c.id)) problems.push(`${where}: duplicate component id`);
     seen.add(c.id);
+
+    const isSystem = (h: Harness) => c.status?.[h] === "system";
+    const status: ComponentModel["status"] = {};
+    for (const h of harnesses) if (!isNone(c.impl[h])) status[h] = c.status?.[h] ?? "legacy";
+    if (!isNone(c.impl.claude)) status.gui = c.status?.gui ?? "legacy";
+    if (c.status?.gui === "system")
+      problems.push(`${where}: gui cannot be \`system\` yet: the kit draws terminals only`);
+    let sourceApi: KitApi | undefined;
+    if (harnesses.some(isSystem)) {
+      if (!c.source)
+        problems.push(`${where}: a \`system\` surface needs \`source\`, the file that draws it`);
+      else if (!existsSync(join(kitRoot, c.source)))
+        problems.push(`${where}: source \`${c.source}\` does not exist under kit/`);
+      else sourceApi = extractKit(join(kitRoot, c.source));
+    }
+    const kitOf = (h: Harness) => (isSystem(h) ? sourceApi : apis[h]);
+    const fileOf = (h: Harness) => (isSystem(h) ? (c.source ?? "") : kits[h].file);
+    const storiesFor = (h: Harness) => (isSystem(h) ? systemStories : stories[h]);
 
     const impl = {} as Record<Harness, ImplState>;
     const api = {} as ComponentModel["api"];
@@ -124,7 +176,7 @@ export async function loadModel(): Promise<Model> {
         continue;
       }
       const names = exportsOf(i);
-      const kit = apis[h];
+      const kit = kitOf(h);
       if (!kit) {
         impl[h] = { state: "planned", exports: names };
         api[h] = null;
@@ -133,9 +185,7 @@ export async function loadModel(): Promise<Model> {
       const have = names.filter((n) => kit.exports.some((e) => e.name === n));
       for (const n of names)
         if (!have.includes(n))
-          problems.push(
-            `${where}: ${h} impl names \`${n}\` but ${kits[h].file} does not export it`,
-          );
+          problems.push(`${where}: ${h} impl names \`${n}\` but ${fileOf(h)} does not export it`);
       impl[h] = { state: have.length === names.length ? "exists" : "planned", exports: names };
       const picked = kit.exports.filter((e) => have.includes(e.name));
       api[h] = { exports: picked, types: referencedTypes(kit, picked) };
@@ -164,11 +214,15 @@ export async function loadModel(): Promise<Model> {
             problems.push(
               `${where}: feature \`${f.id}\` is ${s.status} on ${h} but names no story`,
             );
-          else if (!stories[h]?.has(sid))
+          else if (!storiesFor(h)?.has(sid))
             problems.push(
               `${where}: feature \`${f.id}\` is ${s.status} on ${h} but story \`${sid}\` is not in the ${h} stories`,
             );
         }
+        if (s.status === "planned" && status[h] === "system")
+          problems.push(
+            `${where}: feature \`${f.id}\` is planned on ${h}, which is \`system\`: say yes, partial or no`,
+          );
         if ((s.status === "partial" || s.status === "no") && !s.note)
           problems.push(
             `${where}: feature \`${f.id}\` is ${s.status} on ${h} and needs a note saying why`,
@@ -188,12 +242,12 @@ export async function loadModel(): Promise<Model> {
 
     const storyIds = new Set<string>();
     for (const h of harnesses)
-      for (const id of stories[h]?.keys() ?? []) if (id.startsWith(`${c.id}/`)) storyIds.add(id);
+      for (const id of storiesFor(h)?.keys() ?? []) if (id.startsWith(`${c.id}/`)) storyIds.add(id);
     const storyModels = [...storyIds].map((id): StoryModel => {
       const by: StoryModel["by"] = {};
       const missing: StoryModel["missing"] = {};
       for (const h of harnesses) {
-        const meta = stories[h]?.get(id);
+        const meta = storiesFor(h)?.get(id);
         if (meta) {
           by[h] = { about: meta.about, settings: meta.settings };
           continue;
@@ -213,6 +267,8 @@ export async function loadModel(): Promise<Model> {
       name: c.name,
       purpose: c.purpose,
       impl,
+      status,
+      source: c.source,
       features,
       api,
       stories: storyModels,
@@ -230,16 +286,19 @@ function describe(i: ImplState): string {
 /** `COMPONENTS.md`: components, per-harness status and features, from the manifests alone. */
 export function markdown(model: Model): string {
   const out: string[] = [
-    "<!-- Generated by `npm run catalog` from kit/catalog/components/*.ts. Do not edit. -->",
+    "<!-- Generated by `npm run catalog` from kit/catalog/components/*.ts and kit/*/manifest.ts. Do not edit. -->",
     "",
     "# Kit components",
     "",
-    "Which component each harness has, and which features each supports. Status: `yes`, `partial`, `no` (the engine cannot) and `planned` (can, not built yet). The props and renders of each component are on the site's catalogue (`site/`, `/dev/components/`), read from the kit's own doc comments.",
+    "Which component each harness has, and which features each supports. A surface (pi, Claude Code's terminal, the graphical clients) is `system` when it draws the component with the kit's one drawing and `legacy` when it still uses the old per-harness kit; no feature is `planned` on a `system` surface. Support: `yes`, `partial`, `no` (the engine cannot) and `planned` (can, not built yet). The props and renders of each component are on the site's catalogue (`site/`, `/dev/components/`), read from the kit's own doc comments.",
     "",
   ];
   for (const c of model.components) {
     out.push(`## ${c.name}`, "", c.purpose, "");
     for (const h of harnesses) out.push(`- ${h}: ${describe(c.impl[h])}`);
+    out.push(
+      `- status: ${surfaces.flatMap((x) => (c.status[x] ? [`${x} ${c.status[x]}`] : [])).join("; ")}`,
+    );
     out.push("", "Features:", "");
     for (const f of c.features) {
       const cell = (h: Harness) => {
@@ -257,4 +316,35 @@ export function markdown(model: Model): string {
 export function siteData(model: Model): string {
   const { kits, components } = model;
   return JSON.stringify({ kits, components }, null, 2) + "\n";
+}
+
+export const indexMarkers = { start: "<!-- kit:index:start -->", end: "<!-- kit:index:end -->" };
+
+/**
+ * The block of `AGENTS.md` that lists the components a `system` surface draws. The blank rows
+ * inside the markers are the formatter's, so `just fmt` leaves the block as written.
+ */
+export function agentsIndex(model: Model): string {
+  const system = model.components.filter(
+    (c) => c.source && harnesses.some((h) => c.status[h] === "system"),
+  );
+  return [
+    indexMarkers.start,
+    "",
+    "## Kit components",
+    "",
+    "Draw plugin UI with these; add one with `just kit-new <name>`.",
+    "",
+    ...system.map((c) => `- \`kit/${dirname(c.source ?? "")}/\`: ${c.purpose}`),
+    "",
+    indexMarkers.end,
+  ].join("\n");
+}
+
+/** `AGENTS.md` with its index block replaced by `agentsIndex`; `undefined` without the markers. */
+export function withIndex(agents: string, model: Model): string | undefined {
+  const a = agents.indexOf(indexMarkers.start);
+  const b = agents.indexOf(indexMarkers.end);
+  if (a < 0 || b < a) return undefined;
+  return agents.slice(0, a) + agentsIndex(model) + agents.slice(b + indexMarkers.end.length);
 }

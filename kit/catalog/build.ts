@@ -6,14 +6,16 @@
  *   npm run catalog                play the kit scenarios in PNG mode, then write all three; fail
  *                                  on a manifest problem or a scenario that no longer matches
  *   npm run catalog -- --no-shots  write all three from the PNGs already there, if any
- *   npm run catalog -- --check     no PNGs needed: fail on a problem or a stale COMPONENTS.md
+ *   npm run catalog -- --check     no PNGs needed: fail on a problem or a stale COMPONENTS.md or
+ *                                  AGENTS.md index (the block between its `kit:index` markers)
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { cropShots } from "./crops.ts";
-import { here, loadModel, markdown, siteData } from "./model.ts";
+import { here, loadModel, markdown, siteData, withIndex } from "./model.ts";
 
+const agents = join(here, "..", "..", "AGENTS.md");
 const outputs = {
   components: join(here, "COMPONENTS.md"),
   // In the site's own folder, beside the content model: its pages read no data from outside it.
@@ -45,8 +47,20 @@ if (model.notMirrored.length > 0)
   console.log(`catalog: not yet mirrored:\n- ${model.notMirrored.join("\n- ")}`);
 
 const wanted = { components: markdown(model), catalog: siteData(model) };
+const agentsNow = readFileSync(agents, "utf8");
+const agentsWanted = withIndex(agentsNow, model);
+if (agentsWanted === undefined) {
+  console.error("catalog: AGENTS.md has no `kit:index` start and end markers");
+  process.exit(1);
+}
 if (check) {
   let stale = false;
+  if (agentsNow !== agentsWanted) {
+    console.error(
+      `catalog: ${agents} has a stale kit index; run \`npm run catalog -- --no-shots\``,
+    );
+    stale = true;
+  }
   for (const k of ["components"] as const) {
     const current = existsSync(outputs[k]) ? readFileSync(outputs[k], "utf8") : "";
     if (current !== wanted[k]) {
@@ -58,11 +72,12 @@ if (check) {
   console.log("catalog: ok");
   process.exit(0);
 }
+writeFileSync(agents, agentsWanted);
 for (const k of ["components", "catalog"] as const) {
   mkdirSync(dirname(outputs[k]), { recursive: true });
   writeFileSync(outputs[k], wanted[k]);
 }
 const crops = cropShots();
 console.log(
-  `catalog: ${crops.written} crop(s) written, ${crops.kept} unchanged, ${crops.removed} removed; COMPONENTS.md and site/data/kit.json written`,
+  `catalog: ${crops.written} crop(s) written, ${crops.kept} unchanged, ${crops.removed} removed; COMPONENTS.md, site/data/kit.json and the AGENTS.md index written`,
 );
