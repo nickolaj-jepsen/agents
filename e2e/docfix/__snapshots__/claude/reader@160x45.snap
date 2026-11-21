@@ -1,6 +1,6 @@
 # docfix/claude/reader 160x45 @88,0 (72x41)
 │                                                                     ✕
-│ ─ Doc suggestions ── ● 0 · – 0 · 2 left ──────────────────── Close × ─
+│ ─ Doc suggestions ── 2 left ──────────────────────────────── Close × ─
 │
 │    ○ docs/agent-hub.md · missing · seen 2× · 2 days ago   Back [esc]
 │    agent-hub's unittest suite needs a short TMPDIR and
@@ -42,7 +42,7 @@
 │
 --- styles
 1 .x69 2
-1 . 2 . 3x15 . 2x2 . 2x18 . 2x20 .x9 2
+1 . 2 . 3x15 . 2x2 . 2x6 . 2x32 .x9 2
 1
 1 .x4 2 .x18 2x33 .x8 2x5
 1 .x4 4x51

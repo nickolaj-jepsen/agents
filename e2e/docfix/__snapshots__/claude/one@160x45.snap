@@ -1,6 +1,6 @@
 # docfix/claude/one 160x45 @88,0 (72x41)
 │                                                                     ✕
-│ ─ Doc suggestions ── ● 0 · – 0 · 1 left ──────────────────── Close × ─
+│ ─ Doc suggestions ── 1 left ──────────────────────────────── Close × ─
 │
 │ │  AGENTS.md                                  Apply all  Dismiss all
 │ │  ❯ ○ just build is not enough to verify a pi change; the doc…   3×
@@ -42,7 +42,7 @@
 │
 --- styles
 1 .x69 2
-1 . 2 . 3x15 . 2x2 . 2x18 . 2x20 .x9 2
+1 . 2 . 3x15 . 2x2 . 2x6 . 2x32 .x9 2
 1
 1 .x4 4x9 .x34 2x9 .x2 2x11
 1 .x4 5 . 2 . 5x56 .x2 2x3

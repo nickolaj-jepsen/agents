@@ -1,5 +1,5 @@
 # docfix/pi/one 160x45 @96,0 (64x39)
-─ Doc suggestions ── ● 0 · – 0 · 1 left ────────────── Close × ─
+─ Doc suggestions ── 1 left ────────────────────────── Close × ─
 
 │  AGENTS.md                            Apply all  Dismiss all
 │  ❯ ○ just build is not enough to verify a pi change; t…   3×
@@ -39,7 +39,7 @@
    Close ↵  Apply [a]  Dismiss [d]
 ────────────────────────────────────────────────────────────────
 --- styles
-1 . 2x15 . 1x2 . 3x18 . 1x14 . 4x7 . 1
+1 . 2x15 . 1x2 . 3x6 . 1x26 . 4x7 . 1
 -
 4 .x2 5x9 .x28 3x9 .x2 3x11
 4 .x2 6 . 3 . 6x50 .x2 3x3

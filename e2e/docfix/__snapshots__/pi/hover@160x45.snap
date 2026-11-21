@@ -1,10 +1,12 @@
 # docfix/pi/hover 160x45 @96,0 (64x39)
-─ Doc suggestions ── ● 0 · – 0 · 3 left ────────────── Close × ─
+─ Doc suggestions ── 3 left ────────────────────────── Close × ─
 
 │  AGENTS.md                            Apply all  Dismiss all
 │  ❯ ○ just build is not enough to verify a pi change; t…   3×
+
 │  docs/hosts.md
 │    ○ The legacy card was removed; the section still de…   2×
+
 │  docs/modules.md
 │    ○ A leaf that imports a third-party module imports …
 
@@ -34,17 +36,17 @@
 
 
 
-
-
    Close ↵  Apply [a]  Dismiss [d]
 ────────────────────────────────────────────────────────────────
 --- styles
-1 . 2x15 . 1x2 . 3x18 . 1x14 . 4x7 . 1
+1 . 2x15 . 1x2 . 3x6 . 1x26 . 4x7 . 1
 -
 4 .x2 5x9 .x28 3x9 .x2 3x11
 4 .x2 6 . 3 . 6x50 .x2 3x3
+-
 3 .x2 3x13
 3 .x4 3 . 6x50 .x2 3x3
+-
 3 .x2 3x15
 3 .x4 3 . 4x50
 -
@@ -53,8 +55,6 @@
 .x3 6x10
 -
 .x3 3x21 . 1x28 . 4x4 . 3x3
--
--
 -
 -
 -

@@ -1,11 +1,13 @@
 # docfix/claude/queue 240x60 @159,0 (81x56)
 │                                                                              ✕
-│ ─ Doc suggestions ── ● 0 · – 0 · 3 left ───────────────────────────── Close × ─
+│ ─ Doc suggestions ── 3 left ───────────────────────────────────────── Close × ─
 │
 │ │  AGENTS.md                                           Apply all  Dismiss all
 │ │  ❯ ○ just build is not enough to verify a pi change; the docs say it …   3×
+│
 │ │  docs/hosts.md
 │ │    ○ The legacy card was removed; the section still describes it.        2×
+│
 │ │  docs/modules.md
 │ │    ○ A leaf that imports a third-party module imports it on every hos…
 │
@@ -48,8 +50,6 @@
 │
 │
 │
-│
-│
 │    Close ↵  Apply [a]  Dismiss [d]
 │ ───────────────────────────────────────────────────────────────────────────────
 │
@@ -57,12 +57,14 @@
 │
 --- styles
 1 .x78 2
-1 . 2 . 3x15 . 2x2 . 2x18 . 2x29 .x9 2
+1 . 2 . 3x15 . 2x2 . 2x6 . 2x41 .x9 2
 1
 1 .x4 4x9 .x43 2x9 .x2 2x11
 1 .x4 5 . 2 . 5x65 .x2 2x3
+1
 1 . 2 .x2 2x13
 1 . 2 .x4 2 .x68 2x3
+1
 1 . 2 .x2 2x15
 1 . 2 .x4 2
 1
@@ -70,8 +72,6 @@
 1 .x4 5x67
 1
 1 .x4 2x21 . 2x43 .x6 2x3
-1
-1
 1
 1
 1

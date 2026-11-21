@@ -1,5 +1,5 @@
 # docfix/pi/one 70x24 @26,0 (44x18)
-─ ● 0 · – 0 · 1 left ───────────── Close × ─
+─ Doc suggestions ── 1 left ────── Close × ─
 │  AGENTS.md        Apply all  Dismiss all
 │  ❯ ○ just build is not enough to v…   3×
 
@@ -18,15 +18,13 @@
    Close ↵  Apply [a]  Dismiss [d]
 ────────────────────────────────────────────
 --- styles
-1 . 2x18 . 1x13 . 3x7 . 1
-3 .x2 4x9 .x8 2x9 .x2 2x11
-3 .x2 5 . 2 . 5x30 .x2 2x3
+1 . 2x15 . 1x2 . 3x6 . 1x6 . 4x7 . 1
+4 .x2 5x9 .x8 3x9 .x2 3x11
+4 .x2 6 . 3 . 6x30 .x2 3x3
 -
-.x3 5x39
-.x3 5x27
-.x3 2x21 . 1x8 . 3x4 . 2x3
--
--
+.x3 6x39
+.x3 6x27
+.x3 3x21 . 1x8 . 4x4 . 3x3
 -
 -
 -
@@ -34,11 +32,14 @@
 -
 -
 -
-.x3 3x5 . 2 .x2 3x5 . 2x3 .x2 3x7 . 2x3
+-
+-
+.x3 4x5 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3
 1x44
 --- legend
 1 fg=#768186
-2 fg=#7e888e
-3 fg=#dee0e1
-4 fg=#a798d7
-5 fg=#dee0e1 bold
+2 fg=#a798d7 bold
+3 fg=#7e888e
+4 fg=#dee0e1
+5 fg=#a798d7
+6 fg=#dee0e1 bold

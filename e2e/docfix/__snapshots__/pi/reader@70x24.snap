@@ -1,5 +1,5 @@
 # docfix/pi/reader 70x24 @26,0 (44x18)
-─ ● 0 · – 0 · 2 left ───────────── Close × ─
+─ Doc suggestions ── 2 left ────── Close × ─
    ○ docs/agent-hub.md · miss…  Back [esc]
    agent-hub's unittest suite needs a
    short TMPDIR and markdown-it-py on
@@ -18,27 +18,28 @@
    Close ↵  Apply [a]  Dismiss [d]
 ────────────────────────────────────────────
 --- styles
-1 . 2x18 . 1x13 . 3x7 . 1
-.x3 2 . 3x17 2x8 .x2 3x4 . 2x5
-.x3 4x34
-.x3 4x34
-.x3 4x36
-.x3 4x7
+1 . 2x15 . 1x2 . 3x6 . 1x6 . 4x7 . 1
+.x3 3 . 4x17 3x8 .x2 4x4 . 3x5
+.x3 5x34
+.x3 5x34
+.x3 5x36
+.x3 5x7
 -
-.x3 2x28 . 1 . 3x4 . 2x3
+.x3 3x28 . 1 . 4x4 . 3x3
 -
-.x33 5x9
-.x3 5x8
--
--
+.x33 6x9
+.x3 6x8
 -
 -
 -
-.x3 3x5 . 2 .x2 3x5 . 2x3 .x2 3x7 . 2x3
+-
+-
+.x3 4x5 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3
 1x44
 --- legend
 1 fg=#768186
-2 fg=#7e888e
-3 fg=#dee0e1
-4 fg=#dee0e1 bold
-5 fg=#a798d7
+2 fg=#a798d7 bold
+3 fg=#7e888e
+4 fg=#dee0e1
+5 fg=#dee0e1 bold
+6 fg=#a798d7

@@ -1,10 +1,12 @@
 # docfix/pi/markClick 160x45 @96,0 (64x39)
-─ Doc suggestions ── ● 0 · – 1 · 2 left ────────────── Close × ─
+─ Doc suggestions ── – 1 · 2 left ──────────────────── Close × ─
 
 │  AGENTS.md
 │    ○ just build is not enough to verify a pi change; t…   3×
+
 │  docs/hosts.md                        Apply all  Dismiss all
 │  ❯ – The legacy card was removed; the section still de…   2×
+
 │  docs/modules.md
 │    ○ A leaf that imports a third-party module imports …
 
@@ -34,17 +36,17 @@
 
 
 
-
-
    Dismiss ↵  Apply [a]  Dismiss [d]
 ────────────────────────────────────────────────────────────────
 --- styles
-1 . 2x15 . 1x2 . 3x18 . 1x14 . 4x7 . 1
+1 . 2x15 . 1x2 . 3x12 . 1x20 . 4x7 . 1
 -
 3 .x2 3x9
 3 .x4 3 . 4x50 .x2 3x3
+-
 5 .x2 6x13 .x24 3x9 .x2 3x11
 5 .x2 7 . 3 . 8x50 .x2 3x3
+-
 3 .x2 3x15
 3 .x4 3 . 4x50
 -
@@ -53,8 +55,6 @@
 .x3 7x3
 -
 .x3 3x22 . 1x27 . 4x4 . 3x3
--
--
 -
 -
 -

@@ -1,6 +1,6 @@
 # docfix/claude/many 160x45 @88,0 (72x41)
 │                                                                     ✕
-│ ─ Doc suggestions ── ● 0 · – 0 · 28 left ─────────────────── Close × ─
+│ ─ Doc suggestions ── 28 left ─────────────────────────────── Close × ─
 │
 │ │  AGENTS.md
 │ │    ○ Claim number 4 about AGENTS.md: the page no longer matc…   4×
@@ -42,7 +42,7 @@
 │
 --- styles
 1 .x69 2
-1 . 2 . 3x15 . 2x2 . 2x19 . 2x19 .x9 2
+1 . 2 . 3x15 . 2x2 . 2x7 . 2x31 .x9 2
 1
 1 . 2 .x2 2x9
 1 . 2 .x4 2 .x59 2x3

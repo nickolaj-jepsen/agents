@@ -1,11 +1,13 @@
 # docfix/claude/narrow 110x32 @61,0 (49x28)
 │                                              ✕
-│ ─ ● 0 · – 0 · 3 left ──────────────── Close × ─
+│ ─ Doc suggestions ── 3 left ───────── Close × ─
 │
 │ │  AGENTS.md           Apply all  Dismiss all
 │ │  ❯ ○ just build is not enough to veri…   3×
+│
 │ │  docs/hosts.md
 │ │    ○ The legacy card was removed; the…   2×
+│
 │ │  docs/modules.md
 │ │    ○ A leaf that imports a third-part…
 │
@@ -20,8 +22,6 @@
 │
 │
 │
-│
-│
 │    Close ↵  Apply [a]  Dismiss [d]
 │ ───────────────────────────────────────────────
 │
@@ -29,22 +29,22 @@
 │
 --- styles
 1 .x46 2
-1 . 2 . 2x18 . 2x16 .x9 2
+1 . 2 . 3x15 . 2x2 . 2x6 . 2x9 .x9 2
 1
-1 .x4 3x9 .x11 2x9 .x2 2x11
-1 .x4 4 . 2 . 4x33 .x2 2x3
+1 .x4 4x9 .x11 2x9 .x2 2x11
+1 .x4 5 . 2 . 5x33 .x2 2x3
+1
 1 . 2 .x2 2x13
 1 . 2 .x4 2 .x36 2x3
+1
 1 . 2 .x2 2x15
 1 . 2 .x4 2
 1
 1 .x4 2x28
-1 .x4 4x39
-1 .x4 4x27
+1 .x4 5x39
+1 .x4 5x27
 1
 1 .x4 2x21 . 2x11 .x6 2x3
-1
-1
 1
 1
 1
@@ -59,5 +59,6 @@
 --- legend
 1 fg=#b1b9f9
 2 fg=#999999
-3 fg=#d77757
-4 bold
+3 fg=#d77757 bold
+4 fg=#d77757
+5 bold

@@ -4,20 +4,20 @@
 │
 │ │  AGENTS.md
 │ │    ● just build is not enough to verify a pi change; the doc…   3×
+│
 │ │  docs/hosts.md
 │ │    – The legacy card was removed; the section still describe…   2×
+│
 │ │  docs/modules.md                            Apply all  Dismiss all
 │ │  ❯ ○ A leaf that imports a third-party module imports it on …
 │
-│    missing · seen once · 9 days ago
+│    missing · 9 days ago
 │    A leaf that imports a third-party module imports it on every
 │    host; the page should say that module must be inert when the
 │    feature is off.
 │
 │    Evidence · 9 days ago ────────────────────────────────── Read [e]
 │    docs/modules.md: the line contradicts what the code does now.
-│
-│
 │
 │
 │
@@ -46,19 +46,19 @@
 1
 1 . 5 .x2 2x9
 1 . 5 .x4 3 . 3x56 .x2 2x3
+1
 1 . 5 .x2 2x13
 1 . 5 .x4 2 . 2x56 .x2 2x3
+1
 1 .x4 4x15 .x28 2x9 .x2 2x11
 1 .x4 6 . 2 . 6x56
 1
-1 .x4 2x32
+1 .x4 2x20
 1 .x4 6x60
 1 .x4 6x60
 1 .x4 6x15
 1
 1 .x4 2x21 . 2x34 .x6 2x3
-1
-1
 1
 1
 1

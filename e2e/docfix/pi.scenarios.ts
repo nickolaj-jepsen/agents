@@ -101,7 +101,7 @@ export default scenarios({
     kept: {
       about: "Keep, clicked: the question goes and the choice stays",
       from: "confirmClick",
-      steps: [{ click: "Keep [esc]" }, { wait: "● 1 · – 0" }],
+      steps: [{ click: "Keep [esc]" }, { wait: "● 1 · 2 left" }],
     },
     applied: {
       about:

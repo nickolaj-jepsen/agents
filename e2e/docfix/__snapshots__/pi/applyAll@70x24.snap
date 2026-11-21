@@ -1,5 +1,5 @@
 # docfix/pi/applyAll 70x24 @26,0 (44x18)
-─ ● 4 · – 0 · 24 left ──────────── Close × ─
+─ ● 4 · 24 left ────────────────── Close × ─
 │  AGENTS.md
 │    ○ Claim number 4 about AGENTS.m…   4×
 │    ○ Claim number 3 about AGENTS.m…   3×
@@ -18,7 +18,7 @@
    Draft prompt ↵  Apply [a]  Dismiss [d]
 ────────────────────────────────────────────
 --- styles
-1 . 2x3 3x16 . 1x12 . 4x7 . 1
+1 . 2x3 3x10 . 1x18 . 4x7 . 1
 3 .x2 3x9
 3 .x4 3 . 4x30 .x2 3x3
 3 .x4 3 . 4x30 .x2 3x3

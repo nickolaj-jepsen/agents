@@ -1,9 +1,10 @@
 # docfix/claude/readerBack 160x45 @88,0 (72x41)
 │                                                                     ✕
-│ ─ Doc suggestions ── ● 0 · – 0 · 2 left ──────────────────── Close × ─
+│ ─ Doc suggestions ── 2 left ──────────────────────────────── Close × ─
 │
 │ │  docs/agent-hub.md                          Apply all  Dismiss all
 │ │  ❯ ○ agent-hub's unittest suite needs a short TMPDIR and mar…   2×
+│
 │ │  docs/agents.md
 │ │    ○ pi's permission gate cannot resolve shell variables, so…
 │
@@ -34,7 +35,6 @@
 │
 │
 │
-│
 │    Close ↵  Apply [a]  Dismiss [d]
 │ ──────────────────────────────────────────────────────────────────────
 │
@@ -42,10 +42,11 @@
 │
 --- styles
 1 .x69 2
-1 . 2 . 3x15 . 2x2 . 2x18 . 2x20 .x9 2
+1 . 2 . 3x15 . 2x2 . 2x6 . 2x32 .x9 2
 1
 1 .x4 4x17 .x26 2x9 .x2 2x11
 1 .x4 5 . 2 . 5x56 .x2 2x3
+1
 1 . 2 .x2 2x14
 1 . 2 .x4 2
 1
@@ -55,7 +56,6 @@
 1
 1 .x4 2x19 . 2x36 .x6 2x3
 1 .x34 1x18
-1
 1
 1
 1

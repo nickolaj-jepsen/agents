@@ -1,14 +1,17 @@
 # docfix/claude/extreme 240x60 @159,0 (81x56)
 │                                                                              ✕
-│ ─ Doc suggestions ── ● 0 · – 0 · 5 left ───────────────────────────── Close × ─
+│ ─ Doc suggestions ── 5 left ───────────────────────────────────────── Close × ─
 │
 │ │  AGENTS.md                                           Apply all  Dismiss all
 │ │  ❯ ○ The section says the build verifies a pi change, but the build o…  12×
 │ │    ○ UnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbrokenUnbroken…   3×
+│
 │ │  …/several/nested/levels/and-an-equally-long-file-name-for-the-guide.md
 │ │    ○ A claim under a very long target path, so the group header must …
+│
 │ │  docs/hosts.md
 │ │    ○ Short.
+│
 │ │  docs/日本語のドキュメント.md
 │ │    ○ この節は古くなっています。ビルドが検証するのは型だけで、エージェ…  99+
 │
@@ -47,9 +50,6 @@
 │
 │
 │
-│
-│
-│
 │    Close ↵  Apply [a]  Dismiss [d]
 │ ───────────────────────────────────────────────────────────────────────────────
 │
@@ -57,15 +57,18 @@
 │
 --- styles
 1 .x78 2
-1 . 2 . 3x15 . 2x2 . 2x18 . 2x29 .x9 2
+1 . 2 . 3x15 . 2x2 . 2x6 . 2x41 .x9 2
 1
 1 .x4 4x9 .x43 2x9 .x2 2x11
 1 .x4 5 . 2 . 5x65 .x2 2x3
 1 .x6 2 .x68 2x3
+1
 1 . 2 .x2 2x70
 1 . 2 .x4 2
+1
 1 . 2 .x2 2x13
 1 . 2 .x4 2
+1
 1 . 2 .x2 2x28
 1 . 2 .x4 2 .x68 2x3
 1
@@ -76,9 +79,6 @@
 1
 1 .x4 2x19 . 2x45 .x6 2x3
 1 .x4 1x10
-1
-1
-1
 1
 1
 1

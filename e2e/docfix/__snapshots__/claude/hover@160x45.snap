@@ -1,11 +1,13 @@
 # docfix/claude/hover 160x45 @88,0 (72x41)
 │                                                                     ✕
-│ ─ Doc suggestions ── ● 0 · – 0 · 3 left ──────────────────── Close × ─
+│ ─ Doc suggestions ── 3 left ──────────────────────────────── Close × ─
 │
 │ │  AGENTS.md                                  Apply all  Dismiss all
 │ │  ❯ ○ just build is not enough to verify a pi change; the doc…   3×
+│
 │ │  docs/hosts.md
 │ │    ○ The legacy card was removed; the section still describe…   2×
+│
 │ │  docs/modules.md
 │ │    ○ A leaf that imports a third-party module imports it on …
 │
@@ -33,8 +35,6 @@
 │
 │
 │
-│
-│
 │    Close ↵  Apply [a]  Dismiss [d]
 │ ──────────────────────────────────────────────────────────────────────
 │
@@ -42,12 +42,14 @@
 │
 --- styles
 1 .x69 2
-1 . 2 . 3x15 . 2x2 . 2x18 . 2x20 .x9 2
+1 . 2 . 3x15 . 2x2 . 2x6 . 2x32 .x9 2
 1
 1 .x4 4x9 .x34 2x9 .x2 2x11
 1 .x4 5 . 2 . 5x56 .x2 2x3
+1
 1 . 2 .x2 2x13
 1 . 2 .x4 2 . 6x58 7x3
+1
 1 . 2 .x2 2x15
 1 . 2 .x4 2
 1
@@ -56,8 +58,6 @@
 1 .x4 5x3
 1
 1 .x4 2x21 . 2x34 .x6 2x3
-1
-1
 1
 1
 1

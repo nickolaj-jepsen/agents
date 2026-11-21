@@ -1,5 +1,5 @@
 # docfix/pi/many 70x24 @26,0 (44x18)
-─ ● 0 · – 0 · 28 left ──────────── Close × ─
+─ Doc suggestions ── 28 left ───── Close × ─
 │  AGENTS.md
 │    ○ Claim number 4 about AGENTS.m…   4×
 │    ○ Claim number 3 about AGENTS.m…   3×
@@ -18,26 +18,27 @@
    Close ↵  Apply [a]  Dismiss [d]
 ────────────────────────────────────────────
 --- styles
-1 . 2x19 . 1x12 . 3x7 . 1
-2 .x2 2x9
-2 .x4 2 . 3x30 .x2 2x3
-2 .x4 2 . 3x30 .x2 2x3
-2 .x4 2 . 3x30 .x2 2x3
-2 .x4 2 . 3x30
-2 .x2 2x14
-2 .x4 2 . 3x30 .x2 2x3
-2 .x4 2 . 3x30 .x2 2x3
-.x3 2x14
+1 . 2x15 . 1x2 . 3x7 . 1x5 . 4x7 . 1
+3 .x2 3x9
+3 .x4 3 . 4x30 .x2 3x3
+3 .x4 3 . 4x30 .x2 3x3
+3 .x4 3 . 4x30 .x2 3x3
+3 .x4 3 . 4x30
+3 .x2 3x14
+3 .x4 3 . 4x30 .x2 3x3
+3 .x4 3 . 4x30 .x2 3x3
+.x3 3x14
 -
-.x3 4x36
-.x3 4x35
-.x3 4x10
-.x3 2x21 . 1x8 . 3x4 . 2x3
+.x3 5x36
+.x3 5x35
+.x3 5x10
+.x3 3x21 . 1x8 . 4x4 . 3x3
 -
-.x3 3x5 . 2 .x2 3x5 . 2x3 .x2 3x7 . 2x3
+.x3 4x5 . 3 .x2 4x5 . 3x3 .x2 4x7 . 3x3
 1x44
 --- legend
 1 fg=#768186
-2 fg=#7e888e
-3 fg=#dee0e1
-4 fg=#dee0e1 bold
+2 fg=#a798d7 bold
+3 fg=#7e888e
+4 fg=#dee0e1
+5 fg=#dee0e1 bold

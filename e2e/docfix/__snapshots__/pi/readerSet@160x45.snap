@@ -1,5 +1,5 @@
 # docfix/pi/readerSet 160x45 @96,0 (64x39)
-─ Doc suggestions ── ● 1 · – 0 · 1 left ────────────── Close × ─
+─ Doc suggestions ── ● 1 · 1 left ──────────────────── Close × ─
 
    ● docs/agent-hub.md · missing · seen 2× · 2 da…  Back [esc]
    agent-hub's unittest suite needs a short TMPDIR and
@@ -39,7 +39,7 @@
    Draft prompt ↵  Apply [a]  Dismiss [d]
 ────────────────────────────────────────────────────────────────
 --- styles
-1 . 2x15 . 1x2 . 3x3 4x15 . 1x14 . 5x7 . 1
+1 . 2x15 . 1x2 . 3x3 4x9 . 1x20 . 5x7 . 1
 -
 .x3 2 . 2x17 4x28 .x2 5x4 . 4x5
 .x3 6x51
