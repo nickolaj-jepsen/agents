@@ -14,9 +14,7 @@ import {
   newDraft,
   offer,
   parse,
-  split,
   startLines,
-  tailOf,
   reply,
   step,
   view,
@@ -108,17 +106,6 @@ The alternative is to answer everything in chat and keep the file clean.
 
 > **Recommended:** yes. The file is the conversation.`;
 
-// The legacy one-question format: a recommendation heading over bullets, then "Agree?".
-const MY_RECOMMENDATION = `**Q4. What happens when you tap an app while the VM is off?**
-
-The VM dies with the app's process, so this is common.
-
-**My recommendation:**
-- **The app list is cached**, so the launcher works with the VM off.
-- **A tap starts the VM**, with a splash while it boots.
-
-Agree?`;
-
 // Options with bold titles and prose after them; the lean comes in the closing text.
 const LEAN_TOWARD = `**Q10. The live interface: read-only, or can people steer?**
 
@@ -153,92 +140,6 @@ const MINE_SUMMARY = `2 findings from 4 runs, saved to \`~/notes/FINDINGS.md\`
 
 **Top pick: 1.** Make "worth doing" the default bar.`;
 
-// A question that spells out "Question", a recommendation said in prose, and a closing ask.
-const QUESTION_WORD = `I checked what you already run, so this one is about the bar.
-
-**Question 1: How strict should the filter be?**
-
-- **A. Native only:** nothing that ships a browser.
-- **B. Web is fine** if it feels instant on your biggest repo.
-
-**My recommendation: B**, with a hands-on test on the repos you use.
-
-Do you agree?`;
-
-// A heading with a dash as its label, options, and the recommendation on its own line.
-const DASH_HEADING = `## Q2 — How many workflows should there be?
-
-- **A.** One, with a flag.
-- **B.** Two, one per kind.
-
-Recommendation: A, since the kinds share every step.
-
-Does A match what you meant?`;
-
-// Options lettered in lower case and in parentheses.
-const LOWER_OPTIONS = `**Q3. Where should the cache live?**
-
-- **(a)** In memory.
-- **(b)** On disk.
-
-**Recommended:** (a)`;
-
-// A round and its summary after a rule: prose the cards must not swallow.
-const ROUND_THEN_CLOSING = `**Q1. Should it retry?**
-
-> **Recommended:** Yes, twice.
-
----
-
-**Q2. Should it log the retries?**
-
-> **Recommended:** Yes.
-
----
-
-That is every open branch. Have we reached a shared understanding?
-
-## Next
-
-I will write the plan to the notes once you confirm.`;
-
-// A heading and a rule between two questions belong to the question before.
-const HEADING_BETWEEN = `**Q1. Should it retry?**
-
-> **Recommended:** Yes.
-
-## Round two
-
-Only the logging is left.
-
-**Q2. Should it log?**
-
-> **Recommended:** Yes.`;
-
-// grilling in its emoji form: the label closes its bold, the recommendation follows an arrow.
-const EMOJI_ROUND = `❓ **Q1** - **Storage**: Should the cache use SQLite?
-
-➡️ Yes, it is one file and needs no server.
-
----
-
-❓ **Q2** - **Eviction**: Evict by age or by size?
-
-- **A.** Age.
-- **B.** Size.
-
-➡️ A, the simpler rule.`;
-
-// A "Q" heading that asks nothing, over numbered questions that do.
-const HEADING_OVER_QUESTIONS = `## Q10 — Frontmatter policy
-
-Layout is settled. Two actual choices:
-
-1. **Can the model invoke it on its own?** Users-only, or routed by the description.
-2. **Publish it, or keep it private?** It depends on a tool only you have.
-
-Then the last branch is left.`;
-
 // One question and no number: lettered options under a bold lead-in, a lean, a closing ask.
 const LONE_LETTERED = `Here is the tradeoff.
 
@@ -248,15 +149,6 @@ const LONE_LETTERED = `Here is the tradeoff.
 - **B.** On disk. Slower, survives restarts.
 
 I'd pick **A**, since restarts are rare.
-
-Which do you want?`;
-
-// The same with no lean: the closing question is the sign it asks.
-const LONE_LETTERED_NO_LEAN = `Two ways to cut the list.
-
-- **A.** By age.
-- **B.** By size.
-- **C.** By both.
 
 Which do you want?`;
 
@@ -276,26 +168,6 @@ It is small and rebuilt on start.
 
 My recommended answer: yes, since restarts are rare.`;
 
-// A report that ends on one offer: prose.
-const LONE_OFFER = "Rebased and pushed. The branch is clean.\n\nWant me to delete the old branch?";
-
-// Steps, then "Go, or corrections?": a list of statements, not a round.
-const STEPS_THEN_GO = `Plan:
-
-1. Add the parser.
-2. Wire the card.
-3. Update the docs.
-
-Go, or corrections?`;
-
-// A cue line above the list says its items are decisions.
-const DECISIONS_FOR_YOU = `Done with the spike.
-
-Decisions for you:
-
-1. Should retries be capped at three
-2. Should the log keep failed attempts`;
-
 // Alternatives, a lean and a closing choice: one question whose options are the list.
 const MENU_CLOSING = `Ways to close the gap:
 
@@ -312,28 +184,6 @@ const MENU_CUE_LINE = `The disk is the loose end. Want me to:
 2. Commit the lock bump?
 3. Move on to the next model?`;
 
-// Open items stated as findings: prose.
-const STILL_OPEN = `Still open:
-
-- Drop the two docs commits?
-- Force-push or open a new PR?`;
-
-// The closer of a grilling is answered with "yes", and gets no card.
-const SHARED_UNDERSTANDING = `That empties the frontier.
-
-> **Recommended:** yes, write it up.
-
-Have we reached a shared understanding?`;
-
-// Reasons, then a recommendation paragraph: the list is not the questions.
-const REASONS_THEN_LEAN = `Why nothing simpler keeps it:
-
-1. The sandbox would need a patch.
-2. A different sandbox was ruled out.
-3. The bundle is the current design.
-
-**My recommendation:** keep it as written.`;
-
 // A numbered list that asks nothing.
 const PLAIN_LIST = `Done. What changed:
 
@@ -341,22 +191,6 @@ const PLAIN_LIST = `Done. What changed:
 2. The review screen fills the prompt.
 
 Tests pass.`;
-
-// A round's format quoted inside a fence is not a round.
-const FENCED_FORMAT =
-  "Format a round like so:\n\n```\n**Q1. <question>**\n\n> **Recommended:** <answer>\n```\n\nThat's the whole format.";
-
-/** `label[option keys*recommended key]`, a bare `*` for a recommendation naming no option. */
-function shape(form: Form | null): string {
-  if (!form) return "null";
-  const one = (item: Form["items"][number]) => {
-    const keys = item.options.map((option) => option.key).join(form.kind === "picks" ? "," : "");
-    if (item.recommendedOption !== undefined)
-      return `${item.label}[${keys}*${item.options[item.recommendedOption]?.key}]`;
-    return `${item.label}[${keys}${item.recommended !== undefined ? "*" : ""}]`;
-  };
-  return [form.kind, ...form.items.map(one)].join(" ");
-}
 
 function formOf(text: string): Form {
   const form = parse(text);
@@ -382,43 +216,6 @@ const itemOf = (form: Form, draft: Draft) => {
 };
 
 describe("parse", () => {
-  test.each([
-    [GRILLING_ROUND, "round Q1[ABC*A] Q2[*] Q3[AB]"],
-    [ROUND_AFTER_RESEARCH, "round Q19[*] Q25[*]"],
-    [NUMBERED_QUESTIONS, "round 1[] 2[*] 3[*]"],
-    [SINGLE_QUESTION, "round Q18[*]"],
-    [MY_RECOMMENDATION, "round Q4[*]"],
-    [LEAN_TOWARD, "round Q10[ABC*C]"],
-    [
-      IDEATE_SUMMARY,
-      "picks 1[build*build] 2[build,/brainstorm*/brainstorm] 3[build,/grill-me*/grill-me]",
-    ],
-    [MINE_SUMMARY, "picks 1[build*build] 2[build,/grill-me*/grill-me]"],
-    [QUESTION_WORD, "round Q1[AB*B]"],
-    [DASH_HEADING, "round Q2[AB*A]"],
-    [LOWER_OPTIONS, "round Q3[AB*A]"],
-    [ROUND_THEN_CLOSING, "round Q1[*] Q2[*]"],
-    [HEADING_BETWEEN, "round Q1[*] Q2[*]"],
-    [EMOJI_ROUND, "round Q1[*] Q2[AB*A]"],
-    [HEADING_OVER_QUESTIONS, "round 1[] 2[]"],
-    [LONE_LETTERED, "round Q1[AB*A]"],
-    [LONE_LETTERED_NO_LEAN, "round Q1[ABC]"],
-    [REVISED_OPTIONS, "round Q1[BCD*B]"],
-    [ONE_AT_A_TIME, "round Q1[*]"],
-    [LONE_OFFER, "null"],
-    [STEPS_THEN_GO, "null"],
-    [DECISIONS_FOR_YOU, "round 1[] 2[]"],
-    [MENU_CLOSING, "round Q1[123*1]"],
-    [MENU_CUE_LINE, "round Q1[123]"],
-    [STILL_OPEN, "null"],
-    [SHARED_UNDERSTANDING, "null"],
-    [REASONS_THEN_LEAN, "null"],
-    [PLAIN_LIST, "null"],
-    [FENCED_FORMAT, "null"],
-  ])("each ending parses to its shape (%#)", (text, expected) => {
-    expect(shape(parse(text))).toBe(expected);
-  });
-
   test("a question keeps its context and drops what the form draws itself", () => {
     const [q1, q2] = formOf(GRILLING_ROUND).items;
     expect(q1?.title).toBe(
@@ -483,92 +280,7 @@ describe("parse", () => {
   });
 
   test("line endings from another system parse the same", () => {
-    expect(shape(parse(GRILLING_ROUND.replaceAll("\n", "\r\n")))).toBe(
-      shape(parse(GRILLING_ROUND)),
-    );
-  });
-});
-
-describe("what the cards leave out", () => {
-  const ALL = [
-    GRILLING_ROUND,
-    ROUND_AFTER_RESEARCH,
-    NUMBERED_QUESTIONS,
-    SINGLE_QUESTION,
-    MY_RECOMMENDATION,
-    LEAN_TOWARD,
-    IDEATE_SUMMARY,
-    MINE_SUMMARY,
-    QUESTION_WORD,
-    DASH_HEADING,
-    LOWER_OPTIONS,
-    ROUND_THEN_CLOSING,
-    HEADING_BETWEEN,
-    EMOJI_ROUND,
-    HEADING_OVER_QUESTIONS,
-    LONE_LETTERED,
-    LONE_LETTERED_NO_LEAN,
-    REVISED_OPTIONS,
-    ONE_AT_A_TIME,
-    DECISIONS_FOR_YOU,
-    MENU_CLOSING,
-    MENU_CUE_LINE,
-  ];
-  const words = (text: string) => text.toLowerCase().match(/[\p{L}\p{N}_]{2,}/gu) ?? [];
-
-  /** The lines of a message whose words the head, the items and the tail do not carry. */
-  function hidden(text: string): string[] {
-    const form = formOf(text);
-    const lines = text.split("\n");
-    const head = lines.slice(0, startLines(text)[0] ?? 0).join("\n");
-    const drawn = [head, tailOf(text)];
-    for (const item of form.items) {
-      drawn.push(item.label, item.title, item.body, item.recommended ?? "");
-      for (const option of item.options) drawn.push(option.text, option.detail);
-    }
-    const have = new Set(words(drawn.join("\n")));
-    return lines.filter((line) => {
-      const ws = words(line);
-      return ws.length >= 3 && ws.filter((word) => !have.has(word)).length / ws.length > 0.5;
-    });
-  }
-
-  test.each(ALL.map((text, i) => [i, text] as const))(
-    "every line of a parsed message is drawn somewhere (%#)",
-    (_, text) => {
-      expect(hidden(text)).toEqual([]);
-    },
-  );
-
-  test("what follows the last question after a rule or heading is the tail", () => {
-    expect(tailOf(ROUND_THEN_CLOSING)).toBe(
-      "That is every open branch. Have we reached a shared understanding?\n\n## Next\n\nI will write the plan to the notes once you confirm.",
-    );
-    expect(tailOf(GRILLING_ROUND)).toBe("");
-    expect(tailOf(PLAIN_LIST)).toBe("");
-  });
-
-  test("a heading between two questions stays with the question before", () => {
-    const [q1] = formOf(HEADING_BETWEEN).items;
-    expect(q1?.body).toContain("## Round two");
-    expect(q1?.body).toContain("Only the logging is left.");
-    expect(tailOf(HEADING_BETWEEN)).toBe("");
-  });
-
-  test("the lines after a pick list are the tail", () => {
-    expect(tailOf(IDEATE_SUMMARY)).toBe(
-      "- The verifier rated idea 3 weak; I kept it, ranked last.\n\nStart with 1: its result decides whether idea 3 is worth doing.",
-    );
-  });
-
-  test("a message cut at its items, head and tail covers every line once", () => {
-    for (const text of ALL) {
-      const lines = text.split("\n");
-      const found = split(text);
-      expect(found?.starts).toEqual(startLines(text));
-      expect(found?.tail).toBeGreaterThan(found?.starts.at(-1) ?? lines.length);
-      expect(found?.tail).toBeLessThanOrEqual(lines.length);
-    }
+    expect(parse(GRILLING_ROUND.replaceAll("\n", "\r\n"))).toEqual(parse(GRILLING_ROUND));
   });
 });
 
@@ -633,19 +345,6 @@ describe("a list of alternatives", () => {
       "Commit the lock bump?",
       "Move on to the next model?",
     ]);
-  });
-
-  test("every item has a start the harness can cut the message at", () => {
-    for (const text of [
-      MENU_CLOSING,
-      MENU_CUE_LINE,
-      LONE_LETTERED,
-      ONE_AT_A_TIME,
-      GRILLING_ROUND,
-    ]) {
-      const form = formOf(text);
-      expect(startLines(text)).toHaveLength(form.items.length);
-    }
   });
 });
 

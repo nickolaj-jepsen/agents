@@ -109,10 +109,11 @@ const EMOJI_START = /^❓\s*\*\*Q([0-9]{1,3})\*\*\s*[-–—:]\s*(.*)$/;
 // `- **A.** …`, `- **A. …**`, `A) …`, `**B.** …`, `(c) …`, `- **(a)** …`; a letter may be lower case.
 const OPTION = /^(\s*)(?:[-*+]\s+)?(\*\*)?\(?([A-Ha-h])[.)](\*\*)?\s+(.+)$/;
 const RECOMMENDED =
-  /^\s*(?:>\s*)?(?:\**(?:(?:My )?recommend(?:ed|ation)(?: answer)?)\**\s*:\s*\**|➡️\s*)\s*(.*)$/i;
+  /^\s*(?:>\s*)?(?:\**(?:(?:My )?recommend(?:ed|ation)(?: answer)?)\**(?:\s*:\s*\**|\s+is\s+)|➡️\s*)\s*(.*)$/i;
 const OWN_RECOMMENDATION = /\([^)]*\b(?:my recommendation|recommended|my pick)\b[^)]*\)/i;
 // A letter, then punctuation or the end: "A. The format", "B, because", "**C**"; never "A small".
-const LEADING_LETTER = /^(?:option\s+)?\**\(?([A-H])\)?\**(?=$|[\s]*[.,:;)]|\s+[—–-]\s)/i;
+const LEADING_LETTER =
+  /^(?:option\s+)?\**\(?([A-H])\)?\**(?=$|[\s]*[.,:;)]|\s+[—–-]\s|\s+(?:for now|first|initially|to start|today)\b)/i;
 // Several letters leading a recommendation: "A, B and D now", "A through C", "**A** and **C**."
 const LEADING_LETTERS =
   /^\**([A-H])\**((?:\s*(?:,\s*and|,|and|&|\+|through|to|–|-)\s*\**[A-H]\**(?![A-Za-z]))+)/;
@@ -120,6 +121,8 @@ const LONE_LETTER = /(?<![A-Za-z])[A-H](?![A-Za-z])/g;
 const RANGE = /through|\bto\b|–|-/;
 const RECOMMEND_IN_TEXT =
   /\b(?:recommend(?:ed|ation)?:?|lean (?:toward|towards)|(?:I'd|I would) (?:go with|pick|try|choose))\s+\**(?:option\s+)?([A-H])\b/;
+// "I recommend yes, it is cheap": a yes or no leaned on in a sentence of its own.
+const SAID_YES_NO = /\b(?:I (?:recommend|suggest)|my recommendation is)\s+((?:yes|no)\b[^.\n]*)/i;
 // The same for a numbered menu: "I'd go with 2", "my recommendation: 1".
 const RECOMMEND_NUMBER =
   /\b(?:recommend(?:ed|ation)?:?|lean (?:toward|towards)|(?:I'd|I would) (?:go with|pick|try|start with|choose))\s+\**(?:option\s+|number\s+)?([0-9]{1,2})\b/i;
@@ -325,6 +328,12 @@ function parseItem(start: Start, block: string[]): FormItem {
   if (!choices.length)
     for (const option of options) body.push(`${option.key}. ${option.text}`, option.detail);
   const bodyText = tidy(body);
+  // A yes or no said in passing, "I recommend yes, it is cheap", is the recommendation of a
+  // question with nothing to pick from.
+  if (recommended === undefined && !options.length) {
+    const inline = SAID_YES_NO.exec(`${start.title} ${start.rest} ${bodyText}`);
+    if (inline) recommended = unbold(inline[1] ?? "");
+  }
   const item: FormItem = {
     label: start.label,
     title: start.title,
@@ -476,8 +485,19 @@ function menuOf(lines: string[], run: Start[]): Split | null {
   const asked = closing.length
     ? unbold(ask > 0 ? sentences.slice(ask).join(" ") : tidy(closing))
     : cueWords;
-  const said = RECOMMEND_NUMBER.exec(closing.join(" "));
-  const wanted = said ? options.findIndex((option) => option.key === said[1]) : (ownPick ?? -1);
+  const leanText = closing.join(" ");
+  const said = RECOMMEND_NUMBER.exec(leanText);
+  // "I'd go with 1, 2 and 6": every number the lean strings together.
+  const more = said
+    ? /^((?:\s*(?:,\s*and|,|and|&|\+|plus)\s*[0-9]{1,2}\b)+)/.exec(
+        leanText.slice(said.index + said[0].length),
+      )
+    : null;
+  const numbers = said ? [said[1], ...(more?.[1]?.match(/[0-9]{1,2}/g) ?? [])] : [];
+  const leant = [...new Set(numbers.map((n) => options.findIndex((option) => option.key === n)))]
+    .filter((index) => index >= 0)
+    .sort((a, b) => a - b);
+  const wanted = leant[0] ?? ownPick ?? -1;
   const item: FormItem = {
     label: "Q1",
     unlabelled: true,
@@ -485,7 +505,10 @@ function menuOf(lines: string[], run: Start[]): Split | null {
     body: "",
     options,
   };
-  if (wanted >= 0) {
+  if (leant.length > 1) {
+    item.recommendedOptions = leant;
+    item.recommended = unbold(lean || tidy(closing));
+  } else if (wanted >= 0) {
     item.recommendedOption = wanted;
     if (closing.length) item.recommended = unbold(lean || tidy(closing));
   }
@@ -559,7 +582,8 @@ function singleOf(lines: string[]): Split | null {
         : sentence
           ? [sentence[1], sentence[2]]
           : [lead.slice(0, 160), lead.slice(160)];
-  const title = unbold(headWords.replace(/:\s*$/, ""));
+  // A bare "Q." label with no number is not part of the title.
+  const title = unbold(headWords.replace(/:\s*$/, "")).replace(/^Q\s*[.:)]\s+/, "");
   // The closer of a grilling is answered with a plain "yes"; it gets no card.
   if (!title || /shared understanding/i.test(title)) return null;
   const start: Start = { line, isQ: true, n: 1, label: "Q1", title, rest: restWords ?? "" };
