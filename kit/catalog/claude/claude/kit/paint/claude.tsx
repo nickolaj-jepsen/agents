@@ -22,6 +22,32 @@ const COLOR: Record<Role, string | undefined> = {
  */
 const HOVER_FILL = "userMessageBackground";
 
+/**
+ * One line saying how to move the keyboard between the prompt and the site that draws this,
+ * for wherever the kit's keys live. A click on a pane or the band gives it the keyboard too,
+ * so the line is itself somewhere to click.
+ * @param held Whether the site holds the keyboard, as far as the mod knows: the engine does
+ * not say when Escape hands it back, so both ways stay on show and `held` only lights one.
+ * @param canLeave Whether Escape goes back to the prompt: true in the band, false in a pane
+ * that Escape closes, which then says nothing while it holds the keyboard.
+ */
+export function keysHint(k: Els, held: boolean, canLeave = false): JSX.Element | null {
+  const { Box, Text } = k;
+  if (held && !canLeave) return null;
+  const way = (label: string, key: string, isLit: boolean) => (
+    <Text key={key} dimColor={!isLit || undefined}>
+      <Text bold={isLit || undefined}>{label}</Text>
+      {` ${key}`}
+    </Text>
+  );
+  return (
+    <Box columnGap={3}>
+      {way("Keys here", "ctrl+x tab", !held)}
+      {canLeave ? way("Back to prompt", "esc", held) : null}
+    </Box>
+  );
+}
+
 /** Consecutive lines of one control, or one line of none. */
 const groups = (lines: Line[]) => {
   const out: { hit?: string; lines: Line[] }[] = [];

@@ -30,12 +30,16 @@ export type Painted = {
 /**
  * @param width pi's own measure has the last word: a line it counts wider is cut, since pi
  * refuses a render with one that does not fit.
+ * @param hover The control under the pointer: its rows sit on the theme's second background,
+ * the one a user message is drawn on, to the full width.
  */
-export function paintLines(theme: Theme, lines: Line[], width: number): Painted {
+export function paintLines(theme: Theme, lines: Line[], width: number, hover?: string): Painted {
   return {
     lines: lines.map((l) => {
       const text = l.spans.map((s) => ink(theme, s)).join("");
-      return visibleWidth(text) > width ? truncateToWidth(text, width, "") : text;
+      const fit = visibleWidth(text) > width ? truncateToWidth(text, width, "") : text;
+      if (hover === undefined || l.hit !== hover) return fit;
+      return theme.bg("userMessageBg", fit + " ".repeat(Math.max(0, width - visibleWidth(fit))));
     }),
     hits: lines.map((l) => l.hit),
   };

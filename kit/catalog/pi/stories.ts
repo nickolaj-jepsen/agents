@@ -1002,6 +1002,8 @@ const choicePure = (props: ChoiceProps): Live =>
 function choiceLive(props: ChoiceProps): Live {
   let state: ChoiceState = { chosen: props.chosen, focus: 0 };
   let hits: (string | undefined)[] = [];
+  /** The control under the pointer. pi reports no leave, so it stays until the pointer moves on. */
+  let hover: string | undefined;
   const send = (intent: ChoiceIntent | undefined) => {
     if (!intent) return false;
     state = choiceReduce(state, intent, props);
@@ -1009,7 +1011,8 @@ function choiceLive(props: ChoiceProps): Live {
   };
   return {
     render: (theme, width) => {
-      const painted = paintLines(theme, choiceLines({ ...props, ...state }, width), width);
+      const lines = choiceLines({ ...props, ...state }, width);
+      const painted = paintLines(theme, lines, width, hover);
       hits = painted.hits;
       return painted.lines;
     },
@@ -1020,7 +1023,13 @@ function choiceLive(props: ChoiceProps): Live {
       return send(choiceKey(props.items, data));
     },
     mouse: (event) => {
-      const index = choiceOf(hits[event.y]);
+      const hit = hits[event.y];
+      if (event.type === "move") {
+        const was = hover;
+        hover = hit;
+        return { handled: true, render: was !== hover };
+      }
+      const index = choiceOf(hit);
       if (event.type !== "click" || event.button !== "left" || index < 0) return undefined;
       send({ do: "pick", index });
       return { handled: true, render: true };

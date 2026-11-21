@@ -14,6 +14,7 @@ import {
   type ChoiceState,
 } from "./kit/choice/contract.ts";
 import { choiceStories } from "./kit/choice/stories.ts";
+import { keysHint } from "./kit/paint/claude.tsx";
 import {
   choiceRing,
   choiceRows,
@@ -51,6 +52,18 @@ const PLACED = "kit-choice";
 const liveChoice = (id: string | null): ChoiceProps | undefined =>
   choiceStories.find((c) => c.live && (id === TRANSCRIPT || `choice/${c.state}` === id))?.props;
 
+/**
+ * Whether the site with a live choice story's keys holds the keyboard, as far as the engine
+ * says. It tells a mod when the ring moves into its band or pane, when the person types in the
+ * prompt, and when a row of the transcript is pressed (which hands the keys to the prompt).
+ * Escape hands them back too, and nothing says so: until the next of those, this is stale.
+ */
+const keys = atom({ plugin: "kit-catalog", key: "keys" } as const, false, { shape: "keys-1" });
+
+async function hold($: Parameters<typeof read>[0], held: boolean) {
+  if ((await read($, keys)) !== held) await update($, keys, () => held);
+}
+
 /** The transcript story's state and the way to change it, from either site that draws it. */
 async function transcriptChoice($: Parameters<typeof read>[0]) {
   const props = liveChoice(TRANSCRIPT);
@@ -85,6 +98,8 @@ export const register: Register = (on) => {
 
   on("command.run", { command: "kit" }, async ($, e) => {
     const [component, state] = e.args.trim().split(/[\s/]+/);
+    // The command was typed in the prompt, so the keyboard is there until a site takes it.
+    await hold($, false);
     if (!component) {
       await update($, story, () => null);
       await $.ui.close({ id: PANE }).catch(() => undefined);
@@ -122,23 +137,45 @@ export const register: Register = (on) => {
   on("ui.focus", async ($, e, next) => {
     const id = await read($, story);
     const props = liveChoice(id);
+    if (!props || !id) return next(e);
     const el = e.element;
-    if (!props || !id || !el || el === RING.park) return next(e);
     const by = el === RING.up ? -1 : el === RING.down ? 1 : 0;
     const row = choiceOf(el);
-    if (!by && row < 0 && !el.startsWith(KEY_PREFIX)) return next(e);
-    await update($, live, (held) => {
-      const state = (held?.id === id ? (held.state as ChoiceState) : null) ?? choiceStart(props);
-      return {
-        id,
-        state: by
-          ? choiceReduce(state, { do: "move", by }, props)
-          : row >= 0
-            ? { ...state, focus: row }
-            : state,
-      };
-    });
-    return next({ ...e, element: RING.park });
+    const isOurs = !!el && el !== RING.park && (by !== 0 || row >= 0 || el.startsWith(KEY_PREFIX));
+    if (isOurs)
+      await update($, live, (held) => {
+        const state = (held?.id === id ? (held.state as ChoiceState) : null) ?? choiceStart(props);
+        return {
+          id,
+          state: by
+            ? choiceReduce(state, { do: "move", by }, props)
+            : row >= 0
+              ? { ...state, focus: row }
+              : state,
+        };
+      });
+    const moved = await next(isOurs ? { ...e, element: RING.park } : e);
+    // A ring that moved in the site says the site has the keyboard.
+    if (!moved.deny) await hold($, true);
+    return moved;
+  });
+
+  // What the person types in the prompt went to the prompt, and a letter the site does not
+  // bind takes the keyboard there with it.
+  on("prompt.edit", async ($, e, next) => {
+    if (e.origin.kind !== "plugin") await hold($, false);
+    return next(e);
+  });
+  on("prompt.change", async ($, e, next) => {
+    if (e.origin.kind !== "plugin") await hold($, false);
+    return next(e);
+  });
+
+  // A press on a row of the transcript hands the keyboard to the prompt.
+  on("ui.press", async ($, e, next) => {
+    const pressed = await next(e);
+    if (e.component === "Placed" && e.plugin === PLUGIN) await hold($, false);
+    return pressed;
   });
 
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
@@ -158,7 +195,14 @@ export const register: Register = (on) => {
         set: (state) => update($, live, () => ({ id, state })),
       },
     );
-    return <Box flexDirection="column">{body}</Box>;
+    // A pane without the keyboard says how to give it; Escape closes this one, so it names no way back.
+    const hint = liveChoice(id) ? keysHint(els, await read($, keys)) : null;
+    return (
+      <Box flexDirection="column">
+        {body}
+        {hint}
+      </Box>
+    );
   });
 
   on("ui.render", { component: "Placed" }, async ($, e, next) => {
@@ -172,10 +216,10 @@ export const register: Register = (on) => {
     const choice = e.props.hasSurvey ? undefined : await transcriptChoice($);
     if (choice) {
       const k = kitOf($.ui.resolve(e), e);
-      const { Box, Text } = k;
+      const { Box } = k;
       return (
         <Box flexDirection="column">
-          <Text dimColor>{`${TRANSCRIPT}: the band has the keys after ctrl+x tab`}</Text>
+          {keysHint(k, await read($, keys), true)}
           {choiceRing(k, choice.props, choice.send)}
         </Box>
       );
