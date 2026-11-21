@@ -7,6 +7,7 @@ Plugins for Claude Code and pi, and installable skills, distributed as a flake. 
 - Stage new files before running flake commands; otherwise Nix won't see them.
 - Edit the kit source, not a mod's copy. Run `just kit-sync` after changing the kit, the legacy Claude kit or shared catalogue samples. See [the kit guide](kit/README.md).
 - For changes to what a plugin draws, or to its keys, mouse or focus, use the [agent-plugin-dev skill](skills/agent-plugin-dev/SKILL.md) and look at a real session before handing back.
+- Plugin UI follows the house rules in [the layout reference](skills/agent-plugin-dev/references/style.md). They hold for every plugin: a design that breaks one needs the owner's approval first, and each reviewer gets the page with the design.
 - Keep test sessions isolated. Fixture git must ignore the user's config and hooks; keep the agent's notes and worktrees under the run folder. Use `setupContext` and `runEnv` in `e2e/lib/setup.ts`.
 - A driver that might kill Claude before startup sets `CLAUDE_CODE_NO_FLICKER=1`. Otherwise two early exits with fullscreen enabled can leave the user's own session in the classic renderer. `/tui fullscreen` clears it.
 - `PHILOSOPHY.md` records lasting project choices. Ask the owner for explicit permission before editing it.
