@@ -72,6 +72,11 @@ e2e *ARGS:
 e2e-live PLUGIN SCENARIO *OPTIONS:
     node e2e/cli.ts live {{ quote(PLUGIN) }} {{ quote(SCENARIO) }} {{ OPTIONS }}
 
+[doc('Replay a kit story (card/live) in your terminal and replay it again on each save; --no-watch to stop that')]
+[group('dev')]
+kit-live STORY *OPTIONS:
+    node e2e/cli.ts live kit {{ quote(STORY) }} --watch {{ OPTIONS }}
+
 [doc('Try the answer plugin in an interactive Claude terminal using a local replay')]
 [group('dev')]
 answer-demo FIXTURE="details":

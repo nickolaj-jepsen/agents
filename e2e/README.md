@@ -9,9 +9,15 @@ npm run e2e:cli -- ls answer                  # list saved screens
 just e2e-live answer open --harness claude    # replay in your terminal; Ctrl+] stops it
 just e2e-live answer open --harness pi        # try the pi version instead
 just e2e-live answer form --harness vscode    # open a separate Linux VS Code window; close it to stop
+just e2e-live answer open --harness pi --watch  # replay again on each save
+just kit-live card/live --harness pi          # a kit story, with --watch on; --no-watch turns it off
 ```
 
 The view fits your window once the scripted steps finish. To change the size **during** those steps, pass `--size 96x30` in terminal cells or `--size 900x700` in VS Code pixels. For the Desktop app, see [Claude Desktop](#claude-desktop).
+
+With `--watch`, each save under the plugin's folder, `kit/` or the scenario's folder runs `just kit-sync`, starts the agent over and replays the steps. The old session stays on screen until the new one reaches the screen. If the new code fails to start, its error takes the screen's place; save again to retry. Tests, snapshots and the kit's copies don't count as saves.
+
+For Claude, `--watch --in-place` keeps the session and lets Claude reload the mod itself, which keeps what you clicked. Claude waits for the folder to go quiet first: a few seconds, or up to a minute when you save often. Type `/reload-plugins` to reload at once.
 
 ## Drive a parked terminal session
 
@@ -20,10 +26,11 @@ npm run e2e:cli -- goto docfix queue --harness pi  # park a session at the queue
 npm run e2e:cli -- cap                            # read the screen as text
 npm run e2e:cli -- keys Down Enter                # act on the focused row
 npm run e2e:cli -- sweep                          # write PNGs at all four test sizes
+npm run e2e:cli -- reload                         # after an edit: sync the kit, replay in a fresh session
 npm run e2e:cli -- stop                           # end the session
 ```
 
-Run `npm run e2e:cli` for all verbs. After editing pi code, run `goto` again. For parallel runs, give each driver its own `XDG_STATE_HOME` and short `XDG_RUNTIME_DIR`: the saved state and daemon socket are separate. The CLI finds tui-test via `TUI_TEST_BIN`, then `PATH`, then `.#tui-test` (use `nix build .#tui-test` to build it yourself).
+Run `npm run e2e:cli` for all verbs. Saving doesn't reload a parked session; `reload` does, at the session's current size. If the new session fails to start, `reload` prints why and leaves the old one parked. `goto ... --watch` takes the same flags as live mode, reloads on each save and prints the screen; Ctrl+C stops watching and leaves the session parked. A failed start removes its run folder unless `E2E_KEEP=1` is set, which prints its path. For parallel runs, give each driver its own `XDG_STATE_HOME` and short `XDG_RUNTIME_DIR`: the saved state and daemon socket are separate. The CLI finds tui-test via `TUI_TEST_BIN`, then `PATH`, then `.#tui-test` (use `nix build .#tui-test` to build it yourself).
 
 ## Write a scenario
 

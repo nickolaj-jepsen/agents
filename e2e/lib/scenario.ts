@@ -158,15 +158,27 @@ export const slashCommand = (name: string, about: string): Step => ({
   run: async (session) => {
     const typed = `/${name}`;
     const row = new RegExp(`${escape(typed)}\\s+.*${escape(about)}`);
-    const start = Date.now();
+    let deadline = Date.now() + 45_000;
+    let broken: string | undefined;
     for (;;) {
       await session.type(typed, { settle: false });
       try {
         await session.wait(row, { timeout: 2000 });
         return;
       } catch (err) {
-        if (Date.now() - start > 45_000)
-          throw new Error(`${typed} never showed in the slash menu: ${String(err)}`);
+        // A mod that did not load says so in the transcript, and only a write to it can change
+        // that: when it is likely this command's (`kit-catalog` for `/kit`), wait a few seconds
+        // more, not the whole wait. Another mod's failure only goes into the message.
+        if (!broken) {
+          broken = modLoadError(await session.text());
+          const mod = broken && /^● (\S+):/.exec(broken)?.[1];
+          if (mod && (mod.includes(name) || name.includes(mod)))
+            deadline = Math.min(deadline, Date.now() + 5000);
+        }
+        if (Date.now() > deadline)
+          throw new Error(
+            `${typed} never showed in the slash menu${broken ? `:\n${broken}\n` : ": "}${String(err)}`,
+          );
         await session.press(Array<string>(typed.length).fill("Backspace"), { settle: false });
       }
     }
@@ -174,6 +186,21 @@ export const slashCommand = (name: string, about: string): Step => ({
 });
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Claude's `● <mod>: hooks module did not load: …` and the lines it wraps onto, if shown. */
+export function modLoadError(text: string): string | undefined {
+  const rows = text.split("\n");
+  const at = rows.findIndex((row) => /^● \S+: hooks module did not load/.test(row));
+  if (at < 0) return undefined;
+  // Its wrapped lines are indented two; so is the slash menu's "No commands match".
+  const end = rows.findIndex(
+    (row, i) => i > at && (!/^ {2}\S/.test(row) || /^ {2}No commands/.test(row)),
+  );
+  return rows
+    .slice(at, end < 0 ? undefined : end)
+    .map((row) => row.replace(/\s*│.*$/, "").trimEnd())
+    .join("\n");
+}
 
 const fullRegion: Region = (grid) => ({ x: 0, y: 0, w: grid[0]?.length ?? 0, h: grid.length });
 

@@ -10,6 +10,7 @@ just typecheck     # cores, pi extensions, kit and e2e harness
 just lint          # oxlint over the TypeScript sources
 just fmt           # format the checkout
 just check         # all flake checks, including Claude plugin validation and tests
+just kit-live card/live --harness pi  # try a kit story in your terminal; replays on each save
 ```
 
 Run `just dev-setup` again after upgrading Claude Code or reinstalling npm dependencies: Claude writes its API types only when it loads a mod in a real session, and npm prunes the links to pi's packages. Check the Claude half of one plugin with `npx tsc -p plugins/<name>/claude` after setup. The flake validates and tests Claude halves without that interactive step.
