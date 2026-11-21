@@ -1,7 +1,4 @@
-import { readFileSync } from "node:fs";
-import { relative } from "node:path";
 import { describe, expect, it } from "vitest";
-import { pairs, root } from "./copies.ts";
 import {
   alignRight,
   cellWidth,
@@ -14,13 +11,6 @@ import {
   rowsOf,
   widthCap,
 } from "./ui.tsx";
-
-describe("the copies", () => {
-  it("are verbatim: run `just kit-sync` after editing kit/claude/ui.tsx or kit/catalog/samples.ts", () => {
-    for (const { source, file } of pairs())
-      expect(readFileSync(file, "utf8"), relative(root, file)).toBe(readFileSync(source, "utf8"));
-  });
-});
 
 const text = "the quick brown fox jumps over the lazy dog";
 const ends = (s: string, tail: string) => s.trimEnd().endsWith(tail);

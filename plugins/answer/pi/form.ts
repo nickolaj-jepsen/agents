@@ -25,7 +25,7 @@ import {
   type Band,
   type BandRow,
   type KeyChip,
-} from "../../../kit/pi/ui.ts";
+} from "../../../kit/legacy/pi/ui.ts";
 import type { Action, View } from "../core/forms.ts";
 
 /** `fill` writes the reply into the editor; `send` sends it as the person's message instead. */

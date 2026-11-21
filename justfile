@@ -52,10 +52,10 @@ typecheck:
 lint:
     oxlint --deny-warnings
 
-[doc("Rewrite every mod's claude/ui.tsx from kit/claude/ui.tsx; plugins named get a copy")]
+[doc("Rewrite every mod's claude/ui.tsx from kit/legacy/claude/ui.tsx; plugins named get a copy")]
 [group('dev')]
 kit-sync *PLUGINS:
-    node kit/claude/sync.ts {{ PLUGINS }}
+    node kit/sync.ts {{ PLUGINS }}
 
 [doc("Replay the UI kit's stories and rewrite the catalogue: its crops (site/media/kit), site/data/kit.json, COMPONENTS.md")]
 [group('dev')]

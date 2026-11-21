@@ -10,5 +10,5 @@
     "../plugins/docfix/core/docfix.ts",
     "../kit/**/*.ts"
   ],
-  "exclude": ["../kit/claude/ui.spec.ts", "./assets/**"]
+  "exclude": ["../kit/legacy/claude/ui.spec.ts", "./assets/**"]
 }

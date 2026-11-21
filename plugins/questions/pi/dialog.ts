@@ -33,7 +33,7 @@ import {
   paint,
   tokens,
   widthCap,
-} from "../../../kit/pi/ui.ts";
+} from "../../../kit/legacy/pi/ui.ts";
 import { type Question, type QuestionsResult, type QuestionAnswer } from "./types.ts";
 
 const MIN_WIDTH = 28;

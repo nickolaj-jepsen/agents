@@ -5,5 +5,5 @@
     "types": ["node"]
   },
   "include": ["kit/**/*.ts", "scripts/**/*.ts", "plugins/*/pi/**/*.ts", "plugins/*/core/**/*.ts"],
-  "exclude": ["kit/claude/ui.spec.ts"]
+  "exclude": ["kit/legacy/claude/ui.spec.ts", "kit/**/*.tsx"]
 }

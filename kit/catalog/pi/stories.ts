@@ -40,7 +40,7 @@ import {
   type Column,
   type Hint,
   type WidthClass,
-} from "../../pi/ui.ts";
+} from "../../legacy/pi/ui.ts";
 import {
   CJK,
   EVIDENCE,

@@ -28,7 +28,7 @@ import {
   paint,
   tokens,
   type Hint,
-} from "../../../kit/pi/ui.ts";
+} from "../../../kit/legacy/pi/ui.ts";
 import {
   byTarget,
   choiceSummary,

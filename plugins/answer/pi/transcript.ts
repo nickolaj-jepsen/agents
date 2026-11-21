@@ -34,7 +34,7 @@ import {
   tokens,
   widthCap,
   type BandRow,
-} from "../../../kit/pi/ui.ts";
+} from "../../../kit/legacy/pi/ui.ts";
 import { type Held, type View, view, viewOf } from "../core/forms.ts";
 
 export type Round = Held & { anchor?: string; sent?: boolean };

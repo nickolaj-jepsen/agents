@@ -6,7 +6,7 @@
  */
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import { visibleWidth } from "@earendil-works/pi-tui";
-import { clamp, fit, paint, tokens } from "../../../kit/pi/ui.ts";
+import { clamp, fit, paint, tokens } from "../../../kit/legacy/pi/ui.ts";
 import {
   evidenceBlocks,
   evidenceLabel,

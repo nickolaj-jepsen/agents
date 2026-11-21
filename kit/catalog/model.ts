@@ -65,8 +65,8 @@ export type Model = {
 };
 
 const kitFiles: Record<Harness, string> = {
-  pi: join(kitRoot, "pi/ui.ts"),
-  claude: join(kitRoot, "claude/ui.tsx"),
+  pi: join(kitRoot, "legacy/pi/ui.ts"),
+  claude: join(kitRoot, "legacy/claude/ui.tsx"),
 };
 
 async function storiesOf(harness: Harness): Promise<Map<string, Meta> | undefined> {

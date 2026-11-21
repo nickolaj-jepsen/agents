@@ -20,7 +20,7 @@ import {
   TOOL_NAME,
   type Suggestion,
 } from "../core/docfix.ts";
-import { overlayOptions } from "../../../kit/pi/ui.ts";
+import { overlayOptions } from "../../../kit/legacy/pi/ui.ts";
 import { DocsPanel, EMPTY_TEXT } from "./panel.ts";
 import { hasStore, isTracked, loadAll, remove, repoRoot, save, storeDir } from "./store.ts";
 
