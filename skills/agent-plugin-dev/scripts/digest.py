@@ -12,7 +12,14 @@ import os
 import re
 import sys
 
-ZERO = {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0, "totalTokens": 0, "cost": 0.0}
+ZERO = {
+    "input": 0,
+    "output": 0,
+    "cacheRead": 0,
+    "cacheWrite": 0,
+    "totalTokens": 0,
+    "cost": 0.0,
+}
 
 
 def collapse(text):
@@ -60,7 +67,10 @@ def loadout(entries):
         if entry.get("type") == "compaction":
             checkpoint = entry.get("systemMessage") or {}
             sections = dict(checkpoint.get("sections") or {})
-            tools = {tool.get("name", "?"): tool for tool in checkpoint.get("toolsAdded") or []}
+            tools = {
+                tool.get("name", "?"): tool
+                for tool in checkpoint.get("toolsAdded") or []
+            }
             continue
         message = entry.get("message") or {}
         if entry.get("type") != "message" or message.get("role") != "system":
@@ -109,16 +119,36 @@ def build(path):
             timeline.append((index, "usage", f"kind={entry.get('kind')}"))
         elif kind == "compaction":
             add_usage(entry.get("usage"))
-            timeline.append((index, "compaction", f"{entry.get('tokensBefore', '?')} tokens in, keep from {entry.get('firstKeptEntryId')}"))
+            timeline.append(
+                (
+                    index,
+                    "compaction",
+                    f"{entry.get('tokensBefore', '?')} tokens in, keep from {entry.get('firstKeptEntryId')}",
+                )
+            )
         elif kind == "branch_summary":
             add_usage(entry.get("usage"))
             timeline.append((index, "branch", short(entry.get("summary", ""), 80)))
         elif kind == "custom":
-            timeline.append((index, "custom", f"{entry.get('customType')} {short(json.dumps(entry.get('data')), 70)}"))
+            timeline.append(
+                (
+                    index,
+                    "custom",
+                    f"{entry.get('customType')} {short(json.dumps(entry.get('data')), 70)}",
+                )
+            )
         elif kind == "custom_message":
-            timeline.append((index, "inject", f"{entry.get('customType')} {short(content_text(entry.get('content')), 70)}"))
+            timeline.append(
+                (
+                    index,
+                    "inject",
+                    f"{entry.get('customType')} {short(content_text(entry.get('content')), 70)}",
+                )
+            )
         elif kind == "label":
-            timeline.append((index, "label", f"{entry.get('label')!r} on {entry.get('targetId')}"))
+            timeline.append(
+                (index, "label", f"{entry.get('label')!r} on {entry.get('targetId')}")
+            )
         elif kind == "context_edit":
             state = "omitted" if entry.get("replacement") is None else "replaced"
             timeline.append((index, "edit", f"{entry.get('targetId')} {state}"))
@@ -128,11 +158,19 @@ def build(path):
             if role == "system":
                 continue
             if role == "user":
-                timeline.append((index, "user", short(content_text(message.get("content")), 80)))
+                timeline.append(
+                    (index, "user", short(content_text(message.get("content")), 80))
+                )
             elif role == "toolResult":
                 status = "ERROR" if message.get("isError") else "ok"
                 text = content_text(message.get("content"))
-                timeline.append((index, f"result {message.get('toolName', '?')}", f"{status} {len(text)}B  {short(text, 70)}"))
+                timeline.append(
+                    (
+                        index,
+                        f"result {message.get('toolName', '?')}",
+                        f"{status} {len(text)}B  {short(text, 70)}",
+                    )
+                )
             elif role == "assistant":
                 add_usage(message.get("usage"))
                 blocks = message.get("content") or []
@@ -145,16 +183,26 @@ def build(path):
                         args = short(json.dumps(block.get("arguments")), 70)
                         timeline.append((index, f"call {block.get('name', '?')}", args))
                     elif block.get("type") == "text":
-                        timeline.append((index, "text", short(block.get("text", ""), 80)))
+                        timeline.append(
+                            (index, "text", short(block.get("text", ""), 80))
+                        )
                     elif block.get("type") == "thinking":
-                        timeline.append((index, "thinking", short(block.get("thinking", ""), 60)))
+                        timeline.append(
+                            (index, "thinking", short(block.get("thinking", ""), 60))
+                        )
                 if not blocks:
                     timeline.append((index, "assistant", "empty"))
                 stop = message.get("stopReason")
                 if stop and stop not in ("stop", "toolUse"):
                     timeline.append((index, "stop", str(stop)))
             else:
-                timeline.append((index, role or "?", short(content_text(message.get("content")), 60)))
+                timeline.append(
+                    (
+                        index,
+                        role or "?",
+                        short(content_text(message.get("content")), 60),
+                    )
+                )
 
     return {
         "session": {
@@ -182,7 +230,9 @@ def render(data, width):
     if session["unparsed"]:
         out.append(f"         {session['unparsed']} unparsable lines skipped")
     model = data["model"]
-    out.append(f"model    {model['provider']}/{model['model']}  thinking={model['thinking']}")
+    out.append(
+        f"model    {model['provider']}/{model['model']}  thinking={model['thinking']}"
+    )
 
     sections = data["prompt"]["sections"]
     if sections:
@@ -200,7 +250,9 @@ def render(data, width):
 
     out.append(f"timeline {len(data['timeline'])} steps")
     for step in data["timeline"]:
-        out.append(f"  {step['at']:>3} {step['kind']:<16} {short(step['detail'], width)}")
+        out.append(
+            f"  {step['at']:>3} {step['kind']:<16} {short(step['detail'], width)}"
+        )
 
     usage = data["usage"]
     out.append(
@@ -213,7 +265,9 @@ def render(data, width):
 def main():
     parser = argparse.ArgumentParser(description="Flatten a pi session file.")
     parser.add_argument("session", help="path to a .jsonl session file")
-    parser.add_argument("--json", action="store_true", help="print one aggregate object")
+    parser.add_argument(
+        "--json", action="store_true", help="print one aggregate object"
+    )
     parser.add_argument("--width", type=int, default=96, help="detail width in columns")
     args = parser.parse_args()
     try:

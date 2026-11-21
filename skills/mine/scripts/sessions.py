@@ -47,7 +47,10 @@ import sys
 from datetime import datetime
 
 HOME = os.path.expanduser("~")
-CLAUDE_ROOTS = [("claude", f"{HOME}/.claude/projects"), ("claude-work", f"{HOME}/.claude-work/projects")]
+CLAUDE_ROOTS = [
+    ("claude", f"{HOME}/.claude/projects"),
+    ("claude-work", f"{HOME}/.claude-work/projects"),
+]
 PI_ROOT = f"{HOME}/.pi/agent/sessions"
 
 # Harness-injected text that arrives as a user turn in logs predating `origin`.
@@ -87,10 +90,19 @@ def lines_of(path):
     if path.endswith(".zst"):
         if not shutil.which("zstd"):
             if not _warned_zstd:
-                print("sessions: zstd not on PATH, skipping compressed transcripts", file=sys.stderr)
+                print(
+                    "sessions: zstd not on PATH, skipping compressed transcripts",
+                    file=sys.stderr,
+                )
                 _warned_zstd = True
             return []
-        out = subprocess.run(["zstd", "-dcq", path], capture_output=True, text=True, errors="replace")
+        out = subprocess.run(
+            ["zstd", "-dcq", path],
+            check=False,
+            capture_output=True,
+            text=True,
+            errors="replace",
+        )
         return out.stdout.splitlines()
     with open(path, errors="replace") as f:
         return f.readlines()
@@ -109,7 +121,11 @@ def records(path):
 def text_of(content):
     if isinstance(content, str):
         return content
-    return "\n".join(b.get("text", "") for b in content or () if isinstance(b, dict) and b.get("type") == "text")
+    return "\n".join(
+        b.get("text", "")
+        for b in content or ()
+        if isinstance(b, dict) and b.get("type") == "text"
+    )
 
 
 def clip(text, width):
@@ -122,7 +138,10 @@ def tilde(path):
 
 
 def option_labels(q):
-    return [o.get("label") if isinstance(o, dict) else str(o) for o in q.get("options") or ()]
+    return [
+        o.get("label") if isinstance(o, dict) else str(o)
+        for o in q.get("options") or ()
+    ]
 
 
 def answer_class(label, options, kind=None, multi=False):
@@ -158,18 +177,27 @@ class Session:
     def add(self, kind, ts, **fields):
         last = self.events[-1] if self.events else None
         # A prompt edited before it was sent is logged again in full: keep the last.
-        if kind == "prompt" and last and last["kind"] == "prompt" and fields["text"].startswith(last["text"].rstrip(". ")):
+        if (
+            kind == "prompt"
+            and last
+            and last["kind"] == "prompt"
+            and fields["text"].startswith(last["text"].rstrip(". "))
+        ):
             self.events.pop()
         self.events.append({"kind": kind, "ts": ts, **fields})
 
     def last_prompt(self):
-        return next((e["text"] for e in reversed(self.events) if e["kind"] == "prompt"), "")
+        return next(
+            (e["text"] for e in reversed(self.events) if e["kind"] == "prompt"), ""
+        )
 
 
 def render_slash(text):
     name = re.search(r"<command-name>(.*?)</command-name>", text, re.S)
     args = re.search(r"<command-args>(.*?)</command-args>", text, re.S)
-    return (name.group(1).strip() if name else ""), (args.group(1).strip() if args else "")
+    return (name.group(1).strip() if name else ""), (
+        args.group(1).strip() if args else ""
+    )
 
 
 def parse_claude(source, path, sidechains=False):
@@ -182,7 +210,9 @@ def parse_claude(source, path, sidechains=False):
             s.cwd = s.cwd or r["cwd"]
             s.cwds.add(r["cwd"])
         s.started = s.started or ts
-        if r.get("entrypoint") == "sdk-cli" or any(d in (r.get("cwd") or "") for d in DRIVEN):
+        if r.get("entrypoint") == "sdk-cli" or any(
+            d in (r.get("cwd") or "") for d in DRIVEN
+        ):
             s.skip = True
         content = (r.get("message") or {}).get("content")
         if r.get("type") == "assistant":
@@ -193,11 +223,28 @@ def parse_claude(source, path, sidechains=False):
                     s.add("say", ts, id=rid, text=b["text"])
                 elif b.get("type") == "tool_use":
                     inp = b.get("input") or {}
-                    s.add("call", ts, id=rid, call_id=b.get("id"), name=b.get("name"), input=inp)
+                    s.add(
+                        "call",
+                        ts,
+                        id=rid,
+                        call_id=b.get("id"),
+                        name=b.get("name"),
+                        input=inp,
+                    )
                     if b.get("name") == "Skill":
                         name = inp.get("skill", "")
-                        asked = re.search(rf"(^|\s)/{re.escape(name.split(':')[-1])}\b", s.last_prompt())
-                        s.add("skill", ts, id=rid, name=name, args=inp.get("args", ""), via="typed" if asked else "model")
+                        asked = re.search(
+                            rf"(^|\s)/{re.escape(name.split(':')[-1])}\b",
+                            s.last_prompt(),
+                        )
+                        s.add(
+                            "skill",
+                            ts,
+                            id=rid,
+                            name=name,
+                            args=inp.get("args", ""),
+                            via="typed" if asked else "model",
+                        )
             continue
         if r.get("type") != "user":
             continue
@@ -229,13 +276,25 @@ def parse_claude(source, path, sidechains=False):
                 if label is None:
                     continue
                 multi = bool(q.get("multiSelect")) or isinstance(label, list)
-                label = ", ".join(map(str, label)) if isinstance(label, list) else str(label)
+                label = (
+                    ", ".join(map(str, label))
+                    if isinstance(label, list)
+                    else str(label)
+                )
                 note = (notes.get(q.get("question")) or {}).get("notes")
                 answers.append(
-                    {"header": q.get("header"), "question": q.get("question"), "answer": label, "class": answer_class(label, option_labels(q), multi=multi), "note": note}
+                    {
+                        "header": q.get("header"),
+                        "question": q.get("question"),
+                        "answer": label,
+                        "class": answer_class(label, option_labels(q), multi=multi),
+                        "note": note,
+                    }
                 )
             s.add("answer", ts, id=rid, answers=answers)
-        text = re.sub(r"^(\s*<system-reminder>.*?</system-reminder>)+", "", text, flags=re.S).strip()
+        text = re.sub(
+            r"^(\s*<system-reminder>.*?</system-reminder>)+", "", text, flags=re.S
+        ).strip()
         if not text:
             continue
         if text.startswith("[Request interrupted"):
@@ -245,12 +304,26 @@ def parse_claude(source, path, sidechains=False):
         if origin is not None and origin.get("kind") != "human":
             continue
         if text.startswith("<bash-input>"):
-            s.add("prompt", ts, id=rid, text="!" + re.sub(r"</?bash-input>", "", text).strip())
+            s.add(
+                "prompt",
+                ts,
+                id=rid,
+                text="!" + re.sub(r"</?bash-input>", "", text).strip(),
+            )
         elif "<command-name>" in text[:200]:
             name, args = render_slash(text)
             if name and name.lstrip("/") not in LOCAL_COMMANDS:
-                s.add("prompt", ts, id=rid, text=f"{name} {args}".strip(), slash=name.lstrip("/"))
-        elif re.fullmatch(r"/([\w-]+)\b.*", text) and text[1:].split()[0] in LOCAL_COMMANDS:
+                s.add(
+                    "prompt",
+                    ts,
+                    id=rid,
+                    text=f"{name} {args}".strip(),
+                    slash=name.lstrip("/"),
+                )
+        elif (
+            re.fullmatch(r"/([\w-]+)\b.*", text)
+            and text[1:].split()[0] in LOCAL_COMMANDS
+        ):
             continue
         elif origin is not None or not text.startswith(CLAUDE_NOISE):
             s.add("prompt", ts, id=rid, text=text)
@@ -258,16 +331,30 @@ def parse_claude(source, path, sidechains=False):
     for i, e in enumerate(s.events):
         if e["kind"] == "prompt" and e.get("slash"):
             for nxt in s.events[i + 1 : i + 4]:
-                if nxt["kind"] == "body" and nxt["path"].rstrip("/").endswith("/" + e["slash"].split(":")[-1]):
+                if nxt["kind"] == "body" and nxt["path"].rstrip("/").endswith(
+                    "/" + e["slash"].split(":")[-1]
+                ):
                     args = e["text"].split(" ", 1)[1] if " " in e["text"] else ""
-                    s.events.insert(i + 1, {"kind": "skill", "ts": e["ts"], "id": e["id"], "name": e["slash"], "args": args, "via": "typed"})
+                    s.events.insert(
+                        i + 1,
+                        {
+                            "kind": "skill",
+                            "ts": e["ts"],
+                            "id": e["id"],
+                            "name": e["slash"],
+                            "args": args,
+                            "via": "typed",
+                        },
+                    )
                     break
     s.ids = {e["id"] for e in s.events if e.get("id")}
     return s
 
 
 CODEMODE_CALL = re.compile(r"\btools\.(\w+)\s*\(")
-CODEMODE_COMMAND = re.compile(r"""^\s*\{[^}]*?\bcommand\s*:\s*(["'`])(.*?)(?<!\\)\1""", re.S)
+CODEMODE_COMMAND = re.compile(
+    r"""^\s*\{[^}]*?\bcommand\s*:\s*(["'`])(.*?)(?<!\\)\1""", re.S
+)
 
 
 def parse_pi(path):
@@ -278,7 +365,12 @@ def parse_pi(path):
     for r in records(path):
         ts = r.get("timestamp")
         if r.get("type") == "session":
-            s.cwd, s.started, s.id, s.parent = r.get("cwd"), ts, r.get("id") or s.id, r.get("parentSession")
+            s.cwd, s.started, s.id, s.parent = (
+                r.get("cwd"),
+                ts,
+                r.get("id") or s.id,
+                r.get("parentSession"),
+            )
             s.cwds.add(s.cwd)
             continue
         if r.get("id"):
@@ -297,10 +389,20 @@ def parse_pi(path):
             if first_user and text.startswith(PI_SUBAGENT):
                 s.skip = True
             first_user = False
-            sk = re.match(r'<skill name="([^"]+)" location="([^"]+)">\n?(.*?)</skill>\s*(.*)', text, re.S)
+            sk = re.match(
+                r'<skill name="([^"]+)" location="([^"]+)">\n?(.*?)</skill>\s*(.*)',
+                text,
+                re.S,
+            )
             if sk:
                 name, loc, body, args = sk.groups()
-                s.add("prompt", ts, id=rid, text=f"/skill:{name} {args}".strip(), slash=name)
+                s.add(
+                    "prompt",
+                    ts,
+                    id=rid,
+                    text=f"/skill:{name} {args}".strip(),
+                    slash=name,
+                )
                 s.add("skill", ts, id=rid, name=name, args=args, via="typed")
                 s.add("body", ts, id=rid, path=os.path.dirname(loc), text=body)
             else:
@@ -314,29 +416,67 @@ def parse_pi(path):
                 elif b.get("type") == "toolCall":
                     args = b.get("arguments") or {}
                     calls[b.get("id")] = args
-                    s.add("call", ts, id=rid, call_id=b.get("id"), name=b.get("name"), input=args)
+                    s.add(
+                        "call",
+                        ts,
+                        id=rid,
+                        call_id=b.get("id"),
+                        name=b.get("name"),
+                        input=args,
+                    )
                     if b.get("name") == "codemode":
                         # Inner calls share the codemode call's result, so its errors count for them.
                         code = args.get("code", "")
                         for m_ in CODEMODE_CALL.finditer(code):
                             inner = {"via": "codemode"}
-                            cmd = CODEMODE_COMMAND.match(code, m_.end()) if m_.group(1) == "bash" else None
+                            cmd = (
+                                CODEMODE_COMMAND.match(code, m_.end())
+                                if m_.group(1) == "bash"
+                                else None
+                            )
                             if cmd:
                                 inner["command"] = cmd.group(2)
-                            s.add("call", ts, id=rid, call_id=b.get("id"), name=m_.group(1), input=inner)
+                            s.add(
+                                "call",
+                                ts,
+                                id=rid,
+                                call_id=b.get("id"),
+                                name=m_.group(1),
+                                input=inner,
+                            )
                     # pi has no Skill tool: a model-invoked skill is a read of an installed
                     # SKILL.md. One inside the session's own tree is someone editing it.
                     target = str(args.get("path", ""))
                     sk = re.search(r"/([\w:-]+)/SKILL\.md$", target)
-                    if b.get("name") == "read" and sk and not (s.cwd and target.startswith(s.cwd.rstrip("/") + "/")):
-                        s.add("skill", ts, id=rid, name=sk.group(1), args="", via="model")
+                    if (
+                        b.get("name") == "read"
+                        and sk
+                        and not (s.cwd and target.startswith(s.cwd.rstrip("/") + "/"))
+                    ):
+                        s.add(
+                            "skill", ts, id=rid, name=sk.group(1), args="", via="model"
+                        )
                         skill_reads[b.get("id")] = os.path.dirname(target)
             if m.get("stopReason") == "aborted":
                 s.add("interrupt", ts, id=rid)
         elif role == "toolResult":
-            s.add("result", ts, id=rid, call_id=m.get("toolCallId"), error=bool(m.get("isError")), denial=None, text=text_of(m.get("content")))
+            s.add(
+                "result",
+                ts,
+                id=rid,
+                call_id=m.get("toolCallId"),
+                error=bool(m.get("isError")),
+                denial=None,
+                text=text_of(m.get("content")),
+            )
             if m.get("toolCallId") in skill_reads and not m.get("isError"):
-                s.add("body", ts, id=rid, path=skill_reads[m.get("toolCallId")], text=text_of(m.get("content")))
+                s.add(
+                    "body",
+                    ts,
+                    id=rid,
+                    path=skill_reads[m.get("toolCallId")],
+                    text=text_of(m.get("content")),
+                )
             details = m.get("details") or {}
             if m.get("toolName") == "ask_user_question" and details.get("answers"):
                 asked = (calls.get(m.get("toolCallId")) or {}).get("questions") or []
@@ -352,7 +492,9 @@ def parse_pi(path):
                             "header": q.get("header") or a.get("header"),
                             "question": a.get("question") or q.get("question"),
                             "answer": label,
-                            "class": answer_class(label, option_labels(q), a.get("kind"), multi),
+                            "class": answer_class(
+                                label, option_labels(q), a.get("kind"), multi
+                            ),
                             "note": a.get("notes") or a.get("note"),
                         }
                     )
@@ -367,7 +509,11 @@ def entry_ids(path):
     """The entry ids of a pi session file, cached; a fork copies its parent's, a subagent shares none."""
     if path not in _entry_ids:
         try:
-            _entry_ids[path] = {r["id"] for r in records(path) if r.get("id") and r.get("type") != "session"}
+            _entry_ids[path] = {
+                r["id"]
+                for r in records(path)
+                if r.get("id") and r.get("type") != "session"
+            }
         except OSError:
             _entry_ids[path] = None
     return _entry_ids[path]
@@ -379,12 +525,19 @@ def all_sessions(prefilter=None, subagents=False):
     for source, root in CLAUDE_ROOTS:
         paths += [(source, p, False) for p in glob.glob(f"{root}/*/*.jsonl")]
         if subagents:
-            paths += [(source, p, True) for p in glob.glob(f"{root}/*/*/subagents/**/*.jsonl*", recursive=True)]
+            paths += [
+                (source, p, True)
+                for p in glob.glob(f"{root}/*/*/subagents/**/*.jsonl*", recursive=True)
+            ]
     paths += [("pi", p, False) for p in glob.glob(f"{PI_ROOT}/*/*.jsonl")]
     best = {}
     for source, path, sidechains in paths:
         if prefilter is not None:
-            raw = "\n".join(lines_of(path)) if path.endswith(".zst") else open(path, errors="replace").read()
+            raw = (
+                "\n".join(lines_of(path))
+                if path.endswith(".zst")
+                else open(path, errors="replace").read()
+            )
             if not prefilter.search(raw):
                 continue
         s = parse_pi(path) if source == "pi" else parse_claude(source, path, sidechains)
@@ -425,20 +578,31 @@ class Matcher:
         parts = []
         for n in self.skills:
             e = re.escape(n)
-            parts += [rf'"skill":"(?:[\w-]+:)?{e}"', rf"<command-name>/(?:[\w-]+:)?{e}<", rf'<skill name=\\"{e}\\"', rf"/{e}/SKILL\.md"]
+            parts += [
+                rf'"skill":"(?:[\w-]+:)?{e}"',
+                rf"<command-name>/(?:[\w-]+:)?{e}<",
+                rf'<skill name=\\"{e}\\"',
+                rf"/{e}/SKILL\.md",
+            ]
         parts += [re.escape(n) for n in self.tools + self.cmds]
         parts += [t.pattern for t in self.texts]
         return re.compile("|".join(parts), re.I) if parts else None
 
     def skill_hit(self, e):
-        return e["kind"] == "skill" and any(e["name"] == n or e["name"].endswith(":" + n) for n in self.skills)
+        return e["kind"] == "skill" and any(
+            e["name"] == n or e["name"].endswith(":" + n) for n in self.skills
+        )
 
     def other_hit(self, e):
         if e["kind"] == "call":
             name = e["name"] or ""
             if any(name == n or name.endswith("__" + n) for n in self.tools):
                 return True
-            if name in BASH_TOOLS and any(h == p or h.startswith(p + " ") for p in self.cmds for h in command_heads(e["input"].get("command"))):
+            if name in BASH_TOOLS and any(
+                h == p or h.startswith(p + " ")
+                for p in self.cmds
+                for h in command_heads(e["input"].get("command"))
+            ):
                 return True
         if self.texts:
             blob = e.get("text") or json.dumps(e.get("input") or "")
@@ -451,14 +615,23 @@ def bare(name):
 
 
 def before_retro(events):
-    cut = next((i for i, e in enumerate(events) if e["kind"] == "skill" and bare(e["name"]) == "retro"), len(events))
+    cut = next(
+        (
+            i
+            for i, e in enumerate(events)
+            if e["kind"] == "skill" and bare(e["name"]) == "retro"
+        ),
+        len(events),
+    )
     return events[:cut]
 
 
 def find_runs(sessions, matcher, since=None):
     runs = []
     for s in sessions:
-        ev = s.events if "retro" in map(bare, matcher.skills) else before_retro(s.events)
+        ev = (
+            s.events if "retro" in map(bare, matcher.skills) else before_retro(s.events)
+        )
         skills = [i for i, e in enumerate(ev) if e["kind"] == "skill"]
         if any(bare(ev[i]["name"]) == "mine" for i in skills):
             continue
@@ -466,7 +639,9 @@ def find_runs(sessions, matcher, since=None):
         # A model re-reading the skill that is already open continues its run.
         starts, open_skill = [], None
         for i in skills:
-            if matcher.skill_hit(ev[i]) and not (ev[i]["via"] == "model" and ev[i]["name"] == open_skill):
+            if matcher.skill_hit(ev[i]) and not (
+                ev[i]["via"] == "model" and ev[i]["name"] == open_skill
+            ):
                 starts.append(i)
             open_skill = ev[i]["name"]
         for n, i in enumerate(starts):
@@ -475,7 +650,14 @@ def find_runs(sessions, matcher, since=None):
             # that asked for it.
             opening = next((p for p in prompts if p > i), len(ev))
             family = {ev[j]["name"] for j in skills if i <= j < opening}
-            nxt = next((j for j in skills if j >= opening and (j in starts or ev[j]["name"] not in family)), None)
+            nxt = next(
+                (
+                    j
+                    for j in skills
+                    if j >= opening and (j in starts or ev[j]["name"] not in family)
+                ),
+                None,
+            )
             end = len(ev)
             if nxt is not None:
                 end = max([p for p in prompts if opening <= p <= nxt], default=nxt)
@@ -495,7 +677,14 @@ def find_runs(sessions, matcher, since=None):
 def make_run(s, n, window, rest, start, hits=None):
     target = start.get("name") if start["kind"] == "skill" else None
     bodies = [e for e in window if e["kind"] == "body"]
-    body = next((e for e in bodies if target and e["path"].rstrip("/").endswith("/" + bare(target))), bodies[0] if bodies else None)
+    body = next(
+        (
+            e
+            for e in bodies
+            if target and e["path"].rstrip("/").endswith("/" + bare(target))
+        ),
+        bodies[0] if bodies else None,
+    )
     answers = [a for e in window if e["kind"] == "answer" for a in e["answers"]]
     results = [e for e in window if e["kind"] == "result"]
     if hits is not None:  # a tool or command: only its own calls' outcomes are signal
@@ -520,7 +709,9 @@ def make_run(s, n, window, rest, start, hits=None):
         "body": body,
         "turns": sum(e["kind"] == "prompt" for e in window),
         "answers": answers,
-        "interrupts": 0 if hits is not None else sum(e["kind"] == "interrupt" for e in window),
+        "interrupts": 0
+        if hits is not None
+        else sum(e["kind"] == "interrupt" for e in window),
         "calls": len(hits) if hits is not None else None,
         "errors": sum(e["error"] for e in results),
         "denials": denials,
@@ -538,7 +729,11 @@ def make_run(s, n, window, rest, start, hits=None):
 
 def body_text(text, args=""):
     """The comparable part of a skill body: no harness header, frontmatter, arguments or read footer."""
-    text = re.sub(r"^(Base directory for this skill|References are relative to)[^\n]*\n", "", text.strip())
+    text = re.sub(
+        r"^(Base directory for this skill|References are relative to)[^\n]*\n",
+        "",
+        text.strip(),
+    )
     text = re.split(r"\n\s*ARGUMENTS:", text)[0]
     text = re.sub(r"^---\n.*?\n---\n", "", text, flags=re.S)
     text = re.sub(r"\n*\[\d+ more lines in file\..*$", "", text, flags=re.S)
@@ -557,19 +752,44 @@ def repo_versions(repo, names):
     for name in names:
         # The skills folder may sit below the repo root.
         found = subprocess.run(
-            ["git", "-C", repo, "ls-files", "--", f"skills/{bare(name)}/SKILL.md", f"*/skills/{bare(name)}/SKILL.md"],
+            [
+                "git",
+                "-C",
+                repo,
+                "ls-files",
+                "--",
+                f"skills/{bare(name)}/SKILL.md",
+                f"*/skills/{bare(name)}/SKILL.md",
+            ],
+            check=False,
             capture_output=True,
             text=True,
         ).stdout.split()
         rel = found[0] if found else f"skills/{bare(name)}/SKILL.md"
         # `--follow` ignores `--reverse`, so reverse here.
         log = subprocess.run(
-            ["git", "-C", repo, "log", "--follow", "--name-only", "--format=@%h %cs", "--", rel],
+            [
+                "git",
+                "-C",
+                repo,
+                "log",
+                "--follow",
+                "--name-only",
+                "--format=@%h %cs",
+                "--",
+                rel,
+            ],
+            check=False,
             capture_output=True,
             text=True,
         ).stdout
         for commit, path in reversed(re.findall(r"^@(.+)\n\n(.+)$", log, re.M)):
-            blob = subprocess.run(["git", "-C", repo, "show", f"{commit.split()[0]}:{path}"], capture_output=True, text=True)
+            blob = subprocess.run(
+                ["git", "-C", repo, "show", f"{commit.split()[0]}:{path}"],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
             if blob.returncode == 0:
                 versions.append((commit, body_text(blob.stdout)))
         if os.path.exists(os.path.join(repo, rel)):
@@ -591,7 +811,10 @@ def version_of(run, versions):
         if label is None and len(text) > 200:
             label = next((f"~{lab}" for lab, v in versions if v.startswith(text)), None)
         if label is None and versions:
-            ratio, lab = max((difflib.SequenceMatcher(None, text, v, autojunk=False).ratio(), lab) for lab, v in versions)
+            ratio, lab = max(
+                (difflib.SequenceMatcher(None, text, v, autojunk=False).ratio(), lab)
+                for lab, v in versions
+            )
             label = f"~{lab}" if ratio >= 0.97 else "unmatched"
         _version_cache[text] = label or "unmatched"
     return _version_cache[text]
@@ -607,7 +830,11 @@ def fmt_ts(ts):
     if not ts:
         return "?"
     try:
-        return datetime.fromisoformat(ts.replace("Z", "+00:00")).astimezone().strftime("%Y-%m-%d %H:%M")
+        return (
+            datetime.fromisoformat(ts.replace("Z", "+00:00"))
+            .astimezone()
+            .strftime("%Y-%m-%d %H:%M")
+        )
     except ValueError:
         return ts[:16]
 
@@ -620,17 +847,26 @@ def header(runs, matcher, sessions, since):
     print("sources: " + ", ".join(f"{k} {v}" for k, v in sorted(by_source.items())))
     answers = [a for r in runs for a in r["answers"]]
     if answers:
-        print(f"answers: {len(answers)} — " + ", ".join(f"{k} {sum(a['class'] == k for a in answers)}" for k in CLASSES))
+        print(
+            f"answers: {len(answers)} — "
+            + ", ".join(f"{k} {sum(a['class'] == k for a in answers)}" for k in CLASSES)
+        )
         per = {}
         for a in answers:
-            per.setdefault(a["header"] or clip(a["question"] or "?", 40), []).append(a["class"])
+            per.setdefault(a["header"] or clip(a["question"] or "?", 40), []).append(
+                a["class"]
+            )
         recurring = {h: cls for h, cls in per.items() if len(cls) >= 3}
-        print(f"question headers seen 3+ times: {len(recurring)} of {len(per)} ({'/'.join(CLASSES)})")
+        print(
+            f"question headers seen 3+ times: {len(recurring)} of {len(per)} ({'/'.join(CLASSES)})"
+        )
         for h, cls in sorted(recurring.items(), key=lambda kv: -len(kv[1])):
             print(f"  {h}: {'/'.join(str(cls.count(k)) for k in CLASSES)}")
     notes = sum(1 for a in answers if a["note"])
     calls = sum(r["calls"] or 0 for r in runs)
-    print(f"interrupts: {sum(r['interrupts'] for r in runs)}, matched calls: {calls}, their errors: {sum(r['errors'] for r in runs)}, notes on answers: {notes}")
+    print(
+        f"interrupts: {sum(r['interrupts'] for r in runs)}, matched calls: {calls}, their errors: {sum(r['errors'] for r in runs)}, notes on answers: {notes}"
+    )
     denials = {}
     for r in runs:
         for k, v in r["denials"].items():
@@ -638,7 +874,11 @@ def header(runs, matcher, sessions, since):
     if denials:
         print("denials: " + ", ".join(f"{k} {v}" for k, v in sorted(denials.items())))
     if matcher.tools:
-        pi = [s for s in sessions if s.source == "pi" and (not since or (s.started or "") >= since)]
+        pi = [
+            s
+            for s in sessions
+            if s.source == "pi" and (not since or (s.started or "") >= since)
+        ]
         offered = sum(bool(set(matcher.tools) & s.offered) for s in pi)
         called = len({r["session"] for r in runs if r["source"] == "pi"})
         print(f"pi sessions offering it: {offered}, calling it: {called}")
@@ -646,7 +886,11 @@ def header(runs, matcher, sessions, since):
 
 def run_line(r, versions):
     a = r["answers"]
-    q = "q " + "/".join(str(sum(x["class"] == k for x in a)) for k in CLASSES) if a else "q -"
+    q = (
+        "q " + "/".join(str(sum(x["class"] == k for x in a)) for k in CLASSES)
+        if a
+        else "q -"
+    )
     if r["calls"] is not None:
         q = f"calls {r['calls']}"
     ver = version_of(r, versions) if r["target"] else "-"
@@ -669,7 +913,10 @@ def condense(events, only=None):
             counts = {}
             for n in tools:
                 counts[n] = counts.get(n, 0) + 1
-            out.append("[tools] " + ", ".join(f"{k}×{v}" if v > 1 else k for k, v in counts.items()))
+            out.append(
+                "[tools] "
+                + ", ".join(f"{k}×{v}" if v > 1 else k for k, v in counts.items())
+            )
         if last_say:
             out.append("[agent] " + clip(last_say, WIDTH["say"]))
         tools, last_say = [], None
@@ -684,14 +931,22 @@ def condense(events, only=None):
                 tools.append(e["name"])
             if hit:
                 flush()
-                out.append(f"[call] {e['name']}: {clip(json.dumps(e['input']), WIDTH['result'])}")
+                out.append(
+                    f"[call] {e['name']}: {clip(json.dumps(e['input']), WIDTH['result'])}"
+                )
         elif k == "say":
             last_say = e["text"]
         elif k == "result" and (e["error"] or e["denial"]):
             call = names.get(e["call_id"]) or {}
             tag = f"denied {e['denial']}" if e["denial"] else "error"
-            out.append(f"[{tag}] {call.get('name', '?')}: {clip(e['text'], WIDTH['result'])}")
-        elif k == "result" and only is not None and any(names.get(e["call_id"]) is h for h in only):
+            out.append(
+                f"[{tag}] {call.get('name', '?')}: {clip(e['text'], WIDTH['result'])}"
+            )
+        elif (
+            k == "result"
+            and only is not None
+            and any(names.get(e["call_id"]) is h for h in only)
+        ):
             out.append(f"[result] {clip(e['text'], WIDTH['result'])}")
         elif k == "prompt":
             flush()
@@ -701,7 +956,9 @@ def condense(events, only=None):
             flush()
             for a in e["answers"]:
                 note = f" — note: {clip(a['note'], 300)}" if a["note"] else ""
-                out.append(f"[answer] {a['header'] or clip(a['question'] or '', 80)}: {clip(a['answer'], 300)} ({a['class']}){note}")
+                out.append(
+                    f"[answer] {a['header'] or clip(a['question'] or '', 80)}: {clip(a['answer'], 300)} ({a['class']}){note}"
+                )
         elif k == "interrupt":
             flush()
             out.append("[interrupted]")
@@ -713,16 +970,23 @@ def condense(events, only=None):
 
 def show(r, versions, max_lines):
     ver = version_of(r, versions) if r["target"] else "-"
-    print(f"\n## run {r['id']} · {r['source']} · {fmt_ts(r['ts'])} · {tilde(r['cwd'])} · session {r['session']} · version {ver}")
+    print(
+        f"\n## run {r['id']} · {r['source']} · {fmt_ts(r['ts'])} · {tilde(r['cwd'])} · session {r['session']} · version {ver}"
+    )
     if r["source"] == "claude-work":
         print("(work profile: paraphrase, never quote)")
     if r["target"]:
         print(f"invoked {r['via']}: /{r['target']} {clip(r['args'] or '', 400)}")
     lines = condense(r["window"], only=r["hits"])
     if max_lines and len(lines) > max_lines:
-        lines = lines[:max_lines] + [f"[… {len(lines) - max_lines} more lines; raise --max-lines to see them]"]
+        lines = lines[:max_lines] + [
+            f"[… {len(lines) - max_lines} more lines; raise --max-lines to see them]"
+        ]
     print("\n".join(lines))
-    print(f"[ended] {r['ended']}" + (f"; the prompt that ended it: {clip(r['after'], 600)}" if r["after"] else ""))
+    print(
+        f"[ended] {r['ended']}"
+        + (f"; the prompt that ended it: {clip(r['after'], 600)}" if r["after"] else "")
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -730,7 +994,12 @@ def show(r, versions, max_lines):
 
 
 def git_root(path):
-    out = subprocess.run(["git", "-C", path, "rev-parse", "--show-toplevel"], capture_output=True, text=True)
+    out = subprocess.run(
+        ["git", "-C", path, "rev-parse", "--show-toplevel"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
     return out.stdout.strip() if out.returncode == 0 else None
 
 
@@ -750,7 +1019,13 @@ def cmd_runs(args):
     if args.json:
         skip = ("window", "hits", "session_obj", "body")
         for r in runs:
-            print(json.dumps({k: v for k, v in r.items() if k not in skip} | {"version": version_of(r, versions) if r["target"] else None}, default=str))
+            print(
+                json.dumps(
+                    {k: v for k, v in r.items() if k not in skip}
+                    | {"version": version_of(r, versions) if r["target"] else None},
+                    default=str,
+                )
+            )
         return
     header(runs, matcher, sessions, args.since)
     print()
@@ -761,35 +1036,59 @@ def cmd_runs(args):
 def cmd_work(args):
     mention = re.compile(args.mention, re.I) if args.mention else None
     found = []
-    for s in all_sessions(re.compile("|".join([re.escape(p) for p in args.path] + ([args.mention] if args.mention else [])), re.I)):
+    for s in all_sessions(
+        re.compile(
+            "|".join(
+                [re.escape(p) for p in args.path]
+                + ([args.mention] if args.mention else [])
+            ),
+            re.I,
+        )
+    ):
         if any(e["kind"] == "skill" and bare(e["name"]) == "mine" for e in s.events):
             continue
         edited = any(
-            e["kind"] == "call" and e["name"] in EDIT_TOOLS and any(p in str(e["input"].get("file_path") or e["input"].get("path") or "") for p in args.path)
+            e["kind"] == "call"
+            and e["name"] in EDIT_TOOLS
+            and any(
+                p in str(e["input"].get("file_path") or e["input"].get("path") or "")
+                for p in args.path
+            )
             for e in s.events
         )
         prompts = [e for e in s.events if e["kind"] == "prompt"]
         if edited or (mention and any(mention.search(e["text"]) for e in prompts)):
             found.append((s, prompts))
-    for s, prompts in sorted(found, key=lambda x: x[0].started or "", reverse=True)[: args.limit]:
-        print(f"\n## {s.source} · {fmt_ts(s.started)} · {tilde(s.cwd)} · session {s.id}")
+    for s, prompts in sorted(found, key=lambda x: x[0].started or "", reverse=True)[
+        : args.limit
+    ]:
+        print(
+            f"\n## {s.source} · {fmt_ts(s.started)} · {tilde(s.cwd)} · session {s.id}"
+        )
         if s.source == "claude-work":
             print("(work profile: paraphrase, never quote)")
         for e in prompts:
             print("[you] " + clip(e["text"], 1000))
-    print(f"\n{len(found)} sessions matched, newest {min(len(found), args.limit)} shown", file=sys.stderr)
+    print(
+        f"\n{len(found)} sessions matched, newest {min(len(found), args.limit)} shown",
+        file=sys.stderr,
+    )
 
 
 def cmd_session(args):
     sessions = all_sessions()
     if args.id == "latest":
         cwd = os.path.realpath(args.cwd or os.getcwd())
-        mine = [s for s in sessions if any(c and os.path.realpath(c) == cwd for c in s.cwds)]
+        mine = [
+            s for s in sessions if any(c and os.path.realpath(c) == cwd for c in s.cwds)
+        ]
         if not mine:
             sys.exit(f"session: no session ran in {cwd}")
         s = max(mine, key=lambda s: os.path.getmtime(s.path))
     else:
-        s = next((s for s in sessions if args.id in s.id), None) or sys.exit(f"session: no session {args.id}")
+        s = next((s for s in sessions if args.id in s.id), None) or sys.exit(
+            f"session: no session {args.id}"
+        )
     print(f"## {s.source} · {fmt_ts(s.started)} · {tilde(s.cwd)} · session {s.id}")
     print("\n".join(condense(s.events)))
 
@@ -806,30 +1105,54 @@ def cmd_prompts(args):
             continue
         if args.grep and not re.search(args.grep, first["text"], re.I):
             continue
-        rows.append({"source": s.source, "timestamp": first["ts"], "cwd": s.cwd, "session": s.id, "prompt": first["text"]})
+        rows.append(
+            {
+                "source": s.source,
+                "timestamp": first["ts"],
+                "cwd": s.cwd,
+                "session": s.id,
+                "prompt": first["text"],
+            }
+        )
     rows.sort(key=lambda r: r["timestamp"] or "")
     for r in rows:
         if args.json:
             print(json.dumps(r, ensure_ascii=False))
         else:
-            print(f"{fmt_ts(r['timestamp'])}  {r['source']:<11} {clip(tilde(r['cwd']), 40):<40}  {clip(r['prompt'], args.width)}")
+            print(
+                f"{fmt_ts(r['timestamp'])}  {r['source']:<11} {clip(tilde(r['cwd']), 40):<40}  {clip(r['prompt'], args.width)}"
+            )
     print(f"{len(rows)} sessions", file=sys.stderr)
 
 
 def main():
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     sub = p.add_subparsers(dest="command", required=True)
     r = sub.add_parser("runs")
     for flag in ("--skill", "--tool", "--cmd", "--text"):
         r.add_argument(flag, action="append")
     r.add_argument("--since", help="ISO date; runs that started before it are skipped")
-    r.add_argument("--repo", help="repo whose skills/<name>/SKILL.md history names versions (default: cwd's)")
-    r.add_argument("--subagents", action="store_true", help="also read Claude subagent transcripts")
+    r.add_argument(
+        "--repo",
+        help="repo whose skills/<name>/SKILL.md history names versions (default: cwd's)",
+    )
+    r.add_argument(
+        "--subagents", action="store_true", help="also read Claude subagent transcripts"
+    )
     r.add_argument("--show", help="comma-separated run ids, or all")
-    r.add_argument("--max-lines", type=int, default=150, help="per run in --show; 0 for no limit")
+    r.add_argument(
+        "--max-lines", type=int, default=150, help="per run in --show; 0 for no limit"
+    )
     r.add_argument("--json", action="store_true")
     w = sub.add_parser("work")
-    w.add_argument("--path", action="append", required=True, help="substring of an edited file's path")
+    w.add_argument(
+        "--path",
+        action="append",
+        required=True,
+        help="substring of an edited file's path",
+    )
     w.add_argument("--mention", help="regex a typed turn must match")
     w.add_argument("--limit", type=int, default=10)
     s = sub.add_parser("session")
@@ -837,13 +1160,23 @@ def main():
     s.add_argument("--cwd")
     q = sub.add_parser("prompts")
     q.add_argument("--since")
-    q.add_argument("--source", action="append", choices=["claude", "claude-work", "pi"], help="repeatable; default all")
+    q.add_argument(
+        "--source",
+        action="append",
+        choices=["claude", "claude-work", "pi"],
+        help="repeatable; default all",
+    )
     q.add_argument("--cwd")
     q.add_argument("--grep")
     q.add_argument("--json", action="store_true")
     q.add_argument("--width", type=int, default=160)
     args = p.parse_args()
-    {"runs": cmd_runs, "work": cmd_work, "session": cmd_session, "prompts": cmd_prompts}[args.command](args)
+    {
+        "runs": cmd_runs,
+        "work": cmd_work,
+        "session": cmd_session,
+        "prompts": cmd_prompts,
+    }[args.command](args)
 
 
 if __name__ == "__main__":

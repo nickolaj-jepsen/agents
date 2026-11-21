@@ -15,7 +15,7 @@ done
 # CLAUDE_CODE_NO_FLICKER: one that settings-fullscreen kills counts a strike in ~/.claude.json,
 # and two turn fullscreen off for every later session; forced from the env, it arms no canary.
 # WT_NO_AUTOCLOSE: run from a worktree, the killed session would otherwise close it.
-export CLAUDE_CODE_PLUGIN_DIRS= CLAUDE_CODE_NO_FLICKER=1 WT_NO_AUTOCLOSE=1
+export CLAUDE_CODE_PLUGIN_DIRS='' CLAUDE_CODE_NO_FLICKER=1 WT_NO_AUTOCLOSE=1
 if [ "$(uname)" = Darwin ]; then
     script -q /dev/null claude "${args[@]}" </dev/null >/dev/null 2>&1 &
 else

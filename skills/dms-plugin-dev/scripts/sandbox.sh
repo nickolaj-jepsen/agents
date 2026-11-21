@@ -122,8 +122,8 @@ up() {
   enter
 
   WLR_BACKENDS=headless WLR_RENDERER=pixman WLR_LIBINPUT_NO_DEVICES=1 background "$base/sway.log" "$sway" -c "$base/sway.conf"
-  local socket="" tries
-  for tries in $(seq 1 100); do
+  local socket=""
+  for _ in $(seq 1 100); do
     socket=$(find "$run_dir" -maxdepth 1 -name 'wayland-*' ! -name '*.lock' -printf '%f\n' | head -1)
     [ -n "$socket" ] && break
     sleep 0.1
@@ -139,7 +139,7 @@ up() {
   background "$base/keyboard.log" "$wtype" -s 86400000
 
   background "$dms_log" "$DMS" run --qs-child -c "$DMS_DIR"
-  for tries in $(seq 1 60); do
+  for _ in $(seq 1 60); do
     grep -q 'Daemon plugin loaded\|DankBar: Plugin loaded' "$dms_log" 2>/dev/null && break
     sleep 0.5
   done

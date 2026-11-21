@@ -4,6 +4,7 @@ FIFO: `move x y`, `click`, `wheel n` (n clicks down, negative for up).
 
 Usage: pointer.py <bindings dir> <fifo> <width> <height>
 """
+
 import os
 import select
 import sys
@@ -55,7 +56,9 @@ def run(words):
         clicks = int(words[1])
         for _ in range(abs(clicks)):
             pointer.axis_source(0)
-            pointer.axis_discrete(stamp(), 0, 15.0 if clicks > 0 else -15.0, 1 if clicks > 0 else -1)
+            pointer.axis_discrete(
+                stamp(), 0, 15.0 if clicks > 0 else -15.0, 1 if clicks > 0 else -1
+            )
             pointer.frame()
             display.flush()
             time.sleep(0.03)

@@ -41,7 +41,10 @@ import time
 from datetime import datetime
 
 HOME = os.path.expanduser("~")
-CLAUDE_ROOTS = [("claude", f"{HOME}/.claude/projects"), ("claude-work", f"{HOME}/.claude-work/projects")]
+CLAUDE_ROOTS = [
+    ("claude", f"{HOME}/.claude/projects"),
+    ("claude-work", f"{HOME}/.claude-work/projects"),
+]
 PI_ROOT = f"{HOME}/.pi/agent/sessions"
 
 PRICES_READ = "2026-11-02"
@@ -74,7 +77,9 @@ READ_TOOLS = {"Read", "read"}
 EDIT_TOOLS = {"Edit", "Write", "MultiEdit", "NotebookEdit", "edit", "write"}
 BASH_TOOLS = {"Bash", "bash"}
 # Destructive commands and guard bypasses. An rm counts only outside /tmp and past a bare relative name.
-NIL_LEAF = "00000000-0000-0000-0000-000000000000"  # since 2.1.300, written just after a rewind
+NIL_LEAF = (
+    "00000000-0000-0000-0000-000000000000"  # since 2.1.300, written just after a rewind
+)
 RISKY = re.compile(
     r"\brm\s+-[a-z]*(?:rf|fr)[a-z]*\s+(?:--\s+)?(?!/tmp\b)[/~$*.]|\bgit\s+reset\s+--hard|\bgit\s+clean\s+-[a-z]*f"
     r"|\bgit\s+push\b[^|;&\n]*(?:--force|\s-f\b)|--no-verify|\"dangerouslyDisableSandbox\": true"
@@ -85,7 +90,17 @@ CONTEXT_ATTACHMENTS = {
     "deferred_tools_delta", "agent_listing_delta", "session_context", "environment", "queued_command", "skill_mention",
     "invoked_skills", "nested_memory", "task_reminder", "hook_additional_context", "total_tokens_reminder", "silent_turn_reminder",
 }  # fmt: skip
-CLAUDE_NOISE = ("Another Claude", "This session is being continued", "The summarized", "Caveat:", "<local-command-", "<bash-stdout", "<bash-stderr", "<task-notification", "<artifact-")
+CLAUDE_NOISE = (
+    "Another Claude",
+    "This session is being continued",
+    "The summarized",
+    "Caveat:",
+    "<local-command-",
+    "<bash-stdout",
+    "<bash-stderr",
+    "<task-notification",
+    "<artifact-",
+)
 # Harness commands that change settings or the view, never a request to the agent.
 LOCAL_COMMANDS = {
     "agents", "artifacts", "clear", "compact", "config", "context", "cost", "doctor", "effort", "exit", "fast",
@@ -93,8 +108,12 @@ LOCAL_COMMANDS = {
     "plugin", "reload-plugins", "reload-skills", "remote-control", "rename", "resume", "rewind", "status", "usage",
 }  # fmt: skip
 CHARS_PER_TOKEN = 4
-IMAGE_CHARS = 6000  # an image's base64 says nothing about its tokens; about 1.5k tokens each
-CAP_MINUTES = 15  # WakaTime's default; a convention, which is why the report also shows CAPS
+IMAGE_CHARS = (
+    6000  # an image's base64 says nothing about its tokens; about 1.5k tokens each
+)
+CAP_MINUTES = (
+    15  # WakaTime's default; a convention, which is why the report also shows CAPS
+)
 CAPS = (5, 15, 30)
 BUST_MIN_LOST = 1024
 BUST_MIN_SHARE = 0.2
@@ -104,14 +123,18 @@ TIMELINE_LABELS = 8
 LABEL_WIDTH = 60
 LATER_COMMITS_MAX = 100
 TOO_RECENT_S = 86400  # a day: later fixes haven't had time to happen
-NOISE_FILES = re.compile(r"(^|/)(flake\.lock|package-lock\.json|pnpm-lock\.yaml|uv\.lock)$|\.(age|lock|png|jpg|svg)$")
+NOISE_FILES = re.compile(
+    r"(^|/)(flake\.lock|package-lock\.json|pnpm-lock\.yaml|uv\.lock)$|\.(age|lock|png|jpg|svg)$"
+)
 FIX_SUBJECT = re.compile(r"^(fix|revert)\b", re.I)
 # Commands that look like verification. A pointer for the reader, who judges what they actually showed.
 CHECKS = re.compile(
     r"\b(just\s+(build|check|test|eval|fmt)|pytest|jest|vitest|mypy|pyright|ruff|eslint|tsc|nix\s+(build|flake\s+check)"
     r"|cargo\s+(test|check|clippy|build)|go\s+(test|build|vet)|make(\s+(test|check))?|(npm|pnpm|yarn)\s+(test|run\s+\w*(test|check|lint|build))|claude\s+plugin\s+(validate|test))\b"
 )
-GIT_WRITES = re.compile(r"\bgit\b.*\b(commit|rebase|pull|cherry-pick|merge)\b|\bwt\s+land\b", re.S)
+GIT_WRITES = re.compile(
+    r"\bgit\b.*\b(commit|rebase|pull|cherry-pick|merge)\b|\bwt\s+land\b", re.S
+)
 COMMIT_OUTPUT = re.compile(r"^\[[^\]]*?\b([0-9a-f]{7,40})\] (.+)$", re.M)
 
 
@@ -123,10 +146,19 @@ def lines_of(path):
     if path.endswith(".zst"):
         if not shutil.which("zstd"):
             if not _warned_zstd:
-                print("spend: zstd not on PATH, skipping compressed transcripts", file=sys.stderr)
+                print(
+                    "spend: zstd not on PATH, skipping compressed transcripts",
+                    file=sys.stderr,
+                )
                 _warned_zstd = True
             return []
-        return subprocess.run(["zstd", "-dcq", path], capture_output=True, text=True, errors="replace").stdout.splitlines()
+        return subprocess.run(
+            ["zstd", "-dcq", path],
+            check=False,
+            capture_output=True,
+            text=True,
+            errors="replace",
+        ).stdout.splitlines()
     with open(path, errors="replace") as f:
         return f.readlines()
 
@@ -200,7 +232,9 @@ class Request:
         self.model = model
         self.first_ts = self.last_ts = ts
         self.n = 0  # rN on its chain, set once the chain is cut
-        self.input = self.read = self.w5m = self.w1h = self.output = self.thinking = self.thinking_ms = 0
+        self.input = self.read = self.w5m = self.w1h = self.output = self.thinking = (
+            self.thinking_ms
+        ) = 0
         self.speed = self.geo = None
         self.stored_cost = None  # pi records dollars per class itself
         self.skill = self.effort = None
@@ -220,11 +254,21 @@ class Request:
         if self.stored_cost:
             c = self.stored_cost
             if c.get("total"):
-                return {"input": c.get("input", 0), "read": c.get("cacheRead", 0), "write": c.get("cacheWrite", 0), "output": c.get("output", 0)}
+                return {
+                    "input": c.get("input", 0),
+                    "read": c.get("cacheRead", 0),
+                    "write": c.get("cacheWrite", 0),
+                    "output": c.get("output", 0),
+                }
         p = price_of(self.model, self.speed, self.geo, self.context)
         if not p:
             return None
-        return {"input": self.input * p[0], "read": self.read * p[1], "write": self.w5m * p[2] + self.w1h * p[3], "output": self.output * p[4]}
+        return {
+            "input": self.input * p[0],
+            "read": self.read * p[1],
+            "write": self.w5m * p[2] + self.w1h * p[3],
+            "output": self.output * p[4],
+        }
 
     @property
     def cost(self):
@@ -247,7 +291,9 @@ class Session:
         self.children = []
         self.meta = {}
         self.seen = set()
-        self.copied = set()  # requests replayed from the session this one was forked from
+        self.copied = (
+            set()
+        )  # requests replayed from the session this one was forked from
 
     def add(self, kind, ts, **fields):
         self.events.append({"kind": kind, "ts": seconds(ts), **fields})
@@ -255,7 +301,15 @@ class Session:
 
 def call_label(name, inp):
     inp = inp if isinstance(inp, dict) else {}
-    target = inp.get("file_path") or inp.get("path") or inp.get("command") or inp.get("description") or inp.get("skill") or inp.get("query") or inp.get("pattern")
+    target = (
+        inp.get("file_path")
+        or inp.get("path")
+        or inp.get("command")
+        or inp.get("description")
+        or inp.get("skill")
+        or inp.get("query")
+        or inp.get("pattern")
+    )
     if target is None:
         target = next((v for v in inp.values() if isinstance(v, str)), "")
     return f"{name}: {clip(tilde(str(target)), 70)}" if target else str(name)
@@ -266,19 +320,40 @@ def parse_claude(source, path, seen):
     s = Session(source, path)
     s.seen = seen
     groups = {}
-    rows, tip, open_cut = {}, None, None  # uuid → parent and request, for walking the conversation tree
+    rows, tip, open_cut = (
+        {},
+        None,
+        None,
+    )  # uuid → parent and request, for walking the conversation tree
     for r in records(path):
         kind, ts = r.get("type"), r.get("timestamp")
         s.cwd = s.cwd or r.get("cwd")
-        if kind == "last-prompt" and r.get("leafUuid") == NIL_LEAF and r.get("explicit") and open_cut:
+        if (
+            kind == "last-prompt"
+            and r.get("leafUuid") == NIL_LEAF
+            and r.get("explicit")
+            and open_cut
+        ):
             open_cut["marked"] = True
         row = None
-        if r.get("uuid") and kind in ("user", "assistant", "system", "attachment") and not r.get("isSidechain"):
+        if (
+            r.get("uuid")
+            and kind in ("user", "assistant", "system", "attachment")
+            and not r.get("isSidechain")
+        ):
             parent = r.get("parentUuid")
             content = (r.get("message") or {}).get("content")
-            answers = isinstance(content, list) and any(isinstance(b, dict) and b.get("type") == "tool_result" for b in content)
+            answers = isinstance(content, list) and any(
+                isinstance(b, dict) and b.get("type") == "tool_result" for b in content
+            )
             # A tool result points at its call, so parallel results look like forks; only a new turn can be a cut.
-            if tip and parent and parent != tip and parent in rows and (kind == "attachment" or (kind == "user" and not answers)):
+            if (
+                tip
+                and parent
+                and parent != tip
+                and parent in rows
+                and (kind == "attachment" or (kind == "user" and not answers))
+            ):
                 cut = walk_cut(rows, tip, parent)
                 if cut:
                     s.add("cut", ts, marked=False, **cut)
@@ -292,20 +367,42 @@ def parse_claude(source, path, seen):
             sub = r.get("subtype")
             if sub == "compact_boundary":
                 m = r.get("compactMetadata") or {}
-                s.add("compact", ts, pre=m.get("preTokens"), post=m.get("postTokens"), duration=(m.get("durationMs") or 0) / 1000, trigger=m.get("trigger"))
+                s.add(
+                    "compact",
+                    ts,
+                    pre=m.get("preTokens"),
+                    post=m.get("postTokens"),
+                    duration=(m.get("durationMs") or 0) / 1000,
+                    trigger=m.get("trigger"),
+                )
             elif sub == "turn_duration":
                 s.add("turn_end", ts, pending=r.get("pendingBackgroundAgentCount") or 0)
-            elif sub == "stop_hook_summary" and (r.get("preventedContinuation") or r.get("hookErrors")):
-                s.add("hook", ts, blocked=bool(r.get("preventedContinuation")), errors=len(r.get("hookErrors") or ()))
+            elif sub == "stop_hook_summary" and (
+                r.get("preventedContinuation") or r.get("hookErrors")
+            ):
+                s.add(
+                    "hook",
+                    ts,
+                    blocked=bool(r.get("preventedContinuation")),
+                    errors=len(r.get("hookErrors") or ()),
+                )
             elif sub in ("scheduled_task_fire", "away_summary"):
                 s.add("idle_work", ts, what=sub)
             continue
         if kind == "attachment":
             a = r.get("attachment") or {}
-            if a.get("type") == "queued_command" and (a.get("origin") or {}).get("kind") == "human":
+            if (
+                a.get("type") == "queued_command"
+                and (a.get("origin") or {}).get("kind") == "human"
+            ):
                 s.add("queued", ts)
             if a.get("type") in CONTEXT_ATTACHMENTS:
-                s.add("arrival", ts, label=f"attachment: {a.get('type')}", chars=len(json.dumps(a)))
+                s.add(
+                    "arrival",
+                    ts,
+                    label=f"attachment: {a.get('type')}",
+                    chars=len(json.dumps(a)),
+                )
             continue
         msg = r.get("message") or {}
         content = msg.get("content")
@@ -338,7 +435,10 @@ def parse_claude(source, path, seen):
             req.input = max(req.input, u.get("input_tokens") or 0)
             req.read = max(req.read, u.get("cache_read_input_tokens") or 0)
             req.output = max(req.output, u.get("output_tokens") or 0)
-            req.thinking = max(req.thinking, (u.get("output_tokens_details") or {}).get("thinking_tokens") or 0)
+            req.thinking = max(
+                req.thinking,
+                (u.get("output_tokens_details") or {}).get("thinking_tokens") or 0,
+            )
             w5m = cc.get("ephemeral_5m_input_tokens") or 0
             w1h = cc.get("ephemeral_1h_input_tokens") or 0
             total_write = u.get("cache_creation_input_tokens") or 0
@@ -358,7 +458,14 @@ def parse_claude(source, path, seen):
                     s.add("think", ts, text=b["thinking"])
                 elif b.get("type") == "tool_use":
                     req.calls.append(b.get("name"))
-                    s.add("call", ts, req=req, call_id=b.get("id"), name=b.get("name"), input=b.get("input") or {})
+                    s.add(
+                        "call",
+                        ts,
+                        req=req,
+                        call_id=b.get("id"),
+                        name=b.get("name"),
+                        input=b.get("input") or {},
+                    )
             continue
         if kind != "user":
             continue
@@ -368,13 +475,33 @@ def parse_claude(source, path, seen):
             continue
         if r.get("isMeta"):
             m = re.match(r"Base directory for this skill: (\S+)", text)
-            label = f"skill body: {os.path.basename(m.group(1).rstrip('/'))}" if m else "harness text"
+            label = (
+                f"skill body: {os.path.basename(m.group(1).rstrip('/'))}"
+                if m
+                else "harness text"
+            )
             s.add("arrival", ts, label=label, chars=size)
             continue
-        results = [b for b in content if isinstance(b, dict) and b.get("type") == "tool_result"] if isinstance(content, list) else []
+        results = (
+            [
+                b
+                for b in content
+                if isinstance(b, dict) and b.get("type") == "tool_result"
+            ]
+            if isinstance(content, list)
+            else []
+        )
         if results:
-            tur = r.get("toolUseResult") if isinstance(r.get("toolUseResult"), dict) else {}
-            decision = r.get("permissionDecision") if isinstance(r.get("permissionDecision"), dict) else {}
+            tur = (
+                r.get("toolUseResult")
+                if isinstance(r.get("toolUseResult"), dict)
+                else {}
+            )
+            decision = (
+                r.get("permissionDecision")
+                if isinstance(r.get("permissionDecision"), dict)
+                else {}
+            )
             prompted = str(decision.get("source") or "").startswith("user")
             s.add("tick", ts, what="permission" if prompted else "tool")
             for b in results:
@@ -393,26 +520,48 @@ def parse_claude(source, path, seen):
                     agent_id=tur.get("agentId"),
                 )
             continue
-        text = re.sub(r"^(\s*<system-reminder>.*?</system-reminder>)+", "", text, flags=re.S).strip()
+        text = re.sub(
+            r"^(\s*<system-reminder>.*?</system-reminder>)+", "", text, flags=re.S
+        ).strip()
         if not text:
             continue
         if text.startswith("[Request interrupted"):
             s.add("interrupt", ts)
             continue
         origin = r.get("origin")
-        human = (origin or {}).get("kind") == "human" if origin is not None else not text.startswith(CLAUDE_NOISE)
+        human = (
+            (origin or {}).get("kind") == "human"
+            if origin is not None
+            else not text.startswith(CLAUDE_NOISE)
+        )
         if not human:
             s.add("tick", ts, what="background")
-            s.add("arrival", ts, label=f"notice: {(origin or {}).get('kind') or 'harness'}", chars=size)
+            s.add(
+                "arrival",
+                ts,
+                label=f"notice: {(origin or {}).get('kind') or 'harness'}",
+                chars=size,
+            )
             continue
-        name = re.search(r"<command-name>/?(?:[\w-]+:)?([\w-]+)</command-name>", text[:300])
+        name = re.search(
+            r"<command-name>/?(?:[\w-]+:)?([\w-]+)</command-name>", text[:300]
+        )
         if name and name.group(1) == "retro":
             s.add("retro", ts)
         s.add("tick", ts, what="user")
-        command = name.group(1) if name else (re.fullmatch(r"/([\w-]+)\b.*", text) or [None, None])[1]
+        command = (
+            name.group(1)
+            if name
+            else (re.fullmatch(r"/([\w-]+)\b.*", text) or [None, None])[1]
+        )
         if command in LOCAL_COMMANDS:
             continue  # you were there, so the time is yours, but it asked the agent nothing
-        s.add("prompt", ts, text=re.sub(r"</?(command-[a-z]+)>", " ", text).strip(), chars=size)
+        s.add(
+            "prompt",
+            ts,
+            text=re.sub(r"</?(command-[a-z]+)>", " ", text).strip(),
+            chars=size,
+        )
     return s
 
 
@@ -435,7 +584,10 @@ def walk_cut(rows, tip, parent):
         req.abandoned = True
     while at and not (rows.get(at) or {}).get("req"):
         at = (rows.get(at) or {}).get("parent")
-    return {"ancestor": rows[at]["req"] if at else None, "abandoned": list(reversed(abandoned))}
+    return {
+        "ancestor": rows[at]["req"] if at else None,
+        "abandoned": list(reversed(abandoned)),
+    }
 
 
 def parse_pi(path, seen=frozenset()):
@@ -446,8 +598,20 @@ def parse_pi(path, seen=frozenset()):
             s.cwd, s.id = r.get("cwd"), r.get("id") or s.id
             continue
         if kind == "compaction":
-            s.add("compact", ts, pre=r.get("tokensBefore"), post=None, duration=0, trigger=None)
-            s.add("arrival", ts, label="compaction summary", chars=len(r.get("summary") or ""))
+            s.add(
+                "compact",
+                ts,
+                pre=r.get("tokensBefore"),
+                post=None,
+                duration=0,
+                trigger=None,
+            )
+            s.add(
+                "arrival",
+                ts,
+                label="compaction summary",
+                chars=len(r.get("summary") or ""),
+            )
             continue
         if kind != "message":
             continue
@@ -459,7 +623,9 @@ def parse_pi(path, seen=frozenset()):
             u = m.get("usage") or {}
             s.records += 1
             req = Request(r.get("id"), m.get("model"), ts)
-            req.input, req.read, req.w5m, req.output = (u.get(k) or 0 for k in ("input", "cacheRead", "cacheWrite", "output"))
+            req.input, req.read, req.w5m, req.output = (
+                u.get(k) or 0 for k in ("input", "cacheRead", "cacheWrite", "output")
+            )
             req.thinking = u.get("reasoning") or 0
             req.stored_cost = u.get("cost") if isinstance(u.get("cost"), dict) else None
             req.effort = m.get("thinkingLevel")
@@ -475,7 +641,14 @@ def parse_pi(path, seen=frozenset()):
                     s.add("think", ts, text=b["thinking"])
                 elif b.get("type") == "toolCall":
                     req.calls.append(b.get("name"))
-                    s.add("call", ts, req=req, call_id=b.get("id"), name=b.get("name"), input=b.get("arguments") or {})
+                    s.add(
+                        "call",
+                        ts,
+                        req=req,
+                        call_id=b.get("id"),
+                        name=b.get("name"),
+                        input=b.get("arguments") or {},
+                    )
             if m.get("stopReason") == "aborted":
                 s.add("interrupt", ts)
             elif m.get("stopReason") == "error":
@@ -485,19 +658,45 @@ def parse_pi(path, seen=frozenset()):
             details = m.get("details") if isinstance(m.get("details"), dict) else {}
             prompted = m.get("toolName") in HUMAN_TOOLS
             s.add("tick", ts, what="permission" if prompted else "tool")
-            s.add("result", ts, call_id=m.get("toolCallId"), error=bool(m.get("isError")), denial=None, source=None, prompted=prompted, text=out, chars=n, truncated=bool(details.get("truncated")), agent_id=None)
+            s.add(
+                "result",
+                ts,
+                call_id=m.get("toolCallId"),
+                error=bool(m.get("isError")),
+                denial=None,
+                source=None,
+                prompted=prompted,
+                text=out,
+                chars=n,
+                truncated=bool(details.get("truncated")),
+                agent_id=None,
+            )
         elif role == "user":
             text, n = text_of(m.get("content"))
             if not text.strip():
                 continue
-            sk = re.match(r'<skill name="([^"]+)" location="[^"]+">\n?(.*?)</skill>\s*(.*)', text, re.S)
+            sk = re.match(
+                r'<skill name="([^"]+)" location="[^"]+">\n?(.*?)</skill>\s*(.*)',
+                text,
+                re.S,
+            )
             if sk and sk.group(1) == "retro":
                 s.add("retro", ts)
             s.add("tick", ts, what="user")
             if sk:
-                s.add("arrival", ts, label=f"skill body: {sk.group(1)}", chars=len(sk.group(2)))
+                s.add(
+                    "arrival",
+                    ts,
+                    label=f"skill body: {sk.group(1)}",
+                    chars=len(sk.group(2)),
+                )
                 s.add("skill_start", ts, name=sk.group(1))
-                s.add("prompt", ts, text=f"/skill:{sk.group(1)} {sk.group(3)}".strip(), chars=len(sk.group(3)))
+                s.add(
+                    "prompt",
+                    ts,
+                    text=f"/skill:{sk.group(1)} {sk.group(3)}".strip(),
+                    chars=len(sk.group(3)),
+                )
             else:
                 s.add("prompt", ts, text=text, chars=n)
     return s
@@ -505,7 +704,9 @@ def parse_pi(path, seen=frozenset()):
 
 def cut_at_retro(s):
     """Drop everything from the session's last /retro on, but keep its dollars for the reconciliation."""
-    last = max((i for i, e in enumerate(s.events) if e["kind"] == "retro"), default=None)
+    last = max(
+        (i for i, e in enumerate(s.events) if e["kind"] == "retro"), default=None
+    )
     if last is not None:
         s.cut_ts = s.events[last]["ts"]
         kept = {id(e["req"]) for e in s.events[:last] if e["kind"] == "request"}
@@ -526,10 +727,17 @@ def fork_origin(source, path):
             return set()
         if not parent or not os.path.exists(parent):
             return set()
-        return {r.get("id") for r in records(parent) if r.get("type") == "message" and (r.get("message") or {}).get("role") == "assistant"}
+        return {
+            r.get("id")
+            for r in records(parent)
+            if r.get("type") == "message"
+            and (r.get("message") or {}).get("role") == "assistant"
+        }
     first, forked_from, is_parent = None, None, False
     for r in records(path):
-        first = first or ((r.get("message") or {}).get("id") if r.get("type") == "assistant" else None)
+        first = first or (
+            (r.get("message") or {}).get("id") if r.get("type") == "assistant" else None
+        )
         forked_from = forked_from or (r.get("forkedFrom") or {}).get("sessionId")
         is_parent = is_parent or r.get("type") == "continued-in"
     if not first or is_parent:
@@ -552,7 +760,11 @@ def fork_origin(source, path):
     if not donors:
         return set()
     donor = min(donors, key=os.path.getmtime)
-    return {((r.get("message") or {}).get("id"), r.get("requestId")) for r in records(donor) if r.get("type") == "assistant"}
+    return {
+        ((r.get("message") or {}).get("id"), r.get("requestId"))
+        for r in records(donor)
+        if r.get("type") == "assistant"
+    }
 
 
 def drop_copied_lead(s):
@@ -563,7 +775,10 @@ def drop_copied_lead(s):
     if first is None:
         s.events = []
         return
-    start = max((i for i, e in enumerate(s.events[:first]) if e["kind"] == "prompt"), default=first)
+    start = max(
+        (i for i, e in enumerate(s.events[:first]) if e["kind"] == "prompt"),
+        default=first,
+    )
     s.events = s.events[start:]
 
 
@@ -614,7 +829,9 @@ def pi_children(s):
         if head.get("parentSession") not in (s.path, s.id):
             continue
         if own_ids is None:
-            own_ids = {r.get("id") for r in records(s.path) if r.get("type") != "session"}
+            own_ids = {
+                r.get("id") for r in records(s.path) if r.get("type") != "session"
+            }
         # A fork copies its parent's entries; a subagent shares none.
         if own_ids & {r.get("id") for r in records(p) if r.get("type") != "session"}:
             continue
@@ -634,7 +851,11 @@ def pi_files_by_cwd(cwd):
                 head = json.loads(f.readline() or "{}")
         except (OSError, ValueError):
             continue
-        if head.get("cwd") and os.path.realpath(head["cwd"]) == cwd and not head.get("parentSession"):
+        if (
+            head.get("cwd")
+            and os.path.realpath(head["cwd"]) == cwd
+            and not head.get("parentSession")
+        ):
             found.append(p)
     return sorted(found, key=os.path.getmtime, reverse=True)
 
@@ -649,10 +870,14 @@ def resolve(session):
             found = pi_files_by_cwd(os.path.realpath(os.getcwd()))
             if not found:
                 sys.exit(f"spend: no session ran in {os.getcwd()}; name one")
-            print(f"spend: picked the newest pi session here: {found[0]}", file=sys.stderr)
+            print(
+                f"spend: picked the newest pi session here: {found[0]}", file=sys.stderr
+            )
             others = [p for p in found[1:] if time.time() - os.path.getmtime(p) < 600]
             for p in others:
-                print(f"spend: also active in the last 10 minutes: {p}", file=sys.stderr)
+                print(
+                    f"spend: also active in the last 10 minutes: {p}", file=sys.stderr
+                )
             return "pi", found[0]
     hits = []
     for source, root in CLAUDE_ROOTS:
@@ -661,7 +886,9 @@ def resolve(session):
     if not hits:
         sys.exit(f"spend: no session matches {session}")
     if len({os.path.basename(p).split(".")[0] for _, p in hits}) > 1:
-        sys.exit("spend: more than one session matches:\n" + "\n".join(p for _, p in hits))
+        sys.exit(
+            "spend: more than one session matches:\n" + "\n".join(p for _, p in hits)
+        )
     # A worktree or resume can store the same id twice: the largest copy holds the most.
     return max(hits, key=lambda h: os.path.getsize(h[1]))
 
@@ -681,7 +908,10 @@ def load(session):
 
 
 def sweep(s, cap_s):
-    b = dict.fromkeys(("model", "compaction", "tool", "permission", "background", "engaged", "away"), 0.0)
+    b = dict.fromkeys(
+        ("model", "compaction", "tool", "permission", "background", "engaged", "away"),
+        0.0,
+    )
     raw_human = 0.0
     gaps = []
     human_gaps = []
@@ -704,7 +934,9 @@ def sweep(s, cap_s):
             # The gap also holds whatever came before it, often you away before typing /compact.
             spent = min(gap, e.get("duration") or gap)
             b["compaction"] += spent
-            gaps.append({"what": "compaction", "seconds": spent, "req": req.n if req else 1})
+            gaps.append(
+                {"what": "compaction", "seconds": spent, "req": req.n if req else 1}
+            )
             gap -= spent
         if what == "user" and pending:
             what = "background"
@@ -717,7 +949,12 @@ def sweep(s, cap_s):
         else:
             b[what] += gap
             gaps.append({"what": what, "seconds": gap, "req": req.n if req else 1})
-    return {"buckets": b, "raw_human": raw_human, "human_gaps": human_gaps, "gaps": gaps}
+    return {
+        "buckets": b,
+        "raw_human": raw_human,
+        "human_gaps": human_gaps,
+        "gaps": gaps,
+    }
 
 
 def duration(s):
@@ -740,7 +977,11 @@ class Item:
 def allocate(s):
     """Items and cache-miss events of the main chain, conserving each request's input-side dollars."""
     done, events, compactions, backs = [], [], [], []
-    items, ends, full_rate = [], [], [0.0]  # full_rate[k]: read rate owed by every item below index k
+    items, ends, full_rate = (
+        [],
+        [],
+        [0.0],
+    )  # full_rate[k]: read rate owed by every item below index k
     arrivals, prev, prev_ts, boundary, cut = [], None, None, None, None
     negative = 0
 
@@ -785,18 +1026,43 @@ def allocate(s):
             req = e["req"]
             T = req.context
             costs = req.costs()
-            shrink = prev is not None and not cut and prev.context > 5000 and T < prev.context * SHRINK_SHARE
+            shrink = (
+                prev is not None
+                and not cut
+                and prev.context > 5000
+                and T < prev.context * SHRINK_SHARE
+            )
             ancestor = cut["ancestor"] if cut else None
             ref = ancestor or prev  # what this request's context grew from
             if cut and prev is not None:
-                backs.append({"req": req.n, "before": prev.context, "after": T, "marked": cut["marked"], "abandoned": len(cut["abandoned"]), "structural": True})
+                backs.append(
+                    {
+                        "req": req.n,
+                        "before": prev.context,
+                        "after": T,
+                        "marked": cut["marked"],
+                        "abandoned": len(cut["abandoned"]),
+                        "structural": True,
+                    }
+                )
             if prev is None or boundary or shrink or (cut and not ancestor):
                 if prev is not None:
                     close(prev.n)
                     items, ends, full_rate = [], [], [0.0]
-                sized = [(lab, kind, ch // CHARS_PER_TOKEN, cid) for lab, kind, ch, cid in arrivals]
+                sized = [
+                    (lab, kind, ch // CHARS_PER_TOKEN, cid)
+                    for lab, kind, ch, cid in arrivals
+                ]
                 rest = max(0, T - sum(x[2] for x in sized))
-                base = "startup context" if prev is None else "context after compaction" if boundary else "context after rewind" if cut else "context after shrink"
+                base = (
+                    "startup context"
+                    if prev is None
+                    else "context after compaction"
+                    if boundary
+                    else "context after rewind"
+                    if cut
+                    else "context after shrink"
+                )
                 grow(Item(base, "base", req.n, rest))
             elif cut:
                 if ancestor is prev:
@@ -804,7 +1070,10 @@ def allocate(s):
                 drop_tail(ancestor.context + ancestor.output, prev.n)
                 new = max(0, T - (ends[-1] if ends else 0))
                 chars = sum(x[2] for x in arrivals)
-                sized = [(lab, kind, round(new * ch / chars) if chars else 0, cid) for lab, kind, ch, cid in arrivals]
+                sized = [
+                    (lab, kind, round(new * ch / chars) if chars else 0, cid)
+                    for lab, kind, ch, cid in arrivals
+                ]
                 if not arrivals and new:
                     sized = [("unlabelled growth", "context", new, None)]
             else:
@@ -814,13 +1083,27 @@ def allocate(s):
                     new = 0
                 if T < prev.context - max(BUST_MIN_LOST, BACK_MIN_SHARE * prev.context):
                     # No structure says why: a pi branch, or a trim. Neither is a miss.
-                    backs.append({"req": req.n, "before": prev.context, "after": T, "marked": False, "abandoned": 0, "structural": False})
-                    drop_tail(T - sum(x[2] for x in arrivals) // CHARS_PER_TOKEN, prev.n)
+                    backs.append(
+                        {
+                            "req": req.n,
+                            "before": prev.context,
+                            "after": T,
+                            "marked": False,
+                            "abandoned": 0,
+                            "structural": False,
+                        }
+                    )
+                    drop_tail(
+                        T - sum(x[2] for x in arrivals) // CHARS_PER_TOKEN, prev.n
+                    )
                     new = max(0, T - (ends[-1] if ends else 0))
                 else:
                     grow(Item(output_label(prev), "output", prev.n + 1, prev.output))
                 chars = sum(x[2] for x in arrivals)
-                sized = [(lab, kind, round(new * ch / chars) if chars else 0, cid) for lab, kind, ch, cid in arrivals]
+                sized = [
+                    (lab, kind, round(new * ch / chars) if chars else 0, cid)
+                    for lab, kind, ch, cid in arrivals
+                ]
                 if not arrivals and new:
                     sized = [("unlabelled growth", "context", new, None)]
             for lab, kind, size, cid in sized:
@@ -840,7 +1123,10 @@ def allocate(s):
                 # Only what this request still sends can have been missed.
                 expected = min(ref.context + (ref.output if cut else 0), T)
                 missing = expected - req.read
-                if missing > max(BUST_MIN_LOST, BUST_MIN_SHARE * expected) and req.write:
+                if (
+                    missing > max(BUST_MIN_LOST, BUST_MIN_SHARE * expected)
+                    and req.write
+                ):
                     lost = min(missing, req.write)
             if lost:
                 gap = (seconds(req.first_ts) or 0) - (seconds(prev_ts) or 0)
@@ -855,11 +1141,26 @@ def allocate(s):
                     cause = "context shrank"
                 else:
                     cause = "warm bust"
-                events.append({"req": req.n, "lost": lost, "premium": lost * max(0.0, r_write - r_read), "cause": cause, "gap": gap})
+                events.append(
+                    {
+                        "req": req.n,
+                        "lost": lost,
+                        "premium": lost * max(0.0, r_write - r_read),
+                        "cause": cause,
+                        "gap": gap,
+                    }
+                )
             k_full = bisect.bisect_right(ends, req.read)
             if k_full:
-                full_rate[k_full] += r_read  # applied to items below k_full when the segment closes
-            bands = ((req.read, r_read), (req.read + lost, r_read), (req.read + req.write, r_write), (T, r_in))
+                full_rate[k_full] += (
+                    r_read  # applied to items below k_full when the segment closes
+                )
+            bands = (
+                (req.read, r_read),
+                (req.read + lost, r_read),
+                (req.read + req.write, r_write),
+                (T, r_in),
+            )
             start = ends[k_full - 1] if k_full else 0
             for i in range(k_full, len(items)):
                 a, b = start, ends[i]
@@ -873,7 +1174,17 @@ def allocate(s):
                 if a >= T:
                     break
             if boundary:
-                compactions.append({"req": req.n, "pre": boundary.get("pre") or (prev.context if prev else 0), "post": boundary.get("post") or T, "duration": boundary.get("duration") or 0, "trigger": boundary.get("trigger"), "rebuild": costs["write"] if costs else 0, "r_read": r_read})
+                compactions.append(
+                    {
+                        "req": req.n,
+                        "pre": boundary.get("pre") or (prev.context if prev else 0),
+                        "post": boundary.get("post") or T,
+                        "duration": boundary.get("duration") or 0,
+                        "trigger": boundary.get("trigger"),
+                        "rebuild": costs["write"] if costs else 0,
+                        "r_read": r_read,
+                    }
+                )
             boundary, cut = None, None
             prev, prev_ts = req, req.last_ts
     if prev is not None:
@@ -883,7 +1194,9 @@ def allocate(s):
 
 def output_label(req):
     heavy = [c for c in req.calls if c in EDIT_TOOLS or c in BASH_TOOLS]
-    return f"output of r{req.n}" + (f" ({', '.join(sorted(set(heavy)))})" if heavy else "")
+    return f"output of r{req.n}" + (
+        f" ({', '.join(sorted(set(heavy)))})" if heavy else ""
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -894,7 +1207,13 @@ def call_table(s):
     calls = {}
     for e in s.events:
         if e["kind"] == "call":
-            calls[e["call_id"]] = {"name": e["name"], "input": e["input"], "req": e["req"].n, "ts": e["ts"], "result": None}
+            calls[e["call_id"]] = {
+                "name": e["name"],
+                "input": e["input"],
+                "req": e["req"].n,
+                "ts": e["ts"],
+                "result": None,
+            }
         elif e["kind"] == "result" and e["call_id"] in calls:
             calls[e["call_id"]]["result"] = e
     return calls
@@ -903,13 +1222,25 @@ def call_table(s):
 def tool_rows(calls, items_by_call):
     rows = {}
     for cid, c in calls.items():
-        row = rows.setdefault(c["name"], {"calls": 0, "errors": 0, "seconds": 0.0, "prompted": 0.0, "tokens": 0, "cost": 0.0})
+        row = rows.setdefault(
+            c["name"],
+            {
+                "calls": 0,
+                "errors": 0,
+                "seconds": 0.0,
+                "prompted": 0.0,
+                "tokens": 0,
+                "cost": 0.0,
+            },
+        )
         row["calls"] += 1
         r = c["result"]
         if r:
             row["errors"] += r["error"] or bool(r["denial"])
             if r["ts"] and c["ts"]:
-                row["prompted" if r["prompted"] else "seconds"] += max(0.0, r["ts"] - c["ts"])
+                row["prompted" if r["prompted"] else "seconds"] += max(
+                    0.0, r["ts"] - c["ts"]
+                )
         item = items_by_call.get(cid)
         if item:
             row["tokens"] += item.size
@@ -941,17 +1272,26 @@ def subagent_rows(s, calls):
         rows.append(
             {
                 "id": child.id,
-                "type": child.meta.get("agentType") or (c or {}).get("input", {}).get("subagent_type") or "?",
-                "description": child.meta.get("description") or (c or {}).get("input", {}).get("description") or "",
+                "type": child.meta.get("agentType")
+                or (c or {}).get("input", {}).get("subagent_type")
+                or "?",
+                "description": child.meta.get("description")
+                or (c or {}).get("input", {}).get("description")
+                or "",
                 "model": ",".join(sorted({r.model or "?" for r in child.requests})),
                 "requests": len(child.requests),
                 "cost": sum(r.cost for r in child.requests),
-                "first_write": sum((r.costs() or {}).get("write", 0) for r in child.requests[:1]),
+                "first_write": sum(
+                    (r.costs() or {}).get("write", 0) for r in child.requests[:1]
+                ),
                 "tokens": sum(r.context + r.output for r in child.requests),
                 "seconds": (max(ts) - min(ts)) if ts else 0,
-                "returned": final_report(child) or ((c["result"] or {}).get("chars") if c and c["result"] else None),
+                "returned": final_report(child)
+                or ((c["result"] or {}).get("chars") if c and c["result"] else None),
                 "req": c["req"] if c else None,
-                "call": next((cid for cid, x in calls.items() if x is c), None) if c else None,
+                "call": next((cid for cid, x in calls.items() if x is c), None)
+                if c
+                else None,
             }
         )
     return sorted(rows, key=lambda r: -r["cost"])
@@ -1000,7 +1340,9 @@ def turn_rows(s, subagents):
                 cur["active"] += gap
     for t in turns:
         ns = {r.n for r in t["requests"]}
-        t["cost"] = sum(r.cost for r in t["requests"]) + sum(a["cost"] for a in subagents if a["req"] in ns)
+        t["cost"] = sum(r.cost for r in t["requests"]) + sum(
+            a["cost"] for a in subagents if a["req"] in ns
+        )
         t["from"] = min(ns) if ns else None
         t["to"] = max(ns) if ns else None
     return turns
@@ -1013,10 +1355,26 @@ def friction(s, calls, backs):
     for b in backs:
         if b["structural"]:
             how = "rewound" if b["marked"] else "path jumped back, likely a rewind"
-            lost = f"abandoned {b['abandoned']} request{'s' if b['abandoned'] != 1 else ''}" if b["abandoned"] else "nothing sent since"
-            out.append({"req": b["req"], "what": f"{how}: {lost}", "weight": 3 if b["abandoned"] else 1})
+            lost = (
+                f"abandoned {b['abandoned']} request{'s' if b['abandoned'] != 1 else ''}"
+                if b["abandoned"]
+                else "nothing sent since"
+            )
+            out.append(
+                {
+                    "req": b["req"],
+                    "what": f"{how}: {lost}",
+                    "weight": 3 if b["abandoned"] else 1,
+                }
+            )
         else:
-            out.append({"req": b["req"], "what": f"context went back {tok(b['before'])} → {tok(b['after'])} (a branch or a trim), not a cache miss", "weight": 1})
+            out.append(
+                {
+                    "req": b["req"],
+                    "what": f"context went back {tok(b['before'])} → {tok(b['after'])} (a branch or a trim), not a cache miss",
+                    "weight": 1,
+                }
+            )
     streak = 0
     reads = {}  # path → read count since it last changed
     failed = set()  # calls that failed with nothing changed since: re-running after a fix is no friction
@@ -1027,18 +1385,30 @@ def friction(s, calls, backs):
         elif k == "interrupt":
             out.append({"req": req, "what": "interrupted", "weight": 3})
         elif k == "queued":
-            out.append({"req": req, "what": "you queued a message mid-turn", "weight": 2})
+            out.append(
+                {"req": req, "what": "you queued a message mid-turn", "weight": 2}
+            )
         elif k == "api_error":
             out.append({"req": req, "what": "API error", "weight": 1})
         elif k == "hook":
             if e["blocked"]:
-                out.append({"req": req, "what": "a hook prevented continuing", "weight": 2})
+                out.append(
+                    {"req": req, "what": "a hook prevented continuing", "weight": 2}
+                )
             elif e["errors"]:
-                out.append({"req": req, "what": f"hook errors: {e['errors']}", "weight": 1})
+                out.append(
+                    {"req": req, "what": f"hook errors: {e['errors']}", "weight": 1}
+                )
         elif k == "call":
             sig = json.dumps([e["name"], e["input"]], sort_keys=True, default=str)
             if sig in failed:
-                out.append({"req": req, "what": f"same call repeated after an error: {call_label(e['name'], e['input'])}", "weight": 2})
+                out.append(
+                    {
+                        "req": req,
+                        "what": f"same call repeated after an error: {call_label(e['name'], e['input'])}",
+                        "weight": 2,
+                    }
+                )
             path = str(e["input"].get("file_path") or e["input"].get("path") or "")
             if e["name"] in EDIT_TOOLS:
                 failed.clear()
@@ -1046,22 +1416,48 @@ def friction(s, calls, backs):
             elif path and e["name"] in READ_TOOLS:
                 reads[path] = reads.get(path, 0) + 1
                 if reads[path] == 3:
-                    out.append({"req": req, "what": f"re-read 3+ times with no edit between: {clip(tilde(path), 70)}", "weight": 1})
+                    out.append(
+                        {
+                            "req": req,
+                            "what": f"re-read 3+ times with no edit between: {clip(tilde(path), 70)}",
+                            "weight": 1,
+                        }
+                    )
         elif k == "compact":
             reads.clear()  # re-reading after a compaction is expected, and the compaction is its own line
         elif k == "result":
             c = calls.get(e["call_id"]) or {}
             if e["denial"]:
                 weight = 3 if e["denial"] in ("user-rejected", "interrupted") else 2
-                out.append({"req": req, "what": f"denied ({e['denial']}): {call_label(c.get('name'), c.get('input'))}", "weight": weight})
+                out.append(
+                    {
+                        "req": req,
+                        "what": f"denied ({e['denial']}): {call_label(c.get('name'), c.get('input'))}",
+                        "weight": weight,
+                    }
+                )
             if e["truncated"]:
-                out.append({"req": req, "what": f"output truncated: {call_label(c.get('name'), c.get('input'))}", "weight": 1})
+                out.append(
+                    {
+                        "req": req,
+                        "what": f"output truncated: {call_label(c.get('name'), c.get('input'))}",
+                        "weight": 1,
+                    }
+                )
             if e["error"]:
                 streak += 1
-                sig = json.dumps([c.get("name"), c.get("input")], sort_keys=True, default=str)
+                sig = json.dumps(
+                    [c.get("name"), c.get("input")], sort_keys=True, default=str
+                )
                 failed.add(sig)
                 if streak == 3:
-                    out.append({"req": req, "what": f"3+ errors in a row, starting near {call_label(c.get('name'), c.get('input'))}", "weight": 2})
+                    out.append(
+                        {
+                            "req": req,
+                            "what": f"3+ errors in a row, starting near {call_label(c.get('name'), c.get('input'))}",
+                            "weight": 2,
+                        }
+                    )
             else:
                 streak = 0
                 failed.clear()
@@ -1075,7 +1471,13 @@ def risky_calls(s):
             blob = json.dumps(e["input"])
             m = RISKY.search(blob)
             if m:
-                out.append({"req": e["req"].n, "what": m.group(0), "label": call_label(e["name"], e["input"])})
+                out.append(
+                    {
+                        "req": e["req"].n,
+                        "what": m.group(0),
+                        "label": call_label(e["name"], e["input"]),
+                    }
+                )
     return out
 
 
@@ -1102,7 +1504,10 @@ def pct(x, total):
 
 def table(headers, rows):
     rows = [[str(c) for c in r] for r in rows]
-    widths = [max(len(h), *(len(r[i]) for r in rows)) if rows else len(h) for i, h in enumerate(headers)]
+    widths = [
+        max(len(h), *(len(r[i]) for r in rows)) if rows else len(h)
+        for i, h in enumerate(headers)
+    ]
     print("  " + "  ".join(h.ljust(w) for h, w in zip(headers, widths)))
     for r in rows:
         print("  " + "  ".join(c.ljust(w) for c, w in zip(r, widths)).rstrip())
@@ -1116,7 +1521,9 @@ def report(args):
     cap_s = CAP_MINUTES * 60
     costs = [r.costs() for r in s.requests]
     unpriced = sorted({r.model or "?" for r, c in zip(s.requests, costs) if c is None})
-    classes = {k: sum(c[k] for c in costs if c) for k in ("input", "read", "write", "output")}
+    classes = {
+        k: sum(c[k] for c in costs if c) for k in ("input", "read", "write", "output")
+    }
     main_cost = sum(classes.values())
     child_cost = sum(r.cost for c in s.children for r in c.requests)
     total = main_cost + child_cost
@@ -1137,19 +1544,32 @@ def report(args):
 
     ts = [e["ts"] for e in s.events if e["ts"]]
     start = datetime.fromtimestamp(min(ts)).strftime("%Y-%m-%d %H:%M") if ts else "?"
-    print(f"# Ledger: {s.id} · {s.source} · {tilde(s.cwd)} · from {start} · {len(s.requests)} requests · {len(s.children)} subagents")
+    print(
+        f"# Ledger: {s.id} · {s.source} · {tilde(s.cwd)} · from {start} · {len(s.requests)} requests · {len(s.children)} subagents"
+    )
     if s.source == "claude-work":
         print("(work profile: paraphrase, never quote)")
-    dup = f"{s.records} assistant records → {len(s.requests)} requests" if s.source != "pi" else f"{len(s.requests)} requests"
-    print(f"list price, table read {PRICES_READ} · {dup}" + (f" · retro span excluded (${s.excluded_cost:.2f})" if s.cut_ts else ""))
+    dup = (
+        f"{s.records} assistant records → {len(s.requests)} requests"
+        if s.source != "pi"
+        else f"{len(s.requests)} requests"
+    )
+    print(
+        f"list price, table read {PRICES_READ} · {dup}"
+        + (f" · retro span excluded (${s.excluded_cost:.2f})" if s.cut_ts else "")
+    )
     if s.copied:
-        print(f"forked from an earlier session: {len(s.copied)} copied requests not charged")
+        print(
+            f"forked from an earlier session: {len(s.copied)} copied requests not charged"
+        )
     if unpriced:
         print(f"UNPRICED models, counted as $0: {', '.join(unpriced)}")
 
     print("\n## Time")
     wall = duration(s)
-    print(f"wall {fmt_s(wall)}, active {fmt_s(active)} at a {CAP_MINUTES}m cap · nothing credited after the last event")
+    print(
+        f"wall {fmt_s(wall)}, active {fmt_s(active)} at a {CAP_MINUTES}m cap · nothing credited after the last event"
+    )
     print(
         f"model {fmt_s(b['model'])} ({pct(b['model'], active)}) · compaction {fmt_s(b['compaction'])} · tools {fmt_s(b['tool'])} ({pct(b['tool'], active)}) · "
         f"permission wait {fmt_s(b['permission'])} · background {fmt_s(b['background'])} · you engaged {fmt_s(b['engaged'])} ({pct(b['engaged'], active)}) · you away {fmt_s(b['away'])}"
@@ -1159,9 +1579,15 @@ def report(args):
     for c in CAPS:
         kept = sum(min(g, c * 60) for g in swept["human_gaps"])
         sens.append(f"{c}m {pct(kept, machine + kept)}")
-    print(f"your share of the time: raw {pct(swept['raw_human'], machine + swept['raw_human'])}, " + ", ".join(sens))
+    print(
+        f"your share of the time: raw {pct(swept['raw_human'], machine + swept['raw_human'])}, "
+        + ", ".join(sens)
+    )
     think_ms = sum(r.thinking_ms for r in s.requests)
-    print(f"thinking: {tok(sum(r.thinking for r in s.requests))} tokens, " + (fmt_s(think_ms / 1000) if think_ms else "time not available"))
+    print(
+        f"thinking: {tok(sum(r.thinking for r in s.requests))} tokens, "
+        + (fmt_s(think_ms / 1000) if think_ms else "time not available")
+    )
 
     print("\n## Spend")
     print(f"total ${total:.2f}: main ${main_cost:.2f}, subagents ${child_cost:.2f}")
@@ -1172,69 +1598,163 @@ def report(args):
         f"input ${classes['input']:.2f} ({pct(classes['input'], main_cost)})"
     )
     premium = sum(x["premium"] for x in busts)
-    print(f"main allocated: context items ${sum(i.cost for i in items):.2f} (estimated), cache-miss events ${premium:.2f}, output ${classes['output']:.2f}")
+    print(
+        f"main allocated: context items ${sum(i.cost for i in items):.2f} (estimated), cache-miss events ${premium:.2f}, output ${classes['output']:.2f}"
+    )
     state = (s.cost_state or {}).get("totalCostUSD")
     if s.copied:
         print("cost-state: not comparable, a fork inherits its parent's")
     elif state is not None:
-        print(f"cost-state ${state:.2f} (whole session, retro included) · unattributed ${state - total - s.excluded_cost:.2f}, never spread over items")
+        print(
+            f"cost-state ${state:.2f} (whole session, retro included) · unattributed ${state - total - s.excluded_cost:.2f}, never spread over items"
+        )
     else:
         print("cost-state: not available")
 
-    print("\n## Tools (seconds overlap in parallel batches; estimated cost is of their results while present)")
+    print(
+        "\n## Tools (seconds overlap in parallel batches; estimated cost is of their results while present)"
+    )
     rows = tool_rows(calls, items_by_call)
     table(
         ("tool", "calls", "errors", "time", "prompted", "result tok", "est $"),
-        [(n, r["calls"], r["errors"], fmt_s(r["seconds"]), fmt_s(r["prompted"]) if r["prompted"] else "-", tok(r["tokens"]), f"{r['cost']:.2f}") for n, r in sorted(rows.items(), key=lambda kv: -kv[1]["cost"])[:top]],
+        [
+            (
+                n,
+                r["calls"],
+                r["errors"],
+                fmt_s(r["seconds"]),
+                fmt_s(r["prompted"]) if r["prompted"] else "-",
+                tok(r["tokens"]),
+                f"{r['cost']:.2f}",
+            )
+            for n, r in sorted(rows.items(), key=lambda kv: -kv[1]["cost"])[:top]
+        ],
     )
 
     print("\n## Subagents" + ("" if subagents else ": none"))
     if subagents:
         work = sum(a["seconds"] for a in subagents)
-        print(f"{fmt_s(work)} of agent time against {fmt_s(wall)} wall (ratio {work / wall:.1f})" if wall else "")
+        print(
+            f"{fmt_s(work)} of agent time against {fmt_s(wall)} wall (ratio {work / wall:.1f})"
+            if wall
+            else ""
+        )
         table(
-            ("id", "type", "model", "$", "of which first write", "requests", "tokens", "time", "returned chars", "description"),
-            [(a["id"][:10], a["type"], a["model"][:20], f"{a['cost']:.2f}", f"{a['first_write']:.2f}", a["requests"], tok(a["tokens"]), fmt_s(a["seconds"]), a["returned"] if a["returned"] is not None else "?", clip(a["description"], 40)) for a in subagents[:top]],
+            (
+                "id",
+                "type",
+                "model",
+                "$",
+                "of which first write",
+                "requests",
+                "tokens",
+                "time",
+                "returned chars",
+                "description",
+            ),
+            [
+                (
+                    a["id"][:10],
+                    a["type"],
+                    a["model"][:20],
+                    f"{a['cost']:.2f}",
+                    f"{a['first_write']:.2f}",
+                    a["requests"],
+                    tok(a["tokens"]),
+                    fmt_s(a["seconds"]),
+                    a["returned"] if a["returned"] is not None else "?",
+                    clip(a["description"], 40),
+                )
+                for a in subagents[:top]
+            ],
         )
 
-    print("\n## Skills" + (" (pi: span up to the next prompt)" if s.source == "pi" else ""))
+    print(
+        "\n## Skills"
+        + (" (pi: span up to the next prompt)" if s.source == "pi" else "")
+    )
     skills = skill_rows(s)
     if skills:
-        table(("skill", "$", "requests"), [(n, f"{r['cost']:.2f}", r["requests"]) for n, r in list(skills.items())[:top]])
+        table(
+            ("skill", "$", "requests"),
+            [
+                (n, f"{r['cost']:.2f}", r["requests"])
+                for n, r in list(skills.items())[:top]
+            ],
+        )
     else:
         print("not available")
 
     print("\n## Context")
     first = s.requests[0].context
     last_big = max(r.context for r in s.requests)
-    print(f"first request {tok(first)} (startup context plus the first prompt) · peak {tok(last_big)}")
+    print(
+        f"first request {tok(first)} (startup context plus the first prompt) · peak {tok(last_big)}"
+    )
     if compactions:
         for c in compactions:
             after = len(s.requests) - c["req"]
             saved = max(0, (c["pre"] or 0) - (c["post"] or 0)) * c["r_read"]
             pay = c["rebuild"] / saved if saved else None
-            payback = f"pays back after ~{pay:.0f} requests, {after} followed" if pay is not None else f"{after} requests followed"
-            print(f"compaction at r{c['req']}: {tok(c['pre'] or 0)} → {tok(c['post'] or 0)}, {fmt_s(c['duration'])}, {c['trigger'] or '?'}; {payback}")
+            payback = (
+                f"pays back after ~{pay:.0f} requests, {after} followed"
+                if pay is not None
+                else f"{after} requests followed"
+            )
+            print(
+                f"compaction at r{c['req']}: {tok(c['pre'] or 0)} → {tok(c['post'] or 0)}, {fmt_s(c['duration'])}, {c['trigger'] or '?'}; {payback}"
+            )
     if negative:
-        print(f"context failed to grow between {negative} request pairs without a boundary; those arrivals are unsized")
-    print("largest items, estimated (share while present, not what removing them saves; pressure = tokens × requests):")
+        print(
+            f"context failed to grow between {negative} request pairs without a boundary; those arrivals are unsized"
+        )
+    print(
+        "largest items, estimated (share while present, not what removing them saves; pressure = tokens × requests):"
+    )
     ranked = sorted((i for i in items), key=lambda i: -i.cost)[:top]
     table(
         ("est $", "share", "tokens", "requests", "pressure", "born", "item"),
-        [(f"{i.cost:.2f}", pct(i.cost, main_cost), tok(i.size), i.requests, tok(i.size * i.requests), f"r{i.born}", i.label or "tool result") for i in ranked],
+        [
+            (
+                f"{i.cost:.2f}",
+                pct(i.cost, main_cost),
+                tok(i.size),
+                i.requests,
+                tok(i.size * i.requests),
+                f"r{i.born}",
+                i.label or "tool result",
+            )
+            for i in ranked
+        ],
     )
 
-    print(f"\n## Turns, costliest {min(top, len(turns))} of {len(turns)} (dollars include subagents; time is working time)")
+    print(
+        f"\n## Turns, costliest {min(top, len(turns))} of {len(turns)} (dollars include subagents; time is working time)"
+    )
     table(
         ("#", "$", "requests", "time", "range", "prompt"),
-        [(t["n"], f"{t['cost']:.2f}", len(t["requests"]), fmt_s(t["active"]), f"r{t['from']}-r{t['to']}" if t["from"] else "-", clip(t["text"], 60)) for t in sorted(turns, key=lambda t: -t["cost"])[:top]],
+        [
+            (
+                t["n"],
+                f"{t['cost']:.2f}",
+                len(t["requests"]),
+                fmt_s(t["active"]),
+                f"r{t['from']}-r{t['to']}" if t["from"] else "-",
+                clip(t["text"], 60),
+            )
+            for t in sorted(turns, key=lambda t: -t["cost"])[:top]
+        ],
     )
 
     print("\n## Events")
-    print(f"cache misses {len(busts)} (${premium:.2f} premium) · compactions {sum(e['kind'] == 'compact' for e in s.events)} · events {len(frictions)} · risky calls {len(risks)} · ran while idle {sum(e['kind'] == 'idle_work' for e in s.events)}")
+    print(
+        f"cache misses {len(busts)} (${premium:.2f} premium) · compactions {sum(e['kind'] == 'compact' for e in s.events)} · events {len(frictions)} · risky calls {len(risks)} · ran while idle {sum(e['kind'] == 'idle_work' for e in s.events)}"
+    )
     for x in busts:
         if x["premium"] >= 0.01:
-            print(f"  r{x['req']}: cache miss, {x['cause']}, ~{tok(x['lost'])} rewritten, ${x['premium']:.2f}")
+            print(
+                f"  r{x['req']}: cache miss, {x['cause']}, ~{tok(x['lost'])} rewritten, ${x['premium']:.2f}"
+            )
     for f in sorted(frictions, key=lambda f: -f["weight"])[: top * 2]:
         print(f"  r{f['req']}: {f['what']}")
     if len(frictions) > top * 2:
@@ -1247,8 +1767,12 @@ def report(args):
     for r in s.requests:
         key = (r.model or "?", r.effort or "-")
         mix[key] = mix.get(key, 0) + 1
-    print(" · ".join(f"{m} ({e}): {n}" for (m, e), n in sorted(mix.items(), key=lambda kv: -kv[1])))
-
+    print(
+        " · ".join(
+            f"{m} ({e}): {n}"
+            for (m, e), n in sorted(mix.items(), key=lambda kv: -kv[1])
+        )
+    )
 
 
 def window(args):
@@ -1286,8 +1810,14 @@ def window(args):
             line = f"[call] {e['name']}: {clip(json.dumps(e['input']), width(300))}"
         elif k == "result":
             c = names.get(e["call_id"]) or {}
-            tag = f"denied {e['denial']}" if e["denial"] else ("error" if e["error"] else "result")
-            source = f" ({e['source']})" if e["source"] and e["source"] != "config" else ""
+            tag = (
+                f"denied {e['denial']}"
+                if e["denial"]
+                else ("error" if e["error"] else "result")
+            )
+            source = (
+                f" ({e['source']})" if e["source"] and e["source"] != "config" else ""
+            )
             line = f"[{tag}{source}] {c.get('name', '?')}, {e['chars']:,} chars: {clip(e['text'], width(300))}"
         elif k == "interrupt":
             line = "[interrupted]"
@@ -1296,7 +1826,11 @@ def window(args):
         elif k == "queued":
             line = "[you queued a message mid-turn]"
         elif k == "hook":
-            line = "[a hook prevented continuing]" if e["blocked"] else f"[hook errors: {e['errors']}]"
+            line = (
+                "[a hook prevented continuing]"
+                if e["blocked"]
+                else f"[hook errors: {e['errors']}]"
+            )
         elif k == "api_error":
             line = "[API error]"
         else:
@@ -1311,7 +1845,9 @@ def window(args):
     lo, hi = args.first, args.last
     lines = [line for n, line in out if lo <= n <= hi]
     if args.max_lines and len(lines) > args.max_lines:
-        lines = lines[: args.max_lines] + [f"[… {len(lines) - args.max_lines} more lines; raise --max-lines]"]
+        lines = lines[: args.max_lines] + [
+            f"[… {len(lines) - args.max_lines} more lines; raise --max-lines]"
+        ]
     print("\n".join(lines))
 
 
@@ -1326,9 +1862,15 @@ def timeline(args):
             agents[a["call"]] = a
     if s.source == "claude-work":
         print("(work profile: paraphrase, never quote)")
-    print("# Timeline. rN is an API request; `window` opens any range. Lines starting ! are exact events.")
-    print("# `check` lines are commands that look like verification; judge what they actually showed.")
-    print("# `! risky` is a pattern match for a destructive command or guard bypass; it may be harmless.\n")
+    print(
+        "# Timeline. rN is an API request; `window` opens any range. Lines starting ! are exact events."
+    )
+    print(
+        "# `check` lines are commands that look like verification; judge what they actually showed."
+    )
+    print(
+        "# `! risky` is a pattern match for a destructive command or guard bypass; it may be harmless.\n"
+    )
     out, labels, counts, span, prompts = [], [], {}, [], 0
     mark = latest = None  # when the current stretch began, and its newest event
 
@@ -1339,9 +1881,21 @@ def timeline(args):
             secs = max(0.0, (latest or 0) - (mark or latest or 0))
             where = f"r{first.n}" if first is last else f"r{first.n}-r{last.n}"
             lost = " (abandoned later)" if all(r.abandoned for r in span) else ""
-            summary = ", ".join(f"{k}×{v}" if v > 1 else k for k, v in counts.items()) if args.brief else "; ".join(labels[:TIMELINE_LABELS])
-            more = f"; +{len(labels) - TIMELINE_LABELS} more" if not args.brief and len(labels) > TIMELINE_LABELS else ""
-            out.append(f"{where} {fmt_s(secs)} ${sum(r.cost for r in span):.2f}{lost}: {summary}{more}".rstrip(": "))
+            summary = (
+                ", ".join(f"{k}×{v}" if v > 1 else k for k, v in counts.items())
+                if args.brief
+                else "; ".join(labels[:TIMELINE_LABELS])
+            )
+            more = (
+                f"; +{len(labels) - TIMELINE_LABELS} more"
+                if not args.brief and len(labels) > TIMELINE_LABELS
+                else ""
+            )
+            out.append(
+                f"{where} {fmt_s(secs)} ${sum(r.cost for r in span):.2f}{lost}: {summary}{more}".rstrip(
+                    ": "
+                )
+            )
         labels, counts, span = [], {}, []
         mark = latest
 
@@ -1373,13 +1927,17 @@ def timeline(args):
         elif k == "call":
             touch()
             label = call_label(e["name"], e["input"])
-            cmd = str(e["input"].get("command") or "") if e["name"] in BASH_TOOLS else ""
+            cmd = (
+                str(e["input"].get("command") or "") if e["name"] in BASH_TOOLS else ""
+            )
             if RISKY.search(json.dumps(e["input"])) and e["name"] in BASH_TOOLS:
                 flush()
                 out.append(f"! risky r{req.n}: {label}")
             if e["name"] in EDIT_TOOLS:
                 flush()
-                out.append(f"edit r{req.n}: {tilde(str(e['input'].get('file_path') or e['input'].get('path') or '?'))}")
+                out.append(
+                    f"edit r{req.n}: {tilde(str(e['input'].get('file_path') or e['input'].get('path') or '?'))}"
+                )
             elif not CHECKS.search(cmd):
                 labels.append(clip(label, LABEL_WIDTH))
                 counts[e["name"]] = counts.get(e["name"], 0) + 1
@@ -1390,30 +1948,50 @@ def timeline(args):
             if name in BASH_TOOLS and CHECKS.search(str(inp.get("command") or "")):
                 flush()
                 took = fmt_s(max(0.0, (e["ts"] or 0) - (c.get("ts") or e["ts"] or 0)))
-                out.append(f"check {where} {'FAILED' if e['error'] else 'ok'} {took}: {clip(inp.get('command'), 120)}")
+                out.append(
+                    f"check {where} {'FAILED' if e['error'] else 'ok'} {took}: {clip(inp.get('command'), 120)}"
+                )
             elif e["denial"]:
                 flush()
                 out.append(f"! denied {where} ({e['denial']}): {call_label(name, inp)}")
             elif e["error"]:
                 flush()
-                out.append(f"! error {where}: {clip(call_label(name, inp), LABEL_WIDTH)}: {clip(e['text'], 160)}")
+                out.append(
+                    f"! error {where}: {clip(call_label(name, inp), LABEL_WIDTH)}: {clip(e['text'], 160)}"
+                )
             if name in HUMAN_TOOLS and not e["denial"]:
                 flush()
                 out.append(f"[answer] {clip(e['text'], 300)}")
             if e["truncated"]:
-                out.append(f"! truncated {where}: {clip(call_label(name, inp), LABEL_WIDTH)}")
+                out.append(
+                    f"! truncated {where}: {clip(call_label(name, inp), LABEL_WIDTH)}"
+                )
             if e["call_id"] in agents:
                 a = agents.pop(e["call_id"])
                 flush()
-                ret = f", returned {a['returned']:,} chars" if a["returned"] is not None else ""
-                out.append(f"subagent {a['id'][:10]} {a['type']}: {clip(a['description'], 50)}: ${a['cost']:.2f}, {fmt_s(a['seconds'])}{ret}")
+                ret = (
+                    f", returned {a['returned']:,} chars"
+                    if a["returned"] is not None
+                    else ""
+                )
+                out.append(
+                    f"subagent {a['id'][:10]} {a['type']}: {clip(a['description'], 50)}: ${a['cost']:.2f}, {fmt_s(a['seconds'])}{ret}"
+                )
         elif k == "cut":
             flush()
-            lost = f"r{e['abandoned'][0].n}-r{e['abandoned'][-1].n} abandoned" if e["abandoned"] else "no requests abandoned"
-            out.append(f"! {'rewound' if e['marked'] else 'path jumped back, likely a rewind'}: {lost}")
+            lost = (
+                f"r{e['abandoned'][0].n}-r{e['abandoned'][-1].n} abandoned"
+                if e["abandoned"]
+                else "no requests abandoned"
+            )
+            out.append(
+                f"! {'rewound' if e['marked'] else 'path jumped back, likely a rewind'}: {lost}"
+            )
         elif k == "compact":
             flush()
-            out.append(f"! compaction: {tok(e.get('pre') or 0)} → {tok(e.get('post') or 0)}, {fmt_s(e.get('duration') or 0)}")
+            out.append(
+                f"! compaction: {tok(e.get('pre') or 0)} → {tok(e.get('post') or 0)}, {fmt_s(e.get('duration') or 0)}"
+            )
             mark = latest = e["ts"]
         elif k == "interrupt":
             flush()
@@ -1432,12 +2010,20 @@ def timeline(args):
             out.append(f"[skill loaded] {e['label'].split(': ', 1)[1]}")
     flush()
     if args.max_lines and len(out) > args.max_lines:
-        out = out[: args.max_lines] + [f"[… {len(out) - args.max_lines} more lines; raise --max-lines or use --brief]"]
+        out = out[: args.max_lines] + [
+            f"[… {len(out) - args.max_lines} more lines; raise --max-lines or use --brief]"
+        ]
     print("\n".join(out))
 
 
 def git(repo, *argv):
-    return subprocess.run(["git", "-C", repo, *argv], capture_output=True, text=True, errors="replace")
+    return subprocess.run(
+        ["git", "-C", repo, *argv],
+        check=False,
+        capture_output=True,
+        text=True,
+        errors="replace",
+    )
 
 
 def session_commits(s, repo):
@@ -1457,25 +2043,60 @@ def session_commits(s, repo):
         if not GIT_WRITES.search(cmd):
             continue
         for sha, _ in COMMIT_OUTPUT.findall(e["text"]):
-            full = git(repo, "rev-parse", "--verify", "-q", f"{sha}^{{commit}}").stdout.strip()
+            full = git(
+                repo, "rev-parse", "--verify", "-q", f"{sha}^{{commit}}"
+            ).stdout.strip()
             if full:
                 found[full] = None
         if call.get("ts") and e["ts"]:
-            log = git(repo, "log", "--all", "--no-merges", f"--since={int(call['ts']) - 5}", f"--until={int(e['ts']) + 5}", "--format=%H").stdout
+            log = git(
+                repo,
+                "log",
+                "--all",
+                "--no-merges",
+                f"--since={int(call['ts']) - 5}",
+                f"--until={int(e['ts']) + 5}",
+                "--format=%H",
+            ).stdout
             found.update(dict.fromkeys(log.split()))
     rows = []
     for sha in found:
-        ct, subject = (git(repo, "show", "-s", "--format=%ct%x01%s", sha).stdout.strip().split("\x01", 1) + [""])[:2]
-        rows.append((int(ct or 0), sha, subject, git(repo, "merge-base", "--is-ancestor", sha, "HEAD").returncode == 0))
+        ct, subject = (
+            git(repo, "show", "-s", "--format=%ct%x01%s", sha)
+            .stdout.strip()
+            .split("\x01", 1)
+            + [""]
+        )[:2]
+        rows.append(
+            (
+                int(ct or 0),
+                sha,
+                subject,
+                git(repo, "merge-base", "--is-ancestor", sha, "HEAD").returncode == 0,
+            )
+        )
     return [(sha, subject, on_head) for _, sha, subject, on_head in sorted(rows)]
 
 
 def outcome(args):
     s = load(args.session)
-    edited = sorted({tilde(str(e["input"].get("file_path") or e["input"].get("path"))) for e in s.events if e["kind"] == "call" and e["name"] in EDIT_TOOLS})
+    edited = sorted(
+        {
+            tilde(str(e["input"].get("file_path") or e["input"].get("path")))
+            for e in s.events
+            if e["kind"] == "call" and e["name"] in EDIT_TOOLS
+        }
+    )
     repo = s.cwd if s.cwd and os.path.isdir(s.cwd) else None
     print(f"# Outcome: {s.id} · {tilde(s.cwd)}")
-    print(f"files edited with edit tools: {len(edited)}" + (f" ({', '.join(edited[:20])}{', …' if len(edited) > 20 else ''})" if edited else ""))
+    print(
+        f"files edited with edit tools: {len(edited)}"
+        + (
+            f" ({', '.join(edited[:20])}{', …' if len(edited) > 20 else ''})"
+            if edited
+            else ""
+        )
+    )
     if not repo or git(repo, "rev-parse", "--git-dir").returncode:
         print("commits: not available, the session's directory is gone or isn't a repo")
         return
@@ -1496,16 +2117,28 @@ def outcome(args):
                 if on_head:
                     files.add(bits[2])
         added += n if on_head else 0
-        print(f"  {sha[:8]} +{n}{'' if on_head else ' (not on HEAD)'}: {clip(subject, 80)}")
+        print(
+            f"  {sha[:8]} +{n}{'' if on_head else ' (not on HEAD)'}: {clip(subject, 80)}"
+        )
     end = max((e["ts"] for e in s.events if e["ts"]), default=time.time())
     if time.time() - end < TOO_RECENT_S:
-        print("later changes: too recent to say; run this again on the session after a day or more")
+        print(
+            "later changes: too recent to say; run this again on the session after a day or more"
+        )
         return
     if not ours:
         print("later changes: none of these commits are on HEAD, so nothing to trace")
         return
     oldest = next(sha for sha, _, on_head in commits if on_head)
-    log = git(repo, "log", "--no-merges", "--format=%H%x01%ct%x01%s", f"{oldest}..HEAD", "--", *sorted(files)).stdout
+    log = git(
+        repo,
+        "log",
+        "--no-merges",
+        "--format=%H%x01%ct%x01%s",
+        f"{oldest}..HEAD",
+        "--",
+        *sorted(files),
+    ).stdout
     later = [ln.split("\x01", 2) for ln in log.splitlines()]
     later = [row for row in later if row[0] not in ours][:LATER_COMMITS_MAX]
     changed = {}
@@ -1513,48 +2146,71 @@ def outcome(args):
         lines = 0
         for path in sorted(files):
             ranges = []
-            for line in git(repo, "diff", "-U0", "--no-renames", f"{sha}^", sha, "--", path).stdout.splitlines():
+            for line in git(
+                repo, "diff", "-U0", "--no-renames", f"{sha}^", sha, "--", path
+            ).stdout.splitlines():
                 m = re.match(r"@@ -(\d+)(?:,(\d+))? ", line)
                 if m and int(m.group(2) or 1):
                     start, count = int(m.group(1)), int(m.group(2) or 1)
                     ranges += ["-L", f"{start},{start + count - 1}"]
             if not ranges:
                 continue
-            for line in git(repo, "blame", "--line-porcelain", *ranges[:80], f"{sha}^", "--", path).stdout.splitlines():
+            for line in git(
+                repo, "blame", "--line-porcelain", *ranges[:80], f"{sha}^", "--", path
+            ).stdout.splitlines():
                 m = re.match(r"^([0-9a-f]{40}) \d+ \d+", line)
                 lines += bool(m and m.group(1) in ours)
         if lines:
             changed[sha] = (lines, int(ct), subject)
     total = sum(v[0] for v in changed.values())
     fixes = sum(bool(FIX_SUBJECT.search(v[2])) for v in changed.values())
-    print(f"later changes: {total} of {added} added lines changed since, in {len(changed)} commits, {fixes} of them fixes or reverts")
-    print("(a pointer, not a verdict: larger diffs draw more changes, and much later change is ordinary development)")
-    for sha, (lines, ct, subject) in sorted(changed.items(), key=lambda kv: -kv[1][0])[:15]:
-        print(f"  {sha[:8]} {fmt_s(max(0, ct - end))} later, {lines} lines: {clip(subject, 80)}")
+    print(
+        f"later changes: {total} of {added} added lines changed since, in {len(changed)} commits, {fixes} of them fixes or reverts"
+    )
+    print(
+        "(a pointer, not a verdict: larger diffs draw more changes, and much later change is ordinary development)"
+    )
+    for sha, (lines, ct, subject) in sorted(changed.items(), key=lambda kv: -kv[1][0])[
+        :15
+    ]:
+        print(
+            f"  {sha[:8]} {fmt_s(max(0, ct - end))} later, {lines} lines: {clip(subject, 80)}"
+        )
 
 
 def main():
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     sub = p.add_subparsers(dest="command", required=True)
     r = sub.add_parser("report")
     r.add_argument("session", nargs="?")
     r.add_argument("--top", type=int, default=8, help="rows per section")
-    l = sub.add_parser("timeline")
-    l.add_argument("session")
-    l.add_argument("--brief", action="store_true", help="tool calls as counts, not labels")
-    l.add_argument("--max-lines", type=int, default=2000)
+    tl = sub.add_parser("timeline")
+    tl.add_argument("session")
+    tl.add_argument(
+        "--brief", action="store_true", help="tool calls as counts, not labels"
+    )
+    tl.add_argument("--max-lines", type=int, default=2000)
     o = sub.add_parser("outcome")
     o.add_argument("session")
     w = sub.add_parser("window")
     w.add_argument("session")
     w.add_argument("first", type=int, nargs="?", default=1)
     w.add_argument("last", type=int, nargs="?", default=10**9)
-    w.add_argument("--agent", help="read this subagent's own transcript; its requests are numbered separately")
+    w.add_argument(
+        "--agent",
+        help="read this subagent's own transcript; its requests are numbered separately",
+    )
     w.add_argument("--grep", help="list matching events and their requests instead")
-    w.add_argument("--full", action="store_true", help="don't clip messages and results")
+    w.add_argument(
+        "--full", action="store_true", help="don't clip messages and results"
+    )
     w.add_argument("--max-lines", type=int, default=200)
     args = p.parse_args()
-    {"report": report, "timeline": timeline, "outcome": outcome, "window": window}[args.command](args)
+    {"report": report, "timeline": timeline, "outcome": outcome, "window": window}[
+        args.command
+    ](args)
 
 
 if __name__ == "__main__":

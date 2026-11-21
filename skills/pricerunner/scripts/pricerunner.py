@@ -19,7 +19,9 @@ BASE = "https://www.pricerunner.dk"
 API = f"{BASE}/dk/api"
 CC = "DK"
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/130 Safari/537.36"
-CACHE = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "pricerunner")
+CACHE = os.path.join(
+    os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "pricerunner"
+)
 MENU_TTL = 7 * 86400
 
 
@@ -29,7 +31,9 @@ def get(service, path, params=None):
         url += ("&" if "?" in url else "?") + urllib.parse.urlencode(
             {k: v for k, v in params.items() if v not in (None, "")}, safe=",_-"
         )
-    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
+    req = urllib.request.Request(
+        url, headers={"User-Agent": UA, "Accept": "application/json"}
+    )
     try:
         with urllib.request.urlopen(req, timeout=20) as r:
             body = r.read()
@@ -101,7 +105,11 @@ def slim_quickfilters(qfs):
             "unit": q.get("unit"),
             "options": [
                 {"id": o["id"], "value": o["value"]}
-                | ({"from": o["from"], "to": o["to"]} if o.get("from") or o.get("to") else {})
+                | (
+                    {"from": o["from"], "to": o["to"]}
+                    if o.get("from") or o.get("to")
+                    else {}
+                )
                 for o in q.get("options", [])
             ],
         }
@@ -112,21 +120,35 @@ def slim_quickfilters(qfs):
 def cmd_search(a):
     params = {"q": a.query, **filters(a.filter)}
     if a.category:
-        params["af_CATEGORY"] = a.category if "-" in a.category else f"cl{a.category.removeprefix('cl')}"
+        params["af_CATEGORY"] = (
+            a.category if "-" in a.category else f"cl{a.category.removeprefix('cl')}"
+        )
     if a.no_extract:
         params["filterExtraction"] = "false"
     if a.offset:
         params |= {"offset": a.offset, "size": a.limit}
         d = get("search-edge-rest", f"/public/search/v6/products/{CC}", params)
-        return out({"total": d.get("totalHits"), "products": [slim_product(p) for p in d["products"]]})
+        return out(
+            {
+                "total": d.get("totalHits"),
+                "products": [slim_product(p) for p in d["products"]],
+            }
+        )
     d = get("search-edge-rest", f"/public/search/v6/{CC}", params | {"facetsSize": 10})
     out(
         {
             "total": d["numberOfHits"]["product"],
             "appliedParams": d.get("queryParams"),
             "applied": [
-                {"id": f["id"], "name": f["name"], "options": f.get("options"), "range": f.get("range")}
-                for f in ((d.get("applied") or {}).get("filters") or {}).get("filters", [])
+                {
+                    "id": f["id"],
+                    "name": f["name"],
+                    "options": f.get("options"),
+                    "range": f.get("range"),
+                }
+                for f in ((d.get("applied") or {}).get("filters") or {}).get(
+                    "filters", []
+                )
             ],
             "spelling": d.get("spellingSuggestion"),
             "products": [slim_product(p) for p in d["products"][: a.limit]],
@@ -166,7 +188,12 @@ def flat_categories():
             kind, cid = "cl", nid[2:]
         else:
             kind, cid = "sub", nid
-        row = {"id": cid, "name": node["name"], "kind": kind, "parents": " > ".join(parents)}
+        row = {
+            "id": cid,
+            "name": node["name"],
+            "kind": kind,
+            "parents": " > ".join(parents),
+        }
         if kind == "sub":
             row["cl"] = parent_cl
         rows.append(row)
@@ -189,49 +216,88 @@ def cmd_categories(a):
 
 
 def cmd_filters(a):
-    d = get("search-edge-rest", f"/public/search/category/filters/{CC}/{a.category}", {"showAll": "true", **filters(a.filter)})
+    d = get(
+        "search-edge-rest",
+        f"/public/search/category/filters/{CC}/{a.category}",
+        {"showAll": "true", **filters(a.filter)},
+    )
     seen, res = set(), []
     for g in d.get("groups", []):
         for f in g["filters"]:
             if f["id"] not in seen:
                 seen.add(f["id"])
-                res.append({"id": f["id"], "name": f["name"], "type": f["type"], "unit": f.get("unit"), "group": g["name"]})
+                res.append(
+                    {
+                        "id": f["id"],
+                        "name": f["name"],
+                        "type": f["type"],
+                        "unit": f.get("unit"),
+                        "group": g["name"],
+                    }
+                )
     out(res)
 
 
 def cmd_facets(a):
     params = {"ids": ",".join(a.ids), **filters(a.filter)}
-    d = get("search-edge-rest", f"/public/search/category/facets/{CC}/{a.category}/", params)
+    d = get(
+        "search-edge-rest", f"/public/search/category/facets/{CC}/{a.category}/", params
+    )
     res = []
     for fid, v in d["facets"].items():
         f = v["facet"]
         item = {"id": fid, "name": f.get("name"), "unit": f.get("unit")}
         buckets = f.get("options") or f.get("counts") or []
         if buckets and "optionId" in buckets[0]:
-            opts = [{"id": str(o["optionId"]), "value": o["optionValue"], "count": o["count"]} for o in buckets]
+            opts = [
+                {
+                    "id": str(o["optionId"]),
+                    "value": o["optionValue"],
+                    "count": o["count"],
+                }
+                for o in buckets
+            ]
             if a.grep:
                 opts = [o for o in opts if re.search(a.grep, o["value"], re.I)]
             item["options"] = sorted(opts, key=lambda o: -o["count"])[: a.limit]
         else:
-            item |= {"min": f.get("minimum"), "max": f.get("maximum"), "buckets": buckets}
+            item |= {
+                "min": f.get("minimum"),
+                "max": f.get("maximum"),
+                "buckets": buckets,
+            }
         res.append(item)
     out(res)
 
 
 def cmd_list(a):
-    params = {"size": a.limit, "offset": a.offset or None, "sorting": a.sort, **filters(a.filter)}
+    params = {
+        "size": a.limit,
+        "offset": a.offset or None,
+        "sorting": a.sort,
+        **filters(a.filter),
+    }
     if a.query:
         params["q"] = a.query
     if a.sub:
         attr, _, opt = a.sub.partition("-")
         params[f"af_{attr}"] = opt
-    d = get("search-edge-rest", f"/public/search/category/v4/{CC}/{a.category}", params | {"device": "desktop"})
+    d = get(
+        "search-edge-rest",
+        f"/public/search/category/v4/{CC}/{a.category}",
+        params | {"device": "desktop"},
+    )
     cat = d.get("category") or {}
     out(
         {
-            "category": {"id": cat.get("id"), "name": cat.get("name"), "path": " > ".join(p["name"] for p in cat.get("path", []))},
+            "category": {
+                "id": cat.get("id"),
+                "name": cat.get("name"),
+                "path": " > ".join(p["name"] for p in cat.get("path", [])),
+            },
             "subcategories": [
-                {"sub": c["id"], "name": c["name"], "count": c.get("productCount")} for c in cat.get("children", [])
+                {"sub": c["id"], "name": c["name"], "count": c.get("productCount")}
+                for c in cat.get("children", [])
             ],
             "total": d.get("totalProductHits"),
             "products": [slim_product(p) for p in d.get("products", [])],
@@ -245,11 +311,17 @@ def cmd_offers(a):
     params = {
         "af_ORIGIN": None if a.international else "NATIONAL",
         "af_ITEM_CONDITION": "NEW,UNKNOWN" if not a.used else None,
-        "af_STOCK_STATUS": None if a.all_stock else "IN_STOCK,BACKORDER,PREORDER,SPECIAL_ORDER,COLLECT_IN_STORE",
+        "af_STOCK_STATUS": None
+        if a.all_stock
+        else "IN_STOCK,BACKORDER,PREORDER,SPECIAL_ORDER,COLLECT_IN_STORE",
         "sortByPreset": "PRICE_WITH_SHIPPING" if a.sort == "total" else "PRICE",
         "languageCode": "da",
     }
-    d = get("product-detail-edge-rest", f"/public/product-detail/v0/offers/{CC}/{pid}", params)
+    d = get(
+        "product-detail-edge-rest",
+        f"/public/product-detail/v0/offers/{CC}/{pid}",
+        params,
+    )
     merchants = d.get("merchants") or {}
     offers = []
     for o in d.get("offers", [])[: a.limit]:
@@ -263,7 +335,9 @@ def cmd_offers(a):
                     "merchantId": o["merchantId"],
                     "price": price,
                     "shipping": ship,
-                    "total": round(price + ship, 2) if price is not None and ship is not None else None,
+                    "total": round(price + ship, 2)
+                    if price is not None and ship is not None
+                    else None,
                     "stock": o.get("stockStatus"),
                     "delivery": o.get("deliveryTime"),
                     "country": m.get("internationalCountryCode"),
@@ -283,7 +357,11 @@ def cmd_history(a):
     d = get(
         "product-information-edge-rest",
         f"/public/pricehistory/product/{pid}/{CC}/DAY",
-        {"merchantId": a.merchant or "", "selectedInterval": a.interval, "filter": "NATIONAL"},
+        {
+            "merchantId": a.merchant or "",
+            "selectedInterval": a.interval,
+            "filter": "NATIONAL",
+        },
     )
     hist = d.get("history") or []
     if not hist:
@@ -298,33 +376,74 @@ def cmd_history(a):
             "productId": pid,
             "interval": a.interval,
             "current": cur,
-            "lowest": {"price": lowest["price"], "date": lowest["timestamp"][:10], "merchant": lowest.get("merchantName")},
+            "lowest": {
+                "price": lowest["price"],
+                "date": lowest["timestamp"][:10],
+                "merchant": lowest.get("merchantName"),
+            },
             "highest": {"price": highest["price"], "date": highest["timestamp"][:10]},
             "median": prices[len(prices) // 2],
-            "currentPercentile": round(100 * sum(p < cur for p in prices) / len(prices)),
-            "series": [[h["timestamp"][:10], h["price"], h.get("merchantName")] for h in hist[::step]]
-            + ([[hist[-1]["timestamp"][:10], cur, hist[-1].get("merchantName")]] if (len(hist) - 1) % step else []),
+            "currentPercentile": round(
+                100 * sum(p < cur for p in prices) / len(prices)
+            ),
+            "series": [
+                [h["timestamp"][:10], h["price"], h.get("merchantName")]
+                for h in hist[::step]
+            ]
+            + (
+                [[hist[-1]["timestamp"][:10], cur, hist[-1].get("merchantName")]]
+                if (len(hist) - 1) % step
+                else []
+            ),
         }
     )
 
 
 def cmd_info(a):
     _, pid = product_id(a.product)
-    d = get("product-information-edge-rest", f"/public/info/product/{CC}", {"productIds": pid})
+    d = get(
+        "product-information-edge-rest",
+        f"/public/info/product/{CC}",
+        {"productIds": pid},
+    )
     info = (d.get("productInfoSet") or [{}])[0]
-    r = get("review-edge-rest", f"/public/v2/products/reviews/overview/{CC}/{pid}/") or {}
+    r = (
+        get("review-edge-rest", f"/public/v2/products/reviews/overview/{CC}/{pid}/")
+        or {}
+    )
     out(
         {
             "name": info.get("productName"),
             "url": BASE + info["productUrl"] if info.get("productUrl") else None,
-            "lowest": {k: {"price": v["price"], "merchantId": v["merchantId"]} for k, v in (info.get("offerPrices") or {}).items() if v},
+            "lowest": {
+                k: {"price": v["price"], "merchantId": v["merchantId"]}
+                for k, v in (info.get("offerPrices") or {}).items()
+                if v
+            },
             "reviews": {
                 k: r.get(k)
-                for k in ("score", "scoreCount", "userReviewCount", "proReviewCount", "userScoreDistribution")
+                for k in (
+                    "score",
+                    "scoreCount",
+                    "userReviewCount",
+                    "proReviewCount",
+                    "userScoreDistribution",
+                )
             }
             | {
                 "proReviews": [
-                    {k: p.get(k) for k in ("source", "score", "scoreMax", "title", "pros", "cons", "link")}
+                    {
+                        k: p.get(k)
+                        for k in (
+                            "source",
+                            "score",
+                            "scoreMax",
+                            "title",
+                            "pros",
+                            "cons",
+                            "link",
+                        )
+                    }
                     for p in ((r.get("proReviews") or {}).get("reviews") or [])
                 ]
             },
@@ -335,9 +454,19 @@ def cmd_info(a):
 def cmd_similar(a):
     cat, pid = product_id(a.product)
     if not cat:
-        info = get("product-information-edge-rest", f"/public/info/product/{CC}", {"productIds": pid})
-        cat, _ = product_id((info.get("productInfoSet") or [{}])[0].get("productUrl", ""))
-    d = get("similar-edge-rest", f"/public/search/products/similar/{CC}/{cat}/{pid}", {"size": a.limit})
+        info = get(
+            "product-information-edge-rest",
+            f"/public/info/product/{CC}",
+            {"productIds": pid},
+        )
+        cat, _ = product_id(
+            (info.get("productInfoSet") or [{}])[0].get("productUrl", "")
+        )
+    d = get(
+        "similar-edge-rest",
+        f"/public/search/products/similar/{CC}/{cat}/{pid}",
+        {"size": a.limit},
+    )
     out([slim_product(p) for p in d.get("products", [])])
 
 
@@ -349,7 +478,11 @@ def cmd_compare(a):
     for c in d.get("categories", []):
         for g in c.get("attributeGroups", []):
             for at in g.get("attributes", []):
-                vals = {names.get(pid, pid): ", ".join(v) + (f" {at['unit']}" if at.get("unit") else "") for pid, v in at["values"].items()}
+                vals = {
+                    names.get(pid, pid): ", ".join(v)
+                    + (f" {at['unit']}" if at.get("unit") else "")
+                    for pid, v in at["values"].items()
+                }
                 if a.all or len(set(vals.values())) > 1 or len(vals) < len(names):
                     specs[f"{g.get('name')} / {at['name']}"] = vals
     out({"products": [slim_product(p) for p in d.get("products", [])], "specs": specs})
@@ -366,7 +499,12 @@ def cmd_deals(a):
     if a.category:
         params["af_CATEGORY"] = a.category
     d = get("deals-edge-rest", f"/public/search/deals/products/v3/{CC}", params)
-    out({"total": d.get("totalHits"), "products": [slim_product(p) for p in d.get("products", [])]})
+    out(
+        {
+            "total": d.get("totalHits"),
+            "products": [slim_product(p) for p in d.get("products", [])],
+        }
+    )
 
 
 def main():
@@ -377,10 +515,20 @@ def main():
     s = sub.add_parser("search", help="free-text product search with facets")
     s.add_argument("query")
     s.add_argument("-f", "--filter", action="append", help=fhelp)
-    s.add_argument("-c", "--category", help="restrict to a cl id (94) or sub id (100003567-100014541)")
+    s.add_argument(
+        "-c",
+        "--category",
+        help="restrict to a cl id (94) or sub id (100003567-100014541)",
+    )
     s.add_argument("-n", "--limit", type=int, default=20)
-    s.add_argument("--offset", type=int, help="page past the first result set (drops facets)")
-    s.add_argument("--no-extract", action="store_true", help="don't let PriceRunner turn query words into filters")
+    s.add_argument(
+        "--offset", type=int, help="page past the first result set (drops facets)"
+    )
+    s.add_argument(
+        "--no-extract",
+        action="store_true",
+        help="don't let PriceRunner turn query words into filters",
+    )
     s.set_defaults(fn=cmd_search)
 
     s = sub.add_parser("categories", help="category tree (cached 7 days)")
@@ -395,7 +543,9 @@ def main():
 
     s = sub.add_parser("facets", help="option ids + counts for filters in a category")
     s.add_argument("category")
-    s.add_argument("ids", nargs="+", help="filter ids from `filters`, e.g. BRAND 59671607")
+    s.add_argument(
+        "ids", nargs="+", help="filter ids from `filters`, e.g. BRAND 59671607"
+    )
     s.add_argument("-f", "--filter", action="append", help=fhelp)
     s.add_argument("-g", "--grep", help="regex on option value")
     s.add_argument("-n", "--limit", type=int, default=40)
@@ -404,9 +554,24 @@ def main():
     s = sub.add_parser("list", help="browse a category with filters and sorting")
     s.add_argument("category")
     s.add_argument("-q", "--query")
-    s.add_argument("--sub", help="subcategory id from `categories`/`subcategories`, e.g. 100003567-100014541")
+    s.add_argument(
+        "--sub",
+        help="subcategory id from `categories`/`subcategories`, e.g. 100003567-100014541",
+    )
     s.add_argument("-f", "--filter", action="append", help=fhelp)
-    s.add_argument("-s", "--sort", choices=["POPULARITY", "PRICE_ASC", "PRICE_DESC", "NAME", "PRICE_DROP", "RATING", "TREND"])
+    s.add_argument(
+        "-s",
+        "--sort",
+        choices=[
+            "POPULARITY",
+            "PRICE_ASC",
+            "PRICE_DESC",
+            "NAME",
+            "PRICE_DROP",
+            "RATING",
+            "TREND",
+        ],
+    )
     s.add_argument("-n", "--limit", type=int, default=24)
     s.add_argument("--offset", type=int)
     s.set_defaults(fn=cmd_list)
@@ -414,23 +579,41 @@ def main():
     s = sub.add_parser("offers", help="shop offers for a product")
     s.add_argument("product", help="id, <cat>-<id> or /pl/ URL")
     s.add_argument("-n", "--limit", type=int, default=15)
-    s.add_argument("--sort", choices=["total", "price"], default="total", help="total = incl. shipping")
+    s.add_argument(
+        "--sort",
+        choices=["total", "price"],
+        default="total",
+        help="total = incl. shipping",
+    )
     s.add_argument("--international", action="store_true", help="include foreign shops")
     s.add_argument("--used", action="store_true", help="include used/refurbished")
-    s.add_argument("--all-stock", action="store_true", help="include out-of-stock offers")
+    s.add_argument(
+        "--all-stock", action="store_true", help="include out-of-stock offers"
+    )
     s.set_defaults(fn=cmd_offers)
 
     s = sub.add_parser("history", help="daily lowest-price history")
     s.add_argument("product")
     s.add_argument(
-        "-i", "--interval", default="ONE_YEAR",
-        choices=["ONE_WEEK", "ONE_MONTH", "THREE_MONTHS", "ONE_YEAR", "TWO_YEARS", "INFINITE_DAYS"],
+        "-i",
+        "--interval",
+        default="ONE_YEAR",
+        choices=[
+            "ONE_WEEK",
+            "ONE_MONTH",
+            "THREE_MONTHS",
+            "ONE_YEAR",
+            "TWO_YEARS",
+            "INFINITE_DAYS",
+        ],
     )
     s.add_argument("-m", "--merchant", help="merchant id")
     s.add_argument("-p", "--points", type=int, default=30, help="max series points")
     s.set_defaults(fn=cmd_history)
 
-    s = sub.add_parser("info", help="lowest national/international price + review scores")
+    s = sub.add_parser(
+        "info", help="lowest national/international price + review scores"
+    )
     s.add_argument("product")
     s.set_defaults(fn=cmd_info)
 
@@ -441,7 +624,11 @@ def main():
 
     s = sub.add_parser("compare", help="spec-by-spec comparison of products")
     s.add_argument("products", nargs="+")
-    s.add_argument("--all", action="store_true", help="include specs that are identical across products")
+    s.add_argument(
+        "--all",
+        action="store_true",
+        help="include specs that are identical across products",
+    )
     s.set_defaults(fn=cmd_compare)
 
     s = sub.add_parser("deals", help="current price drops")
@@ -449,8 +636,16 @@ def main():
     s.add_argument("--min-drop", type=int, default=10, help="minimum drop in percent")
     s.add_argument("-f", "--filter", action="append", help=fhelp)
     s.add_argument(
-        "-s", "--sort", default="PRICEDROP_ASC",
-        choices=["PRICEDROP_ASC", "LATESTPRICEDROPTIME_DESC", "GLOBALRANK_ASC", "PRICE_ASC", "PRICE_DESC"],
+        "-s",
+        "--sort",
+        default="PRICEDROP_ASC",
+        choices=[
+            "PRICEDROP_ASC",
+            "LATESTPRICEDROPTIME_DESC",
+            "GLOBALRANK_ASC",
+            "PRICE_ASC",
+            "PRICE_DESC",
+        ],
     )
     s.add_argument("-n", "--limit", type=int, default=20)
     s.add_argument("--offset", type=int)
