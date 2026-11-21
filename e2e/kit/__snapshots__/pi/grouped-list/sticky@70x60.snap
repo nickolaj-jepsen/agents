@@ -1,0 +1,17 @@
+# kit/pi/grouped-list/sticky 70x60 @2,2 (66x5)
+│  docs/page-1.md                                                4
+│    ○ Claim 2 about page 1                                     2×
+│    ○ Claim 3 about page 1
+│  ❯ ○ Claim 4 about page 1                                     2×
+   ↑ 1 more here  ↓ 7 more docs
+--- styles
+1 .x2 2x14 .x48 3
+1 .x4 3 . 1x20 .x37 3x2
+1 .x4 3 . 1x20
+1 .x2 4 . 3 . 4x20 .x37 3x2
+.x3 3x28
+--- legend
+1 fg=#dee0e1
+2 fg=#a798d7
+3 fg=#7e888e
+4 fg=#dee0e1 bold

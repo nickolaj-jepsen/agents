@@ -39,6 +39,21 @@ Features:
 - A round's closing row: the count goes to the first question, Fill prompt is suggested once there is a reply: pi yes (the kit draws the rail beside the row); claude partial (the rail is the engine's quote border, which the kit does not draw)
 - Keys and clicks pick an answer: pi yes (the client wires keys and the mouse to `choiceReduce`); claude yes (the client wires keys and clicks to `choiceReduce`)
 
+## Item detail
+
+One item read whole: a meta line, a wrapped title, sections under dim headings or a rule, keyed rows, cut to a height.
+
+- pi: exists: `detail`, `detailRange`
+- claude: exists: `detail`, `detailRange`
+- status: pi system; claude system; gui legacy
+
+Features:
+
+- A dim meta line, a bold title, then prose and keyed rows under dim headings: pi yes; claude yes
+- Cut to a height, a dim `↓ more` saying there is more: pi yes; claude yes
+- Scrolled by `offset`: `↑ more` above and `↓ more` below; `detailRange` bounds it: pi yes; claude yes
+- A section under a rule with a control at its end, label first and its key dim: pi yes (the control's spans carry its `hit`); claude yes (the control's spans carry its `hit`)
+
 ## Captioned frame
 
 A form between two rules: a caption and Close in the top one, buttons above the bottom one.
@@ -53,6 +68,23 @@ Features:
 - A caption drawn in the room the rule has, such as the steps of a form: pi yes; claude yes
 - Close asks before it throws the answers away, in the place it stood: pi yes (Discard and Keep are controls with a `hit` each); claude yes (Discard and Keep are controls with a `hit` each)
 - The pointer's control is shown: pi yes (the control is bold in the text colour; `close.hover` names it); claude yes (the control sits on a soft fill: the engine inverts it, and the painter swaps its colours first)
+
+## Grouped list
+
+Rows with a mark and one line each, under group rows, behind rails; taller than its room, a window.
+
+- pi: exists: `list`, `listRange`, `listShowsWhole`
+- claude: exists: `list`, `listRange`, `listShowsWhole`
+- status: pi system; claude system; gui legacy
+
+Features:
+
+- Groups behind the card's rail: green once every row is decided, bright by the keyboard's group, whose label is in the accent: pi yes; claude yes
+- A row left alone, chosen (the accent, a filled mark) or set aside (the whole row dim): pi yes; claude yes
+- A long label cut from the left, a row cut to one line, its aside dropped first: pi yes; claude yes
+- Taller than its room: the keyboard's group row on top, the last row saying what is hidden above and below: pi yes (the wheel moves the window by `scroll`; `listRange` bounds it); claude yes (the wheel reaches the mod as `ui.scroll` with the row under the pointer)
+- The group row stays on top of the rows it scrolls past: pi yes; claude yes
+- The row under the pointer is shown: pi yes (the row is bold, like the keyboard's, without its pointer; `hovered` names it); claude yes (the row sits on a soft fill: the engine inverts it, and the painter swaps its colours first)
 
 ## Band shell
 

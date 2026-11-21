@@ -24,6 +24,8 @@ export const tokens = {
     bullet: "•",
     /** The rail down the left of a card in a transcript. */
     rail: "│",
+    /** The mark of a row set aside: it stays in the list, left out of what is carried out. */
+    dropped: "–",
   },
 } as const;
 

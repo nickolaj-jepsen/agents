@@ -1,0 +1,25 @@
+# kit/pi/grouped-list/window 160x45 @2,2 (96x9)
+│  docs/page-4.md                                                                              4
+│    ○ Claim 13 about page 4
+│  ❯ ○ Claim 14 about page 4                                                                  2×
+│    ○ Claim 15 about page 4
+│    ○ Claim 16 about page 4                                                                  2×
+│  docs/page-5.md                                                                              4
+│    ○ Claim 17 about page 5
+│    ○ Claim 18 about page 5                                                                  2×
+   ↑ 3 docs above  ↓ 2 more here · 3 more docs
+--- styles
+1 .x2 2x14 .x78 3
+1 .x4 3 . 1x21
+1 .x2 4 . 3 . 4x21 .x66 3x2
+1 .x4 3 . 1x21
+1 .x4 3 . 1x21 .x66 3x2
+3 .x2 3x14 .x78 3
+3 .x4 3 . 1x21
+3 .x4 3 . 1x21 .x66 3x2
+.x3 3x43
+--- legend
+1 fg=#dee0e1
+2 fg=#a798d7
+3 fg=#7e888e
+4 fg=#dee0e1 bold

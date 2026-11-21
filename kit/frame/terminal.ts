@@ -23,7 +23,7 @@ const confirmButtons: Button[] = [
 /** Close, or the question it asks before the answers go: `undefined` when neither fits. */
 function closeSpans(
   width: number,
-  { confirming, hover }: NonNullable<CaptionFrame["close"]>,
+  { confirming, hover, question = "Discard answers?" }: NonNullable<CaptionFrame["close"]>,
 ): Span[] | undefined {
   const room = width - 7;
   if (!confirming) {
@@ -39,7 +39,7 @@ function closeSpans(
   const buttonsWidth =
     cellWidth(`Discard ${tokens.glyph.enter}`) + tokens.gutter + cellWidth("Keep [esc]");
   if (room < buttonsWidth) return undefined;
-  const prompt = "Discard answers?";
+  const prompt = question;
   // The longer prompt only when there is still room for a caption.
   const lead =
     room >= buttonsWidth + tokens.gutter + cellWidth(prompt) + 7

@@ -1,0 +1,21 @@
+# kit/claude/item-detail/cut 160x45 @89,1 (71x8)
+wrong · seen 3× · 2 days ago
+pi's permission gate cannot resolve shell variables, so cat
+$S/id_ed25519 reads what cat ~/.ssh/id_ed25519 denies.
+
+Why the repo didn't say it
+The docs describe the gate as matching on the command text, and nothing
+says the text is not expanded first.
+↓ more
+--- styles
+1x28
+2x59
+2x54
+-
+1x26
+-
+-
+1x6
+--- legend
+1 fg=#999999
+2 bold

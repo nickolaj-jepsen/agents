@@ -1,0 +1,38 @@
+# kit/pi/item-detail/whole 240x60 @2,2 (96x16)
+wrong · seen 3× · 2 days ago
+pi's permission gate cannot resolve shell variables, so cat $S/id_ed25519 reads what cat
+~/.ssh/id_ed25519 denies.
+
+Why the repo didn't say it
+The docs describe the gate as matching on the command text, and nothing says the text is not
+expanded first.
+
+Details
+Measured: the path projection resolves only HOME and PWD.
+Any other $VAR spelling lands inside cwd and is allowed.
+
+Points at
+path     modules/programs/pi/default.nix
+command  cat $S/id_ed25519
+quote    “if it happens again, just wait”
+--- styles
+1x28
+2x88
+2x25
+-
+1x26
+-
+-
+-
+1x7
+-
+-
+-
+1x9
+1x7 .x2 3x31
+1x7 .x2 3x17
+1x7 .x2 3x32
+--- legend
+1 fg=#7e888e
+2 fg=#dee0e1 bold
+3 fg=#dee0e1

@@ -1,0 +1,41 @@
+import { defineComponent, yes } from "../catalog/manifest.ts";
+
+export default defineComponent({
+  id: "item-detail",
+  name: "Item detail",
+  purpose:
+    "One item read whole: a meta line, a wrapped title, sections under dim headings or a rule, keyed rows, cut to a height.",
+  impl: { pi: ["detail", "detailRange"], claude: ["detail", "detailRange"] },
+  status: { pi: "system", claude: "system", gui: "legacy" },
+  source: "detail/terminal.ts",
+  features: [
+    {
+      id: "whole",
+      label: "A dim meta line, a bold title, then prose and keyed rows under dim headings",
+      story: "item-detail/whole",
+      pi: yes(),
+      claude: yes(),
+    },
+    {
+      id: "cut",
+      label: "Cut to a height, a dim `↓ more` saying there is more",
+      story: "item-detail/cut",
+      pi: yes(),
+      claude: yes(),
+    },
+    {
+      id: "scroll",
+      label: "Scrolled by `offset`: `↑ more` above and `↓ more` below; `detailRange` bounds it",
+      story: "item-detail/rule",
+      pi: yes(),
+      claude: yes(),
+    },
+    {
+      id: "rule",
+      label: "A section under a rule with a control at its end, label first and its key dim",
+      story: "item-detail/rule",
+      pi: yes("the control's spans carry its `hit`"),
+      claude: yes("the control's spans carry its `hit`"),
+    },
+  ],
+});

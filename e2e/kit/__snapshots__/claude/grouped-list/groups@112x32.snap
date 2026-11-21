@@ -1,0 +1,26 @@
+# kit/claude/grouped-list/groups 112x32 @71,1 (41x9)
+│  docs/agent-hub.md                    2
+│    ● Unittest suite needs a short TMPD…
+│    – Socket tests fail with AF_UNIX pa…
+│  docs/agents.md                       3
+│  ❯ ○ pi's permission gate cannot resol…
+│    ○ The hub migration plan is finished
+│    ○ Agents never read the store README
+│  …/a-very-long-folder-name/style.md   1
+│    ○ 東京の節は古くなっています。全角…
+--- styles
+1 .x2 2x17 .x20 2
+1 .x4 3 . 3x34
+1 .x4 2 . 2x34
+.x3 4x14 .x23 2
+.x3 5 . 2 . 5x34
+.x5 2
+.x5 2
+2 .x2 2x34 .x3 2
+2 .x4 2
+--- legend
+1 fg=#4eba65
+2 fg=#999999
+3 fg=#d77757 bold
+4 fg=#d77757
+5 bold

@@ -32,7 +32,12 @@ export type CaptionFrame = {
   /** In place of the title: spans, or what draws them in the room the rule has. */
   caption?: Span[] | ((width: number) => Span[] | undefined);
   /** Close at the right edge, or in its place the question that throws the answers away. */
-  close?: { confirming?: boolean; hover?: CloseAction };
+  close?: {
+    confirming?: boolean;
+    hover?: CloseAction;
+    /** What the question says, where there is room for it. @default "Discard answers?" */
+    question?: string;
+  };
   /** Lines laid out for `width - 2 * captionFrameLayout.x` cells. */
   body: Line[];
   /** A button row above the bottom rule. */

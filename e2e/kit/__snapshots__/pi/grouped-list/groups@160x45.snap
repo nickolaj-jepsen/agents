@@ -1,0 +1,27 @@
+# kit/pi/grouped-list/groups 160x45 @2,2 (96x9)
+│  docs/agent-hub.md                                                                           2
+│    ● Unittest suite needs a short TMPDIR and markdown-it-py on the path                     2×
+│    – Socket tests fail with AF_UNIX path too long
+│  docs/agents.md                                                                              3
+│  ❯ ○ pi's permission gate cannot resolve shell variables, so a path in one is read          3×
+│    ○ The hub migration plan is finished
+│    ○ Agents never read the store README
+│  skills/agent-plugin-dev/references/a-very-long-folder-name/style.md                         1
+│    ○ 東京の節は古くなっています。全角文字の説明文                                          12×
+--- styles
+1 .x2 2x17 .x75 2
+1 .x4 3 . 3x66 .x21 2x2
+1 .x4 2 . 2x44
+4 .x2 5x14 .x78 2
+4 .x2 6 . 2 . 6x77 .x10 2x2
+4 .x4 2 . 4x34
+4 .x4 2 . 4x34
+2 .x2 2x67 .x25 2
+2 .x4 2 . 4x44 .x42 2x3
+--- legend
+1 fg=#68b78d
+2 fg=#7e888e
+3 fg=#a798d7 bold
+4 fg=#dee0e1
+5 fg=#a798d7
+6 fg=#dee0e1 bold

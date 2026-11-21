@@ -5,6 +5,8 @@
 import { buttonStories } from "./buttons/stories.ts";
 import { cardStories } from "./card/stories.ts";
 import { frameStories } from "./frame/stories.ts";
+import { listStories } from "./list/stories.ts";
+import { detailStories } from "./detail/stories.ts";
 import type { Line } from "./lines.ts";
 
 export type KitStory = {
@@ -26,4 +28,10 @@ export type KitStory = {
 
 export const storyId = (s: Pick<KitStory, "component" | "state">) => `${s.component}/${s.state}`;
 
-export const kitStories: KitStory[] = [...cardStories, ...buttonStories, ...frameStories];
+export const kitStories: KitStory[] = [
+  ...cardStories,
+  ...buttonStories,
+  ...frameStories,
+  ...listStories,
+  ...detailStories,
+];
