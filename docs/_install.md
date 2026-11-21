@@ -16,6 +16,6 @@ npx skills add nickolaj-jepsen/agents --skill land
 claude plugin install skills@nickolaj-jepsen
 ```
 
-The checks (`nix flake check`) validate and test each plugin against Claude Code from nixpkgs master,
-or against whichever version a consumer passes to `lib.mkClaudePlugin`. A marketplace install gets no
-such check, so a Claude Code update can break one.
+CI validates and tests each plugin against the Claude Code version the repo pins, and
+`lib.mkClaudePlugin` does the same against whichever version a consumer passes it. A marketplace
+install gets no such check, so a Claude Code update can break one.

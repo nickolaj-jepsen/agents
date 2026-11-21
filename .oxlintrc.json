@@ -41,6 +41,11 @@
                   "SelectList"
                 ],
                 "message": "Don't draw with pi-tui helpers. Measure and wrap with kit/lines.ts, paint with kit/paint/pi.ts."
+              },
+              {
+                "name": "@earendil-works/pi-ai",
+                "importNames": ["Type"],
+                "message": "Import Type from typebox, not from pi-ai. See docs/development.md#change-or-add-a-plugin."
               }
             ],
             "patterns": [
@@ -121,12 +126,106 @@
         ]
       }
     },
+    // An override replaces a rule's options whole, so each restates what it keeps of the shared ones.
+    // A core is harness-free (docs/development.md#change-or-add-a-plugin): it imports its own
+    // files and the mod's copy of the kit, which also keeps it clear of pi-tui and the legacy kit.
+    {
+      "files": ["plugins/*/core/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                // One gitignore-style list, last match wins: oxlint doesn't combine several groups.
+                // A core folder is at most one level deep, so `core/` and `core/<dir>/` are spelled out.
+                "group": [
+                  "*",
+                  "!./**",
+                  "!../**",
+                  "../pi/**",
+                  "../../pi/**",
+                  "../claude/**",
+                  "../../*/**",
+                  "../../../**",
+                  "!../claude/kit/**",
+                  "!../../claude/kit/**"
+                ],
+                "message": "A core has no Node builtin and no package, and imports only its own files and the mod's copy of the kit, claude/kit/. See docs/development.md#change-or-add-a-plugin."
+              }
+            ]
+          }
+        ],
+        "no-restricted-globals": [
+          "error",
+          { "name": "process", "message": "No Node or DOM APIs in a core." },
+          { "name": "Buffer", "message": "No Node or DOM APIs in a core." },
+          { "name": "window", "message": "No Node or DOM APIs in a core." },
+          { "name": "document", "message": "No Node or DOM APIs in a core." },
+          { "name": "localStorage", "message": "No Node or DOM APIs in a core." }
+        ]
+      }
+    },
+    // A core's specs run under vitest in Node and load nowhere else: they may read fixtures and use packages.
+    {
+      "files": ["plugins/*/core/**/*.spec.ts"],
+      "rules": {
+        "no-restricted-imports": "off",
+        "no-restricted-globals": "off"
+      }
+    },
+    // A mod can't import outside its plugin folder: the install copies the plugin alone.
+    {
+      "files": ["plugins/*/claude/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@earendil-works/pi-tui",
+                "message": "A mod runs in Claude Code, which has no pi-tui. Measure and wrap with kit/lines.ts, paint with kit/paint/claude.tsx."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["**/kit/legacy/**", "./ui"],
+                "message": "This is the legacy kit. Use the kit's components (kit/<component>/, listed in AGENTS.md) instead."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./",
+                "message": "A mod can't import outside its plugin. Import ./kit/ (kit/sync.ts copies the kit there) or ../core/. See docs/development.md#change-or-add-a-plugin."
+              }
+            ]
+          }
+        ]
+      }
+    },
     {
       "files": ["plugins/*/claude/kit/**"],
       "rules": {
         "no-restricted-imports": "off",
         "no-restricted-properties": "off",
         "react/forbid-elements": "off"
+      }
+    },
+    // The site reads its content as data (site/data/), so its pages reach into scripts/ and kit/ for
+    // types only, and site/ alone builds. Covers the frontmatter of .astro pages too.
+    {
+      "files": ["site/src/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^(\\.\\./)+(scripts|kit)/",
+                "allowTypeImports": true,
+                "message": "site/src imports a value from outside site/; only `import type` may. See docs/development.md#preview-the-published-site."
+              }
+            ]
+          }
+        ]
       }
     },
     // Legacy files: they still draw around the kit. List only shrinks; never add a file here.
