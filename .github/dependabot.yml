@@ -1,5 +1,8 @@
-# One PR a day at most, all flake inputs together; the Dependabot auto-merge workflow merges it once
-# `CI gate` passes. Dependabot's 3-day cooldown on an input's new commits still applies.
+# One PR a day at most per ecosystem (flake inputs, npm packages, Python packages), each with
+# everything together; the Dependabot auto-merge workflow merges it once `CI gate` passes.
+# Dependabot's 3-day cooldown on an input's new commits still applies.
+# `CI gate` reads the turbo remote cache's secrets, and Dependabot has its own: add TURBO_TOKEN and
+# TURBO_REMOTE_CACHE_SIGNATURE_KEY under the repo's Dependabot secrets, or its PRs run every task.
 version: 2
 updates:
   - package-ecosystem: "nix"
@@ -11,4 +14,24 @@ updates:
     open-pull-requests-limit: 1
     groups:
       flake-inputs:
+        patterns: ["*"]
+  # The pnpm workspace: pnpm-lock.yaml at the root covers every package.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "cron"
+      cronjob: "23 3 * * *"
+    open-pull-requests-limit: 1
+    groups:
+      npm-packages:
+        patterns: ["*"]
+  # The uv workspace: uv.lock at the root.
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "cron"
+      cronjob: "23 3 * * *"
+    open-pull-requests-limit: 1
+    groups:
+      python-packages:
         patterns: ["*"]
