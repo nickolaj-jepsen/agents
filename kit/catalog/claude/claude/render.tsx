@@ -41,8 +41,23 @@ import {
   type Row,
 } from "./samples";
 
+import {
+  choiceKey,
+  choiceOf,
+  choiceReduce,
+  type ChoiceIntent,
+  type ChoiceState,
+} from "./kit/choice/contract.ts";
+import { choiceStories } from "./kit/choice/stories.ts";
+import { choiceLines } from "./kit/choice/terminal.ts";
+import { paintLines } from "./kit/paint/claude.tsx";
+
 export type Env = { columns: number; rows: number };
-type Render = (k: Kit, width: number, env: Env) => JSX.Element | null;
+/** The address of a button that only carries a letter key and draws nothing. */
+export const KEY_PREFIX = "choice-key-";
+/** A story that reacts keeps one value in the catalogue's state and replaces it. */
+export type LiveState = { state: unknown; set: (next: unknown) => unknown };
+type Render = (k: Kit, width: number, env: Env, live?: LiveState) => JSX.Element | null;
 
 const none = () => undefined;
 
@@ -390,6 +405,37 @@ export const renders: Record<string, Render> = {
       </Box>
     );
   },
+
+  ...Object.fromEntries(
+    choiceStories.map((s): [string, Render] => [
+      `choice/${s.state}`,
+      (k, width, _env, live) => {
+        const { Box, Button } = k;
+        if (!s.live || !live) return paintLines(k, choiceLines(s.props, width));
+        const state = (live.state as ChoiceState | null) ?? { chosen: s.props.chosen };
+        const send = (intent: ChoiceIntent | undefined) =>
+          intent && live.set(choiceReduce(state, intent, s.props));
+        return (
+          <Box flexDirection="column">
+            {paintLines(k, choiceLines({ ...s.props, ...state }, width), (hit) =>
+              send({ do: "pick", index: choiceOf(hit) }),
+            )}
+            <Box width={0} height={0} overflow="hidden">
+              {s.props.items.map((item) => (
+                <Button
+                  key={`${KEY_PREFIX}${item.key}`}
+                  plain
+                  hotkey={item.key.toLowerCase()}
+                  label={item.key}
+                  onPress={() => send(choiceKey(s.props.items, item.key))}
+                />
+              ))}
+            </Box>
+          </Box>
+        );
+      },
+    ]),
+  ),
 
   "band/default": bandOf({ title: "Questions", right: true, lines: 3, height: 8 }),
   "band/title-only": bandOf({ title: "Questions", lines: 3, height: 8 }),

@@ -18,6 +18,16 @@ export const checks = join(here, "checks.tsx");
 /** The catalogue mod is not a plugin, so it is named here and always has a copy. */
 const extra = [join(root, "kit/catalog/claude/claude/ui.tsx")];
 
+/** The shared kit's files a Claude mod carries, relative to `kit/`. */
+const shared = [
+  "lines.ts",
+  "tokens.ts",
+  "choice/contract.ts",
+  "choice/terminal.ts",
+  "choice/stories.ts",
+  "paint/claude.tsx",
+];
+
 /** Every copy that exists, plus `add` (plugin names) to be created. */
 export function copies(add: string[] = []): string[] {
   const plugins = join(root, "plugins");
@@ -44,5 +54,10 @@ export function pairs(add: string[] = []): { source: string; file: string }[] {
       source: join(root, "kit/catalog/samples.ts"),
       file: join(root, "kit/catalog/claude/claude/samples.ts"),
     },
+    // The shared kit, drawn once for both terminals: the catalogue mod is its first carrier.
+    ...shared.map((path) => ({
+      source: join(root, "kit", path),
+      file: join(root, "kit/catalog/claude/claude/kit", path),
+    })),
   ];
 }

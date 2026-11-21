@@ -3,7 +3,12 @@
  * the kit means adding its stories here in the same change (see ../../README.md).
  */
 import type { Theme } from "@earendil-works/pi-coding-agent";
-import type { TuiMouseEvent, TuiMouseEventResult } from "@earendil-works/pi-tui";
+import {
+  Key,
+  matchesKey,
+  type TuiMouseEvent,
+  type TuiMouseEventResult,
+} from "@earendil-works/pi-tui";
 import {
   bandShell,
   buttonRow,
@@ -49,6 +54,18 @@ import {
   WIDE,
   type Row,
 } from "../samples.ts";
+
+import {
+  choiceKey,
+  choiceOf,
+  choiceReduce,
+  type ChoiceIntent,
+  type ChoiceProps,
+  type ChoiceState,
+} from "../../choice/contract.ts";
+import { choiceStories } from "../../choice/stories.ts";
+import { choiceLines } from "../../choice/terminal.ts";
+import { paintLines } from "../../paint/pi.ts";
 
 export type Env = { columns: number; rows: number };
 
@@ -967,7 +984,49 @@ export const stories: Story[] = [
     width: "dialog",
     make: () => pure((theme, width) => emptyState(theme, width, `${SENTENCE} ${SENTENCE}`)),
   },
+  ...choiceStories.map((s): Story => ({
+    component: "choice",
+    state: s.state,
+    about: s.about,
+    settings: s.settings,
+    extreme: s.extreme,
+    width: "reading",
+    make: () => (s.live ? choiceLive(s.props) : choicePure(s.props)),
+  })),
 ];
+
+const choicePure = (props: ChoiceProps): Live =>
+  pure((theme, width) => paintLines(theme, choiceLines(props, width), width).lines);
+
+/** pi draws its own focus: arrows move it, space, enter, a letter or a click pick. */
+function choiceLive(props: ChoiceProps): Live {
+  let state: ChoiceState = { chosen: props.chosen, focus: 0 };
+  let hits: (string | undefined)[] = [];
+  const send = (intent: ChoiceIntent | undefined) => {
+    if (!intent) return false;
+    state = choiceReduce(state, intent, props);
+    return true;
+  };
+  return {
+    render: (theme, width) => {
+      const painted = paintLines(theme, choiceLines({ ...props, ...state }, width), width);
+      hits = painted.hits;
+      return painted.lines;
+    },
+    input: (data) => {
+      if (matchesKey(data, Key.down)) return send({ do: "move", by: 1 });
+      if (matchesKey(data, Key.up)) return send({ do: "move", by: -1 });
+      if (matchesKey(data, Key.space) || matchesKey(data, Key.enter)) return send({ do: "pick" });
+      return send(choiceKey(props.items, data));
+    },
+    mouse: (event) => {
+      const index = choiceOf(hits[event.y]);
+      if (event.type !== "click" || event.button !== "left" || index < 0) return undefined;
+      send({ do: "pick", index });
+      return { handled: true, render: true };
+    },
+  };
+}
 
 /** The body rows a story may use under a frame: the terminal less margins and the frame. */
 export const bodyRows = (terminalRows: number) => Math.max(3, terminalRows - 2 * tokens.margin - 4);

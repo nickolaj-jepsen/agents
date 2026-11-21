@@ -1,0 +1,19 @@
+# kit/pi/choice/single 112x32 @2,2 (96x6)
+  A ○ The whole transcript
+  B ● The last turn only, which is the part most people read back when a run went wrong and they
+      want to see why
+      履歴は保存されますが、古い出力は要約されます。 Older output is summarised.
+  C ○ A summary of each run
+  D ○ Write your own answer
+--- styles
+1x2 2x4 3x20
+1x2 2x2 4x92
+3x6 4x15
+3x6 2x74
+1x2 2x4 3x21
+1x2 2x25
+--- legend
+1 fg=#dee0e1 bold
+2 fg=#7e888e
+3 fg=#dee0e1
+4 fg=#a798d7 bold

@@ -7,7 +7,8 @@
 import { atom, read, update } from "claude-code";
 import type { Register } from "claude-code";
 import { stageWidth, storyId, stories, type Story } from "../stories";
-import { renders } from "./render";
+import { choiceHit } from "./kit/choice/contract.ts";
+import { KEY_PREFIX, renders } from "./render";
 import { kitOf, onlyOwnRows, paneOptions, withColumns } from "./ui";
 
 const PANE = "kit";
@@ -16,6 +17,13 @@ const PLUGIN = "kit-catalog";
 const story = atom({ plugin: "kit-catalog", key: "story" } as const, null as string | null, {
   shape: "story-1",
 });
+
+/** What a story that reacts has been set to, by story id; a story drawn again starts over. */
+const live = atom(
+  { plugin: "kit-catalog", key: "live" } as const,
+  null as { id: string; state: unknown } | null,
+  { shape: "live-1" },
+);
 
 const find = (id: string | null): Story | undefined => stories.find((s) => storyId(s) === id);
 
@@ -50,6 +58,7 @@ export const register: Register = (on) => {
       return { text: `${component}${state ? `/${state}` : ""}: pick a state\n${known}` };
     }
     await update($, story, () => storyId(one));
+    await update($, live, () => null);
     if (one.surface === "band") {
       await $.ui.close({ id: PANE }).catch(() => undefined);
       return { text: `Drew ${storyId(one)} in the band.` };
@@ -60,16 +69,29 @@ export const register: Register = (on) => {
     return { text: `Drew ${storyId(one)}.` };
   });
 
+  // The buttons that carry a story's letter keys draw nothing, so the ring never rests on one:
+  // past the last row it wraps to the first.
+  on("ui.focus", { requestId: PANE }, ($, e, next) =>
+    next(e.element?.startsWith(KEY_PREFIX) ? { ...e, element: choiceHit(0) } : e),
+  );
+
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
     const els = $.ui.resolve(e);
     const { Box, Text } = els;
     const s = find(await read($, story));
     if (!s || s.surface !== "pane") return <Text dimColor>/kit &lt;component&gt; [state]</Text>;
     const width = stageWidth(s, e.props.bodyColumns);
-    const body = renders[storyId(s)]?.(withColumns(kitOf(els, e), width), width, {
-      columns: e.props.bodyColumns,
-      rows: e.props.scroll.bodyRows,
-    });
+    const id = storyId(s);
+    const held = await read($, live);
+    const body = renders[id]?.(
+      withColumns(kitOf(els, e), width),
+      width,
+      { columns: e.props.bodyColumns, rows: e.props.scroll.bodyRows },
+      {
+        state: held?.id === id ? held.state : null,
+        set: (state) => update($, live, () => ({ id, state })),
+      },
+    );
     return <Box flexDirection="column">{body}</Box>;
   });
 

@@ -1,0 +1,26 @@
+# kit/claude/choice/single 112x32 @71,1 (41x10)
+  A ○ The whole transcript
+  B ● The last turn only, which is the
+      part most people read back when a
+      run went wrong and they want to see
+      why
+      履歴は保存されますが、古い出力は要
+      約されます。 Older output is
+      summarised.
+  C ○ A summary of each run
+  D ○ Write your own answer
+--- styles
+1x2 2x4
+1x2 2x2 3x34
+.x6 3x33
+.x6 3x35
+.x6 3x3
+.x6 2x34
+.x6 2x28
+.x6 2x11
+1x2 2x4
+1x2 2x25
+--- legend
+1 bold
+2 fg=#999999
+3 fg=#d77757 bold
