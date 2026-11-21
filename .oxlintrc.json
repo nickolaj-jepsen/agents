@@ -150,7 +150,6 @@
         "plugins/linear-issue/claude/gui.tsx",
         "plugins/linear-issue/claude/linear-issue.test.tsx",
         "plugins/linear-issue/claude/register.tsx",
-        "plugins/questions/pi/dialog.ts",
         "plugins/spellfix/claude/band.tsx",
         "plugins/spellfix/claude/register.tsx",
         "plugins/spellfix/claude/spellfix.test.tsx",

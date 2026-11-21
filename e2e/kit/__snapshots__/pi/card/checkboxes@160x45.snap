@@ -7,12 +7,13 @@
   D + Write your own answer
 --- styles
 .x2 1 . 2 . 2x20
-3x2 1 . 1 . 3x90
+3 . 1 . 1 . 3x90
 .x6 3x15
 .x6 1x74
-.x2 1 . 2 . 2x21
+.x2 1 . 2 . 2x2 4x7 2x12
 .x2 1 . 1 . 1x21
 --- legend
 1 fg=#7e888e
 2 fg=#a798d7 bold
 3 fg=#dee0e1 bold
+4 fg=#a798d7

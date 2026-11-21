@@ -6,6 +6,10 @@ export const tokens = {
   prose: 80,
   /** Cells between two things on a row: a label and its text, two buttons, two columns. */
   gutter: 2,
+  /** From this many columns a list with detail is two panes; below it stacks. */
+  splitFrom: 110,
+  /** The list pane's share of a split's content width. */
+  splitRatio: 0.55,
   glyph: {
     pointer: "❯",
     single: { off: "○", on: "●" },

@@ -246,7 +246,8 @@ export function inline(text: string, style: Style = {}): Span[] {
     const start = m.index ?? 0;
     if (start > at) spans.push({ ...style, text: flat.slice(at, start) });
     const [, code, bold, underscored, italic, slanted, link] = m;
-    if (code !== undefined) spans.push({ ...style, text: code, role: "code" });
+    // Code keeps its own face, as a Markdown renderer sets it: not the bold of a title round it.
+    if (code !== undefined) spans.push({ text: code, role: "code" });
     else if (bold !== undefined || underscored !== undefined)
       spans.push({ ...style, text: bold ?? underscored ?? "", bold: true });
     else if (italic !== undefined || slanted !== undefined)

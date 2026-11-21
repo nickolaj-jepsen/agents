@@ -80,7 +80,9 @@ export function choice(c: Choice, width: number): Line[] {
   const marker = chosen ? marks.on : isForm && isLiteral ? tokens.glyph.writeIn : marks.off;
   const key = c.key || " ";
   const pointer: Span[] = isForm
-    ? [focused ? span(`${tokens.glyph.pointer} `, { role: "text", bold: true }) : span(GAP)]
+    ? focused
+      ? [span(tokens.glyph.pointer, { role: "text", bold: true }), span(" ")]
+      : [span(" "), span(" ")]
     : [];
   const chosenRole: Role = isForm ? "accent" : tone;
   const label = controlStyle({
@@ -175,13 +177,10 @@ export function steps(all: readonly Step[], width: number): Line | undefined {
       highlighted: step.hovered,
       rest: step.done || !step.name ? "text" : "dim",
     });
-    if (step.name)
-      spans.push(
-        span(mark + (isCompact ? "" : " "), {
-          role: step.current ? "accent" : "dim",
-          hit: step.hit,
-        }),
-      );
+    if (step.name) {
+      spans.push(span(mark, { role: step.current ? "accent" : "dim", hit: step.hit }));
+      if (!isCompact) spans.push(span(" ", { hit: step.hit }));
+    }
     spans.push(span(label, { ...caption, hit: step.hit }));
   });
   return line(spans);
@@ -229,12 +228,13 @@ export function summary(s: Summary, width: number): Line[] {
   return [...head, ...(answers.length ? answers : missing), ...noted];
 }
 
-/** The nonempty sections of a card, one blank row between them. */
-export function sections(...parts: readonly Line[][]): Line[] {
-  return parts
-    .filter((part) => part.length > 0)
-    .flatMap((part, i) => (i ? [blank(), ...part] : part));
+/** The nonempty sections of a card, `gap` between them: for rows that are not lines yet. */
+export function sectionsOf<Row>(gap: Row, ...parts: readonly Row[][]): Row[] {
+  return parts.filter((part) => part.length > 0).flatMap((part, i) => (i ? [gap, ...part] : part));
 }
+
+/** The nonempty sections of a card, one blank row between them. */
+export const sections = (...parts: readonly Line[][]): Line[] => sectionsOf(blank(), ...parts);
 
 /** A list of answers the keyboard moves through: `choice` rows in a form, each a control. */
 export function choiceList(list: ChoiceList, width: number): Line[] {
@@ -255,7 +255,7 @@ export function choiceList(list: ChoiceList, width: number): Line[] {
     ).map((row, at) =>
       // The pointer is the keyboard's alone: the mouse's row is bold without it.
       at === 0 && list.hover === i && list.focus !== i
-        ? { ...row, spans: [span(GAP), ...row.spans.slice(1)] }
+        ? { ...row, spans: [span(" "), ...row.spans.slice(1)] }
         : row,
     ),
   );

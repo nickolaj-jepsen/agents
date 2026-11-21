@@ -8,32 +8,34 @@ import {
   type TUI,
   type TuiMouseEvent,
   type TuiMouseEventResult,
-  truncateToWidth,
-  visibleWidth,
 } from "@earendil-works/pi-tui";
+import type { Button } from "../../../kit/buttons/contract.ts";
+import { buttonRow } from "../../../kit/buttons/terminal.ts";
+import { digitChoice } from "../../../kit/card/contract.ts";
 import {
-  buttonRow,
-  type BandRow,
-  captionFrame,
-  captionFrameLayout,
-  type CaptionCloseAction,
-  CARD_NOTE_LABEL,
-  cardChoice,
-  cardHeading,
-  cardNote,
-  cardSections,
-  cardSteps,
-  cardSummary,
+  choice as choiceRows,
+  heading as headingRows,
+  note as noteRows,
+  NOTE_LABEL,
+  sectionsOf,
+  steps,
+  summary,
+} from "../../../kit/card/terminal.ts";
+import { captionFrameLayout, closeOf, type CloseAction } from "../../../kit/frame/contract.ts";
+import { captionFrame } from "../../../kit/frame/terminal.ts";
+import { cellWidth, clamp, span } from "../../../kit/lines.ts";
+import {
   cellAt,
-  clamp,
-  digitChoice,
-  fit,
-  type KeyChip,
+  cutPainted,
+  draw,
+  fitPainted,
   markdownLines,
-  paint,
-  tokens,
-  widthCap,
-} from "../../../kit/legacy/pi/ui.ts";
+  paintedWidth,
+  paintLine,
+  paintText,
+  type Cell,
+} from "../../../kit/paint/pi.ts";
+import { tokens, widthCap } from "../../../kit/tokens.ts";
 import { type Question, type QuestionsResult, type QuestionAnswer } from "./types.ts";
 
 const MIN_WIDTH = 28;
@@ -68,7 +70,7 @@ const isAnswered = (draft: Draft) => draft.picked.length > 0 || draft.text.trim(
 
 /** A row that carries a pointer target over the text it actually draws. */
 function target(text: string, item: Item): BodyRow {
-  return { text, hit: item, hitTo: visibleWidth(text.replace(/\s+$/, "")) };
+  return { text, hit: item, hitTo: paintedWidth(text.replace(/\s+$/, "")) };
 }
 
 /**
@@ -121,15 +123,16 @@ export class QuestionsDialog implements Component, Focusable {
   private closed = false;
   private isFocused = false;
   private hits = new Map<number, { item: Item; to: number }>();
-  private tabCells: NonNullable<BandRow<number>["cells"]> = [];
+  /** The controls of the top rule: a step each, and Close or its question. */
+  private captionCells: Cell[] = [];
   private hoverTab?: number;
-  private hoverClose?: CaptionCloseAction;
-  private closeCells: NonNullable<BandRow<CaptionCloseAction>["cells"]> = [];
+  private hoverClose?: CloseAction;
   private hoverReview?: number;
   private hoverButton?: number;
   private reviewOffset = 0;
   private reviewMaxOffset = 0;
-  private footer?: { row: number; buttons: BandRow<() => void> };
+  /** The footer's row, the cells of its buttons and what each does, by its place. */
+  private footer?: { row: number; cells: Cell[]; acts: (() => void)[] };
 
   constructor(
     private readonly tui: TUI,
@@ -581,15 +584,19 @@ export class QuestionsDialog implements Component, Focusable {
   }
 
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
-    const caption = captionFrameLayout.caption;
     const x = event.x - captionFrameLayout.x;
     const row = event.y - captionFrameLayout.y;
+    const onCaption = event.y === 0 ? cellAt(this.captionCells, event.x)?.hit : undefined;
     const tab =
-      !this.confirming && event.y === caption.y
-        ? cellAt(this.tabCells, event.x - caption.x)
+      !this.confirming && onCaption?.startsWith("step:")
+        ? { act: Number(onCaption.slice(5)) }
         : undefined;
-    const button = this.footer?.row === row ? cellAt(this.footer.buttons.cells, x) : undefined;
-    const close = event.y === caption.y ? cellAt(this.closeCells, event.x)?.act : undefined;
+    const pressed = this.footer?.row === row ? cellAt(this.footer.cells, x) : undefined;
+    const button = pressed && {
+      start: pressed.start,
+      act: this.footer?.acts[Number(pressed.hit.slice(4))] ?? (() => undefined),
+    };
+    const close = closeOf(onCaption);
     if (event.type === "move") {
       const item = !this.confirming && x >= 0 ? this.itemAt(x, row) : undefined;
       const review = item?.kind === "review" ? item.question : undefined;
@@ -665,8 +672,7 @@ export class QuestionsDialog implements Component, Focusable {
         this.startEditing(field);
         return { handled: true };
       }
-      const prefix =
-        field === "note" ? visibleWidth(CARD_NOTE_LABEL) : visibleWidth(this.writeInLead(index));
+      const prefix = field === "note" ? cellWidth(NOTE_LABEL) : cellWidth(this.writeInLead(index));
       return (
         this.editingInput.handleMouse?.({ ...event, x: Math.max(0, x - prefix), y: 0 }) ?? {
           handled: true,
@@ -687,8 +693,7 @@ export class QuestionsDialog implements Component, Focusable {
 
   render(width: number): string[] {
     this.hits.clear();
-    this.tabCells = [];
-    this.closeCells = [];
+    this.captionCells = [];
     this.reviewMaxOffset = 0;
     this.footer = undefined;
     this.previewCells = undefined;
@@ -713,39 +718,54 @@ export class QuestionsDialog implements Component, Focusable {
       if (row.hit) this.hits.set(index, { item: row.hit, to: row.hitTo ?? inner });
     });
     const hover = this.hoverButton === undefined ? undefined : { x: this.hoverButton, y: 0 };
-    const buttons = this.confirming
-      ? undefined
-      : buttonRow(theme, inner, this.footerActions(), { hover })[0];
-    if (buttons) this.footer = { row: rows.length + 1, buttons };
-    const frame = captionFrame(theme, {
+    const actions = this.confirming ? undefined : this.footerActions();
+    const buttons = actions && buttonRow(actions.keys, inner, { hover })[0];
+    // The frame's own rows, round a body that is painted already: its fields are pi's inputs.
+    const [top, gap, notice, footer, bottom] = captionFrame({
       width,
       title: question?.header.trim() || "Questions",
       caption:
         this.tabs.length > 1
-          ? (available) => {
-              const steps = cardSteps(
-                theme,
-                Math.min(widthCap("split", width) - captionFrameLayout.caption.reserved, available),
+          ? (available) =>
+              steps(
                 this.tabs.map((tab, index) => ({
                   short: tab.kind === "question" ? String(tab.index + 1) : "Review",
                   name: tab.kind === "question" ? this.headerOf(tab.index) : undefined,
                   current: index === this.tab,
                   hovered: index === this.hoverTab,
                   done: tab.kind === "question" && isAnswered(this.drafts[tab.index]!),
-                  act: index,
+                  hit: `step:${index}`,
                 })),
-              );
-              this.tabCells = steps.cells ?? [];
-              return steps.text || undefined;
-            }
+                Math.min(widthCap("split", width) - captionFrameLayout.reserved, available),
+              )?.spans
           : undefined,
       close: { confirming: this.confirming, hover: this.hoverClose },
-      body: rows.map(({ text }) => text),
-      footer: buttons?.text,
-      notice: this.warning ? paint(theme, "warning", this.warning) : undefined,
-    });
-    this.closeCells = frame.closeCells;
-    return frame.lines;
+      body: [],
+      footer: buttons,
+      notice: this.warning ? { spans: [span(this.warning, { role: "warning" })] } : undefined,
+    }).map((row) => paintLine(theme, row, width));
+    this.captionCells = top?.cells ?? [];
+    if (actions && footer)
+      this.footer = {
+        row: rows.length + 1,
+        // The footer's cells are the frame's, which sets its rows in.
+        cells: footer.cells.map((cell) => ({
+          ...cell,
+          start: cell.start - captionFrameLayout.x,
+          end: cell.end - captionFrameLayout.x,
+        })),
+        acts: actions.acts,
+      };
+    const pad = " ".repeat(captionFrameLayout.x);
+    const set = (text: string) => fitPainted(pad + fitPainted(text, inner), width);
+    return [
+      fitPainted(top?.text ?? "", width),
+      set(gap?.text ?? ""),
+      ...rows.map(({ text }) => set(text)),
+      fitPainted(notice?.text ?? "", width),
+      fitPainted(footer?.text ?? "", width),
+      bottom?.text ?? "",
+    ];
   }
 
   private headerOf(index: number): string {
@@ -763,15 +783,20 @@ export class QuestionsDialog implements Component, Focusable {
     const choiceWidth = split ? Math.floor((inner - GAP.length) * tokens.splitRatio) : inner;
     const draft = this.drafts[this.questionIndex!]!;
     const multiple = question.multiSelect === true;
-    const dim = (line: string) => paint(theme, "dim", line);
-    const title = cardHeading(
+    const dim = (line: string) => paintText(theme, line, { role: "dim" });
+    const title = draw(
       theme,
+      headingRows(
+        {
+          title: question.question,
+          label: this.tabs.length === 1 ? "Q1" : "",
+          active: true,
+          answered: isAnswered(draft) && !multiple && this.tabs.length === 1,
+          presentation: "form",
+        },
+        inner,
+      ),
       inner,
-      question.question,
-      this.tabs.length === 1 ? "Q1" : "",
-      true,
-      isAnswered(draft) && !multiple && this.tabs.length === 1,
-      "form",
     );
     const titleRoom = Math.max(2, Math.floor((budget - Number(multiple)) / 4));
     this.questionMaxOffset = Math.max(0, title.length - titleRoom);
@@ -779,7 +804,7 @@ export class QuestionsDialog implements Component, Focusable {
     const shown = title.slice(this.questionOffset, this.questionOffset + titleRoom);
     if (this.questionMaxOffset > 0) {
       const index = this.questionOffset < this.questionMaxOffset ? shown.length - 1 : 0;
-      shown[index] = truncateToWidth(shown[index]!, inner - 2, "") + dim(" …");
+      shown[index] = cutPainted(shown[index]!, inner - 2) + dim(" …");
     }
 
     this.questionRows = { start: 0, end: shown.length };
@@ -814,14 +839,14 @@ export class QuestionsDialog implements Component, Focusable {
           const row = list[i];
           return {
             ...row,
-            text: fit(row?.text ?? "", choiceWidth) + GAP + (preview[i] ?? ""),
+            text: fitPainted(row?.text ?? "", choiceWidth) + GAP + (preview[i] ?? ""),
           };
         });
       } else {
         list.push(...preview.map((text) => ({ text })));
       }
     }
-    return cardSections<BodyRow>({ text: "" }, heading, list);
+    return sectionsOf<BodyRow>({ text: "" }, heading, list);
   }
 
   private reviewBody(width: number, room: number): BodyRow[] {
@@ -829,18 +854,25 @@ export class QuestionsDialog implements Component, Focusable {
       const item = { kind: "review", question: index } as const;
       const answers = this.valuesOf(index);
       const hasWriteIn = Boolean(this.drafts[index]!.text.trim());
-      return cardSummary(this.theme, width, {
-        label: String(index + 1),
-        title: this.headerOf(index),
-        values: answers.map((text, i) => ({
-          text,
-          literal: hasWriteIn && i === answers.length - 1,
-        })),
-        note: this.notes[index]?.trim(),
-        hovered: index === this.hoverReview,
-      }).map((line) => target(line, item));
+      return draw(
+        this.theme,
+        summary(
+          {
+            label: String(index + 1),
+            title: this.headerOf(index),
+            values: answers.map((text, i) => ({
+              text,
+              literal: hasWriteIn && i === answers.length - 1,
+            })),
+            note: this.notes[index]?.trim(),
+            hovered: index === this.hoverReview,
+          },
+          width,
+        ),
+        width,
+      ).map((line) => target(line, item));
     });
-    const spaced = cardSections<BodyRow>({ text: "" }, ...blocks);
+    const spaced = sectionsOf<BodyRow>({ text: "" }, ...blocks);
     if (spaced.length <= room) return spaced;
     const compact = blocks.flat();
     if (compact.length <= room) return compact;
@@ -851,39 +883,41 @@ export class QuestionsDialog implements Component, Focusable {
     return [
       ...spaced.slice(this.reviewOffset, end),
       {
-        text: paint(this.theme, "dim", `Lines ${this.reviewOffset + 1}–${end} of ${spaced.length}`),
+        text: paintText(this.theme, `Lines ${this.reviewOffset + 1}–${end} of ${spaced.length}`, {
+          role: "dim",
+        }),
       },
     ];
   }
 
-  private footerActions(): KeyChip<() => void>[] {
-    const action = (
-      label: string,
-      hotkey: string,
-      input: string,
-      isLit = false,
-    ): KeyChip<() => void> => ({
-      label,
-      hotkey,
-      isLit,
-      act: () => this.handleInput(input),
-    });
+  /** The footer's buttons, and what the one with `hit` `key:<n>` does. */
+  private footerActions(): { keys: Button[]; acts: (() => void)[] } {
+    const acts: (() => void)[] = [];
+    const action = (label: string, hotkey: string, input: string, isLit = false): Button => {
+      acts.push(() => this.handleInput(input));
+      return { label, hotkey, isLit, hit: `key:${acts.length - 1}` };
+    };
     const enter = (label: string, isLit = false) => action(label, "enter", "\r", isLit);
-    if (this.editing) return [enter("Save", true), action("Back", "esc", "\x1b")];
+    const done = (keys: Button[]) => ({ keys, acts });
+    if (this.editing) return done([enter("Save", true), action("Back", "esc", "\x1b")]);
     if (this.tabKind.kind === "review") {
       const ready = this.drafts.every(isAnswered);
-      return [enter(ready ? "Send" : "Answer first", ready)];
+      return done([enter(ready ? "Send" : "Answer first", ready)]);
     }
+    const option = this.items()[this.row]?.kind === "option";
+    const lead = this.question?.multiSelect
+      ? action(
+          this.tabs.length === 1 ? "Send" : "Continue",
+          "s",
+          "s",
+          isAnswered(this.drafts[this.questionIndex!]!),
+        )
+      : enter(option ? "Choose" : "Edit", true);
     const keys = [action("Note", "n", "n")];
     if (this.previewMax > 0) keys.push({ hotkey: "⇧↑↓", label: "preview" });
     if (this.questionMaxOffset > 0) keys.push({ hotkey: "⇧←→", label: "question" });
-    const option = this.items()[this.row]?.kind === "option";
-    if (this.question?.multiSelect) {
-      if (option) keys.push({ hotkey: "space", label: "toggle" });
-      const label = this.tabs.length === 1 ? "Send" : "Continue";
-      return [action(label, "s", "s", isAnswered(this.drafts[this.questionIndex!]!)), ...keys];
-    }
-    return [enter(option ? "Choose" : "Edit", true), ...keys];
+    if (this.question?.multiSelect && option) keys.push({ hotkey: "space", label: "toggle" });
+    return done([lead, ...keys]);
   }
 
   private letter(i: number): string {
@@ -896,22 +930,29 @@ export class QuestionsDialog implements Component, Focusable {
 
   private itemBlock(item: ChoiceItem, i: number, width: number, detailLines: number): BodyRow[] {
     const { theme, question } = this;
-    const dim = (line: string) => paint(theme, "dim", line);
+    const dim = (line: string) => paintText(theme, line, { role: "dim" });
     const at = i === this.row;
     const draft = this.drafts[this.questionIndex ?? 0]!;
     const answered = isAnswered(draft);
     const choice = (key: string, text: string, chosen: boolean, literal = false, detail?: string) =>
-      cardChoice(theme, width, {
-        key,
-        text,
-        chosen,
-        focused: at,
-        presentation: "form",
-        literal,
-        multiple: question?.multiSelect,
-        detail,
-        detailLines,
-      }).map((line) => target(line, item));
+      draw(
+        theme,
+        choiceRows(
+          {
+            key,
+            text,
+            chosen,
+            focused: at,
+            presentation: "form",
+            literal,
+            multiple: question?.multiSelect,
+            detail,
+            detailLines,
+          },
+          width,
+        ),
+        width,
+      ).map((line) => target(line, item));
     switch (item.kind) {
       case "option": {
         const option = question!.options[item.index]!;
@@ -926,7 +967,7 @@ export class QuestionsDialog implements Component, Focusable {
       case "custom": {
         if (this.editing === "answer") {
           const lead = this.writeInLead(i);
-          const field = this.input.render(width - visibleWidth(lead))[0] ?? "";
+          const field = this.input.render(width - cellWidth(lead))[0] ?? "";
           return [{ ...target(dim(lead) + field, item), hitTo: width }];
         }
         return choice(
@@ -943,14 +984,18 @@ export class QuestionsDialog implements Component, Focusable {
             ? [
                 {
                   ...target(
-                    dim(CARD_NOTE_LABEL) +
-                      (this.noteInput.render(width - visibleWidth(CARD_NOTE_LABEL))[0] ?? ""),
+                    dim(NOTE_LABEL) +
+                      (this.noteInput.render(width - cellWidth(NOTE_LABEL))[0] ?? ""),
                     item,
                   ),
                   hitTo: width,
                 },
               ]
-            : cardNote(theme, width, note, true, answered, 3, at).map((line) => target(line, item));
+            : draw(
+                theme,
+                noteRows({ value: note, active: true, answered, max: 3, focused: at }, width),
+                width,
+              ).map((line) => target(line, item));
         return [{ text: "" }, ...content];
       }
     }
@@ -978,12 +1023,19 @@ export class QuestionsDialog implements Component, Focusable {
     const rows = page.slice(0, limit);
     if (used > limit) {
       const last = rows.at(-1)!;
-      rows[rows.length - 1] = { ...last, text: last.text + paint(this.theme, "dim", " …") };
+      rows[rows.length - 1] = {
+        ...last,
+        text: last.text + paintText(this.theme, " …", { role: "dim" }),
+      };
     }
     while (rows.length < limit) rows.push({ text: "" });
     const above = start ? `↑ ${start} above` : "";
     const below = end < blocks.length ? `↓ ${blocks.length - end} below` : "";
-    rows.push({ text: paint(this.theme, "dim", [above, below].filter(Boolean).join(GAP) || "…") });
+    rows.push({
+      text: paintText(this.theme, [above, below].filter(Boolean).join(GAP) || "…", {
+        role: "dim",
+      }),
+    });
     return rows;
   }
 
@@ -995,7 +1047,7 @@ export class QuestionsDialog implements Component, Focusable {
     }
     const content = option?.preview
       ? markdownLines(this.theme, option.preview, width)
-      : [paint(this.theme, "dim", "No preview available")];
+      : [paintText(this.theme, "No preview available", { role: "dim" })];
     const limit = Math.max(1, room - 1);
     // Hold the preview at one height across choices, even for the placeholder.
     const count = Math.min(
@@ -1012,7 +1064,7 @@ export class QuestionsDialog implements Component, Focusable {
     const end = Math.min(content.length, this.previewOffset + count);
     const suffix = this.previewMax ? `  ${this.previewOffset + 1}–${end} of ${content.length}` : "";
     return [
-      this.theme.bold(paint(this.theme, "dim", `Preview${suffix}`)),
+      paintText(this.theme, `Preview${suffix}`, { role: "dim", bold: true }),
       ...content.slice(this.previewOffset, end),
       ...Array<string>(count - (end - this.previewOffset)).fill(""),
     ];

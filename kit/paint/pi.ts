@@ -177,3 +177,22 @@ export function paintLine(theme: Theme, l: Line, width: number) {
 /** The control at cell `x` of a painted row. */
 export const cellAt = (cells: readonly Cell[] | undefined, x: number) =>
   cells?.find((cell) => x >= cell.start && x < cell.end);
+
+/** Lines painted, for where only the rows are wanted. */
+export const draw = (theme: Theme, lines: readonly Line[], width: number) =>
+  paintLines(theme, lines, width).lines;
+
+/** One run of text in a style of the kit. */
+export const paintText = (theme: Theme, text: string, style: Omit<Span, "text"> = {}) =>
+  paintSpan(theme, { ...style, text });
+
+/** Cells a painted row takes, by pi's measure. */
+export const paintedWidth = (text: string) => visibleWidth(text);
+
+/** A painted row cut with `…` or padded with spaces to exactly `width` cells. */
+export const fitPainted = (text: string, width: number) =>
+  truncateToWidth(text, Math.max(0, width), ELLIPSIS, true);
+
+/** A painted row cut to `width` cells, with nothing to mark the cut. */
+export const cutPainted = (text: string, width: number) =>
+  truncateToWidth(text, Math.max(0, width), "");
