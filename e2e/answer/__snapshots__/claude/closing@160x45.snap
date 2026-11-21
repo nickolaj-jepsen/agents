@@ -1,0 +1,68 @@
+# answer/claude/closing 160x45 @0,10 (160x30)
+▎ ❯ Q1  Should the cache use SQLite?
+▎
+▎   A ○ Yes, one file and no server.  Recommended
+▎   B ○ No, keep it in memory.
+▎   C ○ Write your own answer
+▎   Note: Add a note
+▎
+▎   Recommended: A. It survives restarts.
+
+
+▎   Q2  Should it log every retry?
+▎
+▎   A ○ Yes, the logs are how we tune the cap.
+▎   B ○ Write your own answer
+▎   Note: Add a note
+
+That is every open branch. Have we reached a shared understanding?
+
+Once you confirm I will write the plan to the notes.
+
+
+▎   0 of 2 answered  Fill prompt
+
+
+
+
+
+
+
+Q1/2   alt+a for the keys                                                                                                                                   [-]
+--- styles
+.x2 1 . 2x4 1x28
+-
+.x4 2 . 3 .x29 3x13
+.x4 2 . 3
+.x4 2 . 3 . 3x21
+.x4 3x16
+-
+.x4 4x37
+-
+4x96
+4 .x3 3x4 1x26 .x61 4
+4 .x94 4
+4 .x3 3 . 3 .x88 4
+4 .x3 3 . 3 . 3x21 .x66 4
+4 .x3 3x16 .x75 4
+4x96
+-
+-
+-
+-
+4x96
+4 .x94 4
+4x96
+-
+-
+-
+-
+-
+-
+5x6 . 3x18 .x131 3x3
+--- legend
+1 bold
+2 fg=#d77757
+3 fg=#999999
+4 dim
+5 fg=#d77757 bold

@@ -1,7 +1,4 @@
-# answer/claude/picks 70x24 @0,1 (70x18)
-▎   Recommended: build it
-
-
+# answer/claude/picks 70x24 @0,2 (70x17)
 ▎ ❯ 2  The funnel is wide and slow for what survives
 ▎
 ▎   3/3 · M · /grill-me
@@ -13,34 +10,35 @@
 ▎
 ▎   Recommended: route it to /grill-me
 
+Top pick: 1. Make "worth doing" the default bar.
+
 
 ▎   1 of 2 answered  Fill prompt
 
 2/2    jk move A–B pick C write n note r review keys here         [-]
 --- styles
-1 .x3 1x21 .x44 1
+1 . 2 . 3x3 2x45 .x17 1
+1 .x68 1
+1 .x68 1
+1 .x68 1
+1 .x3 3 . 4 .x62 1
+1 .x3 3 . 4 .x19 4x13 .x30 1
+1 .x3 3 . 5 . 5x23 .x38 1
+1 .x3 4x16 .x49 1
+1 .x68 1
+1 .x3 6x34 .x31 1
 1x70
-2x70
-2 . 3 . 4x3 3x45 .x17 2
-2 .x68 2
-2 .x68 2
-2 .x68 2
-2 .x3 4 . 5 .x62 2
-2 .x3 4 . 5 .x19 5x13 .x30 2
-2 .x3 4 . 6 . 6x23 .x38 2
-2 .x3 5x16 .x49 2
-2 .x68 2
-2 .x3 1x34 .x31 2
-2x70
-1x70
-1 .x20 6x11 .x37 1
-1x70
-7x6 . 5x7 . 5x8 . 5x7 . 5x6 . 5x8 . 5x9 .x9 5x3
+2x12
+-
+6x70
+6 .x20 5x11 .x37 6
+6x70
+7x6 . 4x7 . 4x8 . 4x7 . 4x6 . 4x8 . 4x9 .x9 4x3
 --- legend
-1 dim
-2 fg=#4eba65
-3 bold
-4 fg=#d77757
-5 fg=#999999
-6 fg=#d77757 bold
+1 fg=#4eba65
+2 bold
+3 fg=#d77757
+4 fg=#999999
+5 fg=#d77757 bold
+6 dim
 7 fg=#d77757 bold inverse

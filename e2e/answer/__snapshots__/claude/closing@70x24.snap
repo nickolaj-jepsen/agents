@@ -1,0 +1,43 @@
+# answer/claude/closing 70x24 @0,1 (70x18)
+▎
+▎   Recommended: A. It survives restarts.
+
+
+▎   Q2  Should it log every retry?
+▎
+▎   A ○ Yes, the logs are how we tune the cap.
+▎   B ○ Write your own answer
+▎   Note: Add a note
+
+That is every open branch. Have we reached a shared understanding?
+
+Once you confirm I will write the plan to the notes.
+
+
+▎   0 of 2 answered  Fill prompt
+
+Q1/2   alt+a for the keys                                         [-]
+--- styles
+-
+.x4 1x37
+-
+1x70
+1 .x3 2x4 3x26 .x35 1
+1 .x68 1
+1 .x3 2 . 2 .x62 1
+1 .x3 2 . 2 . 2x21 .x40 1
+1 .x3 2x16 .x49 1
+1x70
+-
+-
+-
+-
+1x70
+1 .x68 1
+1x70
+4x6 . 2x18 .x41 2x3
+--- legend
+1 dim
+2 fg=#999999
+3 bold
+4 fg=#d77757 bold

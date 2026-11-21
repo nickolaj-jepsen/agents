@@ -53,7 +53,9 @@ type Field = { kind: "write" | "note"; step: number; editor: Editor };
 type Item = NonNullable<View["item"]>;
 
 const choiceLetters = (item: Item): string[] => {
-  const unused = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].filter(
+  // A list of alternatives printed its numbers, so its write-in takes the next number.
+  const isNumbered = item.entries.some((entry) => /^[1-9]$/.test(entry.key));
+  const unused = [...(isNumbered ? "123456789" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ")].filter(
     (letter) => !item.entries.some((entry) => entry.key === letter),
   );
   return item.entries.map((entry) => entry.key || unused.shift() || "");

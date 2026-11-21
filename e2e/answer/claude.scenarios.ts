@@ -55,6 +55,24 @@ export default scenarios({
       size: [96, 34],
       steps: [...round, { wait: /❯\s+Q1\s+Use SQLite/ }],
     },
+    closing: {
+      about: "what the message says after its last question is drawn after the cards",
+      start: turn("closing"),
+      size: [96, 34],
+      steps: [...ask, { wait: "shared understanding" }, { wait: "write the plan to the notes" }],
+    },
+    menu: {
+      about: "a list of alternatives is one card whose rows keep the list's numbers",
+      start: turn("menu"),
+      size: [96, 34],
+      steps: [...ask, { wait: "Which do you want?" }, { wait: /1 ○ Accept it/ }],
+    },
+    lone: {
+      about: "one question with lettered options is one card, not a round",
+      start: turn("lone"),
+      size: [96, 34],
+      steps: [...ask, { wait: "where the cache lives" }, { wait: /B\s+.*On disk/ }],
+    },
     picked: {
       from: "open",
       about: "a click picks in place and the focused bar changes questions with j and k",

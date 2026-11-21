@@ -39,7 +39,7 @@ export type RoundActions = {
   top: () => unknown;
 };
 
-const labelOf = (text: string) => text.replace(/^[A-H][.)]\s*/, "");
+const labelOf = (text: string) => text.replace(/^[A-H0-9]{1,2}[.)]\s*/, "");
 
 /** Markdown that `inlineMarkdown` cannot set: a list, a heading, a quote, a fence or a table. */
 const BLOCKS = /^\s*(?:[-*+]\s|\d+[.)]\s|#{1,6}\s|>|```|~~~|\|)/m;
@@ -55,13 +55,14 @@ export const entryLetter = (entry: Entry, index: number) =>
     ? "A"
     : entry.key || (entry.kind === "option" ? String.fromCharCode(65 + index) : "");
 
+/** The key a row of the card binds: a letter, or the number a list of alternatives printed. */
+const isKey = (key: string) => /^[A-H1-9]$/.test(key);
+
 export function writeLetter(item: NonNullable<View["item"]>) {
-  const last = Math.max(
-    64,
-    ...item.entries.map((entry, i) =>
-      /^[A-H]$/.test(entryLetter(entry, i)) ? entryLetter(entry, i).charCodeAt(0) : 64,
-    ),
-  );
+  const keys = item.entries.map((entry, i) => entryLetter(entry, i)).filter(isKey);
+  // Numbered rows are followed by the next number, lettered ones by the next letter.
+  const isNumbered = keys.length > 0 && keys.every((key) => /[1-9]/.test(key));
+  const last = Math.max(isNumbered ? 48 : 64, ...keys.map((key) => key.charCodeAt(0)));
   return String.fromCharCode(last + 1);
 }
 
@@ -911,9 +912,7 @@ export function controlBar(
   const letters =
     item?.entries
       .flatMap((entry, i) =>
-        entry.kind !== "write" && /^[A-H]$/.test(entryLetter(entry, i))
-          ? [entryLetter(entry, i)]
-          : [],
+        entry.kind !== "write" && isKey(entryLetter(entry, i)) ? [entryLetter(entry, i)] : [],
       )
       .sort() ?? [];
   const write = item ? writeLetter(item) : "";

@@ -468,7 +468,14 @@ function menuOf(lines: string[], run: Start[]): Split | null {
     options.push({ key: String(start.n), text, detail: tidy([start.rest, ...block]) });
   }
   const cueWords = MENU_CUE.exec(cue)?.[1] ?? "";
-  const asked = closing.length ? unbold(tidy(closing)) : cueWords;
+  // The closing paragraph says what it leans toward, then asks: the ask is the title.
+  const sentences = tidy(closing).split(/(?<=[.!?])\s+/);
+  let ask = sentences.length - 1;
+  while (ask > 0 && !sentences[ask]?.endsWith("?")) ask--;
+  const lean = ask > 0 ? sentences.slice(0, ask).join(" ") : "";
+  const asked = closing.length
+    ? unbold(ask > 0 ? sentences.slice(ask).join(" ") : tidy(closing))
+    : cueWords;
   const said = RECOMMEND_NUMBER.exec(closing.join(" "));
   const wanted = said ? options.findIndex((option) => option.key === said[1]) : (ownPick ?? -1);
   const item: FormItem = {
@@ -480,7 +487,7 @@ function menuOf(lines: string[], run: Start[]): Split | null {
   };
   if (wanted >= 0) {
     item.recommendedOption = wanted;
-    if (closing.length) item.recommended = unbold(tidy(closing));
+    if (closing.length) item.recommended = unbold(lean || tidy(closing));
   }
   return {
     form: { kind: "round", items: [item] },

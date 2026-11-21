@@ -609,7 +609,8 @@ describe("a question with no number of its own", () => {
 describe("a list of alternatives", () => {
   test("is one question whose options keep the numbers the list printed", () => {
     const [item] = formOf(MENU_CLOSING).items;
-    expect(item?.title).toBe("I'd go with 1, or 1 plus 3. Which do you want?");
+    expect(item?.title).toBe("Which do you want?");
+    expect(item?.recommended).toBe("I'd go with 1, or 1 plus 3.");
     expect(item?.options.map((option) => option.key)).toEqual(["1", "2", "3"]);
     expect(item?.options[0]?.text).toBe("Accept it and label it:");
     expect(item?.options[0]?.detail).toBe("the smallest change.");

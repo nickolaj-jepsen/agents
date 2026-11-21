@@ -1,0 +1,102 @@
+# answer/pi/cards-lone 160x45 @0,0 (159x45)
+
+ ask
+
+
+ I checked what you run today, so this one is about the bar.
+
+ Your decision: where the cache lives.
+
+ - A. In memory. Fast, and lost on restart.
+ - B. On disk. Slower, and it survives restarts.
+
+ I'd pick A, since restarts are rare.
+
+ Which do you want?
+
+│  ❯ Q1  Your decision: where the cache lives.
+│
+│    I'd pick A, since restarts are rare.
+│
+│    Which do you want?
+│
+│    A ○ In memory. Fast, and lost on restart.  Recommended
+│    B ○ On disk. Slower, and it survives restarts.
+│    C ○ Write your own answer
+│    Note: Add a note
+
+
+│    0 of 1 answered  Fill prompt
+
+
+
+
+
+
+
+
+
+
+
+ Answer [alt+a]  Q1  0/1 answered
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+<tmp>
+0.7%/200k (auto)                                                                                                                                          repla
+--- styles
+1x159
+1 2x3 1x155
+1x159
+-
+-
+-
+. 3x37
+-
+. 4x2 3x2
+. 4x2 3x2
+-
+.x10 3
+-
+-
+-
+5 .x2 6 . 4x4 6x37
+5
+5 .x13 3
+5
+5
+5
+5 .x4 4 . 7 .x38 7x13
+5 .x4 4 . 7
+5 .x4 4 . 7 . 7x21
+5 .x4 7x16
+-
+-
+7 .x4 5x15 .x2 5x11
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+. 5x6 . 7x7 .x2 7x16
+8x159
+9
+8x159
+7x5
+7x159
+--- legend
+1 bg=#213b49
+2 fg=#dee0e1 bg=#213b49
+3 bold
+4 fg=#a798d7
+5 fg=#dee0e1
+6 fg=#dee0e1 bold
+7 fg=#7e888e
+8 fg=#6c767b
+9 inverse

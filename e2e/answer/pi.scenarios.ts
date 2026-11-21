@@ -34,6 +34,18 @@ export default scenarios({
       region: CARD,
       steps: [...CARD_ASK, { wait: "❯ Q1  Use SQLite?" }, { type: "a draft for later" }],
     },
+    "cards-menu": {
+      about: "a list of alternatives is one card whose rows keep the list's numbers",
+      start: cards("menu"),
+      region: FULL_CARD,
+      steps: [...CARD_ASK, { wait: /1 ○ Accept it/ }],
+    },
+    "cards-lone": {
+      about: "one question with lettered options is one card, not a round",
+      start: cards("lone"),
+      region: FULL_CARD,
+      steps: [...CARD_ASK, { wait: /B .*On disk/ }],
+    },
     "cards-hover": {
       from: "cards-open",
       about: "hover a transcript choice without picking it or touching the prompt draft",

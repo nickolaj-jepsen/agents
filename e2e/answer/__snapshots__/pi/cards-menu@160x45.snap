@@ -1,0 +1,102 @@
+# answer/pi/cards-menu 160x45 @0,0 (159x45)
+
+ ask
+
+
+ The lag has three ways to close, roughly by payoff:
+
+ 1. Accept it and label it: change the detail to "to ••••• UTC". The smallest change.
+ 2. Read the hourly report: about an hour behind, and it needs a price table.
+ 3. Use the session logs: real time, with no price table.
+
+ I'd go with 1, or 1 plus 3 if you want a live number. Which do you want?
+
+│  ❯ Q1  Which do you want?
+│
+│    1 ○ Accept it and label it:  Recommended
+│        change the detail to "to ••••• UTC". The smallest change.
+│    2 ○ Read the hourly report:
+│        about an hour behind, and it needs a price table.
+│    3 ○ Use the session logs:
+│        real time, with no price table.
+│    4 ○ Write your own answer
+│    Note: Add a note
+│
+│    Recommended: I'd go with 1, or 1 plus 3 if you want a live number.
+
+
+│    0 of 1 answered  Fill prompt
+
+
+
+
+
+
+
+
+
+
+
+
+ Answer [alt+a]  Q1  0/1 answered
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+<tmp>
+0.7%/200k (auto)                                                                                                                                          repla
+--- styles
+1x159
+1 2x3 1x155
+1x159
+-
+-
+-
+. 3x3 4x23
+. 3x3 4x23
+. 3x3 4x21
+-
+-
+-
+5 .x2 6 . 3x4 6x18
+5
+5 .x4 3 . 7 .x24 7x13
+5 .x8 7x57
+5 .x4 3 . 7
+5 .x8 7x49
+5 .x4 3 . 7
+5 .x8 7x31
+5 .x4 3 . 7 . 7x21
+5 .x4 7x16
+5
+5 .x4 7x66
+-
+-
+7 .x4 5x15 .x2 5x11
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+. 5x6 . 7x7 .x2 7x16
+8x159
+9
+8x159
+7x5
+7x159
+--- legend
+1 bg=#213b49
+2 fg=#dee0e1 bg=#213b49
+3 fg=#a798d7
+4 bold
+5 fg=#dee0e1
+6 fg=#dee0e1 bold
+7 fg=#7e888e
+8 fg=#6c767b
+9 inverse
