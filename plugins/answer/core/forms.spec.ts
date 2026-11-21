@@ -14,7 +14,9 @@ import {
   newDraft,
   offer,
   parse,
+  split,
   startLines,
+  tailOf,
   reply,
   step,
   view,
@@ -151,6 +153,92 @@ const MINE_SUMMARY = `2 findings from 4 runs, saved to \`~/notes/FINDINGS.md\`
 
 **Top pick: 1.** Make "worth doing" the default bar.`;
 
+// A question that spells out "Question", a recommendation said in prose, and a closing ask.
+const QUESTION_WORD = `I checked what you already run, so this one is about the bar.
+
+**Question 1: How strict should the filter be?**
+
+- **A. Native only:** nothing that ships a browser.
+- **B. Web is fine** if it feels instant on your biggest repo.
+
+**My recommendation: B**, with a hands-on test on the repos you use.
+
+Do you agree?`;
+
+// A heading with a dash as its label, options, and the recommendation on its own line.
+const DASH_HEADING = `## Q2 — How many workflows should there be?
+
+- **A.** One, with a flag.
+- **B.** Two, one per kind.
+
+Recommendation: A, since the kinds share every step.
+
+Does A match what you meant?`;
+
+// Options lettered in lower case and in parentheses.
+const LOWER_OPTIONS = `**Q3. Where should the cache live?**
+
+- **(a)** In memory.
+- **(b)** On disk.
+
+**Recommended:** (a)`;
+
+// A round and its summary after a rule: prose the cards must not swallow.
+const ROUND_THEN_CLOSING = `**Q1. Should it retry?**
+
+> **Recommended:** Yes, twice.
+
+---
+
+**Q2. Should it log the retries?**
+
+> **Recommended:** Yes.
+
+---
+
+That is every open branch. Have we reached a shared understanding?
+
+## Next
+
+I will write the plan to the notes once you confirm.`;
+
+// A heading and a rule between two questions belong to the question before.
+const HEADING_BETWEEN = `**Q1. Should it retry?**
+
+> **Recommended:** Yes.
+
+## Round two
+
+Only the logging is left.
+
+**Q2. Should it log?**
+
+> **Recommended:** Yes.`;
+
+// grilling in its emoji form: the label closes its bold, the recommendation follows an arrow.
+const EMOJI_ROUND = `❓ **Q1** - **Storage**: Should the cache use SQLite?
+
+➡️ Yes, it is one file and needs no server.
+
+---
+
+❓ **Q2** - **Eviction**: Evict by age or by size?
+
+- **A.** Age.
+- **B.** Size.
+
+➡️ A, the simpler rule.`;
+
+// A "Q" heading that asks nothing, over numbered questions that do.
+const HEADING_OVER_QUESTIONS = `## Q10 — Frontmatter policy
+
+Layout is settled. Two actual choices:
+
+1. **Can the model invoke it on its own?** Users-only, or routed by the description.
+2. **Publish it, or keep it private?** It depends on a tool only you have.
+
+Then the last branch is left.`;
+
 // A numbered list that asks nothing.
 const PLAIN_LIST = `Done. What changed:
 
@@ -211,6 +299,13 @@ describe("parse", () => {
       "picks 1[build*build] 2[build,/brainstorm*/brainstorm] 3[build,/grill-me*/grill-me]",
     ],
     [MINE_SUMMARY, "picks 1[build*build] 2[build,/grill-me*/grill-me]"],
+    [QUESTION_WORD, "round Q1[AB*B]"],
+    [DASH_HEADING, "round Q2[AB*A]"],
+    [LOWER_OPTIONS, "round Q3[AB*A]"],
+    [ROUND_THEN_CLOSING, "round Q1[*] Q2[*]"],
+    [HEADING_BETWEEN, "round Q1[*] Q2[*]"],
+    [EMOJI_ROUND, "round Q1[*] Q2[AB*A]"],
+    [HEADING_OVER_QUESTIONS, "round 1[] 2[]"],
     [PLAIN_LIST, "null"],
     [FENCED_FORMAT, "null"],
   ])("each ending parses to its shape (%#)", (text, expected) => {
@@ -284,6 +379,82 @@ describe("parse", () => {
     expect(shape(parse(GRILLING_ROUND.replaceAll("\n", "\r\n")))).toBe(
       shape(parse(GRILLING_ROUND)),
     );
+  });
+});
+
+describe("what the cards leave out", () => {
+  const ALL = [
+    GRILLING_ROUND,
+    ROUND_AFTER_RESEARCH,
+    NUMBERED_QUESTIONS,
+    SINGLE_QUESTION,
+    MY_RECOMMENDATION,
+    LEAN_TOWARD,
+    IDEATE_SUMMARY,
+    MINE_SUMMARY,
+    QUESTION_WORD,
+    DASH_HEADING,
+    LOWER_OPTIONS,
+    ROUND_THEN_CLOSING,
+    HEADING_BETWEEN,
+    EMOJI_ROUND,
+    HEADING_OVER_QUESTIONS,
+  ];
+  const words = (text: string) => text.toLowerCase().match(/[\p{L}\p{N}_]{2,}/gu) ?? [];
+
+  /** The lines of a message whose words the head, the items and the tail do not carry. */
+  function hidden(text: string): string[] {
+    const form = formOf(text);
+    const lines = text.split("\n");
+    const head = lines.slice(0, startLines(text)[0] ?? 0).join("\n");
+    const drawn = [head, tailOf(text)];
+    for (const item of form.items) {
+      drawn.push(item.label, item.title, item.body, item.recommended ?? "");
+      for (const option of item.options) drawn.push(option.text, option.detail);
+    }
+    const have = new Set(words(drawn.join("\n")));
+    return lines.filter((line) => {
+      const ws = words(line);
+      return ws.length >= 3 && ws.filter((word) => !have.has(word)).length / ws.length > 0.5;
+    });
+  }
+
+  test.each(ALL.map((text, i) => [i, text] as const))(
+    "every line of a parsed message is drawn somewhere (%#)",
+    (_, text) => {
+      expect(hidden(text)).toEqual([]);
+    },
+  );
+
+  test("what follows the last question after a rule or heading is the tail", () => {
+    expect(tailOf(ROUND_THEN_CLOSING)).toBe(
+      "That is every open branch. Have we reached a shared understanding?\n\n## Next\n\nI will write the plan to the notes once you confirm.",
+    );
+    expect(tailOf(GRILLING_ROUND)).toBe("");
+    expect(tailOf(PLAIN_LIST)).toBe("");
+  });
+
+  test("a heading between two questions stays with the question before", () => {
+    const [q1] = formOf(HEADING_BETWEEN).items;
+    expect(q1?.body).toContain("## Round two");
+    expect(q1?.body).toContain("Only the logging is left.");
+    expect(tailOf(HEADING_BETWEEN)).toBe("");
+  });
+
+  test("the lines after a pick list are the tail", () => {
+    expect(tailOf(IDEATE_SUMMARY)).toBe(
+      "- The verifier rated idea 3 weak; I kept it, ranked last.\n\nStart with 1: its result decides whether idea 3 is worth doing.",
+    );
+  });
+
+  test("a message cut at its items, head and tail covers every line once", () => {
+    for (const text of ALL) {
+      const lines = text.split("\n");
+      const found = split(text);
+      expect(found?.starts).toEqual(startLines(text));
+      expect(found?.tail).toBeGreaterThan(found?.starts.at(-1) ?? lines.length);
+      expect(found?.tail).toBeLessThanOrEqual(lines.length);
+    }
   });
 });
 

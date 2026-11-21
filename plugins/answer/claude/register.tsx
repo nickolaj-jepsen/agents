@@ -7,6 +7,7 @@ import {
   hasWork,
   recommendationChoice,
   startLines,
+  tailOf,
   step as stepForm,
   view as viewOf,
 } from "../core/forms";
@@ -430,6 +431,7 @@ async function captureRound(
     [id]: {
       source: message.text.trim(),
       preamble,
+      epilogue: tailOf(message.text),
       anchors,
       matchByText: !message.uuid,
     },
@@ -929,16 +931,26 @@ function roundBody(
   index: number,
   actions?: RoundActions,
   sent = false,
+  epilogue: JSX.Element | null = null,
 ) {
-  return index === held.form.items.length
-    ? closingRow(
-        kit,
-        viewOf(held.form, held.draft),
-        current,
-        current?.writer ? undefined : actions,
-        sent,
-      )
-    : questionCard(kit, held, index, current, actions, null, sent);
+  if (index !== held.form.items.length)
+    return questionCard(kit, held, index, current, actions, null, sent);
+  const closing = closingRow(
+    kit,
+    viewOf(held.form, held.draft),
+    current,
+    current?.writer ? undefined : actions,
+    sent,
+  );
+  // What the message said after its questions comes before the row that closes them.
+  return epilogue ? (
+    <kit.Box flexDirection="column" rowGap={1}>
+      {epilogue}
+      {closing}
+    </kit.Box>
+  ) : (
+    closing
+  );
 }
 
 export const register: Register = (on) => {
@@ -1042,6 +1054,7 @@ export const register: Register = (on) => {
     const els = $.ui.resolve(e);
     const kit = kitOf(els, e);
     const { Box, Markdown } = els;
+    const epilogue = round.epilogue ? <Markdown text={round.epilogue} /> : null;
     const actions = active ? roundActions($, id, surface) : undefined;
     const split = surface === "terminal" && round.anchors.length > 1;
     const cards = split ? [] : held.form.items.map((_, i) => i).concat(held.form.items.length);
@@ -1055,8 +1068,9 @@ export const register: Register = (on) => {
         {kit.isNative
           ? nativeRound(kit, held, active, actions, inline, !active && round.sent)
           : cards.map((index) =>
-              roundBody(kit, held, active, index, actions, !active && round.sent),
+              roundBody(kit, held, active, index, actions, !active && round.sent, epilogue),
             )}
+        {kit.isNative ? epilogue : null}
       </Box>
     );
   });
@@ -1073,9 +1087,11 @@ export const register: Register = (on) => {
     const active = c?.transcript === id ? c : null;
     const held = active?.held ?? round.frozen;
     if (!held) return next(e);
-    const kit = kitOf($.ui.resolve(e), e);
+    const els = $.ui.resolve(e);
+    const kit = kitOf(els, e);
     const actions = active ? roundActions($, id, "terminal") : undefined;
-    return roundBody(kit, held, active, index, actions, !active && round.sent) ?? next(e);
+    const epilogue = round.epilogue ? <els.Markdown text={round.epilogue} /> : null;
+    return roundBody(kit, held, active, index, actions, !active && round.sent, epilogue) ?? next(e);
   });
 
   // Drawn in the band, not a pane: the surface docks every pane beside the transcript once

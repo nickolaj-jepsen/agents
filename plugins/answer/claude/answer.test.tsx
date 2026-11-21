@@ -199,6 +199,31 @@ test("Desktop restores the latest round in the transcript and keeps the submitte
   await cards.unmount();
 });
 
+// A round that ends on prose after a rule: the cards replace the message, so they must draw it.
+const CLOSING = "Have we reached a shared understanding? Say so and I will write the plan.";
+const WITH_CLOSING = `${GRILLING}\n\n---\n\n${CLOSING}`;
+
+for (const surface of ["terminal", "desktop"] as const)
+  test(`${surface}: what the message says after its last question is still drawn`, async ($, on) => {
+    world(on);
+    let messages: Array<{ role: "assistant"; text: string; toolUses: []; uuid: string }> = [];
+    on("session.messages", () => ({ value: messages }));
+    on("session.surfaces", () => ({ value: [surface] }));
+    on("ui.place", () => ({ value: { isPlaced: false, reason: "no surface in the test" } }));
+    await start($, surface);
+    messages = [{ role: "assistant", text: WITH_CLOSING, toolUses: [], uuid: "closing-round" }];
+    await ends($, WITH_CLOSING);
+    const cards = await $.ui.mount({
+      plugin: "answer",
+      surface,
+      component: "AssistantMessage",
+      requestId: "closing-round",
+      props: { text: WITH_CLOSING, isFirstOfReply: true },
+    });
+    expect(await cards.find({ type: "Markdown", text: CLOSING })).toBeDefined();
+    await cards.unmount();
+  });
+
 test("Terminal cards can match a transcript row when the engine omits its UUID", async ($, on) => {
   world(on);
   let messages: Array<{ role: "assistant"; text: string; toolUses: [] }> = [];

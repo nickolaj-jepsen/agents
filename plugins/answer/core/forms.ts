@@ -98,14 +98,19 @@ export type Held = { form: Form; draft: Draft };
 const FENCE = /^\s*(```|~~~)/;
 const RULE = /^\s*(-{3,}|\*{3,}|_{3,})\s*$/;
 const HEADING = /^#{1,6}\s/;
-// `**Q1. …**`, `### Q2: …`, `1. **…?** …`, `**3.** …`, `Q4) …`; unindented only.
-const START = /^(?:#{1,6}\s+)?(\*\*)?(Q)?([0-9]{1,3})[.:)](\*\*)?(?:\s+|$)(.*)$/;
-// `- **A.** …`, `- **A. …**`, `A) …`, `**B.** …`.
-const OPTION = /^(\s*)(?:[-*+]\s+)?(\*\*)?([A-H])[.)](\*\*)?\s+(.+)$/;
-const RECOMMENDED = /^\s*(?:>\s*)?\**(?:Recommended|(?:My )?recommendation)\**\s*:\s*\**\s*(.*)$/i;
+// `**Q1. …**`, `### Q2: …`, `1. **…?** …`, `**3.** …`, `Q4) …`, `## Question 5: …`, `## Q6 — …`;
+// unindented only. A dash separates only a Q label, which a bare number never takes.
+const START =
+  /^(?:#{1,6}\s+)?(\*\*)?(Q(?:uestion)?\s*)?([0-9]{1,3})(?:[.:)]|(?<=Q(?:uestion)?\s*[0-9]{1,3})\s*[—–-](?=\s))(\*\*)?(?:\s+|$)(.*)$/;
+// `❓ **Q1** - **Title**: body`: the label closes its bold before any punctuation.
+const EMOJI_START = /^❓\s*\*\*Q([0-9]{1,3})\*\*\s*[-–—:]\s*(.*)$/;
+// `- **A.** …`, `- **A. …**`, `A) …`, `**B.** …`, `(c) …`, `- **(a)** …`; a letter may be lower case.
+const OPTION = /^(\s*)(?:[-*+]\s+)?(\*\*)?\(?([A-Ha-h])[.)](\*\*)?\s+(.+)$/;
+const RECOMMENDED =
+  /^\s*(?:>\s*)?(?:\**(?:(?:My )?recommend(?:ed|ation)(?: answer)?)\**\s*:\s*\**|➡️\s*)\s*(.*)$/i;
 const OWN_RECOMMENDATION = /\((?:(?:my )?recommend(?:ed|ation)|my pick)\b[^)]*\)/i;
 // A letter, then punctuation or the end: "A. The format", "B, because", "**C**"; never "A small".
-const LEADING_LETTER = /^(?:option\s+)?\**([A-H])\**(?=$|[\s]*[.,:;)]|\s+[—–-]\s)/i;
+const LEADING_LETTER = /^(?:option\s+)?\**\(?([A-H])\)?\**(?=$|[\s]*[.,:;)]|\s+[—–-]\s)/i;
 // Several letters leading a recommendation: "A, B and D now", "A through C", "**A** and **C**."
 const LEADING_LETTERS =
   /^\**([A-H])\**((?:\s*(?:,\s*and|,|and|&|\+|through|to|–|-)\s*\**[A-H]\**(?![A-Za-z]))+)/;
@@ -159,6 +164,23 @@ function findStarts(lines: string[]): Start[] {
   lines.forEach((line, i) => {
     if (FENCE.test(line)) inFence = !inFence;
     if (inFence) return;
+    const emoji = EMOJI_START.exec(line);
+    if (emoji) {
+      // `**Title**: body` after the label: the bold part is the title.
+      const [, n = "", after = ""] = emoji;
+      const [title, rest] = splitTitle(false, after);
+      const [heading, tail] = rest.startsWith(":") ? [title, rest.slice(1)] : [title, rest];
+      if (unbold(heading))
+        starts.push({
+          line: i,
+          isQ: true,
+          n: Number(n),
+          label: `Q${n}`,
+          title: unbold(heading),
+          rest: tail.trim(),
+        });
+      return;
+    }
     const match = START.exec(line);
     if (!match) return;
     const [, bold, q, n = "", closed, after = ""] = match;
@@ -177,14 +199,10 @@ function findStarts(lines: string[]): Start[] {
   return starts;
 }
 
-/**
- * The trailing run of starts: Q-labelled ones when there are any, since numbered lists turn
- * up inside their bodies; a run restarts where the numbering goes back.
- */
+/** The trailing run of starts: a run restarts where the numbering goes back. */
 function lastRun(starts: Start[]): Start[] {
-  const labelled = starts.filter((start) => start.isQ);
   let run: Start[] = [];
-  for (const start of labelled.length ? labelled : starts) {
+  for (const start of starts) {
     const last = run[run.length - 1];
     if (last && start.n <= last.n) run = [];
     run.push(start);
@@ -192,15 +210,35 @@ function lastRun(starts: Start[]): Start[] {
   return run;
 }
 
-function blockOf(lines: string[], start: Start, following: Start | undefined): string[] {
+/**
+ * The lines an item owns: up to the next item. The last one ends where a rule or heading
+ * starts what follows the round, which `split` hands back as the tail. Between items the
+ * lines are the item's own, so no prose goes unshown; only the rules that separate are dropped.
+ * `end` is the first line it did not read.
+ */
+function blockOf(
+  lines: string[],
+  start: Start,
+  following: Start | undefined,
+): { block: string[]; end: number } {
   const block: string[] = [];
   let inFence = false;
-  for (const line of lines.slice(start.line + 1, following ? following.line : lines.length)) {
+  let end = following ? following.line : lines.length;
+  for (let i = start.line + 1; i < end; i++) {
+    const line = lines[i] ?? "";
     if (FENCE.test(line)) inFence = !inFence;
-    if (!inFence && (RULE.test(line) || HEADING.test(line))) break;
+    if (!inFence && !following && (RULE.test(line) || HEADING.test(line))) {
+      end = i;
+      break;
+    }
     block.push(line);
   }
-  return block;
+  while (
+    block.length &&
+    (!block[block.length - 1]?.trim() || RULE.test(block[block.length - 1] ?? ""))
+  )
+    block.pop();
+  return { block, end };
 }
 
 /** The options a recommendation opens on when it names several, a range read as all of it. */
@@ -241,8 +279,9 @@ function parseItem(start: Start, block: string[]): FormItem {
       continue;
     }
     const opt = OPTION.exec(line);
-    if (opt && opt[3] === String.fromCharCode(65 + options.length)) {
-      const [, lead = "", opened, letter = "", closed, words = ""] = opt;
+    if (opt && (opt[3] ?? "").toUpperCase() === String.fromCharCode(65 + options.length)) {
+      const [, lead = "", opened, rawLetter = "", closed, words = ""] = opt;
+      const letter = rawLetter.toUpperCase();
       const detail: string[] = [];
       for (
         let next = block[i + 1];
@@ -289,22 +328,33 @@ function parseItem(start: Start, block: string[]): FormItem {
 
 const routeOf = (line: string) => ROUTES.find(([pattern]) => pattern.test(line))?.[1];
 
-function parsePicks(lines: string[], run: Start[]): Form | null {
+/** The pick list and the line its tail starts on; the prose between rows stays with the row before. */
+function parsePicks(lines: string[], run: Start[]): { form: Form; end: number } | null {
   const items: FormItem[] = [];
-  for (const start of run) {
+  let end = lines.length;
+  for (const [index, start] of run.entries()) {
     const own = [lines[start.line] ?? ""];
-    for (const line of lines.slice(start.line + 1)) {
+    let next = start.line + 1;
+    for (; next < lines.length; next++) {
+      const line = lines[next] ?? "";
       if (!line.trim() || indent(line) < 2) break;
       own.push(line);
     }
     const route = routeOf(own[own.length - 1] ?? "");
     if (!route) return null;
+    const following = run[index + 1];
+    const between = following ? lines.slice(next, following.line) : [];
+    if (!following) end = next;
     // `<title> · <size> · <next>` keeps its fields beside the title.
     const [title = "", ...fields] = [start.title, start.rest]
       .filter(Boolean)
       .join(" ")
       .split(" · ");
-    const detail = [fields.join(" · "), ...own.slice(1).map((line) => line.trim())].filter(Boolean);
+    const detail = [
+      fields.join(" · "),
+      ...own.slice(1).map((line) => line.trim()),
+      ...between.filter((line) => line.trim() && !RULE.test(line)).map((line) => line.trim()),
+    ].filter(Boolean);
     const options: Option[] = [{ key: "build", text: "Build it", detail: "" }];
     if (route !== "build") options.push({ key: route, text: `Route to ${route}`, detail: "" });
     items.push({
@@ -316,32 +366,68 @@ function parsePicks(lines: string[], run: Start[]): Form | null {
       recommendedOption: route === "build" ? 0 : 1,
     });
   }
-  return items.length ? { kind: "picks", items } : null;
+  return items.length ? { form: { kind: "picks", items }, end } : null;
 }
 
-/** The round or pick list a message ends on, or null when it asks nothing. */
-export function parse(text: string): Form | null {
-  const lines = text.replace(/\r\n?/g, "\n").split("\n");
-  const run = lastRun(findStarts(lines));
+/**
+ * Where a message's lines went: the form it asks, the line each item starts on, and the line
+ * the tail starts on. The lines before the first start are the head, each item owns the lines to
+ * the next start, and the tail is what follows the last one, so the three cover every line.
+ */
+export type Split = { form: Form; starts: number[]; tail: number };
+
+/** The runs worth trying, best first: the Q-labelled one, then every numbered one. */
+function candidates(starts: Start[]): Start[][] {
+  const labelled = lastRun(starts.filter((start) => start.isQ));
+  const all = lastRun(starts);
+  return labelled.length && labelled.length !== all.length ? [labelled, all] : [all];
+}
+
+function splitRun(text: string, lines: string[], run: Start[]): Split | null {
   const first = run[0];
   if (!first) return null;
+  const starts = run.map((start) => start.line);
   if (!first.isQ) {
     const picks = parsePicks(lines, run);
-    if (picks) return picks;
+    if (picks) return { form: picks.form, starts, tail: picks.end };
   }
-  const items = run.map((start, i) => parseItem(start, blockOf(lines, start, run[i + 1])));
+  let tail = lines.length;
+  const items = run.map((start, i) => {
+    const { block, end } = blockOf(lines, start, run[i + 1]);
+    tail = end;
+    return parseItem(start, block);
+  });
   const asks =
     text.trimEnd().endsWith("?") ||
     items.some(
       (item) => item.title.includes("?") || item.recommended !== undefined || item.options.length,
     );
-  return asks ? { kind: "round", items } : null;
+  return asks ? { form: { kind: "round", items }, starts, tail } : null;
 }
 
-/** The line each item `parse` finds starts on, so a harness can cut the message up. */
-export function startLines(text: string): number[] {
+/** Where a message's lines went, or null when it asks nothing. */
+export function split(text: string): Split | null {
   const lines = text.replace(/\r\n?/g, "\n").split("\n");
-  return lastRun(findStarts(lines)).map((start) => start.line);
+  for (const run of candidates(findStarts(lines))) {
+    const found = splitRun(text, lines, run);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** The round or pick list a message ends on, or null when it asks nothing. */
+export const parse = (text: string): Form | null => split(text)?.form ?? null;
+
+/** The line each item `parse` finds starts on, so a harness can cut the message up. */
+export const startLines = (text: string): number[] => split(text)?.starts ?? [];
+
+/** What the message says after its last item, which no card draws: markdown, "" when none. */
+export function tailOf(text: string): string {
+  const found = split(text);
+  if (!found) return "";
+  const lines = text.replace(/\r\n?/g, "\n").split("\n").slice(found.tail);
+  while (lines.length && (!lines[0]?.trim() || RULE.test(lines[0] ?? ""))) lines.shift();
+  return tidy(lines);
 }
 
 /** JSON with its keys in order, so the same form always reads the same. */

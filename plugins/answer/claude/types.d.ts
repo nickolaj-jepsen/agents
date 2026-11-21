@@ -99,6 +99,8 @@ export type Editing = "write" | "note" | null;
 export type TranscriptRound = {
   source: string;
   preamble: string;
+  /** What the message says after its last question, which no card draws; drawn before the closing row. */
+  epilogue?: string;
   matchByText?: boolean;
   /** One anchor per question plus review, or one shared message anchor. */
   anchors: string[];
