@@ -1,0 +1,4 @@
+{
+  "extends": ["//"],
+  "tasks": { "check-types": { "command": null } }
+}

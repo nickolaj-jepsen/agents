@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.base.node.json",
+  "compilerOptions": { "tsBuildInfoFile": "${configDir}/node_modules/.cache/node.tsbuildinfo" },
+  "include": ["pi/**/*.ts", "core/**/*.ts", "claude/kit/**/*.ts"]
+}

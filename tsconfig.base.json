@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "composite": true,
-    "tsBuildInfoFile": "./node_modules/.cache/tsconfig.core.tsbuildinfo",
+    "incremental": true,
+    "tsBuildInfoFile": "${configDir}/node_modules/.cache/tsc.tsbuildinfo",
     "target": "ES2022",
     "lib": ["ES2022"],
     "module": "NodeNext",
@@ -12,7 +12,5 @@
     "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "types": []
-  },
-  "include": ["plugins/*/core/**/*.ts", "plugins/*/claude/kit/**/*.ts"],
-  "exclude": ["plugins/*/core/**/*.spec.ts"]
+  }
 }

@@ -1,0 +1,7 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "check-types": { "command": null },
+    "test:claude": { "command": ["sh", "../../scripts/claude-plugin-test.sh"] }
+  }
+}

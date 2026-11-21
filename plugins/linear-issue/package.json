@@ -6,6 +6,16 @@
     "pi-package"
   ],
   "type": "module",
+  "devDependencies": {
+    "@agents/kit": "workspace:*",
+    "@anthropic-ai/claude-code": "catalog:",
+    "@earendil-works/pi-ai": "catalog:",
+    "@earendil-works/pi-coding-agent": "catalog:",
+    "@earendil-works/pi-tui": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",
     "@earendil-works/pi-coding-agent": "*",

@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, readdirSync, renameSync, writeFileSync } from "
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { message } from "./answer/fixture.ts";
-import { checkoutMods, checkoutRoot, STUB_KEY } from "./lib/harness.ts";
+import { agentBin, checkoutMods, checkoutRoot, STUB_KEY } from "./lib/harness.ts";
 import { runEnv, setupContext } from "./lib/setup.ts";
 import { startStub, stopStub } from "./lib/stub.ts";
 
@@ -73,7 +73,7 @@ async function seedSession(): Promise<URL> {
   ];
   const port = await startStub(runDir, [{ text: answer }], process.pid);
   try {
-    const reply = execFileSync("claude", args, {
+    const reply = execFileSync(agentBin("claude"), args, {
       cwd,
       env: {
         PATH: process.env.PATH,

@@ -1,0 +1,18 @@
+{
+  "name": "@agents/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@agents/kit": "workspace:*"
+  },
+  "devDependencies": {
+    "@anthropic-ai/claude-code": "catalog:",
+    "@earendil-works/pi-ai": "catalog:",
+    "@earendil-works/pi-coding-agent": "catalog:",
+    "@microsoft/tui-test": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

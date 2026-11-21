@@ -1,0 +1,12 @@
+{
+  "name": "@nickolaj-jepsen/image-preview",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@anthropic-ai/claude-code": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

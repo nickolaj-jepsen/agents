@@ -8,10 +8,15 @@ result-*
 # The site's build output and the types Astro writes.
 site/dist/
 site/.astro/
-# Recorded, not committed: `just media` writes them, as the Pages workflow does before it builds.
+# Recorded, not committed: `turbo run media` writes them, as the Pages workflow does before it builds.
 site/media/
-# The site's content model, written by `npm run site-data` from the markdown this repo holds.
+# The site's content model, written by `turbo run site-data` from the markdown this repo holds.
 site/data/
 
 # Turborepo
 .turbo
+# Python: the uv environment and tool caches.
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/

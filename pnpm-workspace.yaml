@@ -1,0 +1,34 @@
+packages:
+  - site
+  - kit
+  - scripts
+  - tools
+  - e2e
+  - e2e/*
+  - plugins/*
+allowBuilds:
+  "@anthropic-ai/claude-code": true
+  "@google/genai": false
+  esbuild: true
+  koffi: false
+  protobufjs: false
+# Each package installs what it uses, so bumping a tool changes only the tasks of the packages that
+# have it: turbo hashes the root's dependencies into every task, and a root that held them all would
+# rerun the whole suite on every Dependabot bump. That is why the root holds turbo alone and the
+# linters live in tools/. The catalog states each shared version once; Dependabot updates it here.
+catalog:
+  "@anthropic-ai/claude-code": 2.1.325
+  "@earendil-works/pi-agent-core": 1.5.2
+  "@earendil-works/pi-ai": 1.5.2
+  "@earendil-works/pi-coding-agent": 1.5.2
+  "@earendil-works/pi-tui": 1.5.2
+  "@microsoft/tui-test": ^0.1.1
+  "@types/node": ^24.19.2
+  typebox: 1.3.27
+  typescript: ^5.9.0
+  vitest: ^3.2.0
+  yaml: ^2.9.1
+  zod: ^4.6.7
+# A plugin's peerDependencies name the packages pi supplies and stay "*"; its devDependencies pin the
+# one copy it is checked against. autoInstallPeers would add a second, unpinned copy of each peer.
+autoInstallPeers: false

@@ -1,0 +1,15 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "topo": { "inputs": ["*", "lib/**", "assets/**"] },
+    "check-types": {
+      "inputs": [
+        "*",
+        "lib/**",
+        "answer/fixture.ts",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/tsconfig.base.node.json"
+      ]
+    }
+  }
+}

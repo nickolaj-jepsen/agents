@@ -1,0 +1,19 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "check-types": { "command": null },
+    "dev": {
+      "command": ["./node_modules/.bin/astro", "dev"],
+      "dependsOn": ["//#site-data", "//#catalog:data"],
+      "cache": false,
+      "persistent": true,
+      "interactive": false
+    },
+    "build": {
+      "command": ["./node_modules/.bin/astro", "build"],
+      "dependsOn": ["//#site-data", "//#catalog:data"],
+      "inputs": ["$TURBO_DEFAULT$", "media/**", "!dist/**", "!.astro/**"],
+      "outputs": ["dist/**"]
+    }
+  }
+}

@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 // `-u` accepts snapshots the way vitest's own do: the workers read E2E_UPDATE.
 if (process.argv.includes("-u") || process.argv.includes("--update")) process.env.E2E_UPDATE = "1";
 
-// Local only: not part of `npm test`.
+// Run by `node e2e/run.ts`, the `e2e` task of each e2e/<plugin>/ package; not by the generic `test`.
 export default defineConfig({
   esbuild: { tsconfigRaw: "{}" },
   test: {

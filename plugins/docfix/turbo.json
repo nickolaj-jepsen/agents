@@ -1,0 +1,7 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "test": { "command": ["./node_modules/.bin/vitest", "run"] },
+    "test:claude": { "command": ["sh", "../../scripts/claude-plugin-test.sh"] }
+  }
+}

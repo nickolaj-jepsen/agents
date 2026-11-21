@@ -6,6 +6,12 @@
     "pi-package"
   ],
   "type": "module",
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "catalog:",
+    "@types/node": "catalog:",
+    "typebox": "catalog:",
+    "typescript": "catalog:"
+  },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*"
   },

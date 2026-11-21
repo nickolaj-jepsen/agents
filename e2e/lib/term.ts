@@ -7,11 +7,12 @@
  * cells and 0-based coordinates.
  */
 import { execFile, execFileSync, spawn } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { TuiTest } from "@microsoft/tui-test";
 import { FONT_FAMILIES, fakeFontHome, realHome } from "./fonts.ts";
+import { fetchedBin } from "./tui-test-release.ts";
 
 const run = promisify(execFile);
 /** The terminal's colours and how a picture is drawn: e2e/tui-test.toml. */
@@ -214,7 +215,10 @@ export const daemonHome = () => `${process.env.XDG_RUNTIME_DIR ?? "/tmp"}/tt-e2e
 
 let bin: string | undefined;
 
-/** The daemon CLI: TUI_TEST_BIN, `tui-test` on PATH, or the one this flake builds (`pkgs/tui-test`). */
+/**
+ * The daemon CLI: TUI_TEST_BIN, `tui-test` on PATH, or the pinned release the `@agents/e2e#tui-test` task
+ * fetches. A cache restore from another OS leaves this one's binary missing, so that case fetches.
+ */
 export function tuiTestBin(): string {
   if (bin) return bin;
   bin = process.env.TUI_TEST_BIN;
@@ -223,13 +227,11 @@ export function tuiTestBin(): string {
       execFileSync("which", ["tui-test"], { stdio: "ignore" });
       bin = "tui-test";
     } catch {
-      const root = join(import.meta.dirname, "..", "..");
-      const out = execFileSync(
-        "nix",
-        ["build", `${root}#tui-test`, "--no-link", "--print-out-paths"],
-        { encoding: "utf8" },
-      ).trim();
-      bin = join(out, "bin", "tui-test");
+      bin = fetchedBin();
+      if (!existsSync(bin))
+        execFileSync(process.execPath, [join(import.meta.dirname, "..", "fetch-tui-test.ts")], {
+          stdio: "inherit",
+        });
     }
   }
   return bin;
@@ -258,7 +260,7 @@ export async function tuiTest(args: string[]): Promise<string> {
   } catch (err) {
     const e = err as { stderr?: string; stdout?: string; message: string; code?: string };
     if (e.code === "ENOENT")
-      throw new Error(`${tuiTestBin()} not found: set TUI_TEST_BIN or put pkgs.tui-test on PATH`);
+      throw new Error(`${tuiTestBin()} not found: set TUI_TEST_BIN or put tui-test on PATH`);
     throw new Error(`tui-test ${args.join(" ")}: ${(e.stderr || e.stdout || e.message).trim()}`);
   }
 }

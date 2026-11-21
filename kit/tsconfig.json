@@ -1,0 +1,5 @@
+{
+  "extends": "../tsconfig.base.node.json",
+  "include": ["**/*.ts"],
+  "exclude": ["legacy/claude/ui.spec.ts", "**/*.tsx"]
+}

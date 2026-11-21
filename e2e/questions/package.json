@@ -1,0 +1,15 @@
+{
+  "name": "@agents/e2e-questions",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@agents/e2e": "workspace:*",
+    "@nickolaj-jepsen/questions": "workspace:*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

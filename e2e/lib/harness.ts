@@ -76,6 +76,15 @@ const here = dirname(fileURLToPath(import.meta.url));
 export const checkoutRoot = resolve(here, "..", "..");
 
 /**
+ * `claude` or `pi` from this package's pinned npm dependencies, which the tasks' cache key stands
+ * for, not whichever the shell finds first. Turbo puts only the root's `node_modules/.bin` on PATH.
+ */
+export function agentBin(name: HarnessName): string {
+  const bin = join(here, "..", "node_modules", ".bin", name);
+  return existsSync(bin) ? bin : name;
+}
+
+/**
  * The system's `claude-dev` / `pi-dev` with its checkout swapped for this one, so a session loads
  * the plugins of the tree the harness runs from (a worktree's own), not the wrappers' fixed path.
  */
@@ -189,8 +198,9 @@ const UNSET = [
 // WT_NO_AUTOCLOSE: ending it leaves a worktree it ran in open for the caller.
 const COMMON_ENV = { AGENT_HUB_HIDDEN: "1", WT_NO_AUTOCLOSE: "1" };
 // A hermetic session draws the same colours whatever terminal started the run: without it, a
-// shell with no COLORTERM (CI) gets the 256-colour palette.
-const HERMETIC_ENV = { COLORTERM: "truecolor" };
+// shell with no COLORTERM (CI) gets the 256-colour palette. Claude's `ctrl+g to edit in <editor>`
+// hint names $VISUAL or $EDITOR, so the editor is pinned too.
+const HERMETIC_ENV = { COLORTERM: "truecolor", EDITOR: "nvim", VISUAL: "nvim" };
 
 export const claude: Harness = {
   name: "claude",
@@ -214,7 +224,7 @@ export const claude: Harness = {
       // Hermetic: plain `claude` with this checkout's mods, as `claude-dev` would load them, so a
       // machine without the wrapper (the Pages workflow) records the same screens.
       program: hermetic
-        ? "claude"
+        ? agentBin("claude")
         : (devWrapper("claude-dev", run.runDir) ??
           (onPath("claude-dev") ? "claude-dev" : "claude")),
       // The session is the person's account: no connectors (--strict-mcp-config).
@@ -313,7 +323,7 @@ export const pi: Harness = {
     }
     return {
       program: start.hermetic
-        ? "pi"
+        ? agentBin("pi")
         : (devWrapper("pi-dev", run.runDir) ?? (onPath("pi-dev") ? "pi-dev" : "pi")),
       args: [...args, ...(start.args ?? [])],
       cwd: run.cwd,

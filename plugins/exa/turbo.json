@@ -1,0 +1,4 @@
+{
+  "extends": ["//"],
+  "tasks": { "test": { "command": ["./node_modules/.bin/vitest", "run"] } }
+}

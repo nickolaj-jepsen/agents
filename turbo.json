@@ -1,0 +1,569 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "futureFlags": {
+    "experimentalTaskCommand": true,
+    "experimentalPythonWorkspaces": true
+  },
+  // CI signs what it uploads with TURBO_REMOTE_CACHE_SIGNATURE_KEY; a machine that reads the remote
+  // cache needs the same key.
+  "remoteCache": { "signature": true },
+  "globalDependencies": [".node-version"],
+  "tasks": {
+    "topo": {
+      "dependsOn": ["^topo"]
+    },
+    // Each package installs its own tools and turbo's PATH holds only the root's `node_modules/.bin`,
+    // so a package task names its tool by path (`./node_modules/.bin/tsc`), run from the package.
+    "check-types": {
+      "command": ["./node_modules/.bin/tsc", "-b"],
+      "dependsOn": ["topo"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/tsconfig.base.node.json",
+        "!**/*.md",
+        "!**/__snapshots__/**"
+      ]
+    },
+    "test": {
+      "dependsOn": ["topo"]
+    },
+    "test:claude": {
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/scripts/claude-plugin-test.sh"]
+    },
+    "e2e": {
+      "dependsOn": ["^topo"],
+      "inputs": ["$TURBO_DEFAULT$", "!site.scenarios.ts", "!vscode.scenarios.ts", "!tsconfig.json"],
+      "env": ["E2E_UPDATE", "E2E_PNG", "E2E_TMP"],
+      "passThroughEnv": ["E2E_JOBS", "E2E_JOBS_CLAUDE", "E2E_JOBS_PI", "E2E_KEEP", "E2E_TIMING"]
+    },
+    "e2e:update": {
+      "cache": false,
+      "passThroughEnv": [
+        "E2E_JOBS",
+        "E2E_JOBS_CLAUDE",
+        "E2E_JOBS_PI",
+        "E2E_KEEP",
+        "E2E_PNG",
+        "E2E_TMP"
+      ]
+    },
+    // The root's dependencies are in every task's hash, so the root holds turbo alone. oxlint, oxfmt and
+    // shellcheck live in `tools/` and the tasks name them by path; `tools/package.json` is their
+    // input, which is where a bump of one shows.
+    "//#lint": {
+      "command": ["./tools/node_modules/.bin/oxlint", "--deny-warnings"],
+      "inputs": [
+        "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,vue,astro,svelte}",
+        "tools/package.json",
+        ".oxlintrc.json",
+        ".gitignore",
+        "!**/node_modules/**",
+        "!.turbo/**",
+        "!site/dist/**",
+        "!site/.astro/**",
+        "!site/media/**",
+        "!site/data/**"
+      ]
+    },
+    "//#fmt": {
+      "command": [
+        "./tools/node_modules/.bin/oxfmt",
+        "--write",
+        "**/*.{cjs,css,graphql,hbs,html,js,json,json5,jsonc,jsx,md,mdx,mjs,mustache,scss,ts,tsx,vue,yaml,yml}"
+      ],
+      "cache": false
+    },
+    "//#fmt:check": {
+      "command": [
+        "./tools/node_modules/.bin/oxfmt",
+        "--check",
+        "**/*.{cjs,css,graphql,hbs,html,js,json,json5,jsonc,jsx,md,mdx,mjs,mustache,scss,ts,tsx,vue,yaml,yml}"
+      ],
+      "inputs": [
+        "**/*.{cjs,css,graphql,hbs,html,js,json,json5,jsonc,jsx,md,mdx,mjs,mustache,scss,ts,tsx,vue,yaml,yml}",
+        ".oxfmtrc.json",
+        ".gitignore",
+        "!**/node_modules/**",
+        "!.turbo/**",
+        "!site/dist/**",
+        "!site/.astro/**",
+        "!site/media/**",
+        "!site/data/**"
+      ]
+    },
+    "//#readme": {
+      "command": ["node", "scripts/readme.ts"],
+      "cache": false
+    },
+    "@agents/e2e#tui-test": {
+      "command": ["node", "fetch-tui-test.ts"],
+      "inputs": ["fetch-tui-test.ts", "lib/tui-test-release.ts"],
+      "outputs": ["node_modules/.cache/tui-test/**"]
+    },
+    // Turbo stops what a task leaves behind, so a session parked by `goto` dies with its task:
+    // drive `goto`, `cap` and `keys` with `node e2e/cli.ts` itself. This runs verbs that finish.
+    "//#e2e:cli": {
+      "command": ["node", "e2e/cli.ts"],
+      "dependsOn": ["@agents/e2e#tui-test"],
+      "cache": false,
+      "passThroughEnv": [
+        "XDG_STATE_HOME",
+        "XDG_CACHE_HOME",
+        "XDG_RUNTIME_DIR",
+        "TUI_TEST_BIN",
+        "DISPLAY",
+        "WAYLAND_DISPLAY",
+        "FONTCONFIG_FILE",
+        "E2E_KEEP",
+        "E2E_TIMING",
+        "E2E_VSCODE_SESSION",
+        "E2E_VSCODE_CODE",
+        "E2E_VSCODE_EXTENSIONS",
+        "E2E_VSCODE_CAGE",
+        "E2E_VSCODE_FONTCONFIG_FILE"
+      ]
+    },
+    "//#e2e:vscode": {
+      "command": ["node", "e2e/vscode.ts"],
+      "cache": false,
+      "passThroughEnv": [
+        "XDG_STATE_HOME",
+        "XDG_CACHE_HOME",
+        "XDG_RUNTIME_DIR",
+        "TUI_TEST_BIN",
+        "DISPLAY",
+        "WAYLAND_DISPLAY",
+        "FONTCONFIG_FILE",
+        "E2E_KEEP",
+        "E2E_TIMING",
+        "E2E_VSCODE_SESSION",
+        "E2E_VSCODE_CODE",
+        "E2E_VSCODE_EXTENSIONS",
+        "E2E_VSCODE_CAGE",
+        "E2E_VSCODE_FONTCONFIG_FILE"
+      ]
+    },
+    "//#e2e-live": {
+      "command": ["node", "e2e/cli.ts", "live"],
+      "dependsOn": ["@agents/e2e#tui-test"],
+      "cache": false,
+      "persistent": true,
+      "interactive": true,
+      "passThroughEnv": [
+        "XDG_STATE_HOME",
+        "XDG_CACHE_HOME",
+        "XDG_RUNTIME_DIR",
+        "TUI_TEST_BIN",
+        "DISPLAY",
+        "WAYLAND_DISPLAY",
+        "FONTCONFIG_FILE",
+        "E2E_KEEP",
+        "E2E_TIMING",
+        "E2E_VSCODE_SESSION",
+        "E2E_VSCODE_CODE",
+        "E2E_VSCODE_EXTENSIONS",
+        "E2E_VSCODE_CAGE",
+        "E2E_VSCODE_FONTCONFIG_FILE"
+      ]
+    },
+    "//#kit-live": {
+      "command": ["node", "e2e/cli.ts", "live", "kit", "--watch"],
+      "dependsOn": ["@agents/e2e#tui-test"],
+      "cache": false,
+      "persistent": true,
+      "interactive": true,
+      "passThroughEnv": [
+        "XDG_STATE_HOME",
+        "XDG_CACHE_HOME",
+        "XDG_RUNTIME_DIR",
+        "TUI_TEST_BIN",
+        "DISPLAY",
+        "WAYLAND_DISPLAY",
+        "FONTCONFIG_FILE",
+        "E2E_KEEP",
+        "E2E_TIMING",
+        "E2E_VSCODE_SESSION",
+        "E2E_VSCODE_CODE",
+        "E2E_VSCODE_EXTENSIONS",
+        "E2E_VSCODE_CAGE",
+        "E2E_VSCODE_FONTCONFIG_FILE"
+      ]
+    },
+    "//#answer-demo": {
+      "command": ["node", "e2e/answer/live.ts"],
+      "dependsOn": ["@agents/e2e#tui-test"],
+      "cache": false,
+      "persistent": true,
+      "interactive": true,
+      "passThroughEnv": [
+        "XDG_STATE_HOME",
+        "XDG_CACHE_HOME",
+        "XDG_RUNTIME_DIR",
+        "TUI_TEST_BIN",
+        "DISPLAY",
+        "WAYLAND_DISPLAY",
+        "FONTCONFIG_FILE",
+        "E2E_KEEP",
+        "E2E_TIMING",
+        "E2E_VSCODE_SESSION",
+        "E2E_VSCODE_CODE",
+        "E2E_VSCODE_EXTENSIONS",
+        "E2E_VSCODE_CAGE",
+        "E2E_VSCODE_FONTCONFIG_FILE"
+      ]
+    },
+    "//#claude-desktop-dev": {
+      "command": ["node", "e2e/desktop.ts"],
+      "cache": false,
+      "passThroughEnv": [
+        "XDG_STATE_HOME",
+        "XDG_CACHE_HOME",
+        "XDG_RUNTIME_DIR",
+        "TUI_TEST_BIN",
+        "DISPLAY",
+        "WAYLAND_DISPLAY",
+        "FONTCONFIG_FILE",
+        "E2E_KEEP",
+        "E2E_TIMING",
+        "E2E_VSCODE_SESSION",
+        "E2E_VSCODE_CODE",
+        "E2E_VSCODE_EXTENSIONS",
+        "E2E_VSCODE_CAGE",
+        "E2E_VSCODE_FONTCONFIG_FILE"
+      ]
+    },
+    "//#capture-cast": {
+      "command": [
+        "nix",
+        "--experimental-features",
+        "nix-command flakes",
+        "shell",
+        "--inputs-from",
+        ".",
+        "nixpkgs#nodejs",
+        "nixpkgs#xvfb-run",
+        "nixpkgs#xauth",
+        "nixpkgs#kitty",
+        "nixpkgs#ffmpeg-full",
+        "-c",
+        "node",
+        "e2e/capture-cast.ts"
+      ],
+      "cache": false
+    },
+    "//#plugin-docs": {
+      "command": ["node", "skills/agent-plugin-dev/scripts/refresh-docs.ts"],
+      "cache": false
+    },
+    "//#site-data": {
+      "command": ["node", "scripts/site-data.ts"],
+      "inputs": [
+        "scripts/content.ts",
+        "scripts/site-data.ts",
+        ".claude-plugin/marketplace.json",
+        "plugins/*/package.json",
+        "plugins/*/README.md",
+        "plugins/*/.claude-plugin/plugin.json",
+        "skills/**",
+        "docs/**",
+        "site/media/*/media.json",
+        "site/media/*/media-vscode.json",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/__pycache__/**",
+        "!**/.venv/**",
+        "!**/.*_cache/**"
+      ],
+      "outputs": ["site/data/content.json"]
+    },
+    "//#catalog": { "command": ["node", "kit/catalog/build.ts"], "cache": false },
+    "//#catalog:data": {
+      "command": ["node", "kit/catalog/build.ts", "--no-shots"],
+      "inputs": [
+        "kit/**",
+        "AGENTS.md",
+        "site/media/kit/crops.json",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/__pycache__/**",
+        "!**/.venv/**",
+        "!**/.*_cache/**",
+        "!**/.claude-plugin/types/**",
+        "!**/*.actual.*",
+        "!**/*.spec.ts"
+      ],
+      "outputs": ["site/data/kit.json"]
+    },
+    // Record inside `nix develop .#media`, which exports AGENTS_MEDIA_ENV: a hash of its tools, fonts
+    // and VS Code, so a recording from another environment misses the cache. The recorders are tasks of
+    // the e2e package, not root tasks: a root task is keyed on this file, and a recording is dear.
+    // `turbo run media` is all three; `site#build` reads whatever they left under site/.
+    "//#media": {
+      "dependsOn": ["@agents/e2e#media:kit", "@agents/e2e#site-shots", "@agents/e2e#site-vscode"]
+    },
+    "@agents/e2e#media:kit": {
+      "command": ["env", "E2E_UPDATE=1", "node", "../kit/catalog/build.ts"],
+      "env": ["AGENTS_MEDIA_ENV"],
+      "passThroughEnv": [
+        "XDG_STATE_HOME",
+        "XDG_CACHE_HOME",
+        "XDG_RUNTIME_DIR",
+        "TUI_TEST_BIN",
+        "DISPLAY",
+        "WAYLAND_DISPLAY",
+        "FONTCONFIG_FILE",
+        "CAST_FFMPEG",
+        "CAST_MESA",
+        "SITE_JOBS",
+        "E2E_JOBS",
+        "E2E_JOBS_CLAUDE",
+        "E2E_JOBS_PI",
+        "E2E_KEEP",
+        "E2E_TIMING",
+        "E2E_TMP",
+        "E2E_VSCODE_CODE",
+        "E2E_VSCODE_EXTENSIONS",
+        "E2E_VSCODE_CAGE",
+        "E2E_VSCODE_FONTCONFIG_FILE"
+      ],
+      "inputs": [
+        "lib/**",
+        "assets/**",
+        "tui-test.toml",
+        "run.ts",
+        "e2e.spec.ts",
+        "vitest.config.ts",
+        "kit/**",
+        "$TURBO_ROOT$/kit/**",
+        "$TURBO_ROOT$/AGENTS.md",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/__pycache__/**",
+        "!**/.venv/**",
+        "!**/.*_cache/**",
+        "!**/.claude-plugin/types/**",
+        "!**/*.actual.*",
+        "!**/.out/**",
+        "!**/*.spec.ts",
+        "!**/__snapshots__/**",
+        "!**/turbo.json",
+        "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.turbo/**",
+        "!$TURBO_ROOT$/**/.claude-plugin/types/**",
+        "!$TURBO_ROOT$/**/*.actual.*",
+        "!$TURBO_ROOT$/**/turbo.json",
+        "!$TURBO_ROOT$/**/*.spec.ts",
+        "!$TURBO_ROOT$/**/*.test.ts",
+        "!$TURBO_ROOT$/**/*.test.tsx",
+        "!site-vscode.ts",
+        "!vscode.ts",
+        "!lib/vscode.ts",
+        "!lib/vscode-scenario.ts",
+        "!*/vscode.scenarios.ts"
+      ],
+      "outputs": ["$TURBO_ROOT$/site/media/kit/**", "$TURBO_ROOT$/site/data/kit.json"]
+    },
+    "@agents/e2e#site-shots": {
+      "command": ["node", "site.ts"],
+      "dependsOn": ["@agents/e2e#tui-test"],
+      "env": ["AGENTS_MEDIA_ENV"],
+      "passThroughEnv": [
+        "XDG_STATE_HOME",
+        "XDG_CACHE_HOME",
+        "XDG_RUNTIME_DIR",
+        "TUI_TEST_BIN",
+        "DISPLAY",
+        "WAYLAND_DISPLAY",
+        "FONTCONFIG_FILE",
+        "CAST_FFMPEG",
+        "CAST_MESA",
+        "SITE_JOBS",
+        "E2E_JOBS",
+        "E2E_JOBS_CLAUDE",
+        "E2E_JOBS_PI",
+        "E2E_KEEP",
+        "E2E_TIMING",
+        "E2E_TMP",
+        "E2E_VSCODE_CODE",
+        "E2E_VSCODE_EXTENSIONS",
+        "E2E_VSCODE_CAGE",
+        "E2E_VSCODE_FONTCONFIG_FILE"
+      ],
+      "inputs": [
+        "**",
+        "$TURBO_ROOT$/plugins/**",
+        "$TURBO_ROOT$/kit/**",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/__pycache__/**",
+        "!**/.venv/**",
+        "!**/.*_cache/**",
+        "!**/.claude-plugin/types/**",
+        "!**/*.actual.*",
+        "!**/.out/**",
+        "!**/*.spec.ts",
+        "!**/__snapshots__/**",
+        "!**/turbo.json",
+        "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.turbo/**",
+        "!$TURBO_ROOT$/**/.claude-plugin/types/**",
+        "!$TURBO_ROOT$/**/*.actual.*",
+        "!$TURBO_ROOT$/**/turbo.json",
+        "!$TURBO_ROOT$/**/*.spec.ts",
+        "!$TURBO_ROOT$/**/*.test.ts",
+        "!$TURBO_ROOT$/**/*.test.tsx",
+        "!site-vscode.ts",
+        "!vscode.ts",
+        "!lib/vscode.ts",
+        "!lib/vscode-scenario.ts",
+        "!*/vscode.scenarios.ts",
+        "!README.md"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/site/media/**",
+        "!$TURBO_ROOT$/site/media/kit/**",
+        "!$TURBO_ROOT$/site/media/*/vscode-*",
+        "!$TURBO_ROOT$/site/media/*/media-vscode.json"
+      ]
+    },
+    "@agents/e2e#site-vscode": {
+      "command": [
+        "sh",
+        "-c",
+        "if [ \"$(uname -s)\" = Linux ]; then exec node site-vscode.ts \"$@\"; fi; echo \"site-vscode: needs a Linux compositor, skipped\"",
+        "site-vscode"
+      ],
+      "env": ["AGENTS_MEDIA_ENV"],
+      "passThroughEnv": [
+        "XDG_STATE_HOME",
+        "XDG_CACHE_HOME",
+        "XDG_RUNTIME_DIR",
+        "TUI_TEST_BIN",
+        "DISPLAY",
+        "WAYLAND_DISPLAY",
+        "FONTCONFIG_FILE",
+        "CAST_FFMPEG",
+        "CAST_MESA",
+        "SITE_JOBS",
+        "E2E_JOBS",
+        "E2E_JOBS_CLAUDE",
+        "E2E_JOBS_PI",
+        "E2E_KEEP",
+        "E2E_TIMING",
+        "E2E_TMP",
+        "E2E_VSCODE_CODE",
+        "E2E_VSCODE_EXTENSIONS",
+        "E2E_VSCODE_CAGE",
+        "E2E_VSCODE_FONTCONFIG_FILE"
+      ],
+      "inputs": [
+        "**",
+        "$TURBO_ROOT$/plugins/**",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/__pycache__/**",
+        "!**/.venv/**",
+        "!**/.*_cache/**",
+        "!**/.claude-plugin/types/**",
+        "!**/*.actual.*",
+        "!**/.out/**",
+        "!**/*.spec.ts",
+        "!**/__snapshots__/**",
+        "!**/turbo.json",
+        "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.turbo/**",
+        "!$TURBO_ROOT$/**/.claude-plugin/types/**",
+        "!$TURBO_ROOT$/**/*.actual.*",
+        "!$TURBO_ROOT$/**/turbo.json",
+        "!$TURBO_ROOT$/**/*.spec.ts",
+        "!$TURBO_ROOT$/**/*.test.ts",
+        "!$TURBO_ROOT$/**/*.test.tsx",
+        "!*/claude.scenarios.ts",
+        "!*/pi.scenarios.ts",
+        "!README.md"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/site/media/*/vscode-*",
+        "$TURBO_ROOT$/site/media/*/media-vscode.json"
+      ]
+    },
+    "//#kit-sync": {
+      "command": ["node", "kit/sync.ts"],
+      "cache": false
+    },
+    "//#kit-new": {
+      "command": ["node", "kit/new.ts"],
+      "cache": false
+    },
+    "check": {
+      "dependsOn": ["check-types", "test", "test:claude", "e2e"]
+    },
+    "//#check": {
+      "dependsOn": ["//#fmt:check", "//#lint", "//#lint:sh", "agents-python#check"]
+    },
+    "agents-python#check-types": {
+      "command": null
+    },
+    "run-handoff#check-types": {
+      "command": null
+    },
+    "agents-python#check": {
+      "command": null,
+      "dependsOn": ["agents-python#lint:py", "agents-python#fmt:check", "run-handoff#test"]
+    },
+    "agents-python#lint:py": {
+      "command": ["uv", "run", "--frozen", "ruff", "check"],
+      "inputs": [
+        "**/*.py",
+        "pyproject.toml",
+        "skills/*/scripts/pyproject.toml",
+        "uv.lock",
+        ".python-version"
+      ]
+    },
+    "agents-python#fmt:check": {
+      "command": ["uv", "run", "--frozen", "ruff", "format", "--check"],
+      "inputs": [
+        "**/*.py",
+        "pyproject.toml",
+        "skills/*/scripts/pyproject.toml",
+        "uv.lock",
+        ".python-version"
+      ]
+    },
+    "agents-python#fmt": {
+      "command": ["uv", "run", "--frozen", "ruff", "format"],
+      "cache": false
+    },
+    "//#lint:sh": {
+      "command": [
+        "sh",
+        "-c",
+        "git ls-files -z \"*.sh\" | xargs -0 ./tools/node_modules/.bin/shellcheck -S warning"
+      ],
+      "inputs": ["**/*.sh", "tools/package.json"]
+    },
+    // Not part of `check`: the one task that needs nix. It reads the flake's nix files and lock; the
+    // treefmt check it runs formats nix files only, so nothing else in the tree reaches its result.
+    // CI runs it when this key misses (see .github/workflows/ci.yml).
+    "//#check:nix": {
+      "command": ["nix", "flake", "check", "--print-build-logs"],
+      "inputs": [
+        "**/*.nix",
+        "flake.lock",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/.venv/**",
+        "!site/dist/**"
+      ],
+      "passThroughEnv": [
+        "NIX_*",
+        "SSL_CERT_FILE",
+        "XDG_CACHE_HOME",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME"
+      ]
+    }
+  }
+}

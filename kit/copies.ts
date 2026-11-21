@@ -1,10 +1,10 @@
 /**
  * What a Claude Code mod carries of the kit, and where: the engine cannot import outside a
- * mod's folder, so every mod holds verbatim copies, written by `just kit-sync` and checked by
+ * mod's folder, so every mod holds verbatim copies, written by `turbo run kit-sync` and checked by
  * `kit/legacy/claude/ui.spec.ts`.
  *
  * - The kit (`kit/`, less what only pi or the repo's tooling reads) goes to `claude/kit/`. A
- *   mod is on the list by having that folder; `just kit-sync <plugin>` gives it one.
+ *   mod is on the list by having that folder; `turbo run kit-sync -- <plugin>` gives it one.
  * - The legacy kit (`kit/legacy/claude/ui.tsx`) and its test assertions go to `claude/ui.tsx`
  *   and `claude/checks.tsx`. A mod is on that list by still having a `ui.tsx`; none is added.
  * - The catalogue mod is not a plugin: it always has both, and the catalogue's samples.
@@ -39,7 +39,7 @@ export function kitFiles(withStories: boolean): string[] {
       (file) =>
         !file.endsWith(".spec.ts") &&
         !/(^|\/)pi\.ts$/.test(file) &&
-        !["copies.ts", "sync.ts", "parity.ts", "new.ts"].includes(file) &&
+        !["copies.ts", "sync.ts", "parity.ts", "new.ts", "vitest.config.ts"].includes(file) &&
         !file.endsWith("/manifest.ts") &&
         (withStories || !file.endsWith("stories.ts")),
     )

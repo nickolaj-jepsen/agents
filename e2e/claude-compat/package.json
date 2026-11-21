@@ -1,0 +1,14 @@
+{
+  "name": "@agents/e2e-claude-compat",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@agents/e2e": "workspace:*",
+    "@nickolaj-jepsen/claude-compat": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

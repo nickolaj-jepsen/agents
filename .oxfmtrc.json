@@ -1,0 +1,10 @@
+{
+  "ignorePatterns": [
+    "skills/mermaid/scripts/vendor/**",
+    "skills/agent-plugin-dev/references/upstream/**",
+    "kit/catalog/COMPONENTS.md",
+    // Messages as agents wrote them: a formatter would change what the tests parse.
+    "plugins/*/core/cases/**",
+    "pnpm-lock.yaml"
+  ]
+}
