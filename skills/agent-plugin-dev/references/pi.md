@@ -19,4 +19,7 @@ If a registered tool is missing from the recorded prompt, inspect its exposure a
 - Guard terminal-only UI with `ctx.mode === "tui"`. RPC can still have `ctx.hasUI` for dialogs but can't mount a terminal component.
 - Start session-owned timers or watchers at `session_start` and clean them up at `session_shutdown`. Loading an extension doesn't mean a session started.
 - Restore persisted state from `ctx.sessionManager.getBranch()`, not the whole session file. See [answer's restore code](../../../plugins/answer/pi/index.ts) for a draft that follows branches.
+- A command cannot call a tool: `ctx.executeTool` exists only while a tool runs. To reach an MCP server from a command, run pi's MCP support a second time for that server alone, on a host that only keeps the tools it registers, as [linear-issue's bridge](../../../plugins/linear-issue/pi/linear.ts) does. It reads the same `mcp.json` and stored sign-in.
+- An overlay can stand on the bottom edge: `overlayOptions: () => ({ anchor: "bottom-center", width, maxHeight })`. Draw it with the kit's `sheet`, which closes it on every side so the transcript under it stays apart.
+- pi-tui's `Input` has no way to place its cursor: `setValue` leaves it at the start. Send it `ctrl+e` after setting a value that is to be continued.
 - A component's `render(width)` must fit in terminal cells, not JavaScript string length. Use the [kit](../../../kit/README.md) or pi-tui's width helpers. If an overlay doesn't respond to clicks, check its mouse handler before blaming the driver.

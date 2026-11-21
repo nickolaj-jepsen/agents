@@ -49,6 +49,8 @@ just kit-sync          # rewrite every copy after editing the kit
 
 Its `claude/tsconfig.json` needs `"allowImportingTsExtensions": true`, since the kit's files import each other with `.ts`. `just test` fails while a copy differs from the kit.
 
+A screen both halves of a plugin draw is written once, in the plugin's `core/`, and imports the kit from the mod's copy (`../claude/kit/`): that folder is the one both the mod and the pi extension can reach. [linear-issue's screen](../plugins/linear-issue/core/screen.ts) is the example: it returns lines and decides what a key does, and each half only paints and delivers keys.
+
 The kit keeps no state and registers no hooks. A plugin holds the state (what is chosen, where the keyboard is) and passes it in, the same way on both clients. [The catalogue mod](catalog/claude/claude/register.tsx) shows the hooks a Claude Code site needs for the kit's own focus.
 
 ## Add or change a component
@@ -76,7 +78,8 @@ To change how something looks everywhere, edit its `terminal.ts` or `tokens.ts` 
 - **Keyboard focus on Claude Code.** The engine inverts whatever its focus ring rests on. A site that wants the kit's pointer and bold label instead keeps the ring on a button that draws nothing (`ring` in the painter) and turns the ring's moves into its own focus in a `ui.focus` hook (`ringMove`).
 - **Who has the keyboard on Claude Code.** A pane or the band has it only after `ctrl+x tab` or a click there. `keysHint` draws the line that says so.
 - **The rail of a transcript card.** On Claude Code it is the engine's quote border, which also runs beside blocks the engine draws.
-- **Blocks.** Block Markdown and text entry are each host's own: a `slot` line in the drawing, or the host's input beside it.
+- **Blocks.** Text entry is each host's own field, in the row an `input` slot keeps for it: pi's is one row and follows the cursor, Claude Code's wraps and stands alone on its rows. Block Markdown is a `markdown` slot for the host's renderer, or `prose` where the rows have to be counted, as in a body that scrolls.
+- **A panel over the screen.** pi lays a `sheet` over the transcript. Claude Code frames a pane itself, a box above the prompt or a rule beside the transcript, with its own Close, so a mod draws `sheetHead` and the body.
 
 ## The legacy kits
 

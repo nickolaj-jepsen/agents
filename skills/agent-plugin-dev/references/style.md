@@ -26,4 +26,4 @@ On Claude Code, a pane or the band has the keyboard only after `ctrl+x tab` or a
 
 Use native controls on Desktop and VS Code. Use a button for an action, a labelled field for input, and an expandable row when the same item has detail. Don't simulate a button with a glyph or print a row of terminal key hints. Let the pane or band size and scroll its contents.
 
-Choose an existing pattern before adding one: `docfix` has a queue with evidence that opens in place; `linear-issue` has an editable draft; `answer` has a set of choices. The [Claude reference](claude.md) covers what the host actually renders and which actions can take focus.
+Choose an existing pattern before adding one: `docfix` has a queue with evidence that opens in place; `linear-issue` has an editable draft; `answer` has a set of choices. On the terminal, `linear-issue` is also the pattern for a record reviewed before it is sent: lettered fields that open their choices in place, and only Enter sends. The [Claude reference](claude.md) covers what the host actually renders and which actions can take focus.
