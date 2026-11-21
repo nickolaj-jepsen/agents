@@ -4,15 +4,7 @@ import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import { contentText } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { Component, TUI } from "@earendil-works/pi-tui";
-import {
-  type Held,
-  hasWork,
-  offer,
-  step as stepForm,
-  type View,
-  view,
-  viewOf,
-} from "../core/forms.ts";
+import { hasWork, offer, step as stepForm, type View, view, viewOf } from "../core/forms.ts";
 import { AnswerForm, type FormAction, type FormResult } from "./form.ts";
 import { AnswerOffer } from "./offer.ts";
 import {

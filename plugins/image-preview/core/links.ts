@@ -44,12 +44,12 @@ export function* imageLinks(markdown: string): Generator<string> {
   // Consume escapes and code spans before looking for links. Allow an angle-bracket destination
   // with spaces, or a bare destination with escaped punctuation and one level of parentheses.
   const tokens =
-    /\\[^\n]|(?<!`)(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)|!?\[(?:\\.|[^\[\]\\\n])*\]\(\s*(?:<([^<>\n]+)>|((?:\\.|\([^()\n]*\)|[^\s()\\<>])+))(?:[ \t]+(?:"[^"\n]*"|'[^'\n]*'|\([^()\n]*\)))?\s*\)/g;
+    /\\[^\n]|(?<!`)(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)|!?\[(?:\\.|[^[\]\\\n])*\]\(\s*(?:<([^<>\n]+)>|((?:\\.|\([^()\n]*\)|[^\s()\\<>])+))(?:[ \t]+(?:"[^"\n]*"|'[^'\n]*'|\([^()\n]*\)))?\s*\)/g;
   const seen = new Set<string>();
   for (const match of visible.join("\n").matchAll(tokens)) {
     const target = match[2] ?? match[3];
     if (!target) continue;
-    const path = localImagePath(target.replace(/\\([!-/:-@\[-`{-~])/g, "$1"));
+    const path = localImagePath(target.replace(/\\([!-/:-@[-`{-~])/g, "$1"));
     if (path && !seen.has(path)) {
       seen.add(path);
       yield path;

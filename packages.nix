@@ -38,6 +38,12 @@
           touch $out
         '';
         readme = pkgs.callPackage ./pkgs/readme-check.nix {};
+        # Reads `.oxlintrc.json`: terminal escapes in regexes are this repo's trade, so that rule is off.
+        lint = pkgs.runCommand "oxlint" {nativeBuildInputs = [pkgs.oxlint];} ''
+          cd ${self}
+          oxlint --deny-warnings
+          touch $out
+        '';
         # The site reads its content as data (`site/data/`, which `just site` and `just catalog`
         # write first), so its pages reach into `scripts/` and `kit/` for types only, and `site/`
         # alone builds. A value import would need this checkout at build time again.

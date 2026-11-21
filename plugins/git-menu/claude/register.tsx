@@ -1,11 +1,5 @@
 import { atom, read, update } from "claude-code";
-import type {
-  CommandRunResult,
-  EngineInterface,
-  ProcessRunResult,
-  Register,
-  RenderSurface,
-} from "claude-code";
+import type { EngineInterface, ProcessRunResult, Register, RenderSurface } from "claude-code";
 
 import type { FolderApp, Menu, MenuKind, Row } from "./types.d.ts";
 import { emptyState, kitOf, list, notice, paneOptions, paneTitle, stack } from "./ui";

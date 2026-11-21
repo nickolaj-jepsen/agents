@@ -14,6 +14,7 @@
       packages = [
         pkgs.nodejs # `npm ci`, then `just test` and `just typecheck`; it strips types, so e2e runs .ts as is
         pkgs.just
+        pkgs.oxlint # `just lint`, at the version the flake check runs
         pkgs.claude-code
         pkgs.pi-coding-agent
         pi-dev-links

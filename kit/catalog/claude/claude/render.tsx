@@ -22,7 +22,6 @@ import {
   withColumns,
   type Cell,
   type ClampOptions,
-  type Entry,
   type Kit,
   type ListGroup,
   type ListItem,
@@ -244,7 +243,7 @@ export const renders: Record<string, Render> = {
   "clamp/wide-chars": clampDemo(CJK, { max: 3 }),
   "clamp/markdown": markdownDemo,
 
-  "detail/section": (k, width) => {
+  "detail/section": (k) => {
     const { Box } = k;
     return (
       <Box flexDirection="column" rowGap={1}>
@@ -361,7 +360,7 @@ export const renders: Record<string, Render> = {
     );
   },
 
-  "split/stacked": (k, width) => {
+  "split/stacked": (k) => {
     const { Box } = k;
     return (
       <Box flexDirection="column" rowGap={1}>

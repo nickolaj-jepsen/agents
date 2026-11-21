@@ -47,6 +47,11 @@ handoff-test:
 typecheck:
     npm run typecheck
 
+[doc('Lint the TypeScript sources (oxlint)')]
+[group('dev')]
+lint:
+    oxlint --deny-warnings
+
 [doc("Rewrite every mod's claude/ui.tsx from kit/claude/ui.tsx; plugins named get a copy")]
 [group('dev')]
 kit-sync *PLUGINS:
@@ -172,7 +177,7 @@ build *ARGS:
 fmt:
     {{ nixcmd }} fmt
 
-[doc('Run flake check: tests, type-check, each Claude half validated and tested, formatting')]
+[doc('Run flake check: tests, type-check, lint, each Claude half validated and tested, formatting')]
 [exit-message]
 [group('maintenance')]
 check:

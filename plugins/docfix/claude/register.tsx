@@ -26,7 +26,6 @@ import {
   plan,
   readReminder,
   readsInCommand,
-  repeats,
   seen,
   serialize,
   STORE_DIR,

@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "no-control-regex": "off"
+  },
+  "ignorePatterns": [
+    ".agents/**",
+    "skills/mermaid/scripts/vendor/**",
+    "skills/agent-plugin-dev/references/upstream/**",
+    "plugins/*/claude/ui.tsx",
+    "plugins/*/claude/checks.tsx",
+    "plugins/*/claude/types.d.ts",
+    "kit/catalog/claude/claude/ui.tsx",
+    "kit/catalog/claude/claude/samples.ts",
+    "site/dist/**",
+    "site/.astro/**"
+  ]
+}

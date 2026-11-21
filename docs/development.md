@@ -7,6 +7,7 @@ nix develop        # enter the repo's dev shell (or use direnv)
 just dev-setup     # install dependencies and generate/link editor types
 just test          # fast tests without running an agent
 just typecheck     # cores, pi extensions, kit and e2e harness
+just lint          # oxlint over the TypeScript sources
 just fmt           # format the checkout
 just check         # all flake checks, including Claude plugin validation and tests
 ```

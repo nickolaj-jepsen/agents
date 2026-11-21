@@ -26,7 +26,6 @@ import {
   cardSummary,
   cellAt,
   clamp,
-  controlLabel,
   digitChoice,
   fit,
   type KeyChip,
