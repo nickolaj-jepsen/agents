@@ -26,7 +26,6 @@
   runCommand,
   runtimeShell,
   tui-test,
-  typescript-language-server,
   unifont,
   util-linux,
   vscode,
@@ -100,7 +99,6 @@ in {
     pngquant
     oxipng
     hunspellEn # spellfix
-    typescript-language-server # lsp; it finds tsserver in the project's own typescript, else its bundled one
   ];
 
   # Only the plugin media runner uses these; the component catalogue still uses tui-test.
@@ -122,7 +120,6 @@ in {
       pngquant
       oxipng
       hunspellEn
-      typescript-language-server
     ]
     ++ lib.optionals stdenv.hostPlatform.isLinux [
       util-linux # setsid, which detaches the window from the recorder

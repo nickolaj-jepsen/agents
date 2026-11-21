@@ -69,7 +69,6 @@ More:
 - [transcript-tweaks](https://nickolaj-jepsen.github.io/agents/plugins/transcript-tweaks/): Two changes to how the transcript reads. (pi)
 - [claude-compat](https://nickolaj-jepsen.github.io/agents/plugins/claude-compat/): Claude Code habits in pi. (pi)
 - [exa](https://nickolaj-jepsen.github.io/agents/plugins/exa/): `exa_search` and `exa_fetch` tools over Exa. (pi)
-- [lsp](https://nickolaj-jepsen.github.io/agents/plugins/lsp/): Appends language-server errors to `edit` and `write` results. (pi)
 - [image-preview](https://nickolaj-jepsen.github.io/agents/plugins/image-preview/): Preview local PNG and JPEG images in the Claude Code terminal transcript. (Claude Code)
 
 In progress, and not ready for anyone else to use:
