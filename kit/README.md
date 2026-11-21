@@ -78,8 +78,8 @@ To change how something looks everywhere, edit its `terminal.ts` or `tokens.ts` 
 - **Keyboard focus on Claude Code.** The engine inverts whatever its focus ring rests on. A site that wants the kit's pointer and bold label instead keeps the ring on a button that draws nothing (`ring` in the painter) and turns the ring's moves into its own focus in a `ui.focus` hook (`ringMove`).
 - **Who has the keyboard on Claude Code.** A pane or the band has it only after `ctrl+x tab` or a click there. `keysHint` draws the line that says so.
 - **The rail of a transcript card.** On Claude Code it is the engine's quote border, which also runs beside blocks the engine draws.
-- **Blocks.** Text entry is each host's own field, in the row an `input` slot keeps for it: pi's is one row and follows the cursor, Claude Code's wraps and stands alone on its rows. Block Markdown is a `markdown` slot for the host's renderer, or `prose` where the rows have to be counted, as in a body that scrolls.
-- **A panel over the screen.** pi lays a `sheet` over the transcript. Claude Code frames a pane itself, a box above the prompt or a rule beside the transcript, with its own Close, so a mod draws `sheetHead` and the body.
+- **Blocks.** Text entry is each host's own field, in the row an `input` slot keeps for it: pi's is one row and follows the cursor, Claude Code's wraps and stands alone on its rows. A slot of several rows takes each client's field of several lines, which brings its own rules. Block Markdown is a `markdown` slot for the host's renderer, or `prose` where the rows have to be counted, as in a body that scrolls.
+- **A panel over the screen.** pi lays a `sheet` over the transcript, with no foot where it stands on the prompt's rule. Claude Code frames a pane itself, a box above the prompt or a rule beside the transcript, with its own Close, so a mod draws `sheetHead` and the body.
 
 ## The legacy kits
 
