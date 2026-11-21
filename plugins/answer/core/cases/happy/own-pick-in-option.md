@@ -1,6 +1,10 @@
 ---
 about: the lean sits in an option's own words
-shape: round Q1[AB*A]
+kind: round
+items:
+  - label: Q1
+    options: [A, B]
+    recommended: A
 ---
 **Q1. How do we store the recipes?**
 

@@ -1,6 +1,6 @@
 ---
 about: numbered commands for the reader to run are not questions
-shape: none
+kind: none
 ---
 To see it yourself:
 

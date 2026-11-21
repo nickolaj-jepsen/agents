@@ -1,6 +1,11 @@
 ---
 about: a menu whose closing paragraph leans toward one number
-shape: round Q1[123*2]
+kind: round
+items:
+  - label: Q1
+    options: [1, 2, 3]
+    recommended: 2
+    unlabelled: true
 ---
 Ways to cut the build time:
 

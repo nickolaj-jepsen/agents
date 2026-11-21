@@ -1,6 +1,13 @@
 ---
 about: A numbered list under a bold decisions heading holds unlabelled yes-or-no questions with the lean written inline in each item and no options, after a long report with bold bullet findings.
-shape: round 1[*] 2[*] 3[*]
+kind: round
+items:
+  - label: 1
+    recommended: true
+  - label: 2
+    recommended: true
+  - label: 3
+    recommended: true
 tail: "Still waiting on you from before: the `tag` run, the lot log, the wax row, and tape stock. If you agree with all, I'll write it up in `lots/bin-tag.md`."
 ---
 Pressing works fine, but my sweet-or-sharp blend is too close to call. I read the sheet on `bin-log-v2` and `press-run-day-1` and two more. The lots show how it goes:

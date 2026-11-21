@@ -1,6 +1,11 @@
 ---
 about: Unlettered bold bullets of causes come first, then a bold stance line, then the lettered bold options as bullets, an advice line, and a closing question that asks two things.
-shape: round Q1[AB*A]
+kind: round
+items:
+  - label: Q1
+    options: [A, B]
+    recommended: A
+    unlabelled: true
 ---
 The delay on `quotes` was due to a bug in my first pass. Day-5 job of the wheel truing, based on `quotes` and bench at noon. Each job then took longer, so the `stock` and `part-sync` jobs I didn't touch and the old queue-by-queue run. The cost is small. The final call is resting on you.
 

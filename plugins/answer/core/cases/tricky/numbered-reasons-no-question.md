@@ -1,6 +1,6 @@
 ---
 about: A closing explanation with a bold-led numbered list of reasons and an extra paragraph of an alternative, ending in a bold recommendation sentence, with no question anywhere.
-shape: none
+kind: none
 ---
 That's fair. It's also the only rule that fits the pool rota. If the rota is full, the lane you want is held as soon as the gate opens.
 

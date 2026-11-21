@@ -1,6 +1,10 @@
 ---
 about: a line that is itself the question over a list of things it could do
-shape: round Q1[123]
+kind: round
+items:
+  - label: Q1
+    options: [1, 2, 3]
+    unlabelled: true
 ---
 The disk is the loose end. Want me to:
 

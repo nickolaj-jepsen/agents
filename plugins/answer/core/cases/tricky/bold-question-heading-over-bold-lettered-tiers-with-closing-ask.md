@@ -1,6 +1,10 @@
 ---
 about: A bold question heading over bold-lettered tiers inside a bullet list, a bold recommendation naming one tier with a qualifier, and a short closing ask.
-shape: round Q1[ABC*B]
+kind: round
+items:
+  - label: Q1
+    options: [A, B, C]
+    recommended: B
 ---
 I read the sheet first. Your request is built on both your notes (from Friday) and the quote (with the labour line), and your `part code` column has a gap in it from the import. I'll treat that as follows: each part it needs to match on size and brand and be taken from the list (`<code> <qty>`) so `import` can read it.
 

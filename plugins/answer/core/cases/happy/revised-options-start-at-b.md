@@ -1,6 +1,11 @@
 ---
 about: a revised list that drops its first option and keeps the letters
-shape: round Q1[BCD*B]
+kind: round
+items:
+  - label: Q1
+    options: [B, C, D]
+    recommended: B
+    unlabelled: true
 ---
 Option A costs more than I said, so I'd now go another way.
 

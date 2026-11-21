@@ -1,6 +1,10 @@
 ---
 about: A heading that names the question, two bold lettered options with sub-bullets and a recommendation, then a closing agree-question followed by bullet follow-ups.
-shape: round Q8[AB*A]
+kind: round
+items:
+  - label: Q8
+    options: [A, B]
+    recommended: A
 ---
 I reviewed the fleet rules, and option A makes a small tweak to pricing:
 

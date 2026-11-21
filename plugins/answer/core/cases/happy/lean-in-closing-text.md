@@ -1,6 +1,10 @@
 ---
 about: bold option titles; the lean comes in the closing text
-shape: round Q10[ABC*C]
+kind: round
+items:
+  - label: Q10
+    options: [A, B, C]
+    recommended: C
 ---
 **Q10. The live interface: read-only, or can people steer?**
 

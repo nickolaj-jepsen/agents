@@ -1,6 +1,6 @@
 ---
 about: a finished report with a table, ending on one offer
-shape: none
+kind: none
 ---
 The migration is done.
 

@@ -1,6 +1,6 @@
 ---
 about: Two numbered runs introduced by bold code-formatted headings with arrows, followed by bullet sections of explanation, ending with a single offer question.
-shape: none
+kind: none
 ---
 `lanes` is now done and `rota` and `till`, all three clean. On the rota of the week, `lane sort` and `lane hold:sat` pass, and guard swaps and café on lane. In the old rota, 3 of the part-time slots are covered by the same guard. That is odd or intended.
 

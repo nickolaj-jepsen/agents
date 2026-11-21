@@ -1,7 +1,20 @@
 ---
-about: a pick list: each item ends in the route to take
-shape: picks 1[build*build] 2[build,/brainstorm*/brainstorm] 3[build,/grill-me*/grill-me]
-tail: "- The verifier rated idea 3 weak; I kept it, ranked last.\n\nStart with 1: its result decides whether idea 3 is worth doing."
+about: "a pick list: each item ends in the route to take"
+kind: picks
+items:
+  - label: 1
+    options: [build]
+    recommended: build
+  - label: 2
+    options: [build, /brainstorm]
+    recommended: /brainstorm
+  - label: 3
+    options: [build, /grill-me]
+    recommended: /grill-me
+tail: |-
+  - The verifier rated idea 3 weak; I kept it, ranked last.
+
+  Start with 1: its result decides whether idea 3 is worth doing.
 ---
 3 ideas, saved to `~/notes/ideas/IDEAS.md`
 

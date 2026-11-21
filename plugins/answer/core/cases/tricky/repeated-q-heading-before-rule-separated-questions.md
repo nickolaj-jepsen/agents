@@ -1,6 +1,20 @@
 ---
 about: A heading repeats a later question's label before the real rule-separated questions, with a table, code fences and bullet lists inside the question bodies, and two questions carry only a bare recommendation.
-shape: round Q1[AB*A] Q2[AB*A] Q3[AB*A] Q4[*] Q5[*]
+kind: round
+items:
+  - label: Q1
+    options: [A, B]
+    recommended: A
+  - label: Q2
+    options: [A, B]
+    recommended: A
+  - label: Q3
+    options: [A, B]
+    recommended: A
+  - label: Q4
+    recommended: true
+  - label: Q5
+    recommended: true
 ---
 Short answer: the two routes fit well enough to the shop rota and van run. For Q1 and Q2, I put `scope` first on the van list. That keeps it in the same form as before.
 

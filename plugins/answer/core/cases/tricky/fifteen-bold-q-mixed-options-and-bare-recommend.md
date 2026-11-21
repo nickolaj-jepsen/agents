@@ -1,6 +1,23 @@
 ---
 about: A long analysis with bullets and horizontal rules, followed by bold questions where some have lettered options and a recommendation, some have only a bare recommendation line, and one has a quoted draft and a bullet list between the question and its options, ending with a pointer to later questions.
-shape: round Q1[ABC*A] Q2[*] Q3[AB*A] Q4[AB*A] Q5[ABC*A] Q6[*]
+kind: round
+items:
+  - label: Q1
+    options: [A, B, C]
+    recommended: A
+  - label: Q2
+    recommended: true
+  - label: Q3
+    options: [A, B]
+    recommended: A
+  - label: Q4
+    options: [A, B]
+    recommended: A
+  - label: Q5
+    options: [A, B, C]
+    recommended: A
+  - label: Q6
+    recommended: true
 tail: "Wait for the next round, then I will work on Q4 and Q12: the rota's lane list (a lane count of day two. late shift), and see the \"hold\" tag log."
 ---
 Booking is live; here's what I did, then the first round of questions.

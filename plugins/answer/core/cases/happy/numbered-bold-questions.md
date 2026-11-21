@@ -1,7 +1,11 @@
 ---
 about: plain numbers, each title a bold question
-shape: round 1[] 2[]
-titles: ["Should the fiction section be split by decade?", "Do the audiobooks share a shelf with the large print?"]
+kind: round
+items:
+  - label: 1
+    title: Should the fiction section be split by decade?
+  - label: 2
+    title: Do the audiobooks share a shelf with the large print?
 ---
 A few things before I plan the shelving.
 

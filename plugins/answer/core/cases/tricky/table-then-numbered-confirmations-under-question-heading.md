@@ -1,6 +1,9 @@
 ---
 about: A table with bold cells precedes a bolded question heading and a prose recommendation, with a short numbered list of confirmations at the end.
-shape: round Q11[*]
+kind: round
+items:
+  - label: Q11
+    recommended: true
 ---
 Status: an audit-only walk-through on fines, late fees and waivers to date.
 

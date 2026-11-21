@@ -1,7 +1,17 @@
 ---
 about: Two bold questions in a round, separated by horizontal rules, the first with lettered options and recommendation, the second prose-only, followed by a bold-labelled bullet tail that is not a question.
-shape: round Q9[ABC*A] Q10[*]
-tail: "**Things you skip:**\n\n- **Sale stock lists in the shelf's order.** There's stock and sale lists in-house tags, which lets a user still see the list. Point the path to a short `:id` route only when it is time to open, not before.\n- **Rota.** `rota/week.ts` has a note on the roster and the slot for a swap. Use what we have to keep the same `slot.ts` for each one, with the clerk's own."
+kind: round
+items:
+  - label: Q9
+    options: [A, B, C]
+    recommended: A
+  - label: Q10
+    recommended: true
+tail: |-
+  **Things you skip:**
+
+  - **Sale stock lists in the shelf's order.** There's stock and sale lists in-house tags, which lets a user still see the list. Point the path to a short `:id` route only when it is time to open, not before.
+  - **Rota.** `rota/week.ts` has a note on the roster and the slot for a swap. Use what we have to keep the same `slot.ts` for each one, with the clerk's own.
 ---
 Plan: book-sale flow is the first, and you also want to run book-sale stalls as an extra. I'll treat book-sale stalls as a small add-on for the desk page, not a new one. The first would start fresh with a list, the second would start with the stock that's left, and the third would keep it all clean. That puts it on the same track, which is what the desk needs to run.
 

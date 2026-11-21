@@ -1,6 +1,10 @@
 ---
 about: A long explanation with a code fence and a nested numbered list of statements is followed by a bold question label whose answer is a numbered list of restated statements and a closing recommendation.
-shape: round Q1[*]
+kind: round
+items:
+  - label: Q1
+    recommended: true
+    unlabelled: true
 ---
 It works out like this: a card after an item hold is just a copy-on request, which has 6 steps left. So, an entry with `reads: [loan.md, rota.md]` reads like this:
 

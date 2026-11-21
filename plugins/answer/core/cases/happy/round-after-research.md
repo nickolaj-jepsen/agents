@@ -1,6 +1,11 @@
 ---
 about: research and a table before the round; numbered lists inside question bodies
-shape: round Q19[*] Q25[*]
+kind: round
+items:
+  - label: Q19
+    recommended: true
+  - label: Q25
+    recommended: true
 ---
 I looked at how other tools keep ideas diverse:
 - rotating methods from different categories;

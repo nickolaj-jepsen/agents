@@ -1,6 +1,10 @@
 ---
-about: a menu whose closing lean names no number: the words are kept, not dropped
-shape: round Q1[123]
+about: "a menu whose closing lean names no number: the words are kept, not dropped"
+kind: round
+items:
+  - label: Q1
+    options: [1, 2, 3]
+    unlabelled: true
 ---
 Three ways to dry the washing:
 

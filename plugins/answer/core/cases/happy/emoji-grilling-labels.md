@@ -1,6 +1,12 @@
 ---
-about: the emoji form: a label closing its bold, a recommendation after an arrow
-shape: round Q1[*] Q2[AB*A]
+about: "the emoji form: a label closing its bold, a recommendation after an arrow"
+kind: round
+items:
+  - label: Q1
+    recommended: true
+  - label: Q2
+    options: [A, B]
+    recommended: A
 ---
 ❓ **Q1** - **Storage**: Should the cache use SQLite?
 

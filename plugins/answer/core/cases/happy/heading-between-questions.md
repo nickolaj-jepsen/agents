@@ -1,6 +1,11 @@
 ---
 about: a heading between two questions stays with the one before
-shape: round Q1[*] Q2[*]
+kind: round
+items:
+  - label: Q1
+    recommended: true
+  - label: Q2
+    recommended: true
 ---
 **Q1. Should it retry?**
 

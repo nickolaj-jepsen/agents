@@ -1,6 +1,10 @@
 ---
 about: a code block in the question's body holds numbered lines that are not questions
-shape: round Q1[AB*A]
+kind: round
+items:
+  - label: Q1
+    options: [A, B]
+    recommended: A
 ---
 **Q1. Keep this order of steps?**
 

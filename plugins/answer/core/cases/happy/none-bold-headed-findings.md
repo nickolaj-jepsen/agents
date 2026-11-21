@@ -1,6 +1,6 @@
 ---
 about: bold-numbered section headings in a summary are not questions
-shape: none
+kind: none
 ---
 This repository is a small weather station.
 

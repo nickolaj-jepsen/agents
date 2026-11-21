@@ -1,6 +1,9 @@
 ---
 about: a cue line says the numbered items below it are decisions
-shape: round 1[] 2[]
+kind: round
+items:
+  - label: 1
+  - label: 2
 ---
 Done with the spike.
 

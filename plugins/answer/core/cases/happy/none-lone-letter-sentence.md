@@ -1,6 +1,6 @@
 ---
 about: a lone `A.` is a sentence, not a choice
-shape: none
+kind: none
 ---
 The author is credited like this:
 

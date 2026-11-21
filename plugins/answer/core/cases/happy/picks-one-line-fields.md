@@ -1,6 +1,13 @@
 ---
 about: a pick list in `title · size · route` form
-shape: picks 1[build*build] 2[build,/grill-me*/grill-me]
+kind: picks
+items:
+  - label: 1
+    options: [build]
+    recommended: build
+  - label: 2
+    options: [build, /grill-me]
+    recommended: /grill-me
 ---
 2 findings from 4 runs, saved to `~/notes/FINDINGS.md`
 

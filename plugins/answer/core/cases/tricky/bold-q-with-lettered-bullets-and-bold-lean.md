@@ -1,6 +1,10 @@
 ---
 about: A single question whose bold title holds a trailing lean sentence, with lettered bold-marker bullets, then a separate bold recommendation line naming one option and a bare closing word.
-shape: round Q10[ABC*C]
+kind: round
+items:
+  - label: Q10
+    options: [A, B, C]
+    recommended: C
 ---
 **Q10. Step 4: the first-pass tally (rows, bins, lots) read-in `[crop].toml` and `rows.py`. I'd keep this one too.**
 

@@ -1,6 +1,10 @@
 ---
 about: A report of statements, a table and bullet findings that ends with a numbered list of open items, where only some of the items read as questions.
-shape: round 1[] 2[] 3[]
+kind: round
+items:
+  - label: 1
+  - label: 2
+  - label: 3
 ---
 I drafted a patch for the `quote expiry job` rule and ran it on bikehub.no. The results are a mixed bag, and the specs don't cover it.
 

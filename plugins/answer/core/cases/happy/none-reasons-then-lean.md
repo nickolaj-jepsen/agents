@@ -1,6 +1,6 @@
 ---
-about: numbered reasons then a recommendation paragraph: the list is not the questions
-shape: none
+about: "numbered reasons then a recommendation paragraph: the list is not the questions"
+kind: none
 ---
 Why nothing simpler keeps it:
 

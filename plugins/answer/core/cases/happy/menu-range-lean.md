@@ -1,6 +1,11 @@
 ---
 about: a menu whose closing lean names a range of numbers
-shape: round Q1[1234*]
+kind: round
+items:
+  - label: Q1
+    options: [1, 2, 3, 4]
+    recommended: [1, 2, 3]
+    unlabelled: true
 ---
 Four small jobs are waiting on the allotment:
 

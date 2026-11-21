@@ -1,6 +1,10 @@
 ---
 about: Seven bold numbered findings with nested bullets and bold side headings precede a single lettered question whose label sits in bold, with a lean in the first and last options.
-shape: round Q3[ABC*A]
+kind: round
+items:
+  - label: Q3
+    options: [A, B, C]
+    recommended: A
 ---
 The survey is done. It ran on 9 plots and found 7 gaps, of which 3 need work and 4 are minor. Here is what to know for each:
 

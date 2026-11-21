@@ -1,6 +1,6 @@
 ---
 about: A bulleted status report with a second list of open items whose last bullet ends in a preference question that should stay prose.
-shape: none
+kind: none
 ---
 The build ran clean, so I checked: the loan form and holds are live on the desk (Phase 3).
 

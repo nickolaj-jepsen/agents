@@ -1,6 +1,9 @@
 ---
 about: a recommendation heading over bullets, then a bare Agree?
-shape: round Q4[*]
+kind: round
+items:
+  - label: Q4
+    recommended: true
 ---
 **Q4. What happens when you tap an app while the VM is off?**
 

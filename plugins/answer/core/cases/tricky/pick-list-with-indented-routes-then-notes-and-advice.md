@@ -1,7 +1,34 @@
 ---
 about: A numbered list of ideas where each bold title is followed by an indented description and a short effort-and-route sentence, then plain bullets and an advice line.
-shape: picks 1[build*build] 2[build*build] 3[build*build] 4[build*build] 5[build*build] 6[build,/grill-me*/grill-me] 7[build,/brainstorm*/brainstorm]
-tail: "- Some of the code that makes the \"Add…\" fires on its own, and the fix is it: look in `views/` or `part-list/` where the form it opens.\n- I didn't change the sort order. It was lifted from the old view, a one-off file with shared state code (the rows are not all reset), so that needs to change.\n- A \"quick add\" row or a two-step form would need to go in a no-op path via `add`. The `add` call goes through the same hook in `list.ts`. Both are fine for now; the rest wait.\n\nStart with 1: it fixes a real bug and it is a small change. It starts with an `if` on the `row` in `list.add()`, with a call to `render` in `list`."
+kind: picks
+items:
+  - label: 1
+    options: [build]
+    recommended: build
+  - label: 2
+    options: [build]
+    recommended: build
+  - label: 3
+    options: [build]
+    recommended: build
+  - label: 4
+    options: [build]
+    recommended: build
+  - label: 5
+    options: [build]
+    recommended: build
+  - label: 6
+    options: [build, /grill-me]
+    recommended: /grill-me
+  - label: 7
+    options: [build, /brainstorm]
+    recommended: /brainstorm
+tail: |-
+  - Some of the code that makes the "Add…" fires on its own, and the fix is it: look in `views/` or `part-list/` where the form it opens.
+  - I didn't change the sort order. It was lifted from the old view, a one-off file with shared state code (the rows are not all reset), so that needs to change.
+  - A "quick add" row or a two-step form would need to go in a no-op path via `add`. The `add` call goes through the same hook in `list.ts`. Both are fine for now; the rest wait.
+
+  Start with 1: it fixes a real bug and it is a small change. It starts with an `if` on the `row` in `list.add()`, with a call to `render` in `list`.
 ---
 7 ideas, saved to `~/.shop/notes/jobs/bench/order-parts-by-brand-day/ideas.md`
 

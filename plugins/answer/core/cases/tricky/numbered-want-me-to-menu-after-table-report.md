@@ -1,6 +1,10 @@
 ---
 about: A report with a heading, a comparison table with an empty header cell, bold paragraphs and a closing lead-in followed by a numbered menu of actions.
-shape: round Q1[123]
+kind: round
+items:
+  - label: Q1
+    options: [1, 2, 3]
+    unlabelled: true
 ---
 Swapped it in — and the catch is that it doesn't roll any faster.
 

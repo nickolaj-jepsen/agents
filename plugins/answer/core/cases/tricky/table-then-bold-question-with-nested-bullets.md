@@ -1,6 +1,8 @@
 ---
 about: A table of rows with an ellipsis cell comes before a single bold question whose answers are nested bullets that carry no letters and no recommendation.
-shape: round Q5[]
+kind: round
+items:
+  - label: Q5
 ---
 That fixes it up, and it hides a gap in what #4 shows:
 

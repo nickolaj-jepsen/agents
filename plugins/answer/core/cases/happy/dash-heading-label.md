@@ -1,6 +1,10 @@
 ---
-about: `## Q2 — …` with an em dash as the label's separator
-shape: round Q2[AB*A]
+about: "`## Q2 — …` with an em dash as the label's separator"
+kind: round
+items:
+  - label: Q2
+    options: [A, B]
+    recommended: A
 ---
 ## Q2 — How many workflows should there be?
 

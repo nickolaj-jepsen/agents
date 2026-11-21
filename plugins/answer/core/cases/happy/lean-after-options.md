@@ -1,6 +1,10 @@
 ---
 about: the lean is a sentence after the options
-shape: round Q1[AB*B]
+kind: round
+items:
+  - label: Q1
+    options: [A, B]
+    recommended: B
 ---
 **Q1. Where does the log go?**
 

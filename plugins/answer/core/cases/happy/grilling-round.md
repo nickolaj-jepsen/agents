@@ -1,6 +1,14 @@
 ---
-about: the grilling skill's own format: lettered options and a blockquoted recommendation, rules between
-shape: round Q1[ABC*A] Q2[*] Q3[AB]
+about: "the grilling skill's own format: lettered options and a blockquoted recommendation, rules between"
+kind: round
+items:
+  - label: Q1
+    options: [A, B, C]
+    recommended: A
+  - label: Q2
+    recommended: true
+  - label: Q3
+    options: [A, B]
 ---
 The bar and the funnel are independent, so this round asks both.
 

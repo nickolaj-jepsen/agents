@@ -1,7 +1,11 @@
 ---
 about: the label closes its bold, then the title is bold on its own
-shape: round Q1[AB*A]
-titles: ["Should the greenhouse fans run at night?"]
+kind: round
+items:
+  - label: Q1
+    title: Should the greenhouse fans run at night?
+    options: [A, B]
+    recommended: A
 ---
 **Q1.** **Should the greenhouse fans run at night?**
 

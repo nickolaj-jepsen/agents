@@ -1,6 +1,22 @@
 ---
 about: A table with empty and slash-joined cells precedes six rule-separated bold questions, mixing lettered options with bare yes-style recommendations and inline code paths in the bodies.
-shape: round Q1[ABC*A] Q2[*] Q3[ABC*A] Q4[AB*A] Q5[*] Q6[*]
+kind: round
+items:
+  - label: Q1
+    options: [A, B, C]
+    recommended: A
+  - label: Q2
+    recommended: true
+  - label: Q3
+    options: [A, B, C]
+    recommended: A
+  - label: Q4
+    options: [A, B]
+    recommended: A
+  - label: Q5
+    recommended: true
+  - label: Q6
+    recommended: true
 ---
 I've looked at the rows. Here's what's ripe, then the first round of questions.
 

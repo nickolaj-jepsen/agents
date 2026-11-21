@@ -1,6 +1,55 @@
 ---
 about: A long sectioned report with bold bullets, a table and nested lists ends in a numbered list whose rows carry a size and a route after dots, with only some rows taking a route other than build.
-shape: picks 1[build,/grill-me*/grill-me] 2[build*build] 3[build*build] 4[build*build] 5[build,/grill-me*/grill-me] 6[build*build] 7[build,/grill-me*/grill-me] 8[build*build] 9[build*build] 10[build*build] 11[build,/grill-me*/grill-me] 12[build*build] 13[build*build] 14[build,/brainstorm*/brainstorm] 15[build,/brainstorm*/brainstorm] 16[build*build]
+kind: picks
+items:
+  - label: 1
+    options: [build, /grill-me]
+    recommended: /grill-me
+  - label: 2
+    options: [build]
+    recommended: build
+  - label: 3
+    options: [build]
+    recommended: build
+  - label: 4
+    options: [build]
+    recommended: build
+  - label: 5
+    options: [build, /grill-me]
+    recommended: /grill-me
+  - label: 6
+    options: [build]
+    recommended: build
+  - label: 7
+    options: [build, /grill-me]
+    recommended: /grill-me
+  - label: 8
+    options: [build]
+    recommended: build
+  - label: 9
+    options: [build]
+    recommended: build
+  - label: 10
+    options: [build]
+    recommended: build
+  - label: 11
+    options: [build, /grill-me]
+    recommended: /grill-me
+  - label: 12
+    options: [build]
+    recommended: build
+  - label: 13
+    options: [build]
+    recommended: build
+  - label: 14
+    options: [build, /brainstorm]
+    recommended: /brainstorm
+  - label: 15
+    options: [build, /brainstorm]
+    recommended: /brainstorm
+  - label: 16
+    options: [build]
+    recommended: build
 ---
 I timed this week's `press run`. It took 8.5 hours from first wash (7:3) to a final rack check (4:1). Most of that went to sorting and waiting for the bin, not to work in `press`. Most of the time lost is in the wash step, and some wash days are well over.
 

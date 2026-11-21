@@ -1,6 +1,10 @@
 ---
 about: numbered alternatives and a closing choice with no lean
-shape: round Q1[123]
+kind: round
+items:
+  - label: Q1
+    options: [1, 2, 3]
+    unlabelled: true
 ---
 Three jobs are waiting:
 

@@ -1,6 +1,6 @@
 ---
 about: a numbered list of what changed asks nothing
-shape: none
+kind: none
 ---
 Done. What changed:
 

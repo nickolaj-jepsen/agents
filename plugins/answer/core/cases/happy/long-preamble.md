@@ -1,6 +1,12 @@
 ---
 about: a long preamble with bullets before the first question
-shape: round Q1[*] Q2[AB*B]
+kind: round
+items:
+  - label: Q1
+    recommended: true
+  - label: Q2
+    options: [A, B]
+    recommended: B
 ---
 I went through the notes first.
 

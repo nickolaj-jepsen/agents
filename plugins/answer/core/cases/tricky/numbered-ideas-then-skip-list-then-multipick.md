@@ -1,6 +1,11 @@
 ---
 about: A numbered list of ideas, each with long inline code and prose, followed by a bulleted skip list and a closing line that recommends several numbers at once before the question.
-shape: round Q1[123456*]
+kind: round
+items:
+  - label: Q1
+    options: [1, 2, 3, 4, 5, 6]
+    recommended: [1, 2, 6]
+    unlabelled: true
 ---
 Six are the ones I think are worth it, ranked first. The rest came from the rota sheet and the café till log:
 

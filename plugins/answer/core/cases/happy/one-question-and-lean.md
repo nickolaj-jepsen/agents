@@ -1,6 +1,10 @@
 ---
-about: one question at a time: a recommendation and nothing to pick from
-shape: round Q1[*]
+about: "one question at a time: a recommendation and nothing to pick from"
+kind: round
+items:
+  - label: Q1
+    recommended: true
+    unlabelled: true
 ---
 **Should the cache live in memory?**
 

@@ -1,7 +1,14 @@
 ---
 about: Bulleted findings lead into bold numbered questions, where one has a recommendation line above lettered options with the recommended one marked inline, and another has only a recommendation line.
-shape: round 1[] 2[ABC*B] 3[*]
-tail: "Tell me just 1 and 2 if 3 is easy."
+kind: round
+items:
+  - label: 1
+  - label: 2
+    options: [A, B, C]
+    recommended: B
+  - label: 3
+    recommended: true
+tail: Tell me just 1 and 2 if 3 is easy.
 ---
 Reading the plan and checking the three desk files: `src/loan-desk.ts`, `src/loan-desk/ui/{hold,renew,fine}.ts`, and `web/src/lib/desk/ui/{card/form.ts,list.ts,row.ts,tab/bar.ts}`.
 

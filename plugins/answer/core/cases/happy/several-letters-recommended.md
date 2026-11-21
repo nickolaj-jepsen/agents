@@ -1,6 +1,10 @@
 ---
 about: a recommendation naming several options
-shape: round Q1[ABCD*]
+kind: round
+items:
+  - label: Q1
+    options: [A, B, C, D]
+    recommended: [A, C]
 ---
 **Q1. Which routes get a bus shelter first?**
 

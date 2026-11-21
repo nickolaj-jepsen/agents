@@ -1,7 +1,18 @@
 ---
 about: Bold numbered paragraph steps where some are instructions with a code fence and others contain quoted examples or bullet questions, followed by a bullet pair and a bold-led guess, with no lettered options.
-shape: round 1[] 2[] 3[] 4[]
-tail: "Take this path:\n- **Fast path:** the lane stays open, run for the first two guards. The rota works the rest on the day shift and swap.\n- **Safe path:** the full rota. Once the lane is held, and this adds no extra cover.\n- **My guess** may be it works: it doesn't say *what* is held for (swim or class), and it gives no sign that a hold was set. I'll note that in the rota so it's next to the list.\n\nOnce we've seen it, **drop the rota file in**. That is all."
+kind: round
+items:
+  - label: 1
+  - label: 2
+  - label: 3
+  - label: 4
+tail: |-
+  Take this path:
+  - **Fast path:** the lane stays open, run for the first two guards. The rota works the rest on the day shift and swap.
+  - **Safe path:** the full rota. Once the lane is held, and this adds no extra cover.
+  - **My guess** may be it works: it doesn't say *what* is held for (swim or class), and it gives no sign that a hold was set. I'll note that in the rota so it's next to the list.
+
+  Once we've seen it, **drop the rota file in**. That is all.
 ---
 Both lane sheets are stale, so I need you to run one more. To read the pool's live log I can read `cron` here, but the rota needs to be pulled in.
 

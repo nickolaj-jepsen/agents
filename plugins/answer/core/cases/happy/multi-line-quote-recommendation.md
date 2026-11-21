@@ -1,7 +1,10 @@
 ---
 about: a blockquoted recommendation running over several lines
-shape: round Q1[*]
-titles: ["Should the cache expire?"]
+kind: round
+items:
+  - label: Q1
+    title: Should the cache expire?
+    recommended: true
 ---
 **Q1. Should the cache expire?**
 

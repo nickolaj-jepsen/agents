@@ -1,6 +1,11 @@
 ---
-about: numbered alternatives and one closing choice: one card keyed by the numbers
-shape: round Q1[123*1]
+about: "numbered alternatives and one closing choice: one card keyed by the numbers"
+kind: round
+items:
+  - label: Q1
+    options: [1, 2, 3]
+    recommended: 1
+    unlabelled: true
 ---
 Ways to close the gap:
 

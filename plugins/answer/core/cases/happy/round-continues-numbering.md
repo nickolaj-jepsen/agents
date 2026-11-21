@@ -1,6 +1,12 @@
 ---
 about: a later round keeps counting from where the last one stopped
-shape: round Q7[*] Q8[AB*A]
+kind: round
+items:
+  - label: Q7
+    recommended: true
+  - label: Q8
+    options: [A, B]
+    recommended: A
 ---
 **Q7. Should the badge print the guest's company?**
 

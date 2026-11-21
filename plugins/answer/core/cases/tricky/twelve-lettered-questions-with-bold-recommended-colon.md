@@ -1,6 +1,25 @@
 ---
 about: Several bold labelled questions each carry three lettered options and a blockquote whose bold marker holds the colon and the key, with cross-references to other question labels in the titles.
-shape: round Q21[ABC*A] Q22[ABC*A] Q23[ABC*A] Q24[ABC*A] Q25[ABC*A] Q26[ABC*A]
+kind: round
+items:
+  - label: Q21
+    options: [A, B, C]
+    recommended: A
+  - label: Q22
+    options: [A, B, C]
+    recommended: A
+  - label: Q23
+    options: [A, B, C]
+    recommended: A
+  - label: Q24
+    options: [A, B, C]
+    recommended: A
+  - label: Q25
+    options: [A, B, C]
+    recommended: A
+  - label: Q26
+    options: [A, B, C]
+    recommended: A
 ---
 There is one gap to close: **Q13-C covers pears and plums, but Q14-A stays open.** I’ll ask that as the first question here. This is the last open round once I fix the plan.
 

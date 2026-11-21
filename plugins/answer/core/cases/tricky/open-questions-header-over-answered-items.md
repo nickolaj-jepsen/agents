@@ -1,6 +1,6 @@
 ---
 about: A bold header announcing open questions above a numbered list whose items are already answered with nested bullets, followed by a to-do bullet list and a closing lone offer.
-shape: none
+kind: none
 ---
 The plan is set and the rota ready, but I'd like one more look first. Rules on lanes (`am`, `pm`, `late`, `early`, `split`, `swap`) hang on the same swim the rota day. Note that the rota rows that match that case. Lanes are part of the rota, so "a lane that is held" is only a label, and rota would change the rule. I put a lane hold on the café as the first step, with the till.
 

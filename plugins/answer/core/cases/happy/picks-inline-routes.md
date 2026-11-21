@@ -1,6 +1,13 @@
 ---
 about: a pick list of bold-titled ideas with the route in each last line
-shape: picks 1[build*build] 2[build,/brainstorm*/brainstorm]
+kind: picks
+items:
+  - label: 1
+    options: [build]
+    recommended: build
+  - label: 2
+    options: [build, /brainstorm]
+    recommended: /brainstorm
 ---
 2 ideas, saved to the notes
 

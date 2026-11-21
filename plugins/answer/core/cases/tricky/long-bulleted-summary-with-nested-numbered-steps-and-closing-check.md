@@ -1,6 +1,6 @@
 ---
 about: A long bold-sectioned bulleted summary with a nested numbered list and many inline code spans ends with a confirmation question plus an offer, which stays prose.
-shape: none
+kind: none
 ---
 That covers the plan. Here's what the desk gets, for you to see what I built on top of it.
 

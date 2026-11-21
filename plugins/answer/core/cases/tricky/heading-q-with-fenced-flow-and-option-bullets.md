@@ -1,6 +1,10 @@
 ---
 about: A bulleted preamble full of inline code, then a heading that carries the question, a fenced diagram of arrows, lettered bold option bullets with one marked recommended, a restated recommendation and a closing question.
-shape: round Q1[ABCD*A]
+kind: round
+items:
+  - label: Q1
+    options: [A, B, C, D]
+    recommended: A
 ---
 On the first question, what I found by checking (so I don't miss what the log can hold):
 

@@ -1,6 +1,10 @@
 ---
 about: a table in the body stays with its question
-shape: round Q1[AB*A]
+kind: round
+items:
+  - label: Q1
+    options: [A, B]
+    recommended: A
 ---
 **Q1. Which plan do we pick?**
 

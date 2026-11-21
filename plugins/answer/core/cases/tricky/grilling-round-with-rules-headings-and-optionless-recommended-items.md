@@ -1,6 +1,45 @@
 ---
 about: A long grilling round of many bold question items under headings, separated by rules, where some items have lettered options and a recommendation line and others have only a recommendation.
-shape: round Q33[ABC*A] Q34[AB*A] Q35[AB*A] Q36[ABC*A] Q37[*] Q38[AB*A] Q39[*] Q40[*] Q41[AB*A] Q42[AB*A] Q43[*] Q44[*] Q45[*] Q46[*] Q47[AB*A]
+kind: round
+items:
+  - label: Q33
+    options: [A, B, C]
+    recommended: A
+  - label: Q34
+    options: [A, B]
+    recommended: A
+  - label: Q35
+    options: [A, B]
+    recommended: A
+  - label: Q36
+    options: [A, B, C]
+    recommended: A
+  - label: Q37
+    recommended: true
+  - label: Q38
+    options: [A, B]
+    recommended: A
+  - label: Q39
+    recommended: true
+  - label: Q40
+    recommended: true
+  - label: Q41
+    options: [A, B]
+    recommended: A
+  - label: Q42
+    options: [A, B]
+    recommended: A
+  - label: Q43
+    recommended: true
+  - label: Q44
+    recommended: true
+  - label: Q45
+    recommended: true
+  - label: Q46
+    recommended: true
+  - label: Q47
+    options: [A, B]
+    recommended: A
 ---
 Nine open questions on the fleet booking tool. What I found from the code: `book --hold` is set only by the rider's tag type (`rider.tag.type`, `bike.tag.size`), so it skips the `hold` flag. The rest are open.
 

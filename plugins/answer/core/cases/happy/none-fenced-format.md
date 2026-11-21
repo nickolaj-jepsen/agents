@@ -1,6 +1,6 @@
 ---
 about: a round's format quoted inside a fence is not a round
-shape: none
+kind: none
 ---
 Format a round like so:
 

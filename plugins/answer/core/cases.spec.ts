@@ -1,22 +1,26 @@
 /**
  * What the parser makes of an assistant message, one markdown file per message under `cases/`.
  *
- * A file is a front matter block and then the message exactly as an agent wrote it:
+ * A file is YAML front matter and then the message exactly as an agent wrote it:
  *
  *     ---
  *     about: What this message is there to prove.
- *     shape: round Q1[ABC*A] Q2[*]
- *     titles: ["First question?", "Second question?"]
- *     tail: "Prose after the last question."
+ *     kind: round                     # round, picks, or none for a message that asks nothing
+ *     items:
+ *       - label: Q1                   # as printed ("Q1", 2)
+ *         title: First question?      # optional
+ *         options: [A, B, C]          # the option keys, as printed; a pick list's are build, /grill-me…
+ *         recommended: A              # an option key, [A, C] for several, true for a recommendation
+ *                                     # that names no option; leave out when there is none
+ *         unlabelled: true            # the message printed no label for this lone question
+ *     tail: Prose after the last question.   # optional
  *     ---
  *     **Q1. First question?**
  *     ...
  *
- * `shape` says what it should become: `none` for a message that asks nothing, else the kind and,
- * for each item, `label[option keys*recommended key]` (a bare `*` for a recommendation naming
- * no option; a pick list's keys are separated by commas). `titles` and `tail` are optional and
- * checked when present. Whatever the shape, every line of the message must be drawn by the head,
- * the items or the tail, and the item starts must be the harness's cut points.
+ * The items are what the parser must find, in order, with nothing missing and nothing extra.
+ * Whatever they say, every line of the message must be drawn by the head, the items or the tail,
+ * and the item starts must be the harness's cut points.
  *
  * `cases/happy` holds the easy messages in each format the parser reads; `cases/tricky` holds the
  * hard ones, built from real transcripts with the wording made up. Set `CASES_DIR` to check
@@ -26,40 +30,48 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
 
 import { describe, expect, test } from "vitest";
+import { parse as readYaml } from "yaml";
+import { z } from "zod";
 
 import { type Form, parse, startLines, tailOf } from "./forms.ts";
 
-type Case = {
-  name: string;
-  about: string;
-  shape: string;
-  titles?: string[];
-  tail?: string;
-  text: string;
-};
+/** A label or key as a person writes it in YAML: `Q1`, `A`, `2`. */
+const Key = z.union([z.string(), z.number()]).transform(String);
 
-/** The front matter's lines as `key: value`; a value that is JSON is read as such. */
+const Item = z.strictObject({
+  label: Key,
+  title: z.string().optional(),
+  options: z.array(Key).default([]),
+  recommended: z.union([z.literal(true), Key, z.array(Key).min(2)]).optional(),
+  unlabelled: z.literal(true).optional(),
+});
+
+const Front = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("none"),
+    about: z.string().min(1),
+    tail: z.string().optional(),
+  }),
+  z.strictObject({
+    kind: z.enum(["round", "picks"]),
+    about: z.string().min(1),
+    items: z.array(Item).min(1),
+    tail: z.string().optional(),
+  }),
+]);
+
+type Case = { name: string; front: z.output<typeof Front>; text: string };
+
 function readCase(path: string): Case {
   const lines = readFileSync(path, "utf8").replace(/\r\n?/g, "\n").split("\n");
   if (lines[0] !== "---") throw new Error(`${path}: no front matter`);
   const end = lines.indexOf("---", 1);
   if (end < 0) throw new Error(`${path}: front matter never closes`);
-  const fields: Record<string, unknown> = {};
-  for (const line of lines.slice(1, end)) {
-    const at = line.indexOf(":");
-    if (at < 0) throw new Error(`${path}: not a field: ${line}`);
-    const raw = line.slice(at + 1).trim();
-    fields[line.slice(0, at).trim()] = /^["[{]/.test(raw) ? JSON.parse(raw) : raw;
-  }
-  const { about, shape, titles, tail } = fields;
-  if (typeof about !== "string" || typeof shape !== "string")
-    throw new Error(`${path}: needs about and shape`);
+  const front = Front.safeParse(readYaml(lines.slice(1, end).join("\n")));
+  if (!front.success) throw new Error(`${path}: ${z.prettifyError(front.error)}`);
   return {
     name: basename(path, ".md"),
-    about,
-    shape,
-    ...(Array.isArray(titles) ? { titles: titles as string[] } : {}),
-    ...(typeof tail === "string" ? { tail } : {}),
+    front: front.data,
     // One trailing newline is the file's, not the message's.
     text: lines
       .slice(end + 1)
@@ -68,16 +80,27 @@ function readCase(path: string): Case {
   };
 }
 
-/** `label[option keys*recommended key]`, a bare `*` for a recommendation naming no option. */
-function shapeOf(form: Form | null): string {
-  if (!form) return "none";
-  const one = (item: Form["items"][number]) => {
-    const keys = item.options.map((option) => option.key).join(form.kind === "picks" ? "," : "");
-    if (item.recommendedOption !== undefined)
-      return `${item.label}[${keys}*${item.options[item.recommendedOption]?.key}]`;
-    return `${item.label}[${keys}${item.recommended !== undefined ? "*" : ""}]`;
+type Found = {
+  label: string;
+  options: string[];
+  recommended: true | string | string[] | undefined;
+  unlabelled: boolean;
+};
+
+/** What the parser found of one item, in the terms a case file states it. */
+function found(item: Form["items"][number]): Found {
+  const keys = (indices: number[]) => indices.map((index) => item.options[index]?.key ?? "?");
+  const recommended = item.recommendedOptions
+    ? keys(item.recommendedOptions)
+    : item.recommendedOption !== undefined
+      ? keys([item.recommendedOption])[0]
+      : item.recommended !== undefined || undefined;
+  return {
+    label: item.label,
+    options: item.options.map((option) => option.key),
+    recommended,
+    unlabelled: item.unlabelled ?? false,
   };
-  return [form.kind, ...form.items.map(one)].join(" ");
 }
 
 const words = (text: string) => text.toLowerCase().match(/[\p{L}\p{N}_]{2,}/gu) ?? [];
@@ -103,32 +126,60 @@ const folders = [
   ...(process.env.CASES_DIR ? [["extra", process.env.CASES_DIR] as const] : []),
 ];
 
-for (const [group, dir] of folders) {
-  const files = statSync(dir, { throwIfNoEntry: false })
+const casesIn = (dir: string) =>
+  statSync(dir, { throwIfNoEntry: false })
     ? readdirSync(dir)
         .filter((file) => file.endsWith(".md"))
         .sort()
     : [];
+
+for (const [group, dir] of folders) {
   describe(`cases/${group}`, () => {
-    test.each(files.map((file) => readCase(join(dir, file))))("$name", (found) => {
-      const form = parse(found.text);
-      expect(shapeOf(form), found.about).toBe(found.shape);
-      if (found.titles) expect(form?.items.map((item) => item.title)).toEqual(found.titles);
-      if (found.tail !== undefined) expect(tailOf(found.text)).toBe(found.tail);
-      if (form) {
-        expect(hidden(found.text, form), "lines drawn nowhere").toEqual([]);
-        expect(startLines(found.text)).toHaveLength(form.items.length);
+    test.each(casesIn(dir).map((file) => readCase(join(dir, file))))("$name", ({ front, text }) => {
+      const form = parse(text);
+      if (front.kind === "none") {
+        expect(form?.kind, front.about).toBeUndefined();
       } else {
-        expect(found.shape).toBe("none");
+        expect(form?.kind, front.about).toBe(front.kind);
+        const want: Found[] = front.items.map((item) => ({
+          label: item.label,
+          options: item.options,
+          recommended: item.recommended,
+          unlabelled: item.unlabelled ?? false,
+        }));
+        expect(form?.items.map(found)).toEqual(want);
+        front.items.forEach((item, i) => {
+          if (item.title !== undefined) expect(form?.items[i]?.title).toBe(item.title);
+        });
+      }
+      if (front.tail !== undefined) expect(tailOf(text)).toBe(front.tail);
+      if (form) {
+        expect(hidden(text, form), "lines drawn nowhere").toEqual([]);
+        expect(startLines(text)).toHaveLength(form.items.length);
       }
     });
   });
 }
 
+test("the front matter refuses what it cannot read", () => {
+  const item = { label: "Q1", options: ["A", "B"] };
+  const good = { about: "x", kind: "round", items: [item] };
+  expect(Front.safeParse(good).success).toBe(true);
+  // A misspelt key, a lean that is a list of one, a round with no items, a none with some.
+  expect(Front.safeParse({ ...good, items: [{ ...item, recomended: "A" }] }).success).toBe(false);
+  expect(Front.safeParse({ ...good, items: [{ ...item, recommended: ["A"] }] }).success).toBe(
+    false,
+  );
+  expect(Front.safeParse({ ...good, items: [] }).success).toBe(false);
+  expect(Front.safeParse({ about: "x", kind: "none", items: [item] }).success).toBe(false);
+  expect(Front.safeParse({ ...good, kind: "form" }).success).toBe(false);
+  // Numbers as a person writes them in YAML are the labels and keys they print.
+  expect(Front.parse({ ...good, items: [{ label: 2, options: [1, 2] }] })).toMatchObject({
+    items: [{ label: "2", options: ["1", "2"] }],
+  });
+});
+
 test("every group has cases", () => {
   for (const [group, dir] of folders)
-    expect(
-      readdirSync(dir).filter((file) => file.endsWith(".md")).length,
-      `cases/${group}`,
-    ).toBeGreaterThan(0);
+    expect(casesIn(dir).length, `cases/${group}`).toBeGreaterThan(0);
 });

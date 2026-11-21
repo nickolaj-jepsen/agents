@@ -1,6 +1,10 @@
 ---
-about: `Question 1:` spelled out, a prose recommendation, a closing ask
-shape: round Q1[AB*B]
+about: "`Question 1:` spelled out, a prose recommendation, a closing ask"
+kind: round
+items:
+  - label: Q1
+    options: [A, B]
+    recommended: B
 ---
 I checked what you already run, so this one is about the bar.
 

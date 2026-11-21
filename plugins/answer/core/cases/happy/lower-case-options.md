@@ -1,6 +1,10 @@
 ---
 about: options lettered in lower case and parentheses
-shape: round Q3[AB*A]
+kind: round
+items:
+  - label: Q3
+    options: [A, B]
+    recommended: A
 ---
 **Q3. Where should the cache live?**
 

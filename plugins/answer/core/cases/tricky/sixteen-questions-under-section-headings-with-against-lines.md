@@ -1,6 +1,23 @@
 ---
 about: A long multi-question round with section headings, italic rationale lines, rules between questions, options sometimes placed before and sometimes after the rationale, and a recommendation line under each.
-shape: round Q1[*] Q2[ABC*A] Q3[*] Q4[ABC*A] Q5[AB*A] Q6[ABCD*A]
+kind: round
+items:
+  - label: Q1
+    recommended: true
+  - label: Q2
+    options: [A, B, C]
+    recommended: A
+  - label: Q3
+    recommended: true
+  - label: Q4
+    options: [A, B, C]
+    recommended: A
+  - label: Q5
+    options: [A, B]
+    recommended: A
+  - label: Q6
+    options: [A, B, C, D]
+    recommended: A
 ---
 Ideas and pick lists are set for sale in this first round. Each question also has the default with my recommendation, so you can say yes if you don't want to. Two things I noticed in my first pass:
 - `/sale` was a loan tab and you've left it in two places.

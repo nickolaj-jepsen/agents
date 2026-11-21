@@ -1,6 +1,9 @@
 ---
 about: a Q heading that asks nothing over numbered questions that do
-shape: round 1[] 2[]
+kind: round
+items:
+  - label: 1
+  - label: 2
 ---
 ## Q10 — Frontmatter policy
 

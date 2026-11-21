@@ -1,6 +1,12 @@
 ---
 about: numbered questions after a numbered list of ideas that asks nothing
-shape: round 1[] 2[*] 3[*]
+kind: round
+items:
+  - label: 1
+  - label: 2
+    recommended: true
+  - label: 3
+    recommended: true
 ---
 ## Ideas, grouped by what they're for
 

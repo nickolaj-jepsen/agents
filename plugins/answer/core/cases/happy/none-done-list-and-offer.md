@@ -1,6 +1,6 @@
 ---
 about: a numbered list of finished work with a closing offer
-shape: none
+kind: none
 ---
 Rebase finished. The six commits are:
 

@@ -1,6 +1,6 @@
 ---
 about: a numbered list of statements, then `Go, or corrections?`
-shape: none
+kind: none
 ---
 Plan:
 

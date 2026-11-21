@@ -1,6 +1,11 @@
 ---
-about: one unnumbered question: bold lead-in, lettered options, a lean, a closing ask
-shape: round Q1[AB*A]
+about: "one unnumbered question: bold lead-in, lettered options, a lean, a closing ask"
+kind: round
+items:
+  - label: Q1
+    options: [A, B]
+    recommended: A
+    unlabelled: true
 ---
 Here is the tradeoff.
 

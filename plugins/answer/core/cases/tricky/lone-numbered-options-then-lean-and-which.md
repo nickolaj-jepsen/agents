@@ -1,6 +1,11 @@
 ---
 about: A lone numbered list of alternatives under a bold heading follows a long prose analysis with currency figures and en dashes, and a closing sentence names the lean and asks which.
-shape: round Q1[123*1]
+kind: round
+items:
+  - label: Q1
+    options: [1, 2, 3]
+    recommended: 1
+    unlabelled: true
 ---
 Cider is ready. The batch is clean; fine-tuning just wants the label.
 

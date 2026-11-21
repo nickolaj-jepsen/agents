@@ -1,6 +1,11 @@
 ---
 about: A comparison table followed by bold bullet claims with nested bullets, then two lettered options where only one carries the recommendation, and a closing question plus a note.
-shape: round Q1[AB*A]
+kind: round
+items:
+  - label: Q1
+    options: [A, B]
+    recommended: A
+    unlabelled: true
 ---
 The lane rota's weekend cover is thin. The gap I can't close is the Saturday early swim, and I want you to pick how to cover that.
 

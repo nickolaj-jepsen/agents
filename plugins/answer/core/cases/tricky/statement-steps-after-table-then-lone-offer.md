@@ -1,6 +1,6 @@
 ---
 about: A long status report with a table, bullet lists and a numbered list of steps, ending in a single offer question that is not a decision to catch.
-shape: none
+kind: none
 ---
 That plan was what you wanted to see. It is saved in `~/.pool/ops/plans/rota-log/lane-hold/v2/decisions.md`, which lists the chemistry sign-offs we agreed. The lane map is linked to it in `lane-map.md`. Nothing else changes at open.
 

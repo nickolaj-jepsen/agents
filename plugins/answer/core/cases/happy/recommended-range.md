@@ -1,6 +1,10 @@
 ---
 about: a recommendation naming a range of options
-shape: round Q1[ABCD*]
+kind: round
+items:
+  - label: Q1
+    options: [A, B, C, D]
+    recommended: [A, B, C]
 ---
 **Q1. Which tiers keep the discount?**
 

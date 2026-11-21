@@ -1,6 +1,6 @@
 ---
 about: a report ending on one offer is prose
-shape: none
+kind: none
 ---
 Rebased and pushed. The branch is clean.
 

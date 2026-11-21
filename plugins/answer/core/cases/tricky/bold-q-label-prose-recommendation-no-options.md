@@ -1,6 +1,9 @@
 ---
 about: A bold question label with a single prose recommendation and no lettered options, followed by a caveat paragraph and a closing either-or question.
-shape: round Q2[*]
+kind: round
+items:
+  - label: Q2
+    recommended: true
 ---
 Desk→loan form.
 

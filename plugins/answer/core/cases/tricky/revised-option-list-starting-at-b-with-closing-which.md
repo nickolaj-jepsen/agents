@@ -1,6 +1,11 @@
 ---
 about: A revised list where an earlier option is withdrawn so the lettered options start at B, preceded by unlettered bold bullets, and ends with a bare which-question.
-shape: round Q1[BCD*B]
+kind: round
+items:
+  - label: Q1
+    options: [B, C, D]
+    recommended: B
+    unlabelled: true
 ---
 I've gone over the idea. Option A costs more than I thought when I read it.
 

@@ -1,6 +1,6 @@
 ---
 about: open items stated as findings are prose
-shape: none
+kind: none
 ---
 Still open:
 

@@ -1,6 +1,6 @@
 ---
 about: a grilling's closer is answered with a plain yes
-shape: none
+kind: none
 ---
 That empties the frontier.
 
