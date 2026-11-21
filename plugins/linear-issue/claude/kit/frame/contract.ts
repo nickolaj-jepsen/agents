@@ -35,8 +35,8 @@ export type CaptionFrame = {
   close?: {
     confirming?: boolean;
     hover?: CloseAction;
-    /** What the question asks, where there is room for it. @default "Discard answers?" */
-    prompt?: string;
+    /** What the question says, where there is room for it. @default "Discard answers?" */
+    question?: string;
   };
   /** Lines laid out for `width - 2 * captionFrameLayout.x` cells. */
   body: Line[];

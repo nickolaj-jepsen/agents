@@ -115,7 +115,9 @@ export function paintLines(
   const block = (rows: Line[], at: number, isControl = false) => (
     <Text key={`rows${at}`}>
       {rows.flatMap((l, r) => {
-        const room = isControl ? width - cellWidth(wordsOf(l.spans)) : 0;
+        // A blank row holds one space, which its room counts too, or the row would wrap.
+        const drawn = l.spans.length ? cellWidth(wordsOf(l.spans)) : 1;
+        const room = isControl ? width - drawn : 0;
         return [
           ...(r ? ["\n"] : []),
           // An empty Text takes no row: a blank line holds a space so it keeps its place.

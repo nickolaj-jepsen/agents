@@ -1,5 +1,5 @@
 /** The sheet as styled lines: the one drawing both terminals paint. */
-import { captionRule, closeSpans } from "../frame/terminal.ts";
+import { closeSpans, frameTop } from "../frame/terminal.ts";
 import {
   hitSpans,
   line,
@@ -63,7 +63,7 @@ export function sheet(s: Sheet): Line[] {
       edge(EDGE.side),
     ]);
   };
-  const top = captionRule({ ...s, width: Math.max(0, width - 2) });
+  const top = frameTop({ ...s, width: Math.max(0, width - 2) });
   return [
     line([edge(EDGE.topLeft), ...top.spans, edge(EDGE.topRight)]),
     row(undefined),
@@ -88,7 +88,7 @@ export function sheetHead(s: Pick<Sheet, "width" | "title" | "close">): Line {
   );
   // No rule here: the question may take every cell the title leaves, less a gutter.
   const room = s.width - spansWidth(title) - tokens.gutter;
-  const action = s.close?.confirming ? closeSpans(room + 7, s.close, 0) : undefined;
+  const action = s.close?.confirming ? closeSpans(room + 7, s.close) : undefined;
   if (!action) return line(title);
   return line([...title, ...padding([...title, ...action], s.width), ...action]);
 }

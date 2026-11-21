@@ -26,9 +26,7 @@ const confirmButtons: Button[] = [
  */
 export function closeSpans(
   width: number,
-  { confirming, hover, prompt = "Discard answers?" }: NonNullable<CaptionFrame["close"]>,
-  /** Cells the question's words leave for a caption beside them. */
-  keep = 7,
+  { confirming, hover, question = "Discard answers?" }: NonNullable<CaptionFrame["close"]>,
 ): Span[] | undefined {
   const room = width - 7;
   if (!confirming) {
@@ -44,9 +42,10 @@ export function closeSpans(
   const buttonsWidth =
     cellWidth(`Discard ${tokens.glyph.enter}`) + tokens.gutter + cellWidth("Keep [esc]");
   if (room < buttonsWidth) return undefined;
-  // The longer prompt only when there is still room for a caption.
+  const prompt = question;
+  // The question goes before the caption: while it is asked, it is what the frame is about.
   const lead =
-    room >= buttonsWidth + tokens.gutter + cellWidth(prompt) + keep
+    room >= buttonsWidth + tokens.gutter + cellWidth(prompt)
       ? [span(prompt, { role: "warning" })]
       : [];
   const row = buttonRow(confirmButtons, room, { lead })[0];
@@ -61,26 +60,59 @@ export function closeSpans(
   return row.spans;
 }
 
-const rule = (n: number) => span(tokens.glyph.rule.repeat(Math.max(0, n)), { role: "border" });
+/** Cells a title needs to be worth cutting into. */
+const MIN_TITLE = 8;
+
+const ruleSpan = (n: number) => span(tokens.glyph.rule.repeat(Math.max(0, n)), { role: "border" });
+
+/** `words ── words`: the parts of a rule's caption, a short rule between two. */
+export const captionParts = (parts: readonly Span[][]): Span[] =>
+  parts
+    .filter((part) => part.length)
+    .flatMap((part, i) => (i ? [span(" "), ruleSpan(tokens.gutter), span(" "), ...part] : part));
+
+export type CaptionRule = {
+  width: number;
+  /** The words at the rule's start, after its first cell. */
+  caption?: Span[];
+  /** A control at the rule's end. */
+  end?: Span[];
+  /** Cells of rule after the control: the frame's corner. @default 0 */
+  tail?: number;
+};
+
+/** Cells of a caption rule its caption can take: the rest are its rules and its control. */
+export const captionRoom = ({ width, end = [], tail = 0 }: Omit<CaptionRule, "caption">) =>
+  Math.max(0, width - 3 - (end.length ? spansWidth(end) + 2 + (tail ? tail + 1 : 0) : 1));
 
 /**
- * A frame's top edge, `width` cells of rule: the caption at its left, and Close or its question
- * at its right.
+ * `─ words ── words ──────── control ─`: a rule across `width` cells with a caption at its
+ * start and a control at its end. The one rule a frame's top and a section's heading are.
  */
-export function captionRule(f: Pick<CaptionFrame, "width" | "title" | "caption" | "close">): Line {
+export function captionRule({ width, caption = [], end = [], tail = 0 }: CaptionRule): Line {
+  const label = truncateSpans(caption, captionRoom({ width, end, tail }));
+  const head = spansWidth(label) ? [ruleSpan(1), span(" "), ...label, span(" ")] : [];
+  const close = end.length ? [span(" "), ...end, ...(tail ? [span(" "), ruleSpan(tail)] : [])] : [];
+  const spans = [...head, ruleSpan(width - spansWidth(head) - spansWidth(close)), ...close];
+  return line(truncateSpans(spans, width));
+}
+
+/**
+ * A frame's top edge, `width` cells of rule: the title or caption at its left, and Close or its
+ * question at its right, a cell of rule after it for the corner.
+ */
+export function frameTop(f: Pick<CaptionFrame, "width" | "title" | "caption" | "close">): Line {
   const { width } = f;
-  const action = f.close && closeSpans(width, f.close);
-  const actionStart = action ? width - spansWidth(action) - 2 : width;
-  const limit = Math.max(0, (action ? actionStart - 1 : width) - captionFrameLayout.reserved);
+  const action = (f.close && closeSpans(width, f.close)) || undefined;
+  // A frame keeps a cell of rule more than the rule itself needs after its caption.
+  const limit = Math.max(0, captionRoom({ width, end: action, tail: 1 }) - 1);
   const content = typeof f.caption === "function" ? f.caption(limit) : f.caption;
-  const label = truncateSpans(content ?? [span(f.title, { role: "accent", bold: true })], limit);
-  const head = spansWidth(label) ? [rule(1), span(" "), ...label, span(" ")] : [];
-  const end = action ? actionStart - 1 : width;
-  return line([
-    ...head,
-    rule(end - spansWidth(head)),
-    ...(action ? [span(" "), ...action, span(" "), rule(1)] : []),
-  ]);
+  // A title cut to a few letters says nothing: below that it goes.
+  const label =
+    content || limit >= MIN_TITLE
+      ? truncateSpans(content ?? [span(f.title, { role: "accent", bold: true })], limit)
+      : [];
+  return captionRule({ width, caption: label, end: action, tail: 1 });
 }
 
 /** An inline form between two rules: a caption and Close in the top one, the body set in. */
@@ -93,11 +125,11 @@ export function captionFrame(f: CaptionFrame): Line[] {
       ? { ...l, spans: [pad, ...truncateSpans(l.spans, inner)] }
       : blank();
   return [
-    captionRule(f),
+    frameTop(f),
     blank(),
     ...f.body.map(row),
     row(f.notice),
     row(f.footer),
-    line([rule(width)]),
+    line([ruleSpan(width)]),
   ];
 }
