@@ -1,6 +1,7 @@
 // The editor bridge enables inline underlines; explicit review also works in stock pi.
 import { spawn } from "node:child_process";
-import { mkdir, open, readFile, rename, writeFile } from "node:fs/promises";
+import { readFileSync, renameSync, writeFileSync } from "node:fs";
+import { mkdir, open } from "node:fs/promises";
 import { dirname } from "node:path";
 
 import type {
@@ -194,11 +195,19 @@ async function knownWords(
   return new Set(words.filter((w) => !bad.has(w)));
 }
 
-/** Replaces `path` with `text` by renaming a temporary file over it, so no reader sees it half-written. */
-async function writeAtomic(path: string, text: string) {
+/**
+ * Takes `words` out of the file at `path`, renaming a temporary file over it so no reader sees it
+ * half-written. Hunspell appends to this file from its own process, and a word it adds between
+ * our read and the rename would be lost, so the three steps run without yielding and a file
+ * that holds none of the words is left alone.
+ */
+function removeFromFile(path: string, words: readonly string[]) {
+  const before = readFileSync(path, "utf8");
+  const after = withoutWords(before, words);
+  if (after === before) return;
   const tmp = `${path}.${process.pid}.tmp`;
-  await writeFile(tmp, text);
-  await rename(tmp, path);
+  writeFileSync(tmp, after);
+  renameSync(tmp, path);
 }
 
 async function addWords(gen: number, ctx: ExtensionContext, words: readonly string[]) {
@@ -217,7 +226,7 @@ async function removeWords(gen: number, ctx: ExtensionContext, words: readonly s
   }
   if (!PERSONAL) return;
   try {
-    await writeAtomic(PERSONAL, withoutWords(await readFile(PERSONAL, "utf8"), words));
+    removeFromFile(PERSONAL, words);
   } catch (error) {
     if (gen === sessionGen)
       toast(ctx, `spellfix: couldn't edit ${PERSONAL}: ${String(error)}`, "error");
