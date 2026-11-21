@@ -1,24 +1,24 @@
 # kit/claude/grouped-list/window 70x60 @2,45 (66x9)
-│  docs/page-4.md                                                4
+│    ○ Claim 10 about page 3                                    2×
+│    ○ Claim 11 about page 3
+│    ○ Claim 12 about page 3                                    2×
+│  docs/page-4.md                           Apply all  Dismiss all
 │    ○ Claim 13 about page 4
 │  ❯ ○ Claim 14 about page 4                                    2×
 │    ○ Claim 15 about page 4
 │    ○ Claim 16 about page 4                                    2×
-│  docs/page-5.md                                                4
-│    ○ Claim 17 about page 5
-│    ○ Claim 18 about page 5                                    2×
-   ↑ 3 docs above  ↓ 2 more here · 3 more docs
+   ↑ 9 in 3 docs  ↓ 16 in 4 docs
 --- styles
-.x3 1x14 .x48 2
-.x5 2
-.x3 3 . 2 . 3x21 .x36 2x2
-.x5 2
-.x5 2 .x58 2x2
-2 .x2 2x14 .x48 2
-2 .x4 2
-2 .x4 2 .x58 2x2
-.x3 2x43
+1 .x4 1 .x57 1x3
+1 .x4 1
+1 .x4 1 .x57 1x3
+.x3 2x14 .x27 1x9 .x2 1x11
+.x5 1
+.x3 3 . 1 . 3x21 .x35 1x3
+.x5 1
+.x5 1 .x57 1x3
+.x3 1x29
 --- legend
-1 fg=#d77757
-2 fg=#999999
+1 fg=#999999
+2 fg=#d77757
 3 bold

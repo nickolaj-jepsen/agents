@@ -22,7 +22,10 @@ const GAP = " ".repeat(tokens.gutter);
 /** An action at a rule's end: its label, then its key dim, as a button row draws one. */
 function actionSpans(a: DetailAction): Span[] {
   return [
-    span(a.label, { ...controlStyle({ highlighted: a.hovered }), hit: a.hit }),
+    span(a.label, {
+      ...(a.isDim ? { role: "dim" as const } : controlStyle({ highlighted: a.hovered })),
+      hit: a.hit,
+    }),
     span(" ", { hit: a.hit }),
     span(`[${a.hotkey}]`, { role: "dim", hit: a.hit }),
   ];
@@ -78,7 +81,7 @@ const TITLE = { role: "text", bold: true } as const;
 function rowsOf(d: Detail, width: number): Line[] {
   const head = [
     ...(d.meta ? block([span(d.meta, { role: "dim", bold: d.hovered || undefined })], width) : []),
-    ...(d.title ? block(titleSpans(d.title), width) : []),
+    ...(d.title ? block(titleSpans(d.title), width, { max: d.titleMax }) : []),
   ];
   const parts = [head, ...(d.sections ?? []).map((s) => section(s, width))].filter(
     (part) => part.length > 0,
@@ -86,19 +89,23 @@ function rowsOf(d: Detail, width: number): Line[] {
   return parts.flatMap((part, i) => (i ? [blank(), ...part] : part));
 }
 
+/** Below this many rows a cut detail has no room to say so: its rows are all text. */
+const MARKED = 3;
+
 const more = (glyph: string): Line => line([span(`${glyph} more`, { role: "dim" })]);
 
 /** The furthest `offset` can scroll a detail at `width`: 0 when it fits its height. */
 export function detailRange(d: Detail, width: number): number {
   const all = rowsOf(d, width).length;
   const height = d.height ?? Infinity;
-  return all <= height ? 0 : Math.max(0, all - height + 1);
+  if (all <= height) return 0;
+  return Math.max(0, all - height + (height < MARKED ? 0 : 1));
 }
 
 /**
  * One item read whole: a dim meta line, a bold title, then sections, each under a dim heading
  * or a rule, of prose and of keyed rows, a blank row between. Taller than `height`, it is cut,
- * and a dim `↑ more` and `↓ more` say what is out of sight.
+ * and a dim `↑ more` and `↓ more` say what is out of sight, where it has three rows or more.
  */
 export function detail(d: Detail, width: number): Line[] {
   const all = rowsOf(d, width);
@@ -106,9 +113,10 @@ export function detail(d: Detail, width: number): Line[] {
   let rows = all;
   if (all.length > height) {
     const offset = Math.max(0, Math.min(detailRange(d, width), d.offset ?? 0));
-    const isTop = offset > 0 && height > 1;
+    const isMarked = height >= MARKED;
+    const isTop = offset > 0 && isMarked;
     let room = height - (isTop ? 1 : 0);
-    const isBottom = offset + room < all.length;
+    const isBottom = isMarked && offset + room < all.length;
     if (isBottom) room -= 1;
     rows = [
       ...(isTop ? [more(tokens.glyph.more.up)] : []),

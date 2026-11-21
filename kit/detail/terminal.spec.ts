@@ -81,3 +81,27 @@ describe("a detail", () => {
     expect(detail({ meta: "m", hit: "open" }, 40)[0]!.hit).toBe("open");
   });
 });
+
+describe("a detail with little room", () => {
+  test("under three rows is all text, no marker", () => {
+    expect(detail({ ...ITEM, height: 2 }, 24).map(textOf)).toEqual([
+      "wrong · seen 3×",
+      "A title that wraps onto",
+    ]);
+    const end = detail({ ...ITEM, height: 1, offset: 99 }, 24).map(textOf);
+    expect(end).toEqual(["quote  “said so”"]);
+  });
+
+  test("a title can be held to a few rows, its last cut", () => {
+    const rows = detail({ title: "one two three four five six", titleMax: 1 }, 12).map(textOf);
+    expect(rows).toEqual(["one two…"]);
+  });
+
+  test("a control with nothing to do now is dim", () => {
+    const [row] = detail(
+      { sections: [{ rule: "E", action: { label: "Next", hotkey: "n", hit: "n", isDim: true } }] },
+      30,
+    );
+    expect(row!.spans.find((s) => s.text === "Next")).toMatchObject({ role: "dim" });
+  });
+});

@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { textOf, widthOf } from "../lines.ts";
-import type { ListGroup } from "./contract.ts";
+import type { List, ListGroup } from "./contract.ts";
 import { listStories } from "./stories.ts";
-import { cutLeft, list, listRange, listShowsWhole } from "./terminal.ts";
+import { cutLeft, list, listFollow, listShowsWhole, listTopMax } from "./terminal.ts";
 
 describe("every list story", () => {
   test.each(listStories.map((s) => ({ id: `${s.component}/${s.state}`, story: s })))(
@@ -18,21 +18,41 @@ describe("every list story", () => {
 const groups = (focus: number, count = 5, per = 3): ListGroup[] =>
   Array.from({ length: count }, (_, g) => ({
     label: `docs/page-${g}.md`,
-    count: String(per),
     active: Math.floor(focus / per) === g,
     rows: Array.from({ length: per }, (_, r) => ({
       text: `Row ${g * per + r}`,
       focused: g * per + r === focus,
       hit: `row:${g * per + r}`,
+      markHit: `mark:${g * per + r}`,
     })),
   }));
 
 describe("a list", () => {
   test("lines a group's label up with its rows' pointer, behind the card's rail", () => {
     const rows = list({ groups: groups(1, 1) }, 40).map(textOf);
-    expect(rows[0]).toMatch(/^│  docs\/page-0\.md +3$/);
-    expect(rows[0]).toHaveLength(40);
-    expect(rows.slice(1)).toEqual(["│    ○ Row 0", "│  ❯ ○ Row 1", "│    ○ Row 2"]);
+    expect(rows).toEqual(["│  docs/page-0.md", "│    ○ Row 0", "│  ❯ ○ Row 1", "│    ○ Row 2"]);
+  });
+
+  test("keeps the aside column on every row, so the cut text lines up", () => {
+    const l: List = {
+      aside: 3,
+      groups: [
+        {
+          label: "a.md",
+          rows: [
+            { text: "x".repeat(80), aside: "3×" },
+            { text: "y".repeat(80) },
+            { text: "short" },
+          ],
+        },
+      ],
+    };
+    const [, one, two, three] = list(l, 48).map(textOf);
+    expect(one).toMatch(/…   3×$/);
+    expect(two!.indexOf("…")).toBe(one!.indexOf("…"));
+    expect(three!.trimEnd()).toBe("│    ○ short");
+    expect(listShowsWhole("short", 48, 3)).toBe(true);
+    expect(listShowsWhole("x".repeat(80), 48, 3)).toBe(false);
   });
 
   test("marks a chosen row in the accent and a dropped one dim, the whole row", () => {
@@ -47,6 +67,7 @@ describe("a list", () => {
             ],
           },
         ],
+        aside: 3,
       },
       60,
     );
@@ -58,18 +79,41 @@ describe("a list", () => {
       expect(sp.role, sp.text).toBe("dim");
   });
 
-  test("drops the aside before the text loses more room", () => {
-    const one = (width: number) =>
-      textOf(
-        list(
-          { groups: [{ label: "a.md", rows: [{ text: "x".repeat(80), aside: "3×" }] }] },
-          width,
-        )[1]!,
-      );
-    expect(one(60)).toMatch(/…  3×$/);
-    expect(one(48)).not.toContain("3×");
-    expect(listShowsWhole("short", 48, "3×")).toBe(true);
-    expect(listShowsWhole("x".repeat(80), 48)).toBe(false);
+  test("a row's pointer column and mark are a control apart from its text", () => {
+    const [, row] = list({ groups: groups(0, 1, 1) }, 40);
+    const at = (hit: string) =>
+      row!.spans
+        .filter((s) => s.hit === hit)
+        .map((s) => s.text)
+        .join("");
+    expect(at("mark:0")).toBe("❯ ○ ");
+    expect(at("row:0")).toContain("Row 0");
+    expect(row!.hit).toBeUndefined();
+  });
+
+  test("a group's controls sit at its row's right, dim, bold under the mouse", () => {
+    const [head] = list(
+      {
+        groups: [
+          {
+            label: "docs/a.md",
+            hit: "doc",
+            actions: [
+              { label: "Apply all", hit: "all:apply", hovered: true },
+              { label: "Dismiss all", hit: "all:dismiss" },
+            ],
+            rows: [],
+          },
+        ],
+      },
+      50,
+    );
+    expect(textOf(head!)).toMatch(/^│  docs\/a\.md +Apply all  Dismiss all$/);
+    expect(head!.spans.find((s) => s.hit === "all:apply")).toMatchObject({
+      role: "text",
+      bold: true,
+    });
+    expect(head!.spans.find((s) => s.hit === "all:dismiss")).toMatchObject({ role: "dim" });
   });
 
   test("cuts a path from the left, whole folders first", () => {
@@ -78,35 +122,68 @@ describe("a list", () => {
     );
     expect(cutLeft("a-very-long-file-name.md", 10)).toBe("…e-name.md");
   });
+});
 
-  test("a window keeps the keyboard's group on top and says what it hides", () => {
-    const rows = list({ groups: groups(7), height: 6, noun: ["doc", "docs"] }, 50).map(textOf);
-    expect(rows).toHaveLength(6);
-    expect(rows[0]).toContain("docs/page-2.md");
-    expect(rows.some((r) => r.includes("❯ ○ Row 7"))).toBe(true);
-    expect(rows.at(-1)).toBe("   ↑ 2 docs above  ↓ 3 more here · 1 more doc");
+describe("a window", () => {
+  const at = (focus: number, top: number, height = 7): List => ({
+    groups: groups(focus),
+    height,
+    top,
+    noun: ["doc", "docs"],
   });
 
-  test("the group row stays on top of rows it scrolls past", () => {
-    const rows = list({ groups: groups(5, 2, 6), height: 4 }, 50).map(textOf);
-    expect(rows[0]).toContain("docs/page-0.md");
-    expect(rows[2]).toContain("❯ ○ Row 5");
-    expect(rows[3]).toContain("↑ 4 more here");
+  test("says what it hides above and below, suggestions and docs alike", () => {
+    const rows = list(at(7, 5), 50).map(textOf);
+    expect(rows).toHaveLength(7);
+    expect(rows.at(-1)).toBe("   ↑ 3 in 1 doc  ↓ 7 in 3 docs");
   });
 
-  test("a window of one row is the keyboard's", () => {
-    expect(list({ groups: groups(4), height: 1 }, 50).map(textOf)).toEqual(["│  ❯ ○ Row 4"]);
+  test("moves only when the keyboard would leave it, keeping two rows round it", () => {
+    let top = 0;
+    const tops: number[] = [];
+    for (let f = 0; f < 15; f++) {
+      top = listFollow(at(f, top));
+      tops.push(top);
+    }
+    // Down the list it holds still until the keyboard is two rows from its foot.
+    expect(tops.slice(0, 3)).toEqual([0, 0, 0]);
+    expect(new Set(tops).size).toBeGreaterThan(3);
+    for (let f = 1; f < 15; f++) expect(tops[f]! - tops[f - 1]!).toBeLessThanOrEqual(2);
+    // Back up, it holds still again until the keyboard is two rows from its head.
+    expect(listFollow(at(12, top))).toBe(top);
   });
 
-  test("scroll moves the window within its range, not the keyboard", () => {
-    const l = { groups: groups(0), height: 6 };
-    const range = listRange(l);
-    expect(range.min).toBe(0);
-    const end = list({ ...l, scroll: range.max }, 50).map(textOf);
-    expect(end.some((r) => r.includes("Row 14"))).toBe(true);
-    expect(end.some((r) => r.includes("❯"))).toBe(false);
-    expect(list({ ...l, scroll: range.max + 10 }, 50)).toEqual(
-      list({ ...l, scroll: range.max }, 50),
-    );
+  test("the keyboard's group row stands in for its first row, and nothing else moves", () => {
+    // From entry 5 (Row 3) the window would open on a row of the keyboard's doc.
+    const stood = list(at(4, 5), 50).map(textOf);
+    const below = list(at(4, 4), 50).map(textOf);
+    expect(stood[0]).toContain("docs/page-1.md");
+    expect(stood[1]).toContain("❯ ○ Row 4");
+    // Every row under the first stays where the window from entry 5 puts it.
+    expect(stood.slice(1, 5)).toEqual(below.slice(2, 6));
+  });
+
+  test("a group row is never the window's last without one of its rows", () => {
+    // Top 1: Row 0, 1, 2, then page-1's row, then Row 3 ... the sixth row would be page-2's.
+    const rows = list({ ...at(0, 2), height: 7 }, 50).map(textOf);
+    expect(rows[5]).not.toMatch(/docs\/page/);
+  });
+
+  test("of one row, it is the keyboard's alone; of two, no more-row", () => {
+    expect(
+      list({ ...at(4, listFollow({ ...at(4, 0), height: 1 })), height: 1 }, 50).map(textOf),
+    ).toEqual(["│  ❯ ○ Row 4"]);
+    expect(list({ ...at(0, 0), height: 2 }, 50)).toHaveLength(2);
+  });
+
+  test("flat, each row carries its doc and there are no group rows", () => {
+    const rows = list({ ...at(4, 0), flat: true, height: 3 }, 50).map(textOf);
+    expect(rows[0]).toBe("│    ○ docs/page-0.md › Row 0");
+    expect(rows.at(-1)).toMatch(/↓ 13 in 5 docs/);
+  });
+
+  test("its top stays within the list", () => {
+    expect(listTopMax(at(0, 0))).toBe(20 - 6);
+    expect(list(at(0, 99), 50)).toEqual(list(at(0, listTopMax(at(0, 0))), 50));
   });
 });

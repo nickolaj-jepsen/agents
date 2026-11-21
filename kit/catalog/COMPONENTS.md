@@ -52,7 +52,8 @@ Features:
 - A dim meta line, a bold title, then prose and keyed rows under dim headings: pi yes; claude yes
 - Cut to a height, a dim `↓ more` saying there is more: pi yes; claude yes
 - Scrolled by `offset`: `↑ more` above and `↓ more` below; `detailRange` bounds it: pi yes; claude yes
-- A section under a rule with a control at its end, label first and its key dim: pi yes (the control's spans carry its `hit`); claude yes (the control's spans carry its `hit`)
+- Under three rows it is all text: no row goes to a marker: pi yes; claude yes
+- A section under a rule with a control at its end, label first and its key dim, dim when it has nothing to do: pi yes (the control's spans carry its `hit`); claude yes (the control's spans carry its `hit`)
 
 ## Captioned frame
 
@@ -73,17 +74,19 @@ Features:
 
 Rows with a mark and one line each, under group rows, behind rails; taller than its room, a window.
 
-- pi: exists: `list`, `listRange`, `listShowsWhole`
-- claude: exists: `list`, `listRange`, `listShowsWhole`
+- pi: exists: `list`, `listFollow`, `listTopMax`, `listShowsWhole`
+- claude: exists: `list`, `listFollow`, `listTopMax`, `listShowsWhole`
 - status: pi system; claude system; gui legacy
 
 Features:
 
 - Groups behind the card's rail: green once every row is decided, bright by the keyboard's group, whose label is in the accent: pi yes; claude yes
-- A row left alone, chosen (the accent, a filled mark) or set aside (the whole row dim): pi yes; claude yes
-- A long label cut from the left, a row cut to one line, its aside dropped first: pi yes; claude yes
-- Taller than its room: the keyboard's group row on top, the last row saying what is hidden above and below: pi yes (the wheel moves the window by `scroll`; `listRange` bounds it); claude yes (the wheel reaches the mod as `ui.scroll` with the row under the pointer)
-- The group row stays on top of the rows it scrolls past: pi yes; claude yes
+- A row left alone, chosen (the accent, a filled mark) or set aside (the whole row dim); its mark a control apart from its text: pi yes (the pointer column and the mark carry `markHit`, the text `hit`); claude yes (the pointer column and the mark are a Button of their own)
+- An aside column every row keeps, blank where a row has none, so cut text lines up: pi yes; claude yes
+- Dim controls at the right of a group's row, bold under the mouse: pi yes; claude yes
+- Taller than its room: a window from `top` that `listFollow` moves only when the keyboard would leave it, its last row saying what is hidden above and below: pi yes (the wheel moves `top`; `listTopMax` bounds it); claude yes (the wheel reaches the mod as `ui.scroll` with the row under the pointer)
+- The keyboard's group row stands in for the window's first row when it is above it: pi yes; claude yes
+- Little room: rows carry their group's label, dim, and there are no group rows: pi yes; claude yes
 - The row under the pointer is shown: pi yes (the row is bold, like the keyboard's, without its pointer; `hovered` names it); claude yes (the row sits on a soft fill: the engine inverts it, and the painter swaps its colours first)
 
 ## Band shell

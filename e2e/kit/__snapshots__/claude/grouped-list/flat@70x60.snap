@@ -1,0 +1,12 @@
+# kit/claude/grouped-list/flat 70x60 @2,51 (66x3)
+│    ● docs/agent-hub.md › Unittest suite needs a short TMPD…   2×
+│    – docs/agent-hub.md › Socket tests fail with AF_UNIX pa…
+   ↓ 4 in 2 groups
+--- styles
+1 .x4 2 . 3x20 2x34 .x2 3x3
+1 .x4 3 . 3x54
+.x3 3x15
+--- legend
+1 fg=#4eba65
+2 fg=#d77757 bold
+3 fg=#999999

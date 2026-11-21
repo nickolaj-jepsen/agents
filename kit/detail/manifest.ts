@@ -31,8 +31,16 @@ export default defineComponent({
       claude: yes(),
     },
     {
+      id: "small",
+      label: "Under three rows it is all text: no row goes to a marker",
+      story: "item-detail/cut",
+      pi: yes(),
+      claude: yes(),
+    },
+    {
       id: "rule",
-      label: "A section under a rule with a control at its end, label first and its key dim",
+      label:
+        "A section under a rule with a control at its end, label first and its key dim, dim when it has nothing to do",
       story: "item-detail/rule",
       pi: yes("the control's spans carry its `hit`"),
       claude: yes("the control's spans carry its `hit`"),
