@@ -99,6 +99,14 @@ export const listStories: KitStory[] = [
   },
   {
     component: "grouped-list",
+    state: "spaced",
+    about:
+      "Room to spare: a blank row between groups, without a rail; with less room the same list is dense",
+    settings: "list({groups, space: true, height: 11})",
+    lines: (width) => list({ groups: GROUPS, aside: 3, space: true, height: 11 }, width),
+  },
+  {
+    component: "grouped-list",
     state: "flat",
     about: "Little room: each row carries its group's label, dim, cut from the left",
     settings: "list({groups, height: 3, flat: true})",

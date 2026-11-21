@@ -58,6 +58,14 @@ export default defineComponent({
       claude: yes(),
     },
     {
+      id: "space",
+      label:
+        "A blank row between groups, without a rail, when the whole list and those rows fit; dense when they do not",
+      story: "grouped-list/spaced",
+      pi: yes(),
+      claude: yes(),
+    },
+    {
       id: "flat",
       label: "Little room: rows carry their group's label, dim, and there are no group rows",
       story: "grouped-list/flat",

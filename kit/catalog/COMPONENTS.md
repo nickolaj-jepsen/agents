@@ -86,6 +86,7 @@ Features:
 - Dim controls at the right of a group's row, bold under the mouse: pi yes; claude yes
 - Taller than its room: a window from `top` that `listFollow` moves only when the keyboard would leave it, its last row saying what is hidden above and below: pi yes (the wheel moves `top`; `listTopMax` bounds it); claude yes (the wheel reaches the mod as `ui.scroll` with the row under the pointer)
 - The keyboard's group row stands in for the window's first row when it is above it: pi yes; claude yes
+- A blank row between groups, without a rail, when the whole list and those rows fit; dense when they do not: pi yes; claude yes
 - Little room: rows carry their group's label, dim, and there are no group rows: pi yes; claude yes
 - The row under the pointer is shown: pi yes (the row is bold, like the keyboard's, without its pointer; `hovered` names it); claude yes (the row sits on a soft fill: the engine inverts it, and the painter swaps its colours first)
 

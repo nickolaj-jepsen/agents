@@ -187,6 +187,16 @@ export function listFollow(l: List, context = 2): number {
   return Math.max(0, Math.min(w.max, top));
 }
 
+/**
+ * Rows the list takes drawn whole: one a line, and with `space` a blank row between groups when
+ * all of them fit its height.
+ */
+export function listRows(l: List): number {
+  const lines = entriesOf(l).length;
+  const gaps = l.space && !l.flat ? Math.max(0, l.groups.length - 1) : 0;
+  return gaps && lines + gaps <= (l.height ?? Infinity) ? lines + gaps : lines;
+}
+
 /** The furthest a window's `top` goes: 0 for a list drawn whole. */
 export function listTopMax(l: List): number {
   return windowOf(l, entriesOf(l))?.max ?? 0;
@@ -214,7 +224,13 @@ export function list(l: List, width: number): Line[] {
     return r ? itemRow(r, g, l, width) : groupRow(g, width);
   };
   const w = windowOf(l, entries);
-  if (!w) return entries.map(draw);
+  if (!w) {
+    const rows = entries.map(draw);
+    if (listRows(l) === entries.length) return rows;
+    return rows.flatMap((row, i) =>
+      i > 0 && entries[i]?.row === undefined ? [blank(), row] : [row],
+    );
+  }
   const slots = entries.slice(w.top, w.top + w.rows);
   const shown: (Entry | undefined)[] = [...slots];
   const at = entries.findIndex((e) => isFocused(l, e));

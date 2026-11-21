@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { textOf, widthOf } from "../lines.ts";
 import type { List, ListGroup } from "./contract.ts";
 import { listStories } from "./stories.ts";
-import { cutLeft, list, listFollow, listShowsWhole, listTopMax } from "./terminal.ts";
+import { cutLeft, list, listFollow, listRows, listShowsWhole, listTopMax } from "./terminal.ts";
 
 describe("every list story", () => {
   test.each(listStories.map((s) => ({ id: `${s.component}/${s.state}`, story: s })))(
@@ -174,6 +174,21 @@ describe("a window", () => {
       list({ ...at(4, listFollow({ ...at(4, 0), height: 1 })), height: 1 }, 50).map(textOf),
     ).toEqual(["│  ❯ ○ Row 4"]);
     expect(list({ ...at(0, 0), height: 2 }, 50)).toHaveLength(2);
+  });
+
+  test("with space, a blank row between groups when all of them fit, else dense", () => {
+    const l: List = { groups: groups(0, 3, 2), space: true };
+    const roomy = list({ ...l, height: 11 }, 50).map(textOf);
+    expect(roomy).toHaveLength(11);
+    expect(roomy[3]).toBe("");
+    expect(roomy[7]).toBe("");
+    expect(listRows({ ...l, height: 11 })).toBe(11);
+    // One row short of the gaps: dense, the same lines as without them.
+    const dense = list({ ...l, height: 10 }, 50).map(textOf);
+    expect(dense).toEqual(list({ ...l, space: false, height: 10 }, 50).map(textOf));
+    expect(listRows({ ...l, height: 10 })).toBe(9);
+    // Where the keyboard is does not change it.
+    expect(list({ ...l, groups: groups(5, 3, 2), height: 11 }, 50)).toHaveLength(11);
   });
 
   test("flat, each row carries its doc and there are no group rows", () => {

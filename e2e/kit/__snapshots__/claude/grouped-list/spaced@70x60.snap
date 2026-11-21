@@ -1,0 +1,30 @@
+# kit/claude/grouped-list/spaced 70x60 @2,43 (66x11)
+│  docs/agent-hub.md
+│    ● Unittest suite needs a short TMPDIR and markdown-it-p…   2×
+│    – Socket tests fail with AF_UNIX path too long
+
+│  docs/agents.md                           Apply all  Dismiss all
+│  ❯ ○ pi's permission gate cannot resolve shell variables, …   3×
+│    ○ The hub migration plan is finished
+│    ○ Agents never read the store README
+
+│  …/agent-plugin-dev/references/a-very-long-folder-name/style.md
+│    ○ 東京の節は古くなっています。全角文字の説明文            12×
+--- styles
+1 .x2 2x17
+1 .x4 3 . 3x54 .x2 2x3
+1 .x4 2 . 2x44
+-
+.x3 4x14 .x27 2x9 .x2 2x11
+.x3 5 . 2 . 5x54 .x2 2x3
+.x5 2
+.x5 2
+-
+2 .x2 2x62
+2 .x4 2 .x57 2x3
+--- legend
+1 fg=#4eba65
+2 fg=#999999
+3 fg=#d77757 bold
+4 fg=#d77757
+5 bold
