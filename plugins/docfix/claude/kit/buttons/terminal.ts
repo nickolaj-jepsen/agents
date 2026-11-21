@@ -12,9 +12,13 @@ import { controlStyle } from "../card/terminal.ts";
 import { tokens } from "../tokens.ts";
 import type { Button, ButtonRowOptions } from "./contract.ts";
 
-/** How a button's key is printed after its label: `↵` for Enter, else in brackets. */
+/** How a button's key is printed after its label: `↵` for Enter, else in brackets; nothing for none. */
 export const shortcutOf = (b: Pick<Button, "hotkey" | "hit">) =>
-  b.hit === undefined ? b.hotkey : b.hotkey === "enter" ? tokens.glyph.enter : `[${b.hotkey}]`;
+  b.hit === undefined || !b.hotkey
+    ? b.hotkey
+    : b.hotkey === "enter"
+      ? tokens.glyph.enter
+      : `[${b.hotkey}]`;
 
 /**
  * Actions left to right, label first with the key dim after it, the suggested one in the
@@ -28,7 +32,11 @@ export function buttonRow(
 ): Line[] {
   const chips = keys.map((key) => {
     const shortcut = shortcutOf(key);
-    return { ...key, shortcut, width: cellWidth(`${key.label} ${shortcut}`) };
+    return {
+      ...key,
+      shortcut,
+      width: cellWidth(shortcut ? `${key.label} ${shortcut}` : key.label),
+    };
   });
   const prefix = truncateSpans(lead, width);
   if (!wrap) {
@@ -60,8 +68,9 @@ export function buttonRow(
               ...controlStyle({ primary: chip.isLit, highlighted: isHovered }),
               hit: chip.hit,
             }),
-            span(" ", { hit: chip.hit }),
-            span(chip.shortcut, { role: "dim", hit: chip.hit }),
+            ...(chip.shortcut
+              ? [span(" ", { hit: chip.hit }), span(chip.shortcut, { role: "dim", hit: chip.hit })]
+              : []),
           ];
     if (spans.length) spans.push(span(" ".repeat(tokens.gutter)));
     spans.push(...truncateSpans(entry, width - start));

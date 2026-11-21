@@ -1,0 +1,18 @@
+# kit/pi/fields/rows 240x60 @2,2 (72x6)
+T  Team      Platform
+S  Status    Todo
+P  Priority  Medium
+L  Labels    Bug, Area/reliability, 保存とアーカイブ, Needs a decision
+             before the next release
+J  Project   None
+--- styles
+1 .x2 2x4 .x6 3x8
+1 .x2 2x6 .x4 3x4
+1 .x2 2x8 .x2 3x6
+1 .x2 2x6 .x4 3x57
+.x13 3x23
+1 .x2 2x7 .x3 2x4
+--- legend
+1 fg=#a798d7
+2 fg=#7e888e
+3 fg=#dee0e1

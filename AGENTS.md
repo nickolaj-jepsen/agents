@@ -20,7 +20,10 @@ Draw plugin UI with these; add one with `just kit-new <name>`.
 - `kit/buttons/`: A row of actions with their keys, the suggested one in the accent, and keyboard-only hints.
 - `kit/card/`: A question with lettered answers and a note, and the steps and summary of a form of several.
 - `kit/detail/`: One item read whole: a meta line, a wrapped title, sections under dim headings or a rule, keyed rows, cut to a height.
+- `kit/fields/`: What a record holds, one named value each: a row per field, or side by side.
 - `kit/frame/`: A form between two rules: a caption and Close in the top one, buttons above the bottom one.
 - `kit/list/`: Rows with a mark and a line or two each, under group rows, behind rails or bare; taller than its room, a window.
+- `kit/prose/`: A text of several blocks set as lines whose rows can be counted, and the window a short room shows of it.
+- `kit/sheet/`: A panel laid over the screen, closed on every side: the title and Close in its top edge, buttons at its foot.
 
 <!-- kit:index:end -->

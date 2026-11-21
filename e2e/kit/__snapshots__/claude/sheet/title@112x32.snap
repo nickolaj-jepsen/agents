@@ -1,0 +1,28 @@
+# kit/claude/sheet/title 112x32 @71,1 (41x10)
+╭─ Linear draft ──────────────────── × ─╮
+│                                       │
+│   Honor Retry-After when the sync     │
+│   worker backs off                    │
+│                                       │
+│   T  Team      Platform               │
+│   P  Priority  Medium                 │
+│                                       │
+│   Create ↵  Discard [d]               │
+╰───────────────────────────────────────╯
+--- styles
+1x2 . 2x12 . 1x20 .x3 1x2
+1 .x39 1
+1 .x3 3x6 4x11 3x14 .x5 1
+1 .x3 3x16 .x20 1
+1 .x39 1
+1 .x3 5 .x2 1x4 .x29 1
+1 .x3 5 .x2 1x8 .x25 1
+1 .x39 1
+1 .x3 2x6 . 1 .x10 1x3 .x15 1
+1x41
+--- legend
+1 fg=#999999
+2 fg=#d77757 bold
+3 bold
+4 fg=#b1b9f9
+5 fg=#d77757

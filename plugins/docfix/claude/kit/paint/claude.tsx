@@ -38,6 +38,8 @@ export type PaintOptions = {
   press?: (hit: string) => unknown;
   /** The room in cells: a control that is whole rows is padded to it, so its fill is one block. */
   width?: number;
+  /** The host's text field, for the row an `input` slot keeps: an `Input` element. */
+  input?: JSX.Element;
 };
 
 /** Consecutive lines of one row-wide control, or one line of none. */
@@ -65,7 +67,7 @@ const runsOf = (spans: readonly Span[]) => {
 export function paintLines(
   k: Els,
   lines: readonly Line[],
-  { press, width = 0 }: PaintOptions = {},
+  { press, width = 0, input }: PaintOptions = {},
 ): JSX.Element {
   const { Box, Text, Button, Markdown } = k;
   // The engine refuses a `hover` outside a keyed Box, which only a control has round it.
@@ -130,6 +132,21 @@ export function paintLines(
     <Box flexDirection="column">
       {groups(lines).map((g, at) => {
         const [first] = g.lines;
+        if (first?.slot?.kind === "input") {
+          // The engine's field wraps what is typed only when it has its rows to itself: beside
+          // other text, or in a box with a height, it cuts a long value and hides what is
+          // typed past it. So it stands alone, set in by the blank start of the lead, and the
+          // lead's words (a key) are the field's own label to give.
+          const blankLead = first.slot.lead.findIndex((s) => s.text.trim() !== "");
+          const indent = first.slot.lead
+            .slice(0, blankLead < 0 ? undefined : blankLead)
+            .reduce((n, s) => n + cellWidth(s.text), 0);
+          return (
+            <Box key={`field${at}`} flexDirection="column" paddingLeft={indent}>
+              {input}
+            </Box>
+          );
+        }
         if (first?.slot)
           return (
             <Box
@@ -180,7 +197,9 @@ export const RING = { up: "kit-ring-up", park: "kit-ring", down: "kit-ring-down"
 export const keyAddress = (key: string) => `kit-key-${key}`;
 
 /**
- * The keyboard's half of a site where the kit draws its own focus: nothing here is drawn. The
+ * The keyboard's half of a site where the kit draws its own focus: nothing here is drawn. Put
+ * it first in the site: the engine keeps its ring by a button's place among the site's buttons,
+ * so one drawn after rows that come and go ends up on a row. The
  * engine's ring rests on the middle button, so Enter acts on what the kit drew focus on; the
  * two round it are where an arrow or Tab would take the ring, which the mod's `ui.focus` hook
  * turns into a move (see `ringMove`). The rest carry the keys the site binds: a plain Button
@@ -204,6 +223,31 @@ export function ring(
       ))}
     </Box>
   );
+}
+
+/**
+ * Keys alone, on buttons that draw nothing, for a site that keeps no focus of its own: a row
+ * above the prompt, whose digits the engine presses from an empty prompt.
+ * @param keys One lowercase letter or digit each.
+ */
+export function hotkeys(
+  k: Els,
+  keys: readonly { key: string; press: () => unknown }[],
+): JSX.Element {
+  const { Box, Button } = k;
+  return (
+    <Box width={0} height={0} overflow="hidden">
+      {keys.map(({ key, press }) => (
+        <Button key={keyAddress(key)} plain hotkey={key} label={key} onPress={press} />
+      ))}
+    </Box>
+  );
+}
+
+/** Parts of one site under each other: painted lines, the ring, the hint for the keyboard. */
+export function stack(k: Els, ...parts: (JSX.Element | null | undefined)[]): JSX.Element {
+  const { Box } = k;
+  return <Box flexDirection="column">{parts.filter(Boolean)}</Box>;
 }
 
 /**
@@ -237,7 +281,13 @@ export function ringMove(
  * @param canLeave Whether Escape goes back to the prompt: true in the band, false in a pane
  * that Escape closes, which then says nothing while it holds the keyboard.
  */
-export function keysHint(k: Els, held: boolean, canLeave = false): JSX.Element | null {
+export function keysHint(
+  k: Els,
+  held: boolean,
+  canLeave = false,
+  /** Cells the line is set in by, to stand under what the site draws. */
+  indent = 0,
+): JSX.Element | null {
   const { Box, Text } = k;
   if (held && !canLeave) return null;
   // The way that applies reads as an action: a bold label and its key on a keycap, the fill a
@@ -257,7 +307,7 @@ export function keysHint(k: Els, held: boolean, canLeave = false): JSX.Element |
     </Text>
   );
   return (
-    <Box columnGap={3}>
+    <Box columnGap={3} paddingLeft={indent}>
       {way("Keys here", "ctrl+x tab", !held)}
       {canLeave ? way("Back to prompt", "esc", held) : null}
     </Box>

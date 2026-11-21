@@ -1,0 +1,17 @@
+# kit/claude/fields/rows 240x60 @151,1 (72x6)
+T  Team      Platform
+S  Status    Todo
+P  Priority  Medium
+L  Labels    Bug, Area/reliability, 保存とアーカイブ, Needs a decision
+             before the next release
+J  Project   None
+--- styles
+1 .x2 2x4
+1 .x2 2x6
+1 .x2 2x8
+1 .x2 2x6
+-
+1 .x2 2x7 .x3 2x4
+--- legend
+1 fg=#d77757
+2 fg=#999999

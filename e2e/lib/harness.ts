@@ -43,7 +43,8 @@ export type StartOptions = {
    */
   plugins?: string[];
   /**
-   * MCP servers for Claude, by name, and no others. The name is what plugins see in tool names:
+   * MCP servers by name, and no others. Claude gets them as its config; a hermetic pi gets them
+   * in its `mcp.json`, for a plugin that reads it. The name is what plugins see in tool names:
    * `linear` is what linear-issue looks for.
    */
   mcp?: Record<string, { command: string; args?: string[]; env?: Record<string, string> }>;
@@ -282,6 +283,20 @@ export const pi: Harness = {
       const agentDir = join(run.runDir, "pi-agent");
       mkdirSync(agentDir, { recursive: true });
       writeFileSync(join(agentDir, "settings.json"), JSON.stringify({ quietStartup: true }));
+      // pi's own MCP support stays off (`--no-mcp`): a plugin that calls a server reads this
+      // file itself, as linear-issue does. Each server is told where the run's scratch is.
+      if (start.mcp)
+        writeFileSync(
+          join(agentDir, "mcp.json"),
+          JSON.stringify({
+            mcpServers: Object.fromEntries(
+              Object.entries(start.mcp).map(([name, spec]) => [
+                name,
+                { ...spec, env: { E2E_RUN_DIR: run.runDir, ...spec.env } },
+              ]),
+            ),
+          }),
+        );
       env.PI_CODING_AGENT_DIR = agentDir;
       Object.assign(env, HERMETIC_ENV);
       args.push(

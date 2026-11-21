@@ -1,0 +1,29 @@
+# kit/claude/sheet/confirm 70x60 @2,44 (66x10)
+╭─ Linear draft ───────── Discard draft?  Discard ↵  Keep [esc] ─╮
+│                                                                │
+│   Honor Retry-After when the sync worker backs off             │
+│                                                                │
+│   T  Team      Platform                                        │
+│   P  Priority  Medium                                          │
+│                                                                │
+│   PLT-212 may already cover this                               │
+│   Create ↵  Discard [d]                                        │
+╰────────────────────────────────────────────────────────────────╯
+--- styles
+1x2 . 2x12 . 1x9 . 3x14 .x10 1 .x7 1x5 . 1x2
+1 .x64 1
+1 .x3 4x6 5x11 4x31 .x13 1
+1 .x64 1
+1 .x3 6 .x2 1x4 .x54 1
+1 .x3 6 .x2 1x8 .x50 1
+1 .x64 1
+1 .x3 3x30 .x31 1
+1 .x3 2x6 . 1 .x10 1x3 .x40 1
+1x66
+--- legend
+1 fg=#999999
+2 fg=#d77757 bold
+3 fg=#ffc107
+4 bold
+5 fg=#b1b9f9
+6 fg=#d77757

@@ -7,6 +7,9 @@ import { cardStories } from "./card/stories.ts";
 import { frameStories } from "./frame/stories.ts";
 import { listStories } from "./list/stories.ts";
 import { detailStories } from "./detail/stories.ts";
+import { fieldsStories } from "./fields/stories.ts";
+import { proseStories } from "./prose/stories.ts";
+import { sheetStories } from "./sheet/stories.ts";
 import type { Line } from "./lines.ts";
 
 export type KitStory = {
@@ -34,4 +37,7 @@ export const kitStories: KitStory[] = [
   ...frameStories,
   ...listStories,
   ...detailStories,
+  ...fieldsStories,
+  ...proseStories,
+  ...sheetStories,
 ];

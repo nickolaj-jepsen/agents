@@ -39,8 +39,13 @@ export const paintSpans = (theme: Theme, spans: readonly Span[]) =>
 /** Where a control is on a painted row, in cells from its start. */
 export type Cell = { start: number; end: number; hit: string };
 
+/** A row kept for the host's text field: what is painted before and after it, and its cells. */
+export type Field = { row: number; lead: string; tail: string; width: number };
+
 export type Painted = {
   lines: string[];
+  /** The rows a text field goes in: the caller sets `lead + field + tail` there. */
+  fields: Field[];
   /** The control each row belongs to whole, by row. */
   hits: (string | undefined)[];
   /** The controls on each row and the cells they take, by row. */
@@ -104,7 +109,7 @@ export function markdownLines(
   return lines.map((row) => `${row}\x1b[0m`);
 }
 
-const slotRows = (theme: Theme, slot: Slot) =>
+const slotRows = (theme: Theme, slot: Extract<Slot, { kind: "markdown" }>) =>
   markdownLines(
     theme,
     slot.text,
@@ -128,7 +133,7 @@ export function paintLines(
   width: number,
   { fill = false }: PaintOptions = {},
 ): Painted {
-  const out: Painted = { lines: [], hits: [], cells: [] };
+  const out: Painted = { lines: [], fields: [], hits: [], cells: [] };
   const push = (text: string, hit: string | undefined, cells: Cell[]) => {
     const fit = visibleWidth(text) > width ? truncateToWidth(text, width, "") : text;
     out.lines.push(fill ? fit + " ".repeat(Math.max(0, width - visibleWidth(fit))) : fit);
@@ -136,6 +141,17 @@ export function paintLines(
     out.cells.push(cells);
   };
   for (const l of lines) {
+    if (l.slot?.kind === "input") {
+      const lead = paintSpans(theme, l.slot.lead);
+      const tail = paintSpans(theme, l.slot.tail ?? []);
+      out.fields.push({ row: out.lines.length, lead, tail, width: l.slot.width });
+      push(lead + " ".repeat(l.slot.width) + tail, undefined, []);
+      // pi's field is one row: the others it is given stay blank under it.
+      const hang = l.slot.hang ? paintSpans(theme, l.slot.hang) : " ".repeat(visibleWidth(lead));
+      const under = hang + " ".repeat(l.slot.width) + tail;
+      for (let row = 1; row < (l.slot.rows ?? 1); row++) push(under, undefined, []);
+      continue;
+    }
     if (l.slot) {
       for (const row of slotRows(theme, l.slot)) push(row, l.hit, []);
       continue;

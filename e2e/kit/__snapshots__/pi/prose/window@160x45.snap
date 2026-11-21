@@ -1,0 +1,22 @@
+# kit/pi/prose/window 160x45 @2,2 (72x8)
+↑ 3 more
+• Read Retry-After from the 429 response
+• Wait at least that long
+  • 再試行の上限は MAX_DELAY のまま
+[x] Reproduce it against the stub
+[ ] Cap the wait at MAX_DELAY
+
+↓ 8 more
+--- styles
+1x8
+1 .x6 2x11 .x10 2x3
+1
+.x2 1 .x16 2x9
+3x3
+1x3 .x17 2x9
+-
+1x8
+--- legend
+1 fg=#7e888e
+2 fg=#a798d7
+3 fg=#68b78d

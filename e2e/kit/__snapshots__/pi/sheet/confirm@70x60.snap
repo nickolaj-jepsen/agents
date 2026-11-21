@@ -1,0 +1,30 @@
+# kit/pi/sheet/confirm 70x60 @2,2 (66x10)
+╭─ Linear draft ───────── Discard draft?  Discard ↵  Keep [esc] ─╮
+│                                                                │
+│   Honor Retry-After when the sync worker backs off             │
+│                                                                │
+│   T  Team      Platform                                        │
+│   P  Priority  Medium                                          │
+│                                                                │
+│   PLT-212 may already cover this                               │
+│   Create ↵  Discard [d]                                        │
+╰────────────────────────────────────────────────────────────────╯
+--- styles
+1x2 . 2x12 . 1x9 . 3x14 .x2 4x7 . 5 .x2 4x4 . 5x5 . 1x2
+1 .x64 1
+1 .x3 6x6 7x11 6x31 .x13 1
+1 .x64 1
+1 .x3 7 .x2 5x4 .x6 4x8 .x40 1
+1 .x3 7 .x2 5x8 .x2 4x6 .x42 1
+1 .x64 1
+1 .x3 3x30 .x31 1
+1 .x3 2x6 . 5 .x2 4x7 . 5x3 .x40 1
+1x66
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#cd9a22
+4 fg=#dee0e1
+5 fg=#7e888e
+6 bold
+7 fg=#a798d7

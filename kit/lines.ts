@@ -33,20 +33,36 @@ export type Style = {
 export type Span = Style & { text: string; hit?: string };
 
 /**
- * A block a host draws itself, standing in the drawing as one line: block Markdown, which each
- * client has a renderer for. It takes as many rows as that renderer gives it.
+ * What a host draws itself, standing in the drawing as one line.
+ * - `markdown`: block Markdown, which each client has a renderer for. It takes as many rows as
+ *   that renderer gives it.
+ * - `input`: the host's own text field, between the cells drawn before and after it.
  */
-export type Slot = {
-  kind: "markdown";
-  text: string;
-  /** Cells the block is set in by. */
-  indent: number;
-  /** Cells it may take, after the indent. */
-  width: number;
-  isDim?: boolean;
-  /** Rows it may take; the last of a cut block ends in `…`. */
-  max?: number;
-};
+export type Slot =
+  | {
+      kind: "markdown";
+      text: string;
+      /** Cells the block is set in by. */
+      indent: number;
+      /** Cells it may take, after the indent. */
+      width: number;
+      isDim?: boolean;
+      /** Rows it may take; the last of a cut block ends in `…`. */
+      max?: number;
+    }
+  | {
+      kind: "input";
+      /** What the row starts with: a key, a label. */
+      lead: Span[];
+      /** What each later row of the field starts with instead. @default spaces as wide as `lead` */
+      hang?: Span[];
+      /** Cells the field has. */
+      width: number;
+      /** Rows the field has, for one that wraps what is typed. @default 1 */
+      rows?: number;
+      /** What stands after the field on each of its rows, such as a frame's edge. */
+      tail?: Span[];
+    };
 
 /** One row of cells. `hit` names the control the whole row belongs to: a click on it presses it. */
 export type Line = { spans: Span[]; hit?: string; slot?: Slot };
@@ -406,4 +422,36 @@ export function truncateSpans(spans: readonly Span[], width: number): Span[] {
   const last = out[out.length - 1];
   if (width > 0) out.push({ ...last, text: ELLIPSIS });
   return out;
+}
+
+/** Spaces that bring `spans` to `width` cells, as one unstyled span; none when they are wider. */
+export const padding = (spans: readonly Span[], width: number): Span[] => {
+  const room = width - spansWidth(spans);
+  return room > 0 ? [span(" ".repeat(room))] : [];
+};
+
+const isWords = (s: Span) => s.role === undefined || s.role === "text" || s.role === "accent";
+
+/**
+ * `lines` with the control `hit` drawn as the one under the pointer, for a client that reports
+ * it: its words bold in the text colour, its accent kept and underlined, its key left quiet. A
+ * control of quiet words alone takes the text colour whole.
+ */
+export function hovered(lines: readonly Line[], hit: string | undefined): Line[] {
+  if (hit === undefined) return [...lines];
+  const mine = (l: Line, s: Span) => (s.hit ?? l.hit) === hit && s.text.trim() !== "";
+  const hasWords = lines.some((l) => l.spans.some((s) => mine(l, s) && isWords(s)));
+  return lines.map((l) =>
+    l.hit !== hit && !l.spans.some((s) => s.hit === hit)
+      ? l
+      : {
+          ...l,
+          spans: l.spans.map((s) => {
+            if (!mine(l, s)) return s;
+            if (s.role === "accent") return { ...s, bold: true, underline: true };
+            if (!hasWords || isWords(s)) return { ...s, role: "text" as const, bold: true };
+            return s;
+          }),
+        },
+  );
 }

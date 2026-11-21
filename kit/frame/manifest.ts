@@ -6,8 +6,8 @@ export default defineComponent({
   purpose:
     "A form between two rules: a caption and Close in the top one, buttons above the bottom one.",
   impl: {
-    pi: ["captionFrame", "captionRule", "captionParts"],
-    claude: ["captionFrame", "captionRule", "captionParts"],
+    pi: ["captionFrame", "frameTop", "captionRule", "captionParts"],
+    claude: ["captionFrame", "frameTop", "captionRule", "captionParts"],
   },
   status: { pi: "system", claude: "system", gui: "legacy" },
   source: "frame/terminal.ts",

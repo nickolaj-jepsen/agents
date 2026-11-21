@@ -56,12 +56,28 @@ Features:
 - A section under the frame's caption rule: dim words after its first cell, a short rule between several, and a control at its end, label first and its key dim, dim when it has nothing to do: pi yes (the control's spans carry its `hit`); claude yes (the control's spans carry its `hit`)
 - In a frame's body: rules across the whole width, the frame's corner after their control, and the text set in to line up with their words: pi yes; claude yes
 
+## Fields
+
+What a record holds, one named value each: a row per field, or side by side.
+
+- pi: exists: `fields`
+- claude: exists: `fields`
+- status: pi system; claude system; gui legacy
+
+Features:
+
+- A row per field, the labels in one column; a long value hangs under its start: pi yes; claude yes
+- A key before each field, in the accent where the keyboard is: pi yes (the caller binds the letters); claude yes (the caller binds the letters, on buttons that draw nothing (`ring`))
+- Values side by side after their keys, wrapped whole, where rows are short: pi yes; claude yes
+- A field is a control: its row, or its cells when side by side: pi yes (the row carries the `hit`; `hovered` in `lines.ts` draws the pointer's); claude yes (a press lands on the row's Button; the engine's hover is the soft fill)
+- Read only: no keys and nothing to press: pi yes; claude yes
+
 ## Captioned frame
 
 A form between two rules: a caption and Close in the top one, buttons above the bottom one.
 
-- pi: exists: `captionFrame`, `captionRule`, `captionParts`
-- claude: exists: `captionFrame`, `captionRule`, `captionParts`
+- pi: exists: `captionFrame`, `frameTop`, `captionRule`, `captionParts`
+- claude: exists: `captionFrame`, `frameTop`, `captionRule`, `captionParts`
 - status: pi system; claude system; gui legacy
 
 Features:
@@ -93,6 +109,37 @@ Features:
 - Rows of several lines: a text wraps under its first line up to `lines`, the window counts and follows lines, and a row its end cuts ends in `…`: pi yes; claude yes (a later line is a Button of its own with the row's `hit`)
 - Little room: rows carry their group's label, dim, and there are no group rows: pi yes; claude yes
 - The row under the pointer is shown: pi yes (the row is bold, like the keyboard's, without its pointer; `hovered` names it); claude yes (the row sits on a soft fill: the engine inverts it, and the painter swaps its colours first)
+
+## Prose
+
+A text of several blocks set as lines whose rows can be counted, and the window a short room shows of it.
+
+- pi: exists: `prose`, `scrolled`, `scrollBy`
+- claude: exists: `prose`, `scrolled`, `scrollBy`
+- status: pi system; claude system; gui legacy
+
+Features:
+
+- Paragraphs, lists, ticked items, headings, quotes and rules, with inline Markdown: pi yes; claude yes
+- A table sized to the room it is given, cells wrapped, the first row bold: pi yes; claude yes (the engine's Markdown sizes a table to the terminal, not to the pane)
+- Fenced code in the code colour, a long line cut instead of wrapped: pi yes (no syntax colours; a `slot` line gives pi's own renderer the block); claude yes (no syntax colours; a `slot` line gives the engine's renderer the block)
+- A window of the lines, its first and last row counting what is past them: pi yes (a marker with a `hit` steps the window; the caller keeps `top`); claude yes (a marker with a `hit` steps the window; the caller keeps `top`)
+- Every word quiet: pi yes; claude yes
+
+## Sheet
+
+A panel laid over the screen, closed on every side: the title and Close in its top edge, buttons at its foot.
+
+- pi: exists: `sheet`, `sheetHead`
+- claude: exists: `sheet`, `sheetHead`
+- status: pi system; claude system; gui legacy
+
+Features:
+
+- Closed on every side, the title and Close in the top edge: pi yes (an overlay anchored to the bottom, at the width of a Claude Code pane); claude no (the engine frames a pane itself, a box above the prompt or a rule beside the transcript, with its own Close; a mod draws `sheetHead` in it)
+- Close asks before it throws the work away, in the place it stood: pi yes (Discard and Keep are controls with a `hit` each); claude yes (in `sheetHead`: the question stands at the right of the title)
+- A notice in a row of its own above the buttons: pi yes; claude no (without the edges a mod sets the row itself, above its button row)
+- The top edge alone: the title, and the question Close asks: pi yes; claude yes
 
 ## Band shell
 

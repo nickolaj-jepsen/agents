@@ -1,0 +1,11 @@
+# kit/pi/fields/read 70x60 @2,2 (66x3)
+Team      Platform
+Status    Todo
+Priority  Medium
+--- styles
+1x4 .x6 2x8
+1x6 .x4 2x4
+1x8 .x2 2x6
+--- legend
+1 fg=#7e888e
+2 fg=#dee0e1

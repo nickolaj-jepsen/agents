@@ -1,0 +1,42 @@
+# kit/pi/prose/blocks 70x60 @2,2 (66x17)
+The sync worker never reads Retry-After, so it retries sooner than
+the API allows.
+
+• Read Retry-After from the 429 response
+• Wait at least that long
+  • 再試行の上限は MAX_DELAY のまま
+[x] Reproduce it against the stub
+[ ] Cap the wait at MAX_DELAY
+
+Answer                    Today            After
+429 with Retry-After: 30  waits 2 seconds  waits 30
+
+  curl -sI https://shop.example/api/orders | grep -i retry-after
+
+│ The API team asked for this twice.
+
+Where: src/sync.sh
+--- styles
+.x28 1x11
+-
+-
+2 .x6 1x11 .x10 1x3
+2
+.x2 2 .x16 1x9
+3x3
+2x3 .x17 1x9
+-
+4x6 .x20 4x5 .x12 4x5
+1x3 .x6 1x15
+-
+.x2 1x62
+-
+2 . 2x34
+-
+5x6 . 1x11
+--- legend
+1 fg=#a798d7
+2 fg=#7e888e
+3 fg=#68b78d
+4 fg=#dee0e1 bold
+5 bold

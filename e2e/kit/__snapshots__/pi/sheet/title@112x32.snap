@@ -1,0 +1,27 @@
+# kit/pi/sheet/title 112x32 @2,2 (72x9)
+╭─ Linear draft ───────────────────────────────────────────── Close × ─╮
+│                                                                      │
+│   Honor Retry-After when the sync worker backs off                   │
+│                                                                      │
+│   T  Team      Platform                                              │
+│   P  Priority  Medium                                                │
+│                                                                      │
+│   Create ↵  Discard [d]                                              │
+╰──────────────────────────────────────────────────────────────────────╯
+--- styles
+1x2 . 2x12 . 1x45 . 3x7 . 1x2
+1 .x70 1
+1 .x3 4x6 5x11 4x31 .x19 1
+1 .x70 1
+1 .x3 5 .x2 6x4 .x6 3x8 .x46 1
+1 .x3 5 .x2 6x8 .x2 3x6 .x48 1
+1 .x70 1
+1 .x3 2x6 . 6 .x2 3x7 . 6x3 .x46 1
+1x72
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#dee0e1
+4 bold
+5 fg=#a798d7
+6 fg=#7e888e

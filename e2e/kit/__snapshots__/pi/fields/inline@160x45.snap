@@ -1,0 +1,12 @@
+# kit/pi/fields/inline 160x45 @2,2 (72x3)
+T Platform  S Todo  P Medium
+L Bug, Area/reliability, 保存とアーカイブ, Needs a decision before the …
+J None
+--- styles
+1 . 2x8 .x2 1 . 2x4 .x2 1 . 2x6
+1 . 2x70
+1 . 3x4
+--- legend
+1 fg=#a798d7
+2 fg=#dee0e1
+3 fg=#7e888e

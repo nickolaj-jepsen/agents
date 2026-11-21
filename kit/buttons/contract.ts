@@ -2,7 +2,7 @@
 import type { Span } from "../lines.ts";
 
 export type Button = {
-  /** Key or key range, without brackets. The caller owns the binding. */
+  /** Key or key range, without brackets. The caller owns the binding. Empty where only a press reaches it. */
   hotkey: string;
   label: string;
   /** The control it is. Without one it is a dim, keyboard-only hint: its key, then what it does. */

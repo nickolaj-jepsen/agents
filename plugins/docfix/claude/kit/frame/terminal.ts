@@ -20,8 +20,11 @@ const confirmButtons: Button[] = [
   { label: "Keep", hotkey: "esc", hit: closeHit("keep"), essential: true },
 ];
 
-/** Close, or the question it asks before the answers go: `undefined` when neither fits. */
-function closeSpans(
+/**
+ * Close, or the question it asks before the answers go: `undefined` when neither fits a top
+ * edge `width` cells wide, which keeps seven of them for its own rule and a caption's start.
+ */
+export function closeSpans(
   width: number,
   { confirming, hover, question = "Discard answers?" }: NonNullable<CaptionFrame["close"]>,
 ): Span[] | undefined {
@@ -94,15 +97,12 @@ export function captionRule({ width, caption = [], end = [], tail = 0 }: Caption
   return line(truncateSpans(spans, width));
 }
 
-/** An inline form between two rules: a caption and Close in the top one, the body set in. */
-export function captionFrame(f: CaptionFrame): Line[] {
+/**
+ * A frame's top edge, `width` cells of rule: the title or caption at its left, and Close or its
+ * question at its right, a cell of rule after it for the corner.
+ */
+export function frameTop(f: Pick<CaptionFrame, "width" | "title" | "caption" | "close">): Line {
   const { width } = f;
-  const inner = Math.max(0, width - 2 * captionFrameLayout.x);
-  const pad = span(" ".repeat(captionFrameLayout.x));
-  const row = (l: Line | undefined): Line =>
-    l && (l.spans.length || l.slot)
-      ? { ...l, spans: [pad, ...truncateSpans(l.spans, inner)] }
-      : blank();
   const action = (f.close && closeSpans(width, f.close)) || undefined;
   // A frame keeps a cell of rule more than the rule itself needs after its caption.
   const limit = Math.max(0, captionRoom({ width, end: action, tail: 1 }) - 1);
@@ -112,8 +112,20 @@ export function captionFrame(f: CaptionFrame): Line[] {
     content || limit >= MIN_TITLE
       ? truncateSpans(content ?? [span(f.title, { role: "accent", bold: true })], limit)
       : [];
+  return captionRule({ width, caption: label, end: action, tail: 1 });
+}
+
+/** An inline form between two rules: a caption and Close in the top one, the body set in. */
+export function captionFrame(f: CaptionFrame): Line[] {
+  const { width } = f;
+  const inner = Math.max(0, width - 2 * captionFrameLayout.x);
+  const pad = span(" ".repeat(captionFrameLayout.x));
+  const row = (l: Line | undefined): Line =>
+    l && (l.spans.length || l.slot)
+      ? { ...l, spans: [pad, ...truncateSpans(l.spans, inner)] }
+      : blank();
   return [
-    captionRule({ width, caption: label, end: action, tail: 1 }),
+    frameTop(f),
     blank(),
     ...f.body.map(row),
     row(f.notice),
