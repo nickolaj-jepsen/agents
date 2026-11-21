@@ -73,6 +73,17 @@ export default scenarios({
       size: [96, 34],
       steps: [...ask, { wait: "where the cache lives" }, { wait: /B\s+.*On disk/ }],
     },
+    revisited: {
+      about:
+        "a question come back to, an option that is only its letter, and numbered questions under the last one are all cards",
+      start: turn("revisited"),
+      size: [96, 44],
+      steps: [
+        ...ask,
+        { wait: /Q3\s+Who holds the spare key/ },
+        { wait: /2\s+Is the slab still sound/ },
+      ],
+    },
     picked: {
       from: "open",
       about: "a click picks in place and the focused bar changes questions with j and k",

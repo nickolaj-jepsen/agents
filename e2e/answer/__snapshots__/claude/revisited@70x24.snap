@@ -1,0 +1,43 @@
+# answer/claude/revisited 70x24 @0,1 (70x18)
+▎   Note: Add a note
+
+
+▎   1  How wide is the gate?
+▎
+▎   A ○ Write your own answer
+▎   Note: Add a note
+
+
+▎   2  Is the slab still sound?
+▎
+▎   A ○ Write your own answer
+▎   Note: Add a note
+
+
+▎   0 of 4 answered  Fill prompt
+
+Q7/4   alt+a for the keys                                         [-]
+--- styles
+1 .x3 2x16 .x49 1
+1x70
+1x70
+1 .x3 2x3 3x21 .x41 1
+1 .x68 1
+1 .x3 2 . 2 . 2x21 .x40 1
+1 .x3 2x16 .x49 1
+1x70
+1x70
+1 .x3 2x3 3x24 .x38 1
+1 .x68 1
+1 .x3 2 . 2 . 2x21 .x40 1
+1 .x3 2x16 .x49 1
+1x70
+1x70
+1 .x68 1
+1x70
+4x6 . 2x18 .x41 2x3
+--- legend
+1 dim
+2 fg=#999999
+3 bold
+4 fg=#d77757 bold

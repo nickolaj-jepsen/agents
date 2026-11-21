@@ -1,0 +1,78 @@
+# answer/claude/revisited 160x45 @0,5 (160x35)
+▎ ❯ Q7  Where should the tool shed stand?
+▎
+▎   A ○ Where: against the north fence, on the old slab.  Recommended
+▎       - Why: the slab is level and already there.
+▎   B ○ Beside the greenhouse, on new paving.
+▎   C ○ Write your own answer
+▎   Note: Add a note
+▎
+▎   Recommended: A. Nothing has to be poured.
+
+
+▎   Q3  Who holds the spare key?
+▎
+▎   Two things I need from you:
+▎
+▎   A ○ The site secretary.
+▎   B ○ Write your own answer
+▎   Note: Add a note
+
+
+▎   1  How wide is the gate?
+▎
+▎   A ○ Write your own answer
+▎   Note: Add a note
+
+
+▎   2  Is the slab still sound?
+▎
+▎   A ○ Write your own answer
+▎   Note: Add a note
+
+
+▎   0 of 4 answered  Fill prompt
+
+Q7/4   alt+a for the keys                                                                                                                                   [-]
+--- styles
+.x2 1 . 2x4 1x33
+-
+.x4 2 . 3 . 1x6 .x42 3x13
+.x8 3 . 4x41
+.x4 2 . 3
+.x4 2 . 3 . 3x21
+.x4 3x16
+-
+.x4 4x41
+-
+4x96
+4 .x3 3x4 1x24 .x63 4
+4 .x94 4
+4 .x94 4
+4 .x94 4
+4 .x3 3 . 3 .x88 4
+4 .x3 3 . 3 . 3x21 .x66 4
+4 .x3 3x16 .x75 4
+4x96
+4x96
+4 .x3 3x3 1x21 .x67 4
+4 .x94 4
+4 .x3 3 . 3 . 3x21 .x66 4
+4 .x3 3x16 .x75 4
+4x96
+4x96
+4 .x3 3x3 1x24 .x64 4
+4 .x94 4
+4 .x3 3 . 3 . 3x21 .x66 4
+4 .x3 3x16 .x75 4
+4x96
+4x96
+4 .x94 4
+4x96
+5x6 . 3x18 .x131 3x3
+--- legend
+1 bold
+2 fg=#d77757
+3 fg=#999999
+4 dim
+5 fg=#d77757 bold

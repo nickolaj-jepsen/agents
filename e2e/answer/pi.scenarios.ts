@@ -46,6 +46,18 @@ export default scenarios({
       region: FULL_CARD,
       steps: [...CARD_ASK, { wait: /B .*On disk/ }],
     },
+    "cards-revisited": {
+      about:
+        "a question come back to, an option that is only its letter, and numbered questions under the last one are all cards",
+      start: cards("revisited"),
+      region: FULL_CARD,
+      size: [96, 44],
+      steps: [
+        ...CARD_ASK,
+        { wait: /Q3 +Who holds the spare key/ },
+        { wait: /2 +Is the slab still sound/ },
+      ],
+    },
     "cards-hover": {
       from: "cards-open",
       about: "hover a transcript choice without picking it or touching the prompt draft",

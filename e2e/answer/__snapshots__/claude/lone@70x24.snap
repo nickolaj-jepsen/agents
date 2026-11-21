@@ -1,14 +1,14 @@
 # answer/claude/lone 70x24 @0,4 (70x15)
 ▎ ❯ Q1  Your decision: where the cache lives.
 ▎
-▎   I'd pick A, since restarts are rare.
-▎
 ▎   Which do you want?
 ▎
 ▎   A ○ In memory. Fast, and lost on restart.  Recommended
 ▎   B ○ On disk. Slower, and it survives restarts.
 ▎   C ○ Write your own answer
 ▎   Note: Add a note
+▎
+▎   Recommended: I'd pick A, since restarts are rare.
 
 
 ▎   0 of 1 answered  Fill prompt
@@ -17,14 +17,14 @@ Q1/1   alt+a for the keys                                         [-]
 --- styles
 .x2 1 . 2x4 1x37
 -
-.x13 1
--
 -
 -
 .x4 2 . 3 .x38 3x13
 .x4 2 . 3
 .x4 2 . 3 . 3x21
 .x4 3x16
+-
+.x4 4x49
 -
 4x70
 4 .x68 4
