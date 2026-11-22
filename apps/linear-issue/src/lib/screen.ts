@@ -209,7 +209,7 @@ const chosenOf = (f: Form, id: FieldId): string[] =>
           ? f.labelIds
           : [f.project];
 
-function fieldRows(f: Form, hover?: string): Field[] {
+export function fieldRows(f: Form, hover?: string): Field[] {
   const chosen = f.labels.filter((l) => f.labelIds.includes(l.value)).map((l) => l.label);
   const values: Record<FieldId, { value: string; empty?: boolean }> = {
     team: { value: labelOf(f.teams, f.team) ?? f.team },

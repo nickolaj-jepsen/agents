@@ -60,9 +60,10 @@ export type View = {
   since: number;
 };
 
-/** The graphical surfaces' editing of the draft's fields, opened in place. */
+/** The graphical surfaces' editing of the draft: the property (or the title) opened in place. */
 export type Editing = {
-  isOpen: boolean;
+  // `title`, or a property: `team`, `status`, `priority`, `labels`, `project`.
+  field: string | null;
   // What is typed in the field that finds a label to add, and its remount count to empty it.
   query: string;
   queryRevision: number;
@@ -92,7 +93,7 @@ declare module "claude-code" {
       isDiscardArmed: boolean;
       // Whether the possible duplicate is opened in place (graphical surfaces).
       isDuplicateOpen: boolean;
-      // Whether the fields are opened to edit, and the label search (graphical surfaces).
+      // The property opened to be set, and the label search (graphical surfaces).
       editing: Editing;
     };
   }

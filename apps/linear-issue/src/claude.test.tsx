@@ -1,8 +1,9 @@
+/* oxlint-disable react/forbid-elements -- the stand-in for the host's built-in "You should know" card */
 import type { On, ToolInfo } from "claude-code";
 import { expect, mock, test } from "claude-code/testing";
 import type { Engine, MockClock, Mounted, Plugin } from "claude-code/testing";
 
-import { expectNative } from "@agents/kit-legacy/claude/checks.tsx";
+import { expectNative } from "@agents/kit-core/paint/checks.tsx";
 
 const BAND = {
   plugin: "linear-issue",
@@ -676,6 +677,10 @@ test("a Linear server added later shows the button", { plugins: [YSK] }, async (
 // allowed; the mod's button carries none.
 const CARD_KEYS = ["Understood", "Chat in main session", "Dismiss"];
 
+/** What a property of the pane reads, on the Button that opens it. */
+const valueOf = async (ui: Pick<Mounted, "find">, id: string) =>
+  (await ui.find({ key: `value:field:${id}` }))?.props.label;
+
 /** The keys of the pane's Buttons, top to bottom. */
 const buttonKeys = async (ui: Pick<Mounted, "findAll">) =>
   (await ui.findAll({ type: "Button" })).map((b) => String(b.key));
@@ -698,41 +703,52 @@ for (const surface of ["desktop", "vscode"] as const) {
       await w.clock.settle();
       expect(w.prompts[0]).toContain("One-off /ask questions now cost more");
 
-      // Read as the issue: where it goes, the title, its properties and the description, with
-      // no field drawn until Edit; the actions come after the description, Create filled.
+      // Read as the issue: the title, its properties and the description, with no field drawn
+      // until one is pressed; the actions come after the description, Create filled.
       const pane = await $.ui.mount({ ...PANE, surface });
       await expectNative(pane);
-      expect(await pane.find({ type: "Text", text: "New issue in Misc" })).toBeDefined();
       expect(await pane.find({ type: "Text", text: "Cap get_rate outage latency" })).toBeDefined();
-      for (const text of ["Todo", "Low", "Bug"])
-        expect(await pane.find({ type: "Text", text })).toBeDefined();
+      expect(await valueOf(pane, "status")).toBe("Todo");
+      expect(await valueOf(pane, "priority")).toBe("Low");
+      expect(await valueOf(pane, "labels")).toBe("Bug");
       expect(await pane.find({ type: "Markdown", text: /blocks ~16.5 s/ })).toBeDefined();
       expect(await pane.find({ type: "Input" })).toBeUndefined();
       expect(await pane.find({ type: "Select" })).toBeUndefined();
-      expect(await buttonKeys(pane)).toEqual(["edit", "create", "create-open", "discard"]);
-      const create = await pane.find({ key: "create" });
+      expect(await buttonKeys(pane)).toEqual([
+        "field:title",
+        "value:field:team",
+        "value:field:status",
+        "value:field:priority",
+        "value:field:labels",
+        "set:field:project",
+        "act:create",
+        "act:create-open",
+        "act:discard",
+      ]);
+      const create = await pane.find({ key: "act:create" });
       expect(create?.props.variant).toBe("primary");
       expect(create?.props.dimColor).toBeUndefined();
-      expect((await pane.find({ key: "edit" }))?.props.label).toBe("Edit");
+      expect((await pane.find({ key: "field:title" }))?.props.label).toBe("Edit");
+      // A property nothing is set for is quiet, with a quiet Set.
+      expect((await pane.find({ type: "Text", text: "None" }))?.props.italic).toBe(true);
 
-      // Edit opens the fields in place; the chosen label is a filled option.
-      await pane.press({ key: "edit" });
+      // A property opens in place of its value; a pick sets it and closes it.
+      await pane.press({ key: "value:field:priority" });
       await expectNative(pane);
-      expect((await pane.find({ key: "edit" }))?.props.label).toBe("Done");
+      expect(await pane.find({ key: "priority" })).toBeDefined();
+      await pane.select({ key: "priority", value: "2" });
+      expect(await pane.find({ type: "Select" })).toBeUndefined();
+      expect(await valueOf(pane, "priority")).toBe("High");
+      // The title is set live; Done closes it.
+      await pane.press({ key: "field:title" });
+      await expectNative(pane);
       expect((await pane.find({ key: "title-0" }))?.props.value).toBe(
         "Cap get_rate outage latency",
       );
-      expect(await pane.find({ key: "team" })).toBeDefined();
-      expect((await pane.find({ key: "status" }))?.props.value).toBe("MSC-todo");
-      const bug = await pane.find({ key: "label-MSC-bug" });
-      expect(bug?.props.label).toBe("Bug");
-      expect(bug?.props.dimColor).toBeUndefined();
-      await pane.select({ key: "priority", value: "2" });
       await pane.input({ key: "title-0", text: "Cap outage latency", kind: "change" });
-      await pane.press({ key: "edit" });
+      await pane.press({ key: "act:done" });
       expect(await pane.find({ type: "Text", text: "Cap outage latency" })).toBeDefined();
-      expect(await pane.find({ type: "Text", text: "High" })).toBeDefined();
-      await pane.press({ key: "create" });
+      await pane.press({ key: "act:create" });
       await w.clock.settle();
       expect(saved(w, "save_issue")).toMatchObject({
         team: "MSC",
@@ -766,14 +782,16 @@ for (const surface of ["desktop", "vscode"] as const) {
     await w.clock.settle();
 
     const pane = await $.ui.mount({ ...PANE, surface });
-    await pane.press({ key: "edit" });
+    await pane.press({ key: "field:title" });
     await pane.input({ key: "title-0", text: "  ", kind: "change" });
-    const create = await pane.find({ key: "create" });
+    const create = await pane.find({ key: "act:create" });
     expect(create?.props.variant).toBeUndefined();
     expect(create?.props.dimColor).toBe(true);
     await expectNative(pane);
-    await pane.press({ key: "edit" });
-    expect(await pane.find({ type: "Text", text: "No title yet" })).toBeDefined();
+    await pane.press({ key: "act:done" });
+    // With no title the heading is a property like the rest: None, and a Set.
+    expect(await pane.find({ key: "field:title" })).toBeUndefined();
+    expect(await pane.find({ type: "Button", text: "Set" })).toBeDefined();
     await expectNative(pane);
     await pane.unmount();
   });
@@ -787,25 +805,19 @@ for (const surface of ["desktop", "vscode"] as const) {
 
     const pane = await $.ui.mount({ ...PANE, surface });
     // First in the pane, before the issue; folded it is a line and its title, and Open.
-    expect(await buttonKeys(pane)).toEqual([
-      "duplicate-toggle",
-      "edit",
-      "create",
-      "create-open",
-      "discard",
-    ]);
-    expect((await pane.find({ key: "duplicate-toggle" }))?.props.label).toBe("Open");
+    expect((await buttonKeys(pane)).slice(0, 2)).toEqual(["duplicate", "field:title"]);
+    expect((await pane.find({ key: "duplicate" }))?.props.label).toBe("Open");
     const line = await pane.find({ type: "Text", text: "SHP-1 may already cover this" });
     expect(line?.props.color).toBe("#d4962a");
     expect(await pane.find({ type: "Text", text: "Cache exchange rates" })).toBeDefined();
     await expectNative(pane);
 
-    await pane.press({ key: "duplicate-toggle" });
-    expect((await pane.find({ key: "duplicate-toggle" }))?.props.label).toBe("Close");
+    await pane.press({ key: "duplicate" });
+    expect((await pane.find({ key: "duplicate" }))?.props.label).toBe("Close");
     expect(await pane.find({ type: "Markdown", text: /Seen again in rates.py/ })).toBeDefined();
-    expect((await pane.find({ key: "comment" }))?.props.label).toBe("Comment instead");
+    expect((await pane.find({ key: "act:comment" }))?.props.label).toBe("Comment instead");
     await expectNative(pane);
-    await pane.press({ key: "comment" });
+    await pane.press({ key: "act:comment" });
     await w.clock.settle();
     expect(saved(w, "save_comment")).toEqual({ issueId: "SHP-1", body: "Seen again in rates.py." });
     expect(saved(w, "save_issue")).toBeUndefined();
@@ -819,7 +831,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     await w.clock.settle();
     expect(w.prompts).toHaveLength(2);
     const again = await $.ui.mount({ ...PANE, surface });
-    await again.press({ key: "discard" });
+    await again.press({ key: "act:discard" });
     await w.clock.settle();
     await again.unmount();
     await $.command.run({ ...RUN, args: "once more" });
@@ -840,13 +852,14 @@ for (const surface of ["desktop", "vscode"] as const) {
     expect(await pane.find({ type: "Text", text: /continues/ })).toBeUndefined();
     expect(await pane.find({ type: "Markdown", text: /Line 59/ })).toBeDefined();
     await expectNative(pane);
-    await pane.press({ key: "edit" });
+    await pane.press({ key: "value:field:team" });
     await pane.select({ key: "team", value: "SHP" });
     await w.clock.settle();
+    expect(await valueOf(pane, "team")).toBe("Webshop (SHP)");
+    await pane.press({ key: "value:field:status" });
     expect((await pane.find({ key: "status" }))?.props.value).toBe("SHP-todo");
-    await pane.press({ key: "edit" });
-    expect(await pane.find({ type: "Text", text: "New issue in Webshop" })).toBeDefined();
-    await pane.press({ key: "create-open" });
+    await pane.press({ key: "act:done" });
+    await pane.press({ key: "act:create-open" });
     await w.clock.settle();
     expect(saved(w, "save_issue")).toMatchObject({ team: "SHP", state: "SHP-todo" });
     expect(String(saved(w, "save_issue")?.description)).toContain("Line 59");
@@ -860,35 +873,34 @@ for (const surface of ["desktop", "vscode"] as const) {
     await $.command.run({ ...RUN, args: "rates" });
     await w.clock.settle();
     const pane = await $.ui.mount({ ...PANE, surface });
-    await pane.press({ key: "edit" });
-    // Off, it stays offered, quiet, so it can be turned back on.
-    await pane.press({ key: "label-MSC-bug" });
-    expect((await pane.find({ key: "label-MSC-bug" }))?.props.dimColor).toBe(true);
-    await pane.press({ key: "label-MSC-bug" });
-    expect((await pane.find({ key: "label-MSC-bug" }))?.props.dimColor).toBeUndefined();
-    await pane.press({ key: "label-MSC-bug" });
+    await pane.press({ key: "value:field:labels" });
+    // Off, it stays offered, so it can be turned back on: its mark is the filled one while on.
+    await pane.press({ key: "label:MSC-bug" });
+    expect(await pane.find({ key: "label:MSC-bug" })).toBeDefined();
+    await pane.press({ key: "label:MSC-bug" });
+    await pane.press({ key: "label:MSC-bug" });
 
     // What is typed offers the labels it matches, a few at most; a press adds one and empties it.
-    await pane.input({ key: "label-search-0", text: "area1", kind: "change" });
-    expect(await pane.find({ key: "label-add-MSC-area1" })).toBeDefined();
-    const offered = (await buttonKeys(pane)).filter((k) => k.startsWith("label-add-"));
+    const search = async () => (await pane.find({ type: "Input" }))?.key;
+    await pane.input({ key: String(await search()), text: "area1", kind: "change" });
+    expect(await pane.find({ key: "label-add:MSC-area1" })).toBeDefined();
+    const offered = (await buttonKeys(pane)).filter((k) => k.startsWith("label-add:"));
     expect(offered).toHaveLength(6);
     await expectNative(pane);
-    await pane.press({ key: "label-add-MSC-area12" });
-    expect(await pane.find({ key: "label-add-MSC-area1" })).toBeUndefined();
-    expect((await pane.find({ key: "label-search-1" }))?.props.value).toBe("");
-    expect((await pane.find({ key: "label-MSC-area12" }))?.props.dimColor).toBeUndefined();
+    await pane.press({ key: "label-add:MSC-area12" });
+    expect(await pane.find({ key: "label-add:MSC-area1" })).toBeUndefined();
+    expect((await pane.find({ type: "Input" }))?.props.value).toBe("");
+    expect(await pane.find({ key: "label:MSC-area12" })).toBeDefined();
     // Enter adds the first match; a search that matches nothing says so.
-    await pane.input({ key: "label-search-1", text: "area3", kind: "change" });
-    await pane.input({ key: "label-search-1", text: "area3", kind: "submit" });
-    await pane.input({ key: "label-search-2", text: "nothing like it", kind: "change" });
+    await pane.input({ key: String(await search()), text: "area3", kind: "change" });
+    await pane.input({ key: String(await search()), text: "area3", kind: "submit" });
+    await pane.input({ key: String(await search()), text: "nothing like it", kind: "change" });
     expect(await pane.find({ type: "Text", text: "No label matches" })).toBeDefined();
     await expectNative(pane);
 
-    await pane.press({ key: "edit" });
-    expect(await pane.find({ type: "Text", text: "Area/area12" })).toBeDefined();
-    expect(await pane.find({ type: "Text", text: "Bug" })).toBeUndefined();
-    await pane.press({ key: "create" });
+    await pane.press({ key: "act:done" });
+    expect(await valueOf(pane, "labels")).toBe("Area/area3, Area/area12");
+    await pane.press({ key: "act:create" });
     await w.clock.settle();
     expect(saved(w, "save_issue")?.labels).toEqual(["MSC-area12", "MSC-area3"]);
     await pane.unmount();
@@ -905,11 +917,11 @@ for (const surface of ["desktop", "vscode"] as const) {
     const pane = await $.ui.mount({ ...PANE, surface });
     await expectNative(pane);
     expect(await pane.find({ type: "Text", text: "Drafting the issue" })).toBeDefined();
-    expect(await buttonKeys(pane)).toEqual(["discard"]);
+    expect(await buttonKeys(pane)).toEqual(["act:discard"]);
     await w.clock.advance(11_000);
     await expectNative(pane);
     expect(await pane.find({ type: "Text", text: /Linear draft failed/ })).toBeDefined();
-    expect(await buttonKeys(pane)).toEqual(["discard"]);
+    expect(await buttonKeys(pane)).toEqual(["act:discard"]);
     await pane.unmount();
   });
 }
@@ -926,10 +938,11 @@ test("mobile: the draft is shown as written, to create or discard", async ($, on
   await expectNative(pane);
   expect(await pane.find({ type: "Input" })).toBeUndefined();
   expect(await pane.find({ type: "Select" })).toBeUndefined();
-  expect(await pane.find({ key: "edit" })).toBeUndefined();
+  // Nothing opens: a property is its value, not a control.
+  expect(await buttonKeys(pane)).toEqual(["act:create", "act:create-open", "act:discard"]);
   expect(await pane.find({ type: "Text", text: "Cap get_rate outage latency" })).toBeDefined();
   expect(await pane.find({ type: "Markdown", text: /blocks ~16.5 s/ })).toBeDefined();
-  await pane.press({ key: "create" });
+  await pane.press({ key: "act:create" });
   await w.clock.settle();
   expect(saved(w, "save_issue")).toMatchObject({
     team: "MSC",

@@ -12,11 +12,11 @@ import {
   type View as CoreView,
 } from "./lib/screen.ts";
 import type { Editing, Form, Last, View } from "./claude/types.d.ts";
-import { guiBand, guiPane } from "./claude/gui";
+import { guiBand, guiPane } from "./claude/gui.tsx";
 import { RING, ringMove } from "@agents/kit-core/paint/claude.tsx";
+import { forSurface, guiOf, paneOptions } from "@agents/kit-core/paint/host.tsx";
 import { hasLinear, hostFor, openUrl } from "./claude/linear.ts";
 import { fieldKey, terminalBand, terminalPane, typingOf } from "./claude/terminal.tsx";
-import { forSurface, kitOf, paneOptions } from "@agents/kit-legacy/claude/ui.tsx";
 import {
   ANCHOR,
   cardText,
@@ -52,8 +52,8 @@ const isPaneOpen = atom({ plugin: "linear-issue", key: "isPaneOpen" } as const, 
 const isDiscardArmed = atom({ plugin: "linear-issue", key: "isDiscardArmed" } as const, false);
 // Whether the possible duplicate is opened in place (graphical surfaces).
 const isDuplicateOpen = atom({ plugin: "linear-issue", key: "isDuplicateOpen" } as const, false);
-// The fields opened to edit, and the label search (graphical surfaces).
-const CLOSED_EDITING: Editing = { isOpen: false, query: "", queryRevision: 0, shown: [] };
+// The property opened to be set, and the label search (graphical surfaces).
+const CLOSED_EDITING: Editing = { field: null, query: "", queryRevision: 0, shown: [] };
 const editing = atom({ plugin: "linear-issue", key: "editing" } as const, CLOSED_EDITING);
 
 // Set by a Learn more press, cleared once the expanded card has been checked.
@@ -290,22 +290,21 @@ export const register: Register = (on) => {
 
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
     const els = $.ui.resolve(e);
-    const k = kitOf(els, e);
     const f = await read($, form);
     const isOpen = await read($, isDuplicateOpen);
     const edit = await read($, editing);
+    const v = await read($, view);
+    const held = await read($, keys);
     const set = (patch: Partial<Form>) => patchForm($, patch);
     const setEditing = (patch: (cur: Editing) => Partial<Editing>) =>
       update($, editing, (cur) => ({ ...cur, ...patch(cur) }));
     const gui = (isReadOnly: boolean) =>
-      guiPane(k, {
+      guiPane(guiOf(els, e), {
         form: f,
         isDuplicateOpen: isOpen,
         editing: edit,
         priorities: PRIORITIES,
         isReadOnly,
-        Input: els.Input,
-        Select: els.Select,
         on: {
           create: () => file($, { open: false }),
           createOpen: () => file($, { open: true }),
@@ -314,13 +313,17 @@ export const register: Register = (on) => {
           toggleDuplicate: () => update($, isDuplicateOpen, (open) => !open),
           set,
           switchTeam: (team) => drafter(host($), teams).switchTeam(team),
-          // Opening shows the chosen labels as on-or-off, so one turned off can be turned back on.
-          toggleEditing: () =>
-            setEditing((cur) =>
-              cur.isOpen
-                ? { isOpen: false, query: "", queryRevision: cur.queryRevision + 1 }
-                : { isOpen: true, shown: f?.labelIds ?? [] },
-            ),
+          // Opening labels shows the chosen ones as on-or-off, so one turned off can be turned
+          // back on.
+          open: (field) =>
+            setEditing((cur) => ({
+              field,
+              query: "",
+              queryRevision: cur.queryRevision + 1,
+              shown: field === "labels" ? (f?.labelIds ?? []) : [],
+            })),
+          close: () =>
+            setEditing((cur) => ({ field: null, query: "", queryRevision: cur.queryRevision + 1 })),
           search: (query) => setEditing(() => ({ query })),
           addLabel: async (id) => {
             await update(
@@ -348,12 +351,10 @@ export const register: Register = (on) => {
             ),
         },
       });
-    const v = await read($, view);
-    const held = await read($, keys);
     // The terminal's screen is the shared one, painted from the kit's lines; a graphical
     // surface's, with native controls, is `gui.tsx`. The mobile app draws no Input or Select,
     // so it shows the draft as written.
-    return forSurface(k, {
+    return forSurface(e, {
       tui: () => {
         const pane = terminalPane(els as ElementTable<"terminal">, {
           form: f,
@@ -379,7 +380,6 @@ export const register: Register = (on) => {
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
     if (e.props.hasSurvey) return next(e);
     const els = $.ui.resolve(e);
-    const k = kitOf(els, e);
 
     const issues = await read($, filed);
     const draft = (await read($, isPaneOpen)) ? null : await read($, form);
@@ -395,7 +395,7 @@ export const register: Register = (on) => {
       onDismiss: (key: string) => update($, filed, (list) => list.filter((x) => x.key !== key)),
     };
     // No digits on a graphical surface: its buttons are pressed by a click.
-    return forSurface(k, {
+    return forSurface(e, {
       tui: () =>
         terminalBand(els as ElementTable<"terminal">, {
           draft,
@@ -415,7 +415,8 @@ export const register: Register = (on) => {
             dismiss: handlers.onDismiss,
           },
         }),
-      gui: () => guiBand(k, { draft, issues, onDiscard: () => discard($), ...handlers }),
+      gui: () =>
+        guiBand(guiOf(els, e), { draft, issues, onDiscard: () => discard($), ...handlers }),
     });
   });
 
@@ -425,9 +426,11 @@ export const register: Register = (on) => {
     if (e.props.hasSurvey) return tree;
     const els = $.ui.resolve(e);
     const { Box, Button } = els;
-    const k = kitOf(els, e);
 
     const card = cardText(tree);
+    // The built-in card is the host's, not the kit's: hiding it and splicing a button into it
+    // take its own elements.
+    // oxlint-disable-next-line react/forbid-elements
     if (card !== "" && card === (await read($, hidden))) return <Box />;
 
     const anchor = pathTo(tree, (n) => isButton(n, ANCHOR))?.at(-1);
@@ -449,11 +452,12 @@ export const register: Register = (on) => {
     const style = isElement(anchor) && anchor.type === "Button" ? anchor.props : undefined;
     const taken = hotkeysIn(tree);
     const button = (
+      // oxlint-disable-next-line react/forbid-elements
       <Button
         key="linear-issue"
         label="Linear issue"
         // The digit is the terminal's way in: a graphical surface would draw it as a chip.
-        hotkey={forSurface(k, {
+        hotkey={forSurface(e, {
           tui: () => HOTKEYS.find((h) => !taken.has(h)),
           gui: () => undefined,
         })}
