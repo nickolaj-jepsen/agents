@@ -6,7 +6,7 @@
 import type { On } from "claude-code";
 import { expect, test } from "claude-code/testing";
 import type { Engine, Mounted } from "claude-code/testing";
-import { expectNative } from "@agents/kit-legacy/claude/checks.tsx";
+import { expectNative } from "@agents/kit-core/paint/checks.tsx";
 
 const ROOT = "/repo";
 const DIR = `${ROOT}/.agents/store/docfix`;
@@ -371,41 +371,48 @@ for (const surface of ["desktop", "vscode"] as const) {
     await $.command.run(COMMAND);
     const ui = await $.ui.mount({ ...PANE, surface });
     expect(await ui.find({ type: "Text", text: /AGENTS\.md/ })).toBeDefined();
-    // A folded row is one line: a mark, the claim cut at the edge and a quiet button that opens it.
-    const folded = await ui.find({ type: "Text", text: /sjusk/ });
-    expect(folded?.props.wrap).toBe("truncate-end");
+    // A row is its mark, its claim whole, its kind and a quiet button that opens it.
+    // Folded, a row is one line the surface cuts at its edge.
+    expect((await ui.find({ type: "Text", text: /sjusk/ }))?.props.wrap).toBe("truncate-end");
     expect(await ui.find({ type: "Text", text: /A second gap/ })).toBeDefined();
-    expect(await ui.find({ type: "Markdown" })).toBeUndefined();
+    expect(await ui.find({ type: "Text", text: /^missing$/ })).toBeDefined();
     expect(await ui.find({ type: "Svg" })).toBeDefined();
-    for (const key of [`ev:${ID}`, "submit"])
-      expect(await ui.find({ type: "Button", key })).toBeDefined();
+    const open = await ui.find({ type: "Button", key: `row:${ID}` });
+    expect(open?.text).toBe("Open");
+    expect(open?.props.dimColor).toBe(true);
     // A doc's heading is its path alone.
     expect(await ui.find({ type: "Button", text: /all$/i })).toBeUndefined();
     // Its choices wait inside the row; Submit, at the top, is quiet while nothing is set.
-    expect(await ui.find({ type: "Button", key: `apply:row:${ID}` })).toBeUndefined();
+    expect(await ui.find({ type: "Button", key: `apply:${ID}` })).toBeUndefined();
     const submit = async () => (await ui.find({ type: "Button", key: "submit" }))?.props;
     expect((await submit())?.dimColor).toBe(true);
     expect(await ui.find({ type: "Text", text: /^2 open$/ })).toBeDefined();
     await expectNative(ui);
 
-    // Opened, the row has the claim whole, its kind and history, and its keys.
-    await ui.press({ key: `ev:${ID}` });
-    expect(await ui.find({ type: "Markdown", text: /sjusk/ })).toBeDefined();
-    expect(await ui.find({ type: "Text", text: /Missing/ })).toBeDefined();
-    for (const key of [`apply:row:${ID}`, `dismiss:row:${ID}`, `skip:row:${ID}`])
-      expect(await ui.find({ type: "Button", key })).toBeDefined();
+    // Opened, the row has its history, its evidence and its choices, all quiet.
+    await ui.press({ key: `row:${ID}` });
+    // The opened row shows its claim whole.
+    expect((await ui.find({ type: "Text", text: /sjusk/ }))?.props.wrap).toBeUndefined();
+    expect((await ui.find({ type: "Button", key: `row:${ID}` }))?.text).toBe("Close");
+    expect(await ui.find({ type: "Text", text: /^today$/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /^Evidence$/ })).toBeDefined();
+    expect(await ui.find({ text: /AGENTS\.md:12 says pnpm install/ })).toBeDefined();
+    for (const choice of ["apply", "dismiss", "skip"]) {
+      const button = await ui.find({ type: "Button", key: `${choice}:${ID}` });
+      expect(button?.text).toBe(choice[0]?.toUpperCase() + choice.slice(1));
+      expect(button?.props.dimColor).toBe(true);
+    }
     await expectNative(ui);
-    await ui.press({ key: `apply:row:${ID}` });
+    await ui.press({ key: `apply:${ID}` });
     expect(await ui.find({ type: "Text", text: /On close: apply 1/ })).toBeDefined();
     expect((await submit())?.variant).toBe("primary");
     expect((await submit())?.dimColor).toBeUndefined();
-    // The chosen key is the filled one; the others stay quiet.
+    // The only filled button is Submit: what a row is set to shows on its mark.
     expect(
-      (await ui.find({ type: "Button", key: `apply:row:${ID}` }))?.props.dimColor,
-    ).toBeUndefined();
-    expect((await ui.find({ type: "Button", key: `skip:row:${ID}` }))?.props.dimColor).toBe(true);
+      (await ui.findAll({ type: "Button" })).filter((b) => b.props.variant === "primary"),
+    ).toHaveLength(1);
     // Pressed again, the row is skipped; setting a row does nothing until the pane closes.
-    await ui.press({ key: `apply:row:${ID}` });
+    await ui.press({ key: `apply:${ID}` });
     expect(await ui.find({ type: "Text", text: /^2 open$/ })).toBeDefined();
     expect(world.fills).toHaveLength(0);
     await expectNative(ui);
@@ -422,18 +429,15 @@ for (const surface of ["desktop", "vscode"] as const) {
     await $.tool.call({ ...SUGGEST, claim: claim.slice(0, 270) + " END-OF-CLAIM", evidence });
     await $.command.run(COMMAND);
     const ui = await $.ui.mount({ ...PANE, props: { ...PANE.props, bodyColumns: 48 }, surface });
-    // Folded, a row is one line the surface cuts at its edge; opened, it has the whole claim as
-    // prose and its evidence.
+    // The surface cuts a folded claim: the mod cuts nothing, and shows no evidence until a row opens.
     expect((await ui.find({ type: "Text", text: /END-OF-CLAIM/ }))?.props.wrap).toBe(
       "truncate-end",
     );
-    expect(await ui.find({ type: "Markdown" })).toBeUndefined();
     expect(await ui.find({ text: /END-OF-EVIDENCE/ })).toBeUndefined();
     const toggle = String((await ui.find({ type: "Button", text: /Open/ }))?.key);
-    expect(toggle).toMatch(/^ev:/);
+    expect(toggle).toMatch(/^row:/);
     await ui.press({ key: toggle });
-    expect(await ui.find({ type: "Markdown", text: /END-OF-CLAIM/ })).toBeDefined();
-    expect(await ui.find({ type: "Markdown", text: /END-OF-EVIDENCE/ })).toBeDefined();
+    expect(await ui.find({ text: /END-OF-EVIDENCE/ })).toBeDefined();
     await expectNative(ui);
     await ui.press({ key: toggle });
     expect(await ui.find({ text: /END-OF-EVIDENCE/ })).toBeUndefined();
@@ -467,11 +471,11 @@ for (const surface of ["desktop", "vscode"] as const) {
     const ui = await $.ui.mount({ ...PANE, surface });
     const rows = async () => (await ui.findAll({ type: "Button", text: /^Open$/ })).length;
     expect(await rows()).toBe(12);
-    const more = await ui.find({ type: "Button", key: "more" });
-    expect(more?.text).toBe("Show 8 more");
-    await ui.press({ key: "more" });
+    const more = await ui.find({ type: "Button", text: /more$/ });
+    expect(more?.text).toBe("8 more");
+    await ui.press({ key: String(more?.key) });
     expect(await rows()).toBe(20);
-    expect(await ui.find({ type: "Button", key: "more" })).toBeUndefined();
+    expect(await ui.find({ type: "Button", text: /more$/ })).toBeUndefined();
     await ui.unmount();
   });
 

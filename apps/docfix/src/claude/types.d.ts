@@ -37,10 +37,10 @@ declare module "claude-code" {
     docfix: {
       /** The open queue as the pane last loaded it. */
       queue: Shaped<Suggestion[]>;
-      /** What each row is set to; a row not in it is skipped. Closing the pane carries it out. */
-      choices: Shaped<Record<string, "apply" | "dismiss">>;
       /** The key of the pane element holding the focus ring. */
       focused: string | null;
+      /** What each row is set to; a row not in it is skipped. Closing the pane carries it out. */
+      choices: Shaped<Record<string, "apply" | "dismiss">>;
       /** Ids whose evidence the list shows. */
       expanded: Shaped<string[]>;
       /** Whether the pane is up; the count above the prompt steps aside while it is. */

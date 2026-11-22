@@ -18,7 +18,6 @@ import type { EngineInterface, Register, ToolCallResult } from "claude-code";
 import {
   applyPrompt,
   byTarget,
-  choiceSummary,
   dismiss,
   docTargets,
   fileName,
@@ -29,7 +28,6 @@ import {
   plan,
   readReminder,
   readsInCommand,
-  seen,
   serialize,
   STORE_DIR,
   toggleChoice,
@@ -41,6 +39,7 @@ import {
 } from "./lib/docfix";
 import type { Said, View } from "./claude/types.d.ts";
 import {
+  rowHit,
   drawScreen,
   isScreenHit,
   keyIntent,
@@ -51,30 +50,24 @@ import {
   type ScreenState,
   WHEEL_ROWS,
 } from "./lib/screen";
+import { statusBand } from "@agents/kit-band/terminal.ts";
 import { captionFrameLayout } from "@agents/kit-frame/contract.ts";
-import { blank } from "@agents/kit-core/lines.ts";
-import { keysHint, paintLines, ring, RING, ringMove } from "@agents/kit-core/paint/claude.tsx";
-import { evidence } from "./claude/evidence";
+import { blank, cellWidth } from "@agents/kit-core/lines.ts";
+import { guiOf, isGui, paneOptions } from "@agents/kit-core/paint/host.tsx";
 import {
-  actionBar,
-  capped,
-  card,
-  emptyState,
-  kitOf,
-  notice,
-  pane,
-  paneOptions,
-  paneTitle,
-  rowsOf,
-  section,
+  keysHint,
+  paintLines,
+  ring,
+  RING,
+  ringMove,
   stack,
-  statusBand,
-  tokens,
-  type ChoiceOption,
-  type Kit,
-} from "@agents/kit-legacy/claude/ui.tsx";
+} from "@agents/kit-core/paint/claude.tsx";
+import { statusBand as statusBandGui } from "@agents/kit-band/gui.tsx";
+import { queuePane, readHit, SUBMIT } from "./claude/queue.tsx";
 
 const PANE = "docfix";
+/** The control the band above the prompt is: a click on it opens the pane. */
+const BAND = "docfix:open";
 
 // Change the tag when a suggestion's fields change: it declines what an earlier version stored.
 const queue = atom({ plugin: "docfix", key: "queue" } as const, [] as Suggestion[], {
@@ -83,6 +76,7 @@ const queue = atom({ plugin: "docfix", key: "queue" } as const, [] as Suggestion
 const choices = atom({ plugin: "docfix", key: "choices" } as const, {} as Record<string, Choice>, {
   shape: "choices-1",
 });
+/** The key of the pane element holding the focus ring, on a graphical surface. */
 const focused = atom({ plugin: "docfix", key: "focused" } as const, null as string | null);
 const expanded = atom({ plugin: "docfix", key: "expanded" } as const, [] as string[], {
   shape: "expanded-3",
@@ -198,6 +192,8 @@ async function refresh($: EngineInterface, where?: Place | string) {
 
 /** The width a pane is asked to open at, docked or inline; the surface caps it. */
 const WANTED_COLUMNS = 80;
+/** Lines of a claim the terminal shows before the reader. */
+const FOLDED_LINES = 3;
 
 /**
  * Rows the pane takes with every row folded, a guess at `WANTED_COLUMNS`: what it asks an inline
@@ -207,7 +203,12 @@ function wantedRows(list: readonly Suggestion[]) {
   const text = WANTED_COLUMNS;
   const body = byTarget(list).reduce(
     (n, [, rows]) =>
-      n + 3 + rows.reduce((m, s) => m + Math.min(tokens.foldedLines, rowsOf(s.claim, text)) + 2, 0),
+      n +
+      3 +
+      rows.reduce(
+        (m, s) => m + Math.min(FOLDED_LINES, Math.max(1, Math.ceil(cellWidth(s.claim) / text))) + 2,
+        0,
+      ),
     0,
   );
   // The title, the line under it, the submit key, and the blank rows between them.
@@ -377,135 +378,36 @@ const SCREEN_KEYS = ["a", "d", "e", "n", "j", "k"] as const;
 /** Rows under the screen: the keyboard hint's, and the ring's, which draws nothing. */
 const ROWS_UNDER = 2;
 
-// ---- what the focus ring stops on
+// ---- what the focus ring stops on (graphical surfaces)
 
 /**
- * The element keys the pane draws. The ring stops only on a row's claim and the submit key; the
- * rest (a row's evidence key, its apply, dismiss and skip) are for the mouse, and the keyboard
- * reaches them by their hotkeys.
+ * The ring stops only on a row's Open button and on Submit; a row's choices are for the mouse,
+ * and the focus ring skips them.
  */
-const rowKey = (id: string) => `row:${id}`;
-const evidenceKey = (id: string) => `ev:${id}`;
-const chipKey = (choice: Choice | "skip", owner: string) => `${choice}:${owner}`;
-const SUBMIT = "submit";
-
-/** The stops in the order the pane draws them. */
 const stopsOf = (list: readonly Suggestion[]) => [
-  ...byTarget(list).flatMap(([, rows]) => rows.map((s) => rowKey(s.id))),
+  ...byTarget(list).flatMap(([, rows]) => rows.map((s) => rowHit(s.id))),
   SUBMIT,
 ];
 
-/** The stop an element belongs to: a chip or an evidence line to its row. */
+/** The stop an element belongs to: a choice to its row; none for what is not a stop's. */
 function ownerOf(element: string): string | undefined {
-  const [kind, ...rest] = element.split(":");
-  const id = rest.join(":");
-  if (kind === "row" || element === SUBMIT) return element;
-  if (kind === "ev") return rowKey(id);
-  if (kind === "apply" || kind === "dismiss" || kind === "skip") return id;
-  return undefined;
+  const it = readHit(element);
+  if (it?.kind === "row") return element;
+  if (it?.kind === "submit") return element;
+  return it?.kind === "choice" ? rowHit(it.id) : undefined;
 }
 
 /**
  * Where a move of the ring onto `element` should land instead, or undefined to let it be: past
- * a row's extras, on to the next stop going down and back to their owner going up.
+ * a row's choices, on to the next stop going down and back to their owner going up.
  */
 function landing(stops: readonly string[], from: string | null, element: string) {
   const owner = ownerOf(element);
-  if (owner === element) return undefined;
-  if (owner === undefined) return undefined;
+  if (owner === undefined || owner === element) return undefined;
   const at = stops.indexOf(owner);
   if (at < 0) return undefined;
   const was = from === null ? -1 : stops.indexOf(ownerOf(from) ?? "");
   return was <= at && was >= 0 ? (stops[at + 1] ?? owner) : owner;
-}
-
-// ---- the pane
-
-const DAY = 86_400_000;
-/** `5m`, `3h`, `40d`: how long ago, in at most four cells. */
-const age = (iso: string, now: number) => {
-  const ms = Math.max(0, now - Date.parse(iso));
-  if (Number.isNaN(ms)) return "";
-  if (ms >= DAY) return `${Math.floor(ms / DAY)}d`;
-  if (ms >= 3_600_000) return `${Math.floor(ms / 3_600_000)}h`;
-  return `${Math.floor(ms / 60_000)}m`;
-};
-
-type Rows = {
-  now: number;
-  set: Readonly<Record<string, Choice>>;
-  open: ReadonlySet<string>;
-  /** The stop whose keys carry the hotkeys: the ring's, or the first row before it lands. */
-  keyed: string | undefined;
-  /** The row that takes the ring when the pane gets the keyboard. */
-  first: string | undefined;
-  choose(ids: string[], choice: Choice | undefined): unknown;
-  /** As `choose`, for the row the ring is on as the press lands. */
-  chooseFocused(choice: Choice | undefined): unknown;
-  /** Opens or folds a row; `isAlone` opens it and folds every other. */
-  toggleOpen(id: string, isAlone?: boolean): unknown;
-};
-
-/** The row a stop stands for, as a list: none for the submit key or a row gone from the queue. */
-function idsOf(list: readonly Suggestion[], stop: string): string[] {
-  if (!stop.startsWith("row:")) return [];
-  const id = stop.slice("row:".length);
-  return list.some((s) => s.id === id) ? [id] : [];
-}
-
-/** What a row is set to: `skip` when none is set. */
-type State = Choice | "skip";
-
-const CHOICES = ["apply", "dismiss", "skip"] as const;
-const HOTKEY = { apply: "a", dismiss: "d", skip: "s" } as const;
-
-/**
- * The apply, dismiss and skip options of a row, the one it is set to on. Every row offers all
- * three whatever the ring is on: the engine keeps the ring at its place among
- * the Buttons across a redraw, so a Button that came and went with the ring would move it. Only
- * the hotkeys follow the ring.
- */
-function optionsOf(r: Rows, owner: string, ids: string[], state: State): ChoiceOption[] {
-  const isKeyed = r.keyed === owner;
-  return CHOICES.map((choice) => ({
-    key: chipKey(choice, owner),
-    label: choice,
-    isOn: state === choice,
-    isQuiet: choice === "skip",
-    hotkey: isKeyed ? HOTKEY[choice] : undefined,
-    // A key pressed just after the ring moved can reach these before the redraw that moves the
-    // hotkeys: it acts on where the ring is now.
-    onPress: () =>
-      isKeyed
-        ? r.chooseFocused(choice === "skip" ? undefined : choice)
-        : r.choose(ids, choice === "skip" ? undefined : choice),
-  }));
-}
-
-/** One suggestion: its claim, kind, age, keys and evidence; what it is set to colours the claim. */
-function row(k: Kit, r: Rows, s: Suggestion): JSX.Element {
-  const state = r.set[s.id];
-  return card(k, {
-    key: `s:${s.id}`,
-    claim: s.claim,
-    claimKey: rowKey(s.id),
-    kind: s.kind,
-    seen: seen(s),
-    age: age(s.updated, r.now),
-    tone: state,
-    isOpen: r.open.has(s.id),
-    onToggle: (how) => r.toggleOpen(s.id, how?.isAlone),
-    autoFocus: s.id === r.first,
-    details: {
-      key: evidenceKey(s.id),
-      count: s.evidence.length,
-      render: (inner) => evidence(inner, s.evidence),
-    },
-    choice: {
-      options: optionsOf(r, rowKey(s.id), [s.id], state ?? "skip"),
-      gui: { layout: "row" },
-    },
-  });
 }
 
 export const register: Register = (on) => {
@@ -646,28 +548,34 @@ export const register: Register = (on) => {
     const below = await next(e);
     const n = (await read($, queue)).length;
     if (n === 0 || (await read($, paneShown))) return below;
-    const { Box } = $.ui.resolve(e);
-    const kit = kitOf($.ui.resolve(e), e);
-    return (
-      <Box flexDirection="column">
-        {below}
-        {statusBand(kit, {
-          key: "docfix:open",
-          text: `docfix: docs ${n}`,
-          hint: "review",
-          gui: { text: n === 1 ? "1 doc suggestion to review" : `${n} doc suggestions to review` },
-          status: "warning",
-          onPress: () => openPane($),
-        })}
-      </Box>
-    );
+    const els = $.ui.resolve(e);
+    const open = () => openPane($);
+    const band = isGui(e)
+      ? statusBandGui(
+          guiOf(els, e, open),
+          {
+            text: `docfix: docs ${n}`,
+            hint: "review",
+            hit: BAND,
+            status: "warning",
+          },
+          { text: n === 1 ? "1 doc suggestion to review" : `${n} doc suggestions to review` },
+        )
+      : paintLines(
+          els,
+          statusBand(
+            { text: `docfix: docs ${n}`, hint: "review", hit: BAND, status: "warning" },
+            e.props.bodyColumns,
+          ),
+          { press: open, width: e.props.bodyColumns },
+        );
+    return stack(els, below as JSX.Element, band);
   });
 
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
     paneSurface = e.surface;
     if (e.surface === "terminal") {
       const els = $.ui.resolve(e);
-      const { Box } = els;
       // A docked pane keeps a cell from the engine's divider; an inline one has its box's.
       const pad = e.props.placement === "inline" ? 0 : 1;
       const width = Math.max(20, e.props.bodyColumns - pad);
@@ -676,140 +584,51 @@ export const register: Register = (on) => {
       const state = await screenState($);
       drawnScreen = drawScreen(state, drawnAt);
       const held = await read($, keys);
-      return (
-        <Box flexDirection="column" paddingLeft={pad}>
-          {paintLines(els, drawnScreen.lines, {
-            press: (hit) => act($, { do: "press", hit }),
-            width,
-          })}
-          {/* Always a row, so the frame keeps its place; set in to the screen's left edge. */}
-          <Box paddingLeft={captionFrameLayout.x}>
-            {keysHint(els, held) ?? paintLines(els, [blank()])}
-          </Box>
-          {ring(
-            els,
-            () => act($, { do: "main" }),
-            SCREEN_KEYS.map((key) => ({ key, press: () => press($, key) })),
-          )}
-        </Box>
+      return stack(
+        els,
+        paintLines(els, drawnScreen.lines, {
+          press: (hit) => act($, { do: "press", hit }),
+          width,
+          indent: pad,
+        }),
+        // Always a row, so the frame keeps its place; set in to the screen's left edge.
+        keysHint(els, held, false, pad + captionFrameLayout.x) ??
+          paintLines(els, [blank()], { indent: pad }),
+        ring(
+          els,
+          () => act($, { do: "main" }),
+          SCREEN_KEYS.map((key) => ({ key, press: () => press($, key) })),
+        ),
       );
     }
-    const kit = kitOf($.ui.resolve(e), e);
     const queued = await read($, queue);
-    const set = await read($, choices);
-    const focus = await read($, focused);
-    const open = new Set(await read($, expanded));
-    const isAll = await read($, showAll);
-    const { text: noted, status } = await read($, said);
-    const now = await $.clock.now();
-    const stops = stopsOf(queued);
-    const first = queued[0]?.id;
-    const rows: Rows = {
-      now,
-      set,
-      open,
-      // On submit no row's keys are lit: a, d and s there would set a row out of sight.
-      keyed:
-        focus === SUBMIT
-          ? undefined
-          : focus && stops.includes(focus)
-            ? focus
-            : first
-              ? rowKey(first)
-              : undefined,
-      first,
-      choose: async (ids, choice) => {
-        await update($, choices, (cur) => toggleChoice(cur, ids, choice));
-        await say($, "");
-      },
-      chooseFocused: async (choice) => {
-        const at = await read($, focused);
-        if (at === SUBMIT) return;
-        const stop = at && stops.includes(at) ? at : first ? rowKey(first) : "";
-        const ids = idsOf(await read($, queue), stop);
-        if (ids.length === 0) return;
-        await update($, choices, (cur) => toggleChoice(cur, ids, choice));
-        await say($, "");
-      },
-      toggleOpen: (id, isAlone) =>
-        update($, expanded, (cur) =>
-          cur.includes(id) ? cur.filter((at) => at !== id) : isAlone ? [id] : [...cur, id],
-        ),
+    const view_ = {
+      queue: queued,
+      set: await read($, choices),
+      open: new Set(await read($, expanded)),
+      isAll: await read($, showAll),
+      now: await $.clock.now(),
+      said: await read($, said),
     };
-    const summary = choiceSummary(queued.map((s) => set[s.id]));
-
-    // Submit carries the choices out and closes, as Esc or the close mark does. It settles
-    // first: a close the mod raises itself skips the mod's own ui.close hook.
-    const actions = [
-      {
-        key: SUBMIT,
-        label: "submit",
-        isPrimary: true,
-        gui: { isPrimary: Boolean(summary) },
-        onPress: async () => {
-          if (!(await settle($))) return;
-          await update($, paneShown, () => false);
-          await $.ui.close({ id: PANE });
-        },
-      },
-    ];
-
-    return pane(kit, (k) => {
-      // A graphical surface sets Submit at the top, beside what closing will do.
-      const head = paneTitle(k, "Doc suggestions", queued.length || undefined, {
-        gui: {
-          count: queued.length ? `${queued.length} open` : undefined,
-          summary: summary ? `On close: ${summary}` : undefined,
-          actions: queued.length ? actions : undefined,
-        },
-      });
-      const said_ = noted ? notice(k, noted, status, { isWrapped: true }) : null;
-      if (queued.length === 0)
-        return [
-          head,
-          said_,
-          emptyState(
-            k,
-            "Nothing to review: no open doc suggestions in this repo. An agent files one when a doc it reads no longer matches the code.",
-          ),
-        ];
-
-      const bar = summary
-        ? notice(k, `On close: ${summary}`, "text", { isWrapped: true, gui: { isHidden: true } })
-        : notice(k, "Submit or close to carry out apply and dismiss", "dim", {
-            isWrapped: true,
-            gui: { isHidden: true },
-          });
-      // A long queue shows its first suggestions; the rest is one press away.
-      const { shown, more } = capped(k, queued, {
-        isAll,
-        onMore: () => update($, showAll, () => true),
-      });
-      const submit = actionBar(k, actions, { gui: { isHidden: true } });
-      return [
-        head,
-        bar,
-        said_,
-        stack(
-          k,
-          byTarget(shown).map(([target, list]) =>
-            stack(
-              k,
-              [
-                section(k, target, { isCode: true, isWrapped: true }),
-                stack(
-                  k,
-                  list.map((s) => row(k, rows, s)),
-                  { gui: { gap: "none" } },
-                ),
-              ],
-              { isTight: true, gui: { gap: "xs" } },
-            ),
-          ),
-        ),
-        more,
-        submit,
-      ];
+    // Setting a row does nothing until the pane closes: Submit, or the close mark, carries it out.
+    const choose = async (id: string, choice: Choice | undefined) => {
+      await update($, choices, (cur) => toggleChoice(cur, [id], choice));
+      await say($, "");
+    };
+    const g = guiOf($.ui.resolve(e), e, async (hit) => {
+      const it = readHit(hit);
+      if (it?.kind === "submit") {
+        // Submit settles first: a close the mod raises itself skips the mod's own ui.close hook.
+        if (!(await settle($))) return;
+        await update($, paneShown, () => false);
+        await $.ui.close({ id: PANE });
+      } else if (it?.kind === "more") await update($, showAll, () => true);
+      else if (it?.kind === "row")
+        // Opening a row folds the one that was open.
+        await update($, expanded, (cur) => (cur.includes(it.id) ? [] : [it.id]));
+      else if (it?.kind === "choice")
+        await choose(it.id, it.choice === "skip" ? undefined : it.choice);
     });
+    return queuePane(g, view_);
   });
 };
