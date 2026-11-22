@@ -30,9 +30,6 @@ jobs:
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
       # CI writes the cache; a local run only reads it (`.envrc`).
       TURBO_CACHE: local:rw,remote:rw
-      # A 4-core runner: Claude Code starts less reliably when sessions crowd it.
-      E2E_JOBS_CLAUDE: 1
-      E2E_JOBS_PI: 2
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

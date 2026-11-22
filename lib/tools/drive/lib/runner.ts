@@ -5,7 +5,7 @@
  * stub's port, so a pool of them runs at once; `--jobs` sets the size of each harness's pool (`N`, or `claude=N,pi=M`).
  */
 import { options } from "./options.ts";
-import { cpus } from "node:os";
+import { availableParallelism } from "node:os";
 import { capture, differs, type Capture } from "./check.ts";
 import type { HarnessName } from "./harness.ts";
 import {
@@ -114,7 +114,7 @@ export function planChains(set: ScenarioSet): Chain[] {
 
 // ---- the pool
 
-const cpuCount = () => Math.max(1, cpus().length);
+const cpuCount = () => Math.max(1, availableParallelism());
 
 /** Sessions at once per harness: Claude Code is the heavier, and starts less reliably when crowded. */
 export function poolSize(harness: HarnessName): number {
