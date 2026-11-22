@@ -29,8 +29,8 @@ export type Still = {
 };
 /**
  * A plugin's demos (one per harness, the first shown first) and stills: the terminal's from the
- * `media.json` `turbo run site-shots` writes, then VS Code's from the `media-vscode.json` of
- * `turbo run site-vscode`. Not committed: the Pages workflow records them before it builds.
+ * `media.json` each app's `media` task writes, then VS Code's from the `media-vscode.json` of
+ * its `media:vscode`. Not committed: the Pages workflow records them before it builds.
  */
 export type Media = { videos: Video[]; stills: Still[] };
 

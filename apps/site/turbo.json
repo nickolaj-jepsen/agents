@@ -1,40 +1,53 @@
 {
   "extends": ["//"],
   "tasks": {
+    // The site's `build` is the astro build, which the root's package tasks must not wait for: it
+    // waits for every recording.
     "check-types": { "command": null, "dependsOn": [] },
+    "types": { "command": null, "dependsOn": [] },
+    "e2e": { "command": null, "dependsOn": [] },
+    "e2e:update": { "command": null, "dependsOn": [] },
+    "test:claude": { "command": null, "dependsOn": [] },
+    "media:vscode": { "command": null, "dependsOn": [] },
     "dev": {
       "command": ["./node_modules/.bin/astro", "dev"],
       "cache": false,
       "persistent": true,
       "interactive": false
     },
-    // The content loaders (src/loaders/) read the repo themselves, so what they read is an input: the
-    // apps' package.json and README.md, the skills, the docs, the marketplace, the kits' sources and the
-    // recorded media (media/ is the package's own). A later change moves these to the package graph.
+    // The site depends on every app and kit package (its package.json), because its content
+    // loaders read them: the apps' package.json and README.md, the kits' manifests and stories, and
+    // the media their recordings leave under media/. `pnpm turbo run media` is all of those
+    // recordings, so the site's `media` is them and nothing of its own.
+    "media": {
+      "command": null,
+      "dependsOn": ["^media", "^media:vscode"],
+      "inputs": [],
+      "outputs": []
+    },
+    // The loaders also read the skills, the docs and the marketplace, which are no package, and the
+    // READMEs, which a package's `topo` leaves out (they change no build, test or recording). The
+    // recorded media are not an input (media/ is generated, and turbo hashes inputs before the
+    // recordings run): the build is keyed on the recordings' own hashes, through `media`.
     "build": {
       "command": ["./node_modules/.bin/astro", "build"],
+      "dependsOn": ["^topo", "^build", "media"],
       "inputs": [
         "$TURBO_DEFAULT$",
-        "media/**",
         "$TURBO_ROOT$/.claude-plugin/marketplace.json",
         "$TURBO_ROOT$/lib/tools/build/content.ts",
-        "$TURBO_ROOT$/apps/*/package.json",
         "$TURBO_ROOT$/apps/*/README.md",
+        "$TURBO_ROOT$/lib/kits/README.md",
         "$TURBO_ROOT$/skills/**",
         "$TURBO_ROOT$/docs/**",
-        "$TURBO_ROOT$/lib/kits/**",
+        "!media/**",
         "!dist/**",
         "!.astro/**",
         "!$TURBO_ROOT$/**/node_modules/**",
         "!$TURBO_ROOT$/**/.turbo/**",
         "!$TURBO_ROOT$/**/__pycache__/**",
         "!$TURBO_ROOT$/**/.venv/**",
-        "!$TURBO_ROOT$/**/.*_cache/**",
-        "!$TURBO_ROOT$/**/.claude-plugin/types/**",
-        "!$TURBO_ROOT$/**/dist/**",
-        "!$TURBO_ROOT$/**/*.actual.*",
-        "!$TURBO_ROOT$/**/*.spec.ts",
-        "!$TURBO_ROOT$/lib/kits/**/e2e/**"
+        "!$TURBO_ROOT$/**/.*_cache/**"
       ],
       "outputs": ["dist/**"]
     }

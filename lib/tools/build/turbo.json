@@ -1,6 +1,9 @@
 {
   "extends": ["//"],
   "tasks": {
+    // What the apps and kits import of this package is the bundler. `content.ts` and `readme.ts`
+    // are the site's and the README's (the site lists content.ts as an input of its own).
+    "topo": { "inputs": ["build.ts", "package.json"] },
     "test": {
       "command": ["./node_modules/.bin/vitest", "run"],
       "inputs": [

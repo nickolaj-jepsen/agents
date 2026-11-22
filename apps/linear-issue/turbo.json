@@ -15,6 +15,49 @@
     },
     "e2e:update": {
       "command": ["node", "../../lib/tools/drive/drive.ts", "test", "linear-issue", "--update"]
+    },
+    "types": {
+      "command": ["node", "../../lib/tools/drive/drive.ts", "types", "linear-issue"]
+    },
+    "check-types": {
+      "command": ["./node_modules/.bin/tsc", "-b", "tsconfig.json", "tsconfig.claude.json"]
+    },
+    "media": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "linear-issue",
+        "--harness",
+        "terminal"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/linear-issue/**",
+        "!$TURBO_ROOT$/apps/site/media/linear-issue/vscode-*",
+        "!$TURBO_ROOT$/apps/site/media/linear-issue/media-vscode.json"
+      ]
+    },
+    "media:vscode": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "linear-issue",
+        "--harness",
+        "vscode"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/linear-issue/vscode-*",
+        "$TURBO_ROOT$/apps/site/media/linear-issue/media-vscode.json"
+      ]
     }
   }
 }

@@ -9,32 +9,62 @@
   "remoteCache": { "signature": true },
   "globalDependencies": [".node-version"],
   "tasks": {
+    // What a package contributes to the tasks of those that import it: its sources, not its tests,
+    // its screen scenarios and snapshots or its README. A task that depends on `^topo` is keyed on
+    // the packages it imports, so an edit reruns what reaches it and nothing else. Never key a task
+    // on a file another task writes: turbo hashes a task's inputs before its dependencies run.
     "topo": {
-      "dependsOn": ["^topo"]
+      "dependsOn": ["^topo"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!README.md",
+        "!e2e/**",
+        "!src/e2e/**",
+        "!**/__snapshots__/**",
+        "!**/*.spec.ts",
+        "!**/*.test.ts",
+        "!**/*.test.tsx",
+        "!tsconfig.json",
+        "!tsconfig.claude.json",
+        "!vitest.config.ts",
+        "!turbo.json"
+      ]
     },
     // Each package installs its own tools and turbo's PATH holds only the root's `node_modules/.bin`,
     // so a package task names its tool by path (`./node_modules/.bin/tsc`), run from the package.
     // A package's build is a task of its own: an app's or the catalogue's bundle in `dist/` (see
-    // lib/tools/build/build.ts), which `test:claude` and the e2e scenarios load. The kit's sources reach it
-    // through `^topo`, so an edit to a component rebuilds what imports it. The engine writes
-    // `.claude-plugin/types` and `tsconfig.json` into `dist/` when it loads a mod; a build keeps them
-    // and a cache restore does not touch them.
+    // lib/tools/build/build.ts), which `test:claude`, the e2e scenarios and the recordings load. What
+    // it imports reaches it through `^topo`: the kit packages, and the build tool itself.
     "build": {
       "dependsOn": ["^topo"],
       "inputs": [
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/lib/tools/build/build.ts",
+        "!README.md",
+        "!e2e/**",
         "!src/e2e/**",
+        "!**/__snapshots__/**",
         "!**/*.spec.ts",
         "!tsconfig.json",
+        "!tsconfig.claude.json",
         "!vitest.config.ts",
         "!turbo.json"
       ],
+      // The engine writes `.claude-plugin/types` and `tsconfig.json` into `dist/` when it loads a
+      // mod; `types` owns them, a build keeps them and a cache restore does not touch them.
       "outputs": ["dist/**", "!dist/.claude-plugin/types/**", "!dist/tsconfig.json"]
     },
+    // The Claude Code API types the engine lays beside a mod it loads, which a Claude half is
+    // written against (`drive types`). Its key is its dependencies': the build, the harness and the
+    // `claude` version, all of which reach it as hashes.
+    "types": {
+      "dependsOn": ["^topo", "build"],
+      "inputs": ["package.json"],
+      "outputs": ["dist/.claude-plugin/types/**", "dist/tsconfig.json"]
+    },
+    // A package with a Claude half checks it too, against its `types` (its own `tsconfig.claude.json`).
     "check-types": {
       "command": ["./node_modules/.bin/tsc", "-b"],
-      "dependsOn": ["topo", "build"],
+      "dependsOn": ["topo", "types"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/tsconfig.base.json",
@@ -43,28 +73,120 @@
         "!**/__snapshots__/**"
       ]
     },
+    // A package's specs and what they import: not its README, scenarios or snapshots.
     "test": {
-      "dependsOn": ["topo"]
+      "dependsOn": ["topo"],
+      "inputs": ["$TURBO_DEFAULT$", "!README.md", "!e2e/**", "!src/e2e/**", "!**/__snapshots__/**"]
     },
     "test:claude": {
       "dependsOn": ["build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/lib/tools/build/claude-plugin-test.sh"]
     },
+    // Screen tests, `drive test <package>`: the package's scenarios and snapshots, its build and the
+    // kit packages and harness it imports. The flags of `drive test` are the command's, never the
+    // environment's.
     "e2e": {
       "dependsOn": ["^topo", "build"],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "!README.md",
         "!**/site.scenarios.ts",
         "!**/vscode.scenarios.ts",
+        "!**/desktop.scenarios.ts",
         "!tsconfig.json",
-        "!**/*.spec.ts"
-      ],
-      // The flags of `drive test` are the command's, never the environment's.
-      "env": []
+        "!tsconfig.claude.json",
+        "!**/*.spec.ts",
+        "!turbo.json"
+      ]
     },
     "e2e:update": {
       "dependsOn": ["build"],
       "cache": false
+    },
+    // Builds the recording environment (VS Code, fonts, tools), so nix has it before a recorder
+    // asks. No outputs: its hash is the point. Every recording depends on it, so a recording from
+    // another environment misses the cache.
+    "//#media-env": {
+      "command": ["nix", "build", ".#mediaEnvironment", "--no-link"],
+      "inputs": ["pkgs/media-environment.nix", "devshell.nix", "flake.nix", "flake.lock"],
+      "outputs": [],
+      "passThroughEnv": [
+        "NIX_*",
+        "SSL_CERT_FILE",
+        "XDG_CACHE_HOME",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME"
+      ]
+    },
+    // Recordings, in `nix run .#media -- <command>`, the recording environment. Each app and kit
+    // package that has some owns its `media` task (the terminal's demo, stills and crops) and each app
+    // with VS Code pictures `media:vscode`, writing `apps/site/media/<package>/` and nothing else
+    // (a kit package's: `apps/site/media/kit/<name>/`), which its `outputs` say. A recording is keyed
+    // on its scenarios, the build it plays and the packages that reach it, and not on what only tests
+    // and the other recorder read. The site's own `media` is all of them (apps/site/turbo.json).
+    // CAST_*, E2E_VSCODE_* and FONTCONFIG_FILE are the environment's own, not passed through.
+    "media": {
+      "dependsOn": ["^topo", "build", "//#media-env", "@agents/drive#tui-test"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!README.md",
+        "!src/e2e/claude.scenarios.ts",
+        "!src/e2e/pi.scenarios.ts",
+        "!src/e2e/vscode.scenarios.ts",
+        "!src/e2e/desktop.scenarios.ts",
+        "!**/__snapshots__/**",
+        "!**/*.spec.ts",
+        "!**/*.test.ts",
+        "!**/*.test.tsx",
+        "!tsconfig.json",
+        "!tsconfig.claude.json",
+        "!vitest.config.ts",
+        "!turbo.json"
+      ],
+      "passThroughEnv": [
+        "NIX_*",
+        "SSL_CERT_FILE",
+        "XDG_CACHE_HOME",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME",
+        "XDG_STATE_HOME",
+        "XDG_RUNTIME_DIR",
+        "TUI_TEST_BIN"
+      ]
+    },
+    // The VS Code pictures need a Linux compositor, and fail anywhere else: a skip that succeeded
+    // with no pictures would be cached as the task's result, and restored on Linux.
+    "media:vscode": {
+      "dependsOn": ["^topo", "build", "//#media-env"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!README.md",
+        "!src/e2e/claude.scenarios.ts",
+        "!src/e2e/pi.scenarios.ts",
+        "!src/e2e/desktop.scenarios.ts",
+        "!**/__snapshots__/**",
+        "!**/*.spec.ts",
+        "!**/*.test.ts",
+        "!**/*.test.tsx",
+        "!tsconfig.json",
+        "!tsconfig.claude.json",
+        "!vitest.config.ts",
+        "!turbo.json"
+      ],
+      "passThroughEnv": [
+        "NIX_*",
+        "SSL_CERT_FILE",
+        "XDG_CACHE_HOME",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME",
+        "XDG_STATE_HOME",
+        "XDG_RUNTIME_DIR"
+      ]
+    },
+    "@agents/drive#tui-test": {
+      "command": ["node", "fetch-tui-test.ts"],
+      "inputs": ["fetch-tui-test.ts", "lib/tui-test-release.ts"],
+      "outputs": ["node_modules/.cache/tui-test/**"]
     },
     // The root's dependencies are in every task's hash, so the root holds turbo alone. oxlint, oxfmt and
     // shellcheck live in `lib/tools/lint/` and the tasks name them by path; its `package.json` is their
@@ -110,47 +232,26 @@
         "!apps/site/media/**"
       ]
     },
+    // Writes the committed files generated from sources: README.md, COMPONENTS.md and the kit index
+    // in AGENTS.md (their freshness specs say so when they are stale).
     "//#readme": {
       "command": ["node", "lib/tools/build/readme.ts"],
       "cache": false
     },
-    // Every mod and extension a driver can load, built: what the tasks that start a session depend on.
-    "//#dist": {
-      "command": null,
-      "dependsOn": [
-        "@nickolaj-jepsen/answer#build",
-        "@nickolaj-jepsen/claude-compat#build",
-        "@nickolaj-jepsen/docfix#build",
-        "@nickolaj-jepsen/exa#build",
-        "@nickolaj-jepsen/git-menu#build",
-        "@nickolaj-jepsen/image-preview#build",
-        "@nickolaj-jepsen/linear-issue#build",
-        "@nickolaj-jepsen/questions#build",
-        "@nickolaj-jepsen/spellfix#build",
-        "@nickolaj-jepsen/transcript-tweaks#build",
-        "@nickolaj-jepsen/worktree#build",
-        "@agents/kit-catalog#build"
-      ]
-    },
-    // `pnpm turbo run build` also rewrites the committed files generated from sources: README.md,
-    // COMPONENTS.md and the kit index in AGENTS.md (their freshness specs say so when they are stale).
+    // `pnpm turbo run build`: every package's build, those files, the media and the site built from
+    // them (`@agents/site#build` depends on every package and its `media`).
     "//#build": {
       "command": null,
-      "dependsOn": ["//#readme", "//#catalog:docs"]
+      "dependsOn": ["//#readme", "//#catalog:docs", "@agents/site#build"]
     },
-    "@agents/drive#tui-test": {
-      "command": ["node", "fetch-tui-test.ts"],
-      "inputs": ["fetch-tui-test.ts", "lib/tui-test-release.ts"],
-      "outputs": ["node_modules/.cache/tui-test/**"]
-    },
-    "//#plugin-docs": {
+    "//#skills:refresh": {
       "command": ["node", "skills/agent-plugin-dev/scripts/refresh-docs.ts"],
       "cache": false
     },
-    // `catalog -- --no-shots`: COMPONENTS.md and the kit index in AGENTS.md, from the kits' manifests
-    // and sources. Both are committed, so they are inputs too: a copy edited by hand is written again.
+    // COMPONENTS.md and the kit index in AGENTS.md, from the kits' manifests and sources. Both are
+    // committed, so they are inputs too: a copy edited by hand is written again.
     "//#catalog:docs": {
-      "command": ["node", "lib/kits/catalog/src/build.ts", "--no-shots"],
+      "command": ["node", "lib/kits/catalog/src/build.ts"],
       "inputs": [
         "lib/kits/**",
         "AGENTS.md",
@@ -166,219 +267,6 @@
         "!**/e2e/**"
       ],
       "outputs": ["AGENTS.md", "lib/kits/catalog/COMPONENTS.md"]
-    },
-    // The renders too: plays the kit scenarios in PNG mode and crops them into apps/site/media/kit/.
-    "//#catalog": { "command": ["node", "lib/kits/catalog/src/build.ts"], "cache": false },
-    // Builds the recording environment (VS Code, fonts, tools), so nix has it before a recorder
-    // asks. No outputs: its hash is the point. Every recording depends on it, so a recording from
-    // another environment misses the cache.
-    "//#media-env": {
-      "command": ["nix", "build", ".#mediaEnvironment", "--no-link"],
-      "inputs": ["pkgs/media-environment.nix", "devshell.nix", "flake.nix", "flake.lock"],
-      "outputs": [],
-      "passThroughEnv": [
-        "NIX_*",
-        "SSL_CERT_FILE",
-        "XDG_CACHE_HOME",
-        "XDG_CONFIG_HOME",
-        "XDG_DATA_HOME"
-      ]
-    },
-    // Record inside `nix run .#media -- <command>`, the recording environment. The recorders are
-    // tasks of the drive package, not root tasks: a root task is keyed on this file, and a recording
-    // is dear. `turbo run media` is all three; `site#build` reads whatever they left under apps/site/.
-    "//#media": {
-      "dependsOn": [
-        "@agents/drive#media:kit",
-        "@agents/drive#site-shots",
-        "@agents/drive#site-vscode"
-      ]
-    },
-    "@agents/drive#media:kit": {
-      "command": ["nix", "run", ".#media", "--", "node", "drive.ts", "record", "kit"],
-      "dependsOn": ["//#dist", "//#media-env"],
-      "passThroughEnv": [
-        "NIX_*",
-        "SSL_CERT_FILE",
-        "XDG_CONFIG_HOME",
-        "XDG_DATA_HOME",
-        "XDG_STATE_HOME",
-        "XDG_CACHE_HOME",
-        "XDG_RUNTIME_DIR",
-        "TUI_TEST_BIN",
-        "DISPLAY",
-        "WAYLAND_DISPLAY",
-        "FONTCONFIG_FILE",
-        "CAST_FFMPEG",
-        "CAST_MESA",
-        "E2E_VSCODE_CODE",
-        "E2E_VSCODE_EXTENSIONS",
-        "E2E_VSCODE_CAGE",
-        "E2E_VSCODE_FONTCONFIG_FILE"
-      ],
-      "inputs": [
-        "lib/**",
-        "assets/**",
-        "tui-test.toml",
-        "*.ts",
-        "$TURBO_ROOT$/lib/kits/**",
-        "$TURBO_ROOT$/AGENTS.md",
-        "!**/node_modules/**",
-        "!**/.turbo/**",
-        "!**/__pycache__/**",
-        "!**/.venv/**",
-        "!**/.*_cache/**",
-        "!**/.claude-plugin/types/**",
-        "!**/dist/**",
-        "!**/*.actual.*",
-        "!**/.out/**",
-        "!**/*.spec.ts",
-        "!**/__snapshots__/**",
-        "!**/turbo.json",
-        "!$TURBO_ROOT$/**/node_modules/**",
-        "!$TURBO_ROOT$/**/.turbo/**",
-        "!$TURBO_ROOT$/**/.claude-plugin/types/**",
-        "!$TURBO_ROOT$/**/*.actual.*",
-        "!$TURBO_ROOT$/**/turbo.json",
-        "!$TURBO_ROOT$/**/*.spec.ts",
-        "!$TURBO_ROOT$/**/*.test.ts",
-        "!$TURBO_ROOT$/**/*.test.tsx",
-        "!lib/vscode.ts",
-        "!lib/vscode-scenario.ts",
-        "!*/vscode.scenarios.ts"
-      ],
-      "outputs": ["$TURBO_ROOT$/apps/site/media/kit/**"]
-    },
-    "@agents/drive#site-shots": {
-      "command": [
-        "nix",
-        "run",
-        ".#media",
-        "--",
-        "node",
-        "drive.ts",
-        "record",
-        "apps",
-        "--harness",
-        "terminal"
-      ],
-      "dependsOn": ["//#dist", "@agents/drive#tui-test", "//#media-env"],
-      "passThroughEnv": [
-        "NIX_*",
-        "SSL_CERT_FILE",
-        "XDG_CONFIG_HOME",
-        "XDG_DATA_HOME",
-        "XDG_STATE_HOME",
-        "XDG_CACHE_HOME",
-        "XDG_RUNTIME_DIR",
-        "TUI_TEST_BIN",
-        "DISPLAY",
-        "WAYLAND_DISPLAY",
-        "FONTCONFIG_FILE",
-        "CAST_FFMPEG",
-        "CAST_MESA",
-        "E2E_VSCODE_CODE",
-        "E2E_VSCODE_EXTENSIONS",
-        "E2E_VSCODE_CAGE",
-        "E2E_VSCODE_FONTCONFIG_FILE"
-      ],
-      "inputs": [
-        "**",
-        "$TURBO_ROOT$/apps/**",
-        "$TURBO_ROOT$/lib/kits/**",
-        "!**/node_modules/**",
-        "!**/.turbo/**",
-        "!**/__pycache__/**",
-        "!**/.venv/**",
-        "!**/.*_cache/**",
-        "!**/.claude-plugin/types/**",
-        "!**/dist/**",
-        "!**/*.actual.*",
-        "!**/.out/**",
-        "!**/*.spec.ts",
-        "!**/__snapshots__/**",
-        "!**/turbo.json",
-        "!$TURBO_ROOT$/**/node_modules/**",
-        "!$TURBO_ROOT$/**/.turbo/**",
-        "!$TURBO_ROOT$/**/.claude-plugin/types/**",
-        "!$TURBO_ROOT$/**/*.actual.*",
-        "!$TURBO_ROOT$/**/turbo.json",
-        "!$TURBO_ROOT$/**/*.spec.ts",
-        "!$TURBO_ROOT$/**/*.test.ts",
-        "!$TURBO_ROOT$/**/*.test.tsx",
-        "!lib/vscode.ts",
-        "!lib/vscode-scenario.ts",
-        "!*/vscode.scenarios.ts",
-        "!README.md"
-      ],
-      "outputs": [
-        "$TURBO_ROOT$/apps/site/media/**",
-        "!$TURBO_ROOT$/apps/site/media/kit/**",
-        "!$TURBO_ROOT$/apps/site/media/*/vscode-*",
-        "!$TURBO_ROOT$/apps/site/media/*/media-vscode.json"
-      ]
-    },
-    "@agents/drive#site-vscode": {
-      "command": [
-        "nix",
-        "run",
-        ".#media",
-        "--",
-        "sh",
-        "-c",
-        "if [ \"$(uname -s)\" = Linux ]; then exec node drive.ts record apps --harness vscode; fi; echo \"site-vscode: needs a Linux compositor, skipped\""
-      ],
-      "dependsOn": ["//#dist", "//#media-env"],
-      "passThroughEnv": [
-        "NIX_*",
-        "SSL_CERT_FILE",
-        "XDG_CONFIG_HOME",
-        "XDG_DATA_HOME",
-        "XDG_STATE_HOME",
-        "XDG_CACHE_HOME",
-        "XDG_RUNTIME_DIR",
-        "TUI_TEST_BIN",
-        "DISPLAY",
-        "WAYLAND_DISPLAY",
-        "FONTCONFIG_FILE",
-        "CAST_FFMPEG",
-        "CAST_MESA",
-        "E2E_VSCODE_CODE",
-        "E2E_VSCODE_EXTENSIONS",
-        "E2E_VSCODE_CAGE",
-        "E2E_VSCODE_FONTCONFIG_FILE"
-      ],
-      "inputs": [
-        "**",
-        "$TURBO_ROOT$/apps/**",
-        "!**/node_modules/**",
-        "!**/.turbo/**",
-        "!**/__pycache__/**",
-        "!**/.venv/**",
-        "!**/.*_cache/**",
-        "!**/.claude-plugin/types/**",
-        "!**/dist/**",
-        "!**/*.actual.*",
-        "!**/.out/**",
-        "!**/*.spec.ts",
-        "!**/__snapshots__/**",
-        "!**/turbo.json",
-        "!$TURBO_ROOT$/**/node_modules/**",
-        "!$TURBO_ROOT$/**/.turbo/**",
-        "!$TURBO_ROOT$/**/.claude-plugin/types/**",
-        "!$TURBO_ROOT$/**/*.actual.*",
-        "!$TURBO_ROOT$/**/turbo.json",
-        "!$TURBO_ROOT$/**/*.spec.ts",
-        "!$TURBO_ROOT$/**/*.test.ts",
-        "!$TURBO_ROOT$/**/*.test.tsx",
-        "!*/claude.scenarios.ts",
-        "!*/pi.scenarios.ts",
-        "!README.md"
-      ],
-      "outputs": [
-        "$TURBO_ROOT$/apps/site/media/*/vscode-*",
-        "$TURBO_ROOT$/apps/site/media/*/media-vscode.json"
-      ]
     },
     "//#kit-new": {
       "command": ["node", "lib/kits/new.ts"],

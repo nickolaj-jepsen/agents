@@ -9,6 +9,49 @@
     },
     "test:claude": {
       "command": ["sh", "../../lib/tools/build/claude-plugin-test.sh"]
+    },
+    "types": {
+      "command": ["node", "../../lib/tools/drive/drive.ts", "types", "spellfix"]
+    },
+    "check-types": {
+      "command": ["./node_modules/.bin/tsc", "-b", "tsconfig.json", "tsconfig.claude.json"]
+    },
+    "media": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "spellfix",
+        "--harness",
+        "terminal"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/spellfix/**",
+        "!$TURBO_ROOT$/apps/site/media/spellfix/vscode-*",
+        "!$TURBO_ROOT$/apps/site/media/spellfix/media-vscode.json"
+      ]
+    },
+    "media:vscode": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "spellfix",
+        "--harness",
+        "vscode"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/spellfix/vscode-*",
+        "$TURBO_ROOT$/apps/site/media/spellfix/media-vscode.json"
+      ]
     }
   }
 }

@@ -105,14 +105,15 @@ Desktop needs `claude` and `claude-desktop` on PATH. Sign in to the isolated tes
 ## Site media
 
 ```bash
-pnpm turbo run media                                    # record the site's assets, or restore them from the cache
+pnpm turbo run media                                    # every package's media (terminal and VS Code), or restore them from the cache
+pnpm turbo run media --filter=@nickolaj-jepsen/docfix   # one package's, as `media:vscode` is its VS Code pictures
 nix run .#media -- record docfix                        # rerecord one package: its terminal demo, stills and VS Code pictures
 nix run .#media -- record docfix --harness vscode       # only its VS Code pictures (Linux)
 nix run .#media -- record kit-card                      # a kit package's story pictures
 nix run .#media -- record                               # every package
 ```
 
-Record in the media environment: `nix run .#media -- <drive verb>` runs the driver in it, with VS Code, the fonts and the tools the scenarios call (any other command runs as given). The `//#media-env` task builds it, so its hash is part of each recording's cache key and a recording from another environment is never restored. A recording whose inputs didn't change is restored, not replayed; add `--force` to record it anyway. `record <package>` writes only `apps/site/media/<package>/` (a kit package's pictures go to the folder the kit packages share, `apps/site/media/kit/`) and removes what it wrote before, so no file outlives its scenario. The site builds without any of it.
+Record in the media environment: `nix run .#media -- <drive verb>` runs the driver in it, with VS Code, the fonts and the tools the scenarios call (any other command runs as given). The `//#media-env` task builds it, so its hash is part of each recording's cache key and a recording from another environment is never restored. A recording whose inputs didn't change is restored, not replayed; add `--force` to record it anyway. `record <package>` writes only `apps/site/media/<package>/` (a kit package's pictures go to `apps/site/media/kit/<name>/`, with a `crops.json` of their own) and removes what it wrote before, so no file outlives its scenario. The site builds without any of it.
 
 The site reads generated files under `apps/site/media/`; don't commit them.
 

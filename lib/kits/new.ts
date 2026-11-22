@@ -34,7 +34,12 @@ const files: Record<string, string> = {
     type: "module",
     exports: { "./*": "./src/*" },
     dependencies: { "@agents/kit-core": "workspace:*" },
-    devDependencies: { "@types/node": "catalog:", typescript: "catalog:", vitest: "catalog:" },
+    devDependencies: {
+      "@agents/drive": "workspace:*",
+      "@types/node": "catalog:",
+      typescript: "catalog:",
+      vitest: "catalog:",
+    },
   }),
   "tsconfig.json": json({
     extends: "../../../tsconfig.base.node.json",
@@ -46,11 +51,25 @@ const files: Record<string, string> = {
       test: { command: ["./node_modules/.bin/vitest", "run"] },
       e2e: {
         command: ["node", "../../tools/drive/drive.ts", "test", `kit-${name}`],
-        dependsOn: ["^topo", "@agents/kit-catalog#build"],
+        dependsOn: ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"],
       },
       "e2e:update": {
         command: ["node", "../../tools/drive/drive.ts", "test", `kit-${name}`, "--update"],
-        dependsOn: ["@agents/kit-catalog#build"],
+        dependsOn: ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"],
+      },
+      media: {
+        command: [
+          "nix",
+          "run",
+          "../../..#media",
+          "--",
+          "node",
+          "../../tools/drive/drive.ts",
+          "record",
+          `kit-${name}`,
+        ],
+        outputs: [`$TURBO_ROOT$/apps/site/media/kit/${name}/**`],
+        dependsOn: ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"],
       },
     },
   }),
@@ -163,15 +182,20 @@ writeFileSync(
     .replace(list, `$1  ...${camel}Stories,\n];`),
 );
 
-const catalogPackage = join(kits, "catalog/package.json");
-const catalog = JSON.parse(readFileSync(catalogPackage, "utf8")) as {
-  dependencies: Record<string, string>;
-};
-catalog.dependencies[`@agents/kit-${name}`] = "workspace:*";
-catalog.dependencies = Object.fromEntries(
-  Object.entries(catalog.dependencies).sort(([a], [b]) => a.localeCompare(b)),
-);
-writeFileSync(catalogPackage, json(catalog));
+// The catalogue imports the kit and the site reads it: each depends on the new package.
+for (const file of [
+  join(kits, "catalog/package.json"),
+  join(kits, "../../apps/site/package.json"),
+]) {
+  const pkg = JSON.parse(readFileSync(file, "utf8")) as {
+    devDependencies: Record<string, string>;
+  };
+  pkg.devDependencies[`@agents/kit-${name}`] = "workspace:*";
+  pkg.devDependencies = Object.fromEntries(
+    Object.entries(pkg.devDependencies).sort(([a], [b]) => a.localeCompare(b)),
+  );
+  writeFileSync(file, json(pkg));
+}
 
 console.log(`kit-new: created lib/kits/${name}/ and registered its stories in lib/kits/catalog
 

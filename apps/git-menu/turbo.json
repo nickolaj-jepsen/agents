@@ -6,6 +6,49 @@
     },
     "test:claude": {
       "command": ["sh", "../../lib/tools/build/claude-plugin-test.sh"]
+    },
+    "types": {
+      "command": ["node", "../../lib/tools/drive/drive.ts", "types", "git-menu"]
+    },
+    "check-types": {
+      "command": ["./node_modules/.bin/tsc", "-b", "tsconfig.json", "tsconfig.claude.json"]
+    },
+    "media": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "git-menu",
+        "--harness",
+        "terminal"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/git-menu/**",
+        "!$TURBO_ROOT$/apps/site/media/git-menu/vscode-*",
+        "!$TURBO_ROOT$/apps/site/media/git-menu/media-vscode.json"
+      ]
+    },
+    "media:vscode": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "git-menu",
+        "--harness",
+        "vscode"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/git-menu/vscode-*",
+        "$TURBO_ROOT$/apps/site/media/git-menu/media-vscode.json"
+      ]
     }
   }
 }

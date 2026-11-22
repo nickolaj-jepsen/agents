@@ -1,12 +1,16 @@
 {
   "extends": ["//"],
   "tasks": {
-    "topo": { "inputs": ["*", "lib/**", "assets/**"] },
+    // The harness is every app's and kit's: its code reaches their e2e, media and types by `^topo`.
+    // `e2e.spec.ts` and `vitest.config.ts` are the harness too, so `*` stands.
+    "topo": {
+      "inputs": ["*", "lib/**", "assets/**", "!README.md", "!tsconfig.json", "!turbo.json"]
+    },
     "check-types": {
       "inputs": [
         "*",
         "lib/**",
-        "$TURBO_ROOT$/apps/answer/src/e2e/fixture.ts",
+        "!README.md",
         "$TURBO_ROOT$/tsconfig.base.json",
         "$TURBO_ROOT$/tsconfig.base.node.json"
       ]

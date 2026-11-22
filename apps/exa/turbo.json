@@ -6,6 +6,21 @@
     },
     "test": {
       "command": ["./node_modules/.bin/vitest", "run"]
+    },
+    "media": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "exa",
+        "--harness",
+        "terminal"
+      ],
+      "outputs": ["$TURBO_ROOT$/apps/site/media/exa/**"]
     }
   }
 }

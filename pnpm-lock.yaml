@@ -538,6 +538,76 @@ importers:
       astro:
         specifier: ^7.4.12
         version: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+    devDependencies:
+      '@agents/build':
+        specifier: workspace:*
+        version: link:../../lib/tools/build
+      '@agents/kit-buttons':
+        specifier: workspace:*
+        version: link:../../lib/kits/buttons
+      '@agents/kit-card':
+        specifier: workspace:*
+        version: link:../../lib/kits/card
+      '@agents/kit-catalog':
+        specifier: workspace:*
+        version: link:../../lib/kits/catalog
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../../lib/kits/core
+      '@agents/kit-detail':
+        specifier: workspace:*
+        version: link:../../lib/kits/detail
+      '@agents/kit-fields':
+        specifier: workspace:*
+        version: link:../../lib/kits/fields
+      '@agents/kit-frame':
+        specifier: workspace:*
+        version: link:../../lib/kits/frame
+      '@agents/kit-legacy':
+        specifier: workspace:*
+        version: link:../../lib/kits/legacy
+      '@agents/kit-list':
+        specifier: workspace:*
+        version: link:../../lib/kits/list
+      '@agents/kit-prose':
+        specifier: workspace:*
+        version: link:../../lib/kits/prose
+      '@agents/kit-sheet':
+        specifier: workspace:*
+        version: link:../../lib/kits/sheet
+      '@nickolaj-jepsen/answer':
+        specifier: workspace:*
+        version: link:../answer
+      '@nickolaj-jepsen/claude-compat':
+        specifier: workspace:*
+        version: link:../claude-compat
+      '@nickolaj-jepsen/docfix':
+        specifier: workspace:*
+        version: link:../docfix
+      '@nickolaj-jepsen/exa':
+        specifier: workspace:*
+        version: link:../exa
+      '@nickolaj-jepsen/git-menu':
+        specifier: workspace:*
+        version: link:../git-menu
+      '@nickolaj-jepsen/image-preview':
+        specifier: workspace:*
+        version: link:../image-preview
+      '@nickolaj-jepsen/linear-issue':
+        specifier: workspace:*
+        version: link:../linear-issue
+      '@nickolaj-jepsen/questions':
+        specifier: workspace:*
+        version: link:../questions
+      '@nickolaj-jepsen/spellfix':
+        specifier: workspace:*
+        version: link:../spellfix
+      '@nickolaj-jepsen/transcript-tweaks':
+        specifier: workspace:*
+        version: link:../transcript-tweaks
+      '@nickolaj-jepsen/worktree':
+        specifier: workspace:*
+        version: link:../worktree
 
   apps/spellfix:
     devDependencies:
@@ -635,6 +705,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../tools/drive
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -648,6 +721,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../tools/drive
       '@earendil-works/pi-tui':
         specifier: 'catalog:'
         version: 1.5.2
@@ -757,6 +833,9 @@ importers:
         specifier: workspace:*
         version: link:../prose
     devDependencies:
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../tools/drive
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -773,6 +852,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../tools/drive
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -795,6 +877,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../tools/drive
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -832,6 +917,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../tools/drive
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -848,6 +936,9 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../tools/drive
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
@@ -876,6 +967,9 @@ importers:
         specifier: workspace:*
         version: link:../frame
     devDependencies:
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../tools/drive
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6

@@ -12,6 +12,7 @@
     "@agents/kit-core": "workspace:*"
   },
   "devDependencies": {
+    "@agents/drive": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:"
   }

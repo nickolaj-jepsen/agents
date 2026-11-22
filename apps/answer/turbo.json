@@ -15,6 +15,49 @@
     },
     "e2e:update": {
       "command": ["node", "../../lib/tools/drive/drive.ts", "test", "answer", "--update"]
+    },
+    "types": {
+      "command": ["node", "../../lib/tools/drive/drive.ts", "types", "answer"]
+    },
+    "check-types": {
+      "command": ["./node_modules/.bin/tsc", "-b", "tsconfig.json", "tsconfig.claude.json"]
+    },
+    "media": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "answer",
+        "--harness",
+        "terminal"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/answer/**",
+        "!$TURBO_ROOT$/apps/site/media/answer/vscode-*",
+        "!$TURBO_ROOT$/apps/site/media/answer/media-vscode.json"
+      ]
+    },
+    "media:vscode": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "answer",
+        "--harness",
+        "vscode"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/answer/vscode-*",
+        "$TURBO_ROOT$/apps/site/media/answer/media-vscode.json"
+      ]
     }
   }
 }

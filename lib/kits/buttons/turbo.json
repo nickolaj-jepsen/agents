@@ -3,11 +3,25 @@
   "tasks": {
     "e2e": {
       "command": ["node", "../../tools/drive/drive.ts", "test", "kit-buttons"],
-      "dependsOn": ["^topo", "@agents/kit-catalog#build"]
+      "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
     },
     "e2e:update": {
       "command": ["node", "../../tools/drive/drive.ts", "test", "kit-buttons", "--update"],
-      "dependsOn": ["@agents/kit-catalog#build"]
+      "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
+    },
+    "media": {
+      "command": [
+        "nix",
+        "run",
+        "../../..#media",
+        "--",
+        "node",
+        "../../tools/drive/drive.ts",
+        "record",
+        "kit-buttons"
+      ],
+      "outputs": ["$TURBO_ROOT$/apps/site/media/kit/buttons/**"],
+      "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
     }
   }
 }

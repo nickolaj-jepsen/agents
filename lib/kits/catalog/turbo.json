@@ -1,11 +1,19 @@
 {
   "extends": ["//"],
   "tasks": {
-    "test": {
-      "command": ["./node_modules/.bin/vitest", "run"]
-    },
     "build": {
       "command": ["node", "../../tools/build/build.ts"]
+    },
+    // The specs read what no package import reaches: every kit package's snapshots (parity) and the
+    // kit index in the root AGENTS.md.
+    "test": {
+      "command": ["./node_modules/.bin/vitest", "run"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!README.md",
+        "$TURBO_ROOT$/AGENTS.md",
+        "$TURBO_ROOT$/lib/kits/*/e2e/__snapshots__/**/*.snap"
+      ]
     },
     "test:claude": {
       "command": ["sh", "../../tools/build/claude-plugin-test.sh"]
@@ -15,6 +23,25 @@
     },
     "e2e:update": {
       "command": ["node", "../../tools/drive/drive.ts", "test", "kit-catalog", "--update"]
+    },
+    "types": {
+      "command": ["node", "../../tools/drive/drive.ts", "types", "kit-catalog"]
+    },
+    "check-types": {
+      "command": ["./node_modules/.bin/tsc", "-b", "tsconfig.json", "tsconfig.claude.json"]
+    },
+    "media": {
+      "command": [
+        "nix",
+        "run",
+        "../../..#media",
+        "--",
+        "node",
+        "../../tools/drive/drive.ts",
+        "record",
+        "kit-catalog"
+      ],
+      "outputs": ["$TURBO_ROOT$/apps/site/media/kit/catalog/**"]
     }
   }
 }

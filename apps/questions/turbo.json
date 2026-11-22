@@ -9,6 +9,21 @@
     },
     "e2e:update": {
       "command": ["node", "../../lib/tools/drive/drive.ts", "test", "questions", "--update"]
+    },
+    "media": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "questions",
+        "--harness",
+        "terminal"
+      ],
+      "outputs": ["$TURBO_ROOT$/apps/site/media/questions/**"]
     }
   }
 }

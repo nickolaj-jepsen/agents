@@ -7,5 +7,30 @@
     "@astrojs/markdown-remark": "^7.3.9",
     "@fontsource-variable/source-serif-4": "^5.3.1",
     "astro": "^7.4.12"
+  },
+  "devDependencies": {
+    "@agents/build": "workspace:*",
+    "@agents/kit-buttons": "workspace:*",
+    "@agents/kit-card": "workspace:*",
+    "@agents/kit-catalog": "workspace:*",
+    "@agents/kit-core": "workspace:*",
+    "@agents/kit-detail": "workspace:*",
+    "@agents/kit-fields": "workspace:*",
+    "@agents/kit-frame": "workspace:*",
+    "@agents/kit-legacy": "workspace:*",
+    "@agents/kit-list": "workspace:*",
+    "@agents/kit-prose": "workspace:*",
+    "@agents/kit-sheet": "workspace:*",
+    "@nickolaj-jepsen/answer": "workspace:*",
+    "@nickolaj-jepsen/claude-compat": "workspace:*",
+    "@nickolaj-jepsen/docfix": "workspace:*",
+    "@nickolaj-jepsen/exa": "workspace:*",
+    "@nickolaj-jepsen/git-menu": "workspace:*",
+    "@nickolaj-jepsen/image-preview": "workspace:*",
+    "@nickolaj-jepsen/linear-issue": "workspace:*",
+    "@nickolaj-jepsen/questions": "workspace:*",
+    "@nickolaj-jepsen/spellfix": "workspace:*",
+    "@nickolaj-jepsen/transcript-tweaks": "workspace:*",
+    "@nickolaj-jepsen/worktree": "workspace:*"
   }
 }

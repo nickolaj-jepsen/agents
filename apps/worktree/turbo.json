@@ -9,6 +9,21 @@
     },
     "e2e:update": {
       "command": ["node", "../../lib/tools/drive/drive.ts", "test", "worktree", "--update"]
+    },
+    "media": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "worktree",
+        "--harness",
+        "terminal"
+      ],
+      "outputs": ["$TURBO_ROOT$/apps/site/media/worktree/**"]
     }
   }
 }
