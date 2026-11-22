@@ -108,7 +108,7 @@ export const IN_PROGRESS = "Unfinished, and not ready for anyone else to use.";
 /** Adds the marketplace once per machine; a plugin's Claude install runs it first. */
 export const MARKETPLACE_ADD = "claude plugin marketplace add nickolaj-jepsen/agents";
 
-export const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+export const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
 function frontmatter(file: string): { data: Record<string, any>; body: string; lines: number } {
   const text = readFileSync(file, "utf8");
@@ -139,7 +139,7 @@ function str(file: string, data: Record<string, any>, key: string): string {
 
 function readMedia(root: string, name: string): Media | undefined {
   const read = (file: string) => {
-    const path = join(root, "site/media", name, file);
+    const path = join(root, "apps/site/media", name, file);
     return existsSync(path)
       ? (JSON.parse(readFileSync(path, "utf8")) as Partial<Media>)
       : undefined;
@@ -168,18 +168,18 @@ function loadPlugins(root: string): Plugin[] {
       })
     : { plugins: [] };
   const listed = new Set(marketplace.plugins.map((p) => p.name));
-  return dirs(join(root, "plugins"))
+  return dirs(join(root, "apps"))
     .flatMap((name): Plugin[] => {
-      const dir = join(root, "plugins", name);
+      const dir = join(root, "apps", name);
       const pkgFile = join(dir, "package.json");
       const pkg = existsSync(pkgFile)
         ? (JSON.parse(readFileSync(pkgFile, "utf8")) as Record<string, unknown>)
         : {};
       const harness = {
-        claude: existsSync(join(dir, ".claude-plugin/plugin.json")),
+        claude: "claude" in pkg,
         pi: "pi" in pkg,
       };
-      // Generated Claude types can leave a directory behind after a plugin is removed.
+      // An app that is neither (the site) is not a plugin.
       if (!harness.claude && !harness.pi) return [];
       const file = join(dir, "README.md");
       const { data, body } = frontmatter(file);
@@ -195,7 +195,7 @@ function loadPlugins(root: string): Plugin[] {
       const install: Plugin["install"] = {};
       if (harness.claude && listed.has(name))
         install.claude = `${MARKETPLACE_ADD} && claude plugin install ${name}@nickolaj-jepsen`;
-      if (harness.pi) install.pi = `git clone ${REPO_URL} && pi install ./agents/plugins/${name}`;
+      if (harness.pi) install.pi = `git clone ${REPO_URL} && pi install ./agents/apps/${name}`;
       return [
         {
           name,
@@ -207,7 +207,7 @@ function loadPlugins(root: string): Plugin[] {
           harness,
           install,
           body: body.trimEnd(),
-          path: `plugins/${name}`,
+          path: `apps/${name}`,
           media: readMedia(root, name),
         },
       ];

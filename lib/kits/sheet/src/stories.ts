@@ -1,10 +1,10 @@
 /** The sheet's stories. No host imports. */
-import { buttonRow } from "../buttons/terminal.ts";
-import { CARD_INSET } from "../card/terminal.ts";
-import { fieldHit } from "../fields/contract.ts";
-import { fields } from "../fields/terminal.ts";
-import { blank, block, inline, line, span, type Line } from "../lines.ts";
-import type { KitStory } from "../stories.ts";
+import { buttonRow } from "@agents/kit-buttons/terminal.ts";
+import { CARD_INSET } from "@agents/kit-card/terminal.ts";
+import { fieldHit } from "@agents/kit-fields/contract.ts";
+import { fields } from "@agents/kit-fields/terminal.ts";
+import { blank, block, inline, line, span, type Line } from "@agents/kit-core/lines.ts";
+import type { KitStory } from "@agents/kit-core/stories.ts";
 import { sheetRoom } from "./contract.ts";
 import { sheet, sheetHead } from "./terminal.ts";
 

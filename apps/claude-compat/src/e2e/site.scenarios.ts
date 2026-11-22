@@ -1,8 +1,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Turn } from "../lib/harness.ts";
-import type { Step } from "../lib/scenario.ts";
-import { poster, site, slow, type SiteScenario } from "../lib/site.ts";
+import type { Turn } from "@agents/drive/lib/harness.ts";
+import type { Step } from "@agents/drive/lib/scenario.ts";
+import { poster, site, slow, type SiteScenario } from "@agents/drive/lib/site.ts";
 
 const DRAFT =
   "Refactor the sync worker so a failed upload retries with backoff, and add a test for the fifth failure";

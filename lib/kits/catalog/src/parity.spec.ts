@@ -1,24 +1,29 @@
 /**
  * Both terminals paint the one drawing: every recorded snapshot of a kit story, in pi and in
  * Claude Code, holds exactly the shared lines at the width it was given, and each client
- * paints a role one way. Reads `e2e/kit/__snapshots__`, so it checks what real sessions drew;
- * a story with no snapshot yet fails, which is the reminder to record it (`turbo run e2e:update --filter=@agents/e2e-kit`).
+ * paints a role one way. Reads the kit packages' `e2e/__snapshots__`, so it checks what real sessions
+ * drew; a story with no snapshot yet fails, which is the reminder to record it
+ * (`pnpm turbo run e2e:update --filter=@agents/kit-<component>`).
  */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { cellWidth, textOf, type Line } from "./lines.ts";
-import { kitStories, storyId } from "./stories.ts";
+import { cellWidth, textOf, type Line } from "@agents/kit-core/lines.ts";
+import { storyId } from "@agents/kit-core/stories.ts";
+import { kitStories } from "./registry.ts";
 
-const snapshots = join(import.meta.dirname, "../e2e/kit/__snapshots__");
+const kits = join(import.meta.dirname, "../..");
 const clients = ["pi", "claude"] as const;
 type Client = (typeof clients)[number];
 
 type Snap = { size: string; width: number; text: string[]; styles: string[][] };
 
 function read(client: Client, component: string, state: string): Snap[] {
-  const dir = join(snapshots, client, component);
-  if (!existsSync(dir)) return [];
+  // Whichever kit package recorded the component.
+  const dir = readdirSync(kits)
+    .map((pkg) => join(kits, pkg, "e2e/__snapshots__", client, component))
+    .find((d) => existsSync(d));
+  if (!dir) return [];
   return readdirSync(dir)
     .filter((f) => f.startsWith(`${state}@`) && f.endsWith(".snap") && !f.includes(".actual."))
     .map((f) => {
@@ -62,7 +67,7 @@ describe.each(kitStories.map((s) => ({ id: storyId(s), story: s })))("$id", ({ s
     const snaps = read(client, story.component, story.state);
     expect(
       snaps.length,
-      "no snapshot: run `pnpm turbo run e2e:update --filter=@agents/e2e-kit`",
+      "no snapshot: run `pnpm turbo run e2e:update --filter=@agents/kit-<component>`",
     ).toBeGreaterThan(0);
     for (const snap of snaps) {
       const lines = story.lines(snap.width);

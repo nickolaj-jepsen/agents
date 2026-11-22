@@ -1,0 +1,38 @@
+{
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "test": {
+      "command": [
+        "./node_modules/.bin/vitest",
+        "run"
+      ]
+    },
+    "build": {
+      "command": [
+        "node",
+        "../../tools/build/build.ts"
+      ]
+    },
+    "test:claude": {
+      "command": [
+        "sh",
+        "../../tools/build/claude-plugin-test.sh"
+      ]
+    },
+    "e2e": {
+      "command": [
+        "node",
+        "../../tools/drive/run.ts"
+      ]
+    },
+    "e2e:update": {
+      "command": [
+        "node",
+        "../../tools/drive/run.ts",
+        "-u"
+      ]
+    }
+  }
+}

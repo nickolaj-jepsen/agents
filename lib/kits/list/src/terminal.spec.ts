@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { textOf, widthOf } from "../lines.ts";
+import { textOf, widthOf } from "@agents/kit-core/lines.ts";
 import type { List, ListGroup } from "./contract.ts";
 import { listStories } from "./stories.ts";
 import { cutLeft, list, listFollow, listRows, listShowsWhole, listTopMax } from "./terminal.ts";

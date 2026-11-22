@@ -1,4 +1,4 @@
-import { defineComponent, yes } from "../catalog/manifest.ts";
+import { defineComponent, yes } from "@agents/kit-core/manifest.ts";
 
 export default defineComponent({
   id: "caption-frame",
@@ -10,7 +10,7 @@ export default defineComponent({
     claude: ["captionFrame", "frameTop", "captionRule", "captionParts"],
   },
   status: { pi: "system", claude: "system", gui: "legacy" },
-  source: "frame/terminal.ts",
+  source: "frame/src/terminal.ts",
   features: [
     {
       id: "title",

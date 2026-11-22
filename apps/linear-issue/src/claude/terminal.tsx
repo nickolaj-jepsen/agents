@@ -4,8 +4,8 @@
  */
 import type { ElementTable } from "claude-code";
 
-import { chip, CHIP, draftChip } from "../core/chip.ts";
-import type { Filed, Form } from "../core/draft.ts";
+import { chip, CHIP, draftChip } from "../lib/chip.ts";
+import type { Filed, Form } from "../lib/draft.ts";
 import {
   BODY_KEY,
   draw,
@@ -14,12 +14,12 @@ import {
   type Drawn,
   type Intent,
   type View,
-} from "../core/screen.ts";
-import { CARD_INSET } from "./kit/card/terminal.ts";
-import { blank, line, span, type Line } from "./kit/lines.ts";
-import { hotkeys, keysHint, paintLines, ring, stack } from "./kit/paint/claude.tsx";
-import { sheetHead } from "./kit/sheet/terminal.ts";
-import { tokens } from "./kit/tokens.ts";
+} from "../lib/screen.ts";
+import { CARD_INSET } from "@agents/kit-card/terminal.ts";
+import { blank, line, span, type Line } from "@agents/kit-core/lines.ts";
+import { hotkeys, keysHint, paintLines, ring, stack } from "@agents/kit-core/paint/claude.tsx";
+import { sheetHead } from "@agents/kit-sheet/terminal.ts";
+import { tokens } from "@agents/kit-core/tokens.ts";
 
 type Els = ElementTable<"terminal">;
 

@@ -1,5 +1,5 @@
 /** The captioned frame's contract. No host imports. */
-import type { Line, Span } from "../lines.ts";
+import type { Line, Span } from "@agents/kit-core/lines.ts";
 
 /** What the frame's own controls do: `close`, or the answer to its question once it asks. */
 export type CloseAction = "close" | "discard" | "keep";

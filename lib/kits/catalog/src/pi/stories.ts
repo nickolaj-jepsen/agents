@@ -40,7 +40,7 @@ import {
   type Column,
   type Hint,
   type WidthClass,
-} from "../../legacy/pi/ui.ts";
+} from "@agents/kit-legacy/pi/ui.ts";
 import {
   CJK,
   EVIDENCE,
@@ -61,11 +61,11 @@ import {
   choiceReduce,
   type ChoiceIntent,
   type ChoiceListState,
-} from "../../card/contract.ts";
-import { liveChoices, liveStart } from "../../card/stories.ts";
-import { choiceList } from "../../card/terminal.ts";
-import { paintLines } from "../../paint/pi.ts";
-import { kitStories } from "../../stories.ts";
+} from "@agents/kit-card/contract.ts";
+import { liveChoices, liveStart } from "@agents/kit-card/stories.ts";
+import { choiceList } from "@agents/kit-card/terminal.ts";
+import { paintLines } from "@agents/kit-core/paint/pi.ts";
+import { kitStories } from "../registry.ts";
 
 export type Env = { columns: number; rows: number };
 

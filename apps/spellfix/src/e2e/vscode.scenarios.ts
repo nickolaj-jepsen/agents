@@ -1,6 +1,6 @@
-import type { Turn } from "../lib/harness.ts";
-import { vscodeScenarios } from "../lib/vscode-scenario.ts";
-import type { VscodeStep } from "../lib/vscode-scenario.ts";
+import type { Turn } from "@agents/drive/lib/harness.ts";
+import { vscodeScenarios } from "@agents/drive/lib/vscode-scenario.ts";
+import type { VscodeStep } from "@agents/drive/lib/vscode-scenario.ts";
 
 /**
  * Each scenario ends with the draft typed. VS Code raises no prompt events; the mod reads the draft

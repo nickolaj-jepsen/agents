@@ -1,5 +1,5 @@
 /** The detail's stories. No host imports. */
-import type { KitStory } from "../stories.ts";
+import type { KitStory } from "@agents/kit-core/stories.ts";
 import type { Detail } from "./contract.ts";
 import { detail } from "./terminal.ts";
 

@@ -38,8 +38,8 @@ import {
   type Choice,
   type Input,
   type Suggestion,
-} from "../core/docfix";
-import type { Said, View } from "./types.d.ts";
+} from "./lib/docfix";
+import type { Said, View } from "./claude/types.d.ts";
 import {
   drawScreen,
   isScreenHit,
@@ -50,11 +50,11 @@ import {
   type ScreenOptions,
   type ScreenState,
   WHEEL_ROWS,
-} from "../core/screen";
-import { captionFrameLayout } from "./kit/frame/contract.ts";
-import { blank } from "./kit/lines.ts";
-import { keysHint, paintLines, ring, RING, ringMove } from "./kit/paint/claude.tsx";
-import { evidence } from "./evidence";
+} from "./lib/screen";
+import { captionFrameLayout } from "@agents/kit-frame/contract.ts";
+import { blank } from "@agents/kit-core/lines.ts";
+import { keysHint, paintLines, ring, RING, ringMove } from "@agents/kit-core/paint/claude.tsx";
+import { evidence } from "./claude/evidence";
 import {
   actionBar,
   capped,
@@ -72,7 +72,7 @@ import {
   tokens,
   type ChoiceOption,
   type Kit,
-} from "./ui";
+} from "@agents/kit-legacy/claude/ui.tsx";
 
 const PANE = "docfix";
 

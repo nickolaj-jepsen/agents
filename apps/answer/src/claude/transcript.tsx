@@ -1,4 +1,4 @@
-import { plain, recommendationChoice, view as viewOf } from "../core/forms";
+import { plain, recommendationChoice, view as viewOf } from "../lib/forms";
 import { POSITIONS } from "./terminal";
 import type { Current, Editing, Held, View } from "./types.d.ts";
 import {
@@ -8,9 +8,9 @@ import {
   heading as cardHeading,
   note as cardNote,
   railRole,
-} from "./kit/card/terminal.ts";
-import type { Line } from "./kit/lines.ts";
-import { paintLines } from "./kit/paint/claude.tsx";
+} from "@agents/kit-card/terminal.ts";
+import type { Line } from "@agents/kit-core/lines.ts";
+import { paintLines } from "@agents/kit-core/paint/claude.tsx";
 import {
   actionBar,
   buttonRow,
@@ -24,7 +24,7 @@ import {
   widthCap,
   withColumns,
   type Kit,
-} from "./ui";
+} from "@agents/kit-legacy/claude/ui.tsx";
 
 export type RoundActions = {
   go: (index: number) => unknown;

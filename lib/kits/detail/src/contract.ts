@@ -1,5 +1,5 @@
 /** The detail's contract: one item read whole, cut to a height. No host imports. */
-import type { Button } from "../buttons/contract.ts";
+import type { Button } from "@agents/kit-buttons/contract.ts";
 
 /** A row of what an item points at: a dim key, and the value hanging beside it. */
 export type DetailItem = {

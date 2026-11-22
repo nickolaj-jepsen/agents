@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
-import { linearMcp } from "../lib/linear-mcp.ts";
-import { scenarios, slashCommand, type Step } from "../lib/scenario.ts";
-import { region } from "../lib/screen.ts";
+import { linearMcp } from "@agents/drive/lib/linear-mcp.ts";
+import { scenarios, slashCommand, type Step } from "@agents/drive/lib/scenario.ts";
+import { region } from "@agents/drive/lib/screen.ts";
 import { DRAFT, DUPLICATE, EXTREME, LINEAR_UP, NONE, NOTE, drafting, repo } from "./fixture.ts";
 
 /** /linear with a note, until the draft is on screen. */

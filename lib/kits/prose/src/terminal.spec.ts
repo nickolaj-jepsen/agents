@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { textOf, widthOf } from "../lines.ts";
+import { textOf, widthOf } from "@agents/kit-core/lines.ts";
 import { proseStories } from "./stories.ts";
 
 describe("every prose story", () => {

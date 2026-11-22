@@ -1,7 +1,7 @@
 /**
- * Plays every scenario under e2e/<plugin>/ in its real agent and compares the screen
+ * Plays every scenario of an app or kit package in its real agent and compares the screen
  * at each size with its stored snapshot. It starts Claude Code and pi, so it runs as the `e2e` task
- * of each e2e/<plugin>/ package (`node e2e/run.ts <plugin>`), not as part of the generic `test`.
+ * of each package that has scenarios (`node run.ts <package>`), not as part of the generic `test`.
  *
  * The scenarios run first, together, in `lib/runner.ts` (sessions side by side, a chain of
  * scenarios in one session); the tests then read what each came to.

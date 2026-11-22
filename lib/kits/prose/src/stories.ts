@@ -1,6 +1,6 @@
 /** Prose's stories. No host imports. */
-import type { KitStory } from "../stories.ts";
-import { scrolled } from "../lines.ts";
+import type { KitStory } from "@agents/kit-core/stories.ts";
+import { scrolled } from "@agents/kit-core/lines.ts";
 import { prose } from "./terminal.ts";
 
 // Short enough for the catalogue's stage in a Claude Code pane, which is a third of the rows.

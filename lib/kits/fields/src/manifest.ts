@@ -1,4 +1,4 @@
-import { defineComponent, yes } from "../catalog/manifest.ts";
+import { defineComponent, yes } from "@agents/kit-core/manifest.ts";
 
 export default defineComponent({
   id: "fields",
@@ -6,7 +6,7 @@ export default defineComponent({
   purpose: "What a record holds, one named value each: a row per field, or side by side.",
   impl: { pi: "fields", claude: "fields" },
   status: { pi: "system", claude: "system", gui: "legacy" },
-  source: "fields/terminal.ts",
+  source: "fields/src/terminal.ts",
   features: [
     {
       id: "rows",

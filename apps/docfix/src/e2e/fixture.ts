@@ -7,8 +7,8 @@ import {
   serialize,
   STORE_DIR,
   type Suggestion,
-} from "../../plugins/docfix/core/docfix.ts";
-import type { SetupContext } from "../lib/session.ts";
+} from "../lib/docfix.ts";
+import type { SetupContext } from "@agents/drive/lib/session.ts";
 
 const DAY = 86_400_000;
 const ago = (days: number) => new Date(Date.now() - days * DAY).toISOString();

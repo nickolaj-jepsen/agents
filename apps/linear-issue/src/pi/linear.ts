@@ -15,7 +15,7 @@ import {
   type McpServerEntry,
   type ToolDefinition,
 } from "@earendil-works/pi-coding-agent";
-import { NO_LINEAR } from "../core/draft.ts";
+import { NO_LINEAR } from "../lib/draft.ts";
 
 const LINEAR = /linear/i;
 const TOOL = /^mcp__(.*linear.*)__([^_].*)$/i;

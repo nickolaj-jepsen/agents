@@ -1,0 +1,26 @@
+{
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "build": {
+      "command": [
+        "node",
+        "../../lib/tools/build/build.ts"
+      ]
+    },
+    "e2e": {
+      "command": [
+        "node",
+        "../../lib/tools/drive/run.ts"
+      ]
+    },
+    "e2e:update": {
+      "command": [
+        "node",
+        "../../lib/tools/drive/run.ts",
+        "-u"
+      ]
+    }
+  }
+}

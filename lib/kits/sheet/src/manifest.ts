@@ -1,4 +1,4 @@
-import { defineComponent, no, yes } from "../catalog/manifest.ts";
+import { defineComponent, no, yes } from "@agents/kit-core/manifest.ts";
 
 export default defineComponent({
   id: "sheet",
@@ -7,7 +7,7 @@ export default defineComponent({
     "A panel laid over the screen, closed on every side: the title and Close in its top edge, buttons at its foot.",
   impl: { pi: ["sheet", "sheetHead"], claude: ["sheet", "sheetHead"] },
   status: { pi: "system", claude: "system", gui: "legacy" },
-  source: "sheet/terminal.ts",
+  source: "sheet/src/terminal.ts",
   features: [
     {
       id: "edges",

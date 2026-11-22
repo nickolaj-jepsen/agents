@@ -1,8 +1,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { crc32, deflateSync } from "node:zlib";
-import type { Turn } from "../lib/harness.ts";
-import { site, slow, type SiteScenario } from "../lib/site.ts";
+import type { Turn } from "@agents/drive/lib/harness.ts";
+import { site, slow, type SiteScenario } from "@agents/drive/lib/site.ts";
 
 type Rgb = [number, number, number];
 

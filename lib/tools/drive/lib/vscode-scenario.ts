@@ -2,12 +2,13 @@
  * Scenarios for the Claude Code extension in VS Code, the sibling of `lib/scenario.ts`: the same
  * fixtures (`setup`) and stubbed turns, played by `lib/vscode.ts` instead of a terminal.
  *
- * A file `e2e/<plugin>/vscode.scenarios.ts` default-exports `vscodeScenarios({...})`. Nothing
+ * A file `vscode.scenarios.ts` in an app's e2e folder default-exports `vscodeScenarios({...})`. Nothing
  * here is a regression test: there are no snapshots, and `turbo run e2e` does not read these files.
  */
 import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { e2ePackages } from "./packages.ts";
 import type { Pattern } from "./screen.ts";
 import { setupContext, type SetupContext } from "./setup.ts";
 import type { Size, Target } from "./session.ts";
@@ -100,15 +101,13 @@ export function resolveVscode(set: VscodeSet, name: string, seen: string[] = [])
   };
 }
 
-const e2eRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-
-/** Every `e2e/<plugin>/vscode.scenarios.ts`. */
+/** Every `vscode.scenarios.ts` of an app's e2e folder. */
 export function vscodeFiles(plugin?: string): { plugin: string; file: string }[] {
   const out: { plugin: string; file: string }[] = [];
-  for (const dir of readdirSync(e2eRoot, { withFileTypes: true })) {
-    if (!dir.isDirectory() || (plugin && dir.name !== plugin)) continue;
-    const file = join(e2eRoot, dir.name, "vscode.scenarios.ts");
-    if (existsSync(file)) out.push({ plugin: dir.name, file });
+  for (const p of e2ePackages()) {
+    if (plugin && p.name !== plugin) continue;
+    const file = join(p.e2e, "vscode.scenarios.ts");
+    if (existsSync(file)) out.push({ plugin: p.name, file });
   }
   return out;
 }

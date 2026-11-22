@@ -6,12 +6,12 @@
  */
 import { atom, read, update } from "claude-code";
 import type { Register } from "claude-code";
-import { stageWidth, storyId, stories, type Story } from "../stories";
-import { choiceOf, choiceReduce, type ChoiceListState } from "./kit/card/contract.ts";
-import { liveChoices, liveStart } from "./kit/card/stories.ts";
-import { keysHint, RING, ringMove } from "./kit/paint/claude.tsx";
-import { choiceRing, choiceRows, renders, type ChoiceSend } from "./render";
-import { kitOf, onlyOwnRows, paneOptions, withColumns } from "./ui";
+import { stageWidth, storyId, stories, type Story } from "./claude/stories";
+import { choiceOf, choiceReduce, type ChoiceListState } from "@agents/kit-card/contract.ts";
+import { liveChoices, liveStart } from "@agents/kit-card/stories.ts";
+import { keysHint, RING, ringMove } from "@agents/kit-core/paint/claude.tsx";
+import { choiceRing, choiceRows, renders, type ChoiceSend } from "./claude/render";
+import { kitOf, onlyOwnRows, paneOptions, withColumns } from "@agents/kit-legacy/claude/ui.tsx";
 
 const PANE = "kit";
 const PLUGIN = "kit-catalog";

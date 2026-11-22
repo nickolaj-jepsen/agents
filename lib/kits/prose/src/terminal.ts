@@ -15,8 +15,8 @@ import {
   type Line,
   type Span,
   type Style,
-} from "../lines.ts";
-import { tokens } from "../tokens.ts";
+} from "@agents/kit-core/lines.ts";
+import { tokens } from "@agents/kit-core/tokens.ts";
 import type { ProseOptions } from "./contract.ts";
 
 const GAP = " ".repeat(tokens.gutter);

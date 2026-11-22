@@ -1,5 +1,5 @@
 /** The list's contract: rows of a line or two each under group rows, behind rails. No host imports. */
-import type { Button } from "../buttons/contract.ts";
+import type { Button } from "@agents/kit-buttons/contract.ts";
 
 /**
  * What a row is set to: left alone (`○`), chosen (`●`, in the accent) or set aside (`–`, the

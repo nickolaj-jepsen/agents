@@ -1,7 +1,7 @@
 /** Two transcript tweaks; one failing to load must not stop the other. */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import condense from "./condense.ts";
-import gutter from "./gutter.ts";
+import condense from "./pi/condense.ts";
+import gutter from "./pi/gutter.ts";
 
 export default function (pi: ExtensionAPI) {
   for (const feature of [gutter, condense]) {

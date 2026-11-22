@@ -10,8 +10,8 @@ import {
   tailOf,
   step as stepForm,
   view as viewOf,
-} from "../core/forms";
-import { rowOf } from "./terminal";
+} from "./lib/forms";
+import { rowOf } from "./claude/terminal";
 import {
   closingRow,
   controlBar,
@@ -21,8 +21,8 @@ import {
   entryLetter,
   writeLetter,
   type RoundActions,
-} from "./transcript";
-import type { Action, Current, Editing, Entry, Held, RoundEditor, View } from "./types.d.ts";
+} from "./claude/transcript";
+import type { Action, Current, Editing, Entry, Held, RoundEditor, View } from "./claude/types.d.ts";
 import {
   actionBar,
   choice,
@@ -42,7 +42,7 @@ import {
   type Action as ActionSpec,
   type ChoiceOption,
   type ListItem,
-} from "./ui";
+} from "@agents/kit-legacy/claude/ui.tsx";
 
 const PLUGIN = "answer";
 const WRITE = "write";
@@ -177,7 +177,7 @@ async function leave($: EngineInterface, to: (shown: number) => Action) {
 }
 
 /** Opens a field and hands it the ring: a note under its answer, or the write-in. */
-async function ask($: EngineInterface, editing: typeof WRITE | typeof NOTE) {
+async function askAbout($: EngineInterface, editing: typeof WRITE | typeof NOTE) {
   typed = null;
   opened++;
   await edit($, (c) => ({ ...c, editing }));
@@ -204,7 +204,7 @@ async function keepNote($: EngineInterface, text: string) {
  * The write-in opens its field.
  */
 async function choose($: EngineInterface, entry: Entry, index: number) {
-  if (entry.kind === "write") return ask($, WRITE);
+  if (entry.kind === "write") return askAbout($, WRITE);
   const c = await read($, current);
   if (!c) return;
   // A note being typed is this question's, so it is kept whichever answer is picked.
@@ -213,7 +213,7 @@ async function choose($: EngineInterface, entry: Entry, index: number) {
   // Observed, not documented: the note field takes the keys only from a ring below its place, so
   // the ring goes below first.
   await focus($, `e${index + 1}`);
-  if (await step($, { do: "pick", entry: index })) await ask($, NOTE);
+  if (await step($, { do: "pick", entry: index })) await askAbout($, NOTE);
 }
 
 /** Takes the question's recommendation, whatever it names, and goes on. */
@@ -222,7 +222,7 @@ async function accept($: EngineInterface) {
 }
 
 /** Opens the graphical form and hands it the ring. */
-async function open($: EngineInterface) {
+async function openForm($: EngineInterface) {
   const c = await read($, current);
   if (!c) return;
   await edit($, (was) => ({ ...was, isOpen: true }));
@@ -314,7 +314,7 @@ async function toggle($: EngineInterface) {
     return;
   }
   const surfaces: readonly string[] = await $.session.surfaces().catch(() => []);
-  if (!surfaces.includes("terminal")) await (c.isOpen ? close($) : open($));
+  if (!surfaces.includes("terminal")) await (c.isOpen ? close($) : openForm($));
   else if (!c.transcript) $.ui.toast("The round's message is not in the transcript to answer.");
   else {
     await $.clock.sleep(60);
@@ -1145,7 +1145,7 @@ export const register: Register = (on) => {
       next: forward,
       accept: () => accept($),
       skip: () => move($, { do: "skip" }),
-      note: () => ask($, NOTE),
+      note: () => askAbout($, NOTE),
       fill: async () => {
         const held = typed;
         const kept = held ? await step($, { do: "note", text: held.text }) : view;
@@ -1206,7 +1206,7 @@ export const register: Register = (on) => {
             icon: "question",
             tone: "neutral",
           },
-          onPress: () => open($),
+          onPress: () => openForm($),
         });
 
       // One tab per question, marked once answered, and the review: the current one filled.

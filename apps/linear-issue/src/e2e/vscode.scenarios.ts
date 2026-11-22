@@ -1,7 +1,7 @@
-import type { Turn } from "../lib/harness.ts";
-import { linearMcp } from "../lib/linear-mcp.ts";
-import type { SetupContext } from "../lib/session.ts";
-import { vscodeScenarios } from "../lib/vscode-scenario.ts";
+import type { Turn } from "@agents/drive/lib/harness.ts";
+import { linearMcp } from "@agents/drive/lib/linear-mcp.ts";
+import type { SetupContext } from "@agents/drive/lib/session.ts";
+import { vscodeScenarios } from "@agents/drive/lib/vscode-scenario.ts";
 
 const NOTE = "the sync worker ignores Retry-After headers when it backs off after a 429";
 const TITLE = "Honor Retry-After when the sync worker backs off after a 429";

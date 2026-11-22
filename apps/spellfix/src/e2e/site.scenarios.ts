@@ -1,6 +1,6 @@
-import type { Turn } from "../lib/harness.ts";
-import type { Step } from "../lib/scenario.ts";
-import { poster, site, slow } from "../lib/site.ts";
+import type { Turn } from "@agents/drive/lib/harness.ts";
+import type { Step } from "@agents/drive/lib/scenario.ts";
+import { poster, site, slow } from "@agents/drive/lib/site.ts";
 
 const DRAFT = "Can you teh quick brwon fox jump form the fence and fix the recieve handler";
 

@@ -1,6 +1,6 @@
-import { region, type Region } from "../lib/screen.ts";
-import { scenarios, type Scenario, type Step } from "../lib/scenario.ts";
-import type { Session } from "../lib/session.ts";
+import { region, type Region } from "@agents/drive/lib/screen.ts";
+import { scenarios, type Scenario, type Step } from "@agents/drive/lib/scenario.ts";
+import type { Session } from "@agents/drive/lib/session.ts";
 import { says } from "./fixture.ts";
 
 const keys = (...names: string[]): Step[] => names.map((press) => ({ press }));

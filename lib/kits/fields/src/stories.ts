@@ -1,5 +1,5 @@
 /** The fields' stories. No host imports. */
-import type { KitStory } from "../stories.ts";
+import type { KitStory } from "@agents/kit-core/stories.ts";
 import { fieldHit, type Field } from "./contract.ts";
 import { fields } from "./terminal.ts";
 

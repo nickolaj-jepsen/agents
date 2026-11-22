@@ -165,8 +165,8 @@ settings:
 catalogs:
   default:
     '@anthropic-ai/claude-code':
-      specifier: 2.1.328
-      version: 2.1.328
+      specifier: 2.1.327
+      version: 2.1.327
     '@earendil-works/pi-agent-core':
       specifier: 1.5.2
       version: 1.5.2
@@ -185,6 +185,9 @@ catalogs:
     '@types/node':
       specifier: ^26.6.6
       version: 26.6.6
+    tsdown:
+      specifier: ^0.23.7
+      version: 0.23.7
     typebox:
       specifier: 1.4.7
       version: 1.4.7
@@ -209,15 +212,696 @@ importers:
         specifier: 2.11.13
         version: 2.11.13
 
-  e2e:
-    dependencies:
-      '@agents/kit':
+  apps/answer:
+    devDependencies:
+      '@agents/build':
         specifier: workspace:*
-        version: link:../kit
+        version: link:../../lib/tools/build
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../lib/tools/drive
+      '@agents/kit-buttons':
+        specifier: workspace:*
+        version: link:../../lib/kits/buttons
+      '@agents/kit-card':
+        specifier: workspace:*
+        version: link:../../lib/kits/card
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../../lib/kits/core
+      '@agents/kit-legacy':
+        specifier: workspace:*
+        version: link:../../lib/kits/legacy
+      '@anthropic-ai/claude-code':
+        specifier: 'catalog:'
+        version: 2.1.327
+      '@earendil-works/pi-agent-core':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-ai':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-coding-agent':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-tui':
+        specifier: 'catalog:'
+        version: 1.5.2
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.7(typescript@7.0.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+      yaml:
+        specifier: 'catalog:'
+        version: 2.9.1
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.7
+
+  apps/claude-compat:
+    devDependencies:
+      '@agents/build':
+        specifier: workspace:*
+        version: link:../../lib/tools/build
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../lib/tools/drive
+      '@earendil-works/pi-ai':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-coding-agent':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.7(typescript@7.0.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  apps/docfix:
+    devDependencies:
+      '@agents/build':
+        specifier: workspace:*
+        version: link:../../lib/tools/build
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../lib/tools/drive
+      '@agents/kit-buttons':
+        specifier: workspace:*
+        version: link:../../lib/kits/buttons
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../../lib/kits/core
+      '@agents/kit-detail':
+        specifier: workspace:*
+        version: link:../../lib/kits/detail
+      '@agents/kit-frame':
+        specifier: workspace:*
+        version: link:../../lib/kits/frame
+      '@agents/kit-legacy':
+        specifier: workspace:*
+        version: link:../../lib/kits/legacy
+      '@agents/kit-list':
+        specifier: workspace:*
+        version: link:../../lib/kits/list
+      '@anthropic-ai/claude-code':
+        specifier: 'catalog:'
+        version: 2.1.327
+      '@earendil-works/pi-ai':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-coding-agent':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-tui':
+        specifier: 'catalog:'
+        version: 1.5.2
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.7(typescript@7.0.2)
+      typebox:
+        specifier: 'catalog:'
+        version: 1.4.7
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  apps/exa:
+    devDependencies:
+      '@agents/build':
+        specifier: workspace:*
+        version: link:../../lib/tools/build
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../lib/tools/drive
+      '@earendil-works/pi-coding-agent':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.7(typescript@7.0.2)
+      typebox:
+        specifier: 'catalog:'
+        version: 1.4.7
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  apps/git-menu:
+    devDependencies:
+      '@agents/build':
+        specifier: workspace:*
+        version: link:../../lib/tools/build
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../lib/tools/drive
+      '@agents/kit-legacy':
+        specifier: workspace:*
+        version: link:../../lib/kits/legacy
+      '@anthropic-ai/claude-code':
+        specifier: 'catalog:'
+        version: 2.1.327
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.7(typescript@7.0.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  apps/image-preview:
+    devDependencies:
+      '@agents/build':
+        specifier: workspace:*
+        version: link:../../lib/tools/build
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../lib/tools/drive
+      '@agents/kit-legacy':
+        specifier: workspace:*
+        version: link:../../lib/kits/legacy
+      '@anthropic-ai/claude-code':
+        specifier: 'catalog:'
+        version: 2.1.327
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.7(typescript@7.0.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  apps/linear-issue:
+    devDependencies:
+      '@agents/build':
+        specifier: workspace:*
+        version: link:../../lib/tools/build
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../lib/tools/drive
+      '@agents/kit-buttons':
+        specifier: workspace:*
+        version: link:../../lib/kits/buttons
+      '@agents/kit-card':
+        specifier: workspace:*
+        version: link:../../lib/kits/card
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../../lib/kits/core
+      '@agents/kit-fields':
+        specifier: workspace:*
+        version: link:../../lib/kits/fields
+      '@agents/kit-frame':
+        specifier: workspace:*
+        version: link:../../lib/kits/frame
+      '@agents/kit-legacy':
+        specifier: workspace:*
+        version: link:../../lib/kits/legacy
+      '@agents/kit-prose':
+        specifier: workspace:*
+        version: link:../../lib/kits/prose
+      '@agents/kit-sheet':
+        specifier: workspace:*
+        version: link:../../lib/kits/sheet
+      '@anthropic-ai/claude-code':
+        specifier: 'catalog:'
+        version: 2.1.327
+      '@earendil-works/pi-ai':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-coding-agent':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-tui':
+        specifier: 'catalog:'
+        version: 1.5.2
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.7(typescript@7.0.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  apps/questions:
+    devDependencies:
+      '@agents/build':
+        specifier: workspace:*
+        version: link:../../lib/tools/build
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../lib/tools/drive
+      '@agents/kit-buttons':
+        specifier: workspace:*
+        version: link:../../lib/kits/buttons
+      '@agents/kit-card':
+        specifier: workspace:*
+        version: link:../../lib/kits/card
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../../lib/kits/core
+      '@agents/kit-frame':
+        specifier: workspace:*
+        version: link:../../lib/kits/frame
+      '@earendil-works/pi-coding-agent':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-tui':
+        specifier: 'catalog:'
+        version: 1.5.2
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.7(typescript@7.0.2)
+      typebox:
+        specifier: 'catalog:'
+        version: 1.4.7
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  apps/site:
+    dependencies:
+      '@astrojs/markdown-remark':
+        specifier: ^7.3.9
+        version: 7.3.10
+      '@fontsource-variable/source-serif-4':
+        specifier: ^5.3.1
+        version: 5.3.1
+      astro:
+        specifier: ^7.4.12
+        version: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+
+  apps/spellfix:
+    devDependencies:
+      '@agents/build':
+        specifier: workspace:*
+        version: link:../../lib/tools/build
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../lib/tools/drive
+      '@agents/kit-legacy':
+        specifier: workspace:*
+        version: link:../../lib/kits/legacy
+      '@anthropic-ai/claude-code':
+        specifier: 'catalog:'
+        version: 2.1.327
+      '@earendil-works/pi-ai':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-coding-agent':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-tui':
+        specifier: 'catalog:'
+        version: 1.5.2
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.7(typescript@7.0.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  apps/transcript-tweaks:
+    devDependencies:
+      '@agents/build':
+        specifier: workspace:*
+        version: link:../../lib/tools/build
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../lib/tools/drive
+      '@earendil-works/pi-ai':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-coding-agent':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-tui':
+        specifier: 'catalog:'
+        version: 1.5.2
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.7(typescript@7.0.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  apps/worktree:
+    devDependencies:
+      '@agents/build':
+        specifier: workspace:*
+        version: link:../../lib/tools/build
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../lib/tools/drive
+      '@earendil-works/pi-coding-agent':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.7(typescript@7.0.2)
+      typebox:
+        specifier: 'catalog:'
+        version: 1.4.7
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  lib/kits/buttons:
+    dependencies:
+      '@agents/kit-card':
+        specifier: workspace:*
+        version: link:../card
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  lib/kits/card:
+    dependencies:
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  lib/kits/catalog:
+    dependencies:
+      '@agents/kit-buttons':
+        specifier: workspace:*
+        version: link:../buttons
+      '@agents/kit-card':
+        specifier: workspace:*
+        version: link:../card
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../core
+      '@agents/kit-detail':
+        specifier: workspace:*
+        version: link:../detail
+      '@agents/kit-fields':
+        specifier: workspace:*
+        version: link:../fields
+      '@agents/kit-frame':
+        specifier: workspace:*
+        version: link:../frame
+      '@agents/kit-legacy':
+        specifier: workspace:*
+        version: link:../legacy
+      '@agents/kit-list':
+        specifier: workspace:*
+        version: link:../list
+      '@agents/kit-prose':
+        specifier: workspace:*
+        version: link:../prose
+      '@agents/kit-sheet':
+        specifier: workspace:*
+        version: link:../sheet
+    devDependencies:
+      '@agents/build':
+        specifier: workspace:*
+        version: link:../../tools/build
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../tools/drive
+      '@anthropic-ai/claude-code':
+        specifier: 'catalog:'
+        version: 2.1.327
+      '@earendil-works/pi-coding-agent':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-tui':
+        specifier: 'catalog:'
+        version: 1.5.2
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.7(typescript@7.0.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+      yaml:
+        specifier: 'catalog:'
+        version: 2.9.1
+
+  lib/kits/core:
+    devDependencies:
+      '@earendil-works/pi-coding-agent':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-tui':
+        specifier: 'catalog:'
+        version: 1.5.2
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  lib/kits/detail:
+    dependencies:
+      '@agents/kit-buttons':
+        specifier: workspace:*
+        version: link:../buttons
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../core
+      '@agents/kit-fields':
+        specifier: workspace:*
+        version: link:../fields
+      '@agents/kit-frame':
+        specifier: workspace:*
+        version: link:../frame
+      '@agents/kit-prose':
+        specifier: workspace:*
+        version: link:../prose
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  lib/kits/fields:
+    dependencies:
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  lib/kits/frame:
+    dependencies:
+      '@agents/kit-buttons':
+        specifier: workspace:*
+        version: link:../buttons
+      '@agents/kit-card':
+        specifier: workspace:*
+        version: link:../card
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  lib/kits/legacy:
+    devDependencies:
+      '@earendil-works/pi-coding-agent':
+        specifier: 'catalog:'
+        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-tui':
+        specifier: 'catalog:'
+        version: 1.5.2
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  lib/kits/list:
+    dependencies:
+      '@agents/kit-buttons':
+        specifier: workspace:*
+        version: link:../buttons
+      '@agents/kit-card':
+        specifier: workspace:*
+        version: link:../card
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  lib/kits/prose:
+    dependencies:
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  lib/kits/sheet:
+    dependencies:
+      '@agents/kit-buttons':
+        specifier: workspace:*
+        version: link:../buttons
+      '@agents/kit-card':
+        specifier: workspace:*
+        version: link:../card
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../core
+      '@agents/kit-fields':
+        specifier: workspace:*
+        version: link:../fields
+      '@agents/kit-frame':
+        specifier: workspace:*
+        version: link:../frame
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  lib/tools/build:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.7(typescript@7.0.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+      yaml:
+        specifier: 'catalog:'
+        version: 2.9.1
+
+  lib/tools/drive:
+    dependencies:
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../../kits/core
     devDependencies:
       '@anthropic-ai/claude-code':
         specifier: 'catalog:'
-        version: 2.1.328
+        version: 2.1.327
       '@earendil-works/pi-ai':
         specifier: 'catalog:'
         version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
@@ -237,472 +921,7 @@ importers:
         specifier: 'catalog:'
         version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
-  e2e/answer:
-    dependencies:
-      '@agents/e2e':
-        specifier: workspace:*
-        version: link:..
-      '@nickolaj-jepsen/answer':
-        specifier: workspace:*
-        version: link:../../plugins/answer
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  e2e/claude-compat:
-    dependencies:
-      '@agents/e2e':
-        specifier: workspace:*
-        version: link:..
-      '@nickolaj-jepsen/claude-compat':
-        specifier: workspace:*
-        version: link:../../plugins/claude-compat
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  e2e/docfix:
-    dependencies:
-      '@agents/e2e':
-        specifier: workspace:*
-        version: link:..
-      '@nickolaj-jepsen/docfix':
-        specifier: workspace:*
-        version: link:../../plugins/docfix
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  e2e/exa:
-    dependencies:
-      '@agents/e2e':
-        specifier: workspace:*
-        version: link:..
-      '@nickolaj-jepsen/exa':
-        specifier: workspace:*
-        version: link:../../plugins/exa
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  e2e/git-menu:
-    dependencies:
-      '@agents/e2e':
-        specifier: workspace:*
-        version: link:..
-      '@nickolaj-jepsen/git-menu':
-        specifier: workspace:*
-        version: link:../../plugins/git-menu
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  e2e/image-preview:
-    dependencies:
-      '@agents/e2e':
-        specifier: workspace:*
-        version: link:..
-      '@nickolaj-jepsen/image-preview':
-        specifier: workspace:*
-        version: link:../../plugins/image-preview
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  e2e/kit:
-    dependencies:
-      '@agents/e2e':
-        specifier: workspace:*
-        version: link:..
-      '@agents/kit':
-        specifier: workspace:*
-        version: link:../../kit
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  e2e/linear-issue:
-    dependencies:
-      '@agents/e2e':
-        specifier: workspace:*
-        version: link:..
-      '@nickolaj-jepsen/linear-issue':
-        specifier: workspace:*
-        version: link:../../plugins/linear-issue
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  e2e/questions:
-    dependencies:
-      '@agents/e2e':
-        specifier: workspace:*
-        version: link:..
-      '@nickolaj-jepsen/questions':
-        specifier: workspace:*
-        version: link:../../plugins/questions
-    devDependencies:
-      '@earendil-works/pi-coding-agent':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  e2e/spellfix:
-    dependencies:
-      '@agents/e2e':
-        specifier: workspace:*
-        version: link:..
-      '@nickolaj-jepsen/spellfix':
-        specifier: workspace:*
-        version: link:../../plugins/spellfix
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  e2e/transcript-tweaks:
-    dependencies:
-      '@agents/e2e':
-        specifier: workspace:*
-        version: link:..
-      '@nickolaj-jepsen/transcript-tweaks':
-        specifier: workspace:*
-        version: link:../../plugins/transcript-tweaks
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  e2e/worktree:
-    dependencies:
-      '@agents/e2e':
-        specifier: workspace:*
-        version: link:..
-      '@nickolaj-jepsen/worktree':
-        specifier: workspace:*
-        version: link:../../plugins/worktree
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  kit:
-    devDependencies:
-      '@earendil-works/pi-coding-agent':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
-      '@earendil-works/pi-tui':
-        specifier: 'catalog:'
-        version: 1.5.2
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
-
-  plugins/answer:
-    devDependencies:
-      '@agents/kit':
-        specifier: workspace:*
-        version: link:../../kit
-      '@anthropic-ai/claude-code':
-        specifier: 'catalog:'
-        version: 2.1.328
-      '@earendil-works/pi-agent-core':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
-      '@earendil-works/pi-ai':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
-      '@earendil-works/pi-coding-agent':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
-      '@earendil-works/pi-tui':
-        specifier: 'catalog:'
-        version: 1.5.2
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
-      yaml:
-        specifier: 'catalog:'
-        version: 2.9.1
-      zod:
-        specifier: 'catalog:'
-        version: 4.6.7
-
-  plugins/claude-compat:
-    devDependencies:
-      '@earendil-works/pi-ai':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
-      '@earendil-works/pi-coding-agent':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  plugins/docfix:
-    devDependencies:
-      '@agents/kit':
-        specifier: workspace:*
-        version: link:../../kit
-      '@anthropic-ai/claude-code':
-        specifier: 'catalog:'
-        version: 2.1.328
-      '@earendil-works/pi-ai':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
-      '@earendil-works/pi-coding-agent':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
-      '@earendil-works/pi-tui':
-        specifier: 'catalog:'
-        version: 1.5.2
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typebox:
-        specifier: 'catalog:'
-        version: 1.4.7
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
-
-  plugins/exa:
-    devDependencies:
-      '@earendil-works/pi-coding-agent':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typebox:
-        specifier: 'catalog:'
-        version: 1.4.7
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
-
-  plugins/git-menu:
-    devDependencies:
-      '@anthropic-ai/claude-code':
-        specifier: 'catalog:'
-        version: 2.1.328
-
-  plugins/image-preview:
-    devDependencies:
-      '@anthropic-ai/claude-code':
-        specifier: 'catalog:'
-        version: 2.1.328
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
-
-  plugins/linear-issue:
-    devDependencies:
-      '@agents/kit':
-        specifier: workspace:*
-        version: link:../../kit
-      '@anthropic-ai/claude-code':
-        specifier: 'catalog:'
-        version: 2.1.328
-      '@earendil-works/pi-ai':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
-      '@earendil-works/pi-coding-agent':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
-      '@earendil-works/pi-tui':
-        specifier: 'catalog:'
-        version: 1.5.2
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
-
-  plugins/questions:
-    devDependencies:
-      '@agents/kit':
-        specifier: workspace:*
-        version: link:../../kit
-      '@earendil-works/pi-coding-agent':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
-      '@earendil-works/pi-tui':
-        specifier: 'catalog:'
-        version: 1.5.2
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typebox:
-        specifier: 'catalog:'
-        version: 1.4.7
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  plugins/spellfix:
-    devDependencies:
-      '@anthropic-ai/claude-code':
-        specifier: 'catalog:'
-        version: 2.1.328
-      '@earendil-works/pi-ai':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
-      '@earendil-works/pi-coding-agent':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
-      '@earendil-works/pi-tui':
-        specifier: 'catalog:'
-        version: 1.5.2
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
-
-  plugins/transcript-tweaks:
-    devDependencies:
-      '@earendil-works/pi-ai':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
-      '@earendil-works/pi-coding-agent':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
-      '@earendil-works/pi-tui':
-        specifier: 'catalog:'
-        version: 1.5.2
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  plugins/worktree:
-    devDependencies:
-      '@earendil-works/pi-coding-agent':
-        specifier: 'catalog:'
-        version: 1.5.2(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(ws@8.23.0)(zod@4.6.7)
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typebox:
-        specifier: 'catalog:'
-        version: 1.4.7
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-
-  scripts:
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.6
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
-      yaml:
-        specifier: 'catalog:'
-        version: 2.9.1
-
-  site:
-    dependencies:
-      '@astrojs/markdown-remark':
-        specifier: ^7.3.9
-        version: 7.3.10
-      '@fontsource-variable/source-serif-4':
-        specifier: ^5.3.1
-        version: 5.3.1
-      astro:
-        specifier: ^7.4.12
-        version: 7.4.13(@astrojs/markdown-remark@7.3.10)(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
-
-  tools:
+  lib/tools/lint:
     devDependencies:
       oxfmt:
         specifier: 0.79.0
@@ -716,52 +935,52 @@ importers:
 
 packages:
 
-  '@anthropic-ai/claude-code-darwin-arm64@2.1.328':
-    resolution: {integrity: sha512-BIKLsj2MTaXfWJBE+Wr5ismdpTD0Oju5VmSix8ybBpe4rthXnrrhfMI8iikRQ4Qln5rlcpJyKjVf6CgrZdQASw==}
+  '@anthropic-ai/claude-code-darwin-arm64@2.1.327':
+    resolution: {integrity: sha512-LAK6PYjIZLxLMqhjj/R4bexyKqItk8RXtyUpIHPpgs3opSBzNb7AszbbN3hfdyoyf0VacA2hThVsnDkkpz9R7g==}
     cpu: [arm64]
     os: [darwin]
 
-  '@anthropic-ai/claude-code-darwin-x64@2.1.328':
-    resolution: {integrity: sha512-SuFIh/OGu/qCCAw9aGldbpcu1OZMozDjZVZGfM6T8Cek+40Lg2fOpB9NHKi71nPHOznjn01xLuZ2HuZboodn6A==}
+  '@anthropic-ai/claude-code-darwin-x64@2.1.327':
+    resolution: {integrity: sha512-QNGpfnwjftqzx1otsZjD9f+PAyo7PBomfnB+yNBgZ911o/1ERu9S5n5oNL3jeJTGV2pLbrVRCx/yg2X4/zkqOA==}
     cpu: [x64]
     os: [darwin]
 
-  '@anthropic-ai/claude-code-linux-arm64-musl@2.1.328':
-    resolution: {integrity: sha512-7WgJJKqF3+ZHug9afhVfiEouUME1Y4dApnwqXDK0N06ipIyTPmE7Mqi53FfmUZI7In651SI4ZN7A14xGoe3M2w==}
+  '@anthropic-ai/claude-code-linux-arm64-musl@2.1.327':
+    resolution: {integrity: sha512-zVRKZ1IdMOvm7M4Y0FIuJY1g3BWnpGVUOv8Fu8kGHYk0WbkES1BkuJG0O/6Jzd+LhkadEmBypz0odbGqvoqD+w==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@anthropic-ai/claude-code-linux-arm64@2.1.328':
-    resolution: {integrity: sha512-zeWsClzx/rli8q6RsngKisu5BnuZ41J7Htp0qgsdZomaJCINiksf+mewQ/gyaylKajBZCoE9Z8R+OkLMjIkJig==}
+  '@anthropic-ai/claude-code-linux-arm64@2.1.327':
+    resolution: {integrity: sha512-vI4ygSwj6e8f0hWzM2sRxe6r2OvQU35HgoIZtx0rkvu574lxCFUUKUpn9hgWd6FwwMFz2gQyRhwQD7lPmTgW9A==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@anthropic-ai/claude-code-linux-x64-musl@2.1.328':
-    resolution: {integrity: sha512-JiYOp70eNGo+NQGwfPOyzupUf4rVjXd2cXpyF1elbp97mR22tagM7qlCQ/8jGrKSce82/ZKkyXQo39IsQjnNLQ==}
+  '@anthropic-ai/claude-code-linux-x64-musl@2.1.327':
+    resolution: {integrity: sha512-GhxvaKxZSNSFOyGP3Dwm+QoHz2h5TMmONN+GXb4xH4tbWT5AnvoCT6P62r342fTdGoonVEigEH1bnkcALNzLOw==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@anthropic-ai/claude-code-linux-x64@2.1.328':
-    resolution: {integrity: sha512-KuzL+dBHgDCFTHJxwW+xuBJdVKfBsesGx2BBcTOG9sYDGoAD7b1hUV8rsTS4xjoJsB2SmeGraGjBiFuhrYuC9w==}
+  '@anthropic-ai/claude-code-linux-x64@2.1.327':
+    resolution: {integrity: sha512-uJ24I+t47cpQjeo31ZrHepsFQ8QUsLjCxmDxLshMjYHEtoxhQdgKc4iuViQDaKpFqn3puR85gwHlLj4e7s+1iQ==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@anthropic-ai/claude-code-win32-arm64@2.1.328':
-    resolution: {integrity: sha512-yQUZOl8TzR8POwOede1j/fAkZNOmgf9p2CJ/cZGD7JW5YCLQkyRE9o8yaMJXzi1u+mSchYGFPbNZ+mIjWPZWAQ==}
+  '@anthropic-ai/claude-code-win32-arm64@2.1.327':
+    resolution: {integrity: sha512-NRHSCyQEVLxhOHSP/nuiZwdTABGGICNiUfiJe2Z2BDOcodR6kCg99rYuLlXoyws6SLI50tzgjZLDL9c9KeZkrw==}
     cpu: [arm64]
     os: [win32]
 
-  '@anthropic-ai/claude-code-win32-x64@2.1.328':
-    resolution: {integrity: sha512-mnO+OWOHAOE8ESMvVwwuyup79cdNgJ9zVJBJ4cn5o6iPUAl5padlYEfnPR1Pjlpy17UOUyMmo4hgBXg6PAs/xA==}
+  '@anthropic-ai/claude-code-win32-x64@2.1.327':
+    resolution: {integrity: sha512-iOg2eIuMxvTiqIjS0rl//2iWU4ziZ6hyFzzvr/1cxNTTUH9miYNehzZaAni8chj3tB2RnQp81B1NZW3CnveuSQ==}
     cpu: [x64]
     os: [win32]
 
-  '@anthropic-ai/claude-code@2.1.328':
-    resolution: {integrity: sha512-QJTDDUhzx2Wtnoone+TULvhtxqX9KhUpgt4S96Y2eyohtZK41LWXwe7fWXcR1JnT0Ujs3AfpPTk5BZgwCyZ8pw==}
+  '@anthropic-ai/claude-code@2.1.327':
+    resolution: {integrity: sha512-QToNtikIupqVMsxRUdDHUP0nS/uv3Wc43vcbT8YNRo7FtQOE9MvYLqPLQPoVhJ2DQQVPOFMB5PkaBNJbnNYeVg==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
@@ -1900,6 +2119,9 @@ packages:
   '@protobufjs/utf8@1.1.2':
     resolution: {integrity: sha512-b1UQwcEZ4yCnMCD8DAL1VlbvBJE9/IX4FTIp7BG1xYpf29SLazLSrqUkj4w7Y5y7cCVP6E5tcqqcI0xemPkHug==}
 
+  '@quansync/fs@1.1.0':
+    resolution: {integrity: sha512-qAPG/t3HqML1TlN7sY/pTbEjzFVAKsMjNNMGheyDosro+kT4iw2KCUoHcVdmliwWjorm4elZbgNQyU2eD97eDg==}
+
   '@rolldown/binding-android-arm-eabi@1.2.19':
     resolution: {integrity: sha512-e+Ebe0WT+9tbXmNKPIiC8YrWAHYwug3m6i4p3rZGGulfZri1jtI4HslT+OZnFf/OIHowWF71DTlHwXBP2SiA7A==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -2397,6 +2619,36 @@ packages:
     resolution: {integrity: sha512-oqTYAcObqTlg8owulxFTqiaJkfv2SHsxxxz9Wg4krJAHVzGWlZsU8tAB30R6ow+aHrfv4Kub6WQ8u04NWVPUpA==}
     engines: {node: '>=18'}
 
+  '@yuku-toolchain/darwin-arm64@0.28.1':
+    resolution: {integrity: sha512-xMtZUwiGvJH90ogLjRrnG5+YEhinKti8qMPF18bd5z0ahSoaHWyBoe16evT7cSUxid0JEaZvh6H3daDPwDw4+g==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@yuku-toolchain/darwin-x64@0.28.1':
+    resolution: {integrity: sha512-aI60ScUkZgVEX5GHZfpiAAfTb9e7L6NUxfSU7Ucn+34GyrtswvBapEntbYKPzUuy5ubtVcD9vSWgptm/mlyTxQ==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@yuku-toolchain/linux-arm64@0.28.1':
+    resolution: {integrity: sha512-JYDBUtSI4CHfR9VxSvoJvcD8MS4qhuOk4MAMAqoouHq9Hky/fQbvGkN1VxTiwRtEcYtMp3JUs7vtsSZmbGk4lw==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@yuku-toolchain/linux-x64@0.28.1':
+    resolution: {integrity: sha512-lEWh0UkCr195bQj4DNlpww/B7hPeuotE0hpKbC2oz4STHqYxCEoaMzNOf9vr5Ydjwr9egEDepA0XRsu5xP+z8w==}
+    cpu: [x64]
+    os: [linux]
+
+  '@yuku-toolchain/win32-arm64@0.28.1':
+    resolution: {integrity: sha512-CUiumoJIwNiH9Utm5SbG5GaEaJRUatEXgG5HcPj2yEWh4kxTmEbigB346C3HEmtc+zbRLY0T0XsFO5RGSZaj2A==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@yuku-toolchain/win32-x64@0.28.1':
+    resolution: {integrity: sha512-CSTUi/ya58q2PuWTpk//BNSpXgOz7ol45T+SDuU7QfD/vN1FcLjSh99KDQzLf4AbIy43ORUw5UFehhfMGPNj9w==}
+    cpu: [x64]
+    os: [win32]
+
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
     peerDependencies:
@@ -2552,6 +2804,10 @@ packages:
 
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
+
+  cac@7.1.1:
+    resolution: {integrity: sha512-8zc+h51HxpodKsA7L4PpBNd+9qlrfuUcyUDE5a793BJfN4NZgwk7v9NmrY3ptZ+Sk0+ToigxSzkb47AsEgyizw==}
+    engines: {node: '>=20.19.0'}
 
   call-bind-apply-helpers@1.0.2:
     resolution: {integrity: sha512-Sp1ablJ0ivDkSzjcaJdxEunN5/XvksFJ2sMBFfq6x0ryhQV/2b/KwFe21cMpmHtPOSij8K99/wSfoEuTObmuMQ==}
@@ -2746,12 +3002,25 @@ packages:
     resolution: {integrity: sha512-2QF/g9/zTaPDc3BjNcVTGoBbXBgYfMTTceLaYcFJ/W9kggFUkhxD/hMEeuLKbugyef9SqAx8cpgwlIP/jinUTA==}
     engines: {node: '>=4'}
 
+  dts-resolver@3.0.0:
+    resolution: {integrity: sha512-1T1f+z+4tl9XD+m+0HBgWoL/nm0bOIffyWaUuUSBlFg/86IWvfx+wjNaO/ybU0AJzG9/Mi5hBUgGV6zCmWEN7Q==}
+    engines: {node: ^22.18.0 || >=24.0.0}
+    peerDependencies:
+      oxc-resolver: '>=11.0.0'
+    peerDependenciesMeta:
+      oxc-resolver:
+        optional: true
+
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
 
   ecdsa-sig-formatter@1.0.11:
     resolution: {integrity: sha512-nagl3RYrbNv6kQkeJIpt6NJZy8twLB/2vtz6yN9Z4vRKHN4/QZJIEbqohALSgwKdnksuY3k5Addp5lg8sVoVcQ==}
+
+  empathic@2.1.0:
+    resolution: {integrity: sha512-AnfC1ATldl49/cvZdLPDjBfrRNwbDO05aibiOtzQu3qtlbJtomNLhF30HEtn/7iBz50dlMECqATo3fG0LrdEgw==}
+    engines: {node: '>=14'}
 
   end-of-stream@1.4.5:
     resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
@@ -3034,6 +3303,9 @@ packages:
   highlight.js@10.7.3:
     resolution: {integrity: sha512-tzcUFauisWKNHaRkN4Wjl/ZA07gENAjFl3J/c480dprkGTg5EQstgaNFqBfUqCq54kZRIEcreTsAgF/m2quD7A==}
 
+  hookable@6.1.2:
+    resolution: {integrity: sha512-+abwxtiEA52GCVIsQqut3S/uKTbUwYIp4Pe/vv+6py5XiXBCqMZHg6pA6Y5qhgLSEys0/cYuPbO0z1QFj5ZCmg==}
+
   hosted-git-info@9.0.3:
     resolution: {integrity: sha512-Hc+ghLoSt6QaYZUv0WBiIvmMDZuZZ7oaDvdH8MbfOO4lOsxdXLEvuC6ePoGs9H1X9oCLyq6+NVN0MKqD+ydxyg==}
     engines: {node: ^20.17.0 || >=22.9.0}
@@ -3065,6 +3337,10 @@ packages:
   ignore@7.0.8:
     resolution: {integrity: sha512-YYNsSlXBjMk92SKnkwvB5LOVSa6OznlFUGcsvrFgNJbJCd0M1XKeFVRc8ZByeCqz32FivYNHJVooLmdqrmvp/Q==}
     engines: {node: '>= 4'}
+
+  import-without-cache@0.4.1:
+    resolution: {integrity: sha512-vXoV9PjKHEednCUu01e98TkImxy67e3BJXbTIOmIq4Hyzw3IAwYRcuPkfeTzJzwyyts4kjuA73x+pWJLc4f86A==}
+    engines: {node: ^22.18.0 || >=24.0.0}
 
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
@@ -3670,6 +3946,9 @@ packages:
       kerberos:
         optional: true
 
+  quansync@1.0.0:
+    resolution: {integrity: sha512-5xZacEEufv3HSTPQuchrvV6soaiACMFnq1H8wkVioctoH3TRha9Sz66lOxRwPK/qZj7HPiSveih9yAyh98gvqA==}
+
   quickjs-wasi@3.6.2:
     resolution: {integrity: sha512-FCqGtGOrMgzUiIrMNMA2YnsOxCNwo31dzqXvclXUC6xeT35NJLKXQJsvbeCTjvoFAwZgEAPg8U6+KAPDGXn8Mg==}
 
@@ -3760,6 +4039,28 @@ packages:
   roarr@2.15.4:
     resolution: {integrity: sha512-CHhPh+UNHD2GTXNYhPWLnU8ONHdI+5DI+4EYIAOaiD63rHeYlZvyh8P+in5999TTSFgUYuKUAjzRI4mdh/p+2A==}
     engines: {node: '>=8.0'}
+
+  rolldown-plugin-dts@0.30.2:
+    resolution: {integrity: sha512-Q3wRlwawifZeN1llb1BaeZfimmJMF/WHzm7z5ieZ8g2CWHQM0gvVWLYPbgBglsXJqcd405gc+3LS2NzSevbYNQ==}
+    engines: {node: ^22.18.0 || ^24.11.0 || >=26.0.0}
+    peerDependencies:
+      '@volar/typescript': ~2.4.0
+      '@vue/language-core': ~3.2.0 || ~3.3.0
+      rolldown: ^1.2.0
+      tsrs: '*'
+      typescript: ^5.0.0 || ^6.0.0 || ~7.0.0 || ~7.1.0-0
+      vue-tsc: ~3.2.0 || ~3.3.0
+    peerDependenciesMeta:
+      '@volar/typescript':
+        optional: true
+      '@vue/language-core':
+        optional: true
+      tsrs:
+        optional: true
+      typescript:
+        optional: true
+      vue-tsc:
+        optional: true
 
   rolldown@1.2.19:
     resolution: {integrity: sha512-QIiV1J9d0pzN4jeeTH4sjPy0AZ6cAy2cG0ExeoE1+U8Rvj+hR3gYkokx0YbeUNGlZqiQJJ2utcETe0oKXwzsuA==}
@@ -3959,6 +4260,40 @@ packages:
   ts-algebra@2.0.0:
     resolution: {integrity: sha512-FPAhNPFMrkwz76P7cdjdmiShwMynZYN6SgOujD1urY4oNm80Ou9oMdmbR45LotcKOXoy7wSmHkRFE6Mxbrhefw==}
 
+  tsdown@0.23.7:
+    resolution: {integrity: sha512-w9nmWyEimfqQ7/HpVeKTldAeBvWGXiaWyNP7xaxSrr0GhKxsngEyTWqk1nOruRqvqRSkdpMMkpV2BcoWfLB4Uw==}
+    engines: {node: ^22.18.0 || ^24.11.0 || >=26.0.0}
+    hasBin: true
+    peerDependencies:
+      '@arethetypeswrong/core': ^0.18.1
+      '@tsdown/css': 0.23.7
+      '@tsdown/exe': 0.23.7
+      '@vitejs/devtools': '*'
+      publint: ^0.3.8
+      tsx: '*'
+      typescript: ^5.0.0 || ^6.0.0 || ^7.0.0
+      unplugin-unused: '>=0.5.0'
+      unrun: '*'
+    peerDependenciesMeta:
+      '@arethetypeswrong/core':
+        optional: true
+      '@tsdown/css':
+        optional: true
+      '@tsdown/exe':
+        optional: true
+      '@vitejs/devtools':
+        optional: true
+      publint:
+        optional: true
+      tsx:
+        optional: true
+      typescript:
+        optional: true
+      unplugin-unused:
+        optional: true
+      unrun:
+        optional: true
+
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
@@ -4000,6 +4335,9 @@ packages:
 
   unbzip2-stream@1.4.3:
     resolution: {integrity: sha512-mlExGW4w71ebDJviH16lQLtZS32VKqsSfk80GCfUlwT/4/hNRFsoscrF/c++9xinkMzECL1uL9DDwXqFWkruPg==}
+
+  unconfig-core@7.5.0:
+    resolution: {integrity: sha512-Su3FauozOGP44ZmKdHy2oE6LPjk51M/TRRjHv2HNCWiDvfvCoxC2lno6jevMA91MYAdCdwP05QnWdWpSbncX/w==}
 
   uncrypto@0.1.3:
     resolution: {integrity: sha512-Ql87qFHB3s/De2ClA9e0gsnS6zXG27SkTiSJwjCc9MebbfapQfuPzumMIUMi38ezPZVNFcHI9sUIepeQfw8J8Q==}
@@ -4286,6 +4624,15 @@ packages:
     resolution: {integrity: sha512-4LCcse/U2MHZ63HAJVE+v71o7yOdIe4cZ70Wpf8D/IyjDKYQLV5GD46B+hSTjJsvV5PztjvHoU580EftxjDZFQ==}
     engines: {node: '>=12.20'}
 
+  yuku@0.28.1:
+    resolution: {integrity: sha512-l899L8rSywcq9OLHf8JNQKpgyrBUL7UNJ7JqefoSVy0oYaFpdf3HoF72EVQFNWYr9HqMw0nGw1r1DefNujOnLQ==}
+    engines: {node: '>=16.4.0'}
+    peerDependencies:
+      '@yuku-toolchain/wasm': 0.28.1
+    peerDependenciesMeta:
+      '@yuku-toolchain/wasm':
+        optional: true
+
   zod@4.6.7:
     resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
@@ -4294,40 +4641,40 @@ packages:
 
 snapshots:
 
-  '@anthropic-ai/claude-code-darwin-arm64@2.1.328':
+  '@anthropic-ai/claude-code-darwin-arm64@2.1.327':
     optional: true
 
-  '@anthropic-ai/claude-code-darwin-x64@2.1.328':
+  '@anthropic-ai/claude-code-darwin-x64@2.1.327':
     optional: true
 
-  '@anthropic-ai/claude-code-linux-arm64-musl@2.1.328':
+  '@anthropic-ai/claude-code-linux-arm64-musl@2.1.327':
     optional: true
 
-  '@anthropic-ai/claude-code-linux-arm64@2.1.328':
+  '@anthropic-ai/claude-code-linux-arm64@2.1.327':
     optional: true
 
-  '@anthropic-ai/claude-code-linux-x64-musl@2.1.328':
+  '@anthropic-ai/claude-code-linux-x64-musl@2.1.327':
     optional: true
 
-  '@anthropic-ai/claude-code-linux-x64@2.1.328':
+  '@anthropic-ai/claude-code-linux-x64@2.1.327':
     optional: true
 
-  '@anthropic-ai/claude-code-win32-arm64@2.1.328':
+  '@anthropic-ai/claude-code-win32-arm64@2.1.327':
     optional: true
 
-  '@anthropic-ai/claude-code-win32-x64@2.1.328':
+  '@anthropic-ai/claude-code-win32-x64@2.1.327':
     optional: true
 
-  '@anthropic-ai/claude-code@2.1.328':
+  '@anthropic-ai/claude-code@2.1.327':
     optionalDependencies:
-      '@anthropic-ai/claude-code-darwin-arm64': 2.1.328
-      '@anthropic-ai/claude-code-darwin-x64': 2.1.328
-      '@anthropic-ai/claude-code-linux-arm64': 2.1.328
-      '@anthropic-ai/claude-code-linux-arm64-musl': 2.1.328
-      '@anthropic-ai/claude-code-linux-x64': 2.1.328
-      '@anthropic-ai/claude-code-linux-x64-musl': 2.1.328
-      '@anthropic-ai/claude-code-win32-arm64': 2.1.328
-      '@anthropic-ai/claude-code-win32-x64': 2.1.328
+      '@anthropic-ai/claude-code-darwin-arm64': 2.1.327
+      '@anthropic-ai/claude-code-darwin-x64': 2.1.327
+      '@anthropic-ai/claude-code-linux-arm64': 2.1.327
+      '@anthropic-ai/claude-code-linux-arm64-musl': 2.1.327
+      '@anthropic-ai/claude-code-linux-x64': 2.1.327
+      '@anthropic-ai/claude-code-linux-x64-musl': 2.1.327
+      '@anthropic-ai/claude-code-win32-arm64': 2.1.327
+      '@anthropic-ai/claude-code-win32-x64': 2.1.327
 
   '@anthropic-ai/sdk@0.129.0(zod@4.6.7)':
     dependencies:
@@ -5405,6 +5752,10 @@ snapshots:
 
   '@protobufjs/utf8@1.1.2': {}
 
+  '@quansync/fs@1.1.0':
+    dependencies:
+      quansync: 1.0.0
+
   '@rolldown/binding-android-arm-eabi@1.2.19':
     optional: true
 
@@ -5762,6 +6113,24 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@yuku-toolchain/darwin-arm64@0.28.1':
+    optional: true
+
+  '@yuku-toolchain/darwin-x64@0.28.1':
+    optional: true
+
+  '@yuku-toolchain/linux-arm64@0.28.1':
+    optional: true
+
+  '@yuku-toolchain/linux-x64@0.28.1':
+    optional: true
+
+  '@yuku-toolchain/win32-arm64@0.28.1':
+    optional: true
+
+  '@yuku-toolchain/win32-x64@0.28.1':
+    optional: true
+
   acorn-jsx@5.3.2(acorn@8.19.0):
     dependencies:
       acorn: 8.19.0
@@ -5963,6 +6332,8 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
+  cac@7.1.1: {}
+
   call-bind-apply-helpers@1.0.2:
     dependencies:
       es-errors: 1.3.0
@@ -6152,6 +6523,8 @@ snapshots:
 
   dset@3.1.4: {}
 
+  dts-resolver@3.0.0: {}
+
   dunder-proto@1.0.1:
     dependencies:
       call-bind-apply-helpers: 1.0.2
@@ -6161,6 +6534,8 @@ snapshots:
   ecdsa-sig-formatter@1.0.11:
     dependencies:
       safe-buffer: 5.2.1
+
+  empathic@2.1.0: {}
 
   end-of-stream@1.4.5:
     dependencies:
@@ -6579,6 +6954,8 @@ snapshots:
 
   highlight.js@10.7.3: {}
 
+  hookable@6.1.2: {}
+
   hosted-git-info@9.0.3:
     dependencies:
       lru-cache: 11.5.3
@@ -6617,6 +6994,8 @@ snapshots:
   ieee754@1.2.1: {}
 
   ignore@7.0.8: {}
+
+  import-without-cache@0.4.1: {}
 
   inherits@2.0.4: {}
 
@@ -7464,6 +7843,8 @@ snapshots:
 
   proxy-agent-negotiate@1.1.0: {}
 
+  quansync@1.0.0: {}
+
   quickjs-wasi@3.6.2: {}
 
   radix3@1.1.2: {}
@@ -7626,6 +8007,19 @@ snapshots:
       json-stringify-safe: 5.0.1
       semver-compare: 1.0.0
       sprintf-js: 1.1.3
+
+  rolldown-plugin-dts@0.30.2(rolldown@1.3.3)(typescript@7.0.2):
+    dependencies:
+      dts-resolver: 3.0.0
+      get-tsconfig: 5.0.0-beta.6
+      obug: 3.0.0
+      rolldown: 1.3.3
+      yuku: 0.28.1
+    optionalDependencies:
+      typescript: 7.0.2
+    transitivePeerDependencies:
+      - '@yuku-toolchain/wasm'
+      - oxc-resolver
 
   rolldown@1.2.19:
     dependencies:
@@ -7925,6 +8319,32 @@ snapshots:
 
   ts-algebra@2.0.0: {}
 
+  tsdown@0.23.7(typescript@7.0.2):
+    dependencies:
+      cac: 7.1.1
+      defu: 6.1.7
+      empathic: 2.1.0
+      hookable: 6.1.2
+      import-without-cache: 0.4.1
+      obug: 3.0.0
+      picomatch: 4.0.7
+      rolldown: 1.3.3
+      rolldown-plugin-dts: 0.30.2(rolldown@1.3.3)(typescript@7.0.2)
+      tinyexec: 1.3.1
+      tinyglobby: 0.2.17
+      tinyps: 0.5.2
+      unconfig-core: 7.5.0
+      verkit: 0.5.0
+    optionalDependencies:
+      typescript: 7.0.2
+    transitivePeerDependencies:
+      - '@volar/typescript'
+      - '@vue/language-core'
+      - '@yuku-toolchain/wasm'
+      - oxc-resolver
+      - tsrs
+      - vue-tsc
+
   tslib@2.8.1: {}
 
   tslib@2.9.1: {}
@@ -7983,6 +8403,11 @@ snapshots:
     dependencies:
       buffer: 5.7.1
       through: 2.3.8
+
+  unconfig-core@7.5.0:
+    dependencies:
+      '@quansync/fs': 1.1.0
+      quansync: 1.0.0
 
   uncrypto@0.1.3: {}
 
@@ -8163,6 +8588,15 @@ snapshots:
       pend: 1.2.0
 
   yocto-queue@1.2.2: {}
+
+  yuku@0.28.1:
+    optionalDependencies:
+      '@yuku-toolchain/darwin-arm64': 0.28.1
+      '@yuku-toolchain/darwin-x64': 0.28.1
+      '@yuku-toolchain/linux-arm64': 0.28.1
+      '@yuku-toolchain/linux-x64': 0.28.1
+      '@yuku-toolchain/win32-arm64': 0.28.1
+      '@yuku-toolchain/win32-x64': 0.28.1
 
   zod@4.6.7: {}
 

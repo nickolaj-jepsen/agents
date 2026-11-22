@@ -1,17 +1,17 @@
 node_modules/
-# Laid by Claude Code when it loads a mod from its folder (`claude --plugin-dir`).
-plugins/*/.claude-plugin/types/
-kit/catalog/claude/.claude-plugin/types/
+# Build output (`pnpm turbo run build`); it holds the mod API types Claude Code lays when it loads a mod from its folder.
+apps/*/dist/
+lib/kits/catalog/dist/
 result
 result-*
 .direnv/
 # The site's build output and the types Astro writes.
-site/dist/
-site/.astro/
+apps/site/dist/
+apps/site/.astro/
 # Recorded, not committed: `turbo run media` writes them, as the Pages workflow does before it builds.
-site/media/
+apps/site/media/
 # The site's content model, written by `turbo run site-data` from the markdown this repo holds.
-site/data/
+apps/site/data/
 
 # Turborepo
 .turbo

@@ -8,9 +8,8 @@
         "$TURBO_ROOT$/*.md",
         "$TURBO_ROOT$/.claude-plugin/**",
         "$TURBO_ROOT$/docs/**",
-        "$TURBO_ROOT$/plugins/*/package.json",
-        "$TURBO_ROOT$/plugins/*/README.md",
-        "$TURBO_ROOT$/plugins/*/.claude-plugin/plugin.json",
+        "$TURBO_ROOT$/apps/*/package.json",
+        "$TURBO_ROOT$/apps/*/README.md",
         "$TURBO_ROOT$/skills/**",
         "!$TURBO_ROOT$/**/node_modules/**"
       ]

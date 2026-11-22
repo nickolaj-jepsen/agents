@@ -1,15 +1,18 @@
 /**
  * The Claude kit's catalogue: a scenario per story of the dev-only catalogue mod, named
- * `<component>/<state>`, each snapshot cropped to the component alone.
+ * `<component>/<state>`, each snapshot cropped to the component alone. Each kit package plays the
+ * stories of its own components (`<package>/e2e/claude.scenarios.ts`), the catalogue those of the
+ * legacy kit, all against the catalogue's build.
  */
 import { fileURLToPath } from "node:url";
-import { stageWidth, storyId, stories, type Story } from "../../kit/catalog/claude/stories.ts";
-import { gridLines, region, rowText } from "../lib/screen.ts";
-import type { Rect, Region } from "../lib/screen.ts";
-import { catalogueSizes } from "./sizes.ts";
-import { scenarios, slashCommand, type Scenario } from "../lib/scenario.ts";
+import { stageWidth, storyId, stories, type Story } from "../claude/stories.ts";
+import { gridLines, region, rowText } from "@agents/drive/lib/screen.ts";
+import type { Rect, Region } from "@agents/drive/lib/screen.ts";
+import { catalogueSizes } from "@agents/drive/lib/kit-sizes.ts";
+import { scenarios, slashCommand, type Scenario } from "@agents/drive/lib/scenario.ts";
 
-const catalog = fileURLToPath(new URL("../../kit/catalog/claude", import.meta.url));
+/** The catalogue mod, built (`pnpm turbo run build`). */
+const catalog = fileURLToPath(new URL("../../dist", import.meta.url));
 
 /** Rows to the last one with text in them, so the crop ends where the component does. */
 const trimmed = (grid: Parameters<Region>[0], r: Rect): Rect => {
@@ -51,11 +54,13 @@ const band: Region = (grid) => {
   return { x: 0, y: top, w: grid[0]?.length ?? 0, h: bottom - top + 1 };
 };
 
-export default scenarios({
-  plugin: "kit",
+/** The scenarios of `plugin` (`kit-<name>`): the stories whose component `owns` says is its. */
+export const claudeScenarios = (plugin: string, owns: (component: string) => boolean) =>
+  scenarios({
+  plugin,
   harness: "claude",
   scenarios: Object.fromEntries(
-    stories.map((s): [string, Scenario] => [
+    stories.filter((s) => owns(s.component)).map((s): [string, Scenario] => [
       storyId(s),
       {
         about: s.about,

@@ -16,27 +16,27 @@
     },
     {
       "name": "spellfix",
-      "source": "./plugins/spellfix"
+      "source": "./apps/spellfix"
     },
     {
       "name": "linear-issue",
-      "source": "./plugins/linear-issue"
+      "source": "./apps/linear-issue"
     },
     {
       "name": "git-menu",
-      "source": "./plugins/git-menu"
+      "source": "./apps/git-menu"
     },
     {
       "name": "answer",
-      "source": "./plugins/answer"
+      "source": "./apps/answer"
     },
     {
       "name": "docfix",
-      "source": "./plugins/docfix"
+      "source": "./apps/docfix"
     },
     {
       "name": "image-preview",
-      "source": "./plugins/image-preview"
+      "source": "./apps/image-preview"
     }
   ]
 }

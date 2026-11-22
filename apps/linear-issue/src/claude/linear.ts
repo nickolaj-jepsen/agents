@@ -1,7 +1,7 @@
 /** Claude Code's side of the draft: Linear through the session's MCP server, and the model beside it. */
 import type { EngineInterface } from "claude-code";
 
-import { NO_LINEAR, repoName, type Host, type Last } from "../core/draft.ts";
+import { NO_LINEAR, repoName, type Host, type Last } from "../lib/draft.ts";
 
 const LINEAR_TOOL = /^mcp__(.*linear.*)__([^_].*)$/i;
 const SERVER_WAIT_S = 10;

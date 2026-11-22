@@ -26,7 +26,7 @@ import {
   type IconName,
   type Kit,
   type Property,
-} from "./ui";
+} from "@agents/kit-legacy/claude/ui.tsx";
 
 type Els = ElementTable<"desktop">;
 

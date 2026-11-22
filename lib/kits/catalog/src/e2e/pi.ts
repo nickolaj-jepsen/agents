@@ -1,16 +1,19 @@
 /**
  * The pi kit's catalogue: a scenario per story of the dev-only catalogue; its snapshots and PNGs
- * feed `turbo run catalog`.
+ * feed `turbo run catalog`. Each kit package plays the stories of its own components
+ * (`<package>/e2e/pi.scenarios.ts`), the catalogue those of the legacy kit, all against the
+ * catalogue's build.
  */
 import { fileURLToPath } from "node:url";
-import { STAGE_AT, stageRows, stageWidth } from "../../kit/catalog/pi/stage.ts";
-import { storyId, stories, type Story } from "../../kit/catalog/pi/stories.ts";
-import { region } from "../lib/screen.ts";
-import { catalogueSizes } from "./sizes.ts";
-import { scenarios, type Scenario } from "../lib/scenario.ts";
-import type { Region } from "../lib/screen.ts";
+import { STAGE_AT, stageRows, stageWidth } from "../pi/stage.ts";
+import { storyId, stories, type Story } from "../pi/stories.ts";
+import { region } from "@agents/drive/lib/screen.ts";
+import { catalogueSizes } from "@agents/drive/lib/kit-sizes.ts";
+import { scenarios, type Scenario } from "@agents/drive/lib/scenario.ts";
+import type { Region } from "@agents/drive/lib/screen.ts";
 
-const catalog = fileURLToPath(new URL("../../kit/catalog/pi/index.ts", import.meta.url));
+/** The catalogue extension, built (`pnpm turbo run build`). */
+const catalog = fileURLToPath(new URL("../../dist", import.meta.url));
 
 const plain = {
   fg: (_c: string, t: string) => t,
@@ -34,11 +37,13 @@ const regionOf =
     return { x: STAGE_AT.col, y: STAGE_AT.row, w, h: Math.min(lines.length, stageRows(rows)) };
   };
 
-export default scenarios({
-  plugin: "kit",
+/** The scenarios of `plugin` (`kit-<name>`): the stories whose component `owns` says is its. */
+export const piScenarios = (plugin: string, owns: (component: string) => boolean) =>
+  scenarios({
+  plugin,
   harness: "pi",
   scenarios: Object.fromEntries(
-    stories.map((s): [string, Scenario] => [
+    stories.filter((s) => owns(s.component)).map((s): [string, Scenario] => [
       storyId(s),
       {
         about: s.about,

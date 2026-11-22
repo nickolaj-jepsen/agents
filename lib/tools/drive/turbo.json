@@ -6,7 +6,7 @@
       "inputs": [
         "*",
         "lib/**",
-        "answer/fixture.ts",
+        "$TURBO_ROOT$/apps/answer/src/e2e/fixture.ts",
         "$TURBO_ROOT$/tsconfig.base.json",
         "$TURBO_ROOT$/tsconfig.base.node.json"
       ]

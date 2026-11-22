@@ -6,7 +6,7 @@
 import type { On } from "claude-code";
 import { expect, test } from "claude-code/testing";
 import type { Engine, Mounted } from "claude-code/testing";
-import { expectNative } from "./checks";
+import { expectNative } from "@agents/kit-legacy/claude/checks.tsx";
 
 const ROOT = "/repo";
 const DIR = `${ROOT}/.agents/store/docfix`;

@@ -30,10 +30,10 @@ import {
   wordDiff,
   withExtras,
   withoutWords,
-} from "../core/spellfix.ts";
-import type { Extra, Found, Miss, Splice, Verdict } from "../core/spellfix.ts";
-import { type Bridge, type Draft, followEditor } from "./editor.ts";
-import { sideCall } from "./side-call.ts";
+} from "./lib/spellfix.ts";
+import type { Extra, Found, Miss, Splice, Verdict } from "./lib/spellfix.ts";
+import { type Bridge, type Draft, followEditor } from "./pi/editor.ts";
+import { sideCall } from "./pi/side-call.ts";
 
 const HUNSPELL = process.env.PI_SPELLFIX_HUNSPELL || "hunspell";
 const DICTIONARIES = process.env.PI_SPELLFIX_DICTS || "en_US";

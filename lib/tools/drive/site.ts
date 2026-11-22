@@ -73,7 +73,7 @@ function ensureFfmpeg() {
   process.env.PATH = `${bin}:${process.env.PATH}`;
 }
 
-const mediaRoot = join(checkoutRoot, "site", "media");
+const mediaRoot = join(checkoutRoot, "apps", "site", "media");
 
 type Still = {
   png: string;
@@ -138,7 +138,7 @@ async function play1(
         await session.stopRecording();
       }
       await promisify(execFile)(process.execPath, [
-        join(checkoutRoot, "e2e", "capture-cast.ts"),
+        join(checkoutRoot, "lib/tools/drive/capture-cast.ts"),
         "--require-graphics",
         cast,
         prefix,
@@ -240,7 +240,7 @@ async function runPlugin(plugin: string, file: string) {
     throw new Error(`${plugin}: ${failed.length} scenario(s) failed`);
   }
 
-  const rel = (name: string) => `site/media/${plugin}/${name}`;
+  const rel = (name: string) => `apps/site/media/${plugin}/${name}`;
   const media: Media = { videos: [], stills: [] };
   for (const d of demos) {
     squeeze(join(stage, `${d.base}.png`), BUDGET.png);

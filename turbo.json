@@ -14,9 +14,27 @@
     },
     // Each package installs its own tools and turbo's PATH holds only the root's `node_modules/.bin`,
     // so a package task names its tool by path (`./node_modules/.bin/tsc`), run from the package.
+    // A package's build is a task of its own: an app's or the catalogue's bundle in `dist/` (see
+    // lib/tools/build/build.ts), which `test:claude` and the e2e scenarios load. The kit's sources reach it
+    // through `^topo`, so an edit to a component rebuilds what imports it. The engine writes
+    // `.claude-plugin/types` and `tsconfig.json` into `dist/` when it loads a mod; a build keeps them
+    // and a cache restore does not touch them.
+    "build": {
+      "dependsOn": ["^topo"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/lib/tools/build/build.ts",
+        "!src/e2e/**",
+        "!**/*.spec.ts",
+        "!tsconfig.json",
+        "!vitest.config.ts",
+        "!turbo.json"
+      ],
+      "outputs": ["dist/**", "!dist/.claude-plugin/types/**", "!dist/tsconfig.json"]
+    },
     "check-types": {
       "command": ["./node_modules/.bin/tsc", "-b"],
-      "dependsOn": ["topo"],
+      "dependsOn": ["topo", "build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/tsconfig.base.json",
@@ -29,15 +47,23 @@
       "dependsOn": ["topo"]
     },
     "test:claude": {
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/scripts/claude-plugin-test.sh"]
+      "dependsOn": ["build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/lib/tools/build/claude-plugin-test.sh"]
     },
     "e2e": {
-      "dependsOn": ["^topo"],
-      "inputs": ["$TURBO_DEFAULT$", "!site.scenarios.ts", "!vscode.scenarios.ts", "!tsconfig.json"],
+      "dependsOn": ["^topo", "build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/site.scenarios.ts",
+        "!**/vscode.scenarios.ts",
+        "!tsconfig.json",
+        "!**/*.spec.ts"
+      ],
       "env": ["E2E_UPDATE", "E2E_PNG", "E2E_TMP"],
       "passThroughEnv": ["E2E_JOBS", "E2E_JOBS_CLAUDE", "E2E_JOBS_PI", "E2E_KEEP", "E2E_TIMING"]
     },
     "e2e:update": {
+      "dependsOn": ["build"],
       "cache": false,
       "passThroughEnv": [
         "E2E_JOBS",
@@ -49,26 +75,27 @@
       ]
     },
     // The root's dependencies are in every task's hash, so the root holds turbo alone. oxlint, oxfmt and
-    // shellcheck live in `tools/` and the tasks name them by path; `tools/package.json` is their
+    // shellcheck live in `lib/tools/lint/` and the tasks name them by path; its `package.json` is their
     // input, which is where a bump of one shows.
     "//#lint": {
-      "command": ["./tools/node_modules/.bin/oxlint", "--deny-warnings"],
+      "command": ["./lib/tools/lint/node_modules/.bin/oxlint", "--deny-warnings"],
       "inputs": [
         "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,vue,astro,svelte}",
-        "tools/package.json",
+        "lib/tools/lint/package.json",
         ".oxlintrc.json",
         ".gitignore",
         "!**/node_modules/**",
         "!.turbo/**",
-        "!site/dist/**",
-        "!site/.astro/**",
-        "!site/media/**",
-        "!site/data/**"
+        "!**/dist/**",
+        "!apps/site/dist/**",
+        "!apps/site/.astro/**",
+        "!apps/site/media/**",
+        "!apps/site/data/**"
       ]
     },
     "//#fmt": {
       "command": [
-        "./tools/node_modules/.bin/oxfmt",
+        "./lib/tools/lint/node_modules/.bin/oxfmt",
         "--write",
         "**/*.{cjs,css,graphql,hbs,html,js,json,json5,jsonc,jsx,md,mdx,mjs,mustache,scss,ts,tsx,vue,yaml,yml}"
       ],
@@ -76,7 +103,7 @@
     },
     "//#fmt:check": {
       "command": [
-        "./tools/node_modules/.bin/oxfmt",
+        "./lib/tools/lint/node_modules/.bin/oxfmt",
         "--check",
         "**/*.{cjs,css,graphql,hbs,html,js,json,json5,jsonc,jsx,md,mdx,mjs,mustache,scss,ts,tsx,vue,yaml,yml}"
       ],
@@ -86,26 +113,37 @@
         ".gitignore",
         "!**/node_modules/**",
         "!.turbo/**",
-        "!site/dist/**",
-        "!site/.astro/**",
-        "!site/media/**",
-        "!site/data/**"
+        "!**/dist/**",
+        "!apps/site/dist/**",
+        "!apps/site/.astro/**",
+        "!apps/site/media/**",
+        "!apps/site/data/**"
       ]
     },
     "//#readme": {
-      "command": ["node", "scripts/readme.ts"],
+      "command": ["node", "lib/tools/build/readme.ts"],
       "cache": false
     },
-    "@agents/e2e#tui-test": {
+    // Every mod and extension a driver can load, built: what the tasks that start a session depend on.
+    "//#dist": {
+      "command": null,
+      "dependsOn": ["@nickolaj-jepsen/answer#build", "@nickolaj-jepsen/claude-compat#build", "@nickolaj-jepsen/docfix#build", "@nickolaj-jepsen/exa#build", "@nickolaj-jepsen/git-menu#build", "@nickolaj-jepsen/image-preview#build", "@nickolaj-jepsen/linear-issue#build", "@nickolaj-jepsen/questions#build", "@nickolaj-jepsen/spellfix#build", "@nickolaj-jepsen/transcript-tweaks#build", "@nickolaj-jepsen/worktree#build", "@agents/kit-catalog#build"]
+    },
+    // `pnpm turbo run build` also rewrites the generated README.md (the invariants spec says so when it is stale).
+    "//#build": {
+      "command": null,
+      "dependsOn": ["//#readme"]
+    },
+    "@agents/drive#tui-test": {
       "command": ["node", "fetch-tui-test.ts"],
       "inputs": ["fetch-tui-test.ts", "lib/tui-test-release.ts"],
       "outputs": ["node_modules/.cache/tui-test/**"]
     },
     // Turbo stops what a task leaves behind, so a session parked by `goto` dies with its task:
-    // drive `goto`, `cap` and `keys` with `node e2e/cli.ts` itself. This runs verbs that finish.
+    // drive `goto`, `cap` and `keys` with `node lib/tools/drive/cli.ts` itself. This runs verbs that finish.
     "//#e2e:cli": {
-      "command": ["node", "e2e/cli.ts"],
-      "dependsOn": ["@agents/e2e#tui-test"],
+      "command": ["node", "lib/tools/drive/cli.ts"],
+      "dependsOn": ["//#dist", "@agents/drive#tui-test"],
       "cache": false,
       "passThroughEnv": [
         "XDG_STATE_HOME",
@@ -125,7 +163,8 @@
       ]
     },
     "//#e2e:vscode": {
-      "command": ["node", "e2e/vscode.ts"],
+      "command": ["node", "lib/tools/drive/vscode.ts"],
+      "dependsOn": ["//#dist"],
       "cache": false,
       "passThroughEnv": [
         "XDG_STATE_HOME",
@@ -145,8 +184,8 @@
       ]
     },
     "//#e2e-live": {
-      "command": ["node", "e2e/cli.ts", "live"],
-      "dependsOn": ["@agents/e2e#tui-test"],
+      "command": ["node", "lib/tools/drive/cli.ts", "live"],
+      "dependsOn": ["//#dist", "@agents/drive#tui-test"],
       "cache": false,
       "persistent": true,
       "interactive": true,
@@ -168,8 +207,8 @@
       ]
     },
     "//#kit-live": {
-      "command": ["node", "e2e/cli.ts", "live", "kit", "--watch"],
-      "dependsOn": ["@agents/e2e#tui-test"],
+      "command": ["node", "lib/tools/drive/cli.ts", "live", "kit-catalog", "--watch"],
+      "dependsOn": ["//#dist", "@agents/drive#tui-test"],
       "cache": false,
       "persistent": true,
       "interactive": true,
@@ -191,8 +230,8 @@
       ]
     },
     "//#answer-demo": {
-      "command": ["node", "e2e/answer/live.ts"],
-      "dependsOn": ["@agents/e2e#tui-test"],
+      "command": ["node", "apps/answer/src/e2e/live.ts"],
+      "dependsOn": ["//#dist", "@agents/drive#tui-test"],
       "cache": false,
       "persistent": true,
       "interactive": true,
@@ -214,7 +253,8 @@
       ]
     },
     "//#claude-desktop-dev": {
-      "command": ["node", "e2e/desktop.ts"],
+      "command": ["node", "lib/tools/drive/desktop.ts"],
+      "dependsOn": ["//#dist"],
       "cache": false,
       "passThroughEnv": [
         "XDG_STATE_HOME",
@@ -248,7 +288,7 @@
         "nixpkgs#ffmpeg-full",
         "-c",
         "node",
-        "e2e/capture-cast.ts"
+        "lib/tools/drive/capture-cast.ts"
       ],
       "cache": false
     },
@@ -257,53 +297,54 @@
       "cache": false
     },
     "//#site-data": {
-      "command": ["node", "scripts/site-data.ts"],
+      "command": ["node", "lib/tools/build/site-data.ts"],
       "inputs": [
-        "scripts/content.ts",
-        "scripts/site-data.ts",
+        "lib/tools/build/content.ts",
+        "lib/tools/build/site-data.ts",
         ".claude-plugin/marketplace.json",
-        "plugins/*/package.json",
-        "plugins/*/README.md",
-        "plugins/*/.claude-plugin/plugin.json",
+        "apps/*/package.json",
+        "apps/*/README.md",
         "skills/**",
         "docs/**",
-        "site/media/*/media.json",
-        "site/media/*/media-vscode.json",
+        "apps/site/media/*/media.json",
+        "apps/site/media/*/media-vscode.json",
         "!**/node_modules/**",
         "!**/.turbo/**",
         "!**/__pycache__/**",
         "!**/.venv/**",
         "!**/.*_cache/**"
       ],
-      "outputs": ["site/data/content.json"]
+      "outputs": ["apps/site/data/content.json"]
     },
-    "//#catalog": { "command": ["node", "kit/catalog/build.ts"], "cache": false },
+    "//#catalog": { "command": ["node", "lib/kits/catalog/src/build.ts"], "cache": false },
     "//#catalog:data": {
-      "command": ["node", "kit/catalog/build.ts", "--no-shots"],
+      "command": ["node", "lib/kits/catalog/src/build.ts", "--no-shots"],
       "inputs": [
-        "kit/**",
+        "lib/kits/**",
         "AGENTS.md",
-        "site/media/kit/crops.json",
+        "apps/site/media/kit/crops.json",
         "!**/node_modules/**",
         "!**/.turbo/**",
         "!**/__pycache__/**",
         "!**/.venv/**",
         "!**/.*_cache/**",
         "!**/.claude-plugin/types/**",
+        "!**/dist/**",
         "!**/*.actual.*",
         "!**/*.spec.ts"
       ],
-      "outputs": ["site/data/kit.json"]
+      "outputs": ["apps/site/data/kit.json"]
     },
     // Record inside `nix develop .#media`, which exports AGENTS_MEDIA_ENV: a hash of its tools, fonts
     // and VS Code, so a recording from another environment misses the cache. The recorders are tasks of
     // the e2e package, not root tasks: a root task is keyed on this file, and a recording is dear.
-    // `turbo run media` is all three; `site#build` reads whatever they left under site/.
+    // `turbo run media` is all three; `site#build` reads whatever they left under apps/site/.
     "//#media": {
-      "dependsOn": ["@agents/e2e#media:kit", "@agents/e2e#site-shots", "@agents/e2e#site-vscode"]
+      "dependsOn": ["@agents/drive#media:kit", "@agents/drive#site-shots", "@agents/drive#site-vscode"]
     },
-    "@agents/e2e#media:kit": {
-      "command": ["env", "E2E_UPDATE=1", "node", "../kit/catalog/build.ts"],
+    "@agents/drive#media:kit": {
+      "command": ["env", "E2E_UPDATE=1", "node", "../kits/catalog/src/build.ts"],
+      "dependsOn": ["//#dist"],
       "env": ["AGENTS_MEDIA_ENV"],
       "passThroughEnv": [
         "XDG_STATE_HOME",
@@ -334,8 +375,7 @@
         "run.ts",
         "e2e.spec.ts",
         "vitest.config.ts",
-        "kit/**",
-        "$TURBO_ROOT$/kit/**",
+        "$TURBO_ROOT$/lib/kits/**",
         "$TURBO_ROOT$/AGENTS.md",
         "!**/node_modules/**",
         "!**/.turbo/**",
@@ -343,6 +383,7 @@
         "!**/.venv/**",
         "!**/.*_cache/**",
         "!**/.claude-plugin/types/**",
+        "!**/dist/**",
         "!**/*.actual.*",
         "!**/.out/**",
         "!**/*.spec.ts",
@@ -362,11 +403,11 @@
         "!lib/vscode-scenario.ts",
         "!*/vscode.scenarios.ts"
       ],
-      "outputs": ["$TURBO_ROOT$/site/media/kit/**", "$TURBO_ROOT$/site/data/kit.json"]
+      "outputs": ["$TURBO_ROOT$/apps/site/media/kit/**", "$TURBO_ROOT$/apps/site/data/kit.json"]
     },
-    "@agents/e2e#site-shots": {
+    "@agents/drive#site-shots": {
       "command": ["node", "site.ts"],
-      "dependsOn": ["@agents/e2e#tui-test"],
+      "dependsOn": ["//#dist", "@agents/drive#tui-test"],
       "env": ["AGENTS_MEDIA_ENV"],
       "passThroughEnv": [
         "XDG_STATE_HOME",
@@ -392,14 +433,15 @@
       ],
       "inputs": [
         "**",
-        "$TURBO_ROOT$/plugins/**",
-        "$TURBO_ROOT$/kit/**",
+        "$TURBO_ROOT$/apps/**",
+        "$TURBO_ROOT$/lib/kits/**",
         "!**/node_modules/**",
         "!**/.turbo/**",
         "!**/__pycache__/**",
         "!**/.venv/**",
         "!**/.*_cache/**",
         "!**/.claude-plugin/types/**",
+        "!**/dist/**",
         "!**/*.actual.*",
         "!**/.out/**",
         "!**/*.spec.ts",
@@ -421,19 +463,20 @@
         "!README.md"
       ],
       "outputs": [
-        "$TURBO_ROOT$/site/media/**",
-        "!$TURBO_ROOT$/site/media/kit/**",
-        "!$TURBO_ROOT$/site/media/*/vscode-*",
-        "!$TURBO_ROOT$/site/media/*/media-vscode.json"
+        "$TURBO_ROOT$/apps/site/media/**",
+        "!$TURBO_ROOT$/apps/site/media/kit/**",
+        "!$TURBO_ROOT$/apps/site/media/*/vscode-*",
+        "!$TURBO_ROOT$/apps/site/media/*/media-vscode.json"
       ]
     },
-    "@agents/e2e#site-vscode": {
+    "@agents/drive#site-vscode": {
       "command": [
         "sh",
         "-c",
         "if [ \"$(uname -s)\" = Linux ]; then exec node site-vscode.ts \"$@\"; fi; echo \"site-vscode: needs a Linux compositor, skipped\"",
         "site-vscode"
       ],
+      "dependsOn": ["//#dist"],
       "env": ["AGENTS_MEDIA_ENV"],
       "passThroughEnv": [
         "XDG_STATE_HOME",
@@ -459,13 +502,14 @@
       ],
       "inputs": [
         "**",
-        "$TURBO_ROOT$/plugins/**",
+        "$TURBO_ROOT$/apps/**",
         "!**/node_modules/**",
         "!**/.turbo/**",
         "!**/__pycache__/**",
         "!**/.venv/**",
         "!**/.*_cache/**",
         "!**/.claude-plugin/types/**",
+        "!**/dist/**",
         "!**/*.actual.*",
         "!**/.out/**",
         "!**/*.spec.ts",
@@ -484,16 +528,12 @@
         "!README.md"
       ],
       "outputs": [
-        "$TURBO_ROOT$/site/media/*/vscode-*",
-        "$TURBO_ROOT$/site/media/*/media-vscode.json"
+        "$TURBO_ROOT$/apps/site/media/*/vscode-*",
+        "$TURBO_ROOT$/apps/site/media/*/media-vscode.json"
       ]
     },
-    "//#kit-sync": {
-      "command": ["node", "kit/sync.ts"],
-      "cache": false
-    },
     "//#kit-new": {
-      "command": ["node", "kit/new.ts"],
+      "command": ["node", "lib/kits/new.ts"],
       "cache": false
     },
     "check": {
@@ -540,9 +580,9 @@
       "command": [
         "sh",
         "-c",
-        "git ls-files -z \"*.sh\" | xargs -0 ./tools/node_modules/.bin/shellcheck -S warning"
+        "git ls-files -z \"*.sh\" | xargs -0 ./lib/tools/lint/node_modules/.bin/shellcheck -S warning"
       ],
-      "inputs": ["**/*.sh", "tools/package.json"]
+      "inputs": ["**/*.sh", "lib/tools/lint/package.json"]
     },
     // Not part of `check`: the one task that needs nix. It reads the flake's nix files and lock; the
     // treefmt check it runs formats nix files only, so nothing else in the tree reaches its result.
@@ -555,7 +595,7 @@
         "!**/node_modules/**",
         "!**/.turbo/**",
         "!**/.venv/**",
-        "!site/dist/**"
+        "!apps/site/dist/**"
       ],
       "passThroughEnv": [
         "NIX_*",

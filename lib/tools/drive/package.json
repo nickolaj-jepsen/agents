@@ -1,10 +1,10 @@
 {
-  "name": "@agents/e2e",
+  "name": "@agents/drive",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@agents/kit": "workspace:*"
+    "@agents/kit-core": "workspace:*"
   },
   "devDependencies": {
     "@anthropic-ai/claude-code": "catalog:",
@@ -14,5 +14,8 @@
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "exports": {
+    "./*": "./*"
   }
 }

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { cellWidth, textOf, widthOf, type Line, type Span } from "../claude/kit/lines.ts";
+import { cellWidth, textOf, widthOf, type Line, type Span } from "@agents/kit-core/lines.ts";
 import { openQueue, type Suggestion } from "./docfix.ts";
 import {
   drawScreen,

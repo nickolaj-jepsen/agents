@@ -1,0 +1,21 @@
+{
+  "name": "@agents/kit-detail",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "@agents/kit-buttons": "workspace:*",
+    "@agents/kit-core": "workspace:*",
+    "@agents/kit-fields": "workspace:*",
+    "@agents/kit-frame": "workspace:*",
+    "@agents/kit-prose": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

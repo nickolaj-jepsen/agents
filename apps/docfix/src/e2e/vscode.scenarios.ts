@@ -1,4 +1,4 @@
-import { vscodeScenarios } from "../lib/vscode-scenario.ts";
+import { vscodeScenarios } from "@agents/drive/lib/vscode-scenario.ts";
 import { checkout, EXTREME, fileSuggestions, MANY, STRUCTURED } from "./fixture.ts";
 
 const open = [{ type: "/docfix" }, { press: "Enter" }];

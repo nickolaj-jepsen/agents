@@ -1,5 +1,5 @@
-import type { Turn } from "../lib/harness.ts";
-import { poster, site, slow } from "../lib/site.ts";
+import type { Turn } from "@agents/drive/lib/harness.ts";
+import { poster, site, slow } from "@agents/drive/lib/site.ts";
 
 /** A repository with one commit, so `wt` has a default branch to branch from. */
 const setup = (ctx: { write(rel: string, content: string): void; initRepo(): void }) => {

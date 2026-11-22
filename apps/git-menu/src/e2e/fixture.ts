@@ -5,7 +5,7 @@
  */
 import { utimesSync } from "node:fs";
 import { join } from "node:path";
-import type { SetupContext } from "../lib/session.ts";
+import type { SetupContext } from "@agents/drive/lib/session.ts";
 
 export const BRANCH = "feature/retry-after";
 const HOUR = 3_600_000;

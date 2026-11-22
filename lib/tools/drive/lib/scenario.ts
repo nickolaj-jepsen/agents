@@ -3,12 +3,13 @@
  * how the agent starts, and the steps that reach the screen. Test files and the CLI's
  * `goto` read the same definitions.
  *
- * A file `e2e/<plugin>/<harness>.scenarios.ts` default-exports `scenarios({...})`.
+ * A file `<harness>.scenarios.ts` in a package's e2e folder (`lib/packages.ts`) default-exports `scenarios({...})`.
  */
-import { readdirSync, existsSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { HarnessName, StartOptions } from "./harness.ts";
+import { e2ePackage, e2ePackages } from "./packages.ts";
 import type { Mask, Pattern, Region } from "./screen.ts";
 import {
   EXTREME_SIZES,
@@ -257,24 +258,19 @@ export async function failShot(session: Session, r: Resolved) {
 
 // ---- discovery
 
-export const e2eRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+/** The driver's own folder (`lib/tools/drive`). */
+export const driveRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Every `<plugin>/<harness>.scenarios.ts` under e2e/. */
+/** Every `<harness>.scenarios.ts` of the packages with e2e scenarios, or of `plugin`'s alone. */
 export function scenarioFiles(
   plugin?: string,
 ): { plugin: string; harness: HarnessName; file: string }[] {
   const out: { plugin: string; harness: HarnessName; file: string }[] = [];
-  for (const dir of readdirSync(e2eRoot, { withFileTypes: true })) {
-    if (
-      !dir.isDirectory() ||
-      dir.name === "lib" ||
-      dir.name.startsWith(".") ||
-      (plugin && dir.name !== plugin)
-    )
-      continue;
+  for (const p of e2ePackages()) {
+    if (plugin && p.name !== plugin) continue;
     for (const harness of ["claude", "pi"] as const) {
-      const file = join(e2eRoot, dir.name, `${harness}.scenarios.ts`);
-      if (existsSync(file)) out.push({ plugin: dir.name, harness, file });
+      const file = join(p.e2e, `${harness}.scenarios.ts`);
+      if (existsSync(file)) out.push({ plugin: p.name, harness, file });
     }
   }
   return out;
@@ -286,5 +282,8 @@ export async function loadSet(file: string): Promise<ScenarioSet> {
 }
 
 /** Where a state's snapshot lives; the PNG beside it has the same stem. */
-export const snapshotPath = (r: Resolved, size: Size, ext: "snap" | "png") =>
-  join(e2eRoot, r.plugin, "__snapshots__", r.harness, `${r.name}@${size[0]}x${size[1]}.${ext}`);
+export const snapshotPath = (r: Resolved, size: Size, ext: "snap" | "png") => {
+  const pkg = e2ePackage(r.plugin);
+  if (!pkg) throw new Error(`no package ${r.plugin} with an e2e folder`);
+  return join(pkg.e2e, "__snapshots__", r.harness, `${r.name}@${size[0]}x${size[1]}.${ext}`);
+};

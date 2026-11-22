@@ -5,14 +5,14 @@
  * What is in the text is the core's (`readEvidence`); this only says what goes where, and the
  * kit draws it for the surface.
  */
-import { facts, indent, prose, rule, stack, subhead, type Kit } from "./ui";
+import { facts, indent, prose, rule, stack, subhead, type Kit } from "@agents/kit-legacy/claude/ui.tsx";
 import {
   evidenceBlocks,
   evidenceLabel,
   readEvidence,
   type Evidence,
   type EvidenceBlock,
-} from "../core/docfix";
+} from "../lib/docfix";
 
 function block(k: Kit, b: EvidenceBlock, key: string): JSX.Element {
   const { Box } = k;

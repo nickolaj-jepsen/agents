@@ -5,10 +5,10 @@ Plugins for Claude Code and pi, and installable skills, distributed as a flake. 
 - Use turbo for repo commands: `pnpm turbo run <task>`, with the tasks listed in `turbo.json`. Run `pnpm turbo run fmt` before handing back changes. `pnpm turbo run test` is the quick check; `pnpm turbo run check` is the gate CI runs.
 - Don't edit the root README directly. Run `pnpm turbo run readme` after editing plugin or skill frontmatter or `docs/_intro.md` or `docs/_install.md`. It fails if any plugin folder lacks a `README.md`.
 - Stage new files before running nix commands; otherwise Nix won't see them. `nix fmt` formats the nix files, which `fmt` leaves alone, and `pnpm turbo run check:nix` checks them; `check` doesn't run it.
-- Edit the kit source, not a mod's copy. Run `pnpm turbo run kit-sync` after changing the kit, the legacy Claude kit or shared catalogue samples. See [the kit guide](kit/README.md).
+- A mod and a pi extension are bundled from `apps/<name>/src` into the gitignored `apps/<name>/dist` by `pnpm turbo run build`, and the kit is imported as the packages `@agents/kit-*`: there are no copies to sync. See [the kit guide](lib/kits/README.md).
 - For changes to what a plugin draws, or to its keys, mouse or focus, use the [agent-plugin-dev skill](skills/agent-plugin-dev/SKILL.md) and look at a real session before handing back.
 - Plugin UI follows the house rules in [the layout reference](skills/agent-plugin-dev/references/style.md). They hold for every plugin: a design that breaks one needs the owner's approval first, and each reviewer gets the page with the design.
-- Keep test sessions isolated. Fixture git must ignore the user's config and hooks; keep the agent's notes and worktrees under the run folder. Use `setupContext` and `runEnv` in `e2e/lib/setup.ts`.
+- Keep test sessions isolated. Fixture git must ignore the user's config and hooks; keep the agent's notes and worktrees under the run folder. Use `setupContext` and `runEnv` in `lib/tools/drive/lib/setup.ts`.
 - A driver that might kill Claude before startup sets `CLAUDE_CODE_NO_FLICKER=1`. Otherwise two early exits with fullscreen enabled can leave the user's own session in the classic renderer. `/tui fullscreen` clears it.
 - `PHILOSOPHY.md` records lasting project choices. Ask the owner for explicit permission before editing it.
 

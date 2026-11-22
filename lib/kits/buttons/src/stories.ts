@@ -1,6 +1,6 @@
 /** The button row's stories. No host imports. */
-import { span } from "../lines.ts";
-import type { KitStory } from "../stories.ts";
+import { span } from "@agents/kit-core/lines.ts";
+import type { KitStory } from "@agents/kit-core/stories.ts";
 import type { Button } from "./contract.ts";
 import { buttonRow } from "./terminal.ts";
 

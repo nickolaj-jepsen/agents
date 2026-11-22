@@ -15,7 +15,7 @@ import {
   type TuiMouseEvent,
   type TuiMouseEventResult,
 } from "@earendil-works/pi-tui";
-import { closeOf } from "../../../kit/frame/contract.ts";
+import { closeOf } from "@agents/kit-frame/contract.ts";
 import {
   cellAt,
   fitPainted,
@@ -23,12 +23,12 @@ import {
   paintText,
   paintedWidth,
   type Painted,
-} from "../../../kit/paint/pi.ts";
-import { sheetChrome, sheetRoom } from "../../../kit/sheet/contract.ts";
-import { sheet } from "../../../kit/sheet/terminal.ts";
-import { tokens, widthCap } from "../../../kit/tokens.ts";
-import type { Form } from "../core/draft.ts";
-import { draw, TITLE, type Drawn, type Intent, type View } from "../core/screen.ts";
+} from "@agents/kit-core/paint/pi.ts";
+import { sheetChrome, sheetRoom } from "@agents/kit-sheet/contract.ts";
+import { sheet } from "@agents/kit-sheet/terminal.ts";
+import { tokens, widthCap } from "@agents/kit-core/tokens.ts";
+import type { Form } from "../lib/draft.ts";
+import { draw, TITLE, type Drawn, type Intent, type View } from "../lib/screen.ts";
 
 /** Rows of the terminal the sheet leaves above it, so what it was opened over stays in sight. */
 const ABOVE = 1;

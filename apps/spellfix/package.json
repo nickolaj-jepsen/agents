@@ -6,12 +6,50 @@
     "pi-package"
   ],
   "type": "module",
+  "claude": {
+    "name": "spellfix",
+    "version": "1.2.0",
+    "description": "Pick fixes for misspelled words in the prompt draft with hunspell and Haiku",
+    "author": {
+      "name": "Nickolaj Jepsen"
+    },
+    "types": "./src/claude/types.d.ts",
+    "userConfig": {
+      "hunspell": {
+        "type": "string",
+        "title": "hunspell",
+        "description": "The hunspell executable to run",
+        "default": "hunspell"
+      },
+      "dictionaries": {
+        "type": "string",
+        "title": "Dictionaries",
+        "description": "Comma-separated hunspell dictionaries, as -d takes them",
+        "default": "en_US"
+      },
+      "personalDictionary": {
+        "type": "string",
+        "title": "Personal dictionary",
+        "description": "An existing word list file the picker's add key writes to (hunspell -p), and where words Haiku calls correct are added; empty turns adding off",
+        "default": ""
+      }
+    }
+  },
+  "pi": {
+    "extensions": [
+      "./src/pi.ts"
+    ]
+  },
   "devDependencies": {
+    "@agents/build": "workspace:*",
+    "@agents/drive": "workspace:*",
+    "@agents/kit-legacy": "workspace:*",
     "@anthropic-ai/claude-code": "catalog:",
     "@earendil-works/pi-ai": "catalog:",
     "@earendil-works/pi-coding-agent": "catalog:",
     "@earendil-works/pi-tui": "catalog:",
     "@types/node": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
@@ -19,10 +57,5 @@
     "@earendil-works/pi-ai": "*",
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*"
-  },
-  "pi": {
-    "extensions": [
-      "./pi/index.ts"
-    ]
   }
 }

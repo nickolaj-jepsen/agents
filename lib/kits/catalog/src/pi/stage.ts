@@ -5,7 +5,7 @@
  * frame is what they show.
  */
 import type { OverlayOptions } from "@earendil-works/pi-tui";
-import { fit, tokens } from "../../legacy/pi/ui.ts";
+import { fit, tokens } from "@agents/kit-legacy/pi/ui.ts";
 import type { Story } from "./stories.ts";
 
 /** Top-left cell of the stage, in terminal cells. */

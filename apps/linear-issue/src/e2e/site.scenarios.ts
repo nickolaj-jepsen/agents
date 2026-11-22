@@ -1,10 +1,10 @@
-import type { Turn } from "../lib/harness.ts";
+import type { Turn } from "@agents/drive/lib/harness.ts";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { LISTED, linearMcp } from "../lib/linear-mcp.ts";
-import type { Step } from "../lib/scenario.ts";
-import type { SetupContext } from "../lib/session.ts";
-import { poster, site, slow } from "../lib/site.ts";
+import { LISTED, linearMcp } from "@agents/drive/lib/linear-mcp.ts";
+import type { Step } from "@agents/drive/lib/scenario.ts";
+import type { SetupContext } from "@agents/drive/lib/session.ts";
+import { poster, site, slow } from "@agents/drive/lib/site.ts";
 
 const NOTE = "the sync worker ignores Retry-After headers when it backs off after a 429";
 const TITLE = "Honor Retry-After when the sync worker backs off after a 429";

@@ -1,5 +1,5 @@
-import type { Turn } from "../lib/harness.ts";
-import { poster, site, slow, type SiteScenario } from "../lib/site.ts";
+import type { Turn } from "@agents/drive/lib/harness.ts";
+import { poster, site, slow, type SiteScenario } from "@agents/drive/lib/site.ts";
 import { checkout, fileSuggestions, SUGGESTIONS } from "./fixture.ts";
 
 /** Two suggestions are already waiting; the turn files a third. */

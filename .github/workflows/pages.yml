@@ -1,6 +1,6 @@
 name: Pages
 
-# The site (site/) on GitHub Pages: its media recorded (no sign-in, no model), built, deployed from main.
+# The site (apps/site/) on GitHub Pages: its media recorded (no sign-in, no model), built, deployed from main.
 on:
   push:
     branches: [main]
@@ -55,11 +55,11 @@ jobs:
         run: nix develop .#media -c pnpm turbo run //#media --concurrency=2
         env:
           NIX_CONFIG: access-tokens = github.com=${{ github.token }}
-      # Reads what the recordings left under site/, so it runs after them and outside the shell.
+      # Reads what the recordings left under apps/site/, so it runs after them and outside the shell.
       - run: pnpm turbo run @agents/site#build
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          path: site/dist
+          path: apps/site/dist
 
   deploy:
     needs: build

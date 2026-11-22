@@ -1,15 +1,8 @@
 /** How each agent is started and when it is ready. */
-import { execFileSync } from "node:child_process";
-import {
-  chmodSync,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { chmodSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { distOf, repoRoot } from "./packages.ts";
 import { runEnv } from "./setup.ts";
 import type { LaunchSpec } from "./term.ts";
 
@@ -34,12 +27,12 @@ export type StartOptions = {
   /**
    * A config folder of its own instead of the person's, so nothing of them shows: what the site
    * media are made on. Needs `turns`; Claude runs plain `claude` with every mod of this checkout,
-   * pi loads only `plugins`.
+   * pi loads only `plugins`. Both load the builds (`apps/<name>/dist`).
    */
   hermetic?: boolean;
   /**
-   * With `hermetic`: the plugins (`plugins/<name>`) to load and nothing else; Claude loads every mod
-   * of the checkout when this is left out.
+   * With `hermetic`: the apps (`apps/<name>`, their `dist/`) to load and nothing else; Claude loads every
+   * built mod of the checkout when this is left out.
    */
   plugins?: string[];
   /**
@@ -73,7 +66,7 @@ export interface Harness {
 }
 
 const here = dirname(fileURLToPath(import.meta.url));
-export const checkoutRoot = resolve(here, "..", "..");
+export const checkoutRoot = repoRoot;
 
 /**
  * `claude` or `pi` from this package's pinned npm dependencies, which the tasks' cache key stands
@@ -85,33 +78,30 @@ export function agentBin(name: HarnessName): string {
 }
 
 /**
- * The system's `claude-dev` / `pi-dev` with its checkout swapped for this one, so a session loads
- * the plugins of the tree the harness runs from (a worktree's own), not the wrappers' fixed path.
+ * The built mods of this checkout (`apps/<name>/dist`, from `pnpm turbo run build`): `only`, or all of
+ * them. A name that is not built throws, since a session would start without it.
  */
-function devWrapper(bin: "claude-dev" | "pi-dev", runDir: string): string | undefined {
-  try {
-    const path = execFileSync("which", [bin], { encoding: "utf8" }).trim();
-    const text = readFileSync(path, "utf8");
-    const swapped = text.replace(
-      /^(checkout|plugins)="([^"]*)"$/m,
-      (_, name: string, old: string) =>
-        `${name}="${old.endsWith("/plugins") ? `${checkoutRoot}/plugins` : checkoutRoot}"`,
-    );
-    const out = join(runDir, bin);
-    writeFileSync(out, swapped);
-    chmodSync(out, 0o755);
-    return out;
-  } catch {
-    return undefined;
-  }
+export function checkoutMods(only?: string[]): string[] {
+  const root = join(checkoutRoot, "apps");
+  const names = only ?? readdirSync(root).sort();
+  const dirs = names.map((name) => distOf(name));
+  const built = (dir: string) => existsSync(join(dir, ".claude-plugin", "plugin.json"));
+  const missing = dirs.filter((dir, i) => only && !built(dir) && names[i]);
+  if (missing.length)
+    throw new Error(`not built: ${missing.join(", ")}; run \`pnpm turbo run build\``);
+  return dirs.filter(built);
 }
 
-/** The plugins of this checkout with a Claude half: `only`, or all. */
-export function checkoutMods(only?: string[]): string[] {
-  const root = join(checkoutRoot, "plugins");
-  return (only ?? readdirSync(root).sort())
-    .map((name) => join(root, name))
-    .filter((dir) => existsSync(join(dir, ".claude-plugin", "plugin.json")));
+/** The pi extensions of this checkout's builds: `only`, or every app that has one. */
+export function checkoutExtensions(only?: string[]): string[] {
+  const root = join(checkoutRoot, "apps");
+  const names = only ?? readdirSync(root).sort();
+  const dirs = names.map((name) => distOf(name));
+  const built = (dir: string) => existsSync(join(dir, "pi", "index.js"));
+  const missing = dirs.filter((dir) => only && !built(dir));
+  if (missing.length)
+    throw new Error(`not built: ${missing.join(", ")}; run \`pnpm turbo run build\``);
+  return dirs.filter(built);
 }
 
 /** The keys the plugins need, as a person would have bound them. */
@@ -171,15 +161,6 @@ function withBin(run: Run, bin: Record<string, string>): string {
   return `${dir}:${process.env.PATH ?? ""}`;
 }
 
-const onPath = (bin: string) => {
-  try {
-    execFileSync("which", [bin], { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 /** Markers of a parent agent's session: a test session must not think it is a child of one. */
 const UNSET = [
   "CLAUDECODE",
@@ -221,15 +202,12 @@ export const claude: Harness = {
       mcp = ["--mcp-config", file];
     }
     return {
-      // Hermetic: plain `claude` with this checkout's mods, as `claude-dev` would load them, so a
-      // machine without the wrapper (the Pages workflow) records the same screens.
-      program: hermetic
-        ? agentBin("claude")
-        : (devWrapper("claude-dev", run.runDir) ??
-          (onPath("claude-dev") ? "claude-dev" : "claude")),
+      // Hermetic: the pinned `claude`; otherwise the person's own. Either loads this checkout's built
+      // mods, so a machine without any wrapper (the Pages workflow) records the same screens.
+      program: hermetic ? agentBin("claude") : "claude",
       // The session is the person's account: no connectors (--strict-mcp-config).
       args: [
-        ...(hermetic ? checkoutMods(start.plugins).flatMap((dir) => ["--plugin-dir", dir]) : []),
+        ...checkoutMods(hermetic ? start.plugins : undefined).flatMap((dir) => ["--plugin-dir", dir]),
         "--strict-mcp-config",
         ...mcp,
         ...(hermetic
@@ -245,7 +223,8 @@ export const claude: Harness = {
         ...COMMON_ENV,
         ...runEnv(run.runDir),
         CLAUDE_CODE_NO_FLICKER: "1",
-        ...(hermetic ? { ...hermetic, ...HERMETIC_ENV, CLAUDE_CODE_PLUGIN_DIRS: "" } : {}),
+        CLAUDE_CODE_PLUGIN_DIRS: "",
+        ...(hermetic ? { ...hermetic, ...HERMETIC_ENV } : {}),
         ...path,
         ...start.env,
       },
@@ -277,7 +256,7 @@ export const pi: Harness = {
       env.FIXTURE = file;
       args.push(
         "--extension",
-        join(checkoutRoot, "e2e/assets/fixture-provider.ts"),
+        join(checkoutRoot, "lib/tools/drive/assets/fixture-provider.ts"),
         "--provider",
         "fixture",
         "--model",
@@ -318,13 +297,13 @@ export const pi: Harness = {
         "--use-theme",
         "dark",
       );
-      for (const name of start.plugins ?? [])
-        args.push("--extension", join(checkoutRoot, "plugins", name));
+      for (const dir of checkoutExtensions(start.plugins ?? []))
+        args.push("--extension", dir);
     }
+    // Not hermetic: the person's own `pi`, with no extensions of its own (`-ne`) and this checkout's.
+    if (!start.hermetic) args.push("--no-extensions", ...checkoutExtensions().flatMap((dir) => ["--extension", dir]));
     return {
-      program: start.hermetic
-        ? agentBin("pi")
-        : (devWrapper("pi-dev", run.runDir) ?? (onPath("pi-dev") ? "pi-dev" : "pi")),
+      program: start.hermetic ? agentBin("pi") : "pi",
       args: [...args, ...(start.args ?? [])],
       cwd: run.cwd,
       env,
@@ -335,8 +314,7 @@ export const pi: Harness = {
   // The startup hints, or with `quietStartup` (hermetic) the footer's context meter.
   ready: (text) => /escape interrupt|commands ·|\d%\/\d+k \(/.test(text),
   dialog: () => undefined,
-  // An extension that does not load ends pi before its prompt; `pi-dev` loads the system config's
-  // own from source, whose `node_modules` that config's dev setup links.
+  // An extension that does not load ends pi before its prompt.
   failed: (text) => /^Error: Failed to load extension/m.test(text),
 };
 

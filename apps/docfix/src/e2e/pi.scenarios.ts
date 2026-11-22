@@ -1,6 +1,6 @@
-import { findText, type Region } from "../lib/screen.ts";
-import { region } from "../lib/screen.ts";
-import { scenarios } from "../lib/scenario.ts";
+import { findText, type Region } from "@agents/drive/lib/screen.ts";
+import { region } from "@agents/drive/lib/screen.ts";
+import { scenarios } from "@agents/drive/lib/scenario.ts";
 import { checkout, EXTREME, fileSuggestions, MANY, ONE, STRUCTURED } from "./fixture.ts";
 
 const open = [{ type: "/docfix" }, { press: "Enter" }];

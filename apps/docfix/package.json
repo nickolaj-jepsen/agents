@@ -6,13 +6,38 @@
     "pi-package"
   ],
   "type": "module",
+  "claude": {
+    "name": "docfix",
+    "version": "0.1.0",
+    "description": "Agents file doc suggestions instead of editing docs outside their change; /docs reviews them and hands an apply back to the agent",
+    "author": {
+      "name": "Nickolaj Jepsen"
+    },
+    "types": "./src/claude/types.d.ts"
+  },
+  "pi": {
+    "extensions": [
+      "./src/pi.ts"
+    ]
+  },
+  "agentTools": {
+    "subagents": true
+  },
   "devDependencies": {
-    "@agents/kit": "workspace:*",
+    "@agents/build": "workspace:*",
+    "@agents/drive": "workspace:*",
+    "@agents/kit-buttons": "workspace:*",
+    "@agents/kit-core": "workspace:*",
+    "@agents/kit-detail": "workspace:*",
+    "@agents/kit-frame": "workspace:*",
+    "@agents/kit-legacy": "workspace:*",
+    "@agents/kit-list": "workspace:*",
     "@anthropic-ai/claude-code": "catalog:",
     "@earendil-works/pi-ai": "catalog:",
     "@earendil-works/pi-coding-agent": "catalog:",
     "@earendil-works/pi-tui": "catalog:",
     "@types/node": "catalog:",
+    "tsdown": "catalog:",
     "typebox": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
@@ -21,13 +46,5 @@
     "@earendil-works/pi-ai": "*",
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*"
-  },
-  "agentTools": {
-    "subagents": true
-  },
-  "pi": {
-    "extensions": [
-      "./pi/index.ts"
-    ]
   }
 }

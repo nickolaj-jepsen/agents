@@ -1,6 +1,6 @@
 /** The sheet's contract. No host imports. */
-import type { CaptionFrame } from "../frame/contract.ts";
-import type { Line } from "../lines.ts";
+import type { CaptionFrame } from "@agents/kit-frame/contract.ts";
+import type { Line } from "@agents/kit-core/lines.ts";
 
 /** Where the sheet puts its body, and the rows it takes besides. */
 export const sheetLayout = {

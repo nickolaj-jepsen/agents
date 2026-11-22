@@ -9,9 +9,9 @@ import {
   type TuiMouseEvent,
   type TuiMouseEventResult,
 } from "@earendil-works/pi-tui";
-import type { Button } from "../../../kit/buttons/contract.ts";
-import { buttonRow } from "../../../kit/buttons/terminal.ts";
-import { digitChoice } from "../../../kit/card/contract.ts";
+import type { Button } from "@agents/kit-buttons/contract.ts";
+import { buttonRow } from "@agents/kit-buttons/terminal.ts";
+import { digitChoice } from "@agents/kit-card/contract.ts";
 import {
   CARD_INSET,
   choice as choiceRows,
@@ -21,10 +21,10 @@ import {
   sectionsOf,
   steps,
   summary,
-} from "../../../kit/card/terminal.ts";
-import { captionFrameLayout, closeOf, type CloseAction } from "../../../kit/frame/contract.ts";
-import { captionFrame } from "../../../kit/frame/terminal.ts";
-import { cellWidth, clamp, span } from "../../../kit/lines.ts";
+} from "@agents/kit-card/terminal.ts";
+import { captionFrameLayout, closeOf, type CloseAction } from "@agents/kit-frame/contract.ts";
+import { captionFrame } from "@agents/kit-frame/terminal.ts";
+import { cellWidth, clamp, span } from "@agents/kit-core/lines.ts";
 import {
   cellAt,
   cutPainted,
@@ -35,8 +35,8 @@ import {
   paintLine,
   paintText,
   type Cell,
-} from "../../../kit/paint/pi.ts";
-import { tokens, widthCap } from "../../../kit/tokens.ts";
+} from "@agents/kit-core/paint/pi.ts";
+import { tokens, widthCap } from "@agents/kit-core/tokens.ts";
 import { type Question, type QuestionsResult, type QuestionAnswer } from "./types.ts";
 
 const MIN_WIDTH = 28;

@@ -1,16 +1,6 @@
 {
-  "extends": ["//"],
-  "tasks": {
-    "test": {
-      "command": ["./node_modules/.bin/vitest", "run"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/AGENTS.md",
-        "$TURBO_ROOT$/plugins/*/claude/**",
-        "$TURBO_ROOT$/e2e/kit/__snapshots__/**",
-        "!$TURBO_ROOT$/**/node_modules/**",
-        "!$TURBO_ROOT$/**/*.actual.*"
-      ]
-    }
-  }
+  "extends": [
+    "//"
+  ],
+  "tasks": {}
 }

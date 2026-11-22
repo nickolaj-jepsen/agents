@@ -1,4 +1,4 @@
-import { defineComponent, yes } from "../catalog/manifest.ts";
+import { defineComponent, yes } from "@agents/kit-core/manifest.ts";
 
 export default defineComponent({
   id: "grouped-list",
@@ -10,7 +10,7 @@ export default defineComponent({
     claude: ["list", "listFollow", "listTopMax", "listShowsWhole"],
   },
   status: { pi: "system", claude: "system", gui: "legacy" },
-  source: "list/terminal.ts",
+  source: "list/src/terminal.ts",
   features: [
     {
       id: "groups",

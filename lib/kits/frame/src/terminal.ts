@@ -1,7 +1,7 @@
 /** The captioned frame as styled lines: the one drawing both terminals paint. */
-import { buttonRow } from "../buttons/terminal.ts";
-import type { Button } from "../buttons/contract.ts";
-import { controlStyle } from "../card/terminal.ts";
+import { buttonRow } from "@agents/kit-buttons/terminal.ts";
+import type { Button } from "@agents/kit-buttons/contract.ts";
+import { controlStyle } from "@agents/kit-card/terminal.ts";
 import {
   blank,
   cellWidth,
@@ -11,8 +11,8 @@ import {
   truncateSpans,
   type Line,
   type Span,
-} from "../lines.ts";
-import { tokens } from "../tokens.ts";
+} from "@agents/kit-core/lines.ts";
+import { tokens } from "@agents/kit-core/tokens.ts";
 import { captionFrameLayout, closeHit, type CaptionFrame } from "./contract.ts";
 
 const confirmButtons = (keep: string): Button[] => [

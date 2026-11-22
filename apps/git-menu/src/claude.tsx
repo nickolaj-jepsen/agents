@@ -1,8 +1,8 @@
 import { atom, read, update } from "claude-code";
 import type { EngineInterface, ProcessRunResult, Register, RenderSurface } from "claude-code";
 
-import type { FolderApp, Menu, MenuKind, Row } from "./types.d.ts";
-import { emptyState, kitOf, list, notice, paneOptions, paneTitle, stack } from "./ui";
+import type { FolderApp, Menu, MenuKind, Row } from "./claude/types.d.ts";
+import { emptyState, kitOf, list, notice, paneOptions, paneTitle, stack } from "@agents/kit-legacy/claude/ui.tsx";
 import {
   chooseRemote,
   editorCandidates,
@@ -13,8 +13,8 @@ import {
   preferredEditor,
   type PrAnswer,
   type Status,
-} from "./menus";
-import { holdsNotes, type Note, notesMenu, OPENER, STORE } from "./notes";
+} from "./claude/menus";
+import { holdsNotes, type Note, notesMenu, OPENER, STORE } from "./claude/notes";
 
 const PANE = "git-menu";
 const TITLES: Record<MenuKind, string> = { git: "Git", folder: "Open folder", notes: "Notes" };

@@ -1,19 +1,21 @@
-// Cross-file checks that belong to no one package. The kit's own are in its specs: `kit/copies.spec.ts`
-// (a mod's copies of the kit match it) and `kit/catalog/model.spec.ts` (COMPONENTS.md and the kit
-// index in AGENTS.md match the manifests); `content.spec.ts` holds that every plugin has a README.
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+// Cross-file checks that belong to no one package. The kit's own are in its specs:
+// `lib/kits/catalog/src/model.spec.ts` (COMPONENTS.md and the kit index in AGENTS.md match the
+// manifests); `content.spec.ts` holds that every plugin has a README.
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { repoRoot } from "./content.ts";
 import { checkReadme } from "./readme.ts";
 
-const plugins = join(repoRoot, "plugins");
+const apps = join(repoRoot, "apps");
 
-/** The plugins with a Claude half: the ones the marketplace can publish. */
+/** The apps with a Claude half (a `claude` field in package.json): the ones the marketplace can publish. */
 function claudePlugins(): string[] {
-  return readdirSync(plugins, { withFileTypes: true })
+  return readdirSync(apps, { withFileTypes: true })
     .filter(
-      (e) => e.isDirectory() && existsSync(join(plugins, e.name, ".claude-plugin/plugin.json")),
+      (e) =>
+        e.isDirectory() &&
+        "claude" in JSON.parse(readFileSync(join(apps, e.name, "package.json"), "utf8")),
     )
     .map((e) => e.name)
     .sort();
@@ -27,12 +29,12 @@ describe(".claude-plugin/marketplace.json", () => {
   // `skills` is the other entry: it discovers `skills/` without a per-skill list.
   const published = entries.filter((p) => p.name !== "skills");
 
-  it("lists every plugin that has a Claude half, at ./plugins/<name>", () => {
+  it("lists every plugin that has a Claude half, at ./apps/<name>", () => {
     const listed = new Map(published.map((p) => [p.name, p.source]));
-    const missing = claudePlugins().filter((name) => listed.get(name) !== `./plugins/${name}`);
+    const missing = claudePlugins().filter((name) => listed.get(name) !== `./apps/${name}`);
     expect(
       missing,
-      `add { "name": "<name>", "source": "./plugins/<name>" } to .claude-plugin/marketplace.json for: ${missing.join(", ")}`,
+      `add { "name": "<name>", "source": "./apps/<name>" } to .claude-plugin/marketplace.json for: ${missing.join(", ")}`,
     ).toEqual([]);
   });
 
@@ -41,7 +43,7 @@ describe(".claude-plugin/marketplace.json", () => {
     const stray = published.filter((p) => !halves.has(p.name)).map((p) => p.name);
     expect(
       stray,
-      `remove from .claude-plugin/marketplace.json, or add plugins/<name>/.claude-plugin/plugin.json: ${stray.join(", ")}`,
+      `remove from .claude-plugin/marketplace.json, or add a `claude` field to apps/<name>/package.json: ${stray.join(", ")}`,
     ).toEqual([]);
   });
 
@@ -60,7 +62,7 @@ describe(".claude-plugin/marketplace.json", () => {
 });
 
 describe("README.md", () => {
-  it("is the generator's output: run `turbo run readme` after editing a plugin or skill README, docs/_intro.md or docs/_install.md", () => {
+  it("is the generator's output: run `pnpm turbo run build` after editing a plugin or skill README, docs/_intro.md or docs/_install.md", () => {
     expect(checkReadme().join("\n")).toBe("");
   });
 });

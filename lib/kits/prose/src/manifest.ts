@@ -1,4 +1,4 @@
-import { defineComponent, yes } from "../catalog/manifest.ts";
+import { defineComponent, yes } from "@agents/kit-core/manifest.ts";
 
 export default defineComponent({
   id: "prose",
@@ -7,7 +7,7 @@ export default defineComponent({
     "A text of several blocks set as lines whose rows can be counted, and the window a short room shows of it.",
   impl: { pi: "prose", claude: "prose" },
   status: { pi: "system", claude: "system", gui: "legacy" },
-  source: "prose/terminal.ts",
+  source: "prose/src/terminal.ts",
   features: [
     {
       id: "blocks",

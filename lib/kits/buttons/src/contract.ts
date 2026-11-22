@@ -1,5 +1,5 @@
 /** The button row's contract. No host imports. */
-import type { Span } from "../lines.ts";
+import type { Span } from "@agents/kit-core/lines.ts";
 
 export type Button = {
   /** Key or key range, without brackets. The caller owns the binding. Empty where only a press reaches it. */

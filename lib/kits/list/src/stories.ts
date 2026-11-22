@@ -1,5 +1,5 @@
 /** The list's stories. No host imports. */
-import type { KitStory } from "../stories.ts";
+import type { KitStory } from "@agents/kit-core/stories.ts";
 import type { ListGroup, ListMark } from "./contract.ts";
 import { list, listFollow } from "./terminal.ts";
 

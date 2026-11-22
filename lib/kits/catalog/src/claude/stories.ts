@@ -6,7 +6,7 @@
  * in both.
  */
 
-import { kitStories } from "./claude/kit/stories.ts";
+import { kitStories } from "../registry.ts";
 
 export type Story = {
   /** `<component>/<state>`'s first half: `list` for `list/grouped`. */

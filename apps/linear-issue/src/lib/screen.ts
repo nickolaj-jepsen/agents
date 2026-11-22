@@ -3,13 +3,13 @@
  * transcript, Claude Code in a pane. What a key or a click does is decided here too, so both
  * clients act alike. The kit comes from the mod's copy, the one folder both halves can reach.
  */
-import type { Button } from "../claude/kit/buttons/contract.ts";
-import { buttonRow } from "../claude/kit/buttons/terminal.ts";
-import { choiceHit, choiceOf, type ChoiceListItem } from "../claude/kit/card/contract.ts";
-import { CARD_INSET, choice, choiceList } from "../claude/kit/card/terminal.ts";
-import { fieldHit, fieldOf, type Field } from "../claude/kit/fields/contract.ts";
-import { fields } from "../claude/kit/fields/terminal.ts";
-import { closeOf } from "../claude/kit/frame/contract.ts";
+import type { Button } from "@agents/kit-buttons/contract.ts";
+import { buttonRow } from "@agents/kit-buttons/terminal.ts";
+import { choiceHit, choiceOf, type ChoiceListItem } from "@agents/kit-card/contract.ts";
+import { CARD_INSET, choice, choiceList } from "@agents/kit-card/terminal.ts";
+import { fieldHit, fieldOf, type Field } from "@agents/kit-fields/contract.ts";
+import { fields } from "@agents/kit-fields/terminal.ts";
+import { closeOf } from "@agents/kit-frame/contract.ts";
 import {
   blank,
   block,
@@ -26,9 +26,9 @@ import {
   truncate,
   type Line,
   type Span,
-} from "../claude/kit/lines.ts";
-import { prose } from "../claude/kit/prose/terminal.ts";
-import { tokens } from "../claude/kit/tokens.ts";
+} from "@agents/kit-core/lines.ts";
+import { prose } from "@agents/kit-prose/terminal.ts";
+import { tokens } from "@agents/kit-core/tokens.ts";
 import { labelOf, PRIORITIES, type Form, type Option } from "./draft.ts";
 
 export const TITLE = "Linear draft";

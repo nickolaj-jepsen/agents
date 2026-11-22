@@ -1,4 +1,4 @@
-import { defineComponent, no, partial, planned, yes } from "../manifest.ts";
+import { defineComponent, no, partial, planned, yes } from "@agents/kit-core/manifest.ts";
 
 export default defineComponent({
   id: "list",

@@ -1,7 +1,7 @@
 /** The captioned frame's stories. No host imports. */
-import { buttonRow } from "../buttons/terminal.ts";
-import { heading, steps } from "../card/terminal.ts";
-import type { KitStory } from "../stories.ts";
+import { buttonRow } from "@agents/kit-buttons/terminal.ts";
+import { heading, steps } from "@agents/kit-card/terminal.ts";
+import type { KitStory } from "@agents/kit-core/stories.ts";
 import { captionFrameLayout } from "./contract.ts";
 import { captionFrame } from "./terminal.ts";
 

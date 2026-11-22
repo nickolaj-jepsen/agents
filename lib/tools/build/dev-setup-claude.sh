@@ -1,10 +1,17 @@
 #!/usr/bin/env -S bash -euo pipefail
-# Lays the mods' API types into their gitignored .claude-plugin/types/, for the editor and
-# `tsc -p <plugin>/claude`; only an interactive session lays them, so run one until it has.
+# Lays the mods' API types into their gitignored dist/.claude-plugin/types/, for the editor and
+# `tsc` on a Claude half; only an interactive session lays them, so run one until it has. Builds
+# every mod first, since the session loads the built folders.
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../../.."
 
-mods=(plugins/*/.claude-plugin)
+for app in apps/*/; do
+    [ -f "$app/src/claude.tsx" ] || [ -f "$app/src/claude.ts" ] && node lib/tools/build/build.ts "$app" >/dev/null
+done
+node lib/tools/build/build.ts lib/kits/catalog >/dev/null
+
+mods=(apps/*/dist/.claude-plugin lib/kits/catalog/dist/.claude-plugin)
+mods=($(for m in "${mods[@]}"; do [ -f "$m/plugin.json" ] && echo "$m"; done))
 args=()
 for m in "${mods[@]}"; do
     rm -rf "$m/types"

@@ -1,6 +1,6 @@
 /** The question card's stories. No host imports. */
-import { blank } from "../lines.ts";
-import type { KitStory } from "../stories.ts";
+import { blank } from "@agents/kit-core/lines.ts";
+import type { KitStory } from "@agents/kit-core/stories.ts";
 import type { CardState, ChoiceList, ChoiceListItem, ChoiceListState } from "./contract.ts";
 import {
   choice,

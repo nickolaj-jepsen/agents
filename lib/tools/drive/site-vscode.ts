@@ -10,7 +10,7 @@ import {
 } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { checkoutRoot } from "./lib/harness.ts";
 import { loadSet } from "./lib/scenario.ts";
 import {
@@ -33,7 +33,7 @@ import {
 } from "./lib/vscode-scenario.ts";
 import { fixedOf, stopVscode, VscodeSession } from "./lib/vscode.ts";
 
-const mediaRoot = join(checkoutRoot, "site", "media");
+const mediaRoot = join(checkoutRoot, "apps", "site", "media");
 
 type VscodeStill = {
   png: string;
@@ -151,7 +151,7 @@ async function runPlugin(plugin: string, siteFile: string, vscodeFile: string) {
 
   const files = pictures.map(([n]) => join(stage, `vscode-${n}.png`));
   optimise(files);
-  const rel = (f: string) => `site/media/${plugin}/${f}`;
+  const rel = (f: string) => `apps/site/media/${plugin}/${f}`;
   const stills: VscodeStill[] = pictures.map(([n, pic]) => {
     const png = join(stage, `vscode-${n}.png`);
     squeeze(png, BUDGET.png);
@@ -179,11 +179,11 @@ async function runPlugin(plugin: string, siteFile: string, vscodeFile: string) {
 const only = process.argv.slice(2);
 const plugins = vscodeFiles()
   .filter((f) => only.length === 0 || only.includes(f.plugin))
-  .map((f) => ({ ...f, site: join(checkoutRoot, "e2e", f.plugin, "site.scenarios.ts") }))
+  .map((f) => ({ ...f, site: join(dirname(f.file), "site.scenarios.ts") }))
   .filter((f) => existsSync(f.site));
 for (const name of only)
   if (!plugins.some((p) => p.plugin === name))
-    throw new Error(`no e2e/${name}/vscode.scenarios.ts`);
+    throw new Error(`no vscode.scenarios.ts in ${name}'s e2e folder`);
 let bad = 0;
 for (const { plugin, file, site } of plugins) {
   try {

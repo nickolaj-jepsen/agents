@@ -5,7 +5,7 @@
  */
 import { createInterface } from "node:readline";
 
-import { handle } from "../lib/linear-mcp.ts";
+import { handle } from "@agents/drive/lib/linear-mcp.ts";
 
 const AUTH = {
   name: "authenticate",

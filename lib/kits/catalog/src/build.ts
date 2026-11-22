@@ -1,6 +1,6 @@
 /**
  * Builds the catalogue's data from the component manifests and each kit's source:
- * `COMPONENTS.md` (what agents read, committed), `site/data/kit.json` (what the site reads) and the
+ * `COMPONENTS.md` (what agents read, committed), `apps/site/data/kit.json` (what the site reads) and the
  * stories' crops. The last two are not committed: the Pages workflow writes them (`turbo run media`).
  *
  *   turbo run catalog                  play the kit scenarios in PNG mode, then write all three; fail
@@ -10,27 +10,34 @@
  *                                      AGENTS.md index (the block between its `kit:index` markers)
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { cropShots } from "./crops.ts";
-import { here, loadModel, markdown, siteData, withIndex } from "./model.ts";
+import { here, loadModel, markdown, repoRoot, siteData, withIndex } from "./model.ts";
 
-const agents = join(here, "..", "..", "AGENTS.md");
+const agents = join(repoRoot, "AGENTS.md");
 const outputs = {
-  components: join(here, "COMPONENTS.md"),
+  components: join(here, "..", "COMPONENTS.md"),
   // In the site's own folder, beside the content model: its pages read no data from outside it.
-  catalog: join(here, "..", "..", "site/data/kit.json"),
+  catalog: join(repoRoot, "apps/site/data/kit.json"),
 };
 const check = process.argv.includes("--check");
 
 if (!check && !process.argv.includes("--no-shots")) {
   // The PNGs are not committed: this is where the e2e run draws them.
-  const done = spawnSync(process.execPath, ["e2e/run.ts", "kit"], {
-    cwd: join(here, "..", ".."),
-    stdio: "inherit",
-    env: { ...process.env, E2E_PNG: "1" },
-  });
-  if (done.status !== 0) {
+  // The scenarios load the catalogue's build, and every kit package has some of them.
+  const run = (script: string, ...args: string[]) =>
+    spawnSync(process.execPath, [join(repoRoot, script), ...args], {
+      cwd: repoRoot,
+      stdio: "inherit",
+      env: { ...process.env, E2E_PNG: "1" },
+    });
+  const packages = readdirSync(join(repoRoot, "lib/kits"), { withFileTypes: true })
+    .filter((d) => d.isDirectory() && existsSync(join(repoRoot, "lib/kits", d.name, "e2e")))
+    .map((d) => `kit-${d.name}`);
+  const built = run("lib/tools/build/build.ts", "lib/kits/catalog");
+  const done = built.status === 0 ? packages.map((p) => run("lib/tools/drive/run.ts", p)).find((r) => r.status !== 0) : built;
+  if (done && done.status !== 0) {
     console.error(
       "catalog: the kit scenarios failed; fix them, or use --no-shots for the PNGs there are",
     );
@@ -81,5 +88,5 @@ for (const k of ["components", "catalog"] as const) {
 }
 const crops = cropShots();
 console.log(
-  `catalog: ${crops.written} crop(s) written, ${crops.kept} unchanged, ${crops.removed} removed; COMPONENTS.md, site/data/kit.json and the AGENTS.md index written`,
+  `catalog: ${crops.written} crop(s) written, ${crops.kept} unchanged, ${crops.removed} removed; COMPONENTS.md, apps/site/data/kit.json and the AGENTS.md index written`,
 );

@@ -22,7 +22,7 @@ import { startStub, stopStub } from "./stub.ts";
 export type VscodeStart = {
   /** Assistant turns the stub serves, in order. A session starts on the first prompt or command. */
   turns?: Turn[];
-  /** The mods (`plugins/<name>`) to load; every mod of the checkout when left out. */
+  /** The mods (`apps/<name>`, their builds) to load; every built mod of the checkout when left out. */
   plugins?: string[];
   env?: Record<string, string>;
   /** Programs the session finds first on its PATH, by name: the script text of each. */

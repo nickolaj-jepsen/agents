@@ -1,4 +1,13 @@
 {
   "extends": "../../tsconfig.base.node.json",
-  "include": ["pi/**/*.ts"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/claude.ts",
+    "src/claude.tsx",
+    "src/claude.test.ts",
+    "src/claude.test.tsx",
+    "src/claude"
+  ]
 }

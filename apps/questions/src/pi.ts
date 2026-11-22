@@ -11,7 +11,7 @@
  */
 import { Type } from "typebox";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { QuestionsDialog } from "./dialog.ts";
+import { QuestionsDialog } from "./pi/dialog.ts";
 import {
   HEADER_MAX,
   LABEL_MAX,
@@ -24,7 +24,7 @@ import {
   TOOL_NAME,
   TYPE_SOMETHING,
   validateQuestions,
-} from "./types.ts";
+} from "./pi/types.ts";
 
 const DESCRIPTION = `Ask the user multiple-choice questions and wait for the answers. Use it when you can't proceed without the user's decision, with every question in one call. Each question already gets a "Type something." row and Esc, so don't write "Other" or "Type something." options. Put a recommended option first, its label ending in "(Recommended)". Give options a \`preview\` only to compare concrete artifacts such as mockups, code, diagrams or configs.`;
 

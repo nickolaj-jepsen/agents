@@ -20,23 +20,24 @@
 
       flake = let
         inherit (nixpkgs) lib;
-        pluginsDir = ./plugins;
+        pluginsDir = ./apps;
         skillsDir = ./skills;
         dirs = dir: lib.filterAttrs (_: type: type == "directory") (builtins.readDir dir);
       in {
         lib = {
-          # A plugin's folder decides its halves; `agentTools.subagents` loads the pi half in subagents too.
-          # `path` is a string into the flake's own source: a pi half imports `../../kit`, which a path
-          # literal's copy of the plugin folder alone would not hold.
-          plugins = lib.mapAttrs (name: _: let
-            dir = pluginsDir + "/${name}";
-            pkg = lib.optionalAttrs (builtins.pathExists (dir + "/package.json")) (lib.importJSON (dir + "/package.json"));
-          in {
-            claude = builtins.pathExists (dir + "/.claude-plugin/plugin.json");
+          # An app's package.json decides its halves (a `claude` field, a `pi` manifest), and an app with
+          # neither (the site) is no plugin; `agentTools.subagents` loads the pi half in subagents too.
+          # `path` is a string into the flake's own source. TODO(dist): it names the app's source, which
+          # imports the kit by workspace package; the nix build of `dist/` comes next and replaces it.
+          plugins = lib.mapAttrs (name: pkg: {
+            claude = pkg ? claude;
             pi = pkg ? pi;
             subagents = pkg.agentTools.subagents or false;
-            path = "${self}/plugins/${name}";
-          }) (dirs pluginsDir);
+            path = "${self}/apps/${name}";
+          }) (lib.filterAttrs (_: pkg: pkg ? claude || pkg ? pi) (lib.mapAttrs (name: _: let
+            file = pluginsDir + "/${name}/package.json";
+          in
+            lib.optionalAttrs (builtins.pathExists file) (lib.importJSON file)) (dirs pluginsDir)));
 
           # One folder per skill, each with a SKILL.md.
           skills = lib.mapAttrs (name: _: skillsDir + "/${name}") (dirs skillsDir);

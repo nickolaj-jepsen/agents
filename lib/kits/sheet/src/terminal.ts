@@ -1,5 +1,5 @@
 /** The sheet as styled lines: the one drawing both terminals paint. */
-import { closeSpans, frameTop } from "../frame/terminal.ts";
+import { closeSpans, frameTop } from "@agents/kit-frame/terminal.ts";
 import {
   hitSpans,
   line,
@@ -9,8 +9,8 @@ import {
   truncateSpans,
   type Line,
   type Span,
-} from "../lines.ts";
-import { tokens } from "../tokens.ts";
+} from "@agents/kit-core/lines.ts";
+import { tokens } from "@agents/kit-core/tokens.ts";
 import { sheetLayout, sheetRoom, type Sheet } from "./contract.ts";
 
 const EDGE = { topLeft: "╭", topRight: "╮", bottomLeft: "╰", bottomRight: "╯", side: "│" };

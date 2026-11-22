@@ -3,7 +3,7 @@
  * from `scripts/content.ts` (the site's `dev` and `build` tasks run it first), plus the URLs the pages link with. The
  * pages read no file outside this folder, so the site builds from its own tree.
  */
-import type { Content, Doc, Plugin, Skill } from "../../../scripts/content.ts";
+import type { Content, Doc, Plugin, Skill } from "../../../../lib/tools/build/content.ts";
 import model from "../../data/content.json";
 
 export type { Content, Doc, Plugin, Skill };

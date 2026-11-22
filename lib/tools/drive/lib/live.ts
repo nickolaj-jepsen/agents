@@ -3,11 +3,11 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import { e2eRoot, reach, type Resolved } from "./scenario.ts";
+import { driveRoot, reach, type Resolved } from "./scenario.ts";
 import { Session } from "./session.ts";
 import { stopStub } from "./stub.ts";
 import { DaemonTerm } from "./term.ts";
-import { fileList, relevant, sourceDirs, syncKit, touchesScenario, watchSources } from "./watch.ts";
+import { fileList, relevant, sourceDirs, rebuild, touchesScenario, watchSources } from "./watch.ts";
 
 const run = promisify(execFile);
 
@@ -31,7 +31,7 @@ async function freshSession(r: Resolved, name: string, runDir: string): Promise<
     const { stdout } = await run(
       process.execPath,
       [
-        join(e2eRoot, "cli.ts"),
+        join(driveRoot, "cli.ts"),
         "_reach",
         r.plugin,
         r.name,
@@ -97,7 +97,7 @@ export async function live(r: Resolved, o: LiveOptions = {}) {
       if (controller.signal.aborted || files.length === 0) return;
       if (!session) console.log(`\nSaved ${fileList(files)}: reloading…`);
       try {
-        await syncKit();
+        await rebuild(r);
         // Claude reloads a mod whose file was written, keeping the screen, and says so in its
         // transcript, as it does when the new code fails to load.
         if (session && r.harness === "claude" && o.inPlace && !touchesScenario(r, files)) return;

@@ -1,7 +1,7 @@
 import { atom, read, update } from "claude-code";
 import type { ElementTable, EngineInterface, Register, RenderElement } from "claude-code";
 
-import { drafter, PRIORITIES, type Form as CoreForm, type TeamCache } from "../core/draft.ts";
+import { drafter, PRIORITIES, type Form as CoreForm, type TeamCache } from "./lib/draft.ts";
 import {
   act,
   isControl,
@@ -10,13 +10,13 @@ import {
   type Effect,
   type Intent,
   type View as CoreView,
-} from "../core/screen.ts";
-import type { Editing, Form, Last, View } from "./types.d.ts";
-import { guiBand, guiPane } from "./gui";
-import { RING, ringMove } from "./kit/paint/claude.tsx";
-import { hasLinear, hostFor, openUrl } from "./linear.ts";
-import { fieldKey, terminalBand, terminalPane, typingOf } from "./terminal.tsx";
-import { forSurface, kitOf, paneOptions } from "./ui";
+} from "./lib/screen.ts";
+import type { Editing, Form, Last, View } from "./claude/types.d.ts";
+import { guiBand, guiPane } from "./claude/gui";
+import { RING, ringMove } from "@agents/kit-core/paint/claude.tsx";
+import { hasLinear, hostFor, openUrl } from "./claude/linear.ts";
+import { fieldKey, terminalBand, terminalPane, typingOf } from "./claude/terminal.tsx";
+import { forSurface, kitOf, paneOptions } from "@agents/kit-legacy/claude/ui.tsx";
 import {
   ANCHOR,
   cardText,
@@ -27,7 +27,7 @@ import {
   isElement,
   LEARN_MORE,
   pathTo,
-} from "./ysk.tsx";
+} from "./claude/ysk.tsx";
 
 // The mod's state is declared in `types.d.ts`, which cannot import: these fail to compile when
 // its shapes and the shared core's drift apart.

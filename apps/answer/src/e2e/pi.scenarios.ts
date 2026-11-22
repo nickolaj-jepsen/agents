@@ -1,5 +1,5 @@
-import { region, type Region } from "../lib/screen.ts";
-import { scenarios, type Scenario, type Step } from "../lib/scenario.ts";
+import { region, type Region } from "@agents/drive/lib/screen.ts";
+import { scenarios, type Scenario, type Step } from "@agents/drive/lib/scenario.ts";
 import { message, says } from "./fixture.ts";
 
 const cards = (fixture: string, ...args: string[]): Scenario["start"] => ({

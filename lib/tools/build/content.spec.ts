@@ -7,8 +7,8 @@ const content = loadContent();
 
 describe("content", () => {
   it("has a plugin for every plugin folder, with a README", () => {
-    const folders = readdirSync(join(repoRoot, "plugins"), { withFileTypes: true })
-      .filter((e) => e.isDirectory())
+    const folders = readdirSync(join(repoRoot, "apps"), { withFileTypes: true })
+      .filter((e) => e.isDirectory() && e.name !== "site")
       .map((e) => e.name);
     expect(content.plugins.map((p) => p.name).sort()).toEqual(folders.sort());
     for (const p of content.plugins) {

@@ -12,9 +12,9 @@ import {
   readPreview,
   type LocalImage,
   type Preview,
-} from "../core/images";
-import { imageLinks } from "../core/links";
-import { imageGallery, kitOf } from "./ui";
+} from "./lib/images";
+import { imageLinks } from "./lib/links";
+import { imageGallery, kitOf } from "@agents/kit-legacy/claude/ui.tsx";
 
 const fullSize = (viewport?: { columns: number; rows: number }) => ({
   columns: Math.max(1, Math.min(144, (viewport?.columns ?? 84) - 4)),

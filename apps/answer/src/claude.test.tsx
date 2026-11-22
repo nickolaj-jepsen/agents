@@ -5,7 +5,7 @@ import type { On } from "claude-code";
 import { expect, mock, test } from "claude-code/testing";
 import type { Engine, Mounted } from "claude-code/testing";
 
-import { expectNative } from "./checks";
+import { expectNative } from "@agents/kit-legacy/claude/checks.tsx";
 
 const GRILLING = `The bar and the funnel are independent, so this round asks both.
 

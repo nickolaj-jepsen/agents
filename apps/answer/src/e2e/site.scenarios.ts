@@ -1,6 +1,6 @@
-import type { Turn } from "../lib/harness.ts";
-import type { Step } from "../lib/scenario.ts";
-import { poster, site, slow } from "../lib/site.ts";
+import type { Turn } from "@agents/drive/lib/harness.ts";
+import type { Step } from "@agents/drive/lib/scenario.ts";
+import { poster, site, slow } from "@agents/drive/lib/site.ts";
 
 /** One step per key: a key sent before the last one settled can be lost. */
 const keys = (...names: string[]): Step[] => names.map((press) => ({ press }));

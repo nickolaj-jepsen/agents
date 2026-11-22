@@ -15,10 +15,10 @@ import {
   type TuiMouseEvent,
   type TuiMouseEventResult,
 } from "@earendil-works/pi-tui";
-import { cellAt, paintLines, paintText, type Cell } from "../../../kit/paint/pi.ts";
-import { tokens } from "../../../kit/tokens.ts";
-import { blank } from "../../../kit/lines.ts";
-import { openQueue, type Suggestion } from "../core/docfix.ts";
+import { cellAt, paintLines, paintText, type Cell } from "@agents/kit-core/paint/pi.ts";
+import { tokens } from "@agents/kit-core/tokens.ts";
+import { blank } from "@agents/kit-core/lines.ts";
+import { openQueue, type Suggestion } from "../lib/docfix.ts";
 import {
   decided,
   drawScreen,
@@ -31,7 +31,7 @@ import {
   type ScreenState,
   type Zones,
   WHEEL_ROWS,
-} from "../core/screen.ts";
+} from "../lib/screen.ts";
 
 export type PanelDeps = {
   /** Dismisses what the main action carries out. */

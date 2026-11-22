@@ -8,17 +8,22 @@
     ".agents/**",
     "skills/mermaid/scripts/vendor/**",
     "skills/agent-plugin-dev/references/upstream/**",
-    "plugins/*/claude/ui.tsx",
-    "plugins/*/claude/checks.tsx",
-    "plugins/*/claude/types.d.ts",
-    "kit/catalog/claude/claude/ui.tsx",
-    "kit/catalog/claude/claude/samples.ts",
-    "site/dist/**",
-    "site/.astro/**"
+    "apps/*/src/claude/types.d.ts",
+    "lib/kits/catalog/src/claude/types.d.ts",
+    "apps/*/dist/**",
+    "lib/kits/catalog/dist/**",
+    "apps/site/dist/**",
+    "apps/site/.astro/**"
   ],
   "overrides": [
     {
-      "files": ["plugins/*/pi/**", "plugins/*/claude/**", "plugins/*/core/**"],
+      "files": [
+        "apps/*/src/pi.ts",
+        "apps/*/src/pi/**",
+        "apps/*/src/claude.*",
+        "apps/*/src/claude/**",
+        "apps/*/src/lib/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -40,7 +45,7 @@
                   "Spacer",
                   "SelectList"
                 ],
-                "message": "Don't draw with pi-tui helpers. Measure and wrap with kit/lines.ts, paint with kit/paint/pi.ts."
+                "message": "Don't draw with pi-tui helpers. Measure and wrap with @agents/kit-core/lines.ts, paint with @agents/kit-core/paint/pi.ts."
               },
               {
                 "name": "@earendil-works/pi-ai",
@@ -50,8 +55,8 @@
             ],
             "patterns": [
               {
-                "group": ["**/kit/legacy/**", "./ui"],
-                "message": "This is the legacy kit. Use the kit's components (kit/<component>/, listed in AGENTS.md) instead."
+                "group": ["@agents/kit-legacy/**"],
+                "message": "This is the legacy kit. Use the kit's components (lib/kits/<component>/, listed in AGENTS.md) instead."
               }
             ]
           }
@@ -61,32 +66,32 @@
           {
             "object": "theme",
             "property": "fg",
-            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with kit/paint/pi.ts."
+            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with @agents/kit-core/paint/pi.ts."
           },
           {
             "object": "theme",
             "property": "bg",
-            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with kit/paint/pi.ts."
+            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with @agents/kit-core/paint/pi.ts."
           },
           {
             "object": "theme",
             "property": "bold",
-            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with kit/paint/pi.ts."
+            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with @agents/kit-core/paint/pi.ts."
           },
           {
             "object": "theme",
             "property": "italic",
-            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with kit/paint/pi.ts."
+            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with @agents/kit-core/paint/pi.ts."
           },
           {
             "object": "theme",
             "property": "underline",
-            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with kit/paint/pi.ts."
+            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with @agents/kit-core/paint/pi.ts."
           },
           {
             "object": "theme",
             "property": "strikethrough",
-            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with kit/paint/pi.ts."
+            "message": "Don't style with theme directly. Build styled lines from kit components and paint them with @agents/kit-core/paint/pi.ts."
           }
         ],
         "react/forbid-elements": [
@@ -95,31 +100,31 @@
             "forbid": [
               {
                 "element": "Box",
-                "message": "Don't use raw elements. Compose kit components; kit/paint/claude.tsx paints them."
+                "message": "Don't use raw elements. Compose kit components; @agents/kit-core/paint/claude.tsx paints them."
               },
               {
                 "element": "Text",
-                "message": "Don't use raw elements. Compose kit components; kit/paint/claude.tsx paints them."
+                "message": "Don't use raw elements. Compose kit components; @agents/kit-core/paint/claude.tsx paints them."
               },
               {
                 "element": "Button",
-                "message": "Don't use raw elements. Compose kit components; kit/paint/claude.tsx paints them."
+                "message": "Don't use raw elements. Compose kit components; @agents/kit-core/paint/claude.tsx paints them."
               },
               {
                 "element": "Markdown",
-                "message": "Don't use raw elements. Compose kit components; kit/paint/claude.tsx paints them."
+                "message": "Don't use raw elements. Compose kit components; @agents/kit-core/paint/claude.tsx paints them."
               },
               {
                 "element": "Link",
-                "message": "Don't use raw elements. Compose kit components; kit/paint/claude.tsx paints them."
+                "message": "Don't use raw elements. Compose kit components; @agents/kit-core/paint/claude.tsx paints them."
               },
               {
                 "element": "Image",
-                "message": "Don't use raw elements. Compose kit components; kit/paint/claude.tsx paints them."
+                "message": "Don't use raw elements. Compose kit components; @agents/kit-core/paint/claude.tsx paints them."
               },
               {
                 "element": "Svg",
-                "message": "Don't use raw elements. Compose kit components; kit/paint/claude.tsx paints them."
+                "message": "Don't use raw elements. Compose kit components; @agents/kit-core/paint/claude.tsx paints them."
               }
             ]
           }
@@ -127,10 +132,11 @@
       }
     },
     // An override replaces a rule's options whole, so each restates what it keeps of the shared ones.
-    // A core is harness-free (docs/development.md#change-or-add-a-plugin): it imports its own
-    // files and the mod's copy of the kit, which also keeps it clear of pi-tui and the legacy kit.
+    // A lib is harness-free (docs/development.md#change-or-add-a-plugin): it imports its own files and
+    // the kit's packages, which keeps it clear of pi-tui and the legacy kit, and runs in the mod engine,
+    // which has no Node. This is where "no node: imports" is held, in place of a tsconfig without Node types.
     {
-      "files": ["plugins/*/core/**"],
+      "files": ["apps/*/src/lib/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -138,45 +144,45 @@
             "patterns": [
               {
                 // One gitignore-style list, last match wins: oxlint doesn't combine several groups.
-                // A core folder is at most one level deep, so `core/` and `core/<dir>/` are spelled out.
                 "group": [
                   "*",
                   "!./**",
                   "!../**",
+                  "!@agents/kit-*/**",
+                  "!@agents/kit-legacy/**",
                   "../pi/**",
                   "../../pi/**",
+                  "../pi.ts",
                   "../claude/**",
-                  "../../*/**",
-                  "../../../**",
-                  "!../claude/kit/**",
-                  "!../../claude/kit/**"
+                  "../../claude/**",
+                  "../claude.*"
                 ],
-                "message": "A core has no Node builtin and no package, and imports only its own files and the mod's copy of the kit, claude/kit/. See docs/development.md#change-or-add-a-plugin."
+                "message": "A lib has no Node builtin and no package but the kit's (@agents/kit-*), and imports only its own files. See docs/development.md#change-or-add-a-plugin."
               }
             ]
           }
         ],
         "no-restricted-globals": [
           "error",
-          { "name": "process", "message": "No Node or DOM APIs in a core." },
-          { "name": "Buffer", "message": "No Node or DOM APIs in a core." },
-          { "name": "window", "message": "No Node or DOM APIs in a core." },
-          { "name": "document", "message": "No Node or DOM APIs in a core." },
-          { "name": "localStorage", "message": "No Node or DOM APIs in a core." }
+          { "name": "process", "message": "No Node or DOM APIs in a lib." },
+          { "name": "Buffer", "message": "No Node or DOM APIs in a lib." },
+          { "name": "window", "message": "No Node or DOM APIs in a lib." },
+          { "name": "document", "message": "No Node or DOM APIs in a lib." },
+          { "name": "localStorage", "message": "No Node or DOM APIs in a lib." }
         ]
       }
     },
-    // A core's specs run under vitest in Node and load nowhere else: they may read fixtures and use packages.
+    // A lib's specs run under vitest in Node and load nowhere else: they may read fixtures and use packages.
     {
-      "files": ["plugins/*/core/**/*.spec.ts"],
+      "files": ["apps/*/src/lib/**/*.spec.ts"],
       "rules": {
         "no-restricted-imports": "off",
         "no-restricted-globals": "off"
       }
     },
-    // A mod can't import outside its plugin folder: the install copies the plugin alone.
+    // A mod runs in the mod engine, which has no Node and no pi-tui; the build bundles what it imports.
     {
-      "files": ["plugins/*/claude/*"],
+      "files": ["apps/*/src/claude.*", "apps/*/src/claude/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -184,71 +190,72 @@
             "paths": [
               {
                 "name": "@earendil-works/pi-tui",
-                "message": "A mod runs in Claude Code, which has no pi-tui. Measure and wrap with kit/lines.ts, paint with kit/paint/claude.tsx."
+                "message": "A mod runs in Claude Code, which has no pi-tui. Measure and wrap with @agents/kit-core/lines.ts, paint with @agents/kit-core/paint/claude.tsx."
               }
             ],
             "patterns": [
               {
-                "group": ["**/kit/legacy/**", "./ui"],
-                "message": "This is the legacy kit. Use the kit's components (kit/<component>/, listed in AGENTS.md) instead."
+                "group": ["@agents/kit-legacy/**"],
+                "message": "This is the legacy kit. Use the kit's components (lib/kits/<component>/, listed in AGENTS.md) instead."
               },
               {
-                "regex": "^\\.\\./\\.\\./",
-                "message": "A mod can't import outside its plugin. Import ./kit/ (kit/sync.ts copies the kit there) or ../core/. See docs/development.md#change-or-add-a-plugin."
+                "group": ["node:*"],
+                "message": "A mod runs in Claude Code's mod engine, which has no Node. See docs/development.md#change-or-add-a-plugin."
               }
             ]
           }
+        ],
+        "no-restricted-globals": [
+          "error",
+          { "name": "process", "message": "No Node or DOM APIs in a mod." },
+          { "name": "Buffer", "message": "No Node or DOM APIs in a mod." },
+          { "name": "window", "message": "No Node or DOM APIs in a mod." },
+          { "name": "document", "message": "No Node or DOM APIs in a mod." },
+          { "name": "localStorage", "message": "No Node or DOM APIs in a mod." }
         ]
       }
     },
+    // The site reads its content as data (apps/site/data/), so its pages reach into lib/ for types only,
+    // and apps/site/ alone builds. Covers the frontmatter of .astro pages too.
     {
-      "files": ["plugins/*/claude/kit/**"],
-      "rules": {
-        "no-restricted-imports": "off",
-        "no-restricted-properties": "off",
-        "react/forbid-elements": "off"
-      }
-    },
-    // The site reads its content as data (site/data/), so its pages reach into scripts/ and kit/ for
-    // types only, and site/ alone builds. Covers the frontmatter of .astro pages too.
-    {
-      "files": ["site/src/**"],
+      "files": ["apps/site/src/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "patterns": [
               {
-                "regex": "^(\\.\\./)+(scripts|kit)/",
+                "regex": "^(\\.\\./)+lib/(tools|kits)/",
                 "allowTypeImports": true,
-                "message": "site/src imports a value from outside site/; only `import type` may. See docs/development.md#preview-the-published-site."
+                "message": "apps/site/src imports a value from outside apps/site/; only `import type` may. See docs/development.md#preview-the-published-site."
               }
             ]
           }
-        ]
+        ],
+        "no-restricted-globals": "off"
       }
     },
     // Legacy files: they still draw around the kit. List only shrinks; never add a file here.
     {
       "files": [
-        "plugins/answer/claude/answer.test.tsx",
-        "plugins/answer/claude/register.tsx",
-        "plugins/answer/claude/transcript.tsx",
-        "plugins/answer/pi/offer.ts",
-        "plugins/answer/pi/transcript.ts",
-        "plugins/docfix/claude/evidence.tsx",
-        "plugins/docfix/claude/register.tsx",
-        "plugins/git-menu/claude/register.tsx",
-        "plugins/image-preview/claude/image-preview.test.tsx",
-        "plugins/image-preview/claude/register.tsx",
-        "plugins/linear-issue/claude/gui.tsx",
-        "plugins/linear-issue/claude/linear-issue.test.tsx",
-        "plugins/linear-issue/claude/register.tsx",
-        "plugins/spellfix/claude/band.tsx",
-        "plugins/spellfix/claude/register.tsx",
-        "plugins/spellfix/claude/spellfix.test.tsx",
-        "plugins/spellfix/pi/index.ts",
-        "plugins/transcript-tweaks/pi/condense.ts"
+        "apps/answer/src/claude.test.tsx",
+        "apps/answer/src/claude.tsx",
+        "apps/answer/src/claude/transcript.tsx",
+        "apps/answer/src/pi/offer.ts",
+        "apps/answer/src/pi/transcript.ts",
+        "apps/docfix/src/claude/evidence.tsx",
+        "apps/docfix/src/claude.tsx",
+        "apps/git-menu/src/claude.tsx",
+        "apps/image-preview/src/claude.test.tsx",
+        "apps/image-preview/src/claude.tsx",
+        "apps/linear-issue/src/claude/gui.tsx",
+        "apps/linear-issue/src/claude.test.tsx",
+        "apps/linear-issue/src/claude.tsx",
+        "apps/spellfix/src/claude/band.tsx",
+        "apps/spellfix/src/claude.tsx",
+        "apps/spellfix/src/claude.test.tsx",
+        "apps/spellfix/src/pi.ts",
+        "apps/transcript-tweaks/src/pi/condense.ts"
       ],
       "rules": {
         "no-restricted-imports": "off",

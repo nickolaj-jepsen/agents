@@ -5,9 +5,9 @@
  */
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import type { Component, TUI, TuiMouseEvent, TuiMouseEventResult } from "@earendil-works/pi-tui";
-import { cellAt, paintLines, type Cell } from "../../../kit/paint/pi.ts";
-import { draftChip } from "../core/chip.ts";
-import type { Form } from "../core/draft.ts";
+import { cellAt, paintLines, type Cell } from "@agents/kit-core/paint/pi.ts";
+import { draftChip } from "../lib/chip.ts";
+import type { Form } from "../lib/draft.ts";
 
 /** How /linear is typed: the line's way back for the keyboard. */
 const OPEN_KEY = "/linear";

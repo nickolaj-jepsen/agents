@@ -1,8 +1,8 @@
 import type { On, PromptBox, PromptEditInput, PromptEditResult } from "claude-code";
 import { expect, mock, test } from "claude-code/testing";
 import type { Engine, MockClock, Mounted } from "claude-code/testing";
-import { ACTION_KEYS } from "./band";
-import { expectNative } from "./checks";
+import { ACTION_KEYS } from "./claude/band";
+import { expectNative } from "@agents/kit-legacy/claude/checks.tsx";
 
 const BAND = {
   plugin: "spellfix",

@@ -1,9 +1,9 @@
 /** The detail as styled lines: the one drawing both terminals paint. */
-import { buttonRow } from "../buttons/terminal.ts";
-import type { Button } from "../buttons/contract.ts";
-import { fields } from "../fields/terminal.ts";
-import { captionFrameLayout } from "../frame/contract.ts";
-import { captionParts, captionRule } from "../frame/terminal.ts";
+import { buttonRow } from "@agents/kit-buttons/terminal.ts";
+import type { Button } from "@agents/kit-buttons/contract.ts";
+import { fields } from "@agents/kit-fields/terminal.ts";
+import { captionFrameLayout } from "@agents/kit-frame/contract.ts";
+import { captionParts, captionRule } from "@agents/kit-frame/terminal.ts";
 import {
   blank,
   block,
@@ -13,8 +13,8 @@ import {
   type Line,
   type Scrolled,
   type Span,
-} from "../lines.ts";
-import { prose } from "../prose/terminal.ts";
+} from "@agents/kit-core/lines.ts";
+import { prose } from "@agents/kit-prose/terminal.ts";
 import type { Detail, DetailItem, DetailSection } from "./contract.ts";
 
 /** An action at a rule's end, drawn as a button row draws one. */

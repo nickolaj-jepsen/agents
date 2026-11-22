@@ -10,8 +10,8 @@ import {
   type Line,
   type Role,
   type Span,
-} from "../lines.ts";
-import { tokens } from "../tokens.ts";
+} from "@agents/kit-core/lines.ts";
+import { tokens } from "@agents/kit-core/tokens.ts";
 import type { Field, FieldsOptions } from "./contract.ts";
 
 const GAP = " ".repeat(tokens.gutter);

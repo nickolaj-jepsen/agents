@@ -1,7 +1,19 @@
 {
-  "extends": ["//"],
+  "extends": [
+    "//"
+  ],
   "tasks": {
-    "check-types": { "command": null },
-    "test:claude": { "command": ["sh", "../../scripts/claude-plugin-test.sh"] }
+    "build": {
+      "command": [
+        "node",
+        "../../lib/tools/build/build.ts"
+      ]
+    },
+    "test:claude": {
+      "command": [
+        "sh",
+        "../../lib/tools/build/claude-plugin-test.sh"
+      ]
+    }
   }
 }

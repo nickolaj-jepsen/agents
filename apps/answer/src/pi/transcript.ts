@@ -11,9 +11,9 @@ import {
   type TuiMouseEvent,
   type TuiMouseEventResult,
 } from "@earendil-works/pi-tui";
-import type { Button } from "../../../kit/buttons/contract.ts";
-import { buttonRow } from "../../../kit/buttons/terminal.ts";
-import { digitChoice } from "../../../kit/card/contract.ts";
+import type { Button } from "@agents/kit-buttons/contract.ts";
+import { buttonRow } from "@agents/kit-buttons/terminal.ts";
+import { digitChoice } from "@agents/kit-card/contract.ts";
 import {
   CARD_INSET,
   choice as choiceRows,
@@ -23,10 +23,10 @@ import {
   NOTE_LABEL,
   railRole,
   sectionsOf,
-} from "../../../kit/card/terminal.ts";
-import { cellWidth, span, type Span } from "../../../kit/lines.ts";
-import { draw, markdownLines, paintLine, paintLines, paintText } from "../../../kit/paint/pi.ts";
-import { tokens, widthCap } from "../../../kit/tokens.ts";
+} from "@agents/kit-card/terminal.ts";
+import { cellWidth, span, type Span } from "@agents/kit-core/lines.ts";
+import { draw, markdownLines, paintLine, paintLines, paintText } from "@agents/kit-core/paint/pi.ts";
+import { tokens, widthCap } from "@agents/kit-core/tokens.ts";
 // No kit part yet: the band's hit map, the gutter, prose, and `clamp`, which breaks CJK text
 // between characters where the kit's wraps at spaces only.
 import {
@@ -36,8 +36,8 @@ import {
   gutterLine,
   prose,
   type BandRow,
-} from "../../../kit/legacy/pi/ui.ts";
-import { type Held, type View, view, viewOf } from "../core/forms.ts";
+} from "@agents/kit-legacy/pi/ui.ts";
+import { type Held, type View, view, viewOf } from "../lib/forms.ts";
 
 export type Round = Held & { anchor?: string; sent?: boolean };
 export type RoundAction =

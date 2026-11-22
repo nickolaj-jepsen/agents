@@ -8,9 +8,9 @@ import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import { contentText } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { Component, TUI } from "@earendil-works/pi-tui";
-import { type Action, hasWork, offer, step as stepForm, type View, viewOf } from "../core/forms.ts";
-import { AnswerOffer } from "./offer.ts";
-import { AnswerGuide, type Round, type RoundAction, Transcript, reveal } from "./transcript.ts";
+import { type Action, hasWork, offer, step as stepForm, type View, viewOf } from "./lib/forms.ts";
+import { AnswerOffer } from "./pi/offer.ts";
+import { AnswerGuide, type Round, type RoundAction, Transcript, reveal } from "./pi/transcript.ts";
 
 const WIDGET_KEY = "answer";
 const SHORTCUT = "alt+a";

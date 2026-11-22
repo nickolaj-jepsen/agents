@@ -13,9 +13,9 @@ import {
   type ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import type { TUI } from "@earendil-works/pi-tui";
-import { line, span, truncate, type Line } from "../../../kit/lines.ts";
-import { draw as paint } from "../../../kit/paint/pi.ts";
-import { tokens } from "../../../kit/tokens.ts";
+import { line, span, truncate, type Line } from "@agents/kit-core/lines.ts";
+import { draw as paint } from "@agents/kit-core/paint/pi.ts";
+import { tokens } from "@agents/kit-core/tokens.ts";
 import {
   drafter,
   errorText,
@@ -26,12 +26,12 @@ import {
   type Last,
   type Origin,
   type TeamCache,
-} from "../core/draft.ts";
-import { CHIP } from "../core/chip.ts";
-import { act, startView, type Drawn, type Effect, type Intent, type View } from "../core/screen.ts";
-import { DraftChip, rowsFromPrompt } from "./chip.ts";
-import { linearBridge } from "./linear.ts";
-import { DONE_MARK, DraftSheet, sheetOptions } from "./sheet.ts";
+} from "./lib/draft.ts";
+import { CHIP } from "./lib/chip.ts";
+import { act, startView, type Drawn, type Effect, type Intent, type View } from "./lib/screen.ts";
+import { DraftChip, rowsFromPrompt } from "./pi/chip.ts";
+import { linearBridge } from "./pi/linear.ts";
+import { DONE_MARK, DraftSheet, sheetOptions } from "./pi/sheet.ts";
 
 const WIDGET = "linear-issue";
 const FILED = "linear-issue-filed";

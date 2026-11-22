@@ -17,11 +17,11 @@ import {
   statusText,
   TOOL_DESCRIPTION,
   TOOL_NAME,
-} from "../core/docfix.ts";
-import { line, span } from "../../../kit/lines.ts";
-import { draw } from "../../../kit/paint/pi.ts";
-import { DocsPanel, sidebarOptions, type PanelResult } from "./panel.ts";
-import { hasStore, isTracked, loadAll, remove, repoRoot, save, storeDir } from "./store.ts";
+} from "./lib/docfix.ts";
+import { line, span } from "@agents/kit-core/lines.ts";
+import { draw } from "@agents/kit-core/paint/pi.ts";
+import { DocsPanel, sidebarOptions, type PanelResult } from "./pi/panel.ts";
+import { hasStore, isTracked, loadAll, remove, repoRoot, save, storeDir } from "./pi/store.ts";
 
 const STATUS_KEY = "docfix";
 

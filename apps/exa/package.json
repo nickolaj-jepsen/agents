@@ -6,22 +6,25 @@
     "pi-package"
   ],
   "type": "module",
+  "pi": {
+    "extensions": [
+      "./src/pi.ts"
+    ]
+  },
+  "agentTools": {
+    "subagents": true
+  },
   "devDependencies": {
+    "@agents/build": "workspace:*",
+    "@agents/drive": "workspace:*",
     "@earendil-works/pi-coding-agent": "catalog:",
     "@types/node": "catalog:",
+    "tsdown": "catalog:",
     "typebox": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*"
-  },
-  "agentTools": {
-    "subagents": true
-  },
-  "pi": {
-    "extensions": [
-      "./pi/exa.ts"
-    ]
   }
 }

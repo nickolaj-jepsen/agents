@@ -1,7 +1,7 @@
 /**
  * Parks a live agent session on a scenario's screen and drives it from separate invocations,
  * through the tui-test daemon: `goto <plugin> <scenario>`, then `cap`, `keys`, `click` and so on.
- * Run `node e2e/cli.ts` for the verbs.
+ * Run `node lib/tools/drive/cli.ts` for the verbs.
  */
 import { spawn } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
@@ -17,7 +17,7 @@ import {
   fileList,
   relevant,
   sourceDirs,
-  syncKit,
+  rebuild,
   touchesScenario,
   watchSources,
 } from "./lib/watch.ts";
@@ -46,13 +46,13 @@ const die = (msg: string): never => {
   process.exit(1);
 };
 
-const USAGE = `usage: node e2e/cli.ts <verb>
+const USAGE = `usage: node lib/tools/drive/cli.ts <verb>
   ls [plugin] [--harness claude|pi|vscode]   scenarios, by plugin and agent
   live <plugin> <scenario> [--harness claude|pi|vscode] [--size WxH] [--watch [--in-place]]
                                            replay the scenario, then interact and resize
   goto <plugin> <scenario> [--harness claude|pi] [--size COLSxROWS] [--watch [--in-place]]
                                            start the agent on that screen and leave it there
-  reload                                   sync the kit, start over and replay to the same screen
+  reload                                   rebuild, start over and replay to the same screen
   cap                                      the screen as text
   snap                                     the scenario's snapshot of the screen as it is now
   keys <Key...>                            Enter, Escape, Tab, Down, Ctrl+c, Alt+a ...
@@ -67,7 +67,7 @@ const USAGE = `usage: node e2e/cli.ts <verb>
   stop                                     end the session and remove its folder
   vscode <verb>                            the same in a headless VS Code (\`vscode\` alone lists them)
 
---watch: on each save under the plugin, kit/ or the scenario's folder, sync the kit, start over
+--watch: on each save under the app, the kit or the scenario's folder, rebuild, start over
 and replay. --in-place: Claude keeps its session and reloads the mod itself, in its own time.
 goto --watch stays in the foreground; Ctrl+C stops watching and leaves the session parked.`;
 
@@ -137,14 +137,14 @@ function keepOrRemove(runDir: string) {
 }
 
 /**
- * Syncs the kit and parks a fresh session on the scenario beside the current one, at the size
+ * Rebuilds the apps and parks a fresh session on the scenario beside the current one, at the size
  * that one has now, and only then replaces it: a start that fails leaves the last good session
  * parked. The scenario's file is read as it is now.
  */
 async function reload() {
   const { cur, session: old } = need();
-  for (const line of await syncKit()) console.log(line);
   const r = await resolved(cur);
+  for (const line of await rebuild(r)) console.log(line);
   if (cur.size) r.size = cur.size;
   const before = await old.size().catch(() => undefined);
   const runDir = mkdtempSync(join(stateDir, "run-"));
@@ -176,7 +176,7 @@ const IN_PLACE =
 
 /**
  * `goto --watch`: on each batch of saves until a signal, `reload` (in a process of its own, so the
- * scenario is read anew), which prints the screen. With `inPlace`, a Claude session gets the sync
+ * scenario is read anew), which prints the screen. With `inPlace`, a Claude session gets the rebuild
  * alone and reloads the mod itself, unless the scenario changed.
  */
 async function watchParked(r: Resolved, inPlace: boolean) {
@@ -192,7 +192,7 @@ async function watchParked(r: Resolved, inPlace: boolean) {
       console.log(`\n${new Date().toTimeString().slice(0, 8)} saved ${fileList(files)}`);
       if (!readCurrent()) return void console.log("no session is parked: `goto` again");
       if (r.harness === "claude" && inPlace && !touchesScenario(r, files)) {
-        for (const line of await syncKit()) console.log(line);
+        for (const line of await rebuild(r)) console.log(line);
         console.log(IN_PLACE);
         return;
       }

@@ -2,7 +2,7 @@ import type { On, ToolInfo } from "claude-code";
 import { expect, mock, test } from "claude-code/testing";
 import type { Engine, MockClock, Mounted, Plugin } from "claude-code/testing";
 
-import { expectNative } from "./checks";
+import { expectNative } from "@agents/kit-legacy/claude/checks.tsx";
 
 const BAND = {
   plugin: "linear-issue",

@@ -6,7 +6,7 @@
 import { Type } from "typebox";
 import type { ExtensionAPI, ExtensionToolContext } from "@earendil-works/pi-coding-agent";
 import { readFileSync } from "node:fs";
-import { contextBudget, fetchPlan, resultCount, searchCap } from "../core/budget.ts";
+import { contextBudget, fetchPlan, resultCount, searchCap } from "./lib/budget.ts";
 
 const API = "https://api.exa.ai";
 // Exa's fee as tool-result usage, which pi counts in the session total even under codemode.

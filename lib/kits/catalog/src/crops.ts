@@ -1,7 +1,7 @@
 /**
- * Crops each kit scenario's screenshot (`e2e/kit/__snapshots__/`, git-ignored) to the scenario's
+ * Crops each kit scenario's screenshot (`lib/kits/*/e2e/__snapshots__/`, git-ignored) to the scenario's
  * region (the `@x,y (wxh)` of its `.snap` header), so the site shows the component and not the
- * terminal round it, and commits them under `site/media/kit/`, listed in `crops.json` with a
+ * terminal round it, and writes them under `apps/site/media/kit/`, listed in `crops.json` with a
  * pixel size and a hash: an unchanged crop is not rewritten, so a run leaves no churn.
  *
  * tui-test's screenshot is a window: purple padding, a title bar, then the cell grid, at a
@@ -21,16 +21,15 @@ import {
 } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { crop, decode, encode } from "./png.ts";
-import { here } from "./model.ts";
-import { harnesses } from "./manifest.ts";
+import { repoRoot, snapshotRoots } from "./model.ts";
+import { harnesses } from "@agents/kit-core/manifest.ts";
 
 const cell = { w: 10, h: 21 };
 const origin = { x: 39, y: 65 };
 const margin = { right: 39, bottom: 39 };
 
-const repo = join(here, "..", "..");
-const snapshots = join(repo, "e2e/kit/__snapshots__");
-export const cropsDir = join(repo, "site/media/kit");
+const repo = repoRoot;
+export const cropsDir = join(repo, "apps/site/media/kit");
 export const cropsFile = join(cropsDir, "crops.json");
 /** The most bytes one picture may take before the run warns. */
 const BUDGET = 300_000;
@@ -73,7 +72,7 @@ function optimise(files: string[]): void {
 }
 
 /**
- * Crops every screenshot there is into `site/media/kit/` and rewrites `crops.json`. Crops of a
+ * Crops every screenshot there is into `apps/site/media/kit/` and rewrites `crops.json`. Crops of a
  * harness with screenshots this run that no longer has one are removed; a harness with none
  * keeps the crops it has (a fresh checkout, or `--no-shots`).
  */
@@ -83,7 +82,7 @@ export function cropShots(): { written: number; kept: number; removed: number } 
   const changed: string[] = [];
   const ran = new Set<string>();
   for (const harness of harnesses) {
-    const root = join(snapshots, harness);
+    for (const root of snapshotRoots(harness))
     for (const full of walk(root)) {
       const m = /^(.+\/[^/]+)@(\d+)x(\d+)\.png$/.exec(relative(root, full));
       if (!m) continue;

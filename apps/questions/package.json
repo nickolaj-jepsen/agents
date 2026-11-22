@@ -6,21 +6,27 @@
     "pi-package"
   ],
   "type": "module",
+  "pi": {
+    "extensions": [
+      "./src/pi.ts"
+    ]
+  },
   "devDependencies": {
-    "@agents/kit": "workspace:*",
+    "@agents/build": "workspace:*",
+    "@agents/drive": "workspace:*",
+    "@agents/kit-buttons": "workspace:*",
+    "@agents/kit-card": "workspace:*",
+    "@agents/kit-core": "workspace:*",
+    "@agents/kit-frame": "workspace:*",
     "@earendil-works/pi-coding-agent": "catalog:",
     "@earendil-works/pi-tui": "catalog:",
     "@types/node": "catalog:",
+    "tsdown": "catalog:",
     "typebox": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*"
-  },
-  "pi": {
-    "extensions": [
-      "./pi/index.ts"
-    ]
   }
 }

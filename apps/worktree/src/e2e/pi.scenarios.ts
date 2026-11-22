@@ -1,6 +1,6 @@
-import type { Turn } from "../lib/harness.ts";
-import { gridLines, type Region } from "../lib/screen.ts";
-import { scenarios } from "../lib/scenario.ts";
+import type { Turn } from "@agents/drive/lib/harness.ts";
+import { gridLines, type Region } from "@agents/drive/lib/screen.ts";
+import { scenarios } from "@agents/drive/lib/scenario.ts";
 
 /** The editor between its two rules, and the footer under it. */
 const footer: Region = (grid) => {

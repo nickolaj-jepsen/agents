@@ -1,4 +1,4 @@
-import { defineComponent, no, yes } from "../manifest.ts";
+import { defineComponent, no, yes } from "@agents/kit-core/manifest.ts";
 
 export default defineComponent({
   id: "split",

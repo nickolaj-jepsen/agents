@@ -1,4 +1,4 @@
-import { defineComponent, partial, yes } from "../catalog/manifest.ts";
+import { defineComponent, partial, yes } from "@agents/kit-core/manifest.ts";
 
 const parts = [
   "heading",
@@ -19,7 +19,7 @@ export default defineComponent({
     "A question with lettered answers and a note, and the steps and summary of a form of several.",
   impl: { pi: parts, claude: parts },
   status: { pi: "system", claude: "system", gui: "legacy" },
-  source: "card/terminal.ts",
+  source: "card/src/terminal.ts",
   features: [
     {
       id: "choices",

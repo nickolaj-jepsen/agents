@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { textOf, widthOf, type Line } from "../claude/kit/lines.ts";
-import { sheetHead } from "../claude/kit/sheet/terminal.ts";
+import { textOf, widthOf, type Line } from "@agents/kit-core/lines.ts";
+import { sheetHead } from "@agents/kit-sheet/terminal.ts";
 import type { Form } from "./draft.ts";
 import {
   act,

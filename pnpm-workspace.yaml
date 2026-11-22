@@ -1,11 +1,7 @@
 packages:
-  - site
-  - kit
-  - scripts
-  - tools
-  - e2e
-  - e2e/*
-  - plugins/*
+  - apps/*
+  - lib/kits/*
+  - lib/tools/*
 allowBuilds:
   "@anthropic-ai/claude-code": true
   "@google/genai": false
@@ -15,7 +11,7 @@ allowBuilds:
 # Each package installs what it uses, so bumping a tool changes only the tasks of the packages that
 # have it: turbo hashes the root's dependencies into every task, and a root that held them all would
 # rerun the whole suite on every Dependabot bump. That is why the root holds turbo alone and the
-# linters live in tools/. The catalog states each shared version once; Dependabot updates it here.
+# linters live in lib/tools/lint/. The catalog states each shared version once; Dependabot updates it here.
 catalog:
   "@anthropic-ai/claude-code": 2.1.328
   "@earendil-works/pi-agent-core": 1.5.2
@@ -24,6 +20,7 @@ catalog:
   "@earendil-works/pi-tui": 1.5.2
   "@microsoft/tui-test": ^0.1.1
   "@types/node": ^26.6.6
+  tsdown: ^0.23.7
   typebox: 1.4.7
   typescript: ^7.0.2
   vitest: ^5.1.1

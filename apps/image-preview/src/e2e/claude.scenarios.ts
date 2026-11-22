@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { scenarios, type Scenario } from "../lib/scenario.ts";
-import { gridLines } from "../lib/screen.ts";
+import { scenarios, type Scenario } from "@agents/drive/lib/scenario.ts";
+import { gridLines } from "@agents/drive/lib/screen.ts";
 
 const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAkCAYAAAA5DDySAAAAdklEQVR42u3ZsRGAIAwFUIZxAAtHsLO2ZyVXYyHcAAu5Q8wrfpm78JrkQtqOXFtZ1r2Z2esTAAAAAAAAEBjg7w98qgfQo4FyncMCAAAAAADeAPQYMyMBPrEJAgAAAAAAAJMC2AQBAHARAgAAQFwAP0MAAIQGuAEhKJcojry0RgAAAABJRU5ErkJggg==";

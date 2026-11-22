@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { textOf, widthOf } from "../lines.ts";
+import { textOf, widthOf } from "@agents/kit-core/lines.ts";
 import type { Detail } from "./contract.ts";
 import { detailStories } from "./stories.ts";
 import { detail, detailRange } from "./terminal.ts";

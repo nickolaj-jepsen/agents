@@ -1,5 +1,5 @@
-import { region, type Region } from "../lib/screen.ts";
-import { scenarios, slashCommand } from "../lib/scenario.ts";
+import { region, type Region } from "@agents/drive/lib/screen.ts";
+import { scenarios, slashCommand } from "@agents/drive/lib/scenario.ts";
 import { checkout, EXTREME, fileSuggestions, MANY, ONE, STRUCTURED } from "./fixture.ts";
 
 const open = [slashCommand("docfix", "Review the doc suggestions"), { press: "Enter" }];

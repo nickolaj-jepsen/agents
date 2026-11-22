@@ -1,4 +1,4 @@
-import { vscodeScenarios } from "../lib/vscode-scenario.ts";
+import { vscodeScenarios } from "@agents/drive/lib/vscode-scenario.ts";
 import { checkout, LONG_BASE, LONG_NOTES, MANY_NOTES, NOTES, start, withNotes } from "./fixture.ts";
 
 // A fresh profile may greet with an "Auto mode" notice that takes the first keys typed.

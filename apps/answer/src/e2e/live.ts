@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
-import { offer, title } from "../../plugins/answer/core/forms.ts";
-import { live } from "../lib/live.ts";
-import { resolveScenario, type ScenarioSet } from "../lib/scenario.ts";
+import { offer, title } from "../lib/forms.ts";
+import { live } from "@agents/drive/lib/live.ts";
+import { resolveScenario, type ScenarioSet } from "@agents/drive/lib/scenario.ts";
 import { message } from "./fixture.ts";
 
 async function main() {

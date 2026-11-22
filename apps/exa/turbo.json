@@ -1,4 +1,19 @@
 {
-  "extends": ["//"],
-  "tasks": { "test": { "command": ["./node_modules/.bin/vitest", "run"] } }
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "build": {
+      "command": [
+        "node",
+        "../../lib/tools/build/build.ts"
+      ]
+    },
+    "test": {
+      "command": [
+        "./node_modules/.bin/vitest",
+        "run"
+      ]
+    }
+  }
 }

@@ -3,7 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdirSync, mkdtempSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { message } from "./answer/fixture.ts";
+import { message } from "../../../apps/answer/src/e2e/fixture.ts";
 import { agentBin, checkoutMods, checkoutRoot, STUB_KEY } from "./lib/harness.ts";
 import { runEnv, setupContext } from "./lib/setup.ts";
 import { startStub, stopStub } from "./lib/stub.ts";
@@ -18,7 +18,7 @@ if (process.platform !== "linux") die("this launcher uses the Linux claude-deskt
 const fixture = process.argv[2] ?? "recommended";
 const mode = process.argv[3] ?? "seed";
 if (mode !== "seed" && mode !== "live") die(`unknown mode ${mode}. Choose seed or live.`);
-const fixtures = readdirSync(new URL("./answer/fixtures/", import.meta.url))
+const fixtures = readdirSync(new URL("../../../apps/answer/src/e2e/fixtures/", import.meta.url))
   .filter((file) => file.endsWith(".md"))
   .map((file) => file.slice(0, -3));
 if (!fixtures.includes(fixture))

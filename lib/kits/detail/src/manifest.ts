@@ -1,4 +1,4 @@
-import { defineComponent, yes } from "../catalog/manifest.ts";
+import { defineComponent, yes } from "@agents/kit-core/manifest.ts";
 
 export default defineComponent({
   id: "item-detail",
@@ -7,7 +7,7 @@ export default defineComponent({
     "One item read whole: a meta line, a wrapped title, sections under dim headings or a rule, keyed rows, cut to a height.",
   impl: { pi: ["detail", "detailRange"], claude: ["detail", "detailRange"] },
   status: { pi: "system", claude: "system", gui: "legacy" },
-  source: "detail/terminal.ts",
+  source: "detail/src/terminal.ts",
   features: [
     {
       id: "whole",

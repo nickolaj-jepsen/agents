@@ -1,7 +1,7 @@
 /**
  * Hot reload for a live or parked session: which sources a scenario's screen is drawn from, a
- * watch over them that hands each batch of saves to a handler one at a time, and the kit sync
- * that carries a kit edit into the Claude mods' copies.
+ * watch over them that hands each batch of saves to a handler one at a time, and the rebuild that
+ * carries an edit into the `dist/` folders a session loads.
  *
  * The callers start the agent over and replay the steps, the one way back to the scenario's exact
  * screen. pi does not reload an extension on save, and its `/reload` (which does read an `-e`
@@ -11,46 +11,48 @@
  * to a minute, measured), so in-place is opt-in.
  */
 import { execFile } from "node:child_process";
-import { existsSync, watch, type FSWatcher } from "node:fs";
+import { existsSync, readdirSync, watch, type FSWatcher } from "node:fs";
 import { join, relative } from "node:path";
 import { promisify } from "node:util";
 import { checkoutRoot, type HarnessName } from "./harness.ts";
+import { e2ePackage, repoRoot } from "./packages.ts";
 import type { Resolved } from "./scenario.ts";
 
 const run = promisify(execFile);
 
 /**
- * What the kit sync writes (a mod's `claude/kit/`, its legacy `ui.tsx` and `checks.tsx`, the
- * catalogue mod's copies) and what an agent or a test run writes beside the sources: none of it
- * is an edit, and reacting to the sync's own writes would loop.
+ * What an agent or a test run writes beside the sources, and what the build writes: none of it is an
+ * edit, and reacting to a build's own writes would loop.
  */
-const COPIES = [
-  /^plugins\/[^/]+\/claude\/kit\//,
-  /^plugins\/[^/]+\/claude\/(ui|checks)\.tsx$/,
-  /^kit\/catalog\/claude\/claude\/(kit\/|ui\.tsx$|samples\.ts$)/,
-];
 const NOISE =
-  /(^|\/)(node_modules|__snapshots__|\.claude-plugin\/types)(\/|$)|(^|\/)\.[^/]*$|(^|\/)tsconfig\.json$|\.(spec|test)\.tsx?$|\.actual\./;
+  /(^|\/)(node_modules|dist|__snapshots__|\.claude-plugin\/types)(\/|$)|(^|\/)\.[^/]*$|(^|\/)tsconfig\.json$|\.(spec|test)\.tsx?$|\.actual\./;
 const SOURCE = /\.(tsx?|[cm]?js|json)$/;
 
 /** True for a repo-relative path whose change can change what a session draws. */
-export const isSource = (rel: string) =>
-  SOURCE.test(rel) && !NOISE.test(rel) && !COPIES.some((re) => re.test(rel));
+export const isSource = (rel: string) => SOURCE.test(rel) && !NOISE.test(rel);
 
-/** The folders a scenario's screen comes from: its plugins, the kit and its own scenario folder. */
+/** The built apps a scenario loads: its own, if it is an app's, and those it names. */
+const appsOf = (r: Resolved) =>
+  [...new Set([r.plugin, ...(r.start.plugins ?? [])])].filter((name) =>
+    existsSync(join(repoRoot, "apps", name, "package.json")),
+  );
+
+/** The folders a scenario's screen comes from: its apps' sources, the kit's and its own scenario folder. */
 export function sourceDirs(r: Resolved): string[] {
-  const plugins = new Set([r.plugin, ...(r.start.plugins ?? [])]);
+  const kits = existsSync(join(repoRoot, "lib/kits"))
+    ? readdirSync(join(repoRoot, "lib/kits")).map((c) => join(repoRoot, "lib/kits", c, "src"))
+    : [];
   return [
-    ...[...plugins].map((p) => join(checkoutRoot, "plugins", p)),
-    join(checkoutRoot, "kit"),
-    join(checkoutRoot, "e2e", r.plugin),
-  ].filter((dir) => existsSync(dir));
+    ...appsOf(r).map((p) => join(checkoutRoot, "apps", p, "src")),
+    ...kits,
+    e2ePackage(r.plugin)?.e2e ?? "",
+  ].filter((dir) => dir && existsSync(dir));
 }
 
-/** The other agent's half of a plugin or of the catalogue: a pi screen does not read `claude/`. */
+/** The other agent's half of an app or of the catalogue: a pi screen does not read `claude`. */
 const OTHER_HALF: Record<HarnessName, RegExp> = {
-  pi: /^(plugins\/[^/]+|kit\/catalog)\/claude\//,
-  claude: /^(plugins\/[^/]+|kit\/catalog)\/pi\//,
+  pi: /^(apps\/[^/]+|lib\/kits\/catalog)\/src\/claude(\.|\/)/,
+  claude: /^(apps\/[^/]+|lib\/kits\/catalog)\/src\/pi(\.|\/)/,
 };
 
 /** The saves that can change what an agent draws. */
@@ -58,20 +60,35 @@ export const relevant = (harness: HarnessName, files: string[]) =>
   files.filter((f) => !OTHER_HALF[harness].test(f));
 
 /** A batch of saves touched the scenario's own files, which only a fresh start reads. */
-export const touchesScenario = (r: Resolved, files: string[]) =>
-  files.some((f) => f.startsWith(`e2e/${r.plugin}/`));
+export const touchesScenario = (r: Resolved, files: string[]) => {
+  const e2e = e2ePackage(r.plugin)?.e2e;
+  return !!e2e && files.some((f) => f.startsWith(relative(checkoutRoot, e2e) + "/"));
+};
 
-/** `turbo run kit-sync`, in a process of its own so it reads the kit as it is now. Its lines, if any. */
-export async function syncKit(): Promise<string[]> {
-  try {
-    const { stdout } = await run(process.execPath, [join(checkoutRoot, "kit/sync.ts")], {
-      cwd: checkoutRoot,
-    });
-    return stdout.split("\n").filter(Boolean);
-  } catch (err) {
-    const e = err as { stderr?: string; message: string };
-    throw new Error(`kit sync failed: ${(e.stderr || e.message).trim()}`);
+/**
+ * Builds what a session of the scenario loads, in a process of its own so it reads the sources as
+ * they are now: its apps and, for a kit scenario, the catalogue. Its lines, if any.
+ */
+export async function rebuild(r: Resolved): Promise<string[]> {
+  const dirs = [
+    ...appsOf(r).map((p) => join(checkoutRoot, "apps", p)),
+    ...(r.plugin.startsWith("kit-") ? [join(checkoutRoot, "lib/kits/catalog")] : []),
+  ];
+  const lines: string[] = [];
+  for (const dir of dirs) {
+    try {
+      const { stdout } = await run(
+        process.execPath,
+        [join(checkoutRoot, "lib/tools/build/build.ts"), dir],
+        { cwd: checkoutRoot },
+      );
+      lines.push(...stdout.split("\n").filter((l) => l.includes("Build complete")));
+    } catch (err) {
+      const e = err as { stderr?: string; stdout?: string; message: string };
+      throw new Error(`build failed: ${(e.stderr || e.stdout || e.message).trim()}`);
+    }
   }
+  return lines;
 }
 
 export type Watch = { close(): void };

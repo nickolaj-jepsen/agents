@@ -8,7 +8,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import { fileName, parse, serialize, STORE_DIR, type Suggestion } from "../core/docfix.ts";
+import { fileName, parse, serialize, STORE_DIR, type Suggestion } from "../lib/docfix.ts";
 
 const run = promisify(execFile);
 

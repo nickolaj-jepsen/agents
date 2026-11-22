@@ -8,10 +8,10 @@ import type {
   Timer,
 } from "claude-code";
 
-import { guiBand, terminalBand } from "./band";
-import type { BandActions, BandView } from "./band";
-import type { Picker, Report } from "./types.d.ts";
-import { forSurface, kitOf } from "./ui";
+import { guiBand, terminalBand } from "./claude/band";
+import type { BandActions, BandView } from "./claude/band";
+import type { Picker, Report } from "./claude/types.d.ts";
+import { forSurface, kitOf } from "@agents/kit-legacy/claude/ui.tsx";
 import {
   addInput,
   autoAdds,
@@ -31,8 +31,8 @@ import {
   suggestInput,
   withExtras,
   withoutWords,
-} from "../core/spellfix";
-import type { Extra, Miss, Verdict } from "../core/spellfix";
+} from "./lib/spellfix";
+import type { Extra, Miss, Verdict } from "./lib/spellfix";
 
 // Borrowed: mods can't define keybinding actions, and nothing handles this one
 // while the built-in cc-plugin-diff mod is enabled. A key bound to it in

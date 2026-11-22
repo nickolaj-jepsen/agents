@@ -1,6 +1,6 @@
 /** The assistant messages the answer scenarios replay, one file each under `fixtures/`. */
 import { readFileSync } from "node:fs";
-import type { Turn } from "../lib/harness.ts";
+import type { Turn } from "@agents/drive/lib/harness.ts";
 
 /** The text of `fixtures/<name>.md`. */
 export const message = (name: string) =>

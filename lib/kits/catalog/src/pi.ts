@@ -13,9 +13,9 @@ import {
   type TuiMouseEvent,
   type TuiMouseEventResult,
 } from "@earendil-works/pi-tui";
-import { overlayOptions } from "../../legacy/pi/ui.ts";
-import { stageLines, stageOptions, stageRows } from "./stage.ts";
-import { stories, type Live, type Story } from "./stories.ts";
+import { overlayOptions } from "@agents/kit-legacy/pi/ui.ts";
+import { stageLines, stageOptions, stageRows } from "./pi/stage.ts";
+import { stories, type Live, type Story } from "./pi/stories.ts";
 
 class StoryView implements Component {
   private readonly live: Live;

@@ -2,10 +2,10 @@
  * The line above the prompt for a draft put aside, written once: both clients draw it from the
  * same kit components and each only paints it and delivers its presses.
  */
-import type { Button } from "../claude/kit/buttons/contract.ts";
-import { buttonRow } from "../claude/kit/buttons/terminal.ts";
-import { line, span, spansWidth, truncate, type Line, type Span } from "../claude/kit/lines.ts";
-import { tokens } from "../claude/kit/tokens.ts";
+import type { Button } from "@agents/kit-buttons/contract.ts";
+import { buttonRow } from "@agents/kit-buttons/terminal.ts";
+import { line, span, spansWidth, truncate, type Line, type Span } from "@agents/kit-core/lines.ts";
+import { tokens } from "@agents/kit-core/tokens.ts";
 import type { Form } from "./draft.ts";
 
 const GAP = " ".repeat(tokens.gutter);

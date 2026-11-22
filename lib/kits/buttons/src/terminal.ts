@@ -7,9 +7,9 @@ import {
   truncateSpans,
   type Line,
   type Span,
-} from "../lines.ts";
-import { controlStyle } from "../card/terminal.ts";
-import { tokens } from "../tokens.ts";
+} from "@agents/kit-core/lines.ts";
+import { controlStyle } from "@agents/kit-card/terminal.ts";
+import { tokens } from "@agents/kit-core/tokens.ts";
 import type { Button, ButtonRowOptions } from "./contract.ts";
 
 /** How a button's key is printed after its label: `↵` for Enter, else in brackets; nothing for none. */

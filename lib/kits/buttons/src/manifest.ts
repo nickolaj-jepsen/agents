@@ -1,4 +1,4 @@
-import { defineComponent, yes } from "../catalog/manifest.ts";
+import { defineComponent, yes } from "@agents/kit-core/manifest.ts";
 
 export default defineComponent({
   id: "button-row",
@@ -7,7 +7,7 @@ export default defineComponent({
     "A row of actions with their keys, the suggested one in the accent, and keyboard-only hints.",
   impl: { pi: "buttonRow", claude: "buttonRow" },
   status: { pi: "system", claude: "system", gui: "legacy" },
-  source: "buttons/terminal.ts",
+  source: "buttons/src/terminal.ts",
   features: [
     {
       id: "row",

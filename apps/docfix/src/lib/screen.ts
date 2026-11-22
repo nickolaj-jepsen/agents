@@ -9,12 +9,12 @@
  * It imports the kit from the mod's copy (`../claude/kit/`, written by `turbo run kit-sync`): a Claude
  * Code mod cannot import outside its plugin, and pi reads the same files.
  */
-import type { Button } from "../claude/kit/buttons/contract.ts";
-import { buttonRow } from "../claude/kit/buttons/terminal.ts";
-import type { Detail, DetailSection } from "../claude/kit/detail/contract.ts";
-import { detail, detailRange } from "../claude/kit/detail/terminal.ts";
-import { captionFrameLayout, closeOf } from "../claude/kit/frame/contract.ts";
-import { captionFrame, captionParts, captionRoom } from "../claude/kit/frame/terminal.ts";
+import type { Button } from "@agents/kit-buttons/contract.ts";
+import { buttonRow } from "@agents/kit-buttons/terminal.ts";
+import type { Detail, DetailSection } from "@agents/kit-detail/contract.ts";
+import { detail, detailRange } from "@agents/kit-detail/terminal.ts";
+import { captionFrameLayout, closeOf } from "@agents/kit-frame/contract.ts";
+import { captionFrame, captionParts, captionRoom } from "@agents/kit-frame/terminal.ts";
 import {
   blank,
   line,
@@ -23,8 +23,8 @@ import {
   truncateSpans,
   type Line,
   type Span,
-} from "../claude/kit/lines.ts";
-import type { List, ListGroup } from "../claude/kit/list/contract.ts";
+} from "@agents/kit-core/lines.ts";
+import type { List, ListGroup } from "@agents/kit-list/contract.ts";
 import {
   cutLeft,
   list,
@@ -32,8 +32,8 @@ import {
   listRows,
   listShowsWhole,
   listTopMax,
-} from "../claude/kit/list/terminal.ts";
-import { tokens } from "../claude/kit/tokens.ts";
+} from "@agents/kit-list/terminal.ts";
+import { tokens } from "@agents/kit-core/tokens.ts";
 import {
   byTarget,
   evidenceBlocks,

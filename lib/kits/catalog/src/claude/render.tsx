@@ -25,7 +25,7 @@ import {
   type Kit,
   type ListGroup,
   type ListItem,
-} from "./ui";
+} from "@agents/kit-legacy/claude/ui.tsx";
 import {
   CJK,
   EVIDENCE,
@@ -39,7 +39,7 @@ import {
   SENTENCE,
   WIDE as WIDE_ROWS,
   type Row,
-} from "./samples";
+} from "../samples";
 
 import {
   choiceKey,
@@ -47,11 +47,12 @@ import {
   choiceReduce,
   type ChoiceIntent,
   type ChoiceListState,
-} from "./kit/card/contract.ts";
-import { liveChoices, liveStart } from "./kit/card/stories.ts";
-import { choiceList } from "./kit/card/terminal.ts";
-import { paintLines, ring } from "./kit/paint/claude.tsx";
-import { kitStories, storyId as kitStoryId } from "./kit/stories.ts";
+} from "@agents/kit-card/contract.ts";
+import { liveChoices, liveStart } from "@agents/kit-card/stories.ts";
+import { choiceList } from "@agents/kit-card/terminal.ts";
+import { paintLines, ring } from "@agents/kit-core/paint/claude.tsx";
+import { storyId as kitStoryId } from "@agents/kit-core/stories.ts";
+import { kitStories } from "../registry.ts";
 
 export type Env = { columns: number; rows: number };
 

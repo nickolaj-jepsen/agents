@@ -1,15 +1,8 @@
 /**
- * Every story of the kit's components: one set of props each, which both catalogues draw and
- * the parity check reads back from their snapshots. No host imports.
+ * What a kit component's story is: one set of props, which both catalogues draw and the parity check
+ * reads back from their snapshots. Each component's stories are its own (`<component>/src/stories.ts`);
+ * the catalogue package lists them all (`registry.ts`). No host imports.
  */
-import { buttonStories } from "./buttons/stories.ts";
-import { cardStories } from "./card/stories.ts";
-import { frameStories } from "./frame/stories.ts";
-import { listStories } from "./list/stories.ts";
-import { detailStories } from "./detail/stories.ts";
-import { fieldsStories } from "./fields/stories.ts";
-import { proseStories } from "./prose/stories.ts";
-import { sheetStories } from "./sheet/stories.ts";
 import type { Line } from "./lines.ts";
 
 export type KitStory = {
@@ -31,13 +24,3 @@ export type KitStory = {
 
 export const storyId = (s: Pick<KitStory, "component" | "state">) => `${s.component}/${s.state}`;
 
-export const kitStories: KitStory[] = [
-  ...cardStories,
-  ...buttonStories,
-  ...frameStories,
-  ...listStories,
-  ...detailStories,
-  ...fieldsStories,
-  ...proseStories,
-  ...sheetStories,
-];

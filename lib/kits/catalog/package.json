@@ -1,0 +1,44 @@
+{
+  "name": "@agents/kit-catalog",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "@agents/kit-buttons": "workspace:*",
+    "@agents/kit-card": "workspace:*",
+    "@agents/kit-core": "workspace:*",
+    "@agents/kit-detail": "workspace:*",
+    "@agents/kit-fields": "workspace:*",
+    "@agents/kit-frame": "workspace:*",
+    "@agents/kit-legacy": "workspace:*",
+    "@agents/kit-list": "workspace:*",
+    "@agents/kit-prose": "workspace:*",
+    "@agents/kit-sheet": "workspace:*"
+  },
+  "devDependencies": {
+    "@agents/build": "workspace:*",
+    "@agents/drive": "workspace:*",
+    "@anthropic-ai/claude-code": "catalog:",
+    "@earendil-works/pi-coding-agent": "catalog:",
+    "@earendil-works/pi-tui": "catalog:",
+    "@types/node": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "yaml": "catalog:"
+  },
+  "claude": {
+    "name": "kit-catalog",
+    "version": "0.0.0",
+    "description": "Dev only: /kit <component> [state] draws one Claude kit component alone on a bare stage, for the catalogue's screenshots",
+    "types": "./src/claude/types.d.ts"
+  },
+  "pi": {
+    "extensions": [
+      "./src/pi.ts"
+    ]
+  }
+}

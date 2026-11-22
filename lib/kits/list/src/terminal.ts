@@ -1,5 +1,5 @@
 /** The list as styled lines: the one drawing both terminals paint. */
-import { controlStyle, rail } from "../card/terminal.ts";
+import { controlStyle, rail } from "@agents/kit-card/terminal.ts";
 import {
   blank,
   block,
@@ -16,10 +16,10 @@ import {
   type Line,
   type Span,
   type Style,
-} from "../lines.ts";
-import { tokens } from "../tokens.ts";
-import type { Button } from "../buttons/contract.ts";
-import { buttonRow } from "../buttons/terminal.ts";
+} from "@agents/kit-core/lines.ts";
+import { tokens } from "@agents/kit-core/tokens.ts";
+import type { Button } from "@agents/kit-buttons/contract.ts";
+import { buttonRow } from "@agents/kit-buttons/terminal.ts";
 import type { List, ListGroup, ListRow } from "./contract.ts";
 
 const GAP = " ".repeat(tokens.gutter);

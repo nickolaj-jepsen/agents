@@ -1,7 +1,25 @@
 {
-  "extends": ["//"],
+  "extends": [
+    "//"
+  ],
   "tasks": {
-    "test": { "command": ["./node_modules/.bin/vitest", "run"] },
-    "test:claude": { "command": ["sh", "../../scripts/claude-plugin-test.sh"] }
+    "build": {
+      "command": [
+        "node",
+        "../../lib/tools/build/build.ts"
+      ]
+    },
+    "test": {
+      "command": [
+        "./node_modules/.bin/vitest",
+        "run"
+      ]
+    },
+    "test:claude": {
+      "command": [
+        "sh",
+        "../../lib/tools/build/claude-plugin-test.sh"
+      ]
+    }
   }
 }

@@ -2,7 +2,8 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { checkoutRoot, type HarnessName } from "./harness.ts";
-import { e2eRoot, type Scenario, type ScenarioSet, type Step } from "./scenario.ts";
+import { e2ePackage, e2ePackages } from "./packages.ts";
+import type { Scenario, ScenarioSet, Step } from "./scenario.ts";
 import type { Size } from "./session.ts";
 import type { VscodeStep } from "./vscode-scenario.ts";
 
@@ -71,22 +72,19 @@ export type SiteSet = {
 /** Identity, for the types. */
 export const site = (set: SiteSet) => set;
 
-/** A scenario file's plugins: every `e2e/<plugin>/site.scenarios.ts`. */
+/** A scenario file's plugins: every `site.scenarios.ts` of an app's e2e folder. */
 export function siteFiles(only: string[] = []): { plugin: string; file: string }[] {
   const out: { plugin: string; file: string }[] = [];
   for (const plugin of only.length > 0 ? only : listPlugins()) {
-    const file = join(e2eRoot, plugin, "site.scenarios.ts");
-    if (existsSync(file)) out.push({ plugin, file });
-    else if (only.length > 0) throw new Error(`no e2e/${plugin}/site.scenarios.ts`);
+    const pkg = e2ePackage(plugin);
+    const file = pkg && join(pkg.e2e, "site.scenarios.ts");
+    if (file && existsSync(file)) out.push({ plugin, file });
+    else if (only.length > 0) throw new Error(`no site.scenarios.ts in ${plugin}'s e2e folder`);
   }
   return out;
 }
 
-const listPlugins = () =>
-  readdirSync(e2eRoot, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && d.name !== "lib" && !d.name.startsWith("."))
-    .map((d) => d.name)
-    .sort();
+const listPlugins = () => e2ePackages().map((p) => p.name);
 
 /** A set's demos with their harness and file name: `demo` for the first, `demo-<harness>` after. */
 export function demosOf(set: SiteSet): { demo: SiteDemo; harness: HarnessName; base: string }[] {
