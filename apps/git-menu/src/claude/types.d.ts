@@ -40,6 +40,12 @@ declare module "claude-code" {
     "git-menu": {
       menu: Menu | null;
       showAll: boolean;
+      /** The row the terminal's keyboard is on. */
+      focus: string | null;
+      /** The terminal list's first line. */
+      top: number;
+      /** Whether the pane has the keyboard. */
+      held: boolean;
     };
   }
 }
