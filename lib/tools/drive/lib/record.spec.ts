@@ -3,8 +3,11 @@
  * scenario that fails is that scenario's verdict: the rest still play, and the recorder decides
  * what a failure means. Sessions are held at a barrier, not timed.
  */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { expect, it } from "vitest";
-import { recordJobs } from "./record.ts";
+import { ffmpegBin, recordJobs } from "./record.ts";
+import { pathWith } from "./term.ts";
 
 function latch() {
   let release: () => void = () => {};
@@ -69,4 +72,23 @@ it("takes --jobs for the scenarios at once, still one verdict each", async () =>
     { status: "fulfilled", value: "c" },
   ]);
   expect(most).toBe(3);
+});
+
+it("hands a recording session its own ffmpeg and leaves the parent's PATH alone", async () => {
+  // tui-test encodes with the `ffmpeg` on the session's PATH, so a fallback is the session's
+  // environment, not the process's: a picture taken or a gate run beside it keeps the PATH it
+  // started with.
+  const before = process.env.PATH;
+  const present = ffmpegBin({ found: true, built: "/nix/store/ffmpeg" });
+  expect(present).toBeUndefined();
+  const fallback = ffmpegBin({ found: false, built: "/nix/store/ffmpeg" });
+  // A wrapper that clears LD_LIBRARY_PATH, which a dev shell may point at another glibc.
+  expect(fallback).toBeDefined();
+  expect(readFileSync(join(fallback!, "ffmpeg"), "utf8")).toContain(
+    "unset LD_LIBRARY_PATH\nexec /nix/store/ffmpeg/bin/ffmpeg",
+  );
+  expect(process.env.PATH).toBe(before);
+  // The session's PATH puts it first and still finds the parent's commands.
+  expect(pathWith(fallback)).toBe(`${fallback}:${before}`);
+  expect(pathWith(undefined)).toBeUndefined();
 });

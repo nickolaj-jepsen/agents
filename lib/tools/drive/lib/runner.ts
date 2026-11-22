@@ -9,10 +9,10 @@
  * failure of the chain, so the shared session carries on; a step or reset that throws broke the
  * session, so only the scenarios it never touched carry on in fresh ones.
  */
-import { options } from "./options.ts";
 import { availableParallelism } from "node:os";
-import { gateCapture, type Capture } from "./check.ts";
+import { captureMedia, gateCapture, type Capture } from "./check.ts";
 import type { HarnessName } from "./harness.ts";
+import { options } from "./options.ts";
 import { openPool } from "./pool.ts";
 import {
   failShot,
@@ -31,13 +31,41 @@ export type Outcome = { error?: Error; captures: Capture[] };
  * size, and photograph what a failure left. The gate's and recording's differ only in the capture.
  */
 export type Stage = {
+  /**
+   * The engine its sessions run in. The gate leaves this out and runs in process: a picture of a
+   * mismatched or `--png` screen is drawn of that very screen, so it cannot come from a session of
+   * another engine. Recording names the daemon, whose screens are its own.
+   */
+  backend?: "lib" | "daemon";
   reach: (r: Resolved, backend: "lib" | "daemon", name: string) => Promise<Session>;
   capture: (session: Session, r: Resolved) => Promise<Capture[]>;
   failShot: (session: Session, r: Resolved) => Promise<void>;
 };
 
-/** A real session with its steps: the gate's stage unless a caller reads the screen another way. */
-export const realStage: Stage = { reach, capture: gateCapture, failShot };
+/**
+ * A real session with its steps: the gate's stage unless a caller reads the screen another way.
+ *
+ * The gate reads text, which the in-process engine gives for half the price of a daemon read
+ * (lib/tools/drive/README.md's numbers, and /tmp/drive-09-proof-gKBvYX). `--png` asks for a
+ * picture of every screen, and a picture is rasterized out of process, so that run names the
+ * daemon; so does recording, which is asking for pictures and video of screens of its own.
+ */
+export const realStage: Stage = {
+  get backend() {
+    return options.png ? "daemon" : "lib";
+  },
+  reach,
+  capture: gateCapture,
+  failShot,
+};
+
+/** Recording's stage: its screens are checked by nobody, and its pictures are the point. */
+export const mediaStage: Stage = {
+  backend: "daemon",
+  reach,
+  capture: captureMedia,
+  failShot,
+};
 
 export type Job = { plugin: string; harness: HarnessName; name: string; set: ScenarioSet };
 
@@ -171,7 +199,11 @@ async function runChain(
   const head = resolveScenario(set, chain.head);
   let session: Session | undefined;
   try {
-    session = await stage.reach(head, "lib", `e2e-${head.plugin}-${head.harness}-${++seq}`);
+    session = await stage.reach(
+      head,
+      stage.backend ?? "lib",
+      `e2e-${head.plugin}-${head.harness}-${++seq}`,
+    );
     out.set(k(head.name), await snap(stage, session, head));
   } catch (error) {
     out.set(k(head.name), { captures: [], error: error as Error });

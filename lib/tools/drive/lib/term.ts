@@ -237,6 +237,14 @@ export function tuiTestBin(): string {
   return bin;
 }
 
+/**
+ * `prefix` before the rest of `env`'s PATH, or undefined when there is none: how a session is
+ * told where its `ffmpeg` is without this process's PATH changing under another session's feet.
+ */
+export function pathWith(prefix: string | undefined, env: NodeJS.ProcessEnv = process.env) {
+  return prefix ? `${prefix}:${env.PATH ?? ""}` : undefined;
+}
+
 /** The CLI's environment: the daemon it starts inherits it, which is how it finds fonts. */
 export function tuiTestEnv(): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {
@@ -250,10 +258,13 @@ export function tuiTestEnv(): NodeJS.ProcessEnv {
   return env;
 }
 
-export async function tuiTest(args: string[]): Promise<string> {
+export async function tuiTest(
+  args: string[],
+  env: NodeJS.ProcessEnv = tuiTestEnv(),
+): Promise<string> {
   try {
     const { stdout } = await run(tuiTestBin(), args, {
-      env: tuiTestEnv(),
+      env,
       maxBuffer: 64 * 1024 * 1024,
     });
     return stdout;
@@ -271,29 +282,40 @@ export class DaemonTerm implements Term {
     this.session = session;
   }
 
-  static async launch(spec: LaunchSpec, session: string): Promise<DaemonTerm> {
+  static async launch(
+    spec: LaunchSpec,
+    session: string,
+    /** A folder to put first on the daemon's PATH, which is where its `ffmpeg` is looked up. */
+    pathPrefix?: string,
+  ): Promise<DaemonTerm> {
     const { program, args } = wrap(spec);
     const env = Object.entries({ ...spec.env, HOME: realHome }).flatMap(([k, v]) => [
       "--env",
       `${k}=${v}`,
     ]);
-    await tuiTest([
-      "--session",
-      session,
-      "run",
-      "--backend",
-      "ghostty",
-      "--cols",
-      String(spec.cols),
-      "--rows",
-      String(spec.rows),
-      "--cwd",
-      spec.cwd,
-      ...env,
-      "--",
-      program,
-      ...args,
-    ]);
+    const env0 = tuiTestEnv();
+    const path = pathWith(pathPrefix, env0);
+    const env1 = path ? { ...env0, PATH: path } : env0;
+    await tuiTest(
+      [
+        "--session",
+        session,
+        "run",
+        "--backend",
+        "ghostty",
+        "--cols",
+        String(spec.cols),
+        "--rows",
+        String(spec.rows),
+        "--cwd",
+        spec.cwd,
+        ...env,
+        "--",
+        program,
+        ...args,
+      ],
+      env1,
+    );
     return new DaemonTerm(session);
   }
 

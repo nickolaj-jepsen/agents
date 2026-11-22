@@ -292,3 +292,30 @@ it("keeps each harness's --jobs limit while the queue takes added work", async (
     options.jobs = before;
   }
 });
+
+it("runs the gate in process and a recorder on the daemon", async () => {
+  // The gate reads text alone until a snapshot differs or `--png` asks, and only then draws a
+  // picture; the in-process engine is the one that draws a picture of this very screen, in this
+  // process. Recording has its own screens and asks for the daemon, which leaves the parent's font
+  // environment alone. The stage names its engine; the runner passes it through rather than
+  // deciding for both.
+  const engines: string[] = [];
+  const stage = (backend?: "lib" | "daemon"): Stage => ({
+    backend,
+    reach: async (r, engine) => {
+      engines.push(engine);
+      return {
+        size: async () => r.size,
+        resize: async () => undefined,
+        settle: async () => undefined,
+        close: async () => undefined,
+      } as unknown as Session;
+    },
+    capture: async (_session, r) => [shot(r, r.name)],
+    failShot: async () => undefined,
+  });
+  const scenarios = { head: { size: [70, 24] as const, steps: [], fresh: true } };
+  await runAll([set(scenarios)], () => true, stage());
+  await runAll([set(scenarios)], () => true, stage("daemon"));
+  expect(engines).toEqual(["lib", "daemon"]);
+});

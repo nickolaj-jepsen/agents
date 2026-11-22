@@ -28,7 +28,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { promisify } from "node:util";
-import { actualOf, captureMedia } from "./check.ts";
+import { actualOf } from "./check.ts";
 import { cropToRegion } from "./crop.ts";
 import { entries, packagesNamed } from "./find.ts";
 import { checkoutRoot } from "./harness.ts";
@@ -37,7 +37,7 @@ import { photograph, publish, retainFailure } from "./media.ts";
 import { options } from "./options.ts";
 import type { E2EPackage } from "./packages.ts";
 import { boundedAll } from "./pool.ts";
-import { realStage, runAll } from "./runner.ts";
+import { mediaStage, runAll } from "./runner.ts";
 import { loadSet, play, resolveScenario, type ScenarioSet } from "./scenario.ts";
 import { Session } from "./session.ts";
 import {
@@ -115,19 +115,37 @@ function commit(pkg: string, stage: string, mine: (file: string) => boolean) {
 
 // ---- terminal
 
+/** Whether this process finds a `ffmpeg` that runs, and the one nix would build if it does not. */
+type Ffmpeg = { found: boolean; built: string };
+
 /**
- * tui-test encodes a recording with the `ffmpeg` on PATH. Without one, builds nixpkgs' and puts a
- * wrapper first on PATH that clears LD_LIBRARY_PATH, which a dev shell may point at libraries of
- * another glibc.
+ * tui-test encodes a recording with the `ffmpeg` on the session's PATH. Without one, builds
+ * nixpkgs' and hands back a folder whose wrapper is first on that PATH, clearing LD_LIBRARY_PATH,
+ * which a dev shell may point at libraries of another glibc. It returns that folder, and nothing
+ * when the session already finds one; the caller puts it on the session's PATH, not this
+ * process's, so screenshots and any other session keep the environment the run started with.
  */
-function ensureFfmpeg() {
+export function ffmpegBin(ffmpeg: Ffmpeg): string | undefined {
+  if (ffmpeg.found) return undefined;
+  const bin = mkdtempSync(join(tmpdir(), "site-bin-"));
+  const wrapper = join(bin, "ffmpeg");
+  writeFileSync(
+    wrapper,
+    `#!/bin/sh\nunset LD_LIBRARY_PATH\nexec ${ffmpeg.built}/bin/ffmpeg "$@"\n`,
+    { mode: 0o755 },
+  );
+  return bin;
+}
+
+/** Whether this machine has a `ffmpeg` that runs; when it does not, the nixpkgs one it would use. */
+function ffmpegOnPath(): Ffmpeg {
   try {
     execFileSync("ffmpeg", ["-version"], { stdio: "ignore" });
-    return;
+    return { found: true, built: "" };
   } catch {
     /* none, or one that does not run: use nixpkgs' */
   }
-  const out = execFileSync(
+  const built = execFileSync(
     "nix",
     [
       "build",
@@ -141,12 +159,7 @@ function ensureFfmpeg() {
   )
     .trim()
     .split("\n")[0]!;
-  const bin = mkdtempSync(join(tmpdir(), "site-bin-"));
-  const wrapper = join(bin, "ffmpeg");
-  writeFileSync(wrapper, `#!/bin/sh\nunset LD_LIBRARY_PATH\nexec ${out}/bin/ffmpeg "$@"\n`, {
-    mode: 0o755,
-  });
-  process.env.PATH = `${bin}:${process.env.PATH}`;
+  return { found: false, built };
 }
 
 type Still = {
@@ -176,6 +189,8 @@ async function play1(
   harness: "claude" | "pi",
   out: string,
   record: false | string,
+  /** Where this recording's daemon finds the `ffmpeg` that encodes it. */
+  ffmpeg?: string,
 ) {
   const r = resolveScenario(asSet(set, harness), name);
   const demo = demosOf(set).find((d) => d.harness === harness)?.demo;
@@ -196,6 +211,7 @@ async function play1(
     name: `site-${set.plugin}-${record || name}`,
     runDir,
     project: scenario?.project ?? "app",
+    path: ffmpeg,
   }).catch((error: unknown) => {
     finish();
     throw error;
@@ -288,7 +304,9 @@ async function recordTerminal(p: E2EPackage, o: RecordOptions, named: boolean) {
     console.error(`record: ${plugin}: Kitty capture requires Linux, skipping`);
     return;
   }
-  ensureFfmpeg();
+  // The recorder's own PATH, handed to each recording session: a screenshot beside it, or the
+  // gate, keeps the environment the run started with.
+  const ffmpeg = ffmpegBin(ffmpegOnPath());
   const stage = mkdtempSync(join(tmpdir(), `site-${plugin}-`));
   type Job = { name: string; harness: "claude" | "pi"; record: false | string };
   const jobs: Job[] = [];
@@ -299,7 +317,7 @@ async function recordTerminal(p: E2EPackage, o: RecordOptions, named: boolean) {
   const results = await recordJobs(
     jobs.map((j) => async () => {
       const t = Date.now();
-      await play1(set, j.name, j.harness, stage, j.record);
+      await play1(set, j.name, j.harness, stage, j.record, ffmpeg);
       console.error(
         `record: ${plugin}/${j.record || j.name} ${((Date.now() - t) / 1000).toFixed(0)}s`,
       );
@@ -507,10 +525,7 @@ async function recordKit(p: E2EPackage, named: boolean) {
   const sets: ScenarioSet[] = [];
   for (const f of files) sets.push(await loadSet(f.file));
   const stage = mkdtempSync(join(tmpdir(), `site-${p.name}-`));
-  const { outcomes } = await runAll(sets, () => true, {
-    ...realStage,
-    capture: captureMedia,
-  }).catch((error: unknown) => {
+  const { outcomes } = await runAll(sets, () => true, mediaStage).catch((error: unknown) => {
     throw retainFailure(stage, String(error));
   });
   const crops: Record<string, Crop> = {};

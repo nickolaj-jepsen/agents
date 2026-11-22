@@ -109,6 +109,12 @@ export type OpenOptions = {
   runDir?: string;
   /** The name of the folder the agent runs in, which shows in its header: default `cwd`. */
   project?: string;
+  /**
+   * A folder to put first on a daemon's PATH: where the recording it encodes finds its `ffmpeg`.
+   * That is the daemon's environment, not this process's, so a screenshot or another session
+   * beside it is unaffected.
+   */
+  path?: string;
 };
 
 export class Session {
@@ -164,10 +170,12 @@ export class Session {
       cols: o.size[0],
       rows: o.size[1],
     });
-    const launch = o.backend === "lib" ? LibTerm.launch : DaemonTerm.launch;
     let term: Term;
     try {
-      term = await launch(spec, o.name);
+      term =
+        o.backend === "lib"
+          ? await LibTerm.launch(spec, o.name)
+          : await DaemonTerm.launch(spec, o.name, o.path);
     } catch (err) {
       stopStub(runDir);
       throw err;
