@@ -1,4 +1,4 @@
-# linear-issue/claude/duplicate 70x24 @0,12 (70x8)
+# linear-issue/claude/duplicate 70x24 @0,11 (70x8)
 ╭──────────────────────────────────────────────────────────────────✕─╮
 │   E  Honor Retry-After when the sync worker backs off after a 429  │
 │   T PLT  S Todo  P Medium  L Bug                                   │

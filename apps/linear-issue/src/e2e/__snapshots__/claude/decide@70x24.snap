@@ -1,4 +1,4 @@
-# linear-issue/claude/decide 70x24 @0,12 (70x8)
+# linear-issue/claude/decide 70x24 @0,11 (70x8)
 ╭──────────────────────────────────────────────────────────────────✕─╮
 │ ❯ A ● Comment on PLT-212 instead                                   │
 │       │ The sync worker also ignores Retry-After on a 429: it      │

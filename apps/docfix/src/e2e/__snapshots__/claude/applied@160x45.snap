@@ -1,12 +1,12 @@
 # docfix/claude/applied 160x45 @0,0 (160x43)
-                                                                                                                     ╭─────────────────────────────────────────╮
- ▐▛███▛█   Claude Code <ver>                                                                                         │ docfix                                  │
-▝▜██████▀  <model>                                                                                                   │ The apply prompt is in the prompt box:  │
- ▝▝   ▝▝   <tmp>                                                                                                     │ read it, then Enter to send.            │
-                                                                                                                     ╰─────────────────────────────────────────╯
+
+ ▐▛███▛█   Claude Code <ver>
+▝▜██████▀  <model>
+ ▝▝   ▝▝   <tmp>
+
 
 ❯ /docfix
-  ⎿  docfix: Opened the doc suggestions pane.
+  ⎿  docfix: Opened the doc suggestions pane.
 
 
 
@@ -24,8 +24,8 @@
 
 ⚠ docfix: docs 3 review                                                                                                                                     [-]
                                                                                                                                         ctrl+g to edit in Nvim
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-❯
+─── ↑ 1 more ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
   AGENTS.md
   - wrong: `just build` is not enough to verify a pi change; the docs say it is. (seen 3×)
     .agents/store/docfix/agents-md-says-just-build-verifies.md
@@ -43,16 +43,14 @@
 
   Name every doc you changed beyond the ones above. Anything else you notice gets filed with docfix as usual. Don't commit.
 --- styles
-.x117 1x43
-2x2 3x6 .x3 4x11 . 5x5 .x89 1 . 5x6 .x34 1
-2x2 3x5 2x2 .x2 5x7 .x99 1 .x41 1
-2x9 .x2 5x5 .x101 1 .x41 1
-.x117 1x43
 -
-6 7 8x7 7
-5x5
+1x2 2x6 .x3 3x11 . 4x5
+1x2 2x5 1x2 .x2 4x7
+1x9 .x2 4x5
 -
 -
+5 6 7x7 6
+4x5
 -
 -
 -
@@ -66,9 +64,11 @@
 -
 -
 -
-9x16 5x7 .x133 5x3
-.x136 5x22
-ax160
+-
+-
+8x16 4x7 .x133 4x3
+.x136 4x22
+9x3 . ax8 . 9x147
 -
 -
 -
@@ -87,14 +87,14 @@ ax160
 -
 .x123 b
 --- legend
-1 dim
-2 fg=#d77757
-3 fg=#d77757 bg=#000000
-4 bold
-5 fg=#999999
-6 fg=#999999 bg=#373737
-7 bg=#373737
-8 fg=#ffffff bg=#373737
-9 fg=#ffc107
-a fg=#888888
+1 fg=#d77757
+2 fg=#d77757 bg=#000000
+3 bold
+4 fg=#999999
+5 fg=#999999 bg=#373737
+6 bg=#373737
+7 fg=#ffffff bg=#373737
+8 fg=#ffc107
+9 fg=#888888
+a dim
 b inverse
