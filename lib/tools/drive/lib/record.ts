@@ -183,6 +183,10 @@ async function play1(
   const kitty = scenario?.capture === "kitty";
   // Under /tmp so the folder shows in the agent's header without a user's home in it.
   const runDir = mkdtempSync("/tmp/s-");
+  const finish = () => {
+    if (options.keep) console.error(`kept the run folder: ${runDir}`);
+    else rmSync(runDir, { recursive: true, force: true });
+  };
   const session = await Session.open({
     harness,
     start: r.start,
@@ -192,6 +196,9 @@ async function play1(
     name: `site-${set.plugin}-${record || name}`,
     runDir,
     project: scenario?.project ?? "app",
+  }).catch((error: unknown) => {
+    finish();
+    throw error;
   });
   const look = { zoom: ZOOM };
   try {
@@ -253,10 +260,7 @@ async function play1(
     await session.png(join(out, `${name}@failed.png`), look).catch(() => undefined);
     throw err;
   } finally {
-    await session.close();
-    // A failed screen's run folder is kept and named with `--keep`, as every other run's.
-    if (options.keep) console.error(`kept the run folder: ${runDir}`);
-    else rmSync(runDir, { recursive: true, force: true });
+    await session.close().finally(finish);
   }
 }
 
