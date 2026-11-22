@@ -33,7 +33,7 @@ The engine draws focus and hover its own way, and the [kit's painter](../../../l
 
 ## Graphical surfaces
 
-Use the [kit](../../../lib/kits/README.md) for Desktop and VS Code. Their native controls are still in the legacy kit (`@agents/kit-legacy/claude/ui.tsx`): pass the render event to `kitOf(els, e)`, and use `tui` and `gui` options for variations on one component. When a terminal layout needs a separate rendering, use `forSurface` with a kit-built GUI branch. [linear-issue](../../../apps/linear-issue/src/claude.tsx) has an example.
+Use the [kit](../../../lib/kits/README.md#draw-on-claude-desktop-and-vs-code) for Desktop and VS Code: a component's `gui.tsx` takes `(g: Gui, props)` with the same props as its `terminal.ts`, and `g.press(hit)` is the one reducer both surfaces share. Build the `Gui` with `guiOf(els, e, press)` and choose a drawing with `forSurface(e, { tui, gui })`, both from `@agents/kit-core/paint/host.tsx`. [linear-issue](../../../apps/linear-issue/src/claude.tsx) draws both its terminal and its graphical pane this way. A component without a `gui.tsx` has no graphical drawing: add one with the component rather than drawing by hand.
 
 These quirks were observed in the VS Code extension at 2.1.327. Recheck them after upgrading:
 
@@ -44,7 +44,7 @@ These quirks were observed in the VS Code extension at 2.1.327. Recheck them aft
 
 ## Test a mod
 
-Use `await $.ui.mount({ ...PANE, surface })` for `vscode` and `desktop`. Exercise actions with `ui.press({ key })` and call `expectNative` from `@agents/kit-legacy/claude/checks.tsx`. This tests the element tree, not how the host closes a pane or transfers focus. Use the VS Code driver below and check [Desktop](../../../lib/tools/drive/README.md#claude-desktop) by hand.
+Use `await $.ui.mount({ ...PANE, surface })` for `vscode` and `desktop`. Exercise actions with `ui.press({ key })` and call the kit's `expectNative` from `@agents/kit-core/paint/checks.tsx`. This tests the element tree, not how the host closes a pane or transfers focus. Use the VS Code driver below and check [Desktop](../../../lib/tools/drive/README.md#claude-desktop) by hand.
 
 If a wrapper injects flags before `plugin test` and Claude reports “not run from this spelling,” use the repo's pinned Claude, which the `test:claude` task runs with a scratch `HOME`:
 
