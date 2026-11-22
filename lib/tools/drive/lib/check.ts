@@ -1,8 +1,9 @@
 /**
- * Captures a scenario's screen at each of its sizes and compares it with the stored
- * snapshot. A difference fails; `drive test --update` accepts it. The PNG
- * beside each snapshot is for review and is never compared: it is not committed, and a run
- * draws it only on request (`drive test --png`) or as the evidence of a difference.
+ * Captures a scenario's screen at each of its sizes. The gate's `capture` reads it against the
+ * stored snapshot: a difference fails, `settleCapture` accepts or leaves the evidence, and the PNG
+ * beside each snapshot is for review only (it is not committed, and a run draws it only on request
+ * (`drive test --png`) or as the evidence of a difference). Media's `captureMedia` takes the screen
+ * as it is, with no stored snapshot or test flag deciding what it gets.
  */
 import { options } from "./options.ts";
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
@@ -57,27 +58,53 @@ async function steadySnapshot(
   }
 }
 
+/** The scenario's sizes, in order, after the agent's start-up hints have gone. */
+async function sizes(session: Session, r: Resolved): Promise<Size[]> {
+  await session.waitHintsGone();
+  return r.sizes;
+}
+
+/** Resizes to `size` and reads the region once it is what `expected` says, or still twice. */
+async function read(session: Session, r: Resolved, size: Size, expected?: string) {
+  const now = await session.size();
+  if (now.cols !== size[0] || now.rows !== size[1]) await session.resize(size[0], size[1]);
+  return steadySnapshot(
+    session,
+    `${r.label}/${r.harness}/${r.name} ${size[0]}x${size[1]}`,
+    r,
+    expected,
+  );
+}
+
 /** Resizes through the scenario's sizes and reads the screen at each. */
 export async function capture(session: Session, r: Resolved): Promise<Capture[]> {
   const out: Capture[] = [];
-  await session.waitHintsGone();
-  for (const size of r.sizes) {
-    const now = await session.size();
-    if (now.cols !== size[0] || now.rows !== size[1]) await session.resize(size[0], size[1]);
+  for (const size of await sizes(session, r)) {
     const snap = snapshotPath(r, size, "snap");
     const png = snapshotPath(r, size, "png");
     mkdirSync(dirname(snap), { recursive: true });
     const expected = existsSync(snap) ? readFileSync(snap, "utf8") : undefined;
-    const actual = await steadySnapshot(
-      session,
-      `${r.label}/${r.harness}/${r.name} ${size[0]}x${size[1]}`,
-      r,
-      updating() ? undefined : expected,
-    );
+    const actual = await read(session, r, size, updating() ? undefined : expected);
     // Review only: a glyph the rasterizer has no font for (an emoji) must not fail the text.
     if (wantsPng() || (expected !== actual && !updating()))
       await session.png(actualOf(png)).catch(() => undefined);
     out.push({ size, actual, expected, snap, png });
+  }
+  return out;
+}
+
+/**
+ * The screen as it is now, for media: no stored snapshot is read or compared, and every size is
+ * drawn whatever the run's own flags say. A picture that cannot be had still fails.
+ */
+export async function captureMedia(session: Session, r: Resolved): Promise<Capture[]> {
+  const out: Capture[] = [];
+  for (const size of await sizes(session, r)) {
+    const snap = snapshotPath(r, size, "snap");
+    const png = snapshotPath(r, size, "png");
+    const actual = await read(session, r, size);
+    await session.png(actualOf(png));
+    out.push({ size, actual, expected: undefined, snap, png });
   }
   return out;
 }

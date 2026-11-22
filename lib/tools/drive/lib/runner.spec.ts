@@ -1,0 +1,195 @@
+/**
+ * A chain's verdict is the one its scenarios came to in the session they played in. A failure is
+ * not made green by a second attempt alone, a snapshot mismatch leaves the shared session usable,
+ * and the scenarios a broken step never touched still get their result in a fresh session.
+ */
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterAll, expect, it } from "vitest";
+import { settleCapture, type Capture } from "./check.ts";
+import { runAll, type Stage } from "./runner.ts";
+import type { Resolved, Scenario, ScenarioSet } from "./scenario.ts";
+import type { Session } from "./session.ts";
+
+const dir = mkdtempSync(join(tmpdir(), "drive-runner-"));
+afterAll(() => rmSync(dir, { recursive: true, force: true }));
+
+/** A package with one harness, whose scenarios are its own. */
+const set = (scenarios: Record<string, Scenario>): ScenarioSet => ({
+  plugin: "fake",
+  harness: "pi",
+  scenarios,
+});
+
+/** A session that records only what the chain asks of it; `capture` supplies the screen. */
+type Fake = { id: number; scenario: string; cols: number; rows: number };
+
+/** Scripted sessions, one for each start, and the id of the chain's shared session. */
+function sessions() {
+  const opened: Fake[] = [];
+  const reach: Stage["reach"] = async (r) => {
+    const fake: Fake = {
+      id: opened.length + 1,
+      scenario: r.name,
+      cols: r.size[0],
+      rows: r.size[1],
+    };
+    opened.push(fake);
+    return {
+      id: fake.id,
+      size: async () => [fake.cols, fake.rows],
+      resize: async (cols: number, rows: number) => {
+        fake.cols = cols;
+        fake.rows = rows;
+      },
+      settle: async () => undefined,
+      close: async () => undefined,
+    } as unknown as Session;
+  };
+  const captureOf = (session: Session) => session as unknown as Fake;
+  // The pool may start a fresh chain beside the shared one, so find the head's session by name.
+  const shared = () => opened.find((s) => s.scenario === "head")!.id;
+  return { opened, reach, captureOf, shared };
+}
+
+const shot = (r: Resolved, actual: string, expected?: string): Capture => ({
+  size: r.size,
+  actual,
+  expected,
+  snap: join(dir, `${r.name}.snap`),
+  png: join(dir, `${r.name}.png`),
+});
+
+it("keeps a shared step failure and runs the untouched scenario fresh", async () => {
+  const { opened, reach, captureOf, shared } = sessions();
+  let attempts = 0;
+  const failsShared = {
+    run: async (session: Session) => {
+      attempts++;
+      if (captureOf(session).id === shared()) throw new Error("state leaked in the shared session");
+    },
+  };
+  const shots: string[] = [];
+  const stage: Stage = {
+    reach,
+    capture: async (session, r) => [shot(r, `${r.name} at ${captureOf(session).id}`)],
+    failShot: async (_session, r) => {
+      shots.push(r.name);
+    },
+  };
+  const { outcomes } = await runAll(
+    [
+      set({
+        head: { size: [70, 24], steps: [] },
+        bad: { from: "head", size: [70, 24], steps: [failsShared] },
+        after: { from: "bad", size: [70, 24], steps: [] },
+      }),
+    ],
+    () => true,
+    stage,
+  );
+
+  const bad = outcomes.get("fake/pi/bad")!;
+  expect(bad.error?.message).toMatch(/state leaked in the shared session/);
+  // Alone it would pass: a second attempt on a fresh session is not taken.
+  expect(attempts).toBe(1);
+  expect(shots).toEqual(["bad"]);
+
+  const after = outcomes.get("fake/pi/after")!;
+  expect(after.error).toBeUndefined();
+  const fresh = opened.find((s) => s.scenario === "after")!;
+  expect(fresh.id).not.toBe(shared());
+  expect(after.captures[0]?.actual).toBe(`after at ${fresh.id}`);
+
+  // The failed scenario leaves no second entry: one result, from the shared session.
+  expect(opened.map((s) => s.scenario)).toEqual(["head", "after"]);
+});
+
+it("keeps a mismatch as evidence and carries on in the healthy session", async () => {
+  const { reach, captureOf, shared } = sessions();
+  const captured: Record<string, number[]> = {};
+  const stage: Stage = {
+    reach,
+    capture: async (session, r) => {
+      const id = captureOf(session).id;
+      (captured[r.name] ??= []).push(id);
+      const expected = "the stored screen";
+      const actual = r.name === "bad" && id === shared() ? "the screen now" : expected;
+      return [shot(r, actual, expected)];
+    },
+    failShot: async () => {
+      throw new Error("a mismatch does not need a failure shot");
+    },
+  };
+  const { outcomes } = await runAll(
+    [
+      set({
+        head: { size: [70, 24] },
+        bad: { from: "head", size: [70, 24] },
+        after: { from: "bad", size: [70, 24] },
+      }),
+    ],
+    () => true,
+    stage,
+  );
+
+  const bad = outcomes.get("fake/pi/bad")!;
+  expect(bad.error).toBeUndefined();
+  expect(bad.captures[0]).toMatchObject({
+    actual: "the screen now",
+    expected: "the stored screen",
+  });
+  // The gate still reads this as red, and the evidence is the shared attempt's.
+  expect(settleCapture(bad.captures[0]!)).toMatch(/differs from/);
+  expect(captured.bad).toEqual([shared()]);
+
+  // The chain was not broken by the mismatch: the next scenario played in the same session.
+  const after = outcomes.get("fake/pi/after")!;
+  expect(after.error).toBeUndefined();
+  expect(captured.after).toEqual([shared()]);
+});
+
+it("sends the scenarios after a broken reset to fresh sessions", async () => {
+  const { opened, reach, captureOf, shared } = sessions();
+  let resets = 0;
+  const resetFails = {
+    run: async (session: Session) => {
+      resets++;
+      if (captureOf(session).id === shared()) throw new Error("the reset broke");
+    },
+  };
+  const shots: string[] = [];
+  const stage: Stage = {
+    reach,
+    capture: async (session, r) => [shot(r, `${r.name} at ${captureOf(session).id}`)],
+    failShot: async (_session, r) => {
+      shots.push(r.name);
+    },
+  };
+  const { outcomes } = await runAll(
+    [
+      set({
+        head: { size: [70, 24], steps: [] },
+        before: { from: "head", size: [70, 24], steps: [], reset: [resetFails] },
+        bad: { from: "head", size: [70, 24], steps: [] },
+        after: { from: "bad", size: [70, 24], steps: [] },
+      }),
+    ],
+    () => true,
+    stage,
+  );
+
+  // `bad` never played, and the reset is not tried again alone.
+  const broken = outcomes.get("fake/pi/bad")!;
+  expect(broken.error?.message).toMatch(/the reset broke/);
+  expect(resets).toBe(1);
+  expect(shots).toEqual(["bad"]);
+
+  // `after` was untouched by the chain: a session of its own, and its own result.
+  const after = outcomes.get("fake/pi/after")!;
+  expect(after.error).toBeUndefined();
+  const fresh = opened.find((s) => s.scenario === "after")!;
+  expect(fresh.id).not.toBe(shared());
+  expect(after.captures[0]?.actual).toBe(`after at ${fresh.id}`);
+});

@@ -28,14 +28,14 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { promisify } from "node:util";
-import { actualOf } from "./check.ts";
+import { actualOf, captureMedia } from "./check.ts";
 import { cropToRegion } from "./crop.ts";
 import { entries, packagesNamed } from "./find.ts";
 import { checkoutRoot } from "./harness.ts";
 import { WRITES } from "./linear-mcp.ts";
-import { options, setOptions } from "./options.ts";
+import { options } from "./options.ts";
 import type { E2EPackage } from "./packages.ts";
-import { runAll } from "./runner.ts";
+import { realStage, runAll } from "./runner.ts";
 import { loadSet, play, resolveScenario, type ScenarioSet } from "./scenario.ts";
 import { Session } from "./session.ts";
 import {
@@ -508,9 +508,9 @@ const kitFolder = (p: E2EPackage) => p.name.slice("kit-".length);
 type Crop = { png: string; width: number; height: number; hash: string };
 
 /**
- * Plays the package's stories in PNG mode and keeps each one's region of the screen: the site shows
- * the component and not the terminal round it. Nothing is compared with a snapshot: the media are
- * of the screens as they are now.
+ * Plays the package's stories, taking each screen as it is now, and keeps each one's region: the
+ * site shows the component and not the terminal round it. No stored snapshot and no test flag has
+ * a say in whether a story is recorded; a step or capture that fails still fails the recording.
  */
 async function recordKit(p: E2EPackage, named: boolean) {
   const files = entries(p.name, ["claude", "pi"]);
@@ -526,8 +526,7 @@ async function recordKit(p: E2EPackage, named: boolean) {
 
   const sets: ScenarioSet[] = [];
   for (const f of files) sets.push(await loadSet(f.file));
-  setOptions({ png: true });
-  const { outcomes } = await runAll(sets, () => true);
+  const { outcomes } = await runAll(sets, () => true, { ...realStage, capture: captureMedia });
 
   const stage = mkdtempSync(join(tmpdir(), `site-${p.name}-`));
   const crops: Record<string, Crop> = {};

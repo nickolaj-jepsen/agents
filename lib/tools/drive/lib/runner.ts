@@ -3,10 +3,15 @@
  * of its own and not `fresh`) plays in its parent's session, its siblings that can `reset` take
  * turns before it, and the deepest one carries on. Sessions are isolated by folder and by the
  * stub's port, so a pool of them runs at once; `--jobs` sets the size of each harness's pool (`N`, or `claude=N,pi=M`).
+ *
+ * A scenario's verdict is the result of the one attempt it got, in the session it played in: the
+ * runner never retries a failure in a session of its own. A snapshot that differs is not a
+ * failure of the chain, so the shared session carries on; a step or reset that throws broke the
+ * session, so only the scenarios it never touched carry on in fresh ones.
  */
 import { options } from "./options.ts";
 import { availableParallelism } from "node:os";
-import { capture, differs, type Capture } from "./check.ts";
+import { capture, type Capture } from "./check.ts";
 import type { HarnessName } from "./harness.ts";
 import {
   failShot,
@@ -18,7 +23,20 @@ import {
 } from "./scenario.ts";
 import { Session, startStats } from "./session.ts";
 
-export type Outcome = { error?: Error; captures: Capture[]; sharedWith?: string };
+export type Outcome = { error?: Error; captures: Capture[] };
+
+/**
+ * What the runner needs of a scenario: start its agent and play its steps, read its screen at each
+ * size, and photograph what a failure left. The gate's and recording's differ only in the capture.
+ */
+export type Stage = {
+  reach: (r: Resolved, backend: "lib" | "daemon", name: string) => Promise<Session>;
+  capture: (session: Session, r: Resolved) => Promise<Capture[]>;
+  failShot: (session: Session, r: Resolved) => Promise<void>;
+};
+
+/** A real session with its steps: the gate's stage unless a caller reads the screen another way. */
+export const realStage: Stage = { reach, capture, failShot };
 
 export type Job = { plugin: string; harness: HarnessName; name: string; set: ScenarioSet };
 
@@ -125,55 +143,43 @@ export function poolSize(harness: HarnessName): number {
     : Math.max(1, Math.min(8, Math.floor(cpuCount() / 2)));
 }
 
-type Task = { set: ScenarioSet; chain: Chain; solo: boolean };
+type Task = { set: ScenarioSet; chain: Chain };
 
 const key = (plugin: string, harness: string, name: string) => `${plugin}/${harness}/${name}`;
 let seq = 0;
 
-const wrong = (captures: Capture[]) => captures.some(differs);
-
 /** Plays one scenario's captures; the session is on its screen already. */
-async function snap(session: Session, r: Resolved): Promise<Outcome> {
+async function snap(stage: Stage, session: Session, r: Resolved): Promise<Outcome> {
   if (r.expectFail) return { captures: [] };
-  return { captures: await capture(session, r) };
+  return { captures: await stage.capture(session, r) };
 }
 
-/** A scenario alone, in a session of its own. */
-async function solo(set: ScenarioSet, name: string): Promise<Outcome> {
-  const r = resolveScenario(set, name);
-  let session: Session | undefined;
-  try {
-    session = await reach(r, "lib", `e2e-${r.plugin}-${r.harness}-${++seq}`);
-    return await snap(session, r);
-  } catch (error) {
-    if (session) await failShot(session, r);
-    return { captures: [], error: error as Error };
-  } finally {
-    await session?.close();
-  }
-}
-
-/** Runs one chain; a scenario that fails in a shared session is tried again alone. */
-async function runChain(task: Task, out: Map<string, Outcome>, requeue: (t: Task) => void) {
+/** Runs one chain; what a broken step leaves untouched is handed back as work of its own. */
+async function runChain(
+  stage: Stage,
+  task: Task,
+  out: Map<string, Outcome>,
+  requeue: (t: Task) => void,
+) {
   const { set, chain } = task;
   const k = (n: string) => key(set.plugin, set.harness, n);
+  const fresh = (n: string): Task => ({ set, chain: { head: n, next: [] } });
   const head = resolveScenario(set, chain.head);
   let session: Session | undefined;
   try {
-    session = await reach(head, "lib", `e2e-${head.plugin}-${head.harness}-${++seq}`);
-    out.set(k(head.name), await snap(session, head));
+    session = await stage.reach(head, "lib", `e2e-${head.plugin}-${head.harness}-${++seq}`);
+    out.set(k(head.name), await snap(stage, session, head));
   } catch (error) {
     out.set(k(head.name), { captures: [], error: error as Error });
     await session?.close();
     // The rest still run, each in a session of its own.
-    for (const n of chain.next) requeue({ set, chain: { head: n.name, next: [] }, solo: true });
+    for (const n of chain.next) requeue(fresh(n.name));
     return;
   }
   const shared = head.name;
   try {
     for (const [i, item] of chain.next.entries()) {
       const r = resolveScenario(set, item.name);
-      let outcome: Outcome;
       try {
         // Back on the screen the next scenario starts from: its size, and what undoes the last one.
         const size = await session.size();
@@ -183,20 +189,20 @@ async function runChain(task: Task, out: Map<string, Outcome>, requeue: (t: Task
         // A root that takes its turn starts from the fresh screen: its whole steps, not an addition.
         await play(session, item.fromStart ? r.steps : r.ownSteps);
         await session.settle();
-        outcome = await snap(session, r);
-        if (!r.expectFail && wrong(outcome.captures))
-          throw new Error("differs in a shared session");
+        // A screen that differs from its snapshot is still the shared session's, so the chain carries
+        // on; the gate compares it, and a playback or capture failure is what breaks the session.
+        out.set(k(r.name), await snap(stage, session, r));
       } catch (error) {
-        // Alone it may be right: then what differed came from the session being shared.
         console.error(
-          `e2e: ${k(r.name)} failed in the session of ${shared}: ${String(error).split("\n")[0]}; running it alone`,
+          `e2e: ${k(r.name)} failed in the session of ${shared}: ${String(error).split("\n")[0]}`,
         );
-        out.set(k(r.name), await solo(set, r.name).then((o) => ({ ...o, sharedWith: shared })));
-        for (const n of chain.next.slice(i + 1))
-          requeue({ set, chain: { head: n.name, next: [] }, solo: true });
+        // The failure is the result of the one attempt it got: no second one alone. What the broken
+        // session never reached runs fresh.
+        await stage.failShot(session, r);
+        out.set(k(r.name), { captures: [], error: error as Error });
+        for (const n of chain.next.slice(i + 1)) requeue(fresh(n.name));
         return;
       }
-      out.set(k(r.name), outcome);
     }
   } finally {
     await session.close();
@@ -209,6 +215,7 @@ export type Stats = { sessions: number; seconds: number };
 export async function runAll(
   sets: ScenarioSet[],
   wanted: (plugin: string, harness: string, name: string) => boolean,
+  stage: Stage = realStage,
 ): Promise<{ outcomes: Map<string, Outcome>; stats: Stats }> {
   const began = Date.now();
   const startedWith = { ...startStats };
@@ -220,11 +227,11 @@ export async function runAll(
       // replays its own way in, so a filtered run never plays a neighbour.
       const names = [chain.head, ...chain.next.map((n) => n.name)];
       if (names.every((n) => wanted(set.plugin, set.harness, n)))
-        queues[set.harness].push({ set, chain, solo: false });
+        queues[set.harness].push({ set, chain });
       else
         for (const n of names)
           if (wanted(set.plugin, set.harness, n))
-            queues[set.harness].push({ set, chain: { head: n, next: [] }, solo: true });
+            queues[set.harness].push({ set, chain: { head: n, next: [] } });
     }
   }
   const pools = (Object.keys(queues) as HarnessName[]).map(async (harness) => {
@@ -244,7 +251,7 @@ export async function runAll(
         }
         running++;
         try {
-          await runChain(task, out, requeue);
+          await runChain(stage, task, out, requeue);
         } catch (error) {
           out.set(key(task.set.plugin, harness, task.chain.head), {
             captures: [],
