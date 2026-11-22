@@ -1,4 +1,8 @@
-import { vscodeScenarios, type VscodeScenario, type VscodeStep } from "@agents/drive/lib/vscode-scenario.ts";
+import {
+  vscodeScenarios,
+  type VscodeScenario,
+  type VscodeStep,
+} from "@agents/drive/lib/vscode-scenario.ts";
 import { says } from "./fixture.ts";
 
 const asks = (fixture: string): VscodeScenario["start"] => ({

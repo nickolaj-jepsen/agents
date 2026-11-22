@@ -2,12 +2,7 @@
  * A checkout with a note store of its own, so no scenario reads or writes the real
  * `.agents/store`, which is a link into `~/.local/share/agents/store`.
  */
-import {
-  fileName,
-  serialize,
-  STORE_DIR,
-  type Suggestion,
-} from "../lib/docfix.ts";
+import { fileName, serialize, STORE_DIR, type Suggestion } from "../lib/docfix.ts";
 import type { SetupContext } from "@agents/drive/lib/session.ts";
 
 const DAY = 86_400_000;

@@ -1,7 +1,15 @@
 import type { RenderElement } from "claude-code";
 
 import type { Picker, Report } from "./types.d.ts";
-import { actionBar, choice, notice, roleProps, stack, statusBand, tokens } from "@agents/kit-legacy/claude/ui.tsx";
+import {
+  actionBar,
+  choice,
+  notice,
+  roleProps,
+  stack,
+  statusBand,
+  tokens,
+} from "@agents/kit-legacy/claude/ui.tsx";
 import type { Action, ChoiceOption, Kit } from "@agents/kit-legacy/claude/ui.tsx";
 
 /** What the band draws from: the mod's atoms and whether a personal dictionary is set. */

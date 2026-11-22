@@ -36,7 +36,10 @@ if (!check && !process.argv.includes("--no-shots")) {
     .filter((d) => d.isDirectory() && existsSync(join(repoRoot, "lib/kits", d.name, "e2e")))
     .map((d) => `kit-${d.name}`);
   const built = run("lib/tools/build/build.ts", "lib/kits/catalog");
-  const done = built.status === 0 ? packages.map((p) => run("lib/tools/drive/run.ts", p)).find((r) => r.status !== 0) : built;
+  const done =
+    built.status === 0
+      ? packages.map((p) => run("lib/tools/drive/run.ts", p)).find((r) => r.status !== 0)
+      : built;
   if (done && done.status !== 0) {
     console.error(
       "catalog: the kit scenarios failed; fix them, or use --no-shots for the PNGs there are",

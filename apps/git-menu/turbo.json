@@ -1,19 +1,11 @@
 {
-  "extends": [
-    "//"
-  ],
+  "extends": ["//"],
   "tasks": {
     "build": {
-      "command": [
-        "node",
-        "../../lib/tools/build/build.ts"
-      ]
+      "command": ["node", "../../lib/tools/build/build.ts"]
     },
     "test:claude": {
-      "command": [
-        "sh",
-        "../../lib/tools/build/claude-plugin-test.sh"
-      ]
+      "command": ["sh", "../../lib/tools/build/claude-plugin-test.sh"]
     }
   }
 }

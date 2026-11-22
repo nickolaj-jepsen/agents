@@ -15,14 +15,14 @@ Start with the [layout reference](references/style.md) and an example from the [
 - [Kit guide](../../kit/README.md): change the shared kit instead of maintaining separate frames, text clamping or key hints in plugins.
 - [Replay guide](../../e2e/README.md): write scenarios, drive a screen, take pictures and check snapshots.
 
-Run repo tasks as `pnpm turbo run <task>`. Drive a parked session with `node e2e/cli.ts <verb>` instead: turbo stops what a task leaves running, so `goto` through turbo parks nothing.
+Run repo tasks as `pnpm turbo run <task>`. Drive a parked session with `node lib/tools/drive/cli.ts <verb>` instead: turbo stops what a task leaves running, so `goto` through turbo parks nothing.
 
 If a plugin does nothing, look at the running session before guessing. In pi, startup `cap` shows `[Extension issues]`; in Claude, the session debug log shows rejected hooks and trees.
 
 ## Before handing back
 
 1. Add or use an `extreme: true` scenario with long text, wide characters and more items than fit. Check empty and error states as well.
-2. Run `node e2e/cli.ts sweep` and open each PNG (70×24, 112×32, 160×45, 240×60). Report what wraps or is cut, whether rows and columns stay aligned, whether the width stays bounded, and which hints and controls remain at 70 columns.
+2. Run `node lib/tools/drive/cli.ts sweep` and open each PNG (70×24, 112×32, 160×45, 240×60). Report what wraps or is cut, whether rows and columns stay aligned, whether the width stays bounded, and which hints and controls remain at 70 columns.
 3. Try every visible key and click target with both an empty prompt and a draft. Run the plugin's scenarios and inspect any snapshot diff you accept.
 4. For a Claude mod, mount the states on `desktop` and `vscode` in mod tests, exercise keyed actions, and run `expectNative`. In VS Code, click the actions and inspect each state at 420×800, 420 wide at full height, and 1280×720. Use the [graphical screen procedure](references/claude.md#looking-at-a-graphical-screen). Report anything you could not check on Desktop.
 

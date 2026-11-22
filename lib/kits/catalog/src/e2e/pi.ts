@@ -40,25 +40,27 @@ const regionOf =
 /** The scenarios of `plugin` (`kit-<name>`): the stories whose component `owns` says is its. */
 export const piScenarios = (plugin: string, owns: (component: string) => boolean) =>
   scenarios({
-  plugin,
-  harness: "pi",
-  scenarios: Object.fromEntries(
-    stories.filter((s) => owns(s.component)).map((s): [string, Scenario] => [
-      storyId(s),
-      {
-        about: s.about,
-        region: regionOf(s),
-        // Hermetic, on the replay provider: the same screen signed out (the Pages workflow) as here.
-        start: { hermetic: true, turns: [], args: ["--extension", catalog] },
-        steps: [
-          { type: `/kit ${s.component} ${s.state}` },
-          { press: "Enter" },
-          s.frame ? { wait: /esc (close|later)/ } : { sleep: 600 },
-        ],
-        // Esc closes the story, leaving the prompt the next one starts from.
-        reset: [{ press: "Escape" }],
-        sizes: catalogueSizes(s.extreme ?? false),
-      },
-    ]),
-  ),
-});
+    plugin,
+    harness: "pi",
+    scenarios: Object.fromEntries(
+      stories
+        .filter((s) => owns(s.component))
+        .map((s): [string, Scenario] => [
+          storyId(s),
+          {
+            about: s.about,
+            region: regionOf(s),
+            // Hermetic, on the replay provider: the same screen signed out (the Pages workflow) as here.
+            start: { hermetic: true, turns: [], args: ["--extension", catalog] },
+            steps: [
+              { type: `/kit ${s.component} ${s.state}` },
+              { press: "Enter" },
+              s.frame ? { wait: /esc (close|later)/ } : { sleep: 600 },
+            ],
+            // Esc closes the story, leaving the prompt the next one starts from.
+            reset: [{ press: "Escape" }],
+            sizes: catalogueSizes(s.extreme ?? false),
+          },
+        ]),
+    ),
+  });

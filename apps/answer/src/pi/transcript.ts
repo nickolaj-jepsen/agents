@@ -25,7 +25,13 @@ import {
   sectionsOf,
 } from "@agents/kit-card/terminal.ts";
 import { cellWidth, span, type Span } from "@agents/kit-core/lines.ts";
-import { draw, markdownLines, paintLine, paintLines, paintText } from "@agents/kit-core/paint/pi.ts";
+import {
+  draw,
+  markdownLines,
+  paintLine,
+  paintLines,
+  paintText,
+} from "@agents/kit-core/paint/pi.ts";
 import { tokens, widthCap } from "@agents/kit-core/tokens.ts";
 // No kit part yet: the band's hit map, the gutter, prose, and `clamp`, which breaks CJK text
 // between characters where the kit's wraps at spaces only.

@@ -25,7 +25,7 @@ const items = await Promise.all(
       HARNESSES.map(async (h) => ({
         h,
         status: f.support[h].status,
-        note: f.support[h].note ? await renderInline(f.support[h].note!, 'kit/catalog/components/') : '',
+        note: f.support[h].note ? await renderInline(f.support[h].note!, 'lib/kits/catalog/src/components/') : '',
       })),
     ),
   })),

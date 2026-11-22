@@ -6,73 +6,69 @@ The [component catalogue](catalog/COMPONENTS.md) lists every component, where it
 
 ## How it fits together
 
-| Part                                                    | What it holds                                                                                                                     |
-| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| [`lines.ts`](lines.ts)                                  | The line model: spans with a colour role and a face, the control a span or row belongs to, wrapping and inline Markdown in cells. |
-| [`tokens.ts`](tokens.ts)                                | The numbers and glyphs. One edit restyles every plugin on both clients.                                                           |
-| `<component>/contract.ts`                               | What a plugin passes in and gets back. No host imports.                                                                           |
-| `<component>/terminal.ts`                               | The component as lines for a width.                                                                                               |
-| [`paint/pi.ts`](paint/pi.ts)                            | Lines as pi's themed strings, and where each control sits on its row.                                                             |
-| [`paint/claude.tsx`](paint/claude.tsx)                  | Lines as Claude Code elements: a plain `Button` per control, plus the parked focus ring, the hover fill and the keyboard hint.    |
-| [`stories.ts`](stories.ts) and `<component>/stories.ts` | One set of sample props per state, drawn by both catalogues.                                                                      |
-| [`legacy/`](legacy)                                     | The two kits from before, for what has not moved yet. Don't add to them.                                                          |
+| Part                                                                          | What it holds                                                                                                                     |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| [`core/src/lines.ts`](core/src/lines.ts) (`@agents/kit-core`)                 | The line model: spans with a colour role and a face, the control a span or row belongs to, wrapping and inline Markdown in cells. |
+| [`core/src/tokens.ts`](core/src/tokens.ts)                                    | The numbers and glyphs. One edit restyles every plugin on both clients.                                                           |
+| `<component>/src/contract.ts` (`@agents/kit-<component>`)                     | What a plugin passes in and gets back. No host imports.                                                                           |
+| `<component>/src/terminal.ts`                                                 | The component as lines for a width.                                                                                               |
+| [`core/src/paint/pi.ts`](core/src/paint/pi.ts)                                | Lines as pi's themed strings, and where each control sits on its row.                                                             |
+| [`core/src/paint/claude.tsx`](core/src/paint/claude.tsx)                      | Lines as Claude Code elements: a plain `Button` per control, plus the parked focus ring, the hover fill and the keyboard hint.    |
+| [`core/src/stories.ts`](core/src/stories.ts) and `<component>/src/stories.ts` | One set of sample props per state, drawn by both catalogues; [`catalog/src/registry.ts`](catalog/src/registry.ts) lists them all. |
+| `<component>/e2e/`                                                            | The component's stories played in pi and Claude Code, and their snapshots.                                                        |
+| [`legacy/`](legacy) (`@agents/kit-legacy`)                                    | The two kits from before, for what has not moved yet. Don't add to them.                                                          |
+
+Each component is a workspace package, `lib/kits/<component>`, named `@agents/kit-<component>`; its files are imported as `@agents/kit-card/terminal.ts`. A package lists the kit packages it imports as `workspace:*` dependencies.
 
 A component's functions take props and a width and return `Line[]`. They never see a theme or an element, so they run the same in a test, in pi and in a Claude Code mod.
 
 ## Draw with a component
 
-In pi, import by relative path (the loader resolves no aliases) and paint with the theme:
+In pi, import the packages and paint with the theme:
 
 ```ts
-import { choiceList } from "../../../kit/card/terminal.ts";
-import { paintLines } from "../../../kit/paint/pi.ts";
+import { choiceList } from "@agents/kit-card/terminal.ts";
+import { paintLines } from "@agents/kit-core/paint/pi.ts";
 
 const painted = paintLines(theme, choiceList(props, width), width);
 // painted.lines are the rows; painted.cells say where each control is, for the mouse.
 ```
 
-In a Claude Code mod, import from the mod's own copy and paint with the elements of the render event:
+In a Claude Code mod, import the same way and paint with the elements of the render event:
 
 ```tsx
-import { choiceList } from "./kit/card/terminal.ts";
-import { paintLines } from "./kit/paint/claude.tsx";
+import { choiceList } from "@agents/kit-card/terminal.ts";
+import { paintLines } from "@agents/kit-core/paint/claude.tsx";
 
 return paintLines(els, choiceList(props, width), { press: (hit) => pick(hit), width });
 ```
 
-A mod can't import outside its folder, so it carries a copy of the kit as `claude/kit/`:
+A mod can't import outside its folder, and pi's loader resolves no aliases, so `pnpm turbo run build` bundles what an app imports into its `dist/`: there are no copies of the kit to keep in step. Add the package to the app's `devDependencies` as `workspace:*`.
 
-```bash
-pnpm turbo run kit-sync -- answer  # give a mod its copy of the kit
-pnpm turbo run kit-sync            # rewrite every copy after editing the kit
-```
+A screen both halves of a plugin draw is written once, in the plugin's `src/lib/`, and imports the kit packages. [linear-issue's screen](../../apps/linear-issue/src/lib/screen.ts) is the example: it returns lines and decides what a key does, and each half only paints and delivers keys.
 
-Its `claude/tsconfig.json` needs `"allowImportingTsExtensions": true`, since the kit's files import each other with `.ts`. `pnpm turbo run test` fails while a copy differs from the kit.
-
-A screen both halves of a plugin draw is written once, in the plugin's `core/`, and imports the kit from the mod's copy (`../claude/kit/`): that folder is the one both the mod and the pi extension can reach. [linear-issue's screen](../plugins/linear-issue/core/screen.ts) is the example: it returns lines and decides what a key does, and each half only paints and delivers keys.
-
-The kit keeps no state and registers no hooks. A plugin holds the state (what is chosen, where the keyboard is) and passes it in, the same way on both clients. [The catalogue mod](catalog/claude/claude/register.tsx) shows the hooks a Claude Code site needs for the kit's own focus.
+The kit keeps no state and registers no hooks. A plugin holds the state (what is chosen, where the keyboard is) and passes it in, the same way on both clients. [The catalogue mod](catalog/src/claude.tsx) shows the hooks a Claude Code site needs for the kit's own focus.
 
 ## Add or change a component
 
 ```bash
-pnpm turbo run kit-new -- status-line                                    # scaffold kit/status-line/ and register its stories
-pnpm turbo run kit-live --ui=tui -- status-line/default --harness pi     # watch it in a real session; redraws on save
-pnpm turbo run kit-sync                                                  # copy the kit into the mods
-pnpm turbo run e2e:update --filter=@agents/e2e-kit -- -t 'status-line/'  # record it in pi and Claude Code
-pnpm turbo run test --filter=@agents/kit                                 # the parity check reads those snapshots
+pnpm turbo run kit-new -- status-line                                          # scaffold lib/kits/status-line/ and register its stories
+pnpm install                                                                   # link the new package
+pnpm turbo run kit-live --ui=tui -- status-line/default --harness pi           # watch it in a real session; rebuilds on save
+pnpm turbo run e2e:update --filter=@agents/kit-status-line                     # record it in pi and Claude Code
+pnpm turbo run test --filter=@agents/kit-catalog                               # the parity check reads those snapshots
 ```
 
-`kit-live` is an interactive task: the [replay guide](../e2e/README.md#live-mode) says how to type into it.
+`kit-live` is an interactive task: the [replay guide](../tools/drive/README.md#live-mode) says how to type into it.
 
-1. Put the types in `contract.ts` and draw in `terminal.ts`. Use roles from `lines.ts` and glyphs from `tokens.ts`, never a colour or a literal glyph. Give each control a `hit`, on its row or on its spans.
-2. Add a story per state in the component's `stories.ts`. A story is one call that returns lines for a width.
-3. Fill in `manifest.ts`: what it is for, its features, the story that shows each, and for each surface whether it is on the system. A feature on a `system` surface is supported or says why the engine can't; "not built yet" is not an answer there.
-4. Record and run the tests. [`parity.spec.ts`](parity.spec.ts) fails when a client's snapshot is not exactly the shared drawing at its width, or when the two clients differ at the same width.
+1. Put the types in `src/contract.ts` and draw in `src/terminal.ts`. Use roles from `lines.ts` and glyphs from `tokens.ts`, never a colour or a literal glyph. Give each control a `hit`, on its row or on its spans.
+2. Add a story per state in the component's `src/stories.ts`. A story is one call that returns lines for a width.
+3. Fill in `src/manifest.ts`: what it is for, its features, the story that shows each, and for each surface whether it is on the system. A feature on a `system` surface is supported or says why the engine can't; "not built yet" is not an answer there.
+4. Record and run the tests. [`parity.spec.ts`](catalog/src/parity.spec.ts) fails when a client's snapshot is not exactly the shared drawing at its width, or when the two clients differ at the same width.
 
 Test the mouse first. Hover and click every control in a real session on each client before trying a key, in every place the component is drawn: a pane, the band and the transcript differ in focus and in who holds the keyboard.
 
-To change how something looks everywhere, edit its `terminal.ts` or `tokens.ts` and record again. Both clients change together.
+To change how something looks everywhere, edit its `src/terminal.ts` or `core/src/tokens.ts` and record again. Both clients change together.
 
 ## What still differs between the clients
 
@@ -85,12 +81,12 @@ To change how something looks everywhere, edit its `terminal.ts` or `tokens.ts` 
 
 ## The legacy kits
 
-`legacy/pi/` and `legacy/claude/ui.tsx` hold what has not moved. A mod still on the Claude one carries it as `claude/ui.tsx`. The lint keeps a list of the plugin files that still draw around the kit (`.oxlintrc.json`); the list only shrinks, and a file leaves it when it imports nothing from `legacy/` and styles nothing by hand.
+`legacy/src/pi/` and `legacy/src/claude/ui.tsx` hold what has not moved. A mod still on the Claude one imports `@agents/kit-legacy/claude/ui.tsx`. The lint keeps a list of the plugin files that still draw around the kit (`.oxlintrc.json`); the list only shrinks, and a file leaves it when it imports nothing from `legacy/` and styles nothing by hand.
 
-Their stories and manifests are under [`catalog/`](catalog), and the catalogue is built from both:
+Their stories and manifests are under [`catalog/src/`](catalog/src), and the catalogue is built from both:
 
 ```bash
-E2E_PNG=1 pnpm turbo run e2e --filter=@agents/e2e-kit --force  # compare snapshots and write pictures
+E2E_PNG=1 pnpm turbo run e2e --filter='@agents/kit-*' --force  # compare snapshots and write pictures
 pnpm turbo run catalog                                         # replay stories and regenerate crops and catalogue data
 ```
 

@@ -4,7 +4,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { e2ePackage, e2ePackageAt } from "./lib/packages.ts";
 
@@ -25,7 +25,11 @@ for (const flag of ["-t", "--testNamePattern"]) {
   const at = args.indexOf(flag);
   if (at >= 0 && args[at + 1]) env.E2E_FILTER = args[at + 1];
 }
-const vitest = createRequire(import.meta.url).resolve("vitest/vitest.mjs");
+// vitest's exports do not name its bin, so it is found beside its package.json.
+const vitest = join(
+  dirname(createRequire(import.meta.url).resolve("vitest/package.json")),
+  "vitest.mjs",
+);
 const done = spawnSync(
   process.execPath,
   [vitest, "run", "-c", `${here}/vitest.config.ts`, ...args],

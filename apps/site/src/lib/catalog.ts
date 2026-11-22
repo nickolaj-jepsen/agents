@@ -1,6 +1,6 @@
 /**
  * The UI kit's catalogue for the /dev/components/ pages: `data/kit.json` (the model `turbo run catalog`
- * writes) joined with the crops it keeps in `site/media/kit/crops.json`.
+ * writes) joined with the crops it keeps in `apps/site/media/kit/crops.json`.
  */
 import type { ComponentModel, Model, StoryModel } from "../../../../lib/kits/catalog/src/model.ts";
 import type { Harness } from "../../../../lib/kits/core/src/manifest.ts";

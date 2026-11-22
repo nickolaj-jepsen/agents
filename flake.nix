@@ -29,15 +29,16 @@
           # neither (the site) is no plugin; `agentTools.subagents` loads the pi half in subagents too.
           # `path` is a string into the flake's own source. TODO(dist): it names the app's source, which
           # imports the kit by workspace package; the nix build of `dist/` comes next and replaces it.
-          plugins = lib.mapAttrs (name: pkg: {
-            claude = pkg ? claude;
-            pi = pkg ? pi;
-            subagents = pkg.agentTools.subagents or false;
-            path = "${self}/apps/${name}";
-          }) (lib.filterAttrs (_: pkg: pkg ? claude || pkg ? pi) (lib.mapAttrs (name: _: let
-            file = pluginsDir + "/${name}/package.json";
-          in
-            lib.optionalAttrs (builtins.pathExists file) (lib.importJSON file)) (dirs pluginsDir)));
+          plugins =
+            lib.mapAttrs (name: pkg: {
+              claude = pkg ? claude;
+              pi = pkg ? pi;
+              subagents = pkg.agentTools.subagents or false;
+              path = "${self}/apps/${name}";
+            }) (lib.filterAttrs (_: pkg: pkg ? claude || pkg ? pi) (lib.mapAttrs (name: _: let
+              file = pluginsDir + "/${name}/package.json";
+            in
+              lib.optionalAttrs (builtins.pathExists file) (lib.importJSON file)) (dirs pluginsDir)));
 
           # One folder per skill, each with a SKILL.md.
           skills = lib.mapAttrs (name: _: skillsDir + "/${name}") (dirs skillsDir);

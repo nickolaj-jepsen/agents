@@ -1,5 +1,5 @@
 /**
- * The repo's content for the pages: `site/data/content.json`, which `turbo run site-data` writes
+ * The repo's content for the pages: `apps/site/data/content.json`, which `turbo run site-data` writes
  * from `scripts/content.ts` (the site's `dev` and `build` tasks run it first), plus the URLs the pages link with. The
  * pages read no file outside this folder, so the site builds from its own tree.
  */
@@ -22,8 +22,8 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 /** A site path (`plugins/answer/`) as a URL under the base (`/agents/plugins/answer/`). */
 export const href = (path = ""): string => base + path.replace(/^\//, "");
 
-/** A repo-relative media path (`site/media/answer/demo.mp4`) as its URL. */
-export const mediaUrl = (path: string): string => href(path.replace(/^site\//, ""));
+/** A repo-relative media path (`apps/site/media/answer/demo.mp4`) as its URL. */
+export const mediaUrl = (path: string): string => href(path.replace(/^apps\/site\//, ""));
 
 export const pluginHref = (name: string) => href(`plugins/${name}/`);
 export const skillHref = (name: string) => href(`skills/${name}/`);

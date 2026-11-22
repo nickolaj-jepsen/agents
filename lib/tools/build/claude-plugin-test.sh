@@ -12,4 +12,6 @@ export HOME=$home
 
 cd dist
 claude plugin validate --strict .
-claude plugin test .
+# The catalogue mod has no tests of its own, and `plugin test` fails on none.
+set -- *.test.ts
+if [ -e "$1" ]; then claude plugin test .; fi

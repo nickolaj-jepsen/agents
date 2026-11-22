@@ -1,10 +1,5 @@
 {
   "extends": "../../../tsconfig.base.node.json",
-  "include": [
-    "src",
-    "e2e"
-  ],
-  "exclude": [
-    "src/paint/claude.tsx"
-  ]
+  "include": ["src", "e2e"],
+  "exclude": ["src/paint/claude.tsx"]
 }

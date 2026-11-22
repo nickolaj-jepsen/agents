@@ -3,14 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "claude": {
-    "name": "image-preview",
-    "version": "0.1.0",
-    "description": "Preview local PNG and JPEG images from Read, assistant links, and sent files in the terminal transcript",
-    "author": {
-      "name": "Nickolaj Jepsen"
-    }
-  },
   "devDependencies": {
     "@agents/build": "workspace:*",
     "@agents/drive": "workspace:*",
@@ -20,5 +12,13 @@
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "claude": {
+    "name": "image-preview",
+    "version": "0.1.0",
+    "description": "Preview local PNG and JPEG images from Read, assistant links, and sent files in the terminal transcript",
+    "author": {
+      "name": "Nickolaj Jepsen"
+    }
   }
 }

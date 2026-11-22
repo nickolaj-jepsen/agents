@@ -58,12 +58,12 @@ Run from the repo root with the [VS Code driver prerequisites](../../../e2e/READ
 
 ```bash
 out=$(mktemp -d)                                      # keep screenshots together
-node e2e/vscode.ts goto docfix open --size 420x800      # open the narrow panel with evidence expanded
-node e2e/vscode.ts shot "$out/narrow.png"               # check wrapping, clipping and scroll
-node e2e/vscode.ts resize 1280 720                      # switch to the wide layout
-node e2e/vscode.ts shot "$out/wide.png"                 # check the wide panel before changing its CSS
-node e2e/vscode.ts resize 420 1500                      # return to a narrow viewport with extra height
-node e2e/vscode.ts eval '(() => { const s = document.createElement("style"); s.textContent = "[class*=paneBody_],[class*=abovePrompt_],[class*=band_]{max-height:none!important}"; document.head.appendChild(s); })()'  # lift caps in this webview only
-node e2e/vscode.ts shot "$out/full.png"                 # inspect content below the usual scroll edge
-node e2e/vscode.ts stop                                # close the test window
+node lib/tools/drive/vscode.ts goto docfix open --size 420x800      # open the narrow panel with evidence expanded
+node lib/tools/drive/vscode.ts shot "$out/narrow.png"               # check wrapping, clipping and scroll
+node lib/tools/drive/vscode.ts resize 1280 720                      # switch to the wide layout
+node lib/tools/drive/vscode.ts shot "$out/wide.png"                 # check the wide panel before changing its CSS
+node lib/tools/drive/vscode.ts resize 420 1500                      # return to a narrow viewport with extra height
+node lib/tools/drive/vscode.ts eval '(() => { const s = document.createElement("style"); s.textContent = "[class*=paneBody_],[class*=abovePrompt_],[class*=band_]{max-height:none!important}"; document.head.appendChild(s); })()'  # lift caps in this webview only
+node lib/tools/drive/vscode.ts shot "$out/full.png"                 # inspect content below the usual scroll edge
+node lib/tools/drive/vscode.ts stop                                # close the test window
 ```

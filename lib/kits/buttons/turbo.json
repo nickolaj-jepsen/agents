@@ -1,27 +1,13 @@
 {
-  "extends": [
-    "//"
-  ],
+  "extends": ["//"],
   "tasks": {
     "e2e": {
-      "command": [
-        "node",
-        "../../tools/drive/run.ts"
-      ],
-      "dependsOn": [
-        "^topo",
-        "@agents/kit-catalog#build"
-      ]
+      "command": ["node", "../../tools/drive/run.ts"],
+      "dependsOn": ["^topo", "@agents/kit-catalog#build"]
     },
     "e2e:update": {
-      "command": [
-        "node",
-        "../../tools/drive/run.ts",
-        "-u"
-      ],
-      "dependsOn": [
-        "@agents/kit-catalog#build"
-      ]
+      "command": ["node", "../../tools/drive/run.ts", "-u"],
+      "dependsOn": ["@agents/kit-catalog#build"]
     }
   }
 }

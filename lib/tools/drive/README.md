@@ -17,7 +17,7 @@ pnpm turbo run kit-live --ui=tui -- card/live --harness pi            # a kit st
 
 The view fits your window once the scripted steps finish. To change the size **during** those steps, pass `--size 96x30` in terminal cells or `--size 900x700` in VS Code pixels. For the Desktop app, see [Claude Desktop](#claude-desktop).
 
-With `--watch`, each save under the plugin's folder, `kit/` or the scenario's folder syncs the kit (the `kit-sync` task), starts the agent over and replays the steps. The old session stays on screen until the new one reaches the screen. If the new code fails to start, its error takes the screen's place; save again to retry. Tests, snapshots and the kit's copies don't count as saves.
+With `--watch`, each save under the app's `src/`, the kit packages or the scenario's folder rebuilds the apps (`lib/tools/build/build.ts`), starts the agent over and replays the steps. The old session stays on screen until the new one reaches the screen. If the new code fails to start, its error takes the screen's place; save again to retry. Tests, snapshots and the kit's copies don't count as saves.
 
 For Claude, `--watch --in-place` keeps the session and lets Claude reload the mod itself, which keeps what you clicked. Claude waits for the folder to go quiet first: a few seconds, or up to a minute when you save often. Type `/reload-plugins` to reload at once.
 
@@ -26,19 +26,19 @@ For Claude, `--watch --in-place` keeps the session and lets Claude reload the mo
 Run these with `node` itself, not through turbo: turbo stops what a task leaves behind, so a session parked by `goto` would die with its task. The `e2e:cli` task is for verbs that finish, like `ls`.
 
 ```bash
-node e2e/cli.ts goto docfix queue --harness pi  # park a session at the queue
-node e2e/cli.ts cap                             # read the screen as text
-node e2e/cli.ts keys Down Enter                 # act on the focused row
-node e2e/cli.ts sweep                           # write PNGs at all four test sizes
-node e2e/cli.ts reload                          # after an edit: sync the kit, replay in a fresh session
-node e2e/cli.ts stop                            # end the session
+node lib/tools/drive/cli.ts goto docfix queue --harness pi  # park a session at the queue
+node lib/tools/drive/cli.ts cap                             # read the screen as text
+node lib/tools/drive/cli.ts keys Down Enter                 # act on the focused row
+node lib/tools/drive/cli.ts sweep                           # write PNGs at all four test sizes
+node lib/tools/drive/cli.ts reload                          # after an edit: rebuild, replay in a fresh session
+node lib/tools/drive/cli.ts stop                            # end the session
 ```
 
-Run `node e2e/cli.ts` for all verbs. Saving doesn't reload a parked session; `reload` does, at the session's current size. If the new session fails to start, `reload` prints why and leaves the old one parked. `goto ... --watch` takes the same flags as live mode, reloads on each save and prints the screen; Ctrl+C stops watching and leaves the session parked. A failed start removes its run folder unless `E2E_KEEP=1` is set, which prints its path. For parallel runs, give each driver its own `XDG_STATE_HOME` and short `XDG_RUNTIME_DIR`: the saved state and daemon socket are separate. The CLI finds tui-test via `TUI_TEST_BIN`, then `PATH`, then the release the repo pins, which it downloads and checks on first use (`pnpm turbo run @agents/e2e#tui-test` fetches it ahead of time).
+Run `node lib/tools/drive/cli.ts` for all verbs. Saving doesn't reload a parked session; `reload` does, at the session's current size. If the new session fails to start, `reload` prints why and leaves the old one parked. `goto ... --watch` takes the same flags as live mode, reloads on each save and prints the screen; Ctrl+C stops watching and leaves the session parked. A failed start removes its run folder unless `E2E_KEEP=1` is set, which prints its path. For parallel runs, give each driver its own `XDG_STATE_HOME` and short `XDG_RUNTIME_DIR`: the saved state and daemon socket are separate. The CLI finds tui-test via `TUI_TEST_BIN`, then `PATH`, then the release the repo pins, which it downloads and checks on first use (`pnpm turbo run @agents/e2e#tui-test` fetches it ahead of time).
 
 ## Write a scenario
 
-Copy the pattern in [docfix's Claude scenarios](docfix/claude.scenarios.ts) to `e2e/<plugin>/claude.scenarios.ts` or `pi.scenarios.ts`. [The scenario types](lib/scenario.ts) document the steps, defaults, and how one screen can continue from another.
+Copy the pattern in [docfix's Claude scenarios](../../../apps/docfix/src/e2e/claude.scenarios.ts) to `apps/<plugin>/src/e2e/claude.scenarios.ts` or `pi.scenarios.ts`. [The scenario types](lib/scenario.ts) document the steps, defaults, and how one screen can continue from another.
 
 - Start with `start: { hermetic: true, plugins: ["<plugin>"], turns: [] }` on the set. `start.mcp` names stand-in MCP servers: Claude gets them as its config, and a hermetic pi gets them in its `mcp.json` for a plugin that reads it (pi's own MCP support stays off). Add [canned turns](lib/harness.ts) when the screen needs a model response. A non-hermetic run uses your own config; don't send a real prompt just to reach a screen.
 - Use `setup` to create a fixture, never your real repository or notes store. A driver must carry the [fixture environment](lib/setup.ts) into git and the agent so neither reaches your hooks, notes or worktrees. Run folders are under `/tmp` by default so a user's longer `TMPDIR` doesn't change line wrapping.
@@ -52,10 +52,10 @@ pnpm turbo run e2e --filter=@agents/e2e-docfix              # compare one plugin
 pnpm turbo run e2e                                          # every plugin; a package whose inputs didn't change is a cache hit
 E2E_PNG=1 pnpm turbo run e2e --filter=@agents/e2e-docfix --force  # also write PNGs for inspection
 pnpm turbo run e2e:update --filter=@agents/e2e-docfix       # accept intentional changes (never cached); inspect the diff
-node e2e/run.ts docfix -t 'band'                            # one scenario, outside turbo
+node lib/tools/drive/run.ts docfix -t 'band'                            # one scenario, outside turbo
 ```
 
-Each `e2e/<plugin>/` package is one `e2e` task, which reruns when its scenarios or snapshots, the harness under `e2e/`, the plugin it loads or `kit/` change. A cache hit writes no PNGs, so add `--force` when you want them. Commit only the `.snap` files under `e2e/<plugin>/__snapshots__/`. A mismatch writes `.actual.snap` and `.actual.png`; failed steps leave `*.actual.png`. Set `E2E_KEEP=1` to keep the session and logs. Use `E2E_JOBS=1` to diagnose contention. If a scenario fails only in a shared session and passes when retried alone, look for state leaking between scenarios instead of updating the snapshot.
+Each app and kit package with scenarios has one `e2e` task, which reruns when its scenarios or snapshots, the harness (`lib/tools/drive/`), the builds it loads or the kit packages change. A cache hit writes no PNGs, so add `--force` when you want them. Commit only the `.snap` files under `e2e/<plugin>/__snapshots__/`. A mismatch writes `.actual.snap` and `.actual.png`; failed steps leave `*.actual.png`. Set `E2E_KEEP=1` to keep the session and logs. Use `E2E_JOBS=1` to diagnose contention. If a scenario fails only in a shared session and passes when retried alone, look for state leaking between scenarios instead of updating the snapshot.
 
 Under Ghostty's test backend, Claude's terminal `Image` may show only its alt text. To check pixels, use a graphics-capable terminal or [capture inline graphics](#capture-inline-graphics).
 
@@ -64,11 +64,11 @@ Under Ghostty's test backend, Claude's terminal `Image` may show only its alt te
 Use Linux with `code`, the `anthropic.claude-code` extension, and Nix for the headless compositor. The driver opens an isolated workspace and profile. It doesn't run snapshot tests. Write scenarios in `vscode.scenarios.ts` using [the VS Code scenario types](lib/vscode-scenario.ts).
 
 ```bash
-node e2e/vscode.ts goto docfix queue --size 420x800  # open the real Claude panel
-node e2e/vscode.ts cap                               # read the panel as text
-node e2e/vscode.ts shot                              # write a PNG of the panel
-node e2e/vscode.ts reload                            # read edited mods in a new Claude tab
-node e2e/vscode.ts stop                              # close the driver and its stub
+node lib/tools/drive/vscode.ts goto docfix queue --size 420x800  # open the real Claude panel
+node lib/tools/drive/vscode.ts cap                               # read the panel as text
+node lib/tools/drive/vscode.ts shot                              # write a PNG of the panel
+node lib/tools/drive/vscode.ts reload                            # read edited mods in a new Claude tab
+node lib/tools/drive/vscode.ts stop                              # close the driver and its stub
 ```
 
 - `reload` can replay a different scenario of the same plugin. Use `goto` when launch options change; the extension's own **New session** doesn't reload code. For parallel drivers set a distinct `E2E_VSCODE_SESSION` on every command.
@@ -96,9 +96,9 @@ nix develop .#media -c pnpm turbo run site-vscode -- docfix  # retake just its V
 
 Record in the media shell: it holds VS Code, the fonts and the tools the scenarios call, and exports `AGENTS_MEDIA_ENV`, which changes with any of them and is part of each recording's cache key, so a recording from another environment is never restored. A recording whose inputs didn't change is restored, not replayed; add `--force` to record it anyway. The site builds without any of it.
 
-The site reads generated files under `site/media/`; don't commit them.
+The site reads generated files under `apps/site/media/`; don't commit them.
 
-Use `e2e/<plugin>/site.scenarios.ts` for a demo tour, its stills, and any VS Code pictures. [docfix's recording](docfix/site.scenarios.ts) is a working example; [the types](lib/site.ts) describe what the runner reads. Keep tours short and inspect the video for unintended account details, private paths, or distractions. If a capture is over budget, shorten the tour before changing the limits. Match side calls to their own canned turn with `match` rather than relying on their order. Use the [fake Linear server](lib/linear-mcp.ts) for Linear scenarios, not a logged-in account.
+Use `apps/<plugin>/src/e2e/site.scenarios.ts` for a demo tour, its stills, and any VS Code pictures. [docfix's recording](../../../apps/docfix/src/e2e/site.scenarios.ts) is a working example; [the types](lib/site.ts) describe what the runner reads. Keep tours short and inspect the video for unintended account details, private paths, or distractions. If a capture is over budget, shorten the tour before changing the limits. Match side calls to their own canned turn with `match` rather than relying on their order. Use the [fake Linear server](lib/linear-mcp.ts) for Linear scenarios, not a logged-in account.
 
 ### Capture inline graphics
 

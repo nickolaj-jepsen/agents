@@ -261,13 +261,16 @@ export async function failShot(session: Session, r: Resolved) {
 /** The driver's own folder (`lib/tools/drive`). */
 export const driveRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-/** Every `<harness>.scenarios.ts` of the packages with e2e scenarios, or of `plugin`'s alone. */
+/**
+ * Every `<harness>.scenarios.ts` of the packages with e2e scenarios, or of `plugin`'s alone; `kit` is
+ * every kit package, since a story is named for its component and not for the package that owns it.
+ */
 export function scenarioFiles(
   plugin?: string,
 ): { plugin: string; harness: HarnessName; file: string }[] {
   const out: { plugin: string; harness: HarnessName; file: string }[] = [];
   for (const p of e2ePackages()) {
-    if (plugin && p.name !== plugin) continue;
+    if (plugin && p.name !== plugin && !(plugin === "kit" && p.name.startsWith("kit-"))) continue;
     for (const harness of ["claude", "pi"] as const) {
       const file = join(p.e2e, `${harness}.scenarios.ts`);
       if (existsSync(file)) out.push({ plugin: p.name, harness, file });

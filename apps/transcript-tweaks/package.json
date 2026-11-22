@@ -6,11 +6,6 @@
     "pi-package"
   ],
   "type": "module",
-  "pi": {
-    "extensions": [
-      "./src/pi.ts"
-    ]
-  },
   "devDependencies": {
     "@agents/build": "workspace:*",
     "@agents/drive": "workspace:*",
@@ -25,5 +20,10 @@
     "@earendil-works/pi-ai": "*",
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./src/pi.ts"
+    ]
   }
 }

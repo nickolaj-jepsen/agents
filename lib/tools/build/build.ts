@@ -81,7 +81,8 @@ function writeMetadata() {
       }),
     );
   }
-  if (existsSync(join(dir, "README.md"))) put(join(dist, "README.md"), readFileSync(join(dir, "README.md")));
+  if (existsSync(join(dir, "README.md")))
+    put(join(dist, "README.md"), readFileSync(join(dir, "README.md")));
 }
 
 /** Empties `dist/` of what a build writes, keeping what the engine lays there. */
@@ -108,7 +109,9 @@ const common = {
   clean: false,
   tsconfig: false,
   // Both shapes of `[name].ts`: the test bundle must keep its `.ts` (`claude plugin test` skips `*.test.js`).
-  outputOptions: { entryFileNames: (c: { name: string }) => (c.name.endsWith(".test") ? "[name].ts" : "[name].js") },
+  outputOptions: {
+    entryFileNames: (c: { name: string }) => (c.name.endsWith(".test") ? "[name].ts" : "[name].js"),
+  },
   hooks: { "build:done": writeMetadata },
   watch,
 } satisfies InlineConfig;
@@ -123,7 +126,9 @@ if (mod)
     // The mod engine supplies `claude-code`, and `claude-code/testing` to a test.
     deps: { neverBundle: [/^claude-code(\/.*)?$/] },
     // Its elements are made with `h` and `Fragment`, which the engine supplies as globals.
-    inputOptions: { transform: { jsx: { runtime: "classic", pragma: "h", pragmaFrag: "Fragment" } } },
+    inputOptions: {
+      transform: { jsx: { runtime: "classic", pragma: "h", pragmaFrag: "Fragment" } },
+    },
   });
 if (pi)
   configs.push({
@@ -134,7 +139,9 @@ if (pi)
     // pi supplies its own packages and TypeBox to an extension (`getAliases` in its extension loader).
     deps: {
       neverBundle: [
-        ...Object.keys(pkg.peerDependencies ?? {}).map((n) => new RegExp(`^${n.replace(/[/.]/g, "\\$&")}(/.*)?$`)),
+        ...Object.keys(pkg.peerDependencies ?? {}).map(
+          (n) => new RegExp(`^${n.replace(/[/.]/g, "\\$&")}(/.*)?$`),
+        ),
         /^typebox(\/.*)?$/,
       ],
     },

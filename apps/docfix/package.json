@@ -6,23 +6,6 @@
     "pi-package"
   ],
   "type": "module",
-  "claude": {
-    "name": "docfix",
-    "version": "0.1.0",
-    "description": "Agents file doc suggestions instead of editing docs outside their change; /docs reviews them and hands an apply back to the agent",
-    "author": {
-      "name": "Nickolaj Jepsen"
-    },
-    "types": "./src/claude/types.d.ts"
-  },
-  "pi": {
-    "extensions": [
-      "./src/pi.ts"
-    ]
-  },
-  "agentTools": {
-    "subagents": true
-  },
   "devDependencies": {
     "@agents/build": "workspace:*",
     "@agents/drive": "workspace:*",
@@ -46,5 +29,22 @@
     "@earendil-works/pi-ai": "*",
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*"
+  },
+  "agentTools": {
+    "subagents": true
+  },
+  "claude": {
+    "name": "docfix",
+    "version": "0.1.0",
+    "description": "Agents file doc suggestions instead of editing docs outside their change; /docs reviews them and hands an apply back to the agent",
+    "author": {
+      "name": "Nickolaj Jepsen"
+    },
+    "types": "./src/claude/types.d.ts"
+  },
+  "pi": {
+    "extensions": [
+      "./src/pi.ts"
+    ]
   }
 }

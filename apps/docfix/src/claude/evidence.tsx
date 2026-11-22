@@ -5,7 +5,15 @@
  * What is in the text is the core's (`readEvidence`); this only says what goes where, and the
  * kit draws it for the surface.
  */
-import { facts, indent, prose, rule, stack, subhead, type Kit } from "@agents/kit-legacy/claude/ui.tsx";
+import {
+  facts,
+  indent,
+  prose,
+  rule,
+  stack,
+  subhead,
+  type Kit,
+} from "@agents/kit-legacy/claude/ui.tsx";
 import {
   evidenceBlocks,
   evidenceLabel,

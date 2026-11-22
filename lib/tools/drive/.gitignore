@@ -1,5 +1,0 @@
-# A failed comparison's evidence, and local run output.
-*.actual.*
-.out/
-# Generated on request (sweep, shot, a failing scenario, E2E_PNG=1); only the .snap files are committed.
-**/__snapshots__/**/*.png

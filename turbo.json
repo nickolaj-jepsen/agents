@@ -127,7 +127,20 @@
     // Every mod and extension a driver can load, built: what the tasks that start a session depend on.
     "//#dist": {
       "command": null,
-      "dependsOn": ["@nickolaj-jepsen/answer#build", "@nickolaj-jepsen/claude-compat#build", "@nickolaj-jepsen/docfix#build", "@nickolaj-jepsen/exa#build", "@nickolaj-jepsen/git-menu#build", "@nickolaj-jepsen/image-preview#build", "@nickolaj-jepsen/linear-issue#build", "@nickolaj-jepsen/questions#build", "@nickolaj-jepsen/spellfix#build", "@nickolaj-jepsen/transcript-tweaks#build", "@nickolaj-jepsen/worktree#build", "@agents/kit-catalog#build"]
+      "dependsOn": [
+        "@nickolaj-jepsen/answer#build",
+        "@nickolaj-jepsen/claude-compat#build",
+        "@nickolaj-jepsen/docfix#build",
+        "@nickolaj-jepsen/exa#build",
+        "@nickolaj-jepsen/git-menu#build",
+        "@nickolaj-jepsen/image-preview#build",
+        "@nickolaj-jepsen/linear-issue#build",
+        "@nickolaj-jepsen/questions#build",
+        "@nickolaj-jepsen/spellfix#build",
+        "@nickolaj-jepsen/transcript-tweaks#build",
+        "@nickolaj-jepsen/worktree#build",
+        "@agents/kit-catalog#build"
+      ]
     },
     // `pnpm turbo run build` also rewrites the generated README.md (the invariants spec says so when it is stale).
     "//#build": {
@@ -207,7 +220,7 @@
       ]
     },
     "//#kit-live": {
-      "command": ["node", "lib/tools/drive/cli.ts", "live", "kit-catalog", "--watch"],
+      "command": ["node", "lib/tools/drive/cli.ts", "live", "kit", "--watch"],
       "dependsOn": ["//#dist", "@agents/drive#tui-test"],
       "cache": false,
       "persistent": true,
@@ -340,7 +353,11 @@
     // the e2e package, not root tasks: a root task is keyed on this file, and a recording is dear.
     // `turbo run media` is all three; `site#build` reads whatever they left under apps/site/.
     "//#media": {
-      "dependsOn": ["@agents/drive#media:kit", "@agents/drive#site-shots", "@agents/drive#site-vscode"]
+      "dependsOn": [
+        "@agents/drive#media:kit",
+        "@agents/drive#site-shots",
+        "@agents/drive#site-vscode"
+      ]
     },
     "@agents/drive#media:kit": {
       "command": ["env", "E2E_UPDATE=1", "node", "../kits/catalog/src/build.ts"],

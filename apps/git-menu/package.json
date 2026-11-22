@@ -3,15 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "claude": {
-    "name": "git-menu",
-    "version": "0.1.0",
-    "description": "The checkout's git and folder menus from /git and /open: forge links, copies, desktop apps and the checkout's notes",
-    "author": {
-      "name": "Nickolaj Jepsen"
-    },
-    "types": "./src/claude/types.d.ts"
-  },
   "devDependencies": {
     "@agents/build": "workspace:*",
     "@agents/drive": "workspace:*",
@@ -20,5 +11,14 @@
     "@types/node": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"
+  },
+  "claude": {
+    "name": "git-menu",
+    "version": "0.1.0",
+    "description": "The checkout's git and folder menus from /git and /open: forge links, copies, desktop apps and the checkout's notes",
+    "author": {
+      "name": "Nickolaj Jepsen"
+    },
+    "types": "./src/claude/types.d.ts"
   }
 }

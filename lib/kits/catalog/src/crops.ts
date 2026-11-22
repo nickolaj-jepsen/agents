@@ -83,49 +83,51 @@ export function cropShots(): { written: number; kept: number; removed: number } 
   const ran = new Set<string>();
   for (const harness of harnesses) {
     for (const root of snapshotRoots(harness))
-    for (const full of walk(root)) {
-      const m = /^(.+\/[^/]+)@(\d+)x(\d+)\.png$/.exec(relative(root, full));
-      if (!m) continue;
-      ran.add(harness);
-      const [, story, w, h] = m as unknown as [string, string, string, string];
-      const snap = full.replace(/\.png$/, ".snap");
-      if (!existsSync(snap)) continue;
-      const r = /@(\d+),(\d+) \((\d+)x(\d+)\)/.exec(readFileSync(snap, "utf8").split("\n", 1)[0]!);
-      if (!r) continue;
-      const cols = Number(w);
-      const rows = Number(h);
-      const img = decode(readFileSync(full));
-      if (
-        img.w !== origin.x + cell.w * cols + margin.right ||
-        img.h !== origin.y + cell.h * rows + margin.bottom
-      ) {
-        console.warn(`catalog: ${relative(repo, full)} is not a ${cols}x${rows} window; skipped`);
-        continue;
+      for (const full of walk(root)) {
+        const m = /^(.+\/[^/]+)@(\d+)x(\d+)\.png$/.exec(relative(root, full));
+        if (!m) continue;
+        ran.add(harness);
+        const [, story, w, h] = m as unknown as [string, string, string, string];
+        const snap = full.replace(/\.png$/, ".snap");
+        if (!existsSync(snap)) continue;
+        const r = /@(\d+),(\d+) \((\d+)x(\d+)\)/.exec(
+          readFileSync(snap, "utf8").split("\n", 1)[0]!,
+        );
+        if (!r) continue;
+        const cols = Number(w);
+        const rows = Number(h);
+        const img = decode(readFileSync(full));
+        if (
+          img.w !== origin.x + cell.w * cols + margin.right ||
+          img.h !== origin.y + cell.h * rows + margin.bottom
+        ) {
+          console.warn(`catalog: ${relative(repo, full)} is not a ${cols}x${rows} window; skipped`);
+          continue;
+        }
+        const x0 = Math.max(0, Number(r[1]));
+        const y0 = Math.max(0, Number(r[2]));
+        const x1 = Math.min(cols, Number(r[1]) + Number(r[3]));
+        const y1 = Math.min(rows, Number(r[2]) + Number(r[4]));
+        const cut = crop(
+          img,
+          origin.x + x0 * cell.w,
+          origin.y + y0 * cell.h,
+          (x1 - x0) * cell.w,
+          (y1 - y0) * cell.h,
+        );
+        const key = `${harness}/${story}@${cols}x${rows}`;
+        const out = join(cropsDir, `${key}.png`);
+        const hash = createHash("sha256")
+          .update(`${cut.w}x${cut.h}x${cut.channels}`)
+          .update(cut.data)
+          .digest("hex")
+          .slice(0, 16);
+        after[key] = { png: relative(repo, out), width: cut.w, height: cut.h, hash };
+        if (before[key]?.hash === hash && existsSync(out)) continue;
+        mkdirSync(dirname(out), { recursive: true });
+        writeFileSync(out, encode(cut));
+        changed.push(out);
       }
-      const x0 = Math.max(0, Number(r[1]));
-      const y0 = Math.max(0, Number(r[2]));
-      const x1 = Math.min(cols, Number(r[1]) + Number(r[3]));
-      const y1 = Math.min(rows, Number(r[2]) + Number(r[4]));
-      const cut = crop(
-        img,
-        origin.x + x0 * cell.w,
-        origin.y + y0 * cell.h,
-        (x1 - x0) * cell.w,
-        (y1 - y0) * cell.h,
-      );
-      const key = `${harness}/${story}@${cols}x${rows}`;
-      const out = join(cropsDir, `${key}.png`);
-      const hash = createHash("sha256")
-        .update(`${cut.w}x${cut.h}x${cut.channels}`)
-        .update(cut.data)
-        .digest("hex")
-        .slice(0, 16);
-      after[key] = { png: relative(repo, out), width: cut.w, height: cut.h, hash };
-      if (before[key]?.hash === hash && existsSync(out)) continue;
-      mkdirSync(dirname(out), { recursive: true });
-      writeFileSync(out, encode(cut));
-      changed.push(out);
-    }
   }
   // A harness that drew nothing this run keeps what it had.
   for (const [key, c] of Object.entries(before))

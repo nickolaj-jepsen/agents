@@ -18,9 +18,9 @@ const types = /** @type {Record<string, string>} */ ({
 });
 
 /**
- * Serves `site/media/` at `<base>/media/`: copied into the build, and read in place by the dev
+ * Serves `apps/site/media/` at `<base>/media/`: copied into the build, and read in place by the dev
  * server (with byte ranges, which a video needs to seek). Media paths in the content are
- * repo-relative (`site/media/<plugin>/demo.mp4`), so the URL is the path past `site/`.
+ * repo-relative (`apps/site/media/<plugin>/demo.mp4`), so the URL is the path past `apps/site/`.
  * @returns {import('astro').AstroIntegration}
  */
 function mediaDir() {

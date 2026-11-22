@@ -23,4 +23,3 @@ export type KitStory = {
 };
 
 export const storyId = (s: Pick<KitStory, "component" | "state">) => `${s.component}/${s.state}`;
-

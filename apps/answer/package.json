@@ -6,20 +6,6 @@
     "pi-package"
   ],
   "type": "module",
-  "claude": {
-    "name": "answer",
-    "version": "0.1.0",
-    "description": "Answer the question round or pick list a turn ended on from a form: number keys or clicks, then the reply is written into the prompt",
-    "author": {
-      "name": "Nickolaj Jepsen"
-    },
-    "types": "./src/claude/types.d.ts"
-  },
-  "pi": {
-    "extensions": [
-      "./src/pi.ts"
-    ]
-  },
   "devDependencies": {
     "@agents/build": "workspace:*",
     "@agents/drive": "workspace:*",
@@ -44,5 +30,19 @@
     "@earendil-works/pi-ai": "*",
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*"
+  },
+  "claude": {
+    "name": "answer",
+    "version": "0.1.0",
+    "description": "Answer the question round or pick list a turn ended on from a form: number keys or clicks, then the reply is written into the prompt",
+    "author": {
+      "name": "Nickolaj Jepsen"
+    },
+    "types": "./src/claude/types.d.ts"
+  },
+  "pi": {
+    "extensions": [
+      "./src/pi.ts"
+    ]
   }
 }

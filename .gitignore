@@ -20,3 +20,8 @@ apps/site/data/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
+
+# A failed e2e comparison's evidence, local run output, and the pictures beside the snapshots (generated on request; only the .snap files are committed).
+*.actual.*
+.out/
+**/__snapshots__/**/*.png

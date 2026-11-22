@@ -48,7 +48,7 @@ export function looksOf(p: Plugin): Look[] {
     if (!c) return look;
     return {
       ...look,
-      src: c.still ? mediaUrl(`site/media/${p.name}/${c.still}`) : look.src,
+      src: c.still ? mediaUrl(`apps/site/media/${p.name}/${c.still}`) : look.src,
       rect: c.rect,
     };
   });

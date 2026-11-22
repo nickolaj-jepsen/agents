@@ -26,9 +26,9 @@ export function resolveLink(target: string, from: string, image = false): string
   const [path = "", hash = ""] = target.split(/(?=#)/);
   const folder = path.endsWith("/") || path === "";
   const resolved = posix.normalize(posix.join(posix.dirname(from), path)).replace(/\/$/, "");
-  if (image) return resolved.startsWith("site/media/") ? mediaUrl(resolved) : RAW + resolved;
+  if (image) return resolved.startsWith("apps/site/media/") ? mediaUrl(resolved) : RAW + resolved;
   const c = content();
-  let m = /^plugins\/([^/]+)(?:\/README\.md)?$/.exec(resolved);
+  let m = /^apps\/([^/]+)(?:\/README\.md)?$/.exec(resolved);
   if (m && c.plugins.some((p) => p.name === m![1])) return pluginHref(m[1]!) + hash;
   m = /^skills\/([^/]+)(?:\/SKILL\.md)?$/.exec(resolved);
   if (m && c.skills.some((s) => s.name === m![1])) return skillHref(m[1]!) + hash;

@@ -6,11 +6,6 @@
     "pi-package"
   ],
   "type": "module",
-  "pi": {
-    "extensions": [
-      "./src/pi.ts"
-    ]
-  },
   "devDependencies": {
     "@agents/build": "workspace:*",
     "@agents/drive": "workspace:*",
@@ -22,5 +17,10 @@
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./src/pi.ts"
+    ]
   }
 }

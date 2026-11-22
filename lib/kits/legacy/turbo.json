@@ -1,13 +1,8 @@
 {
-  "extends": [
-    "//"
-  ],
+  "extends": ["//"],
   "tasks": {
     "test": {
-      "command": [
-        "./node_modules/.bin/vitest",
-        "run"
-      ]
+      "command": ["./node_modules/.bin/vitest", "run"]
     }
   }
 }

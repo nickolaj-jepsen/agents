@@ -57,32 +57,34 @@ const band: Region = (grid) => {
 /** The scenarios of `plugin` (`kit-<name>`): the stories whose component `owns` says is its. */
 export const claudeScenarios = (plugin: string, owns: (component: string) => boolean) =>
   scenarios({
-  plugin,
-  harness: "claude",
-  scenarios: Object.fromEntries(
-    stories.filter((s) => owns(s.component)).map((s): [string, Scenario] => [
-      storyId(s),
-      {
-        about: s.about,
-        region: s.surface === "band" ? band : paneBody(s),
-        // Hermetic, with no mod but the catalogue's and no model call, so it draws signed out (the
-        // Pages workflow) as it does here; the model is pinned, or a default's status rows leak in.
-        start: {
-          hermetic: true,
-          plugins: [],
-          turns: [],
-          args: ["--model", "haiku", "--plugin-dir", catalog],
-        },
-        steps: [
-          slashCommand("kit", "Draw a Claude"),
-          { type: ` ${s.component} ${s.state}` },
-          { press: "Enter" },
-          { wait: `Drew ${storyId(s)}`, timeout: 15000 },
-        ],
-        // `/kit` alone clears the stage, which is the screen the next story starts from.
-        reset: [{ type: "/kit" }, { press: "Enter" }],
-        sizes: catalogueSizes(s.extreme ?? false),
-      },
-    ]),
-  ),
-});
+    plugin,
+    harness: "claude",
+    scenarios: Object.fromEntries(
+      stories
+        .filter((s) => owns(s.component))
+        .map((s): [string, Scenario] => [
+          storyId(s),
+          {
+            about: s.about,
+            region: s.surface === "band" ? band : paneBody(s),
+            // Hermetic, with no mod but the catalogue's and no model call, so it draws signed out (the
+            // Pages workflow) as it does here; the model is pinned, or a default's status rows leak in.
+            start: {
+              hermetic: true,
+              plugins: [],
+              turns: [],
+              args: ["--model", "haiku", "--plugin-dir", catalog],
+            },
+            steps: [
+              slashCommand("kit", "Draw a Claude"),
+              { type: ` ${s.component} ${s.state}` },
+              { press: "Enter" },
+              { wait: `Drew ${storyId(s)}`, timeout: 15000 },
+            ],
+            // `/kit` alone clears the stage, which is the screen the next story starts from.
+            reset: [{ type: "/kit" }, { press: "Enter" }],
+            sizes: catalogueSizes(s.extreme ?? false),
+          },
+        ]),
+    ),
+  });

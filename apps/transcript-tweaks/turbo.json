@@ -1,13 +1,8 @@
 {
-  "extends": [
-    "//"
-  ],
+  "extends": ["//"],
   "tasks": {
     "build": {
-      "command": [
-        "node",
-        "../../lib/tools/build/build.ts"
-      ]
+      "command": ["node", "../../lib/tools/build/build.ts"]
     }
   }
 }

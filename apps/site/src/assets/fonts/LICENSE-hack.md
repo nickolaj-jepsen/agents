@@ -1,5 +1,5 @@
 hack-regular.woff2 and hack-bold.woff2 are subsets of Hack 3.003 (https://github.com/source-foundry/Hack), made by
-`site/scripts/fonts.sh`. Its license follows.
+`apps/site/scripts/fonts.sh`. Its license follows.
 
 The work in the Hack project is Copyright 2018 Source Foundry Authors and licensed under the MIT License
 

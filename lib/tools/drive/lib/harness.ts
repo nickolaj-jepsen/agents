@@ -207,7 +207,10 @@ export const claude: Harness = {
       program: hermetic ? agentBin("claude") : "claude",
       // The session is the person's account: no connectors (--strict-mcp-config).
       args: [
-        ...checkoutMods(hermetic ? start.plugins : undefined).flatMap((dir) => ["--plugin-dir", dir]),
+        ...checkoutMods(hermetic ? start.plugins : undefined).flatMap((dir) => [
+          "--plugin-dir",
+          dir,
+        ]),
         "--strict-mcp-config",
         ...mcp,
         ...(hermetic
@@ -297,11 +300,11 @@ export const pi: Harness = {
         "--use-theme",
         "dark",
       );
-      for (const dir of checkoutExtensions(start.plugins ?? []))
-        args.push("--extension", dir);
+      for (const dir of checkoutExtensions(start.plugins ?? [])) args.push("--extension", dir);
     }
     // Not hermetic: the person's own `pi`, with no extensions of its own (`-ne`) and this checkout's.
-    if (!start.hermetic) args.push("--no-extensions", ...checkoutExtensions().flatMap((dir) => ["--extension", dir]));
+    if (!start.hermetic)
+      args.push("--no-extensions", ...checkoutExtensions().flatMap((dir) => ["--extension", dir]));
     return {
       program: start.hermetic ? agentBin("pi") : "pi",
       args: [...args, ...(start.args ?? [])],
