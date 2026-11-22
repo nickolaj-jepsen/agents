@@ -8,6 +8,7 @@ import {
   visibleWidth,
 } from "@earendil-works/pi-tui";
 import { ELLIPSIS, type Line, type Role, type Slot, type Span } from "../lines.ts";
+import { ctxOf, type Ctx, type Events } from "../surfaces.ts";
 
 type ThemeColor = Parameters<Theme["fg"]>[0];
 
@@ -131,6 +132,12 @@ const slotRows = (theme: Theme, slot: Extract<Slot, { kind: "markdown" }>) =>
     slot.max,
   ).map((row) => " ".repeat(slot.indent) + row);
 
+/**
+ * The drawing context of pi: what the surface can do, and `press`, `input` and `submit`. pi
+ * reports the pointer and the keys to the extension, which routes them here (`pressAt`).
+ */
+export const piCtx = (events: Partial<Events> = {}): Ctx<"pi"> => ctxOf("pi", events);
+
 export type PaintOptions = {
   /** Pad every row with spaces to `width`: for a frame laid over something else. */
   fill?: boolean;
@@ -208,6 +215,17 @@ export function paintLine(theme: Theme, l: Line, width: number) {
 /** The control at cell `x` of a painted row. */
 export const cellAt = (cells: readonly Cell[] | undefined, x: number) =>
   cells?.find((cell) => x >= cell.start && x < cell.end);
+
+/**
+ * A click at `(row, x)` of a painted drawing: presses the control there through the context.
+ * @returns Whether a control was there.
+ */
+export function pressAt(ctx: Pick<Ctx<"pi">, "press">, painted: Painted, row: number, x: number) {
+  const hit = cellAt(painted.cells[row], x)?.hit ?? painted.hits[row];
+  if (hit === undefined) return false;
+  ctx.press(hit);
+  return true;
+}
 
 /** Lines painted, for where only the rows are wanted. */
 export const draw = (theme: Theme, lines: readonly Line[], width: number) =>

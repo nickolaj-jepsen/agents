@@ -6,6 +6,7 @@
 import type { ElementTable, RenderNode } from "claude-code";
 import { cellWidth } from "../lines.ts";
 import { tokens } from "../tokens.ts";
+import { ctxOf, type Events } from "../surfaces.ts";
 import type { Gui, GuiEls, GuiSurface } from "./gui.tsx";
 
 /** The parts of a render event the kit reads, whichever component it is for. */
@@ -22,13 +23,17 @@ export const isGui = (e: Pick<HostEvent, "surface">) => e.surface !== "terminal"
  * The context of a `gui.tsx` function, from the event's resolved elements. Call it only where
  * `isGui(e)` holds.
  * @param els What `$.ui.resolve(e)` answered.
- * @param press Runs with a control's `hit`; the one reducer a mod wires for both surfaces.
+ * @param events What a control does: `press` with its `hit`, `input` and `submit` with a field's text.
+ * The one reducer a mod wires for both surfaces. A bare function is `press` alone; events left out do nothing.
  */
 export const guiOf = (
   els: object,
   e: Pick<HostEvent, "surface">,
-  press?: (hit: string) => unknown,
-): Gui => ({ els: els as GuiEls, surface: e.surface as GuiSurface, press });
+  events: ((hit: string) => unknown) | Partial<Events> = {},
+): Gui => ({
+  ...ctxOf(e.surface as GuiSurface, typeof events === "function" ? { press: events } : events),
+  els: els as GuiEls,
+});
 
 /** One drawing per surface, each made only when it is the one shown. */
 export type Drawings<T> = {

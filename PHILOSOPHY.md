@@ -12,6 +12,10 @@ Draw a terminal component once, in the kit, as styled lines that pi and Claude C
 
 For each feature of a kit component, say on each surface it is drawn on that the feature is supported or why the engine cannot do it. A change to a component lands on every surface that can show it, in the same change; "not built yet" is not a state a component may be left in.
 
+## Host limits are written once
+
+What a host can and cannot do lives in the capability table, with the evidence for each fact. Props types, manifest answers and stories follow from it, and a drawing branches on capabilities, never on a surface's name.
+
 ## A flaky test is a bug
 
 The gate never retries. A scenario that fails only sometimes, or only beside others, is leaking state or racing: fix the cause rather than retrying or loosening the check.

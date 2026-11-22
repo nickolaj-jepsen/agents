@@ -7,6 +7,7 @@
  */
 import type { ElementTable } from "claude-code";
 import { cellWidth, type Line, type Role, type Span } from "../lines.ts";
+import { ctxOf, type Ctx, type Events } from "../surfaces.ts";
 
 type Els = Pick<ElementTable<"terminal">, "Box" | "Text" | "Button" | "Markdown"> &
   Partial<Pick<ElementTable<"terminal">, "Image" | "Link">>;
@@ -34,9 +35,22 @@ const isDim = (role: Role | undefined) => role === "dim" || role === "border";
  */
 const HOVER_FILL = "userMessageBackground";
 
+/**
+ * The drawing context of Claude Code's terminal, as the graphical drawings have theirs: what the
+ * surface can do, and `press`, `input` and `submit`. Events left out do nothing.
+ */
+export const terminalCtx = (events: Partial<Events> = {}): Ctx<"claude-terminal"> =>
+  ctxOf("claude-terminal", events);
+
 export type PaintOptions = {
   /** Runs with a control's `hit` when it is pressed. Without it nothing is a control. */
   press?: (hit: string) => unknown;
+  /**
+   * The context, for a caller that has one: its `press` is the controls' unless `press` is given.
+   * The `input` and `submit` of a text field are wired where the host's field is built, from the
+   * same context.
+   */
+  ctx?: Ctx<"claude-terminal">;
   /** The room in cells: a control that is whole rows is padded to it, so its fill is one block. */
   width?: number;
   /** The host's text field, for the row an `input` slot keeps: an `Input` element. */
@@ -72,8 +86,9 @@ const runsOf = (spans: readonly Span[]) => {
 export function paintLines(
   k: Els,
   lines: readonly Line[],
-  { press, width = 0, input, indent: setIn, autoFocus }: PaintOptions = {},
+  { press: pressed, ctx, width = 0, input, indent: setIn, autoFocus }: PaintOptions = {},
 ): JSX.Element {
+  const press = pressed ?? ctx?.press;
   const { Box, Text, Button, Markdown, Image, Link } = k;
   // The engine refuses a `hover` outside a keyed Box, which only a control has round it.
   const run = (s: Span, key: string, isControl: boolean) => (

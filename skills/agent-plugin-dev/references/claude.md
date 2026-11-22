@@ -35,12 +35,14 @@ The engine draws focus and hover its own way, and the [kit's painter](../../../l
 
 Use the [kit](../../../lib/kits/README.md#draw-on-claude-desktop-and-vs-code) for Desktop and VS Code: a component's `gui.tsx` takes `(g: Gui, props)` with the same props as its `terminal.ts`, and `g.press(hit)` is the one reducer both surfaces share. Build the `Gui` with `guiOf(els, e, press)` and choose a drawing with `forSurface(e, { tui, gui })`, both from `@agents/kit-core/paint/host.tsx`. [linear-issue](../../../apps/linear-issue/src/claude.tsx) draws both its terminal and its graphical pane this way. A component without a `gui.tsx` has no graphical drawing: add one with the component rather than drawing by hand.
 
-These quirks were observed in the VS Code extension at 2.1.327. Recheck them after upgrading:
+What each graphical host can and cannot do is in the capability table, [`lib/kits/core/src/surfaces.ts`](../../../lib/kits/core/src/surfaces.ts), with the evidence for each fact; the kit's types, a manifest's answers and a drawing follow it. A fact nobody has checked in a session is `unverified()` there (every Desktop one), and the types treat it as absent. Read the table for a quirk and add a fact to it when you find one; don't repeat it here. A drawing asks `can(ctx, "inputRows:many")`, never which surface it is.
 
-- A `Button` label doesn't wrap. `dimColor`, not `variant`, makes the button quiet in the versions tested. A long label can overflow a narrow pane.
-- An `Input` is one line. Clicking a button that reveals an input doesn't necessarily focus it; test Tab and typing. `wait` can't see placeholder text. For scripted native inputs or selects, use the setter and dispatch the corresponding event, as in [linear-issue's VS Code scenarios](../../../apps/linear-issue/src/e2e/vscode.scenarios.ts).
+Two things the table cannot hold, because they are about the session and not the element:
+
 - Typing doesn't emit the terminal's prompt-edit events or redraw the band. The band redraws only when its props change: a turn starts or ends, or the prompt box changes width. A band that reads `$.prompt.read()` when it renders can stay blank or stale until then. See the [driver guide](../../../lib/tools/drive/README.md#vs-code) for a resize workaround.
 - `$.ui.scroll` can't jump to an element inside an `AssistantMessage` the mod renders: the call is denied or does nothing. Don't offer a transcript jump control that depends on it.
+
+For scripted native inputs or selects, use the setter and dispatch the corresponding event, as in [linear-issue's VS Code scenarios](../../../apps/linear-issue/src/e2e/vscode.scenarios.ts). `wait` can't see placeholder text, and clicking a button that reveals an input doesn't necessarily focus it: test Tab and typing.
 
 ## Test a mod
 

@@ -8,6 +8,7 @@
  */
 import type { ElementTable } from "claude-code";
 import type { Role, Span } from "../lines.ts";
+import type { Ctx } from "../surfaces.ts";
 import { tokens } from "../tokens.ts";
 
 /** The elements a graphical drawing uses, from `$.ui.resolve(e)` on a graphical surface. */
@@ -20,15 +21,11 @@ export type GuiEls = Pick<
 export type GuiSurface = "desktop" | "vscode" | "mobile";
 
 /**
- * What every `gui.tsx` function takes first: the elements, the surface they came from, and the
- * one place a control's `hit` goes, so a mod's reducer serves both drawings.
+ * What every `gui.tsx` function takes first: the elements, and the drawing context: which
+ * surface, what it can do (`can(g, "inputRows:many")`), and the one place a control's events go
+ * (`press`, `input`, `submit`), so a mod's reducer serves both drawings.
  */
-export type Gui = {
-  els: GuiEls;
-  surface: GuiSurface;
-  /** Runs with a control's `hit` when its Button is pressed. Without it a control still draws, pressing nothing. */
-  press?: (hit: string) => unknown;
-};
+export type Gui<S extends GuiSurface = GuiSurface> = Ctx<S> & { els: GuiEls };
 
 /** A component's graphical stories, by state: exactly the component, no title and no hints. */
 export type GuiStories = Record<string, (g: Gui) => JSX.Element>;
