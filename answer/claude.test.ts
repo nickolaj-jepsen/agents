@@ -1,23 +1,31 @@
 import { expect, mock, test } from "claude-code/testing";
+import { t as tokens } from "./tokens-BWSk26Ae.js";
 
-// ../../lib/kits/legacy/src/claude/checks.tsx
+// ../../lib/kits/core/src/paint/checks.tsx
 /**
-* The house style's graphical rules as test assertions, for a mod's `claude plugin test`, which
-* the build bundles into the mod's tests. A `.tsx` file so the pi build's `tsc -b`, which has no
-* Claude types, leaves it out.
+* The house style's graphical rules as test assertions, for a mod's `claude plugin test`: a mod's
+* test imports it from `@agents/kit-core/paint/checks.tsx` and the build bundles it. A `.tsx` file
+* so the package's `tsc -b`, which has no Claude types, leaves it out.
 */
 /** The glyphs a graphical surface draws no controls with. */
 const GLYPHS = /[□■☐☑○●✎▸▾❯↑↓╰│]/;
-/** What a mounted tree shows, one string per element that shows text. */
+/**
+* What a mounted tree shows, one string per element that shows text. A `Markdown`'s text is
+* source the host draws (its table rules and code fences are not painted), so it is cut out of
+* the elements that hold it too, a Box's text being its children's.
+*/
 async function shown(ui) {
-	return (await ui.findAll({})).map((e) => e.text).filter(Boolean);
+	const all = await ui.findAll({});
+	const sources = all.filter((e) => e.type === "Markdown" && e.text).map((e) => e.text);
+	return all.filter((e) => e.type !== "Markdown").map((e) => sources.reduce((text, source) => text.replaceAll(source, ""), e.text ?? "")).filter(Boolean);
 }
 /**
 * A tree drawn for a graphical surface keeps the style's rules (`style.md`, "Graphical
 * surfaces"): no rule of repeated characters, no glyph standing in for a control, no text cut
 * by the mod, no key hints, no hotkey but on an action row, and nothing sized to the viewport:
-* no frame drawn in a colour, no width but a side rule's fraction of a cell, no height but an
-* icon's line, and only the surface cuts a line.
+* no frame drawn in a colour, no width but a side rule's fraction of a cell or a message's
+* reading measure (`tokens.prose`), no height but an icon's line, and only the surface cuts a
+* line.
 */
 async function expectNative(ui, options = {}) {
 	const hotkeys = new Set(options.hotkeys ?? []);
@@ -32,7 +40,7 @@ async function expectNative(ui, options = {}) {
 		if (e.type === "Box") {
 			if (e.props.borderStyle !== void 0) expect(e.props.borderColor).toBe("#00000000");
 			expect(e.props.minHeight).toBeUndefined();
-			if (e.props.width !== void 0) expect(e.props.width).toBeLessThan(1);
+			if (e.props.width !== void 0 && e.props.width !== tokens.prose) expect(e.props.width).toBeLessThan(1);
 			if (e.props.height !== void 0) expect(e.props.height).toBe(1);
 		}
 		if (e.type === "Text") expect([void 0, "truncate-end"]).toContain(e.props.wrap);
@@ -137,10 +145,11 @@ function world(on, draft = "") {
 		return { value: void 0 };
 	});
 	on("ui.log", () => ({ value: void 0 }));
-	on("ui.render", ($, e) => {
-		const { Text } = $.ui.resolve(e);
-		return /* @__PURE__ */ h(Text, null, e.component === "AssistantMessage" ? e.props.text : "engine");
-	});
+	on("ui.render", (_$, e) => ({
+		type: "Text",
+		props: {},
+		children: [e.component === "AssistantMessage" ? e.props.text : "engine"]
+	}));
 	return w;
 }
 /** Where the form a band opens is drawn: only a graphical surface has one. */
@@ -162,7 +171,7 @@ const band = ($, surface = "terminal") => $.ui.mount({
 	surface
 });
 /** A press on an answer: it answers and the form goes on. */
-const pick = (_w, drawn, key) => drawn.press({ key });
+const pick = (_w, drawn, key) => drawn.press({ key: `key:${key}` });
 /** The form's one row, while it is folded: its words, beside its button. */
 const hint = async ($, surface = FORM) => {
 	const drawn = await band($, surface);
@@ -199,25 +208,25 @@ test("Desktop restores the latest round in the transcript and keeps the submitte
 	});
 	expect(await cards.find({
 		type: "Text",
-		text: /0\/3 answered/
+		text: /0 of 3 answered/
 	})).toBeDefined();
 	expect(await hint($, "desktop")).toBeUndefined();
-	await cards.press({ key: "question-0-choose-1" });
+	await cards.press({ key: "key:question-0-choose-1" });
 	expect(await cards.find({
 		type: "Text",
-		text: /1\/3 answered/
+		text: /1 of 3 answered/
 	})).toBeDefined();
 	expect(await cards.find({
 		type: "Text",
 		text: /^Sent$/
 	})).toBeUndefined();
 	expect(await cards.find({ key: "question-1-card" })).toBeDefined();
-	expect(await cards.find({ key: "review-answer-0" })).toBeUndefined();
+	expect(await cards.find({ key: "go:review-answer-0" })).toBeUndefined();
 	await cards.press({ key: "review" });
-	expect(await cards.find({ key: "review-answer-0" })).toBeDefined();
-	await cards.press({ key: "review-answer-0" });
+	expect(await cards.find({ key: "go:review-answer-0" })).toBeDefined();
+	await cards.press({ key: "go:review-answer-0" });
 	expect(await cards.find({ key: "question-1-card" })).toBeDefined();
-	expect(await cards.find({ key: "review-answer-0" })).toBeUndefined();
+	expect(await cards.find({ key: "go:review-answer-0" })).toBeUndefined();
 	await cards.press({ key: "review" });
 	w.refuses = true;
 	await cards.press({ key: "send" });
@@ -234,10 +243,10 @@ test("Desktop restores the latest round in the transcript and keeps the submitte
 		type: "Text",
 		text: /^Sent$/
 	})).toBeDefined();
-	expect(await cards.find({ key: "question-0-choose-1" })).toBeUndefined();
+	expect(await cards.find({ key: "key:question-0-choose-1" })).toBeUndefined();
 	expect(await cards.find({
 		type: "Text",
-		text: /1\/3 answered/
+		text: /1 of 3 answered/
 	})).toBeDefined();
 	await cards.unmount();
 });
@@ -420,7 +429,7 @@ test("send on the review submits the reply as a message and drops the round, kee
 	await ends($, GRILLING);
 	const drawn = await form($);
 	await pick(w, drawn, "e1");
-	await drawn.press({ key: "review" });
+	await drawn.press({ key: "tab:review" });
 	await drawn.press({ key: "send" });
 	await drawn.unmount();
 	expect(w.submitted).toEqual(["Q1: B"]);
@@ -489,7 +498,7 @@ test("a resumed session gets the round its last reply ended on, unless the perso
 		const bar = await band($, "terminal");
 		const found = await bar.find({ key: "round-current" });
 		await bar.unmount();
-		return found?.props.label;
+		return (found?.props.label)?.trim();
 	};
 	await start($);
 	expect(await guide()).toBe("Q1/3");
@@ -522,7 +531,7 @@ test("a send sets an answered round aside, and /answer brings it back with its a
 	expect(w.toasts).toHaveLength(1);
 	expect(w.toasts[0]).toMatch(/^1 answer set aside/);
 	const back = await form($);
-	expect((await back.find({ key: "q0" }))?.props.label).toContain("✓");
+	expect(await chosen(back)).toBe(1);
 	expect(await asking(back, /Should every focus default/)).toBeDefined();
 	await back.unmount();
 });
@@ -544,7 +553,7 @@ test("sending the reply the form filled answers the round", async ($, on) => {
 	const drawn = await band($, FORM);
 	await drawn.press({ key: "answer" });
 	await pick(w, drawn, "e1");
-	await drawn.press({ key: "review" });
+	await drawn.press({ key: "tab:review" });
 	await drawn.press({ key: "fill" });
 	expect(w.box).toBe("Q1: B\n\nand keep it short");
 	await drawn.unmount();
@@ -585,7 +594,7 @@ test("a command's send sets the round aside too, and the aside wins over the tra
 		toolUses: []
 	}];
 	const back = await form($);
-	expect((await back.find({ key: "q0" }))?.props.label).toContain("✓");
+	expect(await chosen(back)).toBe(1);
 	await back.unmount();
 });
 test("a send the engine refuses keeps the round and its answers", async ($, on) => {
@@ -594,7 +603,7 @@ test("a send the engine refuses keeps the round and its answers", async ($, on) 
 	await ends($, GRILLING);
 	const drawn = await form($);
 	await pick(w, drawn, "e1");
-	await drawn.press({ key: "review" });
+	await drawn.press({ key: "tab:review" });
 	w.refuses = true;
 	await drawn.press({ key: "send" });
 	expect(w.submitted).toEqual([]);
@@ -626,7 +635,7 @@ test("nothing runs or is read outside the session: the form needs no hub", async
 	expect(reached).toEqual([]);
 });
 /** The open field, a write-in or a note: each opening of one has a key of its own. */
-const field = async (drawn, name) => (await drawn.findAll({ type: "Input" })).find((e) => e.key?.startsWith(`${name}-field-`));
+const field = async (drawn, name) => (await drawn.findAll({ type: "Input" })).find((e) => e.key?.startsWith(`${name}:${name}-field-`));
 /** Types into the open field, as `input` does into a keyed one. */
 const typeIn = async (drawn, name, text, kind) => drawn.input({
 	key: (await field(drawn, name))?.key ?? `${name}-field`,
@@ -635,14 +644,10 @@ const typeIn = async (drawn, name, text, kind) => drawn.input({
 });
 /** The offer's words, which a graphical surface sets beside its button rather than in it. */
 const offerSays = async (drawn) => (await drawn.findAll({ type: "Text" })).map((e) => e.text).find((t) => /^(Answer|Pick from) /.test(t));
-/** What an action row may carry hotkeys on: nothing else on a graphical surface does. */
-const ACTIONS = [
-	"skip",
-	"note",
-	"accept",
-	"next",
-	"send"
-];
+/** The tick beside an answered question's tab. */
+/** The marks that say an answer is chosen: an icon before its letter, not a filled Button. */
+const chosen = async (drawn) => (await drawn.findAll({ type: "Svg" })).filter((e) => e.props.alt === "Chosen").length;
+const ticked = async (drawn) => (await drawn.findAll({ type: "Svg" })).find((e) => e.props.alt === "Done");
 /** The question shown: its title, as the form's markdown heading draws it. */
 const asking = (drawn, title) => drawn.find({
 	type: "Markdown",
@@ -665,9 +670,9 @@ test("in the round editor a digit answers the shown card's row, as its letter do
 	}];
 	await ends($, GRILLING);
 	const bar = await band($);
-	expect((await bar.find({ key: "round-key-1" }))?.props.hotkey).toBe("1");
-	expect((await bar.find({ key: "round-key-3" }))?.props.hotkey).toBe("3");
-	await bar.press({ key: "round-key-2" });
+	expect((await bar.find({ key: "kit-key-1" }))?.props.hotkey).toBe("1");
+	expect((await bar.find({ key: "kit-key-3" }))?.props.hotkey).toBe("3");
+	await bar.press({ key: "kit-key-2" });
 	await bar.unmount();
 	const cards = await $.ui.mount({
 		plugin: "answer",
@@ -701,7 +706,7 @@ test("the closing row's count goes back to the first question and scrolls to the
 	}];
 	await ends($, GRILLING);
 	const bar = await band($);
-	await bar.press({ key: "round-key-r" });
+	await bar.press({ key: "kit-key-r" });
 	expect((await bar.find({ key: "round-current" }))?.props.label).toBe("Review  0/3 answered");
 	await bar.unmount();
 	const cards = await $.ui.mount({
@@ -717,7 +722,7 @@ test("the closing row's count goes back to the first question and scrolls to the
 	await cards.press({ key: "round-count" });
 	const again = await band($);
 	expect(await again.find({ key: "round-current" })).toBeDefined();
-	expect((await again.find({ key: "round-current" }))?.props.label).toBe("Q1/3");
+	expect(((await again.find({ key: "round-current" }))?.props.label ?? "").trim()).toBe("Q1/3");
 	await again.unmount();
 	await cards.unmount();
 });
@@ -757,7 +762,7 @@ test("a pick list is cards on a terminal: each row lettered, the write-in last",
 	await cards.press({ key: "round-fill" });
 	expect(w.box).toBe("do 1\n2 → /grill-me");
 	const bar = await band($);
-	await bar.press({ key: "round-key-a" });
+	await bar.press({ key: "kit-key-a" });
 	await bar.unmount();
 	expect((await cards.find({ key: "question-1-choose-0" }))?.props.label).toMatch(/^\s*A ● Build it/);
 	await cards.unmount();
@@ -774,7 +779,7 @@ test("on a terminal the band is the cards' key guide, never a form", async ($, o
 			isFullscreen: true
 		}
 	});
-	expect((await guide.find({ key: "round-current" }))?.props.label).toBe("Q1/3");
+	expect(((await guide.find({ key: "round-current" }))?.props.label ?? "").trim()).toBe("Q1/3");
 	expect(await guide.find({ key: "answer" })).toBeUndefined();
 	await guide.unmount();
 	const run = $.command.run(RUN);
@@ -802,7 +807,7 @@ test("while the band writes a note it has the band to itself", async ($, on) => 
 	});
 	await (await terminalRound($, on, GRILLING)).unmount();
 	const bar = await band($);
-	await bar.press({ key: "round-key-n" });
+	await bar.press({ key: "kit-key-n" });
 	await bar.unmount();
 	stacked = [];
 	await (await $.ui.mount(LIST)).unmount();
@@ -846,10 +851,10 @@ for (const surface of ["desktop", "vscode"]) {
 		]) {
 			expect((await drawn.find({
 				type: "Button",
-				key
+				key: `key:${key}`
 			}))?.props.label).toBe(letter);
 			expect(await drawn.find({
-				type: "Text",
+				type: "Markdown",
 				text: words
 			})).toBeDefined();
 		}
@@ -858,42 +863,39 @@ for (const surface of ["desktop", "vscode"]) {
 			text: /^Recommended$/
 		})).toBeDefined();
 		expect(await drawn.find({
-			type: "Text",
-			text: /^Recommended: A\. A per-kind table/
+			type: "Markdown",
+			text: /Recommended:\*\* A\. A per-kind table/
 		})).toBeDefined();
 		expect(await field(drawn, "write")).toBeDefined();
 		expect(await drawn.find({
 			type: "Button",
-			key: "e3"
+			key: "key:e3"
 		})).toBeUndefined();
 		for (const key of [
-			"q0",
 			"q1",
 			"q2",
 			"review"
 		]) expect(await drawn.find({
 			type: "Button",
-			key
+			key: `tab:${key}`
 		})).toBeDefined();
-		expect((await drawn.find({ key: "q0" }))?.props.variant).toBe("primary");
-		expect((await drawn.find({ key: "q1" }))?.props.dimColor).toBe(true);
+		expect(await drawn.find({ key: "tab:q0" })).toBeUndefined();
+		expect((await drawn.find({ key: "tab:q1" }))?.props.dimColor).toBe(true);
 		expect((await drawn.find({ key: "quit" }))?.props.label).toBe("Close");
 		expect(await drawn.find({ key: "next" })).toBeUndefined();
 		expect(await drawn.find({ key: "accept" })).toBeUndefined();
 		expect(await field(drawn, "note")).toBeUndefined();
-		await expectNative(drawn, { hotkeys: ACTIONS });
+		await expectNative(drawn);
 		await pick(w, drawn, "e1");
-		expect((await drawn.find({ key: "e1" }))?.props.variant).toBe("primary");
-		expect((await drawn.find({ key: "e0" }))?.props.variant).not.toBe("primary");
-		expect(await drawn.find({
-			type: "Markdown",
-			text: "**Default by kind.**"
-		})).toBeDefined();
+		expect(await chosen(drawn)).toBe(1);
 		expect(await field(drawn, "note")).toBeDefined();
 		expect((await drawn.find({ key: "next" }))?.props.label).toBe("Next");
 		expect((await drawn.find({ key: "next" }))?.props.variant).toBe("primary");
-		expect((await drawn.find({ key: "q0" }))?.props.label).toBe("✓ Q1");
-		await expectNative(drawn, { hotkeys: ACTIONS });
+		expect(await ticked(drawn)).toBeUndefined();
+		await drawn.press({ key: "next" });
+		expect(await ticked(drawn)).toBeDefined();
+		await drawn.press({ key: "tab:q0" });
+		await expectNative(drawn);
 		await drawn.unmount();
 	});
 	test(`${surface}: a press on an answer, next, the yes and the review fill the prompt`, async ($, on) => {
@@ -904,16 +906,16 @@ for (const surface of ["desktop", "vscode"]) {
 		await pick(w, drawn, "e1");
 		await drawn.press({ key: "next" });
 		expect(await asking(drawn, /Lower the per-generator/)).toBeDefined();
-		expect((await drawn.find({ key: "e0" }))?.props.label).toBe("Yes");
+		expect((await drawn.find({ key: "key:e0" }))?.props.label).toBe("A");
 		expect(await drawn.find({
-			type: "Text",
-			text: "Four generators still give 20–24."
+			type: "Markdown",
+			text: /Four generators still give 20–24\./
 		})).toBeDefined();
-		await expectNative(drawn, { hotkeys: ACTIONS });
-		await drawn.press({ key: "e0" });
+		await expectNative(drawn);
+		await drawn.press({ key: "key:e0" });
 		await drawn.press({ key: "next" });
 		expect(await asking(drawn, /What should happen to/)).toBeDefined();
-		await drawn.press({ key: "review" });
+		await drawn.press({ key: "tab:review" });
 		expect(await drawn.find({
 			type: "Text",
 			text: /^Not answered$/
@@ -922,11 +924,18 @@ for (const surface of ["desktop", "vscode"]) {
 			type: "Text",
 			text: /^B: Default by kind\.$/
 		})).toBeDefined();
-		expect((await drawn.find({ key: "item2" }))?.props.label).toBe("Answer");
-		expect((await drawn.find({ key: "item0" }))?.props.label).toBe("Change");
+		expect(await drawn.find({
+			type: "Text",
+			text: "Q3"
+		})).toBeDefined();
+		expect(await drawn.find({
+			type: "Text",
+			text: "Q1"
+		})).toBeDefined();
+		expect(await drawn.find({ key: "go:item2" })).toBeUndefined();
 		expect((await drawn.find({ key: "send" }))?.props.variant).toBe("primary");
 		expect((await drawn.find({ key: "fill" }))?.props.variant).toBeUndefined();
-		await expectNative(drawn, { hotkeys: ACTIONS });
+		await expectNative(drawn);
 		await drawn.press({ key: "fill" });
 		await drawn.unmount();
 		expect(w.box).toBe("Q1: B\nQ2: yes");
@@ -938,15 +947,15 @@ for (const surface of ["desktop", "vscode"]) {
 		const drawn = await form($, surface);
 		expect((await drawn.find({
 			type: "Button",
-			key: "e0"
-		}))?.props.label).toBe("No");
+			key: "key:e0"
+		}))?.props.label).toBe("A");
 		expect(await drawn.find({
-			type: "Text",
+			type: "Markdown",
 			text: "A plain reply is enough."
 		})).toBeDefined();
-		await expectNative(drawn, { hotkeys: ACTIONS });
-		await drawn.press({ key: "e0" });
-		await drawn.press({ key: "review" });
+		await expectNative(drawn);
+		await drawn.press({ key: "key:e0" });
+		await drawn.press({ key: "tab:review" });
 		expect(await drawn.find({
 			type: "Text",
 			text: "No. A plain reply is enough."
@@ -962,20 +971,19 @@ for (const surface of ["desktop", "vscode"]) {
 		const drawn = await form($, surface);
 		await drawn.press({ key: "note" });
 		expect(await field(drawn, "note")).toBeDefined();
-		await drawn.press({ key: "q2" });
+		await drawn.press({ key: "tab:q2" });
 		expect(await asking(drawn, /What should happen to/)).toBeDefined();
-		await drawn.press({ key: "q1" });
+		await drawn.press({ key: "tab:q1" });
 		expect(await asking(drawn, /Lower the per-generator/)).toBeDefined();
 		await drawn.press({ key: "skip" });
 		expect(await asking(drawn, /What should happen to/)).toBeDefined();
-		await drawn.press({ key: "e0" });
-		await drawn.press({ key: "e1" });
-		expect((await drawn.find({ key: "e0" }))?.props.variant).not.toBe("primary");
-		expect((await drawn.find({ key: "e1" }))?.props.variant).toBe("primary");
+		await drawn.press({ key: "key:e0" });
+		await drawn.press({ key: "key:e1" });
+		expect(await chosen(drawn)).toBe(1);
 		expect((await drawn.find({ key: "next" }))?.props.variant).toBe("primary");
-		await expectNative(drawn, { hotkeys: ACTIONS });
+		await expectNative(drawn);
 		await typeIn(drawn, "note", "use B", "change");
-		await drawn.press({ key: "review" });
+		await drawn.press({ key: "tab:review" });
 		expect(await drawn.find({
 			type: "Text",
 			text: /^B: /
@@ -984,9 +992,9 @@ for (const surface of ["desktop", "vscode"]) {
 			type: "Text",
 			text: "Note: use B"
 		})).toBeDefined();
-		await drawn.press({ key: "item0" });
+		await drawn.press({ key: "tab:q0" });
 		expect(await asking(drawn, /Should every focus default/)).toBeDefined();
-		await drawn.press({ key: "review" });
+		await drawn.press({ key: "tab:review" });
 		await drawn.press({ key: "send" });
 		await drawn.unmount();
 		expect(w.submitted).toHaveLength(1);
@@ -999,11 +1007,11 @@ for (const surface of ["desktop", "vscode"]) {
 		const drawn = await form($, surface);
 		await typeIn(drawn, "write", "A per-kind table, but generated.");
 		expect(await asking(drawn, /Lower the per-generator/)).toBeDefined();
-		await drawn.press({ key: "q0" });
+		await drawn.press({ key: "tab:q0" });
 		expect((await field(drawn, "write"))?.props.value).toBe("A per-kind table, but generated.");
 		expect((await drawn.find({ key: "next" }))?.props.variant).toBe("primary");
-		await expectNative(drawn, { hotkeys: ACTIONS });
-		await drawn.press({ key: "review" });
+		await expectNative(drawn);
+		await drawn.press({ key: "tab:review" });
 		await drawn.press({ key: "fill" });
 		await drawn.unmount();
 		expect(w.box).toBe("Q1: A per-kind table, but generated.");
@@ -1014,7 +1022,7 @@ for (const surface of ["desktop", "vscode"]) {
 		await ends($, GRILLING);
 		const drawn = await form($, surface);
 		await pick(w, drawn, "e1");
-		await drawn.press({ key: "review" });
+		await drawn.press({ key: "tab:review" });
 		await drawn.press({ key: "send" });
 		await drawn.unmount();
 		expect(w.submitted).toEqual(["Q1: B"]);
@@ -1025,27 +1033,23 @@ for (const surface of ["desktop", "vscode"]) {
 		await expectNative(again);
 		await again.unmount();
 	});
-	test(`${surface}: an option of any length is one row, whole once chosen`, async ($, on) => {
+	test(`${surface}: an option of any length wraps beside its letter, whole`, async ($, on) => {
 		const w = world(on);
 		await start($, surface);
 		const words = "an option that runs on well past what one button holds";
 		await ends($, `**Q1. Which one?**\n\n- **A.** ${words}\n- **B.** Short`);
 		const drawn = await form($, surface);
-		expect((await drawn.find({ key: "e0" }))?.props.label).toBe("A");
-		expect((await drawn.find({
-			type: "Text",
-			text: words
-		}))?.props.wrap).toBe("truncate-end");
-		expect((await drawn.find({ key: "e1" }))?.props.label).toBe("B");
-		await expectNative(drawn, { hotkeys: ACTIONS });
-		await pick(w, drawn, "e0");
-		expect((await drawn.find({ key: "e0" }))?.props.variant).toBe("primary");
+		expect((await drawn.find({ key: "key:e0" }))?.props.label).toBe("A");
 		expect(await drawn.find({
 			type: "Markdown",
 			text: words
 		})).toBeDefined();
+		expect((await drawn.find({ key: "key:e1" }))?.props.label).toBe("B");
+		await expectNative(drawn);
+		await pick(w, drawn, "e0");
+		expect(await chosen(drawn)).toBe(1);
 		expect((await drawn.find({ key: "next" }))?.props.label).toBe("Review");
-		await expectNative(drawn, { hotkeys: ACTIONS });
+		await expectNative(drawn);
 		await drawn.unmount();
 	});
 	test(`${surface}: a recommendation of several options is one press`, async ($, on) => {
@@ -1059,7 +1063,7 @@ for (const surface of ["desktop", "vscode"]) {
 			type: "Text",
 			text: "A, B, C: lint; types; tests"
 		})).toBeDefined();
-		await expectNative(drawn, { hotkeys: ACTIONS });
+		await expectNative(drawn);
 		await drawn.press({ key: "fill" });
 		await drawn.unmount();
 		expect(w.box).toBe("yes");
@@ -1070,11 +1074,15 @@ for (const surface of ["desktop", "vscode"]) {
 		await ends($, MINE);
 		expect(await offerSays(await band($, surface))).toBe("Pick from 2 items");
 		const list = await form($, surface);
-		expect((await list.find({ key: "e0" }))?.props.label).toBe("Build it");
-		await expectNative(list, { hotkeys: ACTIONS });
+		expect((await list.find({ key: "key:e0" }))?.props.label).toBe("A");
+		expect(await list.find({
+			type: "Markdown",
+			text: "Build it"
+		})).toBeDefined();
+		await expectNative(list);
 		await pick(w, list, "e0");
-		await list.press({ key: "review" });
-		await expectNative(list, { hotkeys: ACTIONS });
+		await list.press({ key: "tab:review" });
+		await expectNative(list);
 		await list.unmount();
 		await ends($, `${LONG}\n  It is cheap to keep.`);
 		await $.command.run(RUN);
@@ -1086,24 +1094,92 @@ for (const surface of ["desktop", "vscode"]) {
 			},
 			surface
 		});
-		expect((await long.find({
-			type: "Text",
-			text: /^Line 1 of what it hangs on\. Line 2/
-		}))?.props.wrap).toBe("truncate-end");
-		expect((await long.find({ key: "more" }))?.props.label).toBe("More");
-		await expectNative(long, { hotkeys: ACTIONS });
-		await long.press({ key: "more" });
 		expect(await long.find({
 			type: "Markdown",
 			text: /Line 12 of what it hangs on/
 		})).toBeDefined();
-		expect((await long.find({ key: "more" }))?.props.label).toBe("Less");
-		expect((await long.find({ key: "e1" }))?.props.label).toBe("B");
+		expect(await long.find({ key: "more" })).toBeUndefined();
+		expect((await long.find({ key: "key:e1" }))?.props.label).toBe("B");
 		expect(await long.find({
-			type: "Text",
+			type: "Markdown",
 			text: /^It is cheap to keep\.$/
 		})).toBeDefined();
-		await expectNative(long, { hotkeys: ACTIONS });
+		await expectNative(long);
 		await long.unmount();
 	});
 }
+for (const surface of ["desktop", "vscode"]) test(`${surface}: the transcript's cards keep the style; a write-in and a note open in place`, async ($, on) => {
+	const w = world(on, "Already typed");
+	on("session.messages", () => ({ value: [{
+		role: "assistant",
+		text: GRILLING,
+		toolUses: [],
+		uuid: "round-uuid"
+	}] }));
+	on("session.surfaces", () => ({ value: [surface] }));
+	await start($, surface);
+	const cards = await $.ui.mount({
+		plugin: "answer",
+		surface,
+		component: "AssistantMessage",
+		requestId: "block-of-the-assistant-message",
+		props: {
+			text: GRILLING,
+			isFirstOfReply: true
+		}
+	});
+	await expectNative(cards);
+	await cards.press({ key: "key:question-0-choose-1" });
+	expect(await chosen(cards)).toBe(1);
+	expect(await cards.find({ key: "question-0-clear" })).toBeDefined();
+	await expectNative(cards);
+	await cards.press({ key: "key:question-1-write" });
+	const write = await field(cards, "write");
+	expect(write).toBeDefined();
+	expect(await cards.find({ key: "keep" })).toBeDefined();
+	expect(await cards.find({ key: "add-line" }) !== void 0).toBe(surface === "vscode");
+	await expectNative(cards);
+	await cards.input({
+		key: write?.key ?? "",
+		text: "Use the existing schema.",
+		kind: "change"
+	});
+	await cards.press({ key: "keep" });
+	expect(await field(cards, "write")).toBeUndefined();
+	expect(await cards.find({
+		type: "Text",
+		text: /^Answer: Use the existing schema\.$/
+	})).toBeDefined();
+	expect(w.box).toBe("Already typed");
+	await cards.press({ key: "question-0-note" });
+	const note = await field(cards, "note");
+	expect(note).toBeDefined();
+	await cards.input({
+		key: note?.key ?? "",
+		text: "Use the managed instance.",
+		kind: "change"
+	});
+	await cards.press({ key: "keep" });
+	expect(await cards.find({
+		type: "Text",
+		text: "Note: Use the managed instance."
+	})).toBeDefined();
+	await cards.press({ key: "question-0-note" });
+	await cards.press({ key: "cancel" });
+	expect(await field(cards, "note")).toBeUndefined();
+	expect(await cards.find({
+		type: "Text",
+		text: "Note: Use the managed instance."
+	})).toBeDefined();
+	await expectNative(cards);
+	if (surface === "desktop") await cards.press({ key: "review" });
+	await cards.press({ key: "send" });
+	expect(w.submitted).toHaveLength(1);
+	expect(await cards.find({
+		type: "Text",
+		text: /^Sent$/
+	})).toBeDefined();
+	expect(await cards.find({ key: "key:question-0-choose-1" })).toBeUndefined();
+	await expectNative(cards);
+	await cards.unmount();
+});

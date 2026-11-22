@@ -1,23 +1,31 @@
 import { expect, test } from "claude-code/testing";
+import { t as tokens } from "./tokens-B6LwkIOZ.js";
 
-// ../../lib/kits/legacy/src/claude/checks.tsx
+// ../../lib/kits/core/src/paint/checks.tsx
 /**
-* The house style's graphical rules as test assertions, for a mod's `claude plugin test`, which
-* the build bundles into the mod's tests. A `.tsx` file so the pi build's `tsc -b`, which has no
-* Claude types, leaves it out.
+* The house style's graphical rules as test assertions, for a mod's `claude plugin test`: a mod's
+* test imports it from `@agents/kit-core/paint/checks.tsx` and the build bundles it. A `.tsx` file
+* so the package's `tsc -b`, which has no Claude types, leaves it out.
 */
 /** The glyphs a graphical surface draws no controls with. */
 const GLYPHS = /[□■☐☑○●✎▸▾❯↑↓╰│]/;
-/** What a mounted tree shows, one string per element that shows text. */
+/**
+* What a mounted tree shows, one string per element that shows text. A `Markdown`'s text is
+* source the host draws (its table rules and code fences are not painted), so it is cut out of
+* the elements that hold it too, a Box's text being its children's.
+*/
 async function shown(ui) {
-	return (await ui.findAll({})).map((e) => e.text).filter(Boolean);
+	const all = await ui.findAll({});
+	const sources = all.filter((e) => e.type === "Markdown" && e.text).map((e) => e.text);
+	return all.filter((e) => e.type !== "Markdown").map((e) => sources.reduce((text, source) => text.replaceAll(source, ""), e.text ?? "")).filter(Boolean);
 }
 /**
 * A tree drawn for a graphical surface keeps the style's rules (`style.md`, "Graphical
 * surfaces"): no rule of repeated characters, no glyph standing in for a control, no text cut
 * by the mod, no key hints, no hotkey but on an action row, and nothing sized to the viewport:
-* no frame drawn in a colour, no width but a side rule's fraction of a cell, no height but an
-* icon's line, and only the surface cuts a line.
+* no frame drawn in a colour, no width but a side rule's fraction of a cell or a message's
+* reading measure (`tokens.prose`), no height but an icon's line, and only the surface cuts a
+* line.
 */
 async function expectNative(ui, options = {}) {
 	const hotkeys = new Set(options.hotkeys ?? []);
@@ -32,7 +40,7 @@ async function expectNative(ui, options = {}) {
 		if (e.type === "Box") {
 			if (e.props.borderStyle !== void 0) expect(e.props.borderColor).toBe("#00000000");
 			expect(e.props.minHeight).toBeUndefined();
-			if (e.props.width !== void 0) expect(e.props.width).toBeLessThan(1);
+			if (e.props.width !== void 0 && e.props.width !== tokens.prose) expect(e.props.width).toBeLessThan(1);
 			if (e.props.height !== void 0) expect(e.props.height).toBe(1);
 		}
 		if (e.type === "Text") expect([void 0, "truncate-end"]).toContain(e.props.wrap);
@@ -476,28 +484,29 @@ for (const surface of ["desktop", "vscode"]) {
 			type: "Text",
 			text: /AGENTS\.md/
 		})).toBeDefined();
-		const folded = await ui.find({
+		expect((await ui.find({
 			type: "Text",
 			text: /sjusk/
-		});
-		expect(folded?.props.wrap).toBe("truncate-end");
+		}))?.props.wrap).toBe("truncate-end");
 		expect(await ui.find({
 			type: "Text",
 			text: /A second gap/
 		})).toBeDefined();
-		expect(await ui.find({ type: "Markdown" })).toBeUndefined();
-		expect(await ui.find({ type: "Svg" })).toBeDefined();
-		for (const key of [`ev:${ID}`, "submit"]) expect(await ui.find({
+		const icons = (await ui.findAll({ type: "Svg" })).map((s) => String(s.props.alt));
+		expect(icons).toContain("Missing");
+		const open = await ui.find({
 			type: "Button",
-			key
-		})).toBeDefined();
+			key: `row:${ID}`
+		});
+		expect(open?.text).toBe("Open");
+		expect(open?.props.dimColor).toBe(true);
 		expect(await ui.find({
 			type: "Button",
 			text: /all$/i
 		})).toBeUndefined();
 		expect(await ui.find({
 			type: "Button",
-			key: `apply:row:${ID}`
+			key: `apply:${ID}`
 		})).toBeUndefined();
 		const submit = async () => (await ui.find({
 			type: "Button",
@@ -509,40 +518,46 @@ for (const surface of ["desktop", "vscode"]) {
 			text: /^2 open$/
 		})).toBeDefined();
 		await expectNative(ui);
-		await ui.press({ key: `ev:${ID}` });
-		expect(await ui.find({
-			type: "Markdown",
+		await ui.press({ key: `row:${ID}` });
+		expect((await ui.find({
+			type: "Text",
 			text: /sjusk/
+		}))?.props.wrap).toBeUndefined();
+		expect((await ui.find({
+			type: "Button",
+			key: `row:${ID}`
+		}))?.text).toBe("Close");
+		expect(await ui.find({
+			type: "Text",
+			text: /^today$/
 		})).toBeDefined();
 		expect(await ui.find({
 			type: "Text",
-			text: /Missing/
+			text: /^Evidence$/
 		})).toBeDefined();
-		for (const key of [
-			`apply:row:${ID}`,
-			`dismiss:row:${ID}`,
-			`skip:row:${ID}`
-		]) expect(await ui.find({
-			type: "Button",
-			key
-		})).toBeDefined();
+		expect(await ui.find({ text: /AGENTS\.md:12 says pnpm install/ })).toBeDefined();
+		for (const choice of [
+			"apply",
+			"dismiss",
+			"skip"
+		]) {
+			const button = await ui.find({
+				type: "Button",
+				key: `${choice}:${ID}`
+			});
+			expect(button?.text).toBe(choice[0]?.toUpperCase() + choice.slice(1));
+			expect(button?.props.dimColor).toBe(true);
+		}
 		await expectNative(ui);
-		await ui.press({ key: `apply:row:${ID}` });
+		await ui.press({ key: `apply:${ID}` });
 		expect(await ui.find({
 			type: "Text",
 			text: /On close: apply 1/
 		})).toBeDefined();
 		expect((await submit())?.variant).toBe("primary");
 		expect((await submit())?.dimColor).toBeUndefined();
-		expect((await ui.find({
-			type: "Button",
-			key: `apply:row:${ID}`
-		}))?.props.dimColor).toBeUndefined();
-		expect((await ui.find({
-			type: "Button",
-			key: `skip:row:${ID}`
-		}))?.props.dimColor).toBe(true);
-		await ui.press({ key: `apply:row:${ID}` });
+		expect((await ui.findAll({ type: "Button" })).filter((b) => b.props.variant === "primary")).toHaveLength(1);
+		await ui.press({ key: `apply:${ID}` });
 		expect(await ui.find({
 			type: "Text",
 			text: /^2 open$/
@@ -578,22 +593,14 @@ for (const surface of ["desktop", "vscode"]) {
 			type: "Text",
 			text: /END-OF-CLAIM/
 		}))?.props.wrap).toBe("truncate-end");
-		expect(await ui.find({ type: "Markdown" })).toBeUndefined();
 		expect(await ui.find({ text: /END-OF-EVIDENCE/ })).toBeUndefined();
 		const toggle = String((await ui.find({
 			type: "Button",
 			text: /Open/
 		}))?.key);
-		expect(toggle).toMatch(/^ev:/);
+		expect(toggle).toMatch(/^row:/);
 		await ui.press({ key: toggle });
-		expect(await ui.find({
-			type: "Markdown",
-			text: /END-OF-CLAIM/
-		})).toBeDefined();
-		expect(await ui.find({
-			type: "Markdown",
-			text: /END-OF-EVIDENCE/
-		})).toBeDefined();
+		expect(await ui.find({ text: /END-OF-EVIDENCE/ })).toBeDefined();
 		await expectNative(ui);
 		await ui.press({ key: toggle });
 		expect(await ui.find({ text: /END-OF-EVIDENCE/ })).toBeUndefined();
@@ -658,14 +665,14 @@ for (const surface of ["desktop", "vscode"]) {
 		expect(await rows()).toBe(12);
 		const more = await ui.find({
 			type: "Button",
-			key: "more"
+			text: /more$/
 		});
 		expect(more?.text).toBe("Show 8 more");
-		await ui.press({ key: "more" });
+		await ui.press({ key: String(more?.key) });
 		expect(await rows()).toBe(20);
 		expect(await ui.find({
 			type: "Button",
-			key: "more"
+			text: /more$/
 		})).toBeUndefined();
 		await ui.unmount();
 	});

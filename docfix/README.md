@@ -16,7 +16,7 @@ In the terminal, `/docfix` opens a sidebar on the right: the queue grouped by do
 3. Press `e`, or click **Read**, to read all its evidence. There `a` and `d` set the suggestion you are reading, `n` shows the next piece, and `Esc` or **Back** goes back.
 4. Press `Enter` for the main action: **Draft prompt** when something is set to apply, **Dismiss** when only dismissals are, else **Close**. Close (`Esc` or `Close ×`) asks before it throws your choices away.
 
-In Claude Code, the pane has the keyboard after `/docfix`, a click in it or `ctrl+x tab`; a line under it says so when it doesn't. Desktop and VS Code show the queue as a pane of their own, where each row opens in place and closing the pane carries out your choices.
+In Claude Code, the pane has the keyboard after `/docfix`, a click in it or `ctrl+x tab`; a line under it says so when it doesn't. Desktop and VS Code show the queue as a pane of their own, where each row opens in place to its evidence and its **Apply**, **Dismiss** and **Skip** buttons. **Submit**, at the top, and closing the pane both carry out your choices.
 
 **Apply** puts a prompt in your draft without sending it. Review and send it to have the agent verify the claim, edit the docs and resolve the suggestion. **Dismiss** keeps the report but suppresses repeats. If the draft can't be inserted, the sidebar stays open with your choices intact.
 

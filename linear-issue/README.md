@@ -27,6 +27,6 @@ Claude Code's pane takes no `Esc` or `Space` of its own. There `0` goes back fro
 
 To bring a draft back, run `/linear` again or click **Open** on its line above the prompt. In Claude Code's terminal `8` also reopens it and `9` twice discards it. In pi, **Discard** on the line takes two clicks.
 
-In Claude Desktop and VS Code, use **Edit** to change the fields, open the suggested issue and choose **Comment instead** to comment, and use the **Open** and **Discard** buttons for a draft put aside.
+In Claude Desktop and VS Code, the draft reads as the issue it will file. Press the title's **Edit**, or a property (team, status, priority, labels, project) to change it in place; a property with nothing set reads _None_ beside **Set**, and **Done** closes the one that is open. Open the suggested issue and choose **Comment instead** to comment. The **Open** and **Discard** buttons on the line above the prompt bring back or drop a draft put aside.
 
 pi drafts with the session's model and reaches Linear through the servers named like `linear` in `mcp.json`. Sign in once with `/mcp`.

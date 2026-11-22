@@ -1,24 +1,31 @@
 import { expect, mock, test } from "claude-code/testing";
-import { t as ACTION_KEYS } from "./band-DwKKy9Eu.js";
+import { b as tokens, r as paintLines, s as notice } from "./claude-B3pwfCuK.js";
 
-// ../../lib/kits/legacy/src/claude/checks.tsx
+// ../../lib/kits/core/src/paint/checks.tsx
 /**
-* The house style's graphical rules as test assertions, for a mod's `claude plugin test`, which
-* the build bundles into the mod's tests. A `.tsx` file so the pi build's `tsc -b`, which has no
-* Claude types, leaves it out.
+* The house style's graphical rules as test assertions, for a mod's `claude plugin test`: a mod's
+* test imports it from `@agents/kit-core/paint/checks.tsx` and the build bundles it. A `.tsx` file
+* so the package's `tsc -b`, which has no Claude types, leaves it out.
 */
 /** The glyphs a graphical surface draws no controls with. */
 const GLYPHS = /[□■☐☑○●✎▸▾❯↑↓╰│]/;
-/** What a mounted tree shows, one string per element that shows text. */
+/**
+* What a mounted tree shows, one string per element that shows text. A `Markdown`'s text is
+* source the host draws (its table rules and code fences are not painted), so it is cut out of
+* the elements that hold it too, a Box's text being its children's.
+*/
 async function shown(ui) {
-	return (await ui.findAll({})).map((e) => e.text).filter(Boolean);
+	const all = await ui.findAll({});
+	const sources = all.filter((e) => e.type === "Markdown" && e.text).map((e) => e.text);
+	return all.filter((e) => e.type !== "Markdown").map((e) => sources.reduce((text, source) => text.replaceAll(source, ""), e.text ?? "")).filter(Boolean);
 }
 /**
 * A tree drawn for a graphical surface keeps the style's rules (`style.md`, "Graphical
 * surfaces"): no rule of repeated characters, no glyph standing in for a control, no text cut
 * by the mod, no key hints, no hotkey but on an action row, and nothing sized to the viewport:
-* no frame drawn in a colour, no width but a side rule's fraction of a cell, no height but an
-* icon's line, and only the surface cuts a line.
+* no frame drawn in a colour, no width but a side rule's fraction of a cell or a message's
+* reading measure (`tokens.prose`), no height but an icon's line, and only the surface cuts a
+* line.
 */
 async function expectNative(ui, options = {}) {
 	const hotkeys = new Set(options.hotkeys ?? []);
@@ -33,7 +40,7 @@ async function expectNative(ui, options = {}) {
 		if (e.type === "Box") {
 			if (e.props.borderStyle !== void 0) expect(e.props.borderColor).toBe("#00000000");
 			expect(e.props.minHeight).toBeUndefined();
-			if (e.props.width !== void 0) expect(e.props.width).toBeLessThan(1);
+			if (e.props.width !== void 0 && e.props.width !== tokens.prose) expect(e.props.width).toBeLessThan(1);
 			if (e.props.height !== void 0) expect(e.props.height).toBe(1);
 		}
 		if (e.type === "Text") expect([void 0, "truncate-end"]).toContain(e.props.wrap);
@@ -134,10 +141,11 @@ function world(on, haiku = haikuSays()) {
 		usage
 	} }));
 	on("ui.toast", () => ({ value: void 0 }));
-	on("ui.render", ($, e) => {
-		const { Text } = $.ui.resolve(e);
-		return /* @__PURE__ */ h(Text, null, "engine");
-	});
+	on("ui.render", ($, e) => paintLines($.ui.resolve(e), notice({
+		text: "engine",
+		width: 80,
+		status: "text"
+	})));
 	return w;
 }
 function edit($, e) {
@@ -179,7 +187,7 @@ async function openPicker($, w, surface = "terminal") {
 		...BAND,
 		surface
 	});
-	await band.press({ key: "spellfix" });
+	await band.press({ key: await band.find({ key: "spellfix" }) ? "spellfix" : "kit-action" });
 	await w.clock.settle();
 	return band;
 }
@@ -245,6 +253,29 @@ test("a picked suggestion replaces the word under the cursor and keeps the curso
 	expect(await band.find({ key: "ai" })).toBeUndefined();
 	await band.unmount();
 });
+test("the terminal's keys sit on buttons that draw nothing, and the action key stays mounted", async ($, on) => {
+	const w = world(on);
+	await paste($, w, "teh qiuck fox");
+	const band = await $.ui.mount({
+		...BAND,
+		surface: "terminal"
+	});
+	const action = await band.find({ key: "kit-action" });
+	expect(action?.props.action).toBe("app:toggleDiffNoiseFilter");
+	expect(await band.find({ key: "kit-key-1" })).toBeUndefined();
+	await band.press({ key: "spellfix" });
+	await w.clock.settle();
+	for (const k of [
+		"1",
+		"2",
+		"3",
+		"s",
+		"a"
+	]) expect((await band.find({ key: `kit-key-${k}` }))?.props.hotkey).toBe(k);
+	expect(await band.find({ key: "kit-key-d" })).toBeUndefined();
+	expect(await band.find({ key: "kit-key-8" })).toBeUndefined();
+	await band.unmount();
+});
 test("pressing 1 before Haiku answers applies its word once it lands", async ($, on) => {
 	let clock;
 	const w = world(on, async (prompt) => {
@@ -276,7 +307,7 @@ test("one Haiku answer covers every word, so the next word's is there at once", 
 	expect((await band.find({ key: "ai" }))?.text).toContain("quick");
 	expect(await band.find({
 		type: "Text",
-		text: /qiuck→quick/
+		text: /qiuck → quick/
 	})).toBeDefined();
 	await band.unmount();
 });
@@ -330,7 +361,7 @@ test("words Haiku calls correct are added to the dictionary and skipped, and 8 t
 	})).toBeDefined();
 	expect(await band.find({
 		type: "Text",
-		text: /added: Jepsen/
+		text: /Added Jepsen to the dictionary/
 	})).toBeDefined();
 	await key($, w, "8");
 	expect(personal(w).has("Jepsen")).toBe(false);
@@ -364,7 +395,7 @@ test("ctrl+q with nothing flagged offers the typos Haiku finds, and fix all appl
 	expect(w.box.text).toBe("a form sent from home");
 	expect(await band.find({
 		type: "Text",
-		text: /form→from/
+		text: /form → from/
 	})).toBeDefined();
 	await key($, w, "8");
 	expect(w.box.text).toBe("a form sent form home");
@@ -417,7 +448,7 @@ test("fix all applies every word's answer at once", async ($, on) => {
 	expect(w.box.text).toBe("the quick fox");
 	expect(await band.find({
 		type: "Text",
-		text: /teh→the, qiuck→quick/
+		text: /teh → the, qiuck → quick/
 	})).toBeDefined();
 	await band.unmount();
 });
@@ -443,7 +474,6 @@ for (const surface of ["desktop", "vscode"]) {
 		...BAND,
 		surface
 	});
-	const keys = { hotkeys: ACTION_KEYS };
 	test(`${surface}: the count is a status line with one quiet button`, async ($, on) => {
 		await paste($, world(on), "teh qiuck fox");
 		const band = await mount($);
@@ -458,7 +488,7 @@ for (const surface of ["desktop", "vscode"]) {
 		expect(open?.text).toBe("Review");
 		expect(open?.props.dimColor).toBe(true);
 		expect(open?.props.hotkey).toBeUndefined();
-		await expectNative(band, keys);
+		await expectNative(band);
 		await band.unmount();
 	});
 	test(`${surface}: with nothing flagged the band draws nothing`, async ($, on) => {
@@ -509,7 +539,7 @@ for (const surface of ["desktop", "vscode"]) {
 			key
 		})).toBeDefined();
 		expect(await band.find({ key: "add" })).toBeUndefined();
-		await expectNative(band, keys);
+		await expectNative(band);
 		await band.press({ key: "s1" });
 		await w.clock.settle();
 		expect(w.box.text).toBe("the quack fox and teh dog");
@@ -552,7 +582,7 @@ for (const surface of ["desktop", "vscode"]) {
 		expect(trail.length).toBeLessThanOrEqual(80);
 		expect(lead.startsWith("word ")).toBe(true);
 		expect(trail.endsWith(" more")).toBe(true);
-		await expectNative(band, keys);
+		await expectNative(band);
 		await band.unmount();
 	});
 	test(`${surface}: skip moves on, fix all applies the rest, and undo takes it back`, async ($, on) => {
@@ -577,7 +607,7 @@ for (const surface of ["desktop", "vscode"]) {
 			text: /^Fixed teh → the$/
 		})).toBeDefined();
 		expect((await band.find({ key: "dismiss" }))?.text).toBe("Dismiss");
-		await expectNative(band, keys);
+		await expectNative(band);
 		await band.press({ key: "undo" });
 		await w.clock.settle();
 		expect(w.box.text).toBe("teh qiuck fox");
@@ -614,7 +644,7 @@ for (const surface of ["desktop", "vscode"]) {
 			type: "Text",
 			text: /^Haiku has no suggestion$/
 		})).toBeDefined();
-		await expectNative(band, keys);
+		await expectNative(band);
 		await band.press({ key: "add" });
 		await w.clock.settle();
 		expect(personal(w).has("qiuck")).toBe(true);
@@ -635,7 +665,7 @@ for (const surface of ["desktop", "vscode"]) {
 			text: /^Added Jepsen to the dictionary$/
 		})).toBeDefined();
 		expect((await band.find({ key: "undo" }))?.text).toBe("Undo add");
-		await expectNative(band, keys);
+		await expectNative(band);
 		await band.press({ key: "undo" });
 		await w.clock.settle();
 		expect(personal(w).has("Jepsen")).toBe(false);
@@ -668,7 +698,7 @@ for (const surface of ["desktop", "vscode"]) {
 		expect(await band.find({ key: "spellfix" })).toBeUndefined();
 		expect((await band.find({ key: "undo" }))?.text).toBe("Undo");
 		expect((await band.find({ key: "dismiss" }))?.text).toBe("Dismiss");
-		await expectNative(band, keys);
+		await expectNative(band);
 		await band.press({ key: "undo" });
 		await w.clock.advance(1e3);
 		expect(w.box.text).toBe("teh qiuck fox ");

@@ -1,4 +1,5 @@
 import { expect, test } from "claude-code/testing";
+import { r as notice, t as paintLines } from "./claude-lsFLeane.js";
 
 // src/claude.test.tsx
 const PNG = "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAkCAYAAAA5DDySAAAAdklEQVR42u3ZsRGAIAwFUIZxAAtHsLO2ZyVXYyHcAAu5Q8wrfpm78JrkQtqOXFtZ1r2Z2esTAAAAAAAAEBjg7w98qgfQo4FyncMCAAAAAADeAPQYMyMBPrEJAgAAAAAAAJMC2AQBAHARAgAAQFwAP0MAAIQGuAEhKJcojry0RgAAAABJRU5ErkJggg==";
@@ -53,8 +54,11 @@ function world(on) {
 		} };
 	});
 	on("ui.render", ($, e) => {
-		const { Text } = $.ui.resolve(e);
-		return /* @__PURE__ */ h(Text, null, `host ${e.component}`);
+		return paintLines($.ui.resolve(e), notice({
+			text: `host ${e.component}`,
+			width: 80,
+			status: "text"
+		}));
 	});
 	return {
 		reads,

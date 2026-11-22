@@ -1,23 +1,31 @@
 import { expect, test } from "claude-code/testing";
+import { t as tokens } from "./tokens-B6LwkIOZ.js";
 
-// ../../lib/kits/legacy/src/claude/checks.tsx
+// ../../lib/kits/core/src/paint/checks.tsx
 /**
-* The house style's graphical rules as test assertions, for a mod's `claude plugin test`, which
-* the build bundles into the mod's tests. A `.tsx` file so the pi build's `tsc -b`, which has no
-* Claude types, leaves it out.
+* The house style's graphical rules as test assertions, for a mod's `claude plugin test`: a mod's
+* test imports it from `@agents/kit-core/paint/checks.tsx` and the build bundles it. A `.tsx` file
+* so the package's `tsc -b`, which has no Claude types, leaves it out.
 */
 /** The glyphs a graphical surface draws no controls with. */
 const GLYPHS = /[□■☐☑○●✎▸▾❯↑↓╰│]/;
-/** What a mounted tree shows, one string per element that shows text. */
+/**
+* What a mounted tree shows, one string per element that shows text. A `Markdown`'s text is
+* source the host draws (its table rules and code fences are not painted), so it is cut out of
+* the elements that hold it too, a Box's text being its children's.
+*/
 async function shown(ui) {
-	return (await ui.findAll({})).map((e) => e.text).filter(Boolean);
+	const all = await ui.findAll({});
+	const sources = all.filter((e) => e.type === "Markdown" && e.text).map((e) => e.text);
+	return all.filter((e) => e.type !== "Markdown").map((e) => sources.reduce((text, source) => text.replaceAll(source, ""), e.text ?? "")).filter(Boolean);
 }
 /**
 * A tree drawn for a graphical surface keeps the style's rules (`style.md`, "Graphical
 * surfaces"): no rule of repeated characters, no glyph standing in for a control, no text cut
 * by the mod, no key hints, no hotkey but on an action row, and nothing sized to the viewport:
-* no frame drawn in a colour, no width but a side rule's fraction of a cell, no height but an
-* icon's line, and only the surface cuts a line.
+* no frame drawn in a colour, no width but a side rule's fraction of a cell or a message's
+* reading measure (`tokens.prose`), no height but an icon's line, and only the surface cuts a
+* line.
 */
 async function expectNative(ui, options = {}) {
 	const hotkeys = new Set(options.hotkeys ?? []);
@@ -32,7 +40,7 @@ async function expectNative(ui, options = {}) {
 		if (e.type === "Box") {
 			if (e.props.borderStyle !== void 0) expect(e.props.borderColor).toBe("#00000000");
 			expect(e.props.minHeight).toBeUndefined();
-			if (e.props.width !== void 0) expect(e.props.width).toBeLessThan(1);
+			if (e.props.width !== void 0 && e.props.width !== tokens.prose) expect(e.props.width).toBeLessThan(1);
 			if (e.props.height !== void 0) expect(e.props.height).toBe(1);
 		}
 		if (e.type === "Text") expect([void 0, "truncate-end"]).toContain(e.props.wrap);
@@ -78,28 +86,38 @@ const ok = (stdout, exitCode = 0, stderr = "") => ({ value: {
 	isStdoutTruncated: false,
 	isStderrTruncated: false
 } });
-function world(on, { pr = PR, mac = false, notes = {} } = {}) {
+function world(on, { pr = PR, mac = false, notes = {}, cwd = "/repo", terminal = "", terminals = [], xdgSelected = true } = {}) {
 	const w = {
 		launched: [],
+		launchCwds: [],
 		copied: [],
+		toasts: [],
+		closed: [],
 		ran: []
 	};
-	const installed = notes.installed ?? [OPENER];
+	const installed = [...notes.installed ?? [OPENER], ...terminals];
 	const files = Object.entries(notes.files ?? {});
 	on("env.get", (_, e) => ({ value: {
 		HOME,
-		USER: "me"
+		USER: "me",
+		GIT_MENU_TERMINAL: terminal
 	}[e.name] }));
 	on("clock.now", () => ({ value: NOW }));
 	on("ui.open", () => ({ value: { isPlaced: true } }));
-	on("ui.close", () => ({ value: void 0 }));
+	on("ui.close", (_, e) => {
+		w.closed.push(e.id);
+		return { value: void 0 };
+	});
 	on("ui.panes", () => ({ value: [] }));
-	on("ui.toast", () => ({ value: void 0 }));
+	on("ui.toast", (_, e) => {
+		w.toasts.push(e.text);
+		return { value: void 0 };
+	});
 	on("ui.copy", (_, e) => {
 		w.copied.push(e.text);
 		return { value: { isCopied: true } };
 	});
-	on("session.cwd", () => ({ value: "/repo" }));
+	on("session.cwd", () => ({ value: cwd }));
 	on("fs.exists", () => ({ value: false }));
 	on("fs.stat", (_, e) => {
 		if (e.path !== "/repo/.agents/store" || !notes.files) throw new Error(`ENOENT: ${e.path}`);
@@ -147,13 +165,15 @@ function world(on, { pr = PR, mac = false, notes = {} } = {}) {
 			if (line.endsWith("rev-parse --show-toplevel")) return ok("/repo\n");
 			return ok("", 1);
 		}
-		if (argv[0] === "sh" && argv.includes("agent-note-open")) {
+		if (argv[0] === "sh" && argv[2]?.includes("&& exit 0")) {
 			const hit = argv.slice(4).find((c) => installed.includes(c));
 			if (!hit) return ok("", 1);
 			return ok(`${hit.includes("/") ? hit : `/run/current-system/sw/bin/${hit}`}\n`);
 		}
 		if (argv[0] === "sh" && argv.includes("xdg-open") && argv.includes("nautilus")) return ok("code\nxdg-open\n");
+		if (argv[1] === "--print-id") return xdgSelected ? ok("fixture.desktop\n") : ok("", 1);
 		w.launched.push(argv.slice(4));
+		w.launchCwds.push(e.init?.cwd);
 		return ok("");
 	});
 	return w;
@@ -196,9 +216,14 @@ test("a row that cannot run starts nothing", async ($, on) => {
 		...PANE,
 		surface: "terminal"
 	});
-	await pane.press({ key: "create" });
+	expect(await pane.find({
+		type: "Button",
+		key: "create"
+	})).toBeUndefined();
+	await pane.press({ key: "kit-key-4" });
 	await pane.unmount();
 	expect(w.launched).toEqual([]);
+	expect(w.toasts).toEqual(["Create pull request: PR #12 is open"]);
 });
 test("without a pull request, create links the compare page into the default branch", async ($, on) => {
 	const w = world(on, { pr: null });
@@ -241,13 +266,127 @@ test("/open hands the checkout to an installed app and not to a missing one", as
 		...PANE,
 		surface: "terminal"
 	});
-	await pane.press({ key: "smerge" });
+	expect(await pane.find({
+		type: "Button",
+		key: "smerge"
+	})).toBeUndefined();
+	await pane.press({ key: "kit-key-3" });
 	expect(w.launched).toEqual([]);
+	expect(w.toasts).toEqual(["Sublime Merge: not installed"]);
 	await pane.press({ key: "code" });
 	await pane.unmount();
 	expect(w.launched).toEqual([["code", "/repo"]]);
 });
-/** The pane's rows, top to bottom, as `label description`. */
+const XDG = "/run/current-system/sw/bin/xdg-terminal-exec";
+const ALTERNATIVE = "/run/current-system/sw/bin/x-terminal-emulator";
+const WRAPPER = "/opt/My Terminal/launch";
+const CHECKOUT = "/repo with spaces/作業";
+for (const { label, options, argv } of [
+	{
+		label: "Linux desktop selection",
+		options: { terminals: ["xdg-terminal-exec", "x-terminal-emulator"] },
+		argv: [XDG, `--dir=${CHECKOUT}`]
+	},
+	{
+		label: "Linux alternative when XDG cannot select a terminal",
+		options: {
+			terminals: ["xdg-terminal-exec", "x-terminal-emulator"],
+			xdgSelected: false
+		},
+		argv: [ALTERNATIVE]
+	},
+	{
+		label: "macOS Terminal.app",
+		options: { mac: true },
+		argv: [
+			"open",
+			"-a",
+			"Terminal",
+			CHECKOUT
+		]
+	},
+	{
+		label: "explicit executable path with spaces",
+		options: {
+			terminal: WRAPPER,
+			terminals: [WRAPPER, "xdg-terminal-exec"]
+		},
+		argv: [WRAPPER]
+	},
+	{
+		label: "desktop selection when the override is missing",
+		options: {
+			terminal: "missing-launcher",
+			terminals: ["xdg-terminal-exec"]
+		},
+		argv: [XDG, `--dir=${CHECKOUT}`]
+	}
+]) test(`/open Terminal uses ${label} in the checkout`, async ($, on) => {
+	const w = world(on, {
+		...options,
+		cwd: CHECKOUT
+	});
+	await start($, on);
+	await $.command.run({
+		...RUN,
+		command: "open"
+	});
+	const pane = await $.ui.mount({
+		...PANE,
+		surface: "terminal"
+	});
+	await pane.press({ key: "terminal" });
+	await pane.unmount();
+	expect(w.launched).toEqual([argv]);
+	expect(w.launchCwds).toEqual([CHECKOUT]);
+});
+test("/open Terminal is unavailable without a launcher", async ($, on) => {
+	const w = world(on);
+	await start($, on);
+	await $.command.run({
+		...RUN,
+		command: "open"
+	});
+	expect(await paneText($)).toContain("no terminal launcher found");
+	const pane = await $.ui.mount({
+		...PANE,
+		surface: "terminal"
+	});
+	expect(await pane.find({
+		type: "Button",
+		key: "terminal"
+	})).toBeUndefined();
+	await pane.press({ key: "kit-key-5" });
+	await pane.unmount();
+	expect(w.toasts).toEqual(["Terminal: no terminal launcher found"]);
+	expect(w.launched).toEqual([]);
+});
+test("the terminal pane keeps its rows' keys, the keyboard on the pull request, and Close", async ($, on) => {
+	const w = world(on);
+	await start($, on);
+	await $.command.run({
+		...RUN,
+		command: "git"
+	});
+	const pane = await $.ui.mount({
+		...PANE,
+		surface: "terminal"
+	});
+	const said = (await pane.findAll({ type: "Text" })).map((t) => t.text).join("\n");
+	expect(said).toContain("Git");
+	expect(said).toContain("me/repo");
+	expect(said).toMatch(/❯ 3 Open pull request #12/);
+	expect(said).toContain("Close ×");
+	for (const key of ["kit-key-1", "kit-key-6"]) expect(await pane.find({
+		type: "Button",
+		key
+	})).toBeDefined();
+	await pane.press({ key: "frame:close" });
+	await pane.unmount();
+	expect(w.closed).toEqual(["git-menu"]);
+	expect(w.launched).toEqual([]);
+});
+/** The pane's rows, top to bottom, as `key label note`. */
 async function shownRows($, surface = "terminal") {
 	const pane = await $.ui.mount({
 		...PANE,
@@ -255,7 +394,7 @@ async function shownRows($, surface = "terminal") {
 	});
 	const buttons = await pane.findAll({ type: "Button" });
 	await pane.unmount();
-	return buttons.map((b) => b.text.replace(/\s+/g, " ").trim());
+	return buttons.filter((b) => !String(b.key).startsWith("kit-") && b.key !== "frame:close").map((b) => b.text.replace(/\s+/g, " ").replace(/^❯ /, "").trim());
 }
 const openPlan = ($) => $.command.run({
 	...RUN,
@@ -286,9 +425,9 @@ test("/open plan lists the store's Markdown, newest first, and asks no hub", asy
 	await start($, on);
 	await openPlan($);
 	expect(await shownRows($)).toEqual([
-		"plans/hub/PLAN.md 1h",
-		"plans/hub/HANDOFF.md 3h",
-		"research/old/REPORT.md 2d"
+		"1 plans/hub/PLAN.md 1h",
+		"2 plans/hub/HANDOFF.md 3h",
+		"3 research/old/REPORT.md 2d"
 	]);
 	expect(w.ran.filter((argv) => argv.some((arg) => arg.includes("agent-hub")))).toEqual([]);
 });
@@ -349,7 +488,7 @@ test("the folder menu's Notes row switches the pane to the notes", async ($, on)
 	await pane.press({ key: "notes" });
 	await pane.unmount();
 	expect(w.launched).toEqual([]);
-	expect(await shownRows($)).toEqual(["plans/hub/PLAN.md 1h"]);
+	expect(await shownRows($)).toEqual(["1 plans/hub/PLAN.md 1h"]);
 });
 test("bare /open still shows the folder menu", async ($, on) => {
 	world(on);
@@ -445,8 +584,8 @@ for (const surface of ["desktop", "vscode"]) {
 		await pane.unmount();
 		expect(w.launched).toContainEqual(["xdg-open", "https://github.com/me/repo/compare/main...feat/x?expand=1"]);
 	});
-	test(`${surface}: /open draws the folder menu, and a press hands the checkout to an app`, async ($, on) => {
-		const w = world(on);
+	test(`${surface}: /open draws the folder menu, and a press opens the terminal`, async ($, on) => {
+		const w = world(on, { terminals: ["xdg-terminal-exec"] });
 		await start($, on, surface);
 		await $.command.run({
 			...RUN,
@@ -457,14 +596,17 @@ for (const surface of ["desktop", "vscode"]) {
 		const keys = (await pane.findAll({ type: "Button" })).map((b) => b.key);
 		expect(keys).toEqual(expect.arrayContaining([
 			"code",
+			"terminal",
 			"copy",
 			"notes"
 		]));
 		expect(keys).not.toContain("smerge");
 		expect(await said(pane)).toEqual(expect.arrayContaining(["Sublime Merge", "not installed"]));
-		await pane.press({ key: "code" });
+		expect(await said(pane)).toContain("Terminal");
+		await pane.press({ key: "terminal" });
 		await pane.unmount();
-		expect(w.launched).toEqual([["code", "/repo"]]);
+		expect(w.launched).toEqual([[XDG, "--dir=/repo"]]);
+		expect(w.launchCwds).toEqual(["/repo"]);
 	});
 	test(`${surface}: no row carries a hotkey and no hint is drawn`, async ($, on) => {
 		world(on);
@@ -516,17 +658,17 @@ for (const surface of ["desktop", "vscode"]) {
 		await openPlan($);
 		const pane = await mount($, "Notes");
 		await expectNative(pane);
-		const rows = async (p) => (await p.findAll({ type: "Button" })).filter((b) => b.key !== "more").length;
+		const rows = async (p) => (await p.findAll({ type: "Button" })).filter((b) => !String(b.key).includes("more")).length;
 		expect(await rows(pane)).toBe(12);
 		expect(await pane.find({
 			type: "Button",
-			key: "more"
+			key: "g0:more:more"
 		})).toBeDefined();
-		await pane.press({ key: "more" });
+		await pane.press({ key: "g0:more:more" });
 		expect(await rows(pane)).toBe(15);
 		expect(await pane.find({
 			type: "Button",
-			key: "more"
+			key: "g0:more:more"
 		})).toBeUndefined();
 		await expectNative(pane);
 		await pane.unmount();
@@ -542,7 +684,7 @@ for (const surface of ["desktop", "vscode"]) {
 		const pane = await mount($, "Notes");
 		await expectNative(pane);
 		expect(await pane.findAll({ type: "Button" })).toEqual([]);
-		expect(await said(pane)).toContain(`no editor: ${NOTE}`);
+		expect((await said(pane)).join(" ")).toContain(`no editor: ${NOTE}`);
 		await pane.unmount();
 	});
 }

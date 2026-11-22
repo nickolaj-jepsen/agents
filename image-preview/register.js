@@ -1,3 +1,5 @@
+import { a as clamp, i as blank, n as stack, o as line, r as notice, s as span, t as paintLines } from "./claude-lsFLeane.js";
+
 // src/lib/images.ts
 const MAX_INLINE_BYTES = 2097152;
 const MAX_DIMENSION_READ_BYTES = 4194304;
@@ -154,202 +156,7 @@ function* imageLinks(markdown) {
 	}
 }
 
-// ../../lib/kits/legacy/src/claude/ui.tsx
-/** A pane with fewer body rows than this drops the blank rows between its blocks. */
-const TIGHT_ROWS = 16;
-/**
-* Binds the resolved elements to the surface they came from, and to the room it measured.
-* @param els What `$.ui.resolve(e)` answered.
-* @param e The render event: `surface`, `viewport` and the pane's or band's `props`.
-*/
-const kitOf = (els, e) => {
-	const p = e.props ?? {};
-	return {
-		Box: els.Box,
-		Text: els.Text,
-		Button: els.Button,
-		Markdown: els.Markdown,
-		Image: els.Image,
-		Link: els.Link,
-		Svg: els.Svg,
-		surface: e.surface,
-		isNative: e.surface !== "terminal",
-		columns: Math.max(1, Math.floor(p.bodyColumns ?? e.viewport?.columns ?? 80)),
-		maxRows: p.maxRows,
-		isTight: (p.scroll?.bodyRows ?? 1e400) < TIGHT_ROWS,
-		title: p.title,
-		placement: p.placement
-	};
-};
-/**
-* The house style's numbers, glyphs and colour roles; one edit here restyles every mod that
-* carries a fresh copy of this file.
-*/
-const tokens = {
-	/** Width classes: caps in columns, never targets. `wide` is the pane less `wideMargin`. */
-	width: {
-		reading: 96,
-		split: 124,
-		dialog: 72,
-		wideMargin: 2
-	},
-	/** What a pane is opened with, whichever mod opens it: `"transparent"` is no fill under the body. */
-	pane: { backgroundColor: "transparent" },
-	/** Prose is wrapped at this measure even in a wider pane. */
-	prose: 80,
-	/** From this many pane columns a list with detail is two panes; below it stacks. */
-	splitFrom: 110,
-	/** Cells of padding inside a border. */
-	padding: 1,
-	/** Cells between metadata columns, and before the first. */
-	gutter: 2,
-	/** Cells between the keys of a button row. */
-	keyGap: 3,
-	/** From this pane width dated entries use a date column; narrower, a date line. */
-	entriesFrom: 50,
-	/** Cells of the date column of dated entries: an ISO date. */
-	dateWidth: 10,
-	/** A row's title is never given less than this; metadata columns drop first. */
-	minTitle: 16,
-	glyph: {
-		pointer: "❯",
-		multi: {
-			off: "□",
-			on: "■"
-		},
-		single: {
-			off: "○",
-			on: "●"
-		},
-		ellipsis: "…",
-		more: {
-			up: "↑",
-			down: "↓"
-		},
-		rule: "─",
-		done: "✓",
-		times: "×",
-		noteMid: "│",
-		noteEnd: "╰▸",
-		kind: {
-			missing: "+",
-			stale: "↻",
-			wrong: "!"
-		},
-		status: { warning: "⚠" },
-		fold: {
-			closed: "▸",
-			open: "▾"
-		}
-	},
-	/** Lines of a folded claim on the terminal. */
-	foldedLines: 3,
-	/** Inline code on the terminal, outside a `Markdown`: the theme colour its Markdown uses. */
-	code: "permission",
-	/** The graphical surfaces' numbers: none of them is a cell. */
-	gui: {
-		/** A long list shows this many rows, then an `N more` row. */
-		maxItems: 12,
-		/**
-		* The widest a choice's label may be, in cells, before a graphical surface sets it as text
-		* under a Button of its `short` word: a Button never wraps and runs off a 420-pixel pane.
-		*/
-		maxLabel: 34,
-		/**
-		* Icon colours. The host's theme cannot be read from a mod and an image cannot follow it, so
-		* the neutral is one mid-grey that reads on light and dark; colour marks a state only.
-		*/
-		tone: {
-			neutral: "#8b8f98",
-			error: "#e5534b",
-			warning: "#d4962a",
-			success: "#3fa65b"
-		},
-		/** An icon's side, in CSS pixels. */
-		icon: 16,
-		/**
-		* The column, in cells, that leads each row of a choice drawn as rows: its key's Button (`A`)
-		* or an icon, centred, so every row's text starts at one edge.
-		*/
-		lead: 4.6,
-		/**
-		* A passage longer than this, in cells, or of more than one line, is cut to one line with a
-		* `More` beside it (`excerpt`): about what one line of a 420-pixel band holds beside the button.
-		*/
-		excerptCells: 40,
-		/**
-		* The vertical rhythm, in lines of body text. A step name is a whole line or none on VS Code,
-		* too coarse for a short pane, so the kit spaces with these numbers. `xs` sits between the
-		* lines of one part (a label and its text), `sm` between the parts of one item (claim, meta,
-		* evidence, keys), `md` between items that stand alone (groups, the pane's regions).
-		*/
-		space: {
-			xs: .2,
-			sm: .5,
-			md: .9
-		},
-		/**
-		* Horizontal room, in cells: `xs` between the buttons of a row, `sm` after an icon, `md`
-		* between a line's text and its control, and `inset` on each side of a row, which is where
-		* an opened row's fill reaches.
-		*/
-		across: {
-			xs: .6,
-			sm: .8,
-			md: 1.2,
-			inset: 1
-		},
-		/**
-		* The fill of an opened row: the theme's own second background, a well the row's body sits
-		* in, which a quiet button's outline still reads on.
-		*/
-		fill: "userMessageBackground",
-		/** Behind a code span in a Text, which has no code face: the theme's code background. */
-		chip: "bashMessageBackgroundColor",
-		/** A thin rule's colour: one grey at low alpha, which reads on a light theme and a dark one. */
-		rule: "#8b8f9866",
-		/**
-		* The least a form's label column takes, in cells, so its controls start at one edge: a
-		* label longer than this pushes only its own control.
-		*/
-		labelColumn: 7
-	},
-	/**
-	* The style's roles as a mod draws them: `dim` is `dimColor`, `text` is the default,
-	* the rest are theme colours. `note` is the colour of the words a person wrote.
-	*/
-	role: {
-		text: void 0,
-		dim: void 0,
-		accent: "claude",
-		success: "success",
-		warning: "warning",
-		error: "error",
-		note: "suggestion"
-	}
-};
-/** What each icon stands for on the terminal, where one glyph does it. */
-const ICON_GLYPH = {
-	wrong: tokens.glyph.kind.wrong,
-	stale: tokens.glyph.kind.stale,
-	missing: tokens.glyph.kind.missing,
-	warning: tokens.glyph.status.warning,
-	success: tokens.glyph.done,
-	error: tokens.glyph.times,
-	pending: tokens.glyph.single.off,
-	question: "?",
-	note: tokens.glyph.noteEnd,
-	write: "✎",
-	status: tokens.glyph.single.off,
-	priorityNone: "-",
-	priorityLow: "!",
-	priorityMedium: "!!",
-	priorityHigh: "!!!",
-	priorityUrgent: tokens.glyph.status.warning,
-	project: tokens.glyph.multi.off,
-	label: tokens.glyph.single.on,
-	draft: "✎"
-};
+// ../../lib/kits/image/src/internal.ts
 /** Fits an image inside a terminal cell box without changing its aspect ratio. */
 function fitImage(size, options) {
 	const bound = (value, fallback) => Math.max(1, Math.min(255, Math.floor(Number.isFinite(value) ? value : fallback)));
@@ -374,31 +181,46 @@ function fitImage(size, options) {
 }
 /** Encodes an absolute path as a file URL without escaping its slashes. */
 const fileUrl = (path) => `file://${path.split("/").map(encodeURIComponent).join("/")}`;
-/** Draws images at their aspect ratios, each with an optional path link below it. */
-function imageGallery(k, images, options) {
-	const { Box, Text, Image, Link } = k;
-	return /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		rowGap: 1
-	}, options.caption ? /* @__PURE__ */ h(Text, { dimColor: true }, options.caption) : null, images.map((image) => {
-		const box = fitImage(image.size, options);
-		return /* @__PURE__ */ h(Box, {
-			key: image.key,
-			flexDirection: "column",
-			rowGap: 1
-		}, Image ? /* @__PURE__ */ h(Image, {
-			source: image.source,
-			columns: box.columns,
-			rows: box.rows,
-			alt: image.alt
-		}) : /* @__PURE__ */ h(Text, { dimColor: true }, image.alt), image.path ? /* @__PURE__ */ h(Text, {
-			dimColor: true,
-			wrap: "wrap"
-		}, Link ? /* @__PURE__ */ h(Link, {
-			href: fileUrl(image.path),
-			label: image.path
-		}) : image.path) : null);
-	}));
+
+// ../../lib/kits/image/src/terminal.ts
+/**
+* Images as styled lines, for the terminal only: the graphical clients show images themselves.
+* An image is one line with an `image` slot, whose alt text stands in where the client cannot
+* draw one (pi, a terminal without images); its path is `link` lines under it.
+*/
+/**
+* Draws images at their aspect ratios, a blank row between parts, each with its path as a dim
+* link below it. `columns` is the room for the lines too.
+*/
+function imageGallery(gallery) {
+	const { images, caption } = gallery;
+	const room = Math.max(1, Math.floor(gallery.columns));
+	const parts = [];
+	if (caption) parts.push(clamp(caption, room).map((row) => line([span(row, { role: "dim" })])));
+	for (const image of images) {
+		const box = fitImage(image.size, gallery);
+		const rows = [{
+			spans: [span(image.alt, { role: "dim" })],
+			slot: {
+				kind: "image",
+				source: image.source,
+				...box,
+				alt: image.alt
+			}
+		}];
+		if (image.path) {
+			const href = fileUrl(image.path);
+			rows.push(blank(), ...clamp(image.path, room).map((row) => ({
+				spans: [span(row, { role: "dim" })],
+				slot: {
+					kind: "link",
+					href
+				}
+			})));
+		}
+		parts.push(rows);
+	}
+	return parts.flatMap((part, i) => i ? [blank(), ...part] : part);
 }
 
 // src/claude.tsx
@@ -406,6 +228,11 @@ const fullSize = (viewport) => ({
 	columns: Math.max(1, Math.min(144, (viewport?.columns ?? 84) - 4)),
 	rows: Math.max(1, Math.min(42, Math.floor((viewport?.rows ?? 48) * .6)))
 });
+/** The images as the terminal draws them: the kit's lines, painted with the event's elements. */
+const gallery = (els, images, options) => paintLines(els, imageGallery({
+	images,
+	...options
+}));
 const thumbnail = {
 	columns: 24,
 	rows: 6
@@ -548,26 +375,28 @@ const register = (on) => {
 		const native = await next(e);
 		if (!first) return native;
 		const els = $.ui.resolve(e);
-		const { Box, Text } = els;
-		return /* @__PURE__ */ h(Box, { flexDirection: "column" }, native, /* @__PURE__ */ h(Box, {
-			flexDirection: "column",
-			marginLeft: 2
-		}, imageGallery(kitOf(els, e), [{
-			...first,
-			path: void 0
-		}], {
+		const columns = Math.min(thumbnail.columns, fullSize(e.viewport).columns);
+		const lines = [...imageGallery({
+			images: [{
+				...first,
+				path: void 0
+			}],
 			...thumbnail,
-			columns: Math.min(thumbnail.columns, fullSize(e.viewport).columns)
-		}), count > 1 ? /* @__PURE__ */ h(Text, { dimColor: true }, `+${count - 1} more`) : null));
+			columns
+		}), ...count > 1 ? notice({
+			text: `+${count - 1} more`,
+			width: columns,
+			status: "dim"
+		}) : []];
+		return stack(els, native, paintLines(els, lines, { indent: 2 }));
 	});
 	on("ui.render", { component: "ToolResult" }, async ($, e, next) => {
 		if (e.surface !== "terminal" || e.props.isErrored) return next(e);
 		const els = $.ui.resolve(e);
-		const kit = kitOf(els, e);
 		if (e.props.tool === "Read") {
 			const key = e.props.tool_use_id;
 			const image = await fromRead($, e.props.output, readPaths.get(key), key, readJpegCache);
-			return image ? imageGallery(kit, [image], fullSize(e.viewport)) : next(e);
+			return image ? gallery(els, [image], fullSize(e.viewport)) : next(e);
 		}
 		if (e.props.tool !== "SendUserFile") return next(e);
 		const native = await next(e);
@@ -580,10 +409,10 @@ const register = (on) => {
 				path: void 0
 			});
 		}
-		return images.length ? /* @__PURE__ */ h(els.Box, {
-			flexDirection: "column",
-			rowGap: 1
-		}, native, imageGallery(kit, images, fullSize(e.viewport))) : native;
+		return images.length ? stack(els, native, paintLines(els, [blank(), ...imageGallery({
+			images,
+			...fullSize(e.viewport)
+		})])) : native;
 	});
 	on("turn.complete", async ($, e, next) => {
 		if (e.agentId || e.reason !== "answer" || !e.answer.includes("](")) return next(e);
@@ -609,7 +438,7 @@ const register = (on) => {
 	on("ui.render", { component: "Placed" }, ($, e, next) => {
 		if (e.surface !== "terminal" || e.props.plugin !== "image-preview") return next(e);
 		const image = placed.get(e.props.id);
-		return image ? imageGallery(kitOf($.ui.resolve(e), e), [image], fullSize(e.viewport)) : next(e);
+		return image ? gallery($.ui.resolve(e), [image], fullSize(e.viewport)) : next(e);
 	});
 };
 

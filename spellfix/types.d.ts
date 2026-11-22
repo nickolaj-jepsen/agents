@@ -38,6 +38,7 @@ declare module "claude-code" {
       report: Report | null;
       added: string[];
       isBusy: boolean;
+      focus: string | null;
     };
   }
 }

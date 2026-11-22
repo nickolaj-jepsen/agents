@@ -1,9 +1,10 @@
 import { atom, read as read$1, update } from "claude-code";
+import { n as widthCap, t as tokens } from "./tokens-BWSk26Ae.js";
 
 // src/lib/parse/doc.ts
 const FENCE = /^\s*(`{3,}|~{3,})(.*)$/;
 const RULE = /^\s*(-{3,}|\*{3,}|_{3,})\s*$/;
-const HEADING = /^#{1,6}\s+/;
+const HEADING$1 = /^#{1,6}\s+/;
 const BULLET = /^[-*+]\s+/;
 const QUOTE = /^>\s*/;
 const Q_LABEL = /^(?:❓\s*)?(\*\*)?Q(?:uestion)?\s*(\d{1,3})(\s*\([^)]*\))?(\*\*)?(?:[.:)]|\s*[—–-](?=\s))(\*\*)?\s+(.+)$/;
@@ -32,7 +33,7 @@ function titled(words, open) {
 }
 /** A label is unindented: a number under a list item is that item's own. */
 function labelOf$1(line) {
-	const words = line.replace(HEADING, "");
+	const words = line.replace(HEADING$1, "");
 	const asked = Q_LABEL.exec(words);
 	const [open, n = "", shut, after = ""] = asked ? [
 		asked[1],
@@ -127,7 +128,7 @@ function readDoc(text) {
 				raw,
 				indent,
 				quoted,
-				kind: HEADING.test(raw) ? "heading" : "text",
+				kind: HEADING$1.test(raw) ? "heading" : "text",
 				mark: markOf(raw, indent)
 			};
 		})
@@ -136,9 +137,9 @@ function readDoc(text) {
 const isLabel = (line) => line?.mark?.is === "label";
 const isOption = (line) => line?.mark?.is === "option";
 /** What a line says after the marks that open it: a quote mark, heading marks, a list marker. */
-const textOf = (line) => line.raw.trim().replace(QUOTE, "").replace(HEADING, "").replace(BULLET, "");
+const textOf$1 = (line) => line.raw.trim().replace(QUOTE, "").replace(HEADING$1, "").replace(BULLET, "");
 /** What a line says, with its bold taken off too. */
-const wordsOf = (line) => unbold(textOf(line));
+const wordsOf = (line) => unbold(textOf$1(line));
 /** Lines as markdown: blank runs made one, the ends trimmed. */
 const tidy = (lines) => lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 /** Lines with the indentation they all share taken off, and blank lines made empty. */
@@ -217,7 +218,7 @@ function rowLines(doc, start) {
 	return [start, ...end < 0 ? under : under.slice(0, end)];
 }
 /** One row as an item: build it, or the route its last line names. Prose up to the next row stays with it. */
-function rowOf$1(label, own, between, route) {
+function rowOf$2(label, own, between, route) {
 	const [title = "", ...fields] = [label.title, label.rest].filter(Boolean).join(" ").split(" · ");
 	const said = between.filter((line) => line.kind !== "blank" && line.kind !== "rule");
 	const body = [fields.join(" · "), ...[...own.slice(1), ...said].map((line) => line.raw.trim())];
@@ -251,7 +252,7 @@ function picksOf(doc, run) {
 		const rowEnd = start.at + own.length;
 		const next = run[i + 1]?.at;
 		if (next === void 0) tail = rowEnd;
-		items.push(rowOf$1(start.mark, own, doc.lines.slice(rowEnd, next ?? rowEnd), route));
+		items.push(rowOf$2(start.mark, own, doc.lines.slice(rowEnd, next ?? rowEnd), route));
 	}
 	const starts = run.map((start) => start.at);
 	return items.length ? {
@@ -415,7 +416,7 @@ function scan(lines, lettered) {
 		} else if (next && (line.mark.text || under[0])) {
 			const [first, ...below] = under;
 			const lifted = !line.mark.text && first ? first : void 0;
-			addOption(found, line.mark.key, lifted ? textOf(lifted) : line.mark.text, [line.mark.more, ...dedent(lifted ? below : under)]);
+			addOption(found, line.mark.key, lifted ? textOf$1(lifted) : line.mark.text, [line.mark.more, ...dedent(lifted ? below : under)]);
 			i += under.length;
 		} else if (line) found.rest.push(line.raw);
 	}
@@ -568,7 +569,7 @@ function closingOf(lines) {
 * the question's body.
 */
 function leadIn(line) {
-	const lead = textOf(line);
+	const lead = textOf$1(line);
 	const cut = /^\*\*(.+?)\*\*\s*(.*)$/.exec(lead) ?? new RegExp(`^(.{20,${LONG_LINE}}?[.!?])\\s+(.*)$`).exec(lead);
 	const [head = "", rest = ""] = lead.length <= LONG_LINE ? [lead] : cut ? cut.slice(1) : [lead.slice(0, LONG_LINE), lead.slice(LONG_LINE)];
 	return {
@@ -671,7 +672,7 @@ function listOf(doc, run) {
 	return picksOf(doc, run) ?? menuOf(doc, run, true) ?? roundOf(doc, run) ?? menuOf(doc, run, false);
 }
 /** Where a message's lines went, or null when it asks nothing. */
-function split$2(text) {
+function split$1(text) {
 	const doc = readDoc(text);
 	const labels = doc.lines.filter(isLabel);
 	const asked = lastRun(labels.filter((label) => label.mark.q));
@@ -679,12 +680,12 @@ function split$2(text) {
 	return roundOf(doc, asked, numbered) ?? listOf(doc, numbered) ?? letteredOf(doc) ?? bareOf(doc);
 }
 /** The round or pick list a message ends on, or null when it asks nothing. */
-const parse = (text) => split$2(text)?.form ?? null;
+const parse = (text) => split$1(text)?.form ?? null;
 /** The line each item `parse` finds starts on, so a harness can cut the message up. */
-const startLines = (text) => split$2(text)?.starts ?? [];
+const startLines = (text) => split$1(text)?.starts ?? [];
 /** What the message says after its last item, which no card draws: markdown, "" when none. */
 function tailOf(text) {
-	const found = split$2(text);
+	const found = split$1(text);
 	if (!found) return "";
 	const lines = readDoc(text).lines.slice(found.tail);
 	const from = lines.findIndex((line) => line.kind !== "blank" && line.kind !== "rule");
@@ -868,7 +869,7 @@ function recommendationChoice(text) {
 }
 const recommendationText = (item) => item.recommended || "As recommended";
 /** What the reply says for one answer: a recommendation, option keys, a route, or the text. */
-function said(item, answer) {
+function said$1(item, answer) {
 	if (answer.kind === "text") return answer.text;
 	if (answer.kind === "options") return answer.indices.map((index) => keyAt(item, index)).join(", ");
 	const index = answer.kind === "option" ? answer.index : item.recommendedOption;
@@ -889,10 +890,10 @@ const rowsOf = (form, draft) => form.items.map((item, i) => ({
 }));
 function roundReply(form, draft) {
 	const rows = rowsOf(form, draft);
-	if (!draft.note && rows.every(({ item, answer, note }) => !note && isRecommended(item, answer) && (answer?.kind !== "accept" || said(item, answer) === "yes"))) return ["yes"];
+	if (!draft.note && rows.every(({ item, answer, note }) => !note && isRecommended(item, answer) && (answer?.kind !== "accept" || said$1(item, answer) === "yes"))) return ["yes"];
 	return rows.flatMap(({ item, answer, note }) => {
 		if (answer) {
-			const words = said(item, answer);
+			const words = said$1(item, answer);
 			return noted(item.unlabelled ? words : saying(item.label, words), note);
 		}
 		return note ? noted(`${item.label}: ${NO_ANSWER}`, note) : [];
@@ -907,7 +908,7 @@ function picksReply(form, draft) {
 			if (note) rest.push(...noted(`${label}: ${NO_ANSWER}`, note));
 			continue;
 		}
-		const what = said(item, answer);
+		const what = said$1(item, answer);
 		if (what === "build" && !note) builds.push(label);
 		else if (what === "build") rest.push(...noted(`do ${label}`, note));
 		else if (answer.kind === "text") rest.push(...noted(saying(label, answer.text), note));
@@ -935,9 +936,9 @@ const plain = (text) => text.replace(/`+([^`]*)`+/g, "$1").replaceAll("**", "").
 function shown(item, answer) {
 	if (!answer) return "skipped";
 	if (answer.kind === "text") return `"${answer.text}"`;
-	if (answer.kind === "options") return plain(`${said(item, answer)}: ${answer.indices.map((index) => textAt(item, index)).join("; ")}`);
+	if (answer.kind === "options") return plain(`${said$1(item, answer)}: ${answer.indices.map((index) => textAt(item, index)).join("; ")}`);
 	const index = answer.kind === "option" ? answer.index : item.recommendedOption;
-	return plain(index === void 0 ? said(item, answer) : `${said(item, answer)}: ${textAt(item, index)}`);
+	return plain(index === void 0 ? said$1(item, answer) : `${said$1(item, answer)}: ${textAt(item, index)}`);
 }
 function title(form) {
 	const count = form.items.length;
@@ -965,12 +966,12 @@ function itemView(form, draft) {
 		recommended: item.options.length ? item.recommended ?? "" : "",
 		isSeveral: answer ? answer.kind === "options" : item.recommendedOptions !== void 0,
 		canAccept: canAccept(item),
-		accepts: item.recommendedOption !== void 0 || item.recommendedOptions ? said(item, accepted(item)) : "",
+		accepts: item.recommendedOption !== void 0 || item.recommendedOptions ? said$1(item, accepted(item)) : "",
 		note: draft.notes[draft.step] ?? "",
 		written: answer?.kind === "text" ? answer.text : ""
 	};
 }
-function view(form, draft) {
+function view$5(form, draft) {
 	return {
 		id: formId(form),
 		kind: form.kind,
@@ -1032,53 +1033,172 @@ function step$1(held, action, id) {
 */
 const POSITIONS = "123456789";
 /** The place a key names, counting the rows drawn top down; -1 for anything but a digit. */
-const rowOf = (key) => key.length === 1 ? POSITIONS.indexOf(key) : -1;
+const rowOf$1 = (key) => key.length === 1 ? POSITIONS.indexOf(key) : -1;
 
-// ../../lib/kits/core/src/tokens.ts
-/** The style's numbers and glyphs, shared by every client; one edit here restyles them all. No host imports. */
-const tokens$1 = {
-	/** Width classes: caps in columns, never targets. `wide` is the room less `wideMargin`. */
-	width: {
-		reading: 96,
-		split: 124,
-		dialog: 72,
-		wideMargin: 2
+// ../../lib/kits/core/src/icons.ts
+const g = tokens.glyph;
+/**
+* Every meaning the kit draws. Seeded from what `main`'s designs marked: a tracker's status and
+* priority, a doc suggestion's kind and what it is set to, and the states a notice has.
+*/
+const meanings = {
+	"state:success": {
+		shape: "success",
+		tone: "success",
+		glyph: g.done,
+		role: "success",
+		alt: "Done"
 	},
-	/** Prose is wrapped at this measure even in a wider room. */
-	prose: 80,
-	/** Cells between two things on a row: a label and its text, two buttons, two columns. */
-	gutter: 2,
-	/** From this many columns a list with detail is two panes; below it stacks. */
-	splitFrom: 110,
-	/** The list pane's share of a split's content width. */
-	splitRatio: .55,
-	glyph: {
-		pointer: "❯",
-		single: {
-			off: "○",
-			on: "●"
-		},
-		multi: {
-			off: "□",
-			on: "■"
-		},
-		/** The mark of an answer the person writes themselves, while it is empty. */
-		ellipsis: "…",
-		more: {
-			up: "↑",
-			down: "↓"
-		},
-		rule: "─",
-		done: "✓",
-		times: "×",
-		enter: "↵",
-		bullet: "•",
-		/** The rail down the left of a card in a transcript. */
-		rail: "│",
-		/** The mark of a row set aside: it stays in the list, left out of what is carried out. */
-		dropped: "–"
+	"state:error": {
+		shape: "error",
+		tone: "error",
+		glyph: g.times,
+		role: "error",
+		alt: "Failed"
+	},
+	"state:warning": {
+		shape: "warning",
+		tone: "warning",
+		glyph: g.status.warning,
+		role: "warning",
+		alt: "Needs a look"
+	},
+	"state:pending": {
+		shape: "pending",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "dim",
+		alt: "Pending"
+	},
+	"state:question": {
+		shape: "question",
+		tone: "neutral",
+		glyph: "?",
+		role: "dim",
+		alt: "Waiting for an answer"
+	},
+	"kind:wrong": {
+		shape: "wrong",
+		tone: "error",
+		glyph: "!",
+		role: "error",
+		alt: "Wrong"
+	},
+	"kind:stale": {
+		shape: "stale",
+		tone: "warning",
+		glyph: "↻",
+		role: "warning",
+		alt: "Stale"
+	},
+	"kind:missing": {
+		shape: "missing",
+		tone: "neutral",
+		glyph: "+",
+		role: "text",
+		alt: "Missing"
+	},
+	"decision:open": {
+		shape: "open",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "text",
+		alt: "Not decided"
+	},
+	"decision:apply": {
+		shape: "success",
+		tone: "success",
+		glyph: g.single.on,
+		role: "accent",
+		alt: "Set to apply"
+	},
+	"decision:dismiss": {
+		shape: "dropped",
+		tone: "neutral",
+		glyph: g.dropped,
+		role: "dim",
+		alt: "Set to dismiss"
+	},
+	"choice:open": {
+		shape: "open",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "text",
+		alt: "Not chosen"
+	},
+	"choice:chosen": {
+		shape: "chosen",
+		tone: "accent",
+		glyph: g.single.on,
+		role: "accent",
+		alt: "Chosen"
+	},
+	"priority:none": {
+		shape: "priorityNone",
+		tone: "neutral",
+		glyph: "-",
+		role: "dim",
+		alt: "No priority"
+	},
+	"priority:low": {
+		shape: "priorityLow",
+		tone: "neutral",
+		glyph: "!",
+		role: "dim",
+		alt: "Low priority"
+	},
+	"priority:medium": {
+		shape: "priorityMedium",
+		tone: "neutral",
+		glyph: "!!",
+		role: "dim",
+		alt: "Medium priority"
+	},
+	"priority:high": {
+		shape: "priorityHigh",
+		tone: "neutral",
+		glyph: "!!!",
+		role: "text",
+		alt: "High priority"
+	},
+	"priority:urgent": {
+		shape: "priorityUrgent",
+		tone: "warning",
+		glyph: g.status.warning,
+		role: "warning",
+		alt: "Urgent"
+	},
+	"field:status": {
+		shape: "status",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "dim",
+		alt: "Status"
+	},
+	"field:project": {
+		shape: "project",
+		tone: "neutral",
+		glyph: g.multi.off,
+		role: "dim",
+		alt: "Project"
+	},
+	"field:label": {
+		shape: "label",
+		tone: "neutral",
+		glyph: g.single.on,
+		role: "dim",
+		alt: "Label"
+	},
+	"field:draft": {
+		shape: "draft",
+		tone: "neutral",
+		glyph: "✎",
+		role: "dim",
+		alt: "Draft"
 	}
 };
+/** What a name draws as. */
+const meaningOf = (name) => meanings[name];
 
 // ../../lib/kits/core/src/lines.ts
 const span = (text, style = {}) => ({
@@ -1089,25 +1209,34 @@ const line = (spans, hit) => hit === void 0 ? { spans } : {
 	spans,
 	hit
 };
+/** An empty row. */
+const blank = () => ({ spans: [] });
+/** A host-drawn block in the drawing's flow. */
+const slotLine = (slot) => ({
+	spans: [],
+	slot
+});
+/** A line's characters, without its styles. */
+const textOf = (l) => l.spans.map((s) => s.text).join("");
 /** Cells a code point takes: 0 for marks and joiners, 2 for East Asian wide and emoji. */
-const cellsOf$1 = (c) => {
+const cellsOf = (c) => {
 	if (c < 32 || c >= 127 && c < 160) return 0;
 	if (c < 768) return 1;
 	if (c >= 768 && c <= 879 || c >= 8203 && c <= 8207 || c >= 8400 && c <= 8447 || c >= 65024 && c <= 65039 || c === 65279 || c >= 917760 && c <= 917999) return 0;
 	return c >= 4352 && c <= 4447 || c === 9001 || c === 9002 || c >= 8986 && c <= 8987 || c >= 9193 && c <= 9196 || c === 9200 || c === 9203 || c >= 9725 && c <= 9726 || c >= 9748 && c <= 9749 || c >= 9800 && c <= 9811 || c === 9855 || c === 9875 || c === 9889 || c >= 9898 && c <= 9899 || c >= 9917 && c <= 9918 || c >= 9924 && c <= 9925 || c === 9934 || c === 9940 || c === 9962 || c >= 9970 && c <= 9971 || c === 9973 || c === 9978 || c === 9981 || c === 9989 || c >= 9994 && c <= 9995 || c === 10024 || c === 10060 || c === 10062 || c >= 10067 && c <= 10069 || c === 10071 || c >= 10133 && c <= 10135 || c === 10160 || c === 10175 || c >= 11035 && c <= 11036 || c === 11088 || c === 11093 || c >= 11904 && c <= 12350 || c >= 12353 && c <= 13311 || c >= 13312 && c <= 19903 || c >= 19968 && c <= 42191 || c >= 43360 && c <= 43391 || c >= 44032 && c <= 55203 || c >= 63744 && c <= 64255 || c >= 65040 && c <= 65049 || c >= 65072 && c <= 65135 || c >= 65280 && c <= 65376 || c >= 65504 && c <= 65510 || c >= 127744 && c <= 128591 || c >= 128640 && c <= 128767 || c >= 129280 && c <= 129535 || c >= 129648 && c <= 129791 || c >= 131072 && c <= 262141 ? 2 : 1;
 };
 /** Cells `text` takes: wide characters two, marks and joiners none. Never `.length`. */
-function cellWidth$1(text) {
+function cellWidth(text) {
 	let n = 0;
-	for (const ch of text) n += cellsOf$1(ch.codePointAt(0) ?? 0);
+	for (const ch of text) n += cellsOf(ch.codePointAt(0) ?? 0);
 	return n;
 }
 /** The longest start of `text` that fits `cells`, and the rest. */
-function split$1(text, cells) {
+function split(text, cells) {
 	let used = 0;
 	let at = 0;
 	for (const ch of text) {
-		const w = cellsOf$1(ch.codePointAt(0) ?? 0);
+		const w = cellsOf(ch.codePointAt(0) ?? 0);
 		if (used + w > cells) break;
 		used += w;
 		at += ch.length;
@@ -1122,7 +1251,7 @@ function units(word) {
 	const out = [];
 	let run = "";
 	for (const ch of word) {
-		const w = cellsOf$1(ch.codePointAt(0) ?? 0);
+		const w = cellsOf(ch.codePointAt(0) ?? 0);
 		if (w === 2) {
 			if (run) out.push(run);
 			run = "";
@@ -1137,7 +1266,7 @@ function units(word) {
 * Greedy word wrap in cells: a line ends at a space or between wide characters, a narrow word
 * longer than the width is broken, and a `\n` ends a line.
 */
-function wrap$1(text, width) {
+function wrap(text, width) {
 	const out = [];
 	for (const paragraph of text.replace(/\r\n?/g, "\n").split("\n")) {
 		let line = "";
@@ -1147,7 +1276,7 @@ function wrap$1(text, width) {
 		for (const word of words) {
 			let gap = used > 0 ? 1 : 0;
 			for (let unit of units(word)) {
-				let w = cellWidth$1(unit);
+				let w = cellWidth(unit);
 				if (used > 0 && used + gap + w > width) {
 					out.push(line);
 					line = "";
@@ -1155,10 +1284,10 @@ function wrap$1(text, width) {
 					gap = 0;
 				}
 				while (w > width) {
-					const [head, rest] = split$1(unit, width);
+					const [head, rest] = split(unit, width);
 					out.push(head);
 					unit = rest;
-					w = cellWidth$1(unit);
+					w = cellWidth(unit);
 				}
 				line += (gap ? " " : "") + unit;
 				used += gap + w;
@@ -1172,23 +1301,23 @@ function wrap$1(text, width) {
 /** The glyph a cut text ends in. */
 const ELLIPSIS = "…";
 /** `text` cut to `width` cells with `…` when it is longer. */
-function truncate$1(text, width) {
-	if (cellWidth$1(text) <= width) return text;
-	return split$1(text, Math.max(0, width - 1))[0] + "…";
+function truncate(text, width) {
+	if (cellWidth(text) <= width) return text;
+	return split(text, Math.max(0, width - 1))[0] + "…";
 }
 /**
 * Plain text wrapped to `width` cells and bounded in lines: `{min: 1, max: 1}` truncates to one
 * line; no options wraps without limit.
 */
-function clamp$1(text, width, options = {}) {
+function clamp(text, width, options = {}) {
 	if (width < 1) return [];
 	const { min = 0, max = 1e400 } = options;
 	const cap = Math.max(min, max);
-	let lines = wrap$1(text, width);
+	let lines = wrap(text, width);
 	if (lines.length > cap) {
 		if (cap === 0) return [];
 		const rest = lines.slice(cap - 1).join(" ");
-		lines = [...lines.slice(0, cap - 1), truncate$1(rest, width)];
+		lines = [...lines.slice(0, cap - 1), truncate(rest, width)];
 	}
 	while (lines.length < min) lines.push("");
 	return lines;
@@ -1256,7 +1385,7 @@ function wrapSpans(spans, width) {
 			...from,
 			text
 		});
-		used += cellWidth$1(text);
+		used += cellWidth(text);
 	};
 	const end = () => {
 		const row = lines[lines.length - 1] ?? [];
@@ -1282,9 +1411,9 @@ function wrapSpans(spans, width) {
 				continue;
 			}
 			for (let unit of units(piece)) {
-				if (used > 0 && used + cellWidth$1(unit) > width) end();
-				while (cellWidth$1(unit) > width) {
-					const [head, rest] = split$1(unit, width);
+				if (used > 0 && used + cellWidth(unit) > width) end();
+				while (cellWidth(unit) > width) {
+					const [head, rest] = split(unit, width);
 					put(from, head);
 					end();
 					unit = rest;
@@ -1299,7 +1428,7 @@ function wrapSpans(spans, width) {
 	return lines;
 }
 /** Cells a run of spans takes. */
-const spansWidth = (spans) => spans.reduce((n, s) => n + cellWidth$1(s.text), 0);
+const spansWidth = (spans) => spans.reduce((n, s) => n + cellWidth(s.text), 0);
 /**
 * Spans as lines of `width` cells: wrapped by word after a `lead`, later lines hanging under
 * the first line's text.
@@ -1316,7 +1445,7 @@ function block(spans, width, options = {}) {
 		const tail = cut?.[cut.length - 1];
 		if (cut && tail) {
 			const over = spansWidth(cut) + 1 - room;
-			if (over > 0) tail.text = split$1(tail.text, Math.max(0, cellWidth$1(tail.text) - over))[0];
+			if (over > 0) tail.text = split(tail.text, Math.max(0, cellWidth(tail.text) - over))[0];
 			cut.push({
 				...tail,
 				text: "…"
@@ -1332,12 +1461,12 @@ function truncateSpans(spans, width) {
 	let room = Math.max(0, width - 1);
 	for (const s of spans) {
 		if (room <= 0) break;
-		const [head] = split$1(s.text, room);
+		const [head] = split(s.text, room);
 		if (head) out.push({
 			...s,
 			text: head
 		});
-		room -= cellWidth$1(head);
+		room -= cellWidth(head);
 		if (head.length < s.text.length) break;
 	}
 	const last = out[out.length - 1];
@@ -1347,10 +1476,531 @@ function truncateSpans(spans, width) {
 	});
 	return out;
 }
+/** Cells a panel's rail and its gap take: a row of a panel starts this far in. */
+const PANEL_INSET = cellWidth(tokens.glyph.rail) + tokens.gutter;
+/** Markdown's own characters in words that are only words. */
+const escapeMarkdown = (text) => text.replace(/([\\`*_{}[\]<>()#+!|~-])/g, "\\$1");
+
+// ../../lib/kits/core/src/surfaces.ts
+const fact = (value, note, source) => ({
+	value,
+	note,
+	source
+});
+const unverified = (hint) => ({
+	unverified: true,
+	hint
+});
+const README = "lib/kits/README.md, What still differs between the clients";
+const CLAUDE_MD = "49167447:skills/agent-plugin-dev/references/claude.md, Graphical surfaces (extension 2.1.327)";
+const TYPES = "claude-code types, Elements (apps/*/.claude-types/claude-code/index.d.ts, `pnpm drive types <app>`)";
+/**
+* The table. Surfaces are the rows, capabilities the columns; each column's value type is
+* `CapValues`, which the `satisfies` clause checks, and the literals stay for the types below.
+*/
+const surfaces = {
+	pi: {
+		drawing: "terminal",
+		keyFocus: fact("kit", "the extension owns every key and draws its own pointer", README),
+		hover: fact("kit", "pi reports the pointer; the kit bolds the label", README),
+		hotkeys: fact(true, "the caller owns the binding; the key is drawn dim after the label", "lib/kits/buttons/src/manifest.ts, feature `bind`"),
+		window: fact(true, "the kit draws ↑/↓ more and moves `top`", "lib/kits/list/src/manifest.ts, feature `window`"),
+		framesPane: fact(false, "the kit draws a sheet's edges", "lib/kits/sheet/src/manifest.ts, feature `edges`"),
+		inputRows: fact(1, "pi's field is one row and follows the cursor", README + ", Blocks"),
+		input: fact(true, "pi's own field, in the row an `input` slot keeps", README + ", Blocks"),
+		select: unverified(),
+		progress: unverified(),
+		svg: fact(false, "pi draws cells; there is no vector element", "pi-tui has no image or vector component"),
+		textSize: fact(false, "the terminal has one size", TYPES + ", TextProps.size"),
+		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
+		labelWraps: unverified(),
+		transcriptKeyScroll: unverified(),
+		images: fact(false, "pi-tui has no image component", "pi-tui exports (no Image)"),
+		cells: fact(true, "the kit lays out every line in cells: a row is cut to its room, and there is no toolbar line or element for a host to draw", README)
+	},
+	"claude-terminal": {
+		drawing: "terminal",
+		keyFocus: fact("ring", "a parked ring plus a `ui.focus` hook put the kit's pointer on the row", README),
+		hover: fact("painter", "the engine inverts a Button under the pointer; the painter swaps the row's colours first", README),
+		hotkeys: fact(true, "a Button's `hotkey` presses it while the plugin's site holds the focus", TYPES + ", ButtonProps.hotkey"),
+		window: fact(true, "the wheel reaches the mod as `ui.scroll`; the kit moves `top`", "lib/kits/list/src/manifest.ts, feature `window`"),
+		framesPane: fact(true, "a pane or box has the engine's frame and Close; a mod draws `sheetHead` and the body", README + ", A panel over the screen"),
+		inputRows: fact("many", "the engine's field wraps, and stands alone on its rows", README + ", Blocks"),
+		input: fact(true, "the engine's `Input`", TYPES + ", Elements.terminal"),
+		select: fact(true, "the engine's `Select`", TYPES + ", Elements.terminal"),
+		progress: fact(true, "the engine's `Progress`", TYPES + ", Elements.terminal"),
+		svg: fact(false, "the terminal's table has no `Svg`", TYPES + ", Elements.terminal"),
+		textSize: fact(false, "the terminal has one size and ignores `size`", TYPES + ", TextProps.size"),
+		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
+		labelWraps: unverified(),
+		transcriptKeyScroll: unverified(),
+		images: fact(true, "the terminal's table has an `Image`", TYPES + ", Elements.terminal"),
+		cells: fact(true, "the kit lays out every line in cells: a row is cut to its room, and there is no toolbar line or element for a host to draw", README)
+	},
+	vscode: {
+		drawing: "gui",
+		keyFocus: fact("host", "the host draws a Button's focus itself", "lib/kits/band/src/manifest.ts, feature `focus`"),
+		hover: fact("host", "the host draws a Button's hover state itself", "lib/kits/buttons/src/manifest.ts, feature `hover`"),
+		hotkeys: fact(false, "the webview does not act on a Button's `hotkey` (checked live)", "lib/kits/buttons/src/manifest.ts, feature `bind`; VS Code extension 2.1.327"),
+		window: fact(false, "the surface scrolls the pane, so there is no window for the kit to move", "lib/kits/list/src/manifest.ts, feature `window`"),
+		framesPane: fact(true, "the host frames the pane and owns its Close", "lib/kits/sheet/src/manifest.ts, feature `edges`"),
+		inputRows: fact(1, "an `Input` is one line", CLAUDE_MD),
+		input: fact(true, "the extension's table has an `Input`", TYPES + ", Elements.vscode"),
+		select: fact(true, "the extension's table has a `Select`", TYPES + ", Elements.vscode"),
+		progress: fact(true, "the extension's table has a `Progress`", TYPES + ", Elements.vscode"),
+		svg: fact(true, "drawn as an image, so it cannot take theme colours: check a light theme", TYPES + ", SvgProps (the editor draws an image)"),
+		textSize: fact(false, "the webview draws a Text's colour, dimColor, bold, italic and underline, and no `size`: every Text is the body's size. A Markdown heading has real sizes", "extension 2.1.330 webview/index.js, the Text style function (read; probed live: every role drew 13px)"),
+		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
+		labelWraps: fact(false, "a Button's label never wraps; a long one overflows a narrow pane", CLAUDE_MD),
+		transcriptKeyScroll: fact(false, "scrolling to a key inside a mod's AssistantMessage is denied or does nothing", CLAUDE_MD),
+		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.vscode (`Image` is the terminal's alone)"),
+		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
+	},
+	desktop: {
+		drawing: "gui",
+		keyFocus: unverified(),
+		hover: unverified(),
+		hotkeys: unverified(),
+		window: unverified(),
+		framesPane: unverified(),
+		inputRows: unverified(),
+		input: fact(true, "the extension's table has an `Input`, as VS Code's does; never driven", TYPES + ", Elements.desktop"),
+		select: fact(true, "the extension's table has a `Select`, as VS Code's does; never driven", TYPES + ", Elements.desktop"),
+		progress: unverified("the table has a `Progress`"),
+		svg: fact(true, "drawn as an image, or in a sandboxed frame when `isInteractive`", TYPES + ", SvgProps; never driven"),
+		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
+		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
+		labelWraps: unverified(),
+		transcriptKeyScroll: fact(true, "the engine supports targeting element keys; Answer already relies on it for Desktop review, not verified live", TYPES + ", ui.scroll; apps/answer/src/claude.tsx, roundActions"),
+		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.desktop (`Image` is the terminal's alone)"),
+		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
+	},
+	mobile: {
+		drawing: "gui",
+		keyFocus: unverified(),
+		hover: unverified(),
+		hotkeys: unverified(),
+		window: unverified(),
+		framesPane: unverified(),
+		inputRows: unverified(),
+		input: fact(false, "an app is sent an `Input` only if it named it in `draws` on its `ui_attach`; the kit's apps name none", TYPES + ", Elements.mobile"),
+		select: fact(false, "an app is sent a `Select` only if it named it in `draws` on its `ui_attach`; the kit's apps name none", TYPES + ", Elements.mobile"),
+		progress: fact(false, "an app is sent a `Progress` only if it named it in `draws`; its Box and Text otherwise", TYPES + ", Elements.mobile"),
+		svg: fact(true, "drawn in a web view", TYPES + ", SvgProps"),
+		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
+		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
+		labelWraps: unverified(),
+		transcriptKeyScroll: unverified(),
+		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.mobile (`Image` is the terminal's alone)"),
+		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
+	}
+};
+/** What the table says of one capability on one surface: `undefined` when unverified. */
+const factOf = (surface, cap) => {
+	const f = surfaces[surface][cap];
+	return "unverified" in f ? void 0 : f;
+};
+/** `undefined` when `surface` has the need, otherwise why not. */
+function lackOf(surface, need) {
+	const [cap, values] = need.split(":", 2);
+	const f = factOf(surface, cap);
+	if (!f) {
+		const hint = surfaces[surface][cap].hint;
+		return {
+			cap,
+			note: `${cap} has not been checked on ${surface}${hint ? ` (${hint})` : ""}`
+		};
+	}
+	return (values === void 0 ? !(f.value === false || f.value === 0 || f.value === "") : values.split("|").includes(String(f.value))) ? void 0 : {
+		cap,
+		note: f.note
+	};
+}
+/** Whether `surface` has the need. */
+const holds = (surface, need) => lackOf(surface, need) === void 0;
+/** Every fact a surface has, by name, for `ctx.caps`. */
+function capsOf(surface) {
+	const out = {};
+	for (const cap of Object.keys(surfaces[surface])) {
+		if (cap === "drawing") continue;
+		const f = factOf(surface, cap);
+		if (f) out[cap] = f.value;
+	}
+	return out;
+}
+const nothing = () => void 0;
+/** A context for `surface`; events left out do nothing. */
+const ctxOf = (surface, events = {}) => ({
+	surface,
+	caps: capsOf(surface),
+	press: events.press ?? nothing,
+	input: events.input ?? nothing,
+	submit: events.submit ?? nothing
+});
+/**
+* Whether the context's surface has the capability, narrowing it to the surfaces that do.
+* A drawing asks this, never which surface it is.
+*/
+function can(ctx, need) {
+	return holds(ctx.surface, need);
+}
+
+// ../../lib/kits/core/src/paint/gui.tsx
+/** The props of a `Text` in a role of the style. `code` is a chip; `link` is underlined. */
+const roleProps = (role) => {
+	switch (role) {
+		case void 0:
+		case "text": return {};
+		case "dim":
+		case "border": return { dimColor: true };
+		case "accent": return { color: "claude" };
+		case "warning": return { color: tokens.gui.tone.warning };
+		case "success":
+		case "error": return { color: role };
+		case "code": return {
+			backgroundColor: tokens.gui.chip,
+			mono: true
+		};
+		case "link": return { underline: true };
+	}
+};
+/**
+* The `Text` props of a type role: its size and weight from the host's scale, and dim for a role
+* that is. A drawing takes a role and never a size.
+* @param o `tabular` sets digits of one width, for a count or a time that changes or lines up.
+* `isSized: false` leaves the size out, for a host that draws none: its `section` is then dim,
+* since it cannot be smaller. `isToned: false` leaves the role's tone to the spans inside.
+*/
+const typeProps = (role, o = {}) => {
+	const r = tokens.type[role];
+	const isSized = o.isSized !== false;
+	const isDim = o.isToned !== false && (r.role === "dim" || !isSized && role === "section");
+	return {
+		...isSized ? { size: r.size } : {},
+		weight: r.weight,
+		...isDim ? { dimColor: true } : {},
+		...o.tabular ? { tabular: true } : {}
+	};
+};
+/**
+* The Markdown heading level a role takes where the host draws no `Text` sizes. The webview
+* leaves about an em under a heading, which a `Box` cannot take back (it reads no negative
+* margin), so a heading sits a little further from what it heads than a `Text` would.
+*/
+const HEADING = {
+	title: "##",
+	heading: "###"
+};
+/**
+* Words in a type role: a `Text` that sets its size, weight and tone from `tokens.type`. Where
+* the host draws no `Text` size (`textSize`: VS Code's webview reads none), a `title` or a
+* `heading` of plain words is the host's own Markdown heading, which has real sizes; every other
+* role is told apart by weight and tone. `wrap: "truncate-end"` cuts the words at the edge with
+* `…` instead of wrapping them.
+*/
+function typed$1(g, role, children, o = {}) {
+	const { Box, Markdown, Text } = g.els;
+	const isSized = can(g, "textSize");
+	if (!isSized && (role === "title" || role === "heading") && typeof children === "string") return /* @__PURE__ */ h(Box, { key: o.key }, /* @__PURE__ */ h(Markdown, { text: `${HEADING[role]} ${escapeMarkdown(children)}` }));
+	return /* @__PURE__ */ h(Text, {
+		key: o.key,
+		wrap: o.wrap,
+		...typeProps(role, {
+			...o,
+			isSized
+		})
+	}, children);
+}
+/**
+* What opens in place, set apart as one object: a filled well, set in by `tokens.gui.panel`, so
+* its words stay a step inside the fill and a control in it stays on it. A terminal draws the
+* same object as a rail (`panelLines`).
+* Use it for an editor, a note, a warning with its own actions and an opened row: whatever the
+* person opens or is asked about, not for a group of rows that is always there.
+* @param o `key` addresses it. `gap` is the step between its parts. @default "sm"
+*/
+function panel(g, o, ...parts) {
+	const { Box } = g.els;
+	return /* @__PURE__ */ h(Box, {
+		key: o.key,
+		flexDirection: "column",
+		rowGap: tokens.gui.space[o.gap ?? "sm"],
+		paddingX: tokens.gui.panel.x,
+		paddingY: tokens.gui.panel.y,
+		backgroundColor: tokens.gui.fill,
+		borderStyle: "round",
+		borderColor: "#00000000"
+	}, parts.filter(Boolean));
+}
+/**
+* One row of a list or a form: its line and `tokens.gui.row.pad` above and below, whether or not a Button is in it, its
+* parts on one centre line a step apart. A column of these keeps one beat.
+* @param o `align: "start"` sets the parts on the first line instead of the centre, for a row whose
+* text may wrap: its icon stays beside the first line.
+*/
+function rowOf(g, o, ...parts) {
+	const { Box } = g.els;
+	return /* @__PURE__ */ h(Box, {
+		key: o.key,
+		flexDirection: "row",
+		flexWrap: "nowrap",
+		alignItems: o.align === "start" ? "flex-start" : "center",
+		justifyContent: o.justify,
+		paddingY: tokens.gui.row.pad,
+		columnGap: tokens.gui.across.sm
+	}, parts.filter(Boolean));
+}
+/** Rows under each other, `tokens.gui.row.gap` apart: the column a list's `rowOf`s stand in. */
+function rows(g, o, ...parts) {
+	const { Box } = g.els;
+	return /* @__PURE__ */ h(Box, {
+		key: o.key,
+		flexDirection: "column",
+		rowGap: tokens.gui.row.gap
+	}, parts.filter(Boolean));
+}
+/**
+* A column that has an address: what the host scrolls to or finds by `key`. Parts that are
+* `null` are left out.
+* @param o `gap` is the step between the parts. @default "sm". `isMeasured` sets it as wide as a
+* line of prose (`tokens.prose`), shrinking in a narrower room: for the block a host sets in a
+* message, which it sizes by its content, so text that wraps would otherwise be a few cells wide.
+*/
+function column(g, o, ...parts) {
+	const { Box } = g.els;
+	const body = /* @__PURE__ */ h(Box, {
+		key: o.isMeasured ? void 0 : o.key,
+		flexDirection: "column",
+		width: o.isMeasured ? tokens.prose : void 0,
+		flexShrink: o.isMeasured ? 1 : void 0,
+		minWidth: o.isMeasured ? 0 : void 0,
+		rowGap: tokens.gui.space[o.gap ?? "sm"],
+		paddingX: o.isInset ? tokens.gui.across.inset : void 0
+	}, parts.filter(Boolean));
+	return o.isMeasured ? /* @__PURE__ */ h(Box, {
+		key: o.key,
+		flexDirection: "row",
+		minWidth: 0
+	}, body) : body;
+}
+/** `word` with its first letter in capitals: a graphical button's label, which has no key beside it. */
+const capital$2 = (text) => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+/**
+* Styled spans as one `Text`: a nested run per span, in its role and face. A span's `hit` is not
+* a control here: a graphical control is a `Button`, which a component draws itself.
+* @param spans A caption or a line of a contract, as `terminal.ts` takes it.
+* @param options `type` sets the line in a type role; `wrap: "truncate-end"` cuts it at the
+* edge with `…` instead of wrapping.
+*/
+function spans(g, list, options = {}) {
+	const { Text } = g.els;
+	return /* @__PURE__ */ h(Text, {
+		wrap: options.wrap,
+		...options.type ? typeProps(options.type, {
+			...options,
+			isSized: can(g, "textSize"),
+			isToned: false
+		}) : {}
+	}, list.map((s, i) => /* @__PURE__ */ h(Text, {
+		key: `s${i}`,
+		...roleProps(s.role),
+		weight: s.bold ? "bold" : void 0,
+		italic: s.italic || void 0,
+		underline: s.underline || void 0,
+		inverse: s.inverse || void 0
+	}, s.text)));
+}
+/** The kit's icons: small stroked drawings on a 16-pixel grid. */
+const ICONS = {
+	wrong: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M8 4.7v4\"/><path d=\"M8 11.3v.01\"/>",
+	stale: "<path d=\"M13.2 8.2A5.2 5.2 0 1 1 11.7 4.4\"/><path d=\"M13.4 2.4v3.2h-3.2\"/>",
+	missing: "<path d=\"M8 3.2v9.6M3.2 8h9.6\"/>",
+	warning: "<path d=\"M8 2.6 14.2 13.2H1.8L8 2.6Z\"/><path d=\"M8 6.8v2.9\"/><path d=\"M8 11.7v.01\"/>",
+	success: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M5.2 8.2l2 2 3.6-4\"/>",
+	error: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M5.9 5.9l4.2 4.2M10.1 5.9l-4.2 4.2\"/>",
+	pending: "<circle cx=\"8\" cy=\"8\" r=\"6.2\" stroke-dasharray=\"2.4 2.4\"/>",
+	open: "<circle cx=\"8\" cy=\"8\" r=\"5.4\"/>",
+	chosen: "<circle cx=\"8\" cy=\"8\" r=\"5.4\"/><circle cx=\"8\" cy=\"8\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
+	dropped: "<circle cx=\"8\" cy=\"8\" r=\"5.4\"/><path d=\"M5.6 8h4.8\"/>",
+	note: "<path d=\"M2.6 3.4h10.8v7.2H7.4l-3 2.4v-2.4H2.6Z\"/><path d=\"M5.2 6h5.6M5.2 8h3.6\"/>",
+	question: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M6.3 6.3a1.8 1.8 0 1 1 2.5 1.7c-.5.2-.8.6-.8 1.1v.4\"/><path d=\"M8 11.4v.01\"/>",
+	write: "<path d=\"M10.6 2.9l2.5 2.5-7.6 7.6-3.1.6.6-3.1 7.6-7.6Z\"/><path d=\"M9.2 4.3l2.5 2.5\"/>",
+	status: "<circle cx=\"8\" cy=\"8\" r=\"5.6\"/><circle cx=\"8\" cy=\"8\" r=\"1.6\" fill=\"currentColor\"/>",
+	priorityNone: "<path d=\"M3.2 8h1.4M7.3 8h1.4M11.4 8h1.4\"/>",
+	priorityLow: "<path d=\"M4 13v-2.6\"/><path d=\"M8 13V7.4\" stroke-opacity=\".4\"/><path d=\"M12 13V4.4\" stroke-opacity=\".4\"/>",
+	priorityMedium: "<path d=\"M4 13v-2.6M8 13V7.4\"/><path d=\"M12 13V4.4\" stroke-opacity=\".4\"/>",
+	priorityHigh: "<path d=\"M4 13v-2.6M8 13V7.4M12 13V4.4\"/>",
+	priorityUrgent: "<rect x=\"2.6\" y=\"2.6\" width=\"10.8\" height=\"10.8\" rx=\"2.6\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M8 5.2v3.4M8 10.8v.01\" stroke=\"#ffffff\"/>",
+	project: "<path d=\"M8 2.4 13.2 5.2v5.6L8 13.6 2.8 10.8V5.2Z\"/><path d=\"M2.8 5.2 8 8l5.2-2.8M8 8v5.6\"/>",
+	label: "<circle cx=\"8\" cy=\"8\" r=\"3.4\" fill=\"currentColor\" stroke=\"none\"/>",
+	draft: "<path d=\"M10.6 2.8 13.2 5.4 5.7 12.9 2.6 13.4 3.1 10.3Z\"/><path d=\"M9.2 4.2l2.6 2.6\"/>"
+};
+/**
+* The markup of an icon, a whole `<svg>` document.
+* @param tone The state it marks; grey when none.
+* @param size Its side in CSS pixels.
+*/
+const iconSvg = (name, tone = "neutral", size = tokens.gui.icon) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 16 16" fill="none" color="${tokens.gui.tone[tone]}" stroke="${tokens.gui.tone[tone]}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
+/**
+* An icon: an image, grey or in the colour of the state it marks.
+* @param alt What it says, for a reader that cannot see it. @default the icon's name
+*/
+function icon(g, name, options = {}) {
+	const { Svg } = g.els;
+	const { tone = "neutral", alt = name, size = tokens.gui.icon } = options;
+	return /* @__PURE__ */ h(Svg, {
+		source: iconSvg(name, tone, size),
+		alt,
+		width: size,
+		height: size
+	});
+}
+/**
+* An icon that carries a meaning (`priority:high`, `kind:stale`, `decision:apply`,
+* `state:error`): the kit's drawing for it, in its role's colour. A terminal draws the same
+* name as a glyph (`meaningSpan`).
+* @param o `size` in CSS pixels; `alt` replaces what it says.
+*/
+function meaning(g, name, o = {}) {
+	const m = meaningOf(name);
+	return icon(g, m.shape, {
+		tone: m.tone,
+		alt: o.alt ?? m.alt,
+		size: o.size
+	});
+}
+
+// ../../lib/kits/buttons/src/model.ts
+/**
+* The button row's view model: what is lit, what goes quiet and what is drawn on a surface.
+* Pure and plain: the drawings read it, and so does the snapshot that holds it across surfaces.
+* No host imports.
+*/
+/** How a button's key is printed after its label: `↵` for Enter, else in brackets; nothing for none. */
+const shortcutOf = (b) => b.hit === void 0 || !b.hotkey ? b.hotkey : b.hotkey === "enter" ? tokens.glyph.enter : `[${b.hotkey}]`;
+/** `word` with its first letter in capitals: a graphical button's label, which has no key beside it. */
+const capital$1 = (text) => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+/**
+* The buttons as a screen shows them. One button of a screen is lit, the first that asks, so a
+* screen never has two suggested actions; while Close asks, none is lit and every control is
+* quiet, whatever the caller said.
+*/
+function settle(rows, confirming = false) {
+	let isLitOne = false;
+	return rows.map((row) => row.map((b) => {
+		if (confirming) return {
+			...b,
+			isLit: false,
+			isQuiet: b.hit === void 0 ? void 0 : true
+		};
+		if (!b.isLit) return b;
+		if (isLitOne) return {
+			...b,
+			isLit: false
+		};
+		isLitOne = true;
+		return b;
+	}));
+}
+/** What `settle`d buttons are drawn as on `surface`. */
+function view$4(model, surface) {
+	const hasKeys = holds(surface, "hotkeys");
+	const isGui = surfaces[surface].drawing === "gui";
+	const rows = settle(model.rows, model.confirming).flatMap((row) => {
+		const drawn = row.flatMap((b) => {
+			if (b.hit === void 0) return hasKeys ? [{
+				label: b.label,
+				key: b.hotkey,
+				tone: "hint"
+			}] : [];
+			const key = hasKeys ? shortcutOf(b) : "";
+			return [{
+				label: isGui && !b.isLiteral ? capital$1(b.label) : b.label,
+				hit: b.hit,
+				...key ? { key } : {},
+				tone: b.isLit ? "lit" : b.isChosen && isGui && !model.confirming ? "chosen" : b.isQuiet ? "quiet" : isGui ? "quiet" : "plain"
+			}];
+		});
+		return drawn.length ? [drawn] : [];
+	});
+	return {
+		lead: textOf({ spans: [...model.lead ?? []] }),
+		rows
+	};
+}
+
+// ../../lib/kits/buttons/src/gui.tsx
+/** Before the label of the chosen button. */
+const CHECK = "✓";
+/**
+* The buttons of a screen's footer: a row each, every row starting at the same edge, a Button
+* per action. The view model decides what is lit (one only), what is quiet while Close asks, and
+* that a keyboard-only hint is not drawn: a surface with a pointer has no use for a key and no
+* place to show one. VS Code paints a Button by its `dimColor` alone, so the suggested one is
+* `primary` and the rest are dimmed. The host wraps a row, so nothing drops.
+* @param props `rows` are the actions; a label is capitalised unless it is `isLiteral`. `lead`
+* is drawn as a caption before the first Button of the first row.
+* @returns `null` when there is nothing to draw.
+*/
+function buttonRow(g, props) {
+	const { Box, Button } = g.els;
+	const drawn = view$4(props, g.surface);
+	const lead = props.lead?.length ? spans(g, props.lead, { type: "caption" }) : null;
+	if (drawn.rows.length === 0 && !lead) return null;
+	const all = drawn.rows.length ? drawn.rows : [[]];
+	return rows(g, {}, ...all.map((row, r) => /* @__PURE__ */ h(Box, {
+		key: `r${r}`,
+		flexDirection: "row",
+		flexWrap: "wrap",
+		alignItems: "center",
+		columnGap: tokens.gui.across.xs,
+		rowGap: tokens.gui.space.xs,
+		paddingX: props.isFlush ? void 0 : tokens.gui.across.inset
+	}, r === 0 ? lead : null, row.map((b) => /* @__PURE__ */ h(Button, {
+		key: b.hit,
+		variant: b.tone === "lit" ? "primary" : void 0,
+		dimColor: b.tone !== "lit" || void 0,
+		label: b.tone === "chosen" ? `${CHECK} ${b.label}` : b.label,
+		onPress: () => g.press(b.hit)
+	})))));
+}
+
+// ../../lib/kits/core/src/manifest.ts
+/** A contract's model fields, checked against the model type: a field left out is an error. */
+const modelFields = () => (keys) => keys;
+
+// ../../lib/kits/card/src/contract.ts
+/**
+* The question card's contract: its model, what each drawing is given, and the intents a list of
+* choices sends back. No host imports.
+*/
+/** The hit of the `line`th field of a write-in or a note that is one field per line. */
+const lineHit = (hit, line) => line ? `${hit}#${line}` : hit;
+/** A field's hit and its line, from what `g.input` or `g.submit` was given. */
+function lineOf(hit) {
+	const at = hit.lastIndexOf("#");
+	const line = at < 0 ? NaN : Number(hit.slice(at + 1));
+	return Number.isInteger(line) ? {
+		hit: hit.slice(0, at),
+		line
+	} : {
+		hit,
+		line: 0
+	};
+}
+const cardFields = modelFields()([
+	"heading",
+	"choices",
+	"note",
+	"steps",
+	"summaries",
+	"closing",
+	"width"
+]);
 
 // ../../lib/kits/card/src/terminal.ts
 /** The question card's parts as styled lines: the one drawing both terminals paint. */
-const GAP = " ".repeat(tokens$1.gutter);
+const GAP = " ".repeat(tokens.gutter);
 /**
 * One style for every label a person can act on. The keyboard's or the pointer's target is
 * bold in the text colour; only what is chosen takes the accent, and is underlined when it is
@@ -1374,9 +2024,9 @@ const keyRole = (state) => state.active ? "accent" : "dim";
 * The column every row of a card keeps for the focus pointer, as blank cells: what a host sets
 * before a row of its own, such as an input, to line it up with the card's.
 */
-const CARD_INSET = " ".repeat(cellWidth$1(tokens$1.glyph.pointer) + 1);
+const CARD_INSET = " ".repeat(cellWidth(tokens.glyph.pointer) + 1);
 /** The pointer column of one row: the pointer where the keyboard is, else blank. */
-const pointerLead = (isFocused = false) => isFocused ? [span(tokens$1.glyph.pointer, {
+const pointerLead = (isFocused = false) => isFocused ? [span(tokens.glyph.pointer, {
 	role: "text",
 	bold: true
 }), span(" ")] : [span(CARD_INSET)];
@@ -1384,7 +2034,7 @@ const pointerLead = (isFocused = false) => isFocused ? [span(tokens$1.glyph.poin
 * The question: the pointer column, its label, then the title hanging from it. That it is
 * answered is the rail's to say.
 */
-function heading(h, width) {
+function heading$1(h, width) {
 	return block(inline(h.title, {
 		role: "text",
 		bold: true
@@ -1396,7 +2046,7 @@ function heading(h, width) {
 */
 function choice$1(c, width) {
 	const { chosen = false, literal: isLiteral = false, focused = false, hovered = false } = c;
-	const marks = c.multiple ? tokens$1.glyph.multi : tokens$1.glyph.single;
+	const marks = c.multiple ? tokens.glyph.multi : tokens.glyph.single;
 	const isLit = chosen || focused || hovered;
 	const label = controlStyle({
 		primary: chosen,
@@ -1435,9 +2085,9 @@ function note$1(n, width) {
 		highlighted: isLit,
 		rest: "dim"
 	});
-	const room = width - cellWidth$1(CARD_INSET) - cellWidth$1(NOTE_LABEL);
+	const room = width - cellWidth(CARD_INSET) - cellWidth(NOTE_LABEL);
 	const words = isLit ? style : { role: n.value ? "text" : "dim" };
-	return clamp$1(n.value || "Add a note", room, { max: n.max }).map((text, i) => line([...i ? [span(CARD_INSET + " ".repeat(cellWidth$1(NOTE_LABEL)))] : [...pointerLead(n.focused), span(NOTE_LABEL, isLit ? style : { role: "dim" })], span(text, words)], n.hit));
+	return clamp(n.value || "Add a note", room, { max: n.max }).map((text, i) => line([...i ? [span(CARD_INSET + " ".repeat(cellWidth(NOTE_LABEL)))] : [...pointerLead(n.focused), span(NOTE_LABEL, isLit ? style : { role: "dim" })], span(text, words)], n.hit));
 }
 const FILL_LABEL = "Fill prompt";
 /**
@@ -1446,7 +2096,7 @@ const FILL_LABEL = "Fill prompt";
 * step) is not printed. Fill takes the accent only when there is a reply to fill; once the round
 * is sent the row says so instead. With no room beside the count, Fill goes under it.
 */
-function closing(c, width) {
+function closing$1(c, width) {
 	const { hits } = c;
 	const count = span(`${c.answered} of ${c.total} answered`, {
 		...controlStyle({ highlighted: c.focused || c.hovered === "count" }),
@@ -1455,7 +2105,7 @@ function closing(c, width) {
 	const head = [
 		...pointerLead(c.focused),
 		count,
-		...c.sent ? [span(` ${tokens$1.glyph.done} Sent`, { role: "success" })] : []
+		...c.sent ? [span(` ${tokens.glyph.done} Sent`, { role: "success" })] : []
 	];
 	if (!hits || c.sent) return [line(truncateSpans(head, width))];
 	const fill = span(FILL_LABEL, {
@@ -1465,12 +2115,342 @@ function closing(c, width) {
 		}),
 		hit: hits.fill
 	});
-	if (spansWidth(head) + tokens$1.gutter + cellWidth$1("Fill prompt") <= width) return [line([
+	if (spansWidth(head) + tokens.gutter + cellWidth(FILL_LABEL) <= width) return [line([
 		...head,
 		span(GAP),
 		fill
 	])];
 	return [line(truncateSpans(head, width)), line(truncateSpans([span(CARD_INSET), fill], width))];
+}
+
+// ../../lib/kits/card/src/gui.tsx
+/**
+* The question card on the graphical surfaces. A question's answers stand as rows, each a
+* row of a mark (an icon: open or chosen), the key's Button and its words; the letter is a Button
+* because a Box has no press handler, and a Button's label never wraps. The note is a panel with
+* a full-width field; the steps are tabs, the current one a label; each answer in review is a
+* label in a label column. A card draws no pointer or hover of its own: the host draws those.
+* Rows keep the kit's beat (`rowOf`, `rows`).
+*/
+const { space, across, lead } = tokens.gui;
+/** The column that leads a row of answers: the mark's icon and the key's Button. */
+const LEAD = lead + 2.2;
+const INVITATION = "Write your own answer";
+/** A Button that presses its `hit`, quiet: the surface fills any other, and one button of a screen is lit. */
+function control(g, o) {
+	const { Button } = g.els;
+	return /* @__PURE__ */ h(Button, {
+		key: o.key,
+		dimColor: true,
+		label: o.label,
+		onPress: () => o.hit ? g.press(o.hit) : void 0
+	});
+}
+/**
+* A field for the host's `Input`, the width of its room: one, or with `lines` (and a host whose
+* field is one line) one per line of its text, the later ones at `lineHit(hit, i)`.
+*/
+function field(g, o, fp) {
+	const { Box, Input } = g.els;
+	const first = fp.autoFocus || void 0;
+	if (!fp.lines || !can(g, "inputRows:1")) return /* @__PURE__ */ h(Input, {
+		key: o.key,
+		value: o.value,
+		placeholder: o.placeholder,
+		autoFocus: first,
+		rows: o.rows ?? (fp.rows && fp.rows > 1 ? fp.rows : void 0),
+		onInput: (text) => g.input(o.hit, text),
+		onSubmit: (text) => g.submit(o.hit, text)
+	});
+	const parts = o.value.split("\n");
+	const count = Math.max(fp.lines, parts.length);
+	return /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		rowGap: space.sm
+	}, Array.from({ length: count }, (_, i) => /* @__PURE__ */ h(Input, {
+		key: i ? `${o.key}:${i}` : o.key,
+		autoFocus: !i && first || void 0,
+		value: parts[i] ?? "",
+		placeholder: i ? `Line ${i + 1}` : o.placeholder,
+		onInput: (text) => g.input(lineHit(o.hit, i), text),
+		onSubmit: (text) => g.submit(lineHit(o.hit, i), text)
+	})));
+}
+/** The question: its label dim in the lead column, then its title as the heading. */
+function heading(g, question) {
+	const { Box, Markdown } = g.els;
+	return /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		columnGap: across.sm,
+		paddingX: across.inset,
+		alignItems: "flex-start"
+	}, question.label ? /* @__PURE__ */ h(Box, {
+		flexShrink: 0,
+		minWidth: LEAD
+	}, typed$1(g, "caption", question.label)) : null, /* @__PURE__ */ h(Box, {
+		width: 0,
+		flexGrow: 1,
+		flexShrink: 1
+	}, /* @__PURE__ */ h(Markdown, { text: `### ${question.title}` })), question.answered ? /* @__PURE__ */ h(Box, { flexShrink: 0 }, meaning(g, "state:success", { alt: "Answered" })) : null);
+}
+/**
+* One answer: the mark (an icon, filled where chosen), the letter on a quiet Button and its
+* words beside them, the dim aside after them on their line and the detail under them. A
+* write-in is the host's `Input` in place of the words. With no key the mark stands alone.
+*/
+function choice(g, c) {
+	const { Box, Text, Markdown } = g.els;
+	const invitation = c.invitation ?? INVITATION;
+	const mark = meaning(g, c.chosen ? "choice:chosen" : "choice:open", { alt: c.chosen ? "Chosen" : "Not chosen" });
+	const letter = c.key ? control(g, {
+		key: `key:${c.hit ?? c.key}`,
+		label: capital$2(c.key),
+		hit: c.hit
+	}) : null;
+	const body = c.literal && can(g, "input") ? field(g, {
+		key: `write:${c.hit ?? c.key}`,
+		value: c.text === invitation ? "" : c.text,
+		placeholder: invitation,
+		hit: c.hit ?? ""
+	}, c) : c.literal ? /* @__PURE__ */ h(Text, null, c.text) : c.aside ? /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		columnGap: across.sm,
+		alignItems: "flex-start"
+	}, /* @__PURE__ */ h(Box, { flexShrink: 1 }, /* @__PURE__ */ h(Markdown, { text: c.text })), /* @__PURE__ */ h(Text, { dimColor: true }, c.aside)) : /* @__PURE__ */ h(Markdown, { text: c.text });
+	return /* @__PURE__ */ h(Box, {
+		key: `choice:${c.hit ?? c.key}`,
+		flexDirection: "row",
+		alignItems: "flex-start",
+		columnGap: across.sm,
+		paddingY: tokens.gui.row.pad
+	}, /* @__PURE__ */ h(Box, {
+		key: "lead",
+		flexDirection: "row",
+		alignItems: "center",
+		columnGap: across.xs,
+		flexShrink: 0,
+		minWidth: LEAD
+	}, mark, letter), /* @__PURE__ */ h(Box, {
+		key: "body",
+		flexDirection: "column",
+		width: 0,
+		flexGrow: 1,
+		flexShrink: 1,
+		rowGap: space.xs
+	}, body, c.aside && c.literal ? /* @__PURE__ */ h(Text, { dimColor: true }, c.aside) : null, c.detail ? /* @__PURE__ */ h(Markdown, {
+		text: c.detail,
+		dimColor: true
+	}) : null));
+}
+/**
+* The answers of one question as rows that keep one beat. They are tied together by their
+* marks and the one left edge, not by a rail or an outline: the host draws no left border, and a
+* visible round border is not allowed (`expectNative`), nor a fill for rows that are always there.
+*/
+function choices(g, all) {
+	const { Box } = g.els;
+	return /* @__PURE__ */ h(Box, {
+		key: "choices",
+		flexDirection: "column",
+		paddingX: across.inset
+	}, rows(g, {}, ...all.map((c) => choice(g, c))));
+}
+/**
+* The card's note, in a panel: a caption and a field the panel's whole width, under the answers.
+* On a surface with no field the note is its words.
+*/
+function note(g, n) {
+	const { Box } = g.els;
+	const hit = n.hit ?? "note";
+	const body = can(g, "input") ? field(g, {
+		key: `note:${hit}`,
+		value: n.value,
+		placeholder: n.invitation ?? "Add a note",
+		rows: n.max && n.max > 1 ? n.max : void 0,
+		hit
+	}, n) : typed$1(g, "body", n.value);
+	return /* @__PURE__ */ h(Box, {
+		key: `panel:${hit}`,
+		flexDirection: "column",
+		paddingX: across.inset
+	}, panel(g, {}, typed$1(g, "caption", "Note"), body));
+}
+/**
+* The steps of several questions as tabs: a done one marked with a tick, the others quiet
+* Buttons, and the current one a label, which is where the person is and not a control. A name
+* too long for a Button is left out for the step's short word.
+*/
+function steps(g, all) {
+	const { Box } = g.els;
+	if (all.length === 0) return void 0;
+	return /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		alignItems: "center",
+		columnGap: across.sm,
+		rowGap: space.xs,
+		paddingX: across.inset
+	}, all.map((step, i) => {
+		const label = step.name && step.name.length <= tokens.gui.maxLabel ? `${step.short} ${step.name}` : step.short;
+		return /* @__PURE__ */ h(Box, {
+			key: `step:${step.hit ?? i}`,
+			flexDirection: "row",
+			alignItems: "center",
+			columnGap: across.xs
+		}, step.done && !step.current ? meaning(g, "state:success", { alt: "Done" }) : null, step.current ? typed$1(g, "body", label) : control(g, {
+			key: `tab:${step.hit ?? i}`,
+			label,
+			hit: step.hit
+		}));
+	}));
+}
+/**
+* A question's answers for review: its label in the label column, then its title, one line per
+* answer and the note. The label is words, not a Button; where the question can be gone back to
+* from here (a `hit`) a quiet Change stands at the row's far edge.
+*/
+function summary(g, s) {
+	const { Box, Text, Markdown } = g.els;
+	return /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		columnGap: across.sm,
+		paddingX: across.inset,
+		alignItems: "flex-start"
+	}, /* @__PURE__ */ h(Box, {
+		flexShrink: 0,
+		minWidth: LEAD
+	}, typed$1(g, "caption", s.label)), /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		width: 0,
+		flexGrow: 1,
+		flexShrink: 1,
+		rowGap: space.xs
+	}, /* @__PURE__ */ h(Markdown, { text: `**${s.title.replaceAll("**", "")}**` }), s.values.length > 0 ? s.values.map(({ text, literal }, i) => literal ? /* @__PURE__ */ h(Text, { key: `${s.label}:v${i}` }, text) : /* @__PURE__ */ h(Markdown, {
+		key: `${s.label}:v${i}`,
+		text
+	})) : /* @__PURE__ */ h(Text, { dimColor: true }, "Not answered"), s.note ? /* @__PURE__ */ h(Text, { dimColor: true }, `Note: ${s.note}`) : null), s.hit ? /* @__PURE__ */ h(Box, { flexShrink: 0 }, control(g, {
+		key: `go:${s.hit}`,
+		label: "Change",
+		hit: s.hit
+	})) : null);
+}
+/**
+* The row after a round's last card: the count, which goes to the first question, and Fill
+* prompt. A sent round says so; one with no `hits` is the count only.
+*/
+function closing(g, c) {
+	const { Box, Button } = g.els;
+	const { hits } = c;
+	const count = `${c.answered} of ${c.total} answered`;
+	return rowOf(g, { key: "closing" }, /* @__PURE__ */ h(Box, {
+		key: "count",
+		paddingX: across.inset
+	}, hits && !c.sent ? control(g, {
+		key: "count",
+		label: count,
+		hit: hits.count
+	}) : typed$1(g, "body", count, { tabular: true })), c.sent ? /* @__PURE__ */ h(Box, {
+		key: "sent",
+		flexDirection: "row",
+		alignItems: "center",
+		columnGap: across.xs
+	}, meaning(g, "state:success", { alt: "Sent" }), typed$1(g, "body", "Sent")) : null, hits && !c.sent ? /* @__PURE__ */ h(Button, {
+		key: "fill",
+		variant: c.canFill ? "primary" : void 0,
+		dimColor: !c.canFill || void 0,
+		label: "Fill prompt",
+		onPress: () => g.press(hits.fill)
+	}) : null);
+}
+/** The nonempty parts of a card, a gap between them. */
+function sections(g, ...parts) {
+	const { Box } = g.els;
+	return /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		rowGap: space.sm
+	}, parts.filter(Boolean));
+}
+
+// ../../lib/kits/notice/src/model.ts
+/** The meaning a state is marked with, on a surface that draws icons. */
+const MARKS = {
+	success: "state:success",
+	warning: "state:warning",
+	error: "state:error",
+	pending: "state:pending"
+};
+/** The colour role each status's words take: a pending one is quiet, as the dim words are. */
+const TONES = {
+	success: "success",
+	warning: "warning",
+	error: "error",
+	pending: "dim",
+	dim: "dim",
+	text: "text"
+};
+function view$3(model, surface) {
+	const isCells = holds(surface, "cells");
+	const status = model.isEmpty ? "dim" : model.status ?? "warning";
+	const tone = TONES[status];
+	const said = isCells ? model.text : model.words ?? model.text;
+	const text = typeof said === "string" ? [{
+		text: said,
+		role: tone
+	}] : said.map((s) => ({
+		...s,
+		role: s.role ?? tone
+	}));
+	return {
+		mark: !isCells && !model.isEmpty ? MARKS[status] : void 0,
+		type: model.isEmpty || tone === "dim" ? "caption" : "body",
+		rows: model.isEmpty ? "wrap" : (isCells ? model.isWrapped : !model.isCut) ? "wrap" : "cut",
+		text
+	};
+}
+
+// ../../lib/kits/notice/src/gui.tsx
+/** The notice and the empty state on the graphical surfaces: the same model, in native controls. */
+/**
+* The words in their type role. One plain span is a single `Text` carrying its role's colour;
+* spans of several styles are nested runs.
+*/
+function said(g, v, wrap) {
+	const { Text } = g.els;
+	const [only] = v.text;
+	if (v.text.length === 1 && only && !only.bold && !only.italic && !only.underline) return /* @__PURE__ */ h(Text, {
+		wrap,
+		...typeProps(v.type, {
+			isSized: can(g, "textSize"),
+			isToned: false
+		}),
+		...roleProps(only.role)
+	}, only.text);
+	return spans(g, v.text, {
+		type: v.type,
+		wrap
+	});
+}
+/**
+* One line telling the person what just happened: an icon for the state it is in (success,
+* warning, error, pending) and its words in a type role, at the inset. The surface wraps it, or
+* with `isCut` cuts it at the edge.
+*/
+function notice(g, n) {
+	const { Box } = g.els;
+	const v = view$3({
+		...n,
+		isEmpty: false
+	}, g.surface);
+	return /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		paddingX: tokens.gui.across.inset
+	}, rowOf(g, {}, /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		flexWrap: "nowrap",
+		alignItems: "center",
+		columnGap: tokens.gui.across.sm
+	}, v.mark ? meaning(g, v.mark) : null, /* @__PURE__ */ h(Box, { flexShrink: 1 }, said(g, v, v.rows === "cut" ? "truncate-end" : void 0)))));
 }
 
 // ../../lib/kits/core/src/paint/claude.tsx
@@ -1520,8 +2500,9 @@ const runsOf = (spans) => {
 	}
 	return out;
 };
-function paintLines(k, lines, { press, width = 0, input } = {}) {
-	const { Box, Text, Button, Markdown } = k;
+function paintLines(k, lines, { press: pressed, ctx, width = 0, input, indent: setIn, autoFocus } = {}) {
+	const press = pressed ?? ctx?.press;
+	const { Box, Text, Button, Markdown, Image, Link } = k;
 	const run = (s, key, isControl) => /* @__PURE__ */ h(Text, {
 		key,
 		color: s.role ? COLOR[s.role] : void 0,
@@ -1547,13 +2528,14 @@ function paintLines(k, lines, { press, width = 0, input } = {}) {
 		return /* @__PURE__ */ h(Box, { key: `hover-${key}` }, /* @__PURE__ */ h(Button, {
 			key,
 			plain: true,
+			autoFocus: key === autoFocus ? true : void 0,
 			label,
 			onPress: () => press?.(hit)
 		}, body));
 	};
 	const wordsOf = (spans) => spans.map((s) => s.text).join("");
 	const block = (rows, at, isControl = false) => /* @__PURE__ */ h(Text, { key: `rows${at}` }, rows.flatMap((l, r) => {
-		const drawn = l.spans.length ? cellWidth$1(wordsOf(l.spans)) : 1;
+		const drawn = l.spans.length ? cellWidth(wordsOf(l.spans)) : 1;
 		const room = isControl ? width - drawn : 0;
 		return [
 			...r ? ["\n"] : [],
@@ -1562,18 +2544,43 @@ function paintLines(k, lines, { press, width = 0, input } = {}) {
 			...room > 0 ? [run({ text: " ".repeat(room) }, `${at}-${r}-pad`, isControl)] : []
 		];
 	}));
-	return /* @__PURE__ */ h(Box, { flexDirection: "column" }, groups(lines).map((g, at) => {
+	return /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		paddingLeft: setIn || void 0
+	}, groups(lines).map((g, at) => {
 		const [first] = g.lines;
 		if (first?.slot?.kind === "input") {
 			const blankLead = first.slot.lead.findIndex((s) => s.text.trim() !== "");
-			const indent = first.slot.lead.slice(0, blankLead < 0 ? void 0 : blankLead).reduce((n, s) => n + cellWidth$1(s.text), 0);
+			const indent = first.slot.lead.slice(0, blankLead < 0 ? void 0 : blankLead).reduce((n, s) => n + cellWidth(s.text), 0);
 			return /* @__PURE__ */ h(Box, {
 				key: `field${at}`,
 				flexDirection: "column",
 				paddingLeft: indent
 			}, input);
 		}
-		if (first?.slot) return /* @__PURE__ */ h(Box, {
+		if (first?.slot?.kind === "image") {
+			const { source, columns, rows, alt } = first.slot;
+			return Image ? /* @__PURE__ */ h(Image, {
+				key: `image${at}`,
+				source,
+				columns,
+				rows,
+				alt
+			}) : block(g.lines, at);
+		}
+		if (first?.slot?.kind === "link") {
+			const { href } = first.slot;
+			return /* @__PURE__ */ h(Text, {
+				key: `link${at}`,
+				dimColor: true,
+				wrap: "wrap"
+			}, g.lines.flatMap((l, r) => [...r ? ["\n"] : [], Link ? /* @__PURE__ */ h(Link, {
+				key: `${r}`,
+				href,
+				label: wordsOf(l.spans)
+			}) : wordsOf(l.spans)]));
+		}
+		if (first?.slot?.kind === "markdown") return /* @__PURE__ */ h(Box, {
 			key: `slot${at}`,
 			paddingLeft: first.slot.indent,
 			width: first.slot.indent + first.slot.width
@@ -1590,1053 +2597,143 @@ function paintLines(k, lines, { press, width = 0, input } = {}) {
 		}, parts.map((part, p) => part.hit === void 0 ? /* @__PURE__ */ h(Text, { key: `gap${at}-${p}` }, part.spans.map((s, i) => run(s, `${at}-${p}-${i}`, false))) : control(part.hit, wordsOf(part.spans), /* @__PURE__ */ h(Text, { key: `part${at}-${p}` }, part.spans.map((s, i) => run(s, `${at}-${p}-${i}`, true))))));
 	}));
 }
-
-// ../../lib/kits/legacy/src/claude/ui.tsx
-/** A pane with fewer body rows than this drops the blank rows between its blocks. */
-const TIGHT_ROWS = 16;
 /**
-* Binds the resolved elements to the surface they came from, and to the room it measured.
-* @param els What `$.ui.resolve(e)` answered.
-* @param e The render event: `surface`, `viewport` and the pane's or band's `props`.
+* A block behind the engine's quote border: the rail a card has in a transcript. The kit's rows
+* are drawn inside it, so a pane that draws no rail (a terminal's band) never calls this.
+* @param o `width` is the block's outer width in cells; `rail` the border's weight: `answered`
+* in the success colour, `quiet` dim, `bright` the engine's own.
 */
-const kitOf = (els, e) => {
-	const p = e.props ?? {};
-	return {
-		Box: els.Box,
-		Text: els.Text,
-		Button: els.Button,
-		Markdown: els.Markdown,
-		Image: els.Image,
-		Link: els.Link,
-		Svg: els.Svg,
-		surface: e.surface,
-		isNative: e.surface !== "terminal",
-		columns: Math.max(1, Math.floor(p.bodyColumns ?? e.viewport?.columns ?? 80)),
-		maxRows: p.maxRows,
-		isTight: (p.scroll?.bodyRows ?? 1e400) < TIGHT_ROWS,
-		title: p.title,
-		placement: p.placement
-	};
-};
-/** The same kit in a room of `columns` cells: what a narrower region of the terminal draws at. */
-const withColumns = (k, columns) => ({
-	...k,
-	columns: Math.max(1, Math.floor(columns))
-});
-/** The options that apply on this kit's surface: the terminal's, or `gui` with its own surface's over it. */
-function surfaceOf(k, o) {
-	if (!o) return {};
-	if (!k.isNative) return o.tui ?? {};
-	const own = o[k.surface];
-	return {
-		...o.gui,
-		...own
-	};
-}
-/**
-* The house style's numbers, glyphs and colour roles; one edit here restyles every mod that
-* carries a fresh copy of this file.
-*/
-const tokens = {
-	/** Width classes: caps in columns, never targets. `wide` is the pane less `wideMargin`. */
-	width: {
-		reading: 96,
-		split: 124,
-		dialog: 72,
-		wideMargin: 2
-	},
-	/** What a pane is opened with, whichever mod opens it: `"transparent"` is no fill under the body. */
-	pane: { backgroundColor: "transparent" },
-	/** Prose is wrapped at this measure even in a wider pane. */
-	prose: 80,
-	/** From this many pane columns a list with detail is two panes; below it stacks. */
-	splitFrom: 110,
-	/** Cells of padding inside a border. */
-	padding: 1,
-	/** Cells between metadata columns, and before the first. */
-	gutter: 2,
-	/** Cells between the keys of a button row. */
-	keyGap: 3,
-	/** From this pane width dated entries use a date column; narrower, a date line. */
-	entriesFrom: 50,
-	/** Cells of the date column of dated entries: an ISO date. */
-	dateWidth: 10,
-	/** A row's title is never given less than this; metadata columns drop first. */
-	minTitle: 16,
-	glyph: {
-		pointer: "❯",
-		multi: {
-			off: "□",
-			on: "■"
-		},
-		single: {
-			off: "○",
-			on: "●"
-		},
-		ellipsis: "…",
-		more: {
-			up: "↑",
-			down: "↓"
-		},
-		rule: "─",
-		done: "✓",
-		times: "×",
-		noteMid: "│",
-		noteEnd: "╰▸",
-		kind: {
-			missing: "+",
-			stale: "↻",
-			wrong: "!"
-		},
-		status: { warning: "⚠" },
-		fold: {
-			closed: "▸",
-			open: "▾"
-		}
-	},
-	/** Lines of a folded claim on the terminal. */
-	foldedLines: 3,
-	/** Inline code on the terminal, outside a `Markdown`: the theme colour its Markdown uses. */
-	code: "permission",
-	/** The graphical surfaces' numbers: none of them is a cell. */
-	gui: {
-		/** A long list shows this many rows, then an `N more` row. */
-		maxItems: 12,
-		/**
-		* The widest a choice's label may be, in cells, before a graphical surface sets it as text
-		* under a Button of its `short` word: a Button never wraps and runs off a 420-pixel pane.
-		*/
-		maxLabel: 34,
-		/**
-		* Icon colours. The host's theme cannot be read from a mod and an image cannot follow it, so
-		* the neutral is one mid-grey that reads on light and dark; colour marks a state only.
-		*/
-		tone: {
-			neutral: "#8b8f98",
-			error: "#e5534b",
-			warning: "#d4962a",
-			success: "#3fa65b"
-		},
-		/** An icon's side, in CSS pixels. */
-		icon: 16,
-		/**
-		* The column, in cells, that leads each row of a choice drawn as rows: its key's Button (`A`)
-		* or an icon, centred, so every row's text starts at one edge.
-		*/
-		lead: 4.6,
-		/**
-		* A passage longer than this, in cells, or of more than one line, is cut to one line with a
-		* `More` beside it (`excerpt`): about what one line of a 420-pixel band holds beside the button.
-		*/
-		excerptCells: 40,
-		/**
-		* The vertical rhythm, in lines of body text. A step name is a whole line or none on VS Code,
-		* too coarse for a short pane, so the kit spaces with these numbers. `xs` sits between the
-		* lines of one part (a label and its text), `sm` between the parts of one item (claim, meta,
-		* evidence, keys), `md` between items that stand alone (groups, the pane's regions).
-		*/
-		space: {
-			xs: .2,
-			sm: .5,
-			md: .9
-		},
-		/**
-		* Horizontal room, in cells: `xs` between the buttons of a row, `sm` after an icon, `md`
-		* between a line's text and its control, and `inset` on each side of a row, which is where
-		* an opened row's fill reaches.
-		*/
-		across: {
-			xs: .6,
-			sm: .8,
-			md: 1.2,
-			inset: 1
-		},
-		/**
-		* The fill of an opened row: the theme's own second background, a well the row's body sits
-		* in, which a quiet button's outline still reads on.
-		*/
-		fill: "userMessageBackground",
-		/** Behind a code span in a Text, which has no code face: the theme's code background. */
-		chip: "bashMessageBackgroundColor",
-		/** A thin rule's colour: one grey at low alpha, which reads on a light theme and a dark one. */
-		rule: "#8b8f9866",
-		/**
-		* The least a form's label column takes, in cells, so its controls start at one edge: a
-		* label longer than this pushes only its own control.
-		*/
-		labelColumn: 7
-	},
-	/**
-	* The style's roles as a mod draws them: `dim` is `dimColor`, `text` is the default,
-	* the rest are theme colours. `note` is the colour of the words a person wrote.
-	*/
-	role: {
-		text: void 0,
-		dim: void 0,
-		accent: "claude",
-		success: "success",
-		warning: "warning",
-		error: "error",
-		note: "suggestion"
-	}
-};
-/** The props of a `Text` in `role`. */
-const roleProps = (role) => role === "dim" ? { dimColor: true } : tokens.role[role] === void 0 ? {} : { color: tokens.role[role] };
-/**
-* The class's cap in columns in a pane `columns` wide, or the content width for `auto`.
-* Box has no `maxWidth`, so a mod draws to this width instead of the pane's.
-* @param columns The pane's `bodyColumns`.
-* @param content The widest line in cells; only `auto` reads it.
-*/
-function widthCap(cls, columns, content = 0) {
-	const cap = (n) => Math.max(1, Math.min(n, columns));
-	if (cls === "wide") return cap(columns - tokens.width.wideMargin);
-	if (cls === "auto") return cap(Math.min(content, tokens.width.dialog));
-	return cap(tokens.width[cls]);
-}
-/** Cells a code point takes: 0 for marks and joiners, 2 for East Asian wide and emoji. */
-const cellsOf = (c) => {
-	if (c < 32 || c >= 127 && c < 160) return 0;
-	if (c < 768) return 1;
-	if (c >= 768 && c <= 879 || c >= 8203 && c <= 8207 || c >= 8400 && c <= 8447 || c >= 65024 && c <= 65039 || c === 65279 || c >= 917760 && c <= 917999) return 0;
-	return c >= 4352 && c <= 4447 || c === 9001 || c === 9002 || c >= 8986 && c <= 8987 || c >= 9193 && c <= 9196 || c === 9200 || c === 9203 || c >= 9725 && c <= 9726 || c >= 9748 && c <= 9749 || c >= 9800 && c <= 9811 || c === 9855 || c === 9875 || c === 9889 || c >= 9898 && c <= 9899 || c >= 9917 && c <= 9918 || c >= 9924 && c <= 9925 || c === 9934 || c === 9940 || c === 9962 || c >= 9970 && c <= 9971 || c === 9973 || c === 9978 || c === 9981 || c === 9989 || c >= 9994 && c <= 9995 || c === 10024 || c === 10060 || c === 10062 || c >= 10067 && c <= 10069 || c === 10071 || c >= 10133 && c <= 10135 || c === 10160 || c === 10175 || c >= 11035 && c <= 11036 || c === 11088 || c === 11093 || c >= 11904 && c <= 12350 || c >= 12353 && c <= 13311 || c >= 13312 && c <= 19903 || c >= 19968 && c <= 42191 || c >= 43360 && c <= 43391 || c >= 44032 && c <= 55203 || c >= 63744 && c <= 64255 || c >= 65040 && c <= 65049 || c >= 65072 && c <= 65135 || c >= 65280 && c <= 65376 || c >= 65504 && c <= 65510 || c >= 127744 && c <= 128591 || c >= 128640 && c <= 128767 || c >= 129280 && c <= 129535 || c >= 129648 && c <= 129791 || c >= 131072 && c <= 262141 ? 2 : 1;
-};
-/** Cells `text` takes: wide characters two, marks and joiners none. Never `.length`. */
-function cellWidth(text) {
-	let n = 0;
-	for (const ch of text) n += cellsOf(ch.codePointAt(0) ?? 0);
-	return n;
-}
-/** The longest start of `text` that fits `cells`, and the rest. */
-function split(text, cells) {
-	let used = 0;
-	let at = 0;
-	for (const ch of text) {
-		const w = cellsOf(ch.codePointAt(0) ?? 0);
-		if (used + w > cells) break;
-		used += w;
-		at += ch.length;
-	}
-	return [text.slice(0, at), text.slice(at)];
-}
-/** `text` cut to `width` cells with `…` when it is longer. */
-function truncate(text, width) {
-	if (cellWidth(text) <= width) return text;
-	return split(text, Math.max(0, width - 1))[0] + tokens.glyph.ellipsis;
-}
-/** Greedy word wrap in cells; a word longer than the width is broken, and a `\n` ends a line. */
-function wrap(text, width) {
-	const out = [];
-	for (const paragraph of text.replace(/\r\n?/g, "\n").split("\n")) {
-		let line = "";
-		let used = 0;
-		const words = paragraph.split(/[ \t]+/).filter(Boolean);
-		if (words.length === 0) out.push("");
-		for (let word of words) {
-			let w = cellWidth(word);
-			if (used > 0 && used + 1 + w <= width) {
-				line += ` ${word}`;
-				used += 1 + w;
-				continue;
-			}
-			if (used > 0) out.push(line);
-			line = "";
-			used = 0;
-			while (w > width) {
-				const [head, rest] = split(word, width);
-				out.push(head);
-				word = rest;
-				w = cellWidth(word);
-			}
-			line = word;
-			used = w;
-		}
-		if (words.length > 0) out.push(line);
-	}
-	return out;
-}
-/**
-* `{min: 1, max: 1}` truncates to one line; no options wraps without limit.
-* @param width Cells, not characters; wide characters count two.
-*/
-function clamp(text, width, options = {}) {
-	if (width < 1) return [];
-	const { min = 0, max = 1e400, target } = options;
-	const wanted = target === void 0 ? 1e400 : Math.max(1, Math.ceil(target / width));
-	const cap = Math.max(0, Math.max(min, Math.min(max, wanted)));
-	let lines = wrap(text, width);
-	if (lines.length > cap) {
-		if (cap === 0) return [];
-		const rest = lines.slice(cap - 1).join(" ");
-		lines = [...lines.slice(0, cap - 1), truncate(rest, width)];
-	}
-	while (lines.length < min) lines.push("");
-	return lines;
-}
-/** `text` padded with spaces to `width` cells, cut with `…` when longer. */
-const fit = (text, width) => {
-	const cut = truncate(text, Math.max(0, width));
-	return cut + " ".repeat(Math.max(0, width - cellWidth(cut)));
-};
-/** `text` right-aligned in `width` cells. */
-const alignRight = (text, width) => " ".repeat(Math.max(0, width - cellWidth(text))) + text;
-/** The lines of a text, whatever its line ends. */
-const linesOf = (text) => text.replace(/\r\n?/g, "\n").split("\n");
-/** The kit's icons: small stroked drawings on a 16-pixel grid, for the graphical surfaces. */
-const ICONS = {
-	wrong: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M8 4.7v4\"/><path d=\"M8 11.3v.01\"/>",
-	stale: "<path d=\"M13.2 8.2A5.2 5.2 0 1 1 11.7 4.4\"/><path d=\"M13.4 2.4v3.2h-3.2\"/>",
-	missing: "<path d=\"M8 3.2v9.6M3.2 8h9.6\"/>",
-	warning: "<path d=\"M8 2.6 14.2 13.2H1.8L8 2.6Z\"/><path d=\"M8 6.8v2.9\"/><path d=\"M8 11.7v.01\"/>",
-	success: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M5.2 8.2l2 2 3.6-4\"/>",
-	error: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M5.9 5.9l4.2 4.2M10.1 5.9l-4.2 4.2\"/>",
-	pending: "<circle cx=\"8\" cy=\"8\" r=\"6.2\" stroke-dasharray=\"2.4 2.4\"/>",
-	note: "<path d=\"M2.6 3.4h10.8v7.2H7.4l-3 2.4v-2.4H2.6Z\"/><path d=\"M5.2 6h5.6M5.2 8h3.6\"/>",
-	question: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M6.3 6.3a1.8 1.8 0 1 1 2.5 1.7c-.5.2-.8.6-.8 1.1v.4\"/><path d=\"M8 11.4v.01\"/>",
-	write: "<path d=\"M10.6 2.9l2.5 2.5-7.6 7.6-3.1.6.6-3.1 7.6-7.6Z\"/><path d=\"M9.2 4.3l2.5 2.5\"/>",
-	status: "<circle cx=\"8\" cy=\"8\" r=\"5.6\"/><circle cx=\"8\" cy=\"8\" r=\"1.6\" fill=\"currentColor\"/>",
-	priorityNone: "<path d=\"M3.2 8h1.4M7.3 8h1.4M11.4 8h1.4\"/>",
-	priorityLow: "<path d=\"M4 13v-2.6\"/><path d=\"M8 13V7.4\" stroke-opacity=\".35\"/><path d=\"M12 13V4.4\" stroke-opacity=\".35\"/>",
-	priorityMedium: "<path d=\"M4 13v-2.6M8 13V7.4\"/><path d=\"M12 13V4.4\" stroke-opacity=\".35\"/>",
-	priorityHigh: "<path d=\"M4 13v-2.6M8 13V7.4M12 13V4.4\"/>",
-	priorityUrgent: "<rect x=\"2.6\" y=\"2.6\" width=\"10.8\" height=\"10.8\" rx=\"2.6\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M8 5.2v3.4M8 10.8v.01\" stroke=\"#ffffff\"/>",
-	project: "<path d=\"M8 2.4 13.2 5.2v5.6L8 13.6 2.8 10.8V5.2Z\"/><path d=\"M2.8 5.2 8 8l5.2-2.8M8 8v5.6\"/>",
-	label: "<circle cx=\"8\" cy=\"8\" r=\"3.4\" fill=\"currentColor\" stroke=\"none\"/>",
-	draft: "<path d=\"M10.6 2.8 13.2 5.4 5.7 12.9 2.6 13.4 3.1 10.3Z\"/><path d=\"M9.2 4.2l2.6 2.6\"/>"
-};
-/** What each icon stands for on the terminal, where one glyph does it. */
-const ICON_GLYPH = {
-	wrong: tokens.glyph.kind.wrong,
-	stale: tokens.glyph.kind.stale,
-	missing: tokens.glyph.kind.missing,
-	warning: tokens.glyph.status.warning,
-	success: tokens.glyph.done,
-	error: tokens.glyph.times,
-	pending: tokens.glyph.single.off,
-	question: "?",
-	note: tokens.glyph.noteEnd,
-	write: "✎",
-	status: tokens.glyph.single.off,
-	priorityNone: "-",
-	priorityLow: "!",
-	priorityMedium: "!!",
-	priorityHigh: "!!!",
-	priorityUrgent: tokens.glyph.status.warning,
-	project: tokens.glyph.multi.off,
-	label: tokens.glyph.single.on,
-	draft: "✎"
-};
-/**
-* The markup of an icon, a whole `<svg>` document.
-* @param tone The state it marks; grey when none.
-* @param size Its side in CSS pixels.
-*/
-const iconSvg = (name, tone = "neutral", size = tokens.gui.icon) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 16 16" fill="none" color="${tokens.gui.tone[tone]}" stroke="${tokens.gui.tone[tone]}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
-/**
-* An icon: an image on a graphical surface, its glyph in a role's colour on the terminal.
-* @param alt What it says, for a reader that cannot see it.
-*/
-function icon(k, name, options = {}) {
-	const { Svg, Text } = k;
-	const { tone = "neutral", alt = name, size = tokens.gui.icon } = options;
-	if (k.isNative && Svg) return /* @__PURE__ */ h(Svg, {
-		source: iconSvg(name, tone, size),
-		alt,
-		width: size,
-		height: size
-	});
-	return /* @__PURE__ */ h(Text, roleProps(tone === "neutral" ? "dim" : tone), ICON_GLYPH[name]);
-}
-/**
-* A block of prose. A graphical surface draws it as markdown, as it draws a reply; the terminal
-* wraps it in cells, and cuts it where `tui.lines` says.
-* @param text Prose or markdown, whose own newlines are line breaks on the terminal.
-*/
-function prose(k, text, options = {}) {
-	const { Text, Markdown } = k;
-	const { role = "text", isDim } = options;
-	if (k.isNative) {
-		const md = /* @__PURE__ */ h(Markdown, {
-			text,
-			dimColor: isDim || void 0
-		});
-		if (!options.gui?.isInset) return md;
-		const { Box } = k;
-		return /* @__PURE__ */ h(Box, { paddingX: tokens.gui.across.inset }, md);
-	}
-	const { lines, weight } = options.tui ?? {};
-	return /* @__PURE__ */ h(Text, {
-		weight,
-		...roleProps(isDim ? "dim" : role)
-	}, clamp(text, k.columns, lines).join("\n"));
-}
-/**
-* A section header: bold title, then a dim rule to the edge on the terminal. A graphical surface
-* draws a flat heading at its rows' inset.
-* @param title Wrapped on a graphical surface; cut with `…` on the terminal unless `isWrapped`.
-*/
-function section(k, title, options = {}) {
-	const { Box, Text } = k;
-	const width = k.columns;
-	if (k.isNative) return /* @__PURE__ */ h(Box, { paddingX: tokens.gui.across.inset }, /* @__PURE__ */ h(Text, {
-		weight: "semibold",
-		mono: options.isCode || void 0
-	}, title));
-	const lines = options.isWrapped ? clamp(title, Math.max(1, width)) : clamp(title, Math.max(1, width), {
-		min: 1,
-		max: 1
-	});
-	const room = width - cellWidth(lines.at(-1) ?? "") - 1;
-	return /* @__PURE__ */ h(Text, null, /* @__PURE__ */ h(Text, { weight: "semibold" }, lines.join("\n")), room > 0 ? /* @__PURE__ */ h(Text, { dimColor: true }, ` ${tokens.glyph.rule.repeat(room)}`) : null);
-}
-/**
-* A pane's title line, `─ Title  count ─────`, so both harnesses share one. A graphical surface
-* already draws the pane's own title above the body, so it draws only what the title leaves out;
-* given `gui.actions`, the line is the pane's toolbar, its actions at the far edge.
-* @param count Dim, after the title; left out when none.
-* @param options `gui.count` is the count as a graphical surface says it, `3 open`; `gui.summary`
-*   what closing will do, said in its place.
-*/
-function paneTitle(k, title, count, options = {}) {
-	const { Box, Text } = k;
-	if (!k.isNative && options.isHeading) return /* @__PURE__ */ h(Box, { flexDirection: "row" }, /* @__PURE__ */ h(Text, { bold: true }, title), count === void 0 ? null : /* @__PURE__ */ h(Text, { dimColor: true }, `  ${count}`));
-	if (k.isNative) {
-		const own = surfaceOf(k, options);
-		const said = own.count ?? (count === void 0 ? "" : String(count));
-		const lead = !title || title === k.title ? null : /* @__PURE__ */ h(Text, { weight: "semibold" }, `${title}${said || own.summary ? "  " : ""}`);
-		const text = own.summary ? /* @__PURE__ */ h(Text, null, lead, own.summary) : said || lead ? /* @__PURE__ */ h(Text, null, lead, said ? /* @__PURE__ */ h(Text, { dimColor: true }, said) : null) : null;
-		const actions = own.actions ?? [];
-		const tabs = own.tabs ?? [];
-		const left = tabs.length ? /* @__PURE__ */ h(Box, {
-			flexDirection: "row",
-			flexWrap: "wrap",
-			columnGap: tokens.gui.across.xs,
-			rowGap: tokens.gui.space.xs
-		}, tabs.map((a) => actionButton(k, a))) : text;
-		if (!left && actions.length === 0) return null;
-		return /* @__PURE__ */ h(Box, {
-			key: "toolbar",
-			flexDirection: "row",
-			flexWrap: tabs.length ? "nowrap" : "wrap",
-			alignItems: tabs.length ? "flex-start" : "center",
-			justifyContent: "space-between",
-			columnGap: tokens.gui.across.md,
-			rowGap: tokens.gui.space.xs,
-			paddingX: tokens.gui.across.inset
-		}, /* @__PURE__ */ h(Box, { flexShrink: 1 }, left), actions.length > 0 ? /* @__PURE__ */ h(Box, {
-			flexDirection: "row",
-			flexWrap: "wrap",
-			flexShrink: tabs.length ? 0 : void 0,
-			columnGap: tokens.gui.across.xs,
-			rowGap: tokens.gui.space.xs
-		}, actions.map((a) => actionButton(k, a))) : null);
-	}
-	const width = k.columns;
-	const rule = tokens.glyph.rule;
-	const tail = count === void 0 ? "" : `  ${count}`;
-	const head = clamp(title, Math.max(1, width - 2 - cellWidth(tail) - 1), {
-		min: 1,
-		max: 1
-	})[0] ?? "";
-	const fill = width - 2 - cellWidth(head) - cellWidth(tail) - 1;
-	return /* @__PURE__ */ h(Text, null, /* @__PURE__ */ h(Text, { dimColor: true }, `${rule} `), /* @__PURE__ */ h(Text, { weight: "semibold" }, head), tail ? /* @__PURE__ */ h(Text, { dimColor: true }, tail) : null, fill > 0 ? /* @__PURE__ */ h(Text, { dimColor: true }, ` ${rule.repeat(fill)}`) : null);
-}
-/** A note's gutter for line `i` of `count`: `│  ` on all but the last, `╰▸ ` on it. */
-const gutterOf = (i, count) => i < count - 1 ? `${tokens.glyph.noteMid}  ` : `${tokens.glyph.noteEnd} `;
-/**
-* A note: a dim gutter, `│` on each line but the last, `╰▸` on the last. It belongs to the one
-* thing above it; never use it for a list of entries. A graphical surface sets it in quiet italics.
-* @param text The note; its own newlines are lines.
-*/
-function note(k, text, options = {}) {
-	const { Text } = k;
-	const { indent = 0, isWrapped, role = "text", italic } = options;
-	if (k.isNative) return /* @__PURE__ */ h(Text, {
-		italic: italic ?? true,
-		...roleProps(role === "text" ? "dim" : role)
-	}, text);
-	const lines = !isWrapped ? linesOf(text) : linesOf(text).flatMap((line) => clamp(line, k.columns - indent - 3, { min: 1 }));
-	return /* @__PURE__ */ h(Text, null, lines.flatMap((line, i, all) => [
-		i ? "\n" : "",
-		/* @__PURE__ */ h(Text, {
-			key: `g${i}`,
-			dimColor: true
-		}, `${" ".repeat(indent)}${gutterOf(i, all.length)}`),
-		/* @__PURE__ */ h(Text, {
-			key: `n${i}`,
-			...roleProps(role),
-			italic
-		}, line)
-	]));
-}
-const capital = (text) => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
-/**
-* A set of options, one chosen or several. A graphical surface draws each as a Button, the chosen
-* one `primary`, with its detail inside it; the terminal draws plain keys or marked rows.
-*/
-function choice(k, options, settings = {}) {
-	const { Box, Button, Text } = k;
-	if (k.isNative) {
-		const { layout = "stack", onward } = surfaceOf(k, {
-			gui: settings.gui,
-			desktop: settings.desktop,
-			vscode: settings.vscode,
-			mobile: settings.mobile
-		});
-		if (layout === "rows") return choiceRows(k, options, settings, onward);
-		const isRow = layout === "row";
-		return /* @__PURE__ */ h(Box, {
-			key: settings.key,
-			flexDirection: isRow ? "row" : "column",
-			flexWrap: isRow ? "wrap" : void 0,
-			columnGap: tokens.gui.across.xs,
-			rowGap: isRow ? tokens.gui.space.xs : tokens.gui.space.sm
-		}, options.map((o) => {
-			const isLong = !isRow && o.short !== void 0 && cellWidth(o.label) > tokens.gui.maxLabel;
-			const button = /* @__PURE__ */ h(Button, {
-				key: o.key,
-				variant: o.isOn && !o.isQuiet ? "primary" : "secondary",
-				dimColor: !(o.isOn && !o.isQuiet) || void 0,
-				label: isLong ? capital(o.short ?? o.label) : o.isLiteral ? o.label : capital(o.label),
-				onPress: () => o.onPress()
-			});
-			return isRow || !o.detail && !isLong ? button : /* @__PURE__ */ h(Box, {
-				key: `${o.key}:detail`,
-				flexDirection: "column"
-			}, button, isLong ? /* @__PURE__ */ h(Text, null, o.label) : null, o.detail ? /* @__PURE__ */ h(Text, { dimColor: true }, o.detail) : null);
-		}));
-	}
-	const { style = "chips" } = settings.tui ?? {};
-	if (style === "marks") return /* @__PURE__ */ h(Box, {
-		key: settings.key,
-		flexDirection: "column"
-	}, options.map((o) => listRow(k, {
-		key: o.key,
-		title: o.label,
-		isMarked: Boolean(o.isOn),
-		meta: o.detail ? [{
-			text: o.detail,
-			width: 0
-		}] : void 0,
-		onPress: o.onPress
-	}, { marks: settings.isMulti ? "multi" : "single" })));
+function quoted(k, body, o) {
+	const { Box } = k;
 	return /* @__PURE__ */ h(Box, {
-		key: settings.key,
-		columnGap: tokens.gutter
-	}, options.map((o) => /* @__PURE__ */ h(Button, {
 		key: o.key,
+		width: o.width,
+		flexDirection: "column",
+		borderStyle: "quote",
+		borderColor: o.rail === "answered" ? "success" : void 0,
+		borderDimColor: o.rail === "quiet" || void 0,
+		paddingX: 1
+	}, body);
+}
+/** The address of a button that carries one key and draws nothing. */
+const keyAddress = (key) => `kit-key-${key}`;
+/**
+* Keys alone, on buttons that draw nothing, for a site that keeps no focus of its own: a row
+* above the prompt, whose digits the engine presses from an empty prompt.
+* @param keys One lowercase letter or digit each.
+*/
+function hotkeys(k, keys) {
+	const { Box, Button } = k;
+	return /* @__PURE__ */ h(Box, {
+		width: 0,
+		height: 0,
+		overflow: "hidden"
+	}, keys.map(({ key, press }) => /* @__PURE__ */ h(Button, {
+		key: keyAddress(key),
 		plain: true,
-		hotkey: o.hotkey,
-		dimColor: !o.isOn,
-		label: o.label,
-		onPress: () => o.onPress()
+		hotkey: key,
+		label: key,
+		onPress: press
 	})));
 }
-/**
-* A choice as rows (`guiRow`), for options a person reads before picking: each row is one line,
-* led by a Button of the option's tag (filled when chosen), its label and its detail cut at the
-* edge beside it. The option chosen of a single choice opens in its well: the label and the detail
-* whole, its `body` under them and the way on at its far edge. A row with a `field` holds that
-* control in place of the label, led by its icon, so a click lands in the field itself.
-*/
-function choiceRows(k, options, settings, onward) {
-	const { Box, Button, Text } = k;
-	const isTagged = options.some((o) => o.tag !== void 0);
-	return /* @__PURE__ */ h(Box, {
-		key: settings.key,
-		flexDirection: "column"
-	}, options.map((o) => {
-		const isOn = Boolean(o.isOn && !o.isQuiet);
-		const isOpen = isOn && !settings.isMulti;
-		const mark = o.field ? icon(k, o.icon ?? "write") : /* @__PURE__ */ h(Button, {
-			key: o.key,
-			variant: isOn ? "primary" : void 0,
-			dimColor: !isOn || void 0,
-			label: o.tag ?? (o.isLiteral ? o.label : capital(o.label)),
-			onPress: () => o.onPress()
-		});
-		const label = o.field || o.tag === void 0 ? "" : o.label;
-		const named = cellWidth(label) <= tokens.gui.maxLabel ? `**${label.replaceAll("**", "")}**` : label;
-		const whole = isOpen ? [label ? named : "", o.detail ?? ""].filter(Boolean).join("  ") : "";
-		return guiRow(k, {
-			key: `${o.key}:row`,
-			mark,
-			markWidth: isTagged ? tokens.gui.lead : void 0,
-			text: isOpen ? whole : label,
-			field: o.field,
-			detail: !isOpen && o.detail ? { text: o.detail } : void 0,
-			isOpen,
-			button: isOpen && onward ? {
-				...onward,
-				isFilled: true
-			} : void 0,
-			body: isOpen ? [o.field && o.detail ? /* @__PURE__ */ h(Text, { key: "detail" }, o.detail) : null, o.body ?? null] : void 0
-		});
-	}));
-}
-/**
-* A control on a row of its own, led by an icon in a choice's lead column (`choice`'s `rows`), so
-* a field under a choice's rows (a note) lines up with them. The terminal draws the control alone.
-*/
-function fieldRow(k, o) {
-	if (!k.isNative) return o.field;
-	return guiRow(k, {
-		key: o.key,
-		mark: icon(k, o.icon, { alt: o.alt }),
-		markWidth: tokens.gui.lead,
-		text: "",
-		field: o.field
-	});
-}
-/**
-* The first `gui.maxItems` of a long list, and an `N more` row for the rest. The terminal's pane
-* scrolls as a whole, so it shows every item.
-* @param isAll Show every item, as after the person asked for the rest.
-* @param onMore Makes the `N more` row a Button that asks for the rest.
-*/
-function capped(k, items, options = {}) {
-	const { Button, Text } = k;
-	const max = options.gui?.maxItems ?? tokens.gui.maxItems;
-	if (!k.isNative || options.isAll || items.length <= max) return {
-		shown: [...items],
-		more: null
-	};
-	const left = items.length - max;
-	const { onMore } = options;
+/** Parts of one site under each other: painted lines, the ring, the hint for the keyboard. */
+function stack(k, ...parts) {
 	const { Box } = k;
+	return /* @__PURE__ */ h(Box, { flexDirection: "column" }, parts.filter(Boolean));
+}
+
+// ../../lib/kits/prose/src/model.ts
+/**
+* Prose's view model: whether a passage is drawn whole, folded to its first line or opened. Pure
+* and plain: the graphical drawing reads it, and so does the snapshot that holds it across
+* surfaces. No host imports.
+*/
+/** A passage of one short line is never folded: there is nothing to give way. */
+const isLong = (text) => text.includes("\n") || cellWidth(text) > tokens.gui.excerptCells;
+function view$2(model, surface) {
+	const shape = !(!holds(surface, "cells") && model.excerpt !== void 0 && isLong(model.text)) ? "whole" : model.excerpt?.isOpen ? "opened" : "folded";
 	return {
-		shown: items.slice(0, max),
-		more: /* @__PURE__ */ h(Box, {
-			key: "more:box",
-			paddingX: tokens.gui.across.inset
-		}, onMore ? /* @__PURE__ */ h(Button, {
-			key: "more",
-			dimColor: true,
-			label: `Show ${left} more`,
-			onPress: () => onMore()
-		}) : /* @__PURE__ */ h(Text, { dimColor: true }, `${left} more`))
+		shape,
+		isDim: !!model.isDim,
+		first: shape === "folded" ? model.text.replace(/\s*\n\s*/g, " ") : void 0
 	};
 }
+
+// ../../lib/kits/prose/src/gui.tsx
+/** Prose on the graphical surfaces: the host's own `Markdown`, as it draws a reply. */
 /**
-* Words between backticks, as a Text can set them: in a chip, since a Text has no code face. The
-* chip takes the line's own `truncate-end`: a nested Text without a `wrap` is drawn `pre-wrap`,
-* and VS Code's extension before 2.1.327 breaks a one-line row after it.
+* A text of several blocks, at the inset every block of a pane has. The host sets it and wraps
+* it; the surface scrolls, so there is no window. An `excerpt` folds a long passage to its first
+* line with a `More` Button.
 */
-function inlineCode(k, text) {
-	const { Text } = k;
-	return text.split(/(`[^`\n]+`)/).filter(Boolean).map((part, i) => part.startsWith("`") && part.endsWith("`") && part.length > 2 ? /* @__PURE__ */ h(Text, {
-		key: `c${i}`,
-		backgroundColor: tokens.gui.chip,
-		wrap: "truncate-end"
-	}, ` ${part.slice(1, -1)} `) : part.replace(/\*\*|__/g, ""));
-}
-/** A thin rule down the side of what it marks: a Box of a fraction of a cell, filled. */
-function sideRule(k, key) {
-	const { Box } = k;
-	return /* @__PURE__ */ h(Box, {
-		key,
-		width: .2,
-		flexShrink: 0,
-		backgroundColor: tokens.gui.rule
+function prose(g, p) {
+	const { Box, Button, Markdown, Text } = g.els;
+	const { across } = tokens.gui;
+	const v = view$2(p, g.surface);
+	const words = /* @__PURE__ */ h(Markdown, {
+		text: p.text,
+		dimColor: v.isDim || void 0
 	});
-}
-/**
-* The one graphical row. Folded, it is one line: the mark, the text cut at the edge, its detail,
-* and a quiet button at the far edge. The line is one line of text tall whether it has a button
-* or not, so every folded row is the same height. Opened, the line shows the text whole and the
-* row takes a fill that holds everything under it, set in from the mark, with a rule running
-* down from the mark so the body reads as that line's own. A Button cannot wrap or hold an icon
-* and never shrinks, so it is never the row itself.
-*/
-function guiRow(k, o) {
-	const { Box, Button, Text } = k;
-	const { space, across } = tokens.gui;
-	const isOpen = Boolean(o.isOpen);
-	const { detail, button } = o;
-	const line = o.field ? o.field : isOpen ? o.text ? prose(k, o.text) : null : /* @__PURE__ */ h(Text, {
-		wrap: "truncate-end",
-		dimColor: o.isDim || o.isStruck || void 0,
-		strikethrough: o.isStruck || void 0,
-		color: o.tone ? tokens.gui.tone[o.tone] : void 0
-	}, o.isPlain ? o.text : inlineCode(k, linesOf(o.text).join(" ")));
-	return /* @__PURE__ */ h(Box, {
-		key: o.key,
+	if (v.shape === "whole" || !p.excerpt) return /* @__PURE__ */ h(Box, { paddingX: across.inset }, words);
+	const { hit } = p.excerpt;
+	const toggle = /* @__PURE__ */ h(Button, {
+		key: hit,
+		dimColor: true,
+		label: v.shape === "opened" ? "Less" : "More",
+		onPress: () => g.press?.(hit)
+	});
+	if (v.shape === "folded") return /* @__PURE__ */ h(Box, {
 		flexDirection: "row",
 		flexWrap: "nowrap",
-		columnGap: across.sm,
-		paddingX: across.inset,
-		paddingY: isOpen ? space.sm : space.xs,
-		backgroundColor: isOpen ? tokens.gui.fill : void 0,
-		borderStyle: "round",
-		borderColor: "#00000000"
-	}, o.mark ? /* @__PURE__ */ h(Box, {
-		key: "mark",
-		flexDirection: "column",
-		alignItems: "flex-start",
-		flexShrink: 0,
-		minWidth: o.markWidth
-	}, /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
 		alignItems: "center",
-		flexGrow: 1,
-		rowGap: space.xs
-	}, /* @__PURE__ */ h(Box, {
-		height: 1,
-		alignItems: "center"
-	}, o.mark), isOpen ? /* @__PURE__ */ h(Box, { flexGrow: 1 }, sideRule(k, "thread")) : null)) : null, /* @__PURE__ */ h(Box, {
-		key: "text",
-		flexDirection: "column",
-		flexGrow: 1,
-		flexShrink: 1,
-		rowGap: isOpen ? space.sm : space.xs
-	}, /* @__PURE__ */ h(Box, {
-		key: "line",
-		flexDirection: "row",
-		flexWrap: "nowrap",
-		alignItems: isOpen ? "flex-start" : "center",
 		columnGap: across.md,
-		height: isOpen ? void 0 : 1
+		paddingX: across.inset
 	}, /* @__PURE__ */ h(Box, {
-		flexDirection: "row",
-		flexWrap: "nowrap",
 		flexGrow: 1,
 		flexShrink: 1,
-		columnGap: across.md
-	}, /* @__PURE__ */ h(Box, {
-		flexShrink: 1,
-		flexGrow: o.field ? 1 : void 0
-	}, line), detail && !detail.isAtEnd ? /* @__PURE__ */ h(Box, {
-		width: 0,
-		flexGrow: 1,
-		flexShrink: 1
+		width: 0
 	}, /* @__PURE__ */ h(Text, {
-		wrap: "truncate-end",
-		dimColor: true
-	}, detail.text)) : null), detail?.isAtEnd ? /* @__PURE__ */ h(Box, { flexShrink: 0 }, /* @__PURE__ */ h(Text, { dimColor: true }, detail.text)) : null, button ? /* @__PURE__ */ h(Button, {
-		key: button.key,
-		variant: button.isFilled ? "primary" : void 0,
-		dimColor: !button.isFilled || void 0,
-		label: button.label,
-		onPress: () => button.onPress()
-	}) : null), o.meta && !isOpen ? /* @__PURE__ */ h(Text, {
-		wrap: "truncate-end",
-		dimColor: true
-	}, o.meta) : null, isOpen ? o.body : null));
-}
-/**
-* A line that tells the person there is something to open, drawn in the band above the prompt: a
-* status mark and the text, and a way in.
-* @param hint What pressing it does, `review`.
-*/
-function statusBand(k, o) {
-	const { Box, Button, Text } = k;
-	const status = o.status ?? "warning";
-	if (k.isNative) {
-		const extra = o.gui?.actions ?? [];
-		const isOneLine = Boolean(o.gui?.isOneLine);
-		const mark = icon(k, o.gui?.icon ?? status, { tone: o.gui?.tone ?? status });
-		const text = /* @__PURE__ */ h(Box, {
-			flexShrink: 1,
-			flexGrow: isOneLine ? 1 : void 0
-		}, /* @__PURE__ */ h(Text, { wrap: isOneLine ? "truncate-end" : void 0 }, o.gui?.text ?? o.text));
-		const first = /* @__PURE__ */ h(Button, {
-			key: o.key,
-			dimColor: true,
-			label: capital(o.hint),
-			onPress: () => o.onPress()
-		});
-		if (extra.length === 0 || isOneLine) return /* @__PURE__ */ h(Box, {
-			flexDirection: "row",
-			flexWrap: "nowrap",
-			columnGap: tokens.gui.across.sm,
-			alignItems: "center",
-			paddingX: tokens.gui.across.inset
-		}, mark, text, /* @__PURE__ */ h(Box, {
-			flexDirection: "row",
-			flexShrink: 0,
-			columnGap: tokens.gui.across.xs
-		}, first, extra.map((a) => /* @__PURE__ */ h(Button, {
-			key: a.key,
-			dimColor: true,
-			label: capital(a.label),
-			onPress: () => a.onPress()
-		}))));
-		return /* @__PURE__ */ h(Box, {
-			flexDirection: "column",
-			rowGap: tokens.gui.space.xs,
-			paddingX: tokens.gui.across.inset
-		}, /* @__PURE__ */ h(Box, {
-			flexDirection: "row",
-			flexWrap: "nowrap",
-			columnGap: tokens.gui.across.sm
-		}, mark, text), /* @__PURE__ */ h(Box, {
-			flexDirection: "row",
-			flexWrap: "wrap",
-			columnGap: tokens.gui.across.xs
-		}, first, extra.map((a) => /* @__PURE__ */ h(Button, {
-			key: a.key,
-			dimColor: true,
-			label: capital(a.label),
-			onPress: () => a.onPress()
-		}))));
-	}
-	return /* @__PURE__ */ h(Button, {
-		key: o.key,
-		plain: true,
-		onPress: () => o.onPress()
-	}, /* @__PURE__ */ h(Text, roleProps(status), `${ICON_GLYPH[status]} ${o.text}`), /* @__PURE__ */ h(Text, { dimColor: true }, ` ${o.hint}`));
-}
-/**
-* The pane's action row: its Submit, its Close. Labels are as written on the terminal and
-* capitalised on a graphical surface.
-*/
-function actionBar(k, actions, options = {}) {
-	const { Box, Text } = k;
-	if (k.isNative && options.gui?.isHidden) return null;
-	const summary = k.isNative ? options.gui?.summary : void 0;
-	return /* @__PURE__ */ h(Box, {
-		key: "actions",
-		columnGap: k.isNative ? tokens.gui.across.md : void 0,
-		rowGap: k.isNative ? tokens.gui.space.xs : void 0,
-		alignItems: k.isNative ? "center" : void 0,
-		paddingX: k.isNative ? tokens.gui.across.inset : void 0,
-		flexWrap: "wrap"
-	}, summary ? /* @__PURE__ */ h(Text, null, summary) : null, actions.map((a) => actionButton(k, a)));
-}
-/**
-* One action's Button. A graphical surface fills only the one worth pressing now and draws the
-* rest quiet: VS Code paints a Button by its `dimColor` alone, so the variant follows it.
-*/
-function actionButton(k, a) {
-	const { Button } = k;
-	const isPrimary = k.isNative ? a.gui?.isPrimary ?? a.isPrimary : a.isPrimary;
-	return /* @__PURE__ */ h(Button, {
-		key: a.key,
-		variant: isPrimary ? "primary" : void 0,
-		dimColor: k.isNative && !isPrimary || void 0,
-		hotkey: a.hotkey,
-		label: k.isNative ? capital(a.label) : a.label,
-		onPress: () => a.onPress()
-	});
-}
-/** Cells a mark takes with the space after it. */
-const MARK = 2;
-/**
-* A graphical row that is pressed, not opened (`guiRow`): the title cut at the edge, its detail
-* dim beside it or at its end, and one quiet button at the far edge. A dimmed row has no button.
-*/
-function listRowGui(k, item) {
-	const meta = item.meta ?? [];
-	const label = item.action ?? (item.isMarked === void 0 ? "Open" : item.isMarked ? "Chosen" : "Choose");
-	return guiRow(k, {
-		key: `${item.key}:row`,
-		mark: item.icon ? icon(k, item.icon, { tone: item.iconTone }) : void 0,
-		text: item.title,
-		isPlain: true,
-		isDim: item.isDim,
-		detail: item.detail ? {
-			text: item.detail,
-			isAtEnd: item.gui?.isDetailAtEnd
-		} : void 0,
-		meta: meta.length > 0 ? meta.map((c) => c.text).join("  ·  ") : void 0,
-		button: item.isDim ? void 0 : {
-			key: item.key,
-			label,
-			isFilled: item.isMarked,
-			onPress: item.onPress
-		}
-	});
-}
-/**
-* One row of a list: a `Button` whose text is the mark, the clamped title and the metadata.
-* A focused row is drawn by the engine; this draws no pointer of its own. A graphical surface
-* draws a row of text with a short quiet button at its end (`listRowGui`).
-*/
-function listRow(k, item, options = {}) {
-	const { Button, Text } = k;
-	if (k.isNative) return listRowGui(k, item);
-	if (options.tui?.isInline) {
-		const pad = Math.max(0, (options.tui.labelWidth ?? 0) - cellWidth(item.title));
-		return /* @__PURE__ */ h(Button, {
-			key: item.key,
-			plain: true,
-			hotkey: item.hotkey,
-			dimColor: item.isDim || void 0,
-			onPress: () => item.onPress()
-		}, `${item.title}${" ".repeat(pad)}`, item.detail ? /* @__PURE__ */ h(Text, { dimColor: true }, `  ${item.detail}`) : null);
-	}
-	const meta = [...item.detail ? [{
-		text: item.detail,
-		width: cellWidth(item.detail)
-	}] : [], ...item.meta ?? []];
-	const { isColumns = false } = options.tui ?? {};
-	const width = k.columns;
-	const gutter = tokens.gutter;
-	const hasMark = item.isMarked !== void 0;
-	const lead = hasMark ? MARK : 0;
-	const columnsWidth = meta.reduce((n, c) => n + gutter + c.width, 0);
-	const inColumns = isColumns && meta.length > 0 && width - lead - columnsWidth >= tokens.minTitle;
-	const titleWidth = Math.max(1, width - lead - (inColumns ? columnsWidth : 0));
-	const lines = clamp(item.title, titleWidth, options.tui?.title);
-	const children = [];
-	const cellText = (c) => c.align === "right" ? alignRight(truncate(c.text, c.width), c.width) : fit(c.text, c.width);
-	lines.forEach((line, i) => {
-		if (i > 0) children.push(`\n${" ".repeat(lead)}`);
-		else if (hasMark) {
-			const mark = tokens.glyph[options.marks ?? "multi"];
-			children.push(item.isMarked ? `${mark.on} ` : `${mark.off} `);
-		}
-		children.push(line);
-		if (i === 0 && inColumns) {
-			children.push(" ".repeat(titleWidth - cellWidth(line) + gutter));
-			meta.forEach((c, n) => {
-				if (n > 0) children.push(" ".repeat(gutter));
-				children.push(/* @__PURE__ */ h(Text, {
-					key: `m${n}`,
-					...roleProps(c.role ?? "dim")
-				}, cellText(c)));
-			});
-		}
-	});
-	if (!inColumns && meta.length > 0) {
-		children.push(`\n${" ".repeat(lead)}`);
-		meta.forEach((c, n) => {
-			if (n > 0) children.push(" ".repeat(gutter));
-			children.push(/* @__PURE__ */ h(Text, {
-				key: `m${n}`,
-				...roleProps(c.role ?? "dim")
-			}, c.text));
-		});
-	}
-	return /* @__PURE__ */ h(Button, {
-		key: item.key,
-		plain: true,
-		hotkey: item.hotkey,
-		dimColor: item.isDim || void 0,
-		onPress: () => item.onPress()
-	}, children);
-}
-/**
-* Groups of rows, each under a section header, one blank row between groups. A Claude pane
-* scrolls as a whole, so the terminal has no windowing and no `n more`; a graphical surface shows
-* `gui.maxItems` rows of a group and says how many more. A group with no title is rows alone.
-*/
-function list(k, groups, options = {}) {
-	const { Box } = k;
-	const own = surfaceOf(k, {
-		gui: options.gui,
-		desktop: options.desktop,
-		vscode: options.vscode,
-		mobile: options.mobile
-	});
-	const rowOptions = options.tui?.isInline ? {
-		...options,
-		tui: {
-			...options.tui,
-			labelWidth: Math.max(0, ...groups.flatMap((g) => g.rows.map((r) => cellWidth(r.title))))
-		}
-	} : options;
-	return /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		rowGap: k.isNative ? tokens.gui.space.md : 1
-	}, groups.map((group, g) => {
-		const { shown, more } = capped(k, group.rows, {
-			gui: own,
-			isAll: own.isAll,
-			onMore: own.onMore
-		});
-		const rows = shown.map((row) => listRow(k, row, rowOptions));
-		return k.isNative ? /* @__PURE__ */ h(Box, {
-			key: `group${g}`,
-			flexDirection: "column",
-			rowGap: tokens.gui.space.xs
-		}, group.title ? section(k, group.title) : null, /* @__PURE__ */ h(Box, {
-			key: "rows",
-			flexDirection: "column"
-		}, rows), more) : /* @__PURE__ */ h(Box, {
-			key: `group${g}`,
-			flexDirection: "column"
-		}, group.title ? section(k, group.title) : null, rows, more);
-	}));
-}
-/**
-* Blocks in a column with the gap of the style: a blank row on the terminal, dropped in a pane
-* too short for them when `isTight`; on a graphical surface a step of `tokens.gui.space`, `md`
-* unless `gui.gap` says, or `none` for rows that space themselves.
-*/
-function stack(k, children, options = {}) {
-	const { Box } = k;
-	const gap = options.gui?.gap ?? "md";
-	return /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		rowGap: k.isNative ? gap === "none" ? 0 : tokens.gui.space[gap] : options.isTight && k.isTight ? 0 : options.tui?.gap ?? 1
-	}, children);
-}
-/**
-* Leaves only `plugin`'s own rows in an `AbovePromptList` event: an open form has the band to
-* itself. Return it from the hook in place of `next(e)`'s input.
-* @param e The event's input, with `props.rows`.
-*/
-function onlyOwnRows(e, plugin) {
-	const rows = e.props.rows.filter((r) => r.plugin === plugin);
-	return {
-		...e,
-		props: {
-			...e.props,
-			rows
-		}
-	};
-}
-/**
-* Actions and keyboard-only labels in one wrapping row. Labels without a press handler are
-* dim text in the terminal and hidden on native surfaces. A native surface marks the lit
-* action as primary and capitalises button labels.
-*/
-function buttonRow(k, keys, compact = false) {
-	const { Box, Button, Text } = k;
-	const { isNative } = k;
-	return /* @__PURE__ */ h(Box, {
-		columnGap: isNative ? tokens.gui.across.sm : compact ? 1 : tokens.keyGap,
-		flexWrap: "wrap",
-		alignItems: "center"
-	}, keys.map(({ id, hotkey, label, press, isLit, autoFocus }) => press ? /* @__PURE__ */ h(Button, {
-		key: id ?? label,
-		plain: isNative ? void 0 : true,
-		dimColor: !isNative && !isLit,
-		variant: isNative && isLit ? "primary" : void 0,
-		hotkey: /^[a-z0-9]$/.test(hotkey) ? hotkey : void 0,
-		label: isNative ? `${label.charAt(0).toUpperCase()}${label.slice(1)}` : /^[a-z0-9]$/.test(hotkey) ? label : `${hotkey} ${label}`,
-		autoFocus,
-		onPress: () => press()
-	}) : isNative ? null : /* @__PURE__ */ h(Text, {
-		key: id ?? label,
-		dimColor: true
-	}, `${hotkey} ${label}`)));
-}
-/**
-* A passage that gives way to what follows it: a graphical surface shows its first line dim, cut
-* at the edge, with a quiet `More` at the far edge when there is more; opened, the passage is
-* whole in a well, with `Less`. The terminal draws it whole.
-*/
-function excerpt(k, o) {
-	const text = o.text.trim();
-	if (!text) return null;
-	if (!k.isNative) return prose(k, text);
-	const isLong = linesOf(text).length > 1 || cellWidth(text) > tokens.gui.excerptCells;
-	return guiRow(k, {
-		key: o.key,
-		text,
-		isDim: !o.isOpen,
-		isOpen: isLong && o.isOpen,
-		button: isLong ? {
-			key: o.toggleKey,
-			label: o.isOpen ? "Less" : "More",
-			onPress: o.onToggle
-		} : void 0
-	});
+		dimColor: true,
+		wrap: "truncate-end"
+	}, spans(g, inline(v.first ?? "")))), /* @__PURE__ */ h(Box, { flexShrink: 0 }, toggle));
+	return panel(g, {}, words, /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		justifyContent: "flex-end"
+	}, toggle));
 }
 
 // src/claude/transcript.tsx
+/**
+* The drawing context with the events of the fields the kit's card draws: `fields` by their `hit`.
+* A field of one line per line (`lines`) reports the line it was typed on; the others the text whole.
+*/
+function fieldEvents(g, fields) {
+	const by = (hit) => {
+		const at = lineOf(hit);
+		const f = fields[at.hit];
+		return f ? {
+			f,
+			line: f.lines ? at.line : void 0
+		} : void 0;
+	};
+	return {
+		...g,
+		input: (hit, text) => {
+			const w = by(hit);
+			return w ? w.f.input(text, w.line) : g.input(hit, text);
+		},
+		submit: (hit, text) => {
+			const w = by(hit);
+			return w ? w.f.submit(text, w.line) : g.submit(hit, text);
+		}
+	};
+}
+/** A transcript's open field, as `fieldEvents` takes it. */
+const eventsOf = (w) => ({ [w.hit]: {
+	lines: w.props.lines,
+	input: w.onInput,
+	submit: w.onSubmit
+} });
 const labelOf = (text) => text.replace(/^[A-H0-9]{1,2}[.)]\s*/, "");
 /** Markdown that `inlineMarkdown` cannot set: a list, a heading, a quote, a fence or a table. */
 const BLOCKS = /^\s*(?:[-*+]\s|\d+[.)]\s|#{1,6}\s|>|```|~~~|\|)/m;
@@ -2653,180 +2750,127 @@ function writeLetter(item) {
 	const last = Math.max(isNumbered ? 48 : 64, ...keys.map((key) => key.charCodeAt(0)));
 	return String.fromCharCode(last + 1);
 }
-function questionCard(outer, held, index, current, actions, editor, sent = false) {
-	const { Box, Text, Button, Markdown } = outer;
-	const v = view(held.form, {
+/** Whether a recommendation of several options has its own press: `Take A, B`. */
+const takesMany = (item) => item.canAccept && item.accepts.includes(",");
+/** A markdown block the engine sets, in the card's room: `indent` cells in, `inner` wide in all. */
+const markdown = (text, indent, inner, isDim) => slotLine({
+	kind: "markdown",
+	text,
+	indent,
+	width: Math.max(1, inner - indent),
+	isDim
+});
+/** Blocks as lines with a blank row between them, as the card keeps them. */
+const spaced = (blocks) => blocks.filter((rows) => rows.length).flatMap((rows, i) => i ? [blank(), ...rows] : rows);
+/**
+* A question's card in a terminal: the kit's lines behind the engine's quote rail, each control
+* a Button named by its row (`question-<n>-choose-<i>`, `-write`, `-note`, `-activate`).
+* @param columns The band's or pane's room in cells.
+*/
+function questionCard(els, columns, held, index, current, actions) {
+	const v = view$5(held.form, {
 		...held.draft,
 		step: index
 	});
 	const item = v.item;
 	if (!item) return null;
-	const interactive = outer.isNative && current?.writer ? void 0 : actions;
 	const isActive = current?.view.step === index;
 	const several = item.isSeveral;
-	const width = widthCap("reading", outer.columns);
-	const kit = withColumns(outer, Math.max(1, width - 4));
+	const width = widthCap("reading", columns);
+	const room = Math.max(1, width - 4);
+	const inner = room;
 	const prefix = `question-${index}`;
 	const answered = v.review[index]?.isAnswered;
 	const hasChoices = item.entries.some((entry) => entry.kind !== "write");
-	const controls = interactive ? [...kit.isNative ? [{
-		key: `${prefix}-write`,
-		label: item.written ? "Edit answer" : "Write answer",
-		icon: "",
-		onPress: () => interactive.edit(index, "write")
-	}, {
-		key: `${prefix}-note`,
-		label: item.note ? "Edit note" : "Add note",
-		icon: "",
-		onPress: () => interactive.edit(index, "note")
-	}] : [], ...item.canAccept && item.accepts.includes(",") ? [{
-		key: `${prefix}-accept`,
-		label: `Take ${item.accepts}`,
-		icon: `Take ${item.accepts}`,
-		onPress: () => interactive.accept(index)
-	}] : []] : [];
-	const answerTone = sent ? "success" : "note";
-	const titleRole = roleProps(isActive ? "accent" : !kit.isNative && answered ? answerTone : "text");
 	const state = {
 		active: isActive,
 		answered
 	};
-	const room = kit.columns;
-	const terminal = (lines, press) => paintLines(outer, lines, {
-		press: interactive && press ? () => press() : void 0,
-		width: room
+	const inset = cellWidth(CARD_INSET);
+	const hit = (name) => `${prefix}-${name}`;
+	const choices = [];
+	item.entries.forEach((entry, i) => {
+		if (entry.kind === "write") return;
+		const words = entry.kind === "accept" ? entry.text : labelOf(entry.text);
+		const isDetailInline = !!entry.detail && !BLOCKS.test(entry.detail);
+		choices.push(...choice$1({
+			...state,
+			key: entryLetter(entry, i),
+			text: words,
+			aside: entry.isRecommended ? "  Recommended" : void 0,
+			detail: isDetailInline ? entry.detail : void 0,
+			detailLines: 1e400,
+			chosen: entry.isChosen,
+			multiple: several,
+			hit: hit(`choose-${i}`)
+		}, room));
+		if (entry.detail && !isDetailInline) choices.push(markdown(entry.detail, 4 + inset, inner, true));
 	});
-	const inset = (node) => node && !kit.isNative ? /* @__PURE__ */ h(Box, { paddingLeft: cellWidth(CARD_INSET) }, node) : node;
-	const activate = !kit.isNative ? terminal(heading({
+	if (actions || item.written) choices.push(...choice$1({
 		...state,
-		focused: isActive,
-		label: item.label,
-		title: item.title
-	}, room).map((row) => ({
-		...row,
-		hit: `${prefix}-activate`
-	})), () => interactive?.go(index)) : /* @__PURE__ */ h(Box, {
-		columnGap: tokens.gui.across.sm,
-		alignItems: "flex-start"
-	}, /* @__PURE__ */ h(Text, {
-		...titleRole,
-		weight: "semibold"
-	}, item.label), /* @__PURE__ */ h(Box, {
-		flexShrink: 1,
-		width: 0,
-		flexGrow: 1
-	}, /* @__PURE__ */ h(Text, {
-		weight: "semibold",
-		...titleRole
-	}, item.title)), isActive ? /* @__PURE__ */ h(Text, titleRole, "Current") : null);
-	return /* @__PURE__ */ h(Box, {
-		key: kit.isNative ? `${prefix}-card` : item.label,
-		width: kit.isNative ? void 0 : width,
-		flexDirection: "column",
-		borderStyle: kit.isNative ? void 0 : "quote",
-		borderColor: !kit.isNative && answered ? tokens.role.success : void 0,
-		borderDimColor: !kit.isNative && !isActive && !answered || void 0,
-		paddingX: 1
-	}, stack(kit, [
-		activate,
-		inset(item.body ? /* @__PURE__ */ h(Markdown, { text: item.body }) : null),
-		hasChoices || !kit.isNative && (interactive || item.written || item.note) ? /* @__PURE__ */ h(Box, {
-			flexDirection: "column",
-			rowGap: kit.isNative ? tokens.gui.space.xs : 0
-		}, item.entries.map((entry, i) => {
-			if (entry.kind === "write") return null;
-			const words = entry.kind === "accept" ? entry.text : labelOf(entry.text);
-			const tag = entryLetter(entry, i) ? `${entryLetter(entry, i)} ` : "";
-			const said = plain(words);
-			const weight = entry.isChosen ? "semibold" : void 0;
-			const pick = () => !kit.isNative && entry.isChosen && !several ? interactive?.clear(index) : interactive?.pick(index, i);
-			const key = `${prefix}-choose-${i}`;
-			const isDetailInline = !kit.isNative && !!entry.detail && !BLOCKS.test(entry.detail);
-			const option = kit.isNative ? null : terminal(choice$1({
-				...state,
-				key: entryLetter(entry, i),
-				text: words,
-				aside: entry.isRecommended ? "  Recommended" : void 0,
-				detail: isDetailInline ? entry.detail : void 0,
-				detailLines: 1e400,
-				chosen: entry.isChosen,
-				multiple: several,
-				hit: key
-			}, room), pick);
-			return /* @__PURE__ */ h(Box, {
-				key: `${prefix}-option-${i}`,
-				flexDirection: "column"
-			}, kit.isNative ? /* @__PURE__ */ h(Box, {
-				flexDirection: "column",
-				rowGap: tokens.gui.space.xs
-			}, /* @__PURE__ */ h(Box, {
-				flexDirection: "row",
-				flexWrap: "wrap",
-				columnGap: tokens.gui.across.sm,
-				alignItems: "center"
-			}, interactive ? /* @__PURE__ */ h(Button, {
-				key,
-				label: cellWidth(said) > tokens.gui.maxLabel ? entry.key ? `Choose ${entry.key}` : "Accept recommendation" : [entry.key, said].filter(Boolean).join(" "),
-				variant: entry.isChosen ? "primary" : "secondary",
-				dimColor: !entry.isChosen || void 0,
-				onPress: pick
-			}) : null, entry.isChosen || entry.isRecommended ? /* @__PURE__ */ h(Text, { dimColor: true }, entry.isChosen ? entry.isRecommended ? "Selected, recommended" : "Selected" : "Recommended") : null), !interactive || cellWidth(said) > tokens.gui.maxLabel ? /* @__PURE__ */ h(Text, { weight }, !interactive ? tag : "", said) : null) : option, entry.detail && !isDetailInline ? /* @__PURE__ */ h(Box, { paddingLeft: kit.isNative ? 1 : 4 + cellWidth(CARD_INSET) }, /* @__PURE__ */ h(Markdown, {
-				text: entry.detail,
-				dimColor: true
-			})) : null);
-		}), !kit.isNative && (interactive || item.written) ? terminal(choice$1({
+		key: writeLetter(item),
+		text: item.written || item.entries.find((entry) => entry.kind === "write")?.text || "Write your own answer",
+		literal: true,
+		chosen: !!item.written,
+		hit: hit("write")
+	}, room));
+	if (actions || item.note) choices.push(...note$1({
+		...state,
+		value: item.note,
+		hit: hit("note")
+	}, room));
+	const rows = spaced([
+		heading$1({
 			...state,
-			key: writeLetter(item),
-			text: item.written || item.entries.find((entry) => entry.kind === "write")?.text || "Write your own answer",
-			literal: true,
-			chosen: !!item.written,
-			hit: `${prefix}-write`
-		}, room), () => interactive?.edit(index, "write")) : null, !kit.isNative && (interactive || item.note) ? terminal(note$1({
-			...state,
-			value: item.note,
-			hit: `${prefix}-note`
-		}, room), () => interactive?.edit(index, "note")) : null) : null,
-		inset(item.recommended ? /* @__PURE__ */ h(Markdown, {
-			text: `**Recommended:** ${item.recommended}`,
-			dimColor: true
-		}) : null),
-		kit.isNative && item.written ? /* @__PURE__ */ h(Text, null, /* @__PURE__ */ h(Text, {
-			weight: "semibold",
-			...roleProps(sent ? "success" : "note")
-		}, "Answer: "), item.written) : null,
-		kit.isNative && interactive && answered ? /* @__PURE__ */ h(Button, {
-			key: `${prefix}-clear`,
-			dimColor: true,
-			label: "Clear answer",
-			onPress: () => interactive.clear(index)
-		}) : null,
-		kit.isNative && item.note ? note(kit, item.note, { role: "note" }) : null,
-		inset(editor ?? null),
-		!controls.length ? null : kit.isNative ? actionBar(kit, controls) : /* @__PURE__ */ h(Box, {
-			columnGap: tokens.gutter,
-			flexWrap: "wrap",
-			paddingLeft: cellWidth(CARD_INSET)
-		}, controls.map((control) => /* @__PURE__ */ h(Button, {
-			key: control.key,
-			plain: true,
-			dimColor: true,
-			label: control.label,
-			onPress: control.onPress
-		}, /* @__PURE__ */ h(Text, null, control.icon))))
-	], { gui: { gap: "sm" } }));
+			focused: isActive,
+			label: item.label,
+			title: item.title
+		}, room).map((row) => ({
+			...row,
+			hit: hit("activate")
+		})),
+		item.body ? [markdown(item.body, inset, inner)] : [],
+		hasChoices || actions || item.written || item.note ? choices : [],
+		item.recommended ? [markdown(`**Recommended:** ${item.recommended}`, inset, inner, true)] : [],
+		actions && takesMany(item) ? [line([span(CARD_INSET), span(`Take ${item.accepts}`, {
+			role: "dim",
+			hit: hit("accept")
+		})])] : []
+	]);
+	const press = (name) => {
+		if (name === hit("activate")) return actions?.go(index);
+		if (name === hit("write")) return actions?.edit(index, "write");
+		if (name === hit("note")) return actions?.edit(index, "note");
+		if (name === hit("accept")) return actions?.accept(index);
+		const at = Number(name.slice(hit("choose-").length));
+		return item.entries[at]?.isChosen && !several ? actions?.clear(index) : actions?.pick(index, at);
+	};
+	return quoted(els, paintLines(els, rows, {
+		press: actions ? press : void 0,
+		width: room
+	}), {
+		key: item.label,
+		width,
+		rail: answered ? "answered" : isActive ? "bright" : "quiet"
+	});
 }
+/** The closing row's controls, as the painter names their Buttons. */
+const CLOSING = {
+	count: "round-count",
+	fill: "round-fill",
+	note: "round-note"
+};
 /**
 * The row after the last card, the kit's: the count goes back to the first question, Fill prompt
 * puts the reply in the prompt, and the round's note stands under it once it has words.
 */
-function closingRow(outer, view, current, actions, sent) {
-	const { Box } = outer;
-	const width = widthCap("reading", outer.columns);
+function closingRow(els, columns, view, current, actions, sent) {
+	const width = widthCap("reading", columns);
 	const room = Math.max(1, width - 4);
 	const isActive = current?.view.isReview === true;
 	const isNoting = isActive && (current.writer ? current.editing === "note" : current.pending?.field === "note");
-	const press = (hit) => hit === CLOSING.count ? actions?.top() : hit === CLOSING.fill ? actions?.fill() : actions?.edit(view.count, "note");
-	const lines = [...closing({
+	const press = (name) => name === CLOSING.count ? actions?.top() : name === CLOSING.fill ? actions?.fill() : actions?.edit(view.count, "note");
+	const rows = [...closing$1({
 		answered: view.answered,
 		total: view.count,
 		focused: isActive && !isNoting,
@@ -2846,348 +2890,27 @@ function closingRow(outer, view, current, actions, sent) {
 		active: isActive,
 		answered: view.answered === view.count
 	});
-	return /* @__PURE__ */ h(Box, {
-		key: "round-closing",
-		width,
-		flexDirection: "column",
-		borderStyle: "quote",
-		borderColor: rail === "success" ? tokens.role.success : void 0,
-		borderDimColor: rail === "dim" || void 0,
-		paddingX: 1
-	}, paintLines(outer, lines, {
+	return quoted(els, paintLines(els, rows, {
 		press: actions ? press : void 0,
 		width: room
-	}));
-}
-/** The closing row's controls, as the painter names their Buttons. */
-const CLOSING = {
-	count: "round-count",
-	fill: "round-fill",
-	note: "round-note"
-};
-/** An answer or note under the choices, aligned without forcing the editor to one line. */
-function nativeQuestionField(kit, kind, body) {
-	const { Box } = kit;
-	const { across, lead, space } = tokens.gui;
-	return /* @__PURE__ */ h(Box, {
-		paddingX: across.inset,
-		flexDirection: "row",
-		flexWrap: "nowrap",
-		columnGap: across.sm
-	}, /* @__PURE__ */ h(Box, {
-		flexShrink: 0,
-		minWidth: lead
-	}, icon(kit, kind)), /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		flexGrow: 1,
-		flexShrink: 1,
-		minWidth: 0,
-		rowGap: space.xs
-	}, body));
-}
-/** Native choice buttons with pi's selection marks. */
-function vscodeOption(kit, key, tag, label, selected, multiple, press, detail, recommended = false) {
-	const { Box, Button, Text, Markdown } = kit;
-	const marks = multiple ? tokens.glyph.multi : tokens.glyph.single;
-	const marker = `${selected ? marks.on : marks.off}${tag ? `  ${tag}` : ""}`;
-	const text = `${marker}  ${label}`;
-	const long = cellWidth(text) > tokens.gui.maxLabel || label.includes("\n");
-	return /* @__PURE__ */ h(Box, {
-		key: `${key}-row`,
-		flexDirection: "column",
-		rowGap: tokens.gui.space.xs,
-		minWidth: 0
-	}, press && !long ? /* @__PURE__ */ h(Button, {
-		key,
-		dimColor: !selected || void 0,
-		label: text,
-		onPress: press
-	}) : press ? /* @__PURE__ */ h(Box, {
-		flexWrap: "nowrap",
-		columnGap: tokens.gui.across.sm,
-		alignItems: "flex-start"
-	}, /* @__PURE__ */ h(Button, {
-		key,
-		dimColor: !selected || void 0,
-		label: marker,
-		onPress: press
-	}), /* @__PURE__ */ h(Box, {
-		flexShrink: 1,
-		minWidth: 0
-	}, /* @__PURE__ */ h(Text, null, label))) : /* @__PURE__ */ h(Text, { weight: selected ? "semibold" : void 0 }, text), recommended || detail ? /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		paddingLeft: tokens.gui.across.inset
-	}, detail ? /* @__PURE__ */ h(Markdown, {
-		text: recommended ? `**Recommended.** ${detail}` : detail,
-		dimColor: true
-	}) : /* @__PURE__ */ h(Text, { dimColor: true }, "Recommended")) : null);
-}
-/** A transcript question with native controls. */
-function nativeQuestion(kit, held, index, current, actions, editor, sent) {
-	const { Box, Text, Button, Markdown } = kit;
-	const show = view(held.form, {
-		...held.draft,
-		step: index
+	}), {
+		key: "round-closing",
+		width,
+		rail: rail === "success" ? "answered" : rail === "dim" ? "quiet" : "bright"
 	});
-	const item = show.item;
-	if (!item) return null;
-	const prefix = `question-${index}`;
-	const answered = show.review[index]?.isAnswered;
-	const active = current?.view.step === index && !current.view.isReview;
-	const vscode = kit.surface === "vscode";
-	const highlighted = active && (!vscode || Boolean(editor));
-	const rail = highlighted ? tokens.role.accent : answered ? tokens.role.note : tokens.gui.rule;
-	const editingNote = editor && current?.editing === "note";
-	const editingAnswer = editor && current?.editing === "write";
-	const options = item.entries.flatMap((entry, i) => {
-		if (entry.kind === "write") return [];
-		const option = entry.kind === "accept" ? recommendationChoice(entry.text) : {
-			tag: entry.key,
-			label: labelOf(entry.text)
-		};
-		return [{
-			key: `${prefix}-choose-${i}`,
-			...option,
-			detail: [entry.isRecommended ? "Recommended" : "", entry.detail.replace(/\s*\n\s*/g, " ")].filter(Boolean).join("  /  ") || void 0,
-			isOn: entry.isChosen,
-			fullDetail: entry.detail,
-			isRecommended: entry.isRecommended,
-			onPress: () => actions?.pick(index, i)
-		}];
-	});
-	const full = current?.view.step === index && current.isBodyOpen;
-	const hasDetails = options.some((o) => o.fullDetail || cellWidth(o.label) > tokens.gui.maxLabel);
-	const details = actions?.details;
-	return /* @__PURE__ */ h(Box, {
-		key: `${prefix}-card`,
-		flexDirection: "row",
-		flexWrap: "nowrap",
-		minWidth: 0
-	}, /* @__PURE__ */ h(Box, {
-		backgroundColor: rail,
-		width: .2,
-		flexShrink: 0
-	}), /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		flexGrow: 1,
-		flexShrink: 1,
-		minWidth: 0,
-		rowGap: vscode ? tokens.gui.space.sm : tokens.gui.space.xs
-	}, /* @__PURE__ */ h(Box, {
-		paddingX: tokens.gui.across.inset,
-		flexDirection: "column",
-		rowGap: tokens.gui.space.xs
-	}, /* @__PURE__ */ h(Box, {
-		flexDirection: "row",
-		flexWrap: "nowrap",
-		alignItems: "flex-start",
-		columnGap: tokens.gui.across.sm
-	}, /* @__PURE__ */ h(Box, {
-		flexShrink: 0,
-		minWidth: tokens.gui.lead
-	}, /* @__PURE__ */ h(Text, {
-		weight: "semibold",
-		...roleProps(highlighted ? "accent" : "dim")
-	}, item.label)), /* @__PURE__ */ h(Box, {
-		flexGrow: 1,
-		flexShrink: 1,
-		minWidth: 0
-	}, /* @__PURE__ */ h(Text, { weight: "semibold" }, item.title)), answered ? /* @__PURE__ */ h(Box, { flexShrink: 0 }, /* @__PURE__ */ h(Text, roleProps(sent ? "success" : "note"), tokens.glyph.done)) : null), item.body ? /* @__PURE__ */ h(Markdown, {
-		text: item.body,
-		dimColor: true
-	}) : null, item.recommended ? /* @__PURE__ */ h(Markdown, {
-		text: `**Recommended:** ${item.recommended}`,
-		dimColor: true
-	}) : null), vscode ? /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		rowGap: tokens.gui.space.xs,
-		paddingX: tokens.gui.across.inset
-	}, options.map((option) => vscodeOption(kit, option.key, option.tag, option.label, option.isOn, item.isSeveral, actions && option.onPress, option.fullDetail, option.isRecommended)), editingAnswer ? editor : actions || item.written ? vscodeOption(kit, `${prefix}-write`, writeLetter(item), item.written ? "Edit answer" : "Write your own answer", Boolean(item.written), false, actions && (() => actions.edit(index, "write"))) : null, item.written && !editingAnswer ? /* @__PURE__ */ h(Text, null, `Answer: ${item.written}`) : null) : actions ? choice(kit, options, {
-		key: `${prefix}-options`,
-		isMulti: item.isSeveral,
-		gui: { layout: "rows" }
-	}) : /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		paddingX: tokens.gui.across.inset
-	}, options.map((option) => /* @__PURE__ */ h(Text, {
-		key: `${option.key}-saved`,
-		weight: option.isOn ? "semibold" : void 0
-	}, [
-		option.tag,
-		option.label,
-		option.isOn ? "Selected" : ""
-	].filter(Boolean).join("  ")))), !vscode && details && hasDetails ? /* @__PURE__ */ h(Box, {
-		paddingX: tokens.gui.across.inset,
-		flexDirection: "column",
-		alignItems: "flex-start",
-		rowGap: tokens.gui.space.xs
-	}, /* @__PURE__ */ h(Button, {
-		key: `${prefix}-details`,
-		label: full ? "Hide option details" : "Option details",
-		dimColor: true,
-		onPress: () => details(index)
-	}), full ? options.map((o) => /* @__PURE__ */ h(Box, {
-		key: `${o.key}-detail`,
-		flexDirection: "column"
-	}, /* @__PURE__ */ h(Text, { weight: "semibold" }, `${o.tag}  ${o.label}`), o.fullDetail ? /* @__PURE__ */ h(Markdown, {
-		text: o.fullDetail,
-		dimColor: true
-	}) : null)) : null) : null, vscode ? /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		rowGap: tokens.gui.space.xs
-	}, editingNote ? /* @__PURE__ */ h(Box, {
-		paddingX: tokens.gui.across.inset,
-		flexDirection: "column"
-	}, editor) : item.note ? /* @__PURE__ */ h(Box, { paddingX: tokens.gui.across.inset }, /* @__PURE__ */ h(Text, null, `Note: ${item.note}`)) : null, actions ? actionBar(kit, [
-		...!editingNote ? [{
-			key: `${prefix}-note`,
-			label: item.note ? "Edit note" : "Add note",
-			onPress: () => actions.edit(index, "note")
-		}] : [],
-		...answered && !editingAnswer ? [{
-			key: `${prefix}-clear`,
-			label: "Clear answer",
-			onPress: () => actions.clear(index)
-		}] : [],
-		...item.canAccept && item.accepts.includes(",") ? [{
-			key: `${prefix}-accept`,
-			label: `Take ${item.accepts}`,
-			onPress: () => actions.accept(index)
-		}] : []
-	]) : null) : /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		rowGap: tokens.gui.space.xs
-	}, editingAnswer || item.written || actions ? nativeQuestionField(kit, "write", editingAnswer ? editor : /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		rowGap: tokens.gui.space.xs
-	}, item.written ? /* @__PURE__ */ h(Text, null, `Answer: ${item.written}`) : null, actions ? /* @__PURE__ */ h(Button, {
-		key: `${prefix}-write`,
-		dimColor: true,
-		label: item.written ? "Edit answer" : "Write your own answer",
-		onPress: () => actions.edit(index, "write")
-	}) : null)) : null, actions && (answered || item.canAccept && item.accepts.includes(",")) ? actionBar(kit, [...answered ? [{
-		key: `${prefix}-clear`,
-		label: "Clear answer",
-		onPress: () => actions.clear(index)
-	}] : [], ...item.canAccept && item.accepts.includes(",") ? [{
-		key: `${prefix}-accept`,
-		label: `Take ${item.accepts}`,
-		onPress: () => actions.accept(index)
-	}] : []]) : null, editingNote || item.note || actions ? nativeQuestionField(kit, "note", editingNote ? editor : /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		rowGap: tokens.gui.space.xs
-	}, item.note ? /* @__PURE__ */ h(Text, { dimColor: true }, item.note) : null, actions ? /* @__PURE__ */ h(Button, {
-		key: `${prefix}-note`,
-		label: item.note ? "Edit note" : "Add note",
-		dimColor: true,
-		onPress: () => actions.edit(index, "note")
-	}) : null)) : null)));
 }
-/** Transcript cards and the surface's reply controls. */
-function nativeRound(kit, held, current, actions, editor, sent = false) {
-	const { Box, Text, Button } = kit;
-	const view$2 = current?.view ?? view(held.form, held.draft);
-	const writingAt = current?.writer ? view$2.step : -1;
-	const live = actions;
-	const reviewEditor = writingAt === view$2.count ? editor : null;
-	const open = sent || (current ? view$2.isReview : true);
-	return /* @__PURE__ */ h(Box, {
-		flexDirection: "row",
-		minWidth: 0
-	}, /* @__PURE__ */ h(Box, {
-		width: tokens.prose,
-		flexShrink: 1,
-		minWidth: 0,
-		flexDirection: "column",
-		rowGap: tokens.gui.space.md
-	}, held.form.items.map((_, index) => nativeQuestion(kit, held, index, current, live, index === writingAt ? editor : null, sent)), kit.surface === "vscode" ? /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		rowGap: tokens.gui.space.xs,
-		paddingTop: tokens.gui.space.sm
-	}, /* @__PURE__ */ h(Box, {
-		paddingX: tokens.gui.across.inset,
-		flexDirection: "column"
-	}, /* @__PURE__ */ h(Text, { dimColor: true }, `${view$2.answered}/${view$2.count} answered`), sent ? /* @__PURE__ */ h(Text, roleProps("success"), "Sent") : null, view$2.note ? /* @__PURE__ */ h(Text, null, `Round note: ${view$2.note}`) : null), live && view$2.reply ? actionBar(kit, [{
-		key: "send",
-		label: "Send reply",
-		isPrimary: true,
-		onPress: live.send
-	}, {
-		key: "fill",
-		label: "Fill prompt",
-		onPress: live.fill
-	}]) : null) : /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		rowGap: tokens.gui.space.sm
-	}, /* @__PURE__ */ h(Box, {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		alignItems: "center",
-		columnGap: tokens.gui.across.md
-	}, live ? /* @__PURE__ */ h(Button, {
-		key: "review",
-		label: open ? "Hide review" : "Review answers",
-		dimColor: open || void 0,
-		onPress: () => live.go(view$2.count)
-	}) : /* @__PURE__ */ h(Text, { weight: "semibold" }, sent ? "Answers" : "Review answers"), /* @__PURE__ */ h(Text, { dimColor: true }, `${view$2.answered}/${view$2.count} answered`), sent ? /* @__PURE__ */ h(Text, roleProps("success"), "Sent") : null), open ? /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		rowGap: tokens.gui.space.md
-	}, /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		rowGap: tokens.gui.space.sm
-	}, view$2.review.map((row, i) => /* @__PURE__ */ h(Box, {
-		key: row.label,
-		flexDirection: "row",
-		columnGap: tokens.gui.across.md,
-		alignItems: "flex-start"
-	}, live ? /* @__PURE__ */ h(Button, {
-		key: `review-answer-${i}`,
-		label: row.label,
-		dimColor: true,
-		onPress: () => live.go(i)
-	}) : /* @__PURE__ */ h(Text, { dimColor: true }, row.label), /* @__PURE__ */ h(Box, {
-		flexGrow: 1,
-		flexShrink: 1,
-		minWidth: 0,
-		flexDirection: "column"
-	}, /* @__PURE__ */ h(Text, { weight: "semibold" }, row.title), /* @__PURE__ */ h(Text, { dimColor: !row.isAnswered || void 0 }, row.isAnswered ? row.shown : "Not answered"), row.note ? /* @__PURE__ */ h(Text, { dimColor: true }, `Note: ${row.note}`) : null)))), view$2.note ? /* @__PURE__ */ h(Text, { dimColor: true }, `Round note: ${view$2.note}`) : null, reviewEditor, live ? actionBar(kit, [...!reviewEditor ? [{
-		key: "round-note",
-		label: view$2.note ? "Edit round note" : "Add round note",
-		onPress: () => live.edit(view$2.count, "note")
-	}] : [], ...view$2.reply ? [{
-		key: "fill",
-		label: "Fill prompt",
-		onPress: live.fill
-	}, {
-		key: "send",
-		label: "Send reply",
-		isPrimary: true,
-		onPress: live.send
-	}] : []]) : null) : null)));
-}
+/** One blank row between the blocks of a terminal reply. */
+const spacer = (els) => paintLines(els, [blank()]);
+/** A passage of the reply the engine sets, as wide as the room. */
+const preamble = (els, columns, text) => paintLines(els, [markdown(text, 0, columns)], { width: columns });
 const ROUND_FOCUS = "round-current";
-const binding = (key) => `round-key-${key}`;
 const shortcuts = "abcdefghijklmnopqrstuvwxyz";
 /**
-* The host sends unmatched printable keys back to the prompt. While the band has the keys, bind
-* every letter so a slip stays there, and every digit so a row answers by its place on screen.
+* The guide above the prompt while the cards have the keys. The host sends unmatched printable
+* keys back to the prompt, so while the band has the keys every letter is bound, and every digit
+* so a row answers by its place on screen.
 */
-function absorb(kit, press) {
-	const { Box, Button } = kit;
-	return /* @__PURE__ */ h(Box, {
-		width: 0,
-		height: 0,
-		overflow: "hidden"
-	}, Array.from(`${shortcuts}${POSITIONS}`, (key) => /* @__PURE__ */ h(Button, {
-		key: binding(key),
-		plain: true,
-		hotkey: key,
-		label: key,
-		onPress: () => press(key)
-	})));
-}
-function controlBar(kit, current, home, press) {
-	const { Box, Text, Button } = kit;
+function controlBar(els, current, home, press) {
 	const { view } = current;
 	const item = view.item;
 	const letters = item?.entries.flatMap((entry, i) => entry.kind !== "write" && isKey(entryLetter(entry, i)) ? [entryLetter(entry, i)] : []).sort() ?? [];
@@ -3195,58 +2918,486 @@ function controlBar(kit, current, home, press) {
 	const first = letters[0]?.charCodeAt(0) ?? 0;
 	const picks = letters.length > 1 && letters.every((c, i) => c.charCodeAt(0) === first + i) ? `${letters[0]}–${letters.at(-1)}` : letters.join("");
 	const position = view.isReview ? `Review  ${view.answered}/${view.count} answered` : `${view.item?.label}/${view.count}`;
-	const hint = (hotkey, label) => ({
-		hotkey,
-		label
-	});
-	if (!current.hasKeys) return /* @__PURE__ */ h(Box, { columnGap: 1 }, /* @__PURE__ */ h(Button, {
-		key: ROUND_FOCUS,
-		plain: true,
-		autoFocus: true,
-		label: position,
-		onPress: home
-	}, /* @__PURE__ */ h(Text, {
-		...roleProps("accent"),
-		weight: "semibold"
-	}, position.padEnd(Math.max(6, cellWidth(`Q${view.count}/${view.count}`))))), buttonRow(kit, [hint("alt+a", "for the keys")]), absorb(kit, press));
-	if (view.isReview) {
-		const action = view.reply ? "fill" : "first question";
-		return /* @__PURE__ */ h(Box, { columnGap: 1 }, /* @__PURE__ */ h(Text, {
-			...roleProps("accent"),
-			weight: "semibold"
-		}, position), buttonRow(kit, [
-			hint("jk", "move"),
-			{
-				id: ROUND_FOCUS,
-				hotkey: "enter",
-				label: action,
-				press: home,
-				isLit: true,
-				autoFocus: true
-			},
-			hint("n", "note"),
-			hint("r", "back")
-		], true), /* @__PURE__ */ h(Text, { dimColor: true }, "keys here"), absorb(kit, press));
-	}
-	return /* @__PURE__ */ h(Box, { columnGap: 1 }, /* @__PURE__ */ h(Button, {
-		key: ROUND_FOCUS,
-		plain: true,
-		autoFocus: true,
-		label: position,
-		onPress: home
-	}, /* @__PURE__ */ h(Text, {
-		...roleProps("accent"),
-		weight: "semibold"
-	}, position.padEnd(Math.max(6, cellWidth(`Q${view.count}/${view.count}`))))), buttonRow(kit, [
+	const hint = (hotkey, label) => [span(`${hotkey} ${label}`, { role: "dim" })];
+	/** The parts of one row, a cell apart. */
+	const row = (parts) => line(parts.flatMap((part, i) => i ? [span(" "), ...part] : part));
+	const painted = (parts) => stack(els, paintLines(els, [row(parts)], {
+		press: (name) => name === "round-current" ? home() : void 0,
+		autoFocus: ROUND_FOCUS
+	}), hotkeys(els, Array.from(`${shortcuts}${POSITIONS}`, (key) => ({
+		key,
+		press: () => press(key)
+	}))));
+	const here = [span(position.padEnd(Math.max(6, cellWidth(`Q${view.count}/${view.count}`))), {
+		role: "accent",
+		bold: true,
+		hit: ROUND_FOCUS
+	})];
+	if (!current.hasKeys) return painted([here, hint("alt+a", "for the keys")]);
+	if (view.isReview) return painted([
+		[span(position, {
+			role: "accent",
+			bold: true
+		})],
+		hint("jk", "move"),
+		[span(`enter ${view.reply ? "fill" : "first question"}`, { hit: ROUND_FOCUS })],
+		hint("n", "note"),
+		hint("r", "back"),
+		[span("keys here", { role: "dim" })]
+	]);
+	return painted([
+		here,
 		hint("jk", "move"),
 		...picks ? [hint(picks, "pick")] : [],
 		hint(write, "write"),
 		hint("n", "note"),
-		hint("r", "review")
-	], true), /* @__PURE__ */ h(Text, { dimColor: true }, "keys here"), absorb(kit, press));
+		hint("r", "review"),
+		[span("keys here", { role: "dim" })]
+	]);
+}
+/**
+* The terminal's writer above the prompt: the question and, for a note, its answer, the engine's
+* field and Save and Cancel. `input` is the field, which stands alone on its rows.
+*/
+function writerBand(els, columns, o) {
+	const one = (text) => clamp(text, Math.max(1, columns - 6), { max: 1 }).join("");
+	const rows = [
+		line([span(one(o.caption), {
+			role: "accent",
+			bold: true
+		})]),
+		...o.answer ? [line([span(one(o.answer), { role: "dim" })])] : [],
+		slotLine({
+			kind: "input",
+			lead: [],
+			width: columns,
+			rows: o.rows
+		}),
+		line([
+			span("Save", {
+				role: "dim",
+				hit: "keep"
+			}),
+			span("  "),
+			span("Cancel", {
+				role: "dim",
+				hit: "cancel"
+			}),
+			...o.isWaiting ? [span("  "), span(`Click field or ${o.chord}`, { role: "dim" })] : []
+		])
+	];
+	return paintLines(els, rows, {
+		press: (name) => name === "keep" ? o.save() : o.cancel(),
+		width: columns,
+		input: o.input
+	});
+}
+/** What a press on a transcript card's control does, by its `hit`. */
+function roundPress(actions, writing, count) {
+	return (name) => {
+		const own = writing?.act[name];
+		if (own) return own();
+		if (name === "review") return actions.go(count);
+		if (name === "send") return actions.send();
+		if (name === "fill") return actions.fill();
+		if (name === "round-note") return actions.edit(count, "note");
+		const answer = /^review-answer-(\d+)$/.exec(name);
+		if (answer) return actions.go(Number(answer[1]));
+		const card = /^question-(\d+)-(choose|write|note|clear|accept)(?:-(\d+))?$/.exec(name);
+		if (!card) return void 0;
+		const question = Number(card[1]);
+		if (card[2] === "choose") return actions.pick(question, Number(card[3]));
+		if (card[2] === "write" || card[2] === "note") return actions.edit(question, card[2]);
+		return card[2] === "clear" ? actions.clear(question) : actions.accept(question);
+	};
+}
+/** One question of the transcript, as the surface draws it: its heading, answers, field and actions. */
+function question$1(g, held, index, actions, writing, sent) {
+	const show = view$5(held.form, {
+		...held.draft,
+		step: index
+	});
+	const item = show.item;
+	if (!item) return null;
+	const prefix = `question-${index}`;
+	const answered = show.review[index]?.isAnswered;
+	const mine = writing?.question === index ? writing : void 0;
+	const choices$2 = item.entries.flatMap((entry, i) => {
+		if (entry.kind === "write") return [];
+		const option = {
+			tag: entryLetter(entry, i),
+			label: entry.kind === "accept" ? entry.text : labelOf(entry.text)
+		};
+		return [{
+			key: actions ? option.tag : "",
+			text: option.label,
+			aside: entry.isRecommended ? "Recommended" : void 0,
+			detail: entry.detail || void 0,
+			chosen: entry.isChosen,
+			multiple: item.isSeveral,
+			answered,
+			hit: `${prefix}-choose-${i}`
+		}];
+	});
+	const written = item.written ? notice(g, {
+		text: [span("Answer: ", {
+			bold: true,
+			role: sent ? "success" : void 0
+		}), span(item.written)],
+		status: "text"
+	}) : null;
+	const write = mine?.field === "write" ? choice(fieldEvents(g, eventsOf(mine)), {
+		key: writeLetter(item),
+		text: mine.value,
+		literal: true,
+		chosen: true,
+		hit: mine.hit,
+		...mine.props
+	}) : actions ? choice(g, {
+		key: writeLetter(item),
+		text: item.written ? "Edit answer" : "Write your own answer",
+		chosen: Boolean(item.written),
+		hit: `${prefix}-write`
+	}) : null;
+	const note$2 = mine?.field === "note" ? note(fieldEvents(g, eventsOf(mine)), {
+		value: mine.value,
+		hit: mine.hit,
+		...mine.props
+	}) : item.note ? notice(g, {
+		text: `Note: ${item.note}`,
+		status: "dim"
+	}) : null;
+	const controls = actions ? [
+		...mine?.field === "note" ? [] : [{
+			hotkey: "",
+			label: item.note ? "Edit note" : "Add note",
+			hit: `${prefix}-note`
+		}],
+		...answered && mine?.field !== "write" ? [{
+			hotkey: "",
+			label: "Clear answer",
+			hit: `${prefix}-clear`
+		}] : [],
+		...takesMany(item) ? [{
+			hotkey: "",
+			label: `Take ${item.accepts}`,
+			hit: `${prefix}-accept`,
+			isLiteral: true
+		}] : []
+	] : [];
+	return column(g, { key: `${prefix}-card` }, column(g, { gap: "xs" }, heading(g, {
+		label: item.label,
+		title: item.title,
+		answered
+	}), item.body ? prose(g, { text: item.body }) : null, item.recommended ? prose(g, {
+		text: `**Recommended:** ${item.recommended}`,
+		isDim: true
+	}) : null), column(g, { gap: "sm" }, choices$2.length ? choices(g, choices$2) : null, write), mine?.field === "write" ? buttonRow(g, { rows: [mine.buttons] }) : written, note$2, mine?.field === "note" ? buttonRow(g, { rows: [mine.buttons] }) : null, buttonRow(g, { rows: [controls] }));
+}
+/**
+* The transcript's cards and reply controls. Where the host can jump to a card by key,
+* offer a review with links back to its answers; otherwise end with the count and reply buttons.
+*/
+function nativeRound(g, held, current, actions, writing, sent = false, epilogue = "") {
+	const view = current?.view ?? view$5(held.form, held.draft);
+	const open = sent || (current ? view.isReview : true);
+	const reply = actions && view.reply ? [{
+		hotkey: "",
+		label: "Send reply",
+		hit: "send",
+		isLit: true
+	}, {
+		hotkey: "",
+		label: "Fill prompt",
+		hit: "fill"
+	}] : [];
+	const count = closing(g, {
+		answered: view.answered,
+		total: view.count,
+		sent
+	});
+	const cards = held.form.items.map((_, index) => question$1(g, held, index, actions, writing, sent));
+	const foot = !can(g, "transcriptKeyScroll") ? [
+		count,
+		view.note ? notice(g, {
+			text: `Round note: ${view.note}`,
+			status: "dim"
+		}) : null,
+		buttonRow(g, { rows: [reply] })
+	] : [
+		count,
+		actions ? buttonRow(g, { rows: [[{
+			hotkey: "",
+			label: open ? "Hide review" : "Review answers",
+			hit: "review"
+		}]] }) : null,
+		...open ? [
+			column(g, { gap: "sm" }, ...view.review.map((row, i) => summary(g, {
+				label: row.label,
+				title: row.title,
+				values: row.isAnswered ? [{
+					text: row.shown,
+					literal: true
+				}] : [],
+				note: row.note,
+				hit: actions ? `review-answer-${i}` : void 0
+			}))),
+			writing?.question === view.count ? note(fieldEvents(g, eventsOf(writing)), {
+				value: writing.value,
+				hit: writing.hit,
+				...writing.props
+			}) : view.note ? notice(g, {
+				text: `Round note: ${view.note}`,
+				status: "dim"
+			}) : null,
+			writing?.question === view.count ? buttonRow(g, { rows: [writing.buttons] }) : actions ? buttonRow(g, { rows: [[{
+				hotkey: "",
+				label: view.note ? "Edit round note" : "Add round note",
+				hit: "round-note"
+			}, ...reply.toReversed()]] }) : null
+		] : []
+	];
+	return column(g, { gap: "md" }, ...cards, epilogue ? prose(g, { text: epilogue }) : null, column(g, {
+		key: "round-closing",
+		gap: "sm"
+	}, ...foot));
+}
+
+// ../../lib/kits/band/src/internal.ts
+/** The meaning each status marks the band with on a graphical surface. */
+const statusMeaning = (status) => `state:${status}`;
+
+// ../../lib/kits/band/src/model.ts
+const capital = (text) => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+function view$1(model, surface) {
+	if (holds(surface, "cells")) return {
+		mark: void 0,
+		text: model.text,
+		buttons: [],
+		layout: "line"
+	};
+	const actions = model.actions ?? [];
+	return {
+		mark: model.mark ?? statusMeaning(model.status ?? "warning"),
+		text: model.words ?? model.text,
+		buttons: [{
+			label: capital(model.hint),
+			hit: model.hit
+		}, ...actions].map((b) => ({
+			label: capital(b.label),
+			hit: b.hit
+		})),
+		layout: actions.length === 0 || model.isOneLine ? "line" : "stacked"
+	};
+}
+
+// ../../lib/kits/band/src/gui.tsx
+/** The status band on the graphical surfaces: an icon, the text and quiet buttons. */
+/**
+* The band's line: the status mark, the text, a quiet way-in button (`hint`) and a quiet button
+* per further action, at the inset. A button's `hit` goes to `g.press`.
+*/
+function statusBand(g, b) {
+	const { Box, Button } = g.els;
+	const v = view$1(b, g.surface);
+	const { across } = tokens.gui;
+	const isOneLine = Boolean(b.isOneLine);
+	const mark = v.mark ? meaning(g, v.mark) : null;
+	const words = /* @__PURE__ */ h(Box, {
+		flexShrink: 1,
+		flexGrow: isOneLine ? 1 : void 0
+	}, typed$1(g, "body", v.text, { wrap: isOneLine ? "truncate-end" : void 0 }));
+	const buttons = v.buttons.map((x) => /* @__PURE__ */ h(Button, {
+		key: x.hit,
+		dimColor: true,
+		label: x.label,
+		onPress: () => g.press?.(x.hit)
+	}));
+	if (v.layout === "line") return /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		paddingX: across.inset
+	}, rowOf(g, {}, /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		flexWrap: "nowrap",
+		alignItems: "center",
+		columnGap: across.sm,
+		flexGrow: 1
+	}, mark, words, /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		flexShrink: 0,
+		columnGap: across.xs
+	}, buttons))));
+	return /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		paddingX: across.inset
+	}, rows(g, {}, rowOf(g, {}, /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		flexWrap: "nowrap",
+		alignItems: "center",
+		columnGap: across.sm
+	}, mark, words)), rowOf(g, {}, /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		columnGap: across.xs
+	}, buttons))));
+}
+
+// ../../lib/kits/frame/src/model.ts
+/**
+* The frame's view model: what its head, its footer and its notice are on a surface. Pure and
+* plain: the graphical drawing reads it, and so does the snapshot that holds it across surfaces.
+* The footer is decided by the buttons' view model (`@agents/kit-buttons/model.ts`), which
+* says what is lit and what goes quiet while Close asks. A frame has one lit button: the head's
+* own actions come first, so the footer's lit one is quieted where they have one. No host imports.
+*/
+const words = (spans) => textOf({ spans: [...spans ?? []] });
+function view(model, surface) {
+	const isCells = holds(surface, "cells");
+	const asks = !!model.close?.confirming;
+	const hasCaption = (model.caption?.length ?? 0) > 0;
+	const keep = model.close?.keep ?? "esc";
+	const [acts = [], ...footer] = settle([model.actions ?? [], ...model.footer ?? []], asks);
+	return {
+		head: {
+			title: isCells ? hasCaption ? void 0 : model.title : model.title && model.title !== model.hostTitle ? model.title : void 0,
+			caption: words(model.caption),
+			close: asks ? "question" : isCells ? "control" : "host",
+			question: asks ? view$4({
+				rows: [[{
+					hotkey: "enter",
+					label: "Discard",
+					hit: "frame:discard",
+					essential: true
+				}, {
+					hotkey: keep,
+					label: "Keep",
+					hit: "frame:keep",
+					essential: true
+				}]],
+				confirming: true
+			}, surface) : void 0,
+			actions: !isCells && !asks && acts.length ? view$4({ rows: [acts] }, surface) : void 0
+		},
+		footer: view$4({
+			rows: footer,
+			confirming: asks
+		}, surface),
+		notice: words(model.notice)
+	};
+}
+
+// ../../lib/kits/frame/src/gui.tsx
+const asModel = (f) => ({
+	title: f.title ?? "",
+	caption: f.caption,
+	close: f.close,
+	hostTitle: f.hostTitle,
+	actions: f.actions,
+	footer: f.footer,
+	notice: f.notice,
+	body: { question: "" }
+});
+/** Close's question, once it asks, set apart as a panel: it is a warning with its own actions. */
+function question(g, f, v) {
+	const { Box, Button, Text } = g.els;
+	return /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		paddingX: tokens.gui.across.inset
+	}, panel(g, { key: "ask" }, rowOf(g, {}, meaning(g, "state:warning"), /* @__PURE__ */ h(Text, {
+		...typeProps("body"),
+		...roleProps("warning")
+	}, f.close?.question ?? "Discard answers?"), /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		columnGap: tokens.gui.across.xs
+	}, v.head.question?.rows[0]?.map((b) => /* @__PURE__ */ h(Button, {
+		key: b.hit,
+		dimColor: true,
+		label: b.label,
+		onPress: () => g.press(b.hit)
+	}))))));
+}
+/** The toolbar line both heads are: the words at the start, the pane's own actions at the far edge. */
+function head(g, f, v) {
+	const { Box, Button } = g.els;
+	if (v.head.close === "question") return question(g, f, v);
+	const words = f.head ?? (v.head.title || v.head.caption ? /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		rowGap: tokens.gui.space.xs
+	}, v.head.title ? typed$1(g, "heading", v.head.title) : null, v.head.caption ? spans(g, f.caption ?? [], { type: "caption" }) : null) : null);
+	const acts = v.head.actions?.rows[0] ?? [];
+	if (!words && acts.length === 0) return null;
+	return /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		alignItems: "center",
+		justifyContent: "space-between",
+		columnGap: tokens.gui.across.md,
+		rowGap: tokens.gui.space.xs,
+		paddingX: tokens.gui.across.inset,
+		paddingY: tokens.gui.row.pad
+	}, words, acts.length ? /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		alignItems: "center",
+		columnGap: tokens.gui.across.xs
+	}, acts.map((b) => /* @__PURE__ */ h(Button, {
+		key: b.hit,
+		variant: b.tone === "lit" ? "primary" : void 0,
+		dimColor: b.tone !== "lit" || void 0,
+		label: b.label,
+		onPress: () => g.press(b.hit)
+	}))) : null);
+}
+/**
+* A frame's top: the pane's toolbar line. Its title is the `heading` and left out where it
+* repeats `hostTitle`; a `caption` follows it as a `caption`. Close is the host's, so it appears
+* only as the question it asks, with Discard and Keep.
+*/
+function frameTop(g, f) {
+	return head(g, f, view(asModel(f), g.surface));
+}
+
+// ../../lib/kits/core/src/paint/host.tsx
+/** Whether the event's surface draws with native controls (Desktop, VS Code, mobile), not cells. */
+const isGui = (e) => e.surface !== "terminal";
+/**
+* The context of a `gui.tsx` function, from the event's resolved elements. Call it only where
+* `isGui(e)` holds.
+* @param els What `$.ui.resolve(e)` answered.
+* @param events What a control does: `press` with its `hit`, `input` and `submit` with a field's text.
+* The one reducer a mod wires for both surfaces. A bare function is `press` alone; events left out do nothing.
+*/
+const guiOf = (els, e, events = {}) => ({
+	...ctxOf(e.surface, typeof events === "function" ? { press: events } : events),
+	els
+});
+/**
+* The one door through which a mod draws by surface itself: a terminal screen laid out to the
+* cell beside a graphical one built from the kit's `gui.tsx`. Only the chosen drawing runs.
+*/
+function forSurface(e, drawings) {
+	if (!isGui(e)) return drawings.tui();
+	return (drawings[e.surface] ?? drawings.gui)();
+}
+/**
+* Leaves only `plugin`'s own rows in an `AbovePromptList` event: an open form has the band to
+* itself. Return it from the hook in place of `next(e)`'s input.
+* @param e The event's input, with `props.rows`.
+*/
+function onlyOwnRows(e, plugin) {
+	const rows = e.props.rows.filter((r) => r.plugin === plugin);
+	return {
+		...e,
+		props: {
+			...e.props,
+			rows
+		}
+	};
 }
 
 // src/claude.tsx
+const singleLineEditor = (surface) => surface !== "terminal" && holds(surface, "inputRows:1");
 const PLUGIN = "answer";
 const WRITE = "write";
 const NOTE = "note";
@@ -3255,7 +3406,9 @@ const NOTE = "note";
 * until it is drawn with another value, so each opening gets an address of its own: one opened
 * after a cancel would otherwise come back holding the cancelled text.
 */
-const keyOf = (field) => `${field}-field-${opened}`;
+const hitOf = (field) => `${field}-field-${opened}`;
+/** The kit keys a field's Input from its hit; the terminal's Input is keyed alike. */
+const keyOf = (field) => `${field}:${hitOf(field)}`;
 let opened = 0;
 const CHORD = "alt+a";
 const current = atom({
@@ -3292,14 +3445,13 @@ const transcriptRows = /* @__PURE__ */ new Map();
 const complain = ($, error) => $.ui.log(`answer: ${String(error)}`, { to: "debug" });
 /** What is held over what was shown: the same item keeps its field and mode, the same form stays open. */
 const over = (c, held) => {
-	const view$1 = view(held.form, held.draft);
-	const isSameForm = c?.view.id === view$1.id;
-	const isSameItem = isSameForm && c?.view.step === view$1.step;
+	const view = view$5(held.form, held.draft);
+	const isSameForm = c?.view.id === view.id;
+	const isSameItem = isSameForm && c?.view.step === view.step;
 	return {
 		held,
-		view: view$1,
+		view,
 		editing: isSameItem ? c?.editing ?? null : null,
-		isBodyOpen: isSameItem ? c?.isBodyOpen ?? false : false,
 		isOpen: isSameForm ? c?.isOpen ?? false : false,
 		filled: isSameForm ? c?.filled ?? null : null,
 		filledRound: isSameForm ? c?.filledRound : void 0,
@@ -3347,7 +3499,9 @@ async function pressElsewhere($, id) {
 	return wasWriting;
 }
 /** The ring's place on what is shown: the answer or the recommendation, or the review's button. */
-const home = (view) => view.item ? `e${view.item.start}` : "fill";
+/** The Button of an answer: the kit keys a letter's Button from its `hit`. */
+const answerKey = (entry) => `key:e${entry}`;
+const home = (view) => view.item ? answerKey(view.item.start) : "fill";
 /** One step of the draft, and what it now shows; null with no form to step. */
 async function step($, action) {
 	typed = null;
@@ -3411,7 +3565,7 @@ async function choose($, entry, index) {
 	if (!c) return;
 	if (typed?.field === NOTE && !await keepTyped($)) return;
 	if (entry.isChosen && !c.view.item?.isSeveral) return move($, { do: "next" });
-	await focus($, `e${index + 1}`);
+	await focus($, answerKey(index + 1));
 	if (await step($, {
 		do: "pick",
 		entry: index
@@ -3785,21 +3939,11 @@ function roundActions($, id, surface) {
 			if (c?.transcript !== id) return;
 			if (index === c.view.count) return toggleReview($, id, surface);
 			await moveRound($, id, surface, index);
-			if (c.view.isReview && surface === "desktop") await $.ui.scroll({
+			if (c.view.isReview && surface !== "terminal" && holds(surface, "transcriptKeyScroll")) await $.ui.scroll({
 				to: { key: `question-${index}-card` },
 				block: "start"
 			}).catch(() => void 0);
 		}),
-		details: surface !== "desktop" ? void 0 : (index) => press(() => update($, current, (c) => {
-			if (c?.transcript !== id || c.writer) return c;
-			return {
-				...over(c, step$1(c.held, {
-					do: "go",
-					step: index
-				})),
-				isBodyOpen: c.view.step !== index || !c.isBodyOpen
-			};
-		})),
 		pick: (question, entry) => press(() => changeRound($, id, question, {
 			do: "pick",
 			entry
@@ -3881,7 +4025,7 @@ async function pressRoundKey($, id, key) {
 	const c = await read$1($, current);
 	if (c?.transcript !== id || c.writer) return;
 	if (key === "r") return toggleReview($, id);
-	const at = rowOf(key);
+	const at = rowOf$1(key);
 	if (at >= 0) return pressRowAt($, id, c, at);
 	if (c.view.isReview) return pressReview($, id, c, key);
 	if (key === "j" && c.view.step === c.view.count - 1) return toggleReview($, id, "terminal");
@@ -3890,27 +4034,106 @@ async function pressRoundKey($, id, key) {
 	if (c.view.item && key.toUpperCase() === writeLetter(c.view.item)) return writeRound($, id, c.view.step, WRITE, "terminal");
 	if (c.view.item?.entries.some((entry, i) => entry.kind !== "write" && entryLetter(entry, i) === key.toUpperCase())) return changeRound($, id, (view) => view.step, { letter: key.toUpperCase() });
 }
-function writingMode($, kit, c, Input, maxRows) {
-	const { Box, Text, Button } = kit;
+/** `text` with line `line` replaced: a one-line field's part of a longer text. */
+function withLine(text, line, part) {
+	const lines = text.split("\n");
+	while (lines.length <= line) lines.push("");
+	lines[line] = part;
+	return lines.join("\n");
+}
+/**
+* The field a graphical surface has open in the transcript: the field's options (what is typed is
+* kept as it goes), and Save, Add line where the host's field is one line, and Cancel.
+*/
+function writingOf($, c) {
 	const { view, editing, transcript: id, writer } = c;
-	if (!id || !writer || !editing) return null;
+	if (!id || !writer || !editing || writer.surface === "terminal") return null;
 	const note = editing === NOTE;
-	const label = note ? "Write note" : "Write answer";
-	const title = view.item ? `${label}  /  ${view.item.label}` : `${label}  /  Round`;
-	const answer = view.review[view.step];
 	const saved = savedField(c);
 	const value = () => typed?.field === editing ? typed.text : saved;
-	if (writer.surface === "terminal") {
-		const detail = view.item?.title ?? "Review answers";
-		const singleLine = (text, width) => clamp(text, Math.max(1, width), { max: 1 }).join("");
-		const caption = view.item ? `${view.item.label}  ${detail}` : detail;
-		return /* @__PURE__ */ h(Box, {
-			key: "writing",
-			flexDirection: "column"
-		}, /* @__PURE__ */ h(Text, {
-			weight: "semibold",
-			...roleProps("accent")
-		}, singleLine(caption, kit.columns - 6)), answer?.isAnswered && note ? /* @__PURE__ */ h(Text, roleProps("note"), singleLine(answer.shown, kit.columns - 6)) : null, /* @__PURE__ */ h(Input, {
+	const isSingleLine = singleLineEditor(writer.surface);
+	/** What the field now holds, once `line` of it changed: the text whole. */
+	const joined = (text, line) => line === void 0 ? text : withLine(value(), line, text);
+	const lines = isSingleLine ? writer.lines ?? saved.split("\n").length : void 0;
+	const addLine = () => edit($, (was) => was.transcript === id && was.view.step === view.step && was.editing === editing && was.writer?.surface === writer.surface ? {
+		...was,
+		writer: {
+			...was.writer,
+			lines: (was.writer.lines ?? saved.split("\n").length) + 1
+		}
+	} : was);
+	return {
+		question: view.step,
+		field: editing,
+		value: value(),
+		hit: hitOf(editing),
+		onInput: (text, line) => {
+			typed = {
+				field: editing,
+				text: joined(text, line)
+			};
+		},
+		onSubmit: (text, line) => finishWriting($, id, joined(text, line)),
+		props: {
+			invitation: note ? isSingleLine ? "Type a note" : "Add a condition or follow-up" : "Type an answer",
+			autoFocus: !isSingleLine,
+			lines,
+			rows: isSingleLine ? void 0 : 3
+		},
+		buttons: [
+			{
+				hotkey: "",
+				label: "Save",
+				hit: "keep",
+				isLit: true
+			},
+			...isSingleLine ? [{
+				hotkey: "",
+				label: "Add line",
+				hit: "add-line"
+			}] : [],
+			{
+				hotkey: "",
+				label: "Cancel",
+				hit: "cancel"
+			}
+		],
+		act: {
+			keep: () => finishWriting($, id, value()),
+			"add-line": addLine,
+			cancel: () => finishWriting($, id)
+		}
+	};
+}
+/**
+* The terminal's writer, above the prompt: the field is the engine's, so it is drawn by the
+* band and not the transcript.
+*/
+function writerOf($, els, columns, c, maxRows) {
+	const { view, editing, transcript: id, writer } = c;
+	if (!id || !writer || !editing) return null;
+	const { Input } = els;
+	const note = editing === NOTE;
+	const saved = savedField(c);
+	const value = () => typed?.field === editing ? typed.text : saved;
+	const detail = view.item?.title ?? "Review answers";
+	const answer = view.review[view.step];
+	const hit = hitOf(editing);
+	const field = ctxOf("claude-terminal", {
+		input: (address, text) => {
+			if (address === hit) typed = {
+				field: editing,
+				text
+			};
+		},
+		submit: (address, text) => {
+			if (address === hit) return finishWriting($, id, text);
+		}
+	});
+	return writerBand(els, columns, {
+		caption: view.item ? `${view.item.label}  ${detail}` : detail,
+		answer: answer?.isAnswered && note ? answer.shown : void 0,
+		input: /* @__PURE__ */ h(Input, {
 			key: keyOf(editing),
 			label: note ? "Note" : "Answer",
 			rows: Math.min(2, Math.max(1, maxRows - 4)),
@@ -3918,103 +4141,161 @@ function writingMode($, kit, c, Input, maxRows) {
 			value: value(),
 			placeholder: note ? "Add a condition or follow-up" : "Write your own answer",
 			submitLabel: "save",
-			onInput: (text) => {
-				typed = {
-					field: editing,
-					text
-				};
-			},
-			onSubmit: (text) => finishWriting($, id, text)
-		}), /* @__PURE__ */ h(Box, { columnGap: 2 }, /* @__PURE__ */ h(Button, {
-			plain: true,
-			dimColor: true,
-			key: "keep",
-			label: "Save",
-			onPress: () => finishWriting($, id, value())
-		}), /* @__PURE__ */ h(Button, {
-			plain: true,
-			dimColor: true,
-			key: "cancel",
-			label: "Cancel",
-			onPress: () => finishWriting($, id)
-		}), c.pending ? /* @__PURE__ */ h(Text, { dimColor: true }, `Click field or ${CHORD}`) : null));
+			onInput: (text) => field.input(hit, text),
+			onSubmit: (text) => field.submit(hit, text)
+		}),
+		rows: Math.min(2, Math.max(1, maxRows - 4)),
+		isWaiting: Boolean(c.pending),
+		chord: CHORD,
+		save: () => finishWriting($, id, value()),
+		cancel: () => finishWriting($, id)
+	});
+}
+function roundBody(els, columns, held, current, index, actions, sent = false, epilogue = "") {
+	if (index !== held.form.items.length) return questionCard(els, columns, held, index, current, actions);
+	const closing = closingRow(els, columns, view$5(held.form, held.draft), current, current?.writer ? void 0 : actions, sent);
+	return epilogue ? stack(els, preamble(els, columns, epilogue), spacer(els), closing) : closing;
+}
+/** The band's or pane's room in cells, as the event measured it. */
+const columnsOf = (e) => Math.max(1, Math.floor(e.props?.bodyColumns ?? e.viewport?.columns ?? 80));
+/** What each control of the graphical form does, by its `hit`. */
+async function pressForm($, hit) {
+	const c = await read$1($, current);
+	if (!c) return;
+	const { view } = c;
+	const go = (to) => leave($, to);
+	const index = (prefix) => Number(hit.slice(prefix.length));
+	if (/^q\d+$/.test(hit)) return go(() => ({
+		do: "go",
+		step: index("q")
+	}));
+	if (/^item\d+$/.test(hit)) return go(() => ({
+		do: "go",
+		step: index("item")
+	}));
+	const entry = /^e\d+$/.test(hit) ? view.item?.entries[index("e")] : void 0;
+	if (entry) return choose($, entry, index("e"));
+	switch (hit) {
+		case "answer": return openForm($);
+		case "quit": return close($);
+		case "review": return go(() => ({ do: "review" }));
+		case "next": return go((shown) => ({
+			do: "go",
+			step: shown + 1
+		}));
+		case "accept": return accept($);
+		case "skip": return move($, { do: "skip" });
+		case "note": return askAbout($, NOTE);
+		case "fill":
+		case "send": {
+			const held = typed;
+			const kept = held ? await step($, {
+				do: "note",
+				text: held.text
+			}) : view;
+			if (!kept?.reply) return kept ? $.ui.toast("Nothing answered yet.") : void 0;
+			return hit === "fill" ? fill($, kept.reply) : send($, kept.reply);
+		}
 	}
-	return /* @__PURE__ */ h(Box, {
-		key: "writing",
-		flexDirection: "column",
-		backgroundColor: tokens.gui.fill,
-		paddingX: tokens.gui.across.inset,
-		paddingY: tokens.gui.space.sm,
-		rowGap: tokens.gui.space.sm,
-		borderStyle: "round",
-		borderColor: "#00000000"
-	}, !view.item ? /* @__PURE__ */ h(Text, { weight: "semibold" }, title) : null, writer.surface === "vscode" ? /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		rowGap: tokens.gui.space.sm
-	}, /* @__PURE__ */ h(Text, { weight: "semibold" }, note ? "Note" : "Your answer"), Array.from({ length: writer.lines ?? saved.split("\n").length }, (_, i) => {
-		const setLine = (line) => {
-			const lines = value().split("\n");
-			while (lines.length <= i) lines.push("");
-			lines[i] = line;
+}
+/**
+* A graphical surface's form: the way out, the steps as tabs, then the question with its answers
+* and note, or the review. A field is always drawn where it belongs, so a click lands in it: a
+* press that reveals one would leave the focus on the press.
+*/
+function form($, c, base) {
+	const { view, editing } = c;
+	const { item } = view;
+	/** What a field of the form does with what is typed, and with Enter. */
+	const typing = (name, submit) => ({
+		input: (text) => {
 			typed = {
-				field: editing,
-				text: lines.join("\n")
-			};
-			return typed.text;
-		};
-		return /* @__PURE__ */ h(Input, {
-			key: `${view.step}-${keyOf(editing)}-${i}`,
-			placeholder: i === 0 ? note ? "Type a note" : "Type an answer" : `Line ${i + 1}`,
-			value: value().split("\n")[i] ?? "",
-			onInput: setLine,
-			onSubmit: (line) => finishWriting($, id, setLine(line))
-		});
-	})) : /* @__PURE__ */ h(Input, {
-		key: keyOf(editing),
-		label: note ? "Note" : "Answer",
-		rows: Math.min(3, Math.max(1, maxRows - 3)),
-		autoFocus: true,
-		value: value(),
-		placeholder: note ? "Add a condition or follow-up" : "Type an answer",
-		onInput: (text) => {
-			typed = {
-				field: editing,
+				field: name,
 				text
 			};
 		},
-		onSubmit: (text) => finishWriting($, id, text)
-	}), actionBar(kit, [
-		{
-			key: "keep",
-			label: "Save",
-			isPrimary: true,
-			onPress: () => finishWriting($, id, value())
-		},
-		...writer.surface === "vscode" ? [{
-			key: "add-line",
-			label: "Add line",
-			onPress: () => edit($, (was) => was.transcript === id && was.view.step === view.step && was.editing === editing && was.writer?.surface === "vscode" ? {
-				...was,
-				writer: {
-					...was.writer,
-					lines: (was.writer.lines ?? saved.split("\n").length) + 1
-				}
-			} : was)
+		submit
+	});
+	const g = fieldEvents(base, {
+		[hitOf(WRITE)]: typing(WRITE, (text) => move($, {
+			do: "write",
+			text
+		})),
+		[hitOf(NOTE)]: typing(NOTE, (text) => keepNote($, text))
+	});
+	const head = sections(g, frameTop(g, {
+		title: view.title,
+		actions: [{
+			hotkey: "",
+			label: "close",
+			hit: "quit"
+		}]
+	}), steps(g, [...view.review.map((row, i) => ({
+		short: row.label,
+		done: row.isAnswered,
+		current: !view.isReview && i === view.step,
+		hit: `q${i}`
+	})), {
+		short: "Review",
+		current: view.isReview,
+		hit: "review"
+	}]));
+	/** An action of the row at the foot. */
+	const act = (hit, label, isLit = false) => ({
+		hotkey: "",
+		label,
+		hit,
+		isLit
+	});
+	if (!item) return sections(g, head, ...view.review.map((row) => summary(g, {
+		label: row.label,
+		title: row.title,
+		values: row.isAnswered ? [{
+			text: row.shown,
+			literal: true
 		}] : [],
-		{
-			key: "cancel",
-			label: "Cancel",
-			onPress: () => finishWriting($, id)
-		}
-	]));
-}
-function roundBody(kit, held, current, index, actions, sent = false, epilogue = null) {
-	if (index !== held.form.items.length) return questionCard(kit, held, index, current, actions, null, sent);
-	const closing = closingRow(kit, view(held.form, held.draft), current, current?.writer ? void 0 : actions, sent);
-	return epilogue ? /* @__PURE__ */ h(kit.Box, {
-		flexDirection: "column",
-		rowGap: 1
-	}, epilogue, closing) : closing;
+		note: row.note
+	})), note(g, {
+		value: view.note,
+		hit: hitOf(NOTE),
+		invitation: "Add a note on the whole round"
+	}), buttonRow(g, { rows: [[act("send", "send", Boolean(view.reply)), act("fill", "fill the prompt")]] }));
+	const several = item.isSeveral;
+	const isChosen = item.entries.some((row) => row.isChosen);
+	const isNoteShown = isChosen || editing === NOTE || !!item.note;
+	const answered = view.review[view.step]?.isAnswered;
+	const choices$1 = item.entries.map((row, k) => {
+		if (row.kind === "write") return {
+			key: "",
+			text: item.written || row.text,
+			literal: true,
+			chosen: row.isChosen,
+			answered,
+			hit: hitOf(WRITE),
+			invitation: row.text
+		};
+		return {
+			key: entryLetter(row, k),
+			text: row.kind === "accept" ? row.text : row.text.replace(/^[A-H0-9]{1,2}[.)]\s*/, ""),
+			aside: row.isRecommended ? "Recommended" : void 0,
+			detail: row.detail || void 0,
+			chosen: row.isChosen,
+			multiple: several,
+			answered,
+			hit: `e${k}`
+		};
+	});
+	const body = [item.body, item.recommended ? `**Recommended:** ${item.recommended}` : ""].filter(Boolean).join("\n\n");
+	return sections(g, head, heading(g, { title: item.title }), body ? prose(g, { text: body }) : null, choices(g, choices$1), isNoteShown ? note(g, {
+		value: item.note,
+		hit: hitOf(NOTE),
+		invitation: "Add a note"
+	}) : null, buttonRow(g, { rows: [[
+		act("skip", "skip"),
+		...isChosen || isNoteShown ? [] : [act("note", "add note")],
+		...item.canAccept && item.accepts.includes(",") ? [act("accept", `Take ${item.accepts}`)] : [],
+		...isChosen || several ? [act("next", view.answered === view.count ? "Review" : "Next", isChosen)] : []
+	]] }));
 }
 const register = (on) => {
 	on("session.start", async ($, e, next) => {
@@ -4048,7 +4329,7 @@ const register = (on) => {
 	on("prompt.submit", async ($, e, next) => {
 		const c = PERSON.has(e.origin.kind) ? await read$1($, current) : null;
 		if (!c) return next(e);
-		if (c.transcript && c.writer?.surface === "vscode" && e.origin.kind === "composer") return { drop: "Save or cancel the edit on the question card first" };
+		if (c.transcript && c.writer && singleLineEditor(c.writer.surface) && e.origin.kind === "composer") return { drop: "Save or cancel the edit on the question card first" };
 		if (e.origin.kind === "composer" && !e.command && c.transcript && c.pending && !c.pending.isWarned && e.text.trim()) {
 			await edit($, (was) => was?.pending ? {
 				...was,
@@ -4085,7 +4366,7 @@ const register = (on) => {
 	});
 	on("ui.render", { component: "AssistantMessage" }, async ($, e, next) => {
 		const surface = e.surface;
-		if (surface !== "terminal" && surface !== "desktop" && surface !== "vscode") return next(e);
+		if (surface !== "terminal" && (!Object.hasOwn(surfaces, surface) || surfaces[surface].drawing !== "gui" || !holds(surface, "input"))) return next(e);
 		if (e.props.isSummary) return next(e);
 		const match = await findRound($, surface, e.requestId, e.props.text);
 		if (!match) return next(e);
@@ -4095,16 +4376,22 @@ const register = (on) => {
 		const held = active?.held ?? round.frozen;
 		if (!held) return next(e);
 		const els = $.ui.resolve(e);
-		const kit = kitOf(els, e);
-		const { Box, Markdown } = els;
-		const epilogue = round.epilogue ? /* @__PURE__ */ h(Markdown, { text: round.epilogue }) : null;
 		const actions = active ? roundActions($, id, surface) : void 0;
-		const cards = surface === "terminal" && round.anchors.length > 1 ? [] : held.form.items.map((_, i) => i).concat(held.form.items.length);
-		const inline = surface !== "terminal" && active?.writer?.surface === surface ? writingMode($, kit, active, $.ui.resolve(e).Input, 8) : null;
-		return /* @__PURE__ */ h(Box, {
-			flexDirection: "column",
-			rowGap: kit.isNative ? tokens.gui.space.sm : 1
-		}, round.preamble ? /* @__PURE__ */ h(Markdown, { text: round.preamble }) : null, kit.isNative ? nativeRound(kit, held, active, actions, inline, !active && round.sent) : cards.map((index) => roundBody(kit, held, active, index, actions, !active && round.sent, epilogue)), kit.isNative ? epilogue : null);
+		return forSurface(e, {
+			tui: () => {
+				const columns = columnsOf(e);
+				const cards = round.anchors.length > 1 ? [] : held.form.items.map((_, i) => i).concat(held.form.items.length);
+				return stack(els, round.preamble ? preamble(els, columns, round.preamble) : null, ...cards.flatMap((index) => [round.preamble || index ? spacer(els) : null, roundBody(els, columns, held, active, index, actions, !active && round.sent, round.epilogue)]));
+			},
+			gui: () => {
+				const writing = active?.writer?.surface === surface ? writingOf($, active) : null;
+				const g = guiOf(els, e, actions && roundPress(actions, writing, held.form.items.length));
+				return column(g, {
+					gap: "sm",
+					isMeasured: true
+				}, round.preamble ? prose(g, { text: round.preamble }) : null, nativeRound(g, held, active, actions, writing, !active && round.sent, round.epilogue));
+			}
+		});
 	});
 	on("ui.render", { component: "Placed" }, async ($, e, next) => {
 		if (e.surface !== "terminal" || e.props.plugin !== PLUGIN) return next(e);
@@ -4116,11 +4403,8 @@ const register = (on) => {
 		const active = c?.transcript === id ? c : null;
 		const held = active?.held ?? round.frozen;
 		if (!held) return next(e);
-		const els = $.ui.resolve(e);
-		const kit = kitOf(els, e);
 		const actions = active ? roundActions($, id, "terminal") : void 0;
-		const epilogue = round.epilogue ? /* @__PURE__ */ h(els.Markdown, { text: round.epilogue }) : null;
-		return roundBody(kit, held, active, index, actions, !active && round.sent, epilogue) ?? next(e);
+		return roundBody($.ui.resolve(e), columnsOf(e), held, active, index, actions, !active && round.sent, round.epilogue) ?? next(e);
 	});
 	on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
 		if (e.props.hasSurvey) return next(e);
@@ -4128,233 +4412,32 @@ const register = (on) => {
 		if (!c) return next(e);
 		band = e.requestId;
 		const els = $.ui.resolve(e);
-		const { Box } = els;
-		const kit = kitOf(els, e);
 		if (e.surface === "terminal") {
 			if (!c.transcript) return next(e);
-			{
-				if (c.writer?.surface === "terminal") return writingMode($, kit, c, $.ui.resolve(e).Input, e.props.maxRows) ?? next(e);
-				const id = c.transcript;
-				if (c.pending) return writingMode($, kit, {
-					...c,
-					writer: {
-						from: c.pending.from,
-						surface: "terminal"
-					},
-					editing: c.pending.field
-				}, els.Input, e.props.maxRows) ?? next(e);
-				return controlBar(kit, c, () => c.view.isReview && c.hasKeys ? pressRoundKey($, id, "enter") : moveRound($, id, "terminal", (view) => view.step), (key) => pressRoundKey($, id, key));
-			}
+			const columns = columnsOf(e);
+			if (c.writer?.surface === "terminal") return writerOf($, els, columns, c, e.props.maxRows) ?? next(e);
+			const id = c.transcript;
+			if (c.pending) return writerOf($, els, columns, {
+				...c,
+				writer: {
+					from: c.pending.from,
+					surface: "terminal"
+				},
+				editing: c.pending.field
+			}, e.props.maxRows) ?? next(e);
+			return controlBar(els, c, () => c.view.isReview && c.hasKeys ? pressRoundKey($, id, "enter") : moveRound($, id, "terminal", (view) => view.step), (key) => pressRoundKey($, id, key));
 		}
 		if (c.transcript && !c.isOpen) return next(e);
-		const { view, editing } = c;
-		const back = () => leave($, (shown) => ({
-			do: "go",
-			step: shown - 1
-		}));
-		const forward = () => leave($, (shown) => ({
-			do: "go",
-			step: shown + 1
-		}));
-		const press = {
-			back,
-			next: forward,
-			accept: () => accept($),
-			skip: () => move($, { do: "skip" }),
-			note: () => askAbout($, NOTE),
-			fill: async () => {
-				const held = typed;
-				const kept = held ? await step($, {
-					do: "note",
-					text: held.text
-				}) : view;
-				if (kept?.reply) await fill($, kept.reply);
-				else if (kept) $.ui.toast("Nothing answered yet.");
-			},
-			quit: () => close($),
-			send: async () => {
-				const held = typed;
-				const kept = held ? await step($, {
-					do: "note",
-					text: held.text
-				}) : view;
-				if (kept?.reply) await send($, kept.reply);
-				else if (kept) $.ui.toast("Nothing answered yet.");
-			}
-		};
-		{
-			const { inset } = tokens.gui.across;
-			/** A block not already set in by the kit: its left edge lines up with the rest. */
-			const block = (key, node) => node ? /* @__PURE__ */ h(Box, {
-				key,
-				flexDirection: "column",
-				paddingX: inset
-			}, node) : null;
-			/**
-			* A field, always drawn where it belongs, so a click lands in it: a press that reveals one
-			* leaves the focus on the press. It says no word for its Enter, so the surface draws no
-			* button of its own beside it.
-			*/
-			const field = (key, placeholder, value, onSubmit) => "Input" in els ? /* @__PURE__ */ h(els.Input, {
-				key: keyOf(key),
-				placeholder,
-				value,
-				onInput: (text) => {
-					typed = {
-						field: key,
-						text
-					};
-				},
-				onSubmit: (text) => onSubmit(text)
-			}) : null;
-			if (!c.isOpen) return statusBand(kit, {
-				key: "answer",
-				text: view.title,
-				hint: view.kind === "picks" ? "pick" : "answer",
-				gui: {
-					text: view.answered ? `${view.title}, ${view.answered} of ${view.count} answered` : view.title,
-					icon: "question",
-					tone: "neutral"
-				},
-				onPress: () => openForm($)
-			});
-			const toolbar = paneTitle(kit, "", void 0, { gui: {
-				tabs: [...view.review.map((row, i) => ({
-					key: `q${i}`,
-					label: row.isAnswered ? `${tokens.glyph.done} ${row.label}` : row.label,
-					isPrimary: !view.isReview && i === view.step,
-					onPress: () => leave($, () => ({
-						do: "go",
-						step: i
-					}))
-				})), {
-					key: "review",
-					label: "review",
-					isPrimary: view.isReview,
-					onPress: () => leave($, () => ({ do: "review" }))
-				}],
-				actions: [{
-					key: "quit",
-					label: "close",
-					onPress: () => close($)
-				}]
-			} });
-			/** An action of the row at the foot: its key is the press's name. */
-			const act = (key, label, extra = {}) => ({
-				key,
-				label,
-				onPress: () => press[key]?.(),
-				...extra
-			});
-			if (!view.item) {
-				const rows = view.review.map((row, i) => ({
-					key: `item${i}`,
-					title: row.isAnswered ? row.shown : "Not answered",
-					detail: row.title,
-					icon: row.isAnswered ? "success" : "pending",
-					iconTone: row.isAnswered ? "success" : "neutral",
-					action: row.isAnswered ? "Change" : "Answer",
-					meta: row.note ? [{
-						text: `Note: ${row.note}`,
-						width: 0
-					}] : void 0,
-					onPress: () => leave($, () => ({
-						do: "go",
-						step: i
-					}))
-				}));
-				return stack(kit, [
-					toolbar,
-					list(kit, [{
-						title: "",
-						rows
-					}]),
-					block("round-note", field(NOTE, "Add a note on the whole round", view.note, (t) => keepNote($, t))),
-					actionBar(kit, [act("send", "send", {
-						hotkey: "s",
-						isPrimary: Boolean(view.reply)
-					}), act("fill", "fill the prompt")])
-				], { gui: { gap: "sm" } });
-			}
-			const { item } = view;
-			const several = item.isSeveral;
-			const isChosen = item.entries.some((row) => row.isChosen);
-			const onward = {
-				key: "next",
-				label: view.answered === view.count ? "Review" : "Next",
-				onPress: () => leave($, () => ({ do: "next" }))
-			};
-			const note = field(NOTE, "Add a note", item.note, (t) => keepNote($, t));
-			const isNoteLoose = several && isChosen || !isChosen && (editing === NOTE || !!item.note);
-			const options = item.entries.map((row, k) => {
-				if (row.kind === "write") return {
-					key: `e${k}`,
-					label: row.text,
-					icon: "write",
-					field: field(WRITE, row.text, item.written, (t) => move($, {
-						do: "write",
-						text: t
-					})) ?? void 0,
-					isOn: row.isChosen,
-					body: note,
-					onPress: () => choose($, row, k)
-				};
-				const option = row.kind === "accept" ? recommendationChoice(row.text) : {
-					tag: row.key || void 0,
-					label: row.key ? row.text.replace(/^[A-H0-9]{1,2}[.)]\s*/, "") : row.text
-				};
-				return {
-					key: `e${k}`,
-					...option,
-					detail: [row.isRecommended ? "Recommended" : "", row.detail.replace(/\s*\n\s*/g, " ")].filter(Boolean).join("  ·  ") || void 0,
-					isOn: row.isChosen,
-					body: note,
-					onPress: () => choose($, row, k)
-				};
-			});
-			const body = [item.body, item.recommended ? `**Recommended:** ${item.recommended}` : ""].filter(Boolean).join("\n\n");
-			return stack(kit, [
-				toolbar,
-				/* @__PURE__ */ h(Box, {
-					key: "question",
-					flexDirection: "column"
-				}, block("title", prose(kit, `**${item.title.replace(/\*\*/g, "")}**`)), excerpt(kit, {
-					key: "body",
-					text: body,
-					isOpen: c.isBodyOpen,
-					toggleKey: "more",
-					onToggle: () => edit($, (was) => ({
-						...was,
-						isBodyOpen: !was.isBodyOpen
-					}))
-				})),
-				choice(kit, options, {
-					key: "options",
-					isMulti: several,
-					gui: {
-						layout: "rows",
-						onward
-					}
-				}),
-				isNoteLoose && note ? fieldRow(kit, {
-					key: "note-row",
-					icon: "note",
-					alt: "Note",
-					field: note
-				}) : null,
-				actionBar(kit, [
-					act("skip", "skip", { hotkey: "s" }),
-					...isChosen || isNoteLoose ? [] : [act("note", "add note", { hotkey: "n" })],
-					...item.canAccept && item.accepts.includes(",") ? [act("accept", `take ${item.accepts}`, { hotkey: "y" })] : [],
-					...several ? [{
-						...onward,
-						hotkey: "l",
-						isPrimary: isChosen,
-						onPress: onward.onPress
-					}] : []
-				])
-			], { gui: { gap: "sm" } });
-		}
+		const g = guiOf(els, e, (hit) => pressForm($, hit));
+		if (c.isOpen) return form($, c, g);
+		const { view } = c;
+		return statusBand(g, {
+			text: view.title,
+			hint: view.kind === "picks" ? "pick" : "answer",
+			hit: "answer",
+			words: view.answered ? `${view.title}, ${view.answered} of ${view.count} answered` : view.title,
+			mark: "state:question"
+		});
 	});
 	on("ui.render", {
 		component: "AbovePromptList",
@@ -4386,12 +4469,12 @@ const register = (on) => {
 			} : was);
 			return moved;
 		}
-		if (c?.transcript && !c.writer && e.element?.startsWith("round-key-")) return mark(await next({
+		if (c?.transcript && !c.writer && e.element?.startsWith(keyAddress(""))) return mark(await next({
 			...e,
 			element: ROUND_FOCUS
 		}));
 		if (!c?.isOpen || !c.view.item || !e.element) return mark(await next(e));
-		if (c.editing === NOTE && /^e\d+$/.test(e.element) && await $.clock.now() - askedAt < CLICK_MS) return mark(await next({
+		if (c.editing === NOTE && /^key:e\d+$/.test(e.element) && await $.clock.now() - askedAt < CLICK_MS) return mark(await next({
 			...e,
 			element: keyOf(NOTE)
 		}));

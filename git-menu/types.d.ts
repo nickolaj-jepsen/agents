@@ -1,6 +1,6 @@
 export type MenuKind = "git" | "folder" | "notes";
 
-export type FolderApp = "code" | "zed" | "smerge" | "files" | "ghostty";
+export type FolderApp = "code" | "zed" | "smerge" | "files" | "terminal";
 
 export type EditorApp = Extract<FolderApp, "code" | "zed">;
 
@@ -8,7 +8,7 @@ export type EditorApp = Extract<FolderApp, "code" | "zed">;
 export type Action =
   | { kind: "url"; url: string }
   | { kind: "copy"; text: string; what: string }
-  | { kind: "launch"; argv: string[] }
+  | { kind: "launch"; argv: string[]; cwd?: string }
   /** Switches the pane to another menu. */
   | { kind: "menu"; menu: MenuKind };
 
@@ -40,6 +40,12 @@ declare module "claude-code" {
     "git-menu": {
       menu: Menu | null;
       showAll: boolean;
+      /** The row the terminal's keyboard is on. */
+      focus: string | null;
+      /** The terminal list's first line. */
+      top: number;
+      /** Whether the pane has the keyboard. */
+      held: boolean;
     };
   }
 }
