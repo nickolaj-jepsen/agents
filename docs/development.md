@@ -2,73 +2,107 @@
 
 ## Set up and check a change
 
-You need Node 24 (`.node-version`), pnpm (`corepack enable` gives you the version `packageManager` pins) and uv, which fetches the Python in `.python-version`. `nix develop` gives the same tools, and `direnv allow` loads that shell. Otherwise nix is only for recording site media and checking nix files.
+You need Node 24 (`.node-version`), pnpm (`corepack enable` gives you the version `packageManager` pins) and uv, which fetches the Python in `.python-version`. `nix develop` gives the same tools, and `direnv allow` loads that shell. Otherwise nix is only for recording site media, checking nix files and building the plugins the way CI publishes them.
 
 ```bash
 pnpm install                  # every package's dependencies, from pnpm-lock.yaml
-pnpm turbo run test           # specs for the libs, kit and build tools, and run-handoff's pytest; runs no agent
+pnpm turbo run test           # specs for the libs, kits and build tools, and run-handoff's pytest; runs no agent
 pnpm turbo run check-types    # tsc -b in each package
 pnpm turbo run lint           # oxlint over the TypeScript sources
 pnpm turbo run fmt            # format the checkout: oxfmt, and ruff for Python
 pnpm turbo run check          # the gate CI runs
 ```
 
-Run turbo through pnpm: it puts turbo on `PATH`. `check` covers the format check, oxlint, shellcheck, ruff, each package's type-check and specs, `claude plugin validate` and `test` on each Claude half, and every plugin's screen snapshots against real Claude Code and pi. `fmt` leaves nix files alone; `nix fmt` formats them.
+Run turbo through pnpm: it puts turbo on `PATH`. `fmt` leaves nix files alone; `nix fmt` formats them.
 
 Turbo caches a task by its inputs, so a repeat run replays the output. CI writes a remote cache that local runs only read: `.envrc` sets `TURBO_CACHE=local:rw,remote:r`, and without direnv you export it yourself. To read the remote cache, run `turbo login` and `turbo link`, and set `TURBO_REMOTE_CACHE_SIGNATURE_KEY` to the key CI signs with. Without them every task runs on your machine.
 
-| Task                 | What it does                                                                                                                                                                          |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `check:nix`          | `nix flake check`: the nix files, treefmt, and a nix build of every plugin. Not part of `check`; CI runs it only when a nix file, the lockfile or a plugin's or kit's source changed. |
-| `build`              | Bundle an app or the kit catalogue into its gitignored `dist/` (the mod, its tests and the pi extension, in the shape Claude Code and pi load), and rewrite the generated README.     |
-| `test:claude`        | `claude plugin validate --strict` and `test` on one plugin's built mod (`dist/`), with the Claude Code the lockfile pins and a scratch `HOME`.                                        |
-| `e2e`, `e2e:update`  | One plugin's screen snapshots, compared or accepted. See the [replay guide](../lib/tools/drive/README.md#snapshots).                                                                  |
-| `lint:py`, `lint:sh` | ruff and shellcheck; `fmt:check` is the format check `check` runs.                                                                                                                    |
-| `skills:refresh`     | Refresh the upstream manuals in the agent-plugin-dev skill. `-- vMAJOR.MINOR.PATCH` picks the pi docs' release.                                                                       |
+## Layout
 
-A session of an agent is not a turbo task: `pnpm drive live` replays a scenario in your terminal, and `pnpm drive goto` parks one that `cap`, `keys` and `shot` drive from separate commands, as the [replay guide](../lib/tools/drive/README.md#drive-a-parked-session) shows.
+| Path          | What it holds                                                                                                                                                                 |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/<name>` | A plugin: a Claude Code mod, a pi extension, or both. `apps/site` is the Astro site and no plugin.                                                                            |
+| `lib/kits/`   | The UI kit, one package per component (`@agents/kit-<component>`), plus `core` (lines, tokens, painters), `legacy` and `catalog`. See [the kit guide](../lib/kits/README.md). |
+| `lib/tools/`  | `build` (the bundler, manifests, README generator), `drive` (`pnpm drive`: real agents, screen tests, recordings) and `lint` (oxlint, oxfmt, shellcheck).                     |
+| `skills/`     | Installable skills, one folder each with a `SKILL.md`.                                                                                                                        |
+| `docs/`       | These pages. They feed the site's developer section; `_intro.md` and `_install.md` feed the root README.                                                                      |
+| `pkgs/`       | Nix: how the apps are built, the recording environment, and the hash that pins the dependency fetch.                                                                          |
 
-Claude writes a mod's API types only when it loads the mod in a real session, into the mod's `dist/.claude-plugin/types/`, which the `types` task does for an app with a Claude half (`pnpm drive types <app>`; a build keeps them). `check-types` runs after it and checks the Claude half too, with the app's `tsconfig.claude.json`, which extends the types' own tsconfig; `tsconfig.json` leaves that half out. After upgrading Claude Code, run `lib/tools/build/dev-setup-claude.sh` with `claude` on `PATH`; it builds every mod, loads each once, waits for the types and tells you to restart the editor's TypeScript server. `test:claude` validates and tests the built mods without that step. pi's packages come from `pnpm install`, so pi halves need no setup.
+Everything under `apps/`, `lib/kits/` and `lib/tools/` is a pnpm workspace package with its own `turbo.json`, which holds the commands of the tasks it takes part in.
+
+## Tasks
+
+Run each as `pnpm turbo run <task>`, with `--filter=<package>` for one package. A per-package task runs in each package that defines it.
+
+| Task                | What it covers                                                                                                                                                                                                                       | Cache key                                                                                                        |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `build`             | Per app: bundle it into its gitignored `dist/`, in the shape Claude Code and pi load. At the root it also writes the generated files (README, `COMPONENTS.md`, the kit index in `AGENTS.md`), records the media and builds the site. | The package's sources and the kits and build tool it imports, less its tests, scenarios and README.              |
+| `dev`               | `astro dev` for the site at http://localhost:4321/agents/. Reloads when a plugin README, skill, doc or kit manifest changes.                                                                                                         | Not cached.                                                                                                      |
+| `test`              | Each package's vitest specs, and run-handoff's pytest. Runs no agent.                                                                                                                                                                | The package's sources and what it imports.                                                                       |
+| `check-types`       | `tsc -b` per package. An app with a Claude half checks it too, against its `dist/.claude-plugin/types/` (`tsconfig.claude.json`).                                                                                                    | The package, the root tsconfigs and its `types`.                                                                 |
+| `types`             | Claude writes the mod API types only when it loads a mod. `drive types <app>` loads the build in a hermetic Claude and waits for them. Run it after a Claude Code upgrade.                                                           | The app's build and the `claude` version.                                                                        |
+| `test:claude`       | `claude plugin validate --strict` and `claude plugin test` on an app's built mod, with the Claude Code the lockfile pins and a scratch `HOME`.                                                                                       | The app's build.                                                                                                 |
+| `e2e`, `e2e:update` | One package's screen snapshots in real Claude Code and pi, compared or accepted (`drive test <package>`). See [snapshots](../lib/tools/drive/README.md#snapshots).                                                                   | `e2e`: the package's scenarios and snapshots, its build, and the kits and driver it imports. `e2e:update`: none. |
+| `check`             | The gate CI runs: the format check, `lint`, shellcheck and ruff, and per package `check-types`, `test`, `test:claude` and `e2e`.                                                                                                     | Its parts.                                                                                                       |
+| `check:nix`         | `nix flake check`: the nix files, treefmt, and a nix build of every plugin. Not part of `check`; CI runs it only when its key misses.                                                                                                | The nix files, the lockfile, `pkgs/pnpm-deps.hash`, and the apps', kits' and build tool's sources.               |
+| `fmt`, `lint`       | `oxfmt` and `ruff format`; `oxlint --deny-warnings`. `lint:py`, `lint:sh` and `fmt:check` are the parts `check` runs.                                                                                                                | `lint` and the checks: the sources they read. `fmt`: none.                                                       |
+| `media`             | The pictures and demos the site shows, recorded in `nix run .#media`; `media:vscode` is a package's VS Code pictures. See [site media](../lib/tools/drive/README.md#site-media).                                                     | The package's scenarios, its build, what it imports and the recording environment (`//#media-env`).              |
+| `readme`            | Write the root `README.md` from the plugin READMEs, skill frontmatter, `docs/_intro.md` and `docs/_install.md`.                                                                                                                      | Not cached.                                                                                                      |
+| `catalog:docs`      | Write `lib/kits/catalog/COMPONENTS.md` and the kit index in `AGENTS.md` from the kit manifests.                                                                                                                                      | The kits' sources and `AGENTS.md`.                                                                               |
+| `skills:refresh`    | Refresh the upstream manuals in the agent-plugin-dev skill. `-- vMAJOR.MINOR.PATCH` picks the pi docs' release.                                                                                                                      | Not cached.                                                                                                      |
+| `kit-new`           | `-- <name>` scaffolds a kit component; see [the kit guide](../lib/kits/README.md#add-or-change-a-component).                                                                                                                         | Not cached.                                                                                                      |
+
+A session of an agent is not a turbo task: turbo stops what a task leaves running, and `goto` would park nothing. `pnpm drive live` replays a scenario in your terminal, and `pnpm drive goto` parks one that `cap`, `keys` and `shot` drive from separate commands; see [the driver's guide](../lib/tools/drive/README.md#drive-a-parked-session).
 
 ## Try the answer form
 
 ```bash
-pnpm install                                                       # prepare a new checkout
+pnpm install                                        # prepare a new checkout
 pnpm drive ls answer                                # list saved screens
 pnpm drive live answer open --harness claude        # try a Claude card; Ctrl+] stops the replay
 pnpm drive live answer open --harness pi            # try the pi version; Ctrl+] stops the replay
 pnpm drive live answer form --harness vscode        # Linux with the extension installed; close the window to stop
 ```
 
-The replay stops on a question card and hands you the controls. Pick an option or resize the window. See the [replay guide](../lib/tools/drive/README.md#live-mode) to write scenarios, take pictures or update snapshots.
+The replay stops on a question card and hands you the controls. Pick an option or resize the window. See [the driver's guide](../lib/tools/drive/README.md) to write scenarios, take pictures or update snapshots.
 
 ## Change or add a plugin
 
-Each directory under `apps/` is a Claude Code mod, a pi package, or both, and a pnpm workspace package: `pnpm install` links a new one and updates `pnpm-lock.yaml`. `pnpm turbo run build` bundles it into `apps/<name>/dist/`, in the shape Claude Code and pi load ([`lib/tools/build/build.ts`](../lib/tools/build/build.ts) says what goes where). `dist/` is gitignored, and the tests and the e2e scenarios run on it.
+Each directory under `apps/` is a Claude Code mod, a pi package, or both. To add one, copy a small app such as `apps/docfix`, rename it, then:
 
-| Location                      | What goes there                                                                                                                                                                                                                     |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `package.json`                | The workspace package: the pi manifest (`pi`), the Claude manifest (`claude`, what `.claude-plugin/plugin.json` held: the build writes that file and `hooks/hooks.json` from it), and the dependencies.                             |
-| `src/claude.tsx`              | The mod: the file with the actual `on(...)` calls. The build bundles it, with the kit and `src/lib`, into `dist/register.js`. Other files of the mod are in `src/claude/`, with the self-contained `types.d.ts` the manifest names. |
-| `src/claude.test.tsx`         | The mod's tests, for `claude plugin test`; bundled into `dist/claude.test.ts`.                                                                                                                                                      |
-| `src/lib/`                    | Shared logic in TypeScript with no Node or DOM APIs: oxlint bans `node:` imports and Node globals here and in the mod. Put Vitest specs next to it.                                                                                 |
-| `src/pi.ts`, `src/pi/`        | The pi extension entry, declared by `package.json` under `pi`, and its files. Set `"agentTools": { "subagents": true }` in that file if subagents should load it.                                                                   |
-| `src/e2e/`                    | The plugin's screen scenarios, fixtures and `__snapshots__`. See the [replay guide](../lib/tools/drive/README.md#write-a-scenario).                                                                                                 |
-| `tsconfig.json`, `turbo.json` | One tsconfig that extends `tsconfig.base.node.json` (a Claude half adds `tsconfig.claude.json`), and the tasks the package opts into: `build`, `test`, `test:claude`, `e2e`, `types`, `media`, `media:vscode`.                      |
-| `README.md`                   | Public plugin page. Include `tagline`, `featured` and `order` frontmatter. `requires` lists prerequisites when there are any; `status: in-progress` adds a notice and moves the plugin to the end.                                  |
+```bash
+pnpm install                                  # link the new package and update pnpm-lock.yaml
+pnpm turbo run build --filter=<package>       # bundle it into apps/<name>/dist/
+pnpm turbo run types --filter=<package>       # a Claude half: write the mod API types the editor and tsc read
+pnpm drive live <name> <scenario> --watch     # look at it in a real session
+```
 
-For a Claude half, also list the app in [the marketplace](../.claude-plugin/marketplace.json), as a `git-subdir` source on the `dist` branch (see the existing entries). Its other entry, `skills`, discovers `skills/` without a per-skill list. The invariants spec in `lib/tools/build/` fails when the list and the plugins disagree.
+`dist/` is gitignored and holds what Claude Code and pi load ([`lib/tools/build/build.ts`](../lib/tools/build/build.ts) says what goes where). The tests and the screen scenarios run on it.
 
-- The manifest's `hooks` field is for settings-style hooks, not modules; a `claude.hooks` object in `package.json` is written to `hooks/hooks.json` beside the module. The mod engine accepts no symlinks.
-- Declare dependencies in `package.json` with `"catalog:"` for the versions `pnpm-workspace.yaml` states once: `typescript`, `@types/node` and `tsdown`, `vitest` for specs, `@anthropic-ai/claude-code` for a Claude half. The kit packages an app imports (`@agents/kit-card`, ...) are `workspace:*` devDependencies: they are bundled, so a kit change rebuilds and retests the apps that use it. `@agents/build` and `@agents/drive` are too.
-- The mod engine's check that a function handed `$` is not assigned to elsewhere does not understand scopes, and a bundle is one scope. A top-level function that takes `$` (`open($)`) collides with any `let open = ...` in the bundle, the kit's included: `claude plugin validate` fails the `test:claude` task on it. Rename the function (`openForm`).
-- To run a plugin's specs, add a `vitest.config.ts` that includes `src/lib/**/*.spec.ts` and give `test` its command in `turbo.json`, `["./node_modules/.bin/vitest", "run"]`, as the other apps do. Name the tool by path: turbo's `PATH` holds only the root's `node_modules/.bin`, which has turbo alone.
+| Location                                    | What goes there                                                                                                                                                                                                            |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `package.json`                              | The pi manifest (`pi`), the Claude manifest (`claude`: the build writes `.claude-plugin/plugin.json` and `hooks/hooks.json` from it) and the dependencies.                                                                 |
+| `src/claude.ts`, `src/claude.tsx`           | The mod: the file with the `on(...)` calls. The build bundles it with the kit and `src/lib` into `dist/register.js`. Its other files are in `src/claude/`, with the self-contained `types.d.ts` that `claude.types` names. |
+| `src/claude.test.ts`, `src/claude.test.tsx` | The mod's tests, for `claude plugin test`; bundled into `dist/claude.test.ts`.                                                                                                                                             |
+| `src/lib/`                                  | Shared logic with no Node or DOM APIs: oxlint bans `node:` imports and Node globals here and in the mod. Put Vitest specs next to it.                                                                                      |
+| `src/pi.ts`, `src/pi/`                      | The pi extension entry, which `pi.extensions` names, and its files. Set `"agentTools": { "subagents": true }` in `package.json` if subagents should load it.                                                               |
+| `src/e2e/`                                  | The scenarios (`claude.scenarios.ts`, `pi.scenarios.ts`, `vscode.scenarios.ts`, `site.scenarios.ts`), fixtures and `__snapshots__`. See [writing a scenario](../lib/tools/drive/README.md#write-a-scenario).               |
+| `tsconfig.json`, `tsconfig.claude.json`     | `tsconfig.json` extends `tsconfig.base.node.json` and leaves the Claude half out. `tsconfig.claude.json` covers that half and extends the types Claude wrote into `dist/.claude-plugin/types/` (`drive types`).            |
+| `turbo.json`                                | The commands of the tasks the package takes part in: `build`, `test`, `test:claude`, `e2e`, `e2e:update`, `types`, `check-types`, `media`, `media:vscode`. Copy them from an existing app and change the name.             |
+| `README.md`                                 | The public plugin page. Include `tagline`, `featured` and `order` frontmatter. `requires` lists prerequisites when there are any; `status: in-progress` adds a notice and moves the plugin to the end.                     |
+
+For a Claude half, also list the app in [the marketplace](../.claude-plugin/marketplace.json) as a `git-subdir` source on the `dist` branch (see the existing entries). Its other entry, `skills`, discovers `skills/` without a per-skill list. The invariants spec in `lib/tools/build/` fails when the list and the plugins disagree.
+
+- A `claude.hooks` object in `package.json` is written to `hooks/hooks.json` beside the module; the manifest's own `hooks` field is for settings-style hooks, not modules. The mod engine accepts no symlinks.
+- Declare dependencies in `package.json`. `"catalog:"` takes the versions `pnpm-workspace.yaml` states once: `typescript`, `@types/node`, `tsdown`, `vitest` for specs, `@anthropic-ai/claude-code` for a Claude half. The kit packages an app imports (`@agents/kit-card`, ...), `@agents/build` and `@agents/drive` are `workspace:*` devDependencies. The kits are bundled, so a kit change rebuilds and retests the apps that use it.
+- A top-level function that takes `$` (`open($)`) collides with any `let open = ...` in the bundle, the kit's included: the engine's check that a function handed `$` is not assigned to elsewhere does not understand scopes, and a bundle is one scope. `claude plugin validate` fails the `test:claude` task on it. Name such a function for what it does (`openForm`).
+- To run an app's specs, add a `vitest.config.ts` that includes `src/lib/**/*.spec.ts` and give `test` its command in `turbo.json`, `["./node_modules/.bin/vitest", "run"]`, as the other apps do. Name the tool by path: turbo's `PATH` holds only the root's `node_modules/.bin`, which has turbo alone.
 - In pi, import the [shared UI kit](../lib/kits/README.md) as packages (`@agents/kit-core/paint/pi.ts`); the build bundles them into the extension. List the packages pi ships as `peerDependencies` with `"*"` and as catalog `devDependencies` for the type-check and specs, never as `dependencies`: pi supplies them (and TypeBox) at runtime, and the build leaves them out. Import `Type` from `typebox`, not from pi-ai. Read settings inside an event or tool, not the extension factory.
 - Try new slash commands in a real session. Claude can refuse a name that conflicts with a built-in or skill even when validation and tests pass. See the [Claude guide](../skills/agent-plugin-dev/references/claude.md) if a wrapper prevents `claude plugin test` from running.
 
 ## Publish a skill
 
-Put the instructions in `skills/<name>/SKILL.md`. Set `metadata.summary` and pick a `metadata.category` from [the content loader](../lib/tools/build/content.ts). The site uses `argument-hint` for invocation help and takes the “Needs” list from bullets under `## Requirements` if present.
+Put the instructions in `skills/<name>/SKILL.md`. Set `metadata.summary` and pick a `metadata.category` from [the content loader](../lib/tools/build/content.ts). The site uses `argument-hint` for invocation help and takes the "Needs" list from bullets under `## Requirements` if present.
 
 To validate frontmatter, copy `skills/` into a temporary plugin directory and run `claude plugin validate --strict --json <dir>`. Don't symlink the skills.
 
@@ -78,9 +112,9 @@ To validate frontmatter, copy `skills/` into a temporary plugin directory and ru
 
 Nix builds each app with the same bundler as `pnpm turbo run build` (`pkgs/plugin-apps.nix`), so `nix build .#<app>` is that app's `dist/`, and `nix build .#plugins` holds them all, one `<name>/` folder each. The dependencies come from one fixed-output fetch whose hash is in `pkgs/pnpm-deps.hash`. It covers the apps, the kit packages they import, the build tool and the root's own dependencies (turbo); a lockfile bump that touches only the site, the drive tool or the linters leaves it alone.
 
-When `pnpm-lock.yaml` changes the hash, `nix run .#update-deps-hash` rewrites it, and `check:nix` fails with that advice while it is stale. On Dependabot's npm PR, [`update-deps-hash.yml`](../.github/workflows/update-deps-hash.yml) pushes the new hash to the branch and starts `ci.yml` on it, because a push made with the workflow's own token starts no workflow. A `DEPS_HASH_TOKEN` secret (a personal access token or App token) makes the push start CI itself.
+When `pnpm-lock.yaml` changes the hash, `nix run .#update-deps-hash` rewrites it, and `check:nix` fails with that advice while it is stale. On Dependabot's npm PR, [`update-deps-hash.yml`](../.github/workflows/update-deps-hash.yml) pushes the new hash to the branch and starts `ci.yml` on it, because a push made with the workflow's own token starts no workflow. A `DEPS_HASH_TOKEN` secret (a personal access token or App token) makes the push start CI itself. Dependabot opens one PR per ecosystem (nix, npm, uv) on the 1st and 15th.
 
-On every push to `main`, after `CI gate` passes, the `publish` job of [`ci.yml`](../.github/workflows/ci.yml) builds `.#plugins` and appends one commit with the result to the `dist` branch ([`publish-dist.sh`](../.github/publish-dist.sh)); it creates the branch when it is missing, never force-pushes, and commits nothing when the build is unchanged. The marketplace entries are `git-subdir` sources on that branch, so a Claude install gets a built plugin, not the app's source.
+On every push to `main`, after `CI gate` passes, the `publish` job of [`ci.yml`](../.github/workflows/ci.yml) builds `.#plugins` and appends one commit with the result to the `dist` branch ([`publish-dist.sh`](../.github/publish-dist.sh)); it creates the branch when it is missing, never force-pushes, and commits nothing when the build is unchanged. The marketplace entries are `git-subdir` sources on that branch, so a Claude install gets a built plugin, not the app's source. The `skills` entry stays `./` on `main`.
 
 | Entry                                                   | What you get                                                                                                                                  |
 | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -89,8 +123,11 @@ On every push to `main`, after `CI gate` passes, the `publish` job of [`ci.yml`]
 | `lib.pluginsFor pkgs`                                   | `lib.plugins` with `path` set to the app built for `pkgs.stdenv.hostPlatform.system`: a store path, the folder pi loads as a package.         |
 | `lib.skills`                                            | Map from name to skill directory.                                                                                                             |
 | `lib.mkClaudePlugin { pkgs; claude-code; } <name>`      | One Claude half, validated (`--strict`) and tested with the supplied Claude Code.                                                             |
+| `apps.media`, `apps.update-deps-hash`                   | `nix run .#media -- <command>` runs a command in the recording environment; `nix run .#update-deps-hash` refreshes the pinned hash.           |
 
 The repo's own checks run in turbo, not nix: Claude Code and pi are the versions `pnpm-lock.yaml` pins. `nix flake check` (`check:nix`) builds every plugin and runs each Claude half through `lib.mkClaudePlugin` with nixpkgs' `claude-code`. A consumer's flake that sets `inputs.agents.inputs.nixpkgs.follows` builds with its own nixpkgs: if its `pnpm_12` fetches differently, `agents-pnpm-deps` fails with a hash mismatch, and the answer is to drop the `follows` for `agents`. Marketplace installs aren't checked against your local Claude version.
+
+Stage new files before running nix commands; otherwise Nix won't see them.
 
 ## Preview the published site
 

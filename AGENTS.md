@@ -1,12 +1,12 @@
 # Agent notes
 
-Plugins for Claude Code and pi, and installable skills, distributed as a flake. Start with the [developer guide](docs/development.md) for setup, plugin layout, checks, packaging and site changes. Home-manager loads this flake; that configuration lives outside this repo.
+Plugins for Claude Code and pi, and installable skills, distributed as a flake. Start with the [developer guide](docs/development.md) for setup, layout, tasks, adding a plugin, packaging and site changes. Home-manager loads this flake; that configuration lives outside this repo.
 
-- Use turbo for repo commands: `pnpm turbo run <task>`, with the tasks listed in `turbo.json`. Run `pnpm turbo run fmt` before handing back changes. `pnpm turbo run test` is the quick check; `pnpm turbo run check` is the gate CI runs.
-- Drive real agents with `pnpm drive <verb>` (`pnpm drive --help`, [the driver's guide](lib/tools/drive/README.md)), not through turbo: `live` and `goto` with `cap`, `keys`, `shot` and `stop`, `test` for snapshots, `record` for site media.
-- Don't edit the root README directly. Run `pnpm turbo run readme` after editing plugin or skill frontmatter or `docs/_intro.md` or `docs/_install.md`. It fails if any plugin folder lacks a `README.md`.
+- Use turbo for repo commands: `pnpm turbo run <task>`, with the tasks in [the guide](docs/development.md#tasks). Run `pnpm turbo run fmt` before handing back changes. `pnpm turbo run test` is the quick check; `pnpm turbo run check` is the gate CI runs.
+- Drive real agents with `pnpm drive <verb>` (`pnpm drive --help`, [the driver's guide](lib/tools/drive/README.md)), not through turbo: `live` and `goto` with `cap`, `keys`, `shot` and `stop`, `test` for snapshots, `record` for site media (in `nix run .#media`).
+- Don't edit the root README directly. Run `pnpm turbo run readme` after editing a plugin README, skill frontmatter, `docs/_intro.md` or `docs/_install.md`. It fails if any `apps/<name>` plugin lacks a `README.md`.
 - Stage new files before running nix commands; otherwise Nix won't see them. `nix fmt` formats the nix files, which `fmt` leaves alone, and `pnpm turbo run check:nix` checks them; `check` doesn't run it.
-- A mod and a pi extension are bundled from `apps/<name>/src` into the gitignored `apps/<name>/dist` by `pnpm turbo run build`, and the kit is imported as the packages `@agents/kit-*`: there are no copies to sync. See [the kit guide](lib/kits/README.md).
+- A mod and a pi extension are bundled from `apps/<name>/src` into the gitignored `apps/<name>/dist` by `pnpm turbo run build`, and the kit is imported as the packages `@agents/kit-*`: there are no copies to sync. See [the kit guide](lib/kits/README.md). `pnpm turbo run catalog:docs` rewrites the kit index below.
 - For changes to what a plugin draws, or to its keys, mouse or focus, use the [agent-plugin-dev skill](skills/agent-plugin-dev/SKILL.md) and look at a real session before handing back.
 - Plugin UI follows the house rules in [the layout reference](skills/agent-plugin-dev/references/style.md). They hold for every plugin: a design that breaks one needs the owner's approval first, and each reviewer gets the page with the design.
 - Keep test sessions isolated. Fixture git must ignore the user's config and hooks; keep the agent's notes and worktrees under the run folder. Use `setupContext` and `runEnv` in `lib/tools/drive/lib/setup.ts`.
