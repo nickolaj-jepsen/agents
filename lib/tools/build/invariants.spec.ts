@@ -24,17 +24,28 @@ function claudePlugins(): string[] {
 describe(".claude-plugin/marketplace.json", () => {
   const file = join(repoRoot, ".claude-plugin/marketplace.json");
   const { plugins: entries } = JSON.parse(readFileSync(file, "utf8")) as {
-    plugins: { name: string; source: string }[];
+    plugins: { name: string; source: string | Record<string, string> }[];
   };
   // `skills` is the other entry: it discovers `skills/` without a per-skill list.
   const published = entries.filter((p) => p.name !== "skills");
 
-  it("lists every plugin that has a Claude half, at ./apps/<name>", () => {
+  // An app's source is not a plugin: it imports the kit by workspace package. CI builds each app with
+  // nix and commits the result to the `dist` branch, one folder per plugin (see ci.yml's `publish`).
+  const fromDist = (name: string) => ({
+    source: "git-subdir",
+    url: "nickolaj-jepsen/agents",
+    path: name,
+    ref: "dist",
+  });
+
+  it("lists every plugin that has a Claude half, from the dist branch's <name>/ folder", () => {
     const listed = new Map(published.map((p) => [p.name, p.source]));
-    const missing = claudePlugins().filter((name) => listed.get(name) !== `./apps/${name}`);
+    const missing = claudePlugins().filter(
+      (name) => JSON.stringify(listed.get(name)) !== JSON.stringify(fromDist(name)),
+    );
     expect(
       missing,
-      `add { "name": "<name>", "source": "./apps/<name>" } to .claude-plugin/marketplace.json for: ${missing.join(", ")}`,
+      `add { "name": "<name>", "source": ${JSON.stringify(fromDist("<name>"))} } to .claude-plugin/marketplace.json for: ${missing.join(", ")}`,
     ).toEqual([]);
   });
 

@@ -16,27 +16,57 @@
     },
     {
       "name": "spellfix",
-      "source": "./apps/spellfix"
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "spellfix",
+        "ref": "dist"
+      }
     },
     {
       "name": "linear-issue",
-      "source": "./apps/linear-issue"
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "linear-issue",
+        "ref": "dist"
+      }
     },
     {
       "name": "git-menu",
-      "source": "./apps/git-menu"
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "git-menu",
+        "ref": "dist"
+      }
     },
     {
       "name": "answer",
-      "source": "./apps/answer"
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "answer",
+        "ref": "dist"
+      }
     },
     {
       "name": "docfix",
-      "source": "./apps/docfix"
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "docfix",
+        "ref": "dist"
+      }
     },
     {
       "name": "image-preview",
-      "source": "./apps/image-preview"
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "image-preview",
+        "ref": "dist"
+      }
     }
   ]
 }

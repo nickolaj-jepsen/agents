@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # A run on a branch by hand. `update-deps-hash.yml` starts one on the commit it pushes, which a
+  # push made with the workflow's own token would not.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -82,3 +85,39 @@ jobs:
             apps/*/src/e2e/__snapshots__/**/*.actual.*
             lib/kits/*/e2e/__snapshots__/**/*.actual.*
           if-no-files-found: ignore
+
+  # The plugins as the marketplace installs them: built by nix (`nix build .#plugins`) from the commit
+  # the gate passed on, appended to the `dist` branch as one commit per publish (see
+  # .github/publish-dist.sh). Nothing else holds a write token.
+  publish:
+    name: Publish plugins
+    needs: check
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    # One publish at a time, in push order: a newer one waits rather than cancelling one in flight.
+    concurrency:
+      group: publish-dist
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+      - if: vars.CACHIX_CACHE != ''
+        uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
+        with:
+          name: ${{ vars.CACHIX_CACHE }}
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      - name: Build the plugins
+        run: nix build .#plugins --print-build-logs --out-link plugins
+        env:
+          NIX_CONFIG: access-tokens = github.com=${{ github.token }}
+      - name: Commit them to dist
+        run: .github/publish-dist.sh plugins
+        env:
+          DIST_REMOTE: ${{ github.server_url }}/${{ github.repository }}
+          DIST_TOKEN: ${{ github.token }}
+          DIST_SOURCE: ${{ github.sha }}

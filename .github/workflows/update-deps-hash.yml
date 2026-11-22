@@ -1,0 +1,92 @@
+# Dependabot's npm PR changes pnpm-lock.yaml, which changes the hash in pkgs/pnpm-deps.hash that
+# the nix build of the plugins pins (a stale one fails `check:nix`). This pushes the new hash to
+# the PR's branch.
+#
+# Why `pull_request_target`: a Dependabot `pull_request` run gets a read-only token, and this one
+# must write. Its safeguards: it runs only for Dependabot's own branch in this repository, and only
+# when the PR changes manifests and the lockfile and nothing else, so the code nix builds is main's.
+#
+# A push made with `GITHUB_TOKEN` starts no workflow, so `CI gate` would never run on the new commit
+# and the PR would wait on it for good. The exception is `workflow_dispatch`: the last step starts
+# `ci.yml` on the branch, and its check runs report on the new head commit under the same names.
+# To have the push itself start CI instead, put a personal access token or a GitHub App token in the
+# `DEPS_HASH_TOKEN` secret (Dependabot's, not Actions'); the dispatch is then skipped.
+name: Update pnpm deps hash
+
+on:
+  pull_request_target:
+    branches: [main]
+    paths:
+      - pnpm-lock.yaml
+
+permissions: {}
+
+concurrency:
+  group: update-deps-hash-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  hash:
+    name: Refresh the hash
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      # The PR's head commit, not its merge with main: the hash is for the lockfile it holds.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Only manifests and the lockfile changed
+        id: scope
+        run: |
+          git fetch --no-tags origin "$BASE_SHA"
+          other=$(git diff --name-only "$BASE_SHA" HEAD | grep -Ev '(^|/)package\.json$|^pnpm-lock\.yaml$|^pnpm-workspace\.yaml$' || true)
+          if [ -n "$other" ]; then
+            echo "The PR changes more than manifests and the lockfile, so nothing runs here:"
+            echo "$other"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      - if: steps.scope.outputs.run == 'true'
+        uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+      - if: steps.scope.outputs.run == 'true' && vars.CACHIX_CACHE != ''
+        uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
+        with:
+          name: ${{ vars.CACHIX_CACHE }}
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      - if: steps.scope.outputs.run == 'true'
+        name: Recompute the hash
+        run: nix run .#update-deps-hash
+        env:
+          NIX_CONFIG: access-tokens = github.com=${{ github.token }}
+      - if: steps.scope.outputs.run == 'true'
+        name: Push it to the PR
+        run: |
+          if git diff --quiet -- pkgs/pnpm-deps.hash; then
+            echo "The hash is current."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'build(nix): refresh the pnpm deps hash' -- pkgs/pnpm-deps.hash
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $(printf 'x-access-token:%s' "$PUSH_TOKEN" | base64 -w0)" \
+            push origin "HEAD:refs/heads/$HEAD_REF"
+          # A push with GITHUB_TOKEN starts no workflow: run the gate on the new commit by hand.
+          if [ -z "${DEPS_HASH_TOKEN:-}" ]; then
+            gh workflow run ci.yml --ref "$HEAD_REF"
+          fi
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          DEPS_HASH_TOKEN: ${{ secrets.DEPS_HASH_TOKEN }}
+          PUSH_TOKEN: ${{ secrets.DEPS_HASH_TOKEN || github.token }}
+          GH_TOKEN: ${{ github.token }}

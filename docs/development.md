@@ -17,14 +17,14 @@ Run turbo through pnpm: it puts turbo on `PATH`. `check` covers the format check
 
 Turbo caches a task by its inputs, so a repeat run replays the output. CI writes a remote cache that local runs only read: `.envrc` sets `TURBO_CACHE=local:rw,remote:r`, and without direnv you export it yourself. To read the remote cache, run `turbo login` and `turbo link`, and set `TURBO_REMOTE_CACHE_SIGNATURE_KEY` to the key CI signs with. Without them every task runs on your machine.
 
-| Task                 | What it does                                                                                                                                                                      |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `check:nix`          | `nix flake check`: the nix files and treefmt. Not part of `check`; CI runs it only when a `.nix` file or `flake.lock` changed.                                                    |
-| `build`              | Bundle an app or the kit catalogue into its gitignored `dist/` (the mod, its tests and the pi extension, in the shape Claude Code and pi load), and rewrite the generated README. |
-| `test:claude`        | `claude plugin validate --strict` and `test` on one plugin's built mod (`dist/`), with the Claude Code the lockfile pins and a scratch `HOME`.                                    |
-| `e2e`, `e2e:update`  | One plugin's screen snapshots, compared or accepted. See the [replay guide](../lib/tools/drive/README.md#snapshots).                                                              |
-| `lint:py`, `lint:sh` | ruff and shellcheck; `fmt:check` is the format check `check` runs.                                                                                                                |
-| `plugin-docs`        | Refresh the upstream manuals in the agent-plugin-dev skill. `-- vMAJOR.MINOR.PATCH` picks the pi docs' release.                                                                   |
+| Task                 | What it does                                                                                                                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `check:nix`          | `nix flake check`: the nix files, treefmt, and a nix build of every plugin. Not part of `check`; CI runs it only when a nix file, the lockfile or a plugin's or kit's source changed. |
+| `build`              | Bundle an app or the kit catalogue into its gitignored `dist/` (the mod, its tests and the pi extension, in the shape Claude Code and pi load), and rewrite the generated README.     |
+| `test:claude`        | `claude plugin validate --strict` and `test` on one plugin's built mod (`dist/`), with the Claude Code the lockfile pins and a scratch `HOME`.                                        |
+| `e2e`, `e2e:update`  | One plugin's screen snapshots, compared or accepted. See the [replay guide](../lib/tools/drive/README.md#snapshots).                                                                  |
+| `lint:py`, `lint:sh` | ruff and shellcheck; `fmt:check` is the format check `check` runs.                                                                                                                    |
+| `plugin-docs`        | Refresh the upstream manuals in the agent-plugin-dev skill. `-- vMAJOR.MINOR.PATCH` picks the pi docs' release.                                                                       |
 
 Tasks that give you a session (`e2e-live`, `kit-live`, `answer-demo`) are interactive. Run them with `--ui=tui`, select the task in turbo's list and press `i` to send it your keys. `Ctrl+Z` gives the keys back to turbo. Turbo stops what a task leaves running, so a session parked by `goto` dies with its task: drive `goto`, `cap` and `keys` with `node lib/tools/drive/cli.ts` itself, as the [replay guide](../lib/tools/drive/README.md#drive-a-parked-terminal-session) shows.
 
@@ -57,7 +57,7 @@ Each directory under `apps/` is a Claude Code mod, a pi package, or both, and a 
 | `tsconfig.json`, `turbo.json` | One tsconfig that extends `tsconfig.base.node.json`, and the tasks the package opts into: `build`, `test`, `test:claude`, `e2e`.                                                                                                    |
 | `README.md`                   | Public plugin page. Include `tagline`, `featured` and `order` frontmatter. `requires` lists prerequisites when there are any; `status: in-progress` adds a notice and moves the plugin to the end.                                  |
 
-For a Claude half, also list the app in [the marketplace](../.claude-plugin/marketplace.json). Its other entry, `skills`, discovers `skills/` without a per-skill list. The invariants spec in `lib/tools/build/` fails when the list and the plugins disagree.
+For a Claude half, also list the app in [the marketplace](../.claude-plugin/marketplace.json), as a `git-subdir` source on the `dist` branch (see the existing entries). Its other entry, `skills`, discovers `skills/` without a per-skill list. The invariants spec in `lib/tools/build/` fails when the list and the plugins disagree.
 
 - The manifest's `hooks` field is for settings-style hooks, not modules; a `claude.hooks` object in `package.json` is written to `hooks/hooks.json` beside the module. The mod engine accepts no symlinks.
 - Declare dependencies in `package.json` with `"catalog:"` for the versions `pnpm-workspace.yaml` states once: `typescript`, `@types/node` and `tsdown`, `vitest` for specs, `@anthropic-ai/claude-code` for a Claude half. The kit packages an app imports (`@agents/kit-card`, ...) are `workspace:*` devDependencies: they are bundled, so a kit change rebuilds and retests the apps that use it. `@agents/build` and `@agents/drive` are too.
@@ -74,15 +74,23 @@ To validate frontmatter, copy `skills/` into a temporary plugin directory and ru
 
 `check` lints a skill's scripts too: ruff for Python and shellcheck, at warning level, for shell. `fmt` formats the Python. A script folder with a `pyproject.toml` and tests joins the uv workspace (`skills/run-handoff/scripts` is the first); add its path to `members` in the root `pyproject.toml`.
 
-## Use the flake from another configuration
+## Build, publish and use the plugins with nix
 
-| Entry                                              | What you get                                                                                                                                  |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lib.plugins`                                      | Map by plugin name; entries have `claude`, `pi`, `subagents` and `path`. `path` is a string into the flake's source, `"${self}/apps/<name>"`. |
-| `lib.skills`                                       | Map from name to skill directory.                                                                                                             |
-| `lib.mkClaudePlugin { pkgs; claude-code; } <name>` | One Claude half, validated and tested with the supplied Claude Code.                                                                          |
+Nix builds each app with the same bundler as `pnpm turbo run build` (`pkgs/plugin-apps.nix`), so `nix build .#<app>` is that app's `dist/`, and `nix build .#plugins` holds them all, one `<name>/` folder each. The dependencies come from one fixed-output fetch whose hash is in `pkgs/pnpm-deps.hash`. It covers the apps, the kit packages they import, the build tool and the root's own dependencies (turbo); a lockfile bump that touches only the site, the drive tool or the linters leaves it alone.
 
-The repo's own checks run in turbo, not nix: Claude Code and pi are the versions `pnpm-lock.yaml` pins. `lib.mkClaudePlugin` is how a consumer checks a Claude half against their own `claude-code`. Marketplace installs aren't checked against your local Claude version.
+When `pnpm-lock.yaml` changes the hash, `nix run .#update-deps-hash` rewrites it, and `check:nix` fails with that advice while it is stale. On Dependabot's npm PR, [`update-deps-hash.yml`](../.github/workflows/update-deps-hash.yml) pushes the new hash to the branch and starts `ci.yml` on it, because a push made with the workflow's own token starts no workflow. A `DEPS_HASH_TOKEN` secret (a personal access token or App token) makes the push start CI itself.
+
+On every push to `main`, after `CI gate` passes, the `publish` job of [`ci.yml`](../.github/workflows/ci.yml) builds `.#plugins` and appends one commit with the result to the `dist` branch ([`publish-dist.sh`](../.github/publish-dist.sh)); it creates the branch when it is missing, never force-pushes, and commits nothing when the build is unchanged. The marketplace entries are `git-subdir` sources on that branch, so a Claude install gets a built plugin, not the app's source.
+
+| Entry                                                   | What you get                                                                                                                                  |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages.<system>.<name>`, `packages.<system>.plugins` | A plugin's build, and all of them (`<name>/`).                                                                                                |
+| `lib.plugins`                                           | Map by plugin name; entries have `claude`, `pi` and `subagents`. Their `path` throws: a build belongs to a system, which `lib` does not know. |
+| `lib.pluginsFor pkgs`                                   | `lib.plugins` with `path` set to the app built for `pkgs.stdenv.hostPlatform.system`: a store path, the folder pi loads as a package.         |
+| `lib.skills`                                            | Map from name to skill directory.                                                                                                             |
+| `lib.mkClaudePlugin { pkgs; claude-code; } <name>`      | One Claude half, validated (`--strict`) and tested with the supplied Claude Code.                                                             |
+
+The repo's own checks run in turbo, not nix: Claude Code and pi are the versions `pnpm-lock.yaml` pins. `nix flake check` (`check:nix`) builds every plugin and runs each Claude half through `lib.mkClaudePlugin` with nixpkgs' `claude-code`. A consumer's flake that sets `inputs.agents.inputs.nixpkgs.follows` builds with its own nixpkgs: if its `pnpm_12` fetches differently, `agents-pnpm-deps` fails with a hash mismatch, and the answer is to drop the `follows` for `agents`. Marketplace installs aren't checked against your local Claude version.
 
 ## Preview the published site
 
