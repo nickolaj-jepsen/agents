@@ -22,8 +22,8 @@ import {
 } from '../../lib/content.ts';
 import { renderInline, renderMarkdown } from '../../lib/markdown.ts';
 
-export const getStaticPaths = (() =>
-  content().plugins.map((plugin, i, all) => ({
+export const getStaticPaths = (async () =>
+  (await content()).plugins.map((plugin, i, all) => ({
     params: { name: plugin.name },
     props: { plugin, prev: all[i - 1], next: all[i + 1] },
   }))) satisfies GetStaticPaths;

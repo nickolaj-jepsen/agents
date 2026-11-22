@@ -5,7 +5,7 @@
  * top (`.cat-jump`) stands in for it. The pages' controls are Toolbar.astro, in the slot.
  */
 import Base from '../../layouts/Base.astro';
-import { catalogHref, components, type Component } from '../../lib/catalog.ts';
+import { catalogHref, getComponents, type Component } from '../../lib/catalog.ts';
 import { content, docHref, href } from '../../lib/content.ts';
 import '../../styles/catalog.css';
 
@@ -22,7 +22,8 @@ interface Props {
   crumbs?: { name: string; href?: string }[];
 }
 const { title, description, current, doc, overview = false, crumbs = [] } = Astro.props;
-const docs = content().docs;
+const components = await getComponents();
+const docs = (await content()).docs;
 ---
 
 <Base title={title} description={description} nav="dev" mainClass="catalog">
@@ -52,7 +53,7 @@ const docs = content().docs;
             <ul>
               <li><a href={catalogHref()} aria-current={overview ? 'page' : undefined}>Overview</a></li>
               {components.map((c) => (
-                <li><a href={catalogHref(c)} aria-current={c === current ? 'page' : undefined}>{c.name}</a></li>
+                <li><a href={catalogHref(c)} aria-current={c.id === current?.id ? 'page' : undefined}>{c.name}</a></li>
               ))}
             </ul>
             <ul>
@@ -74,8 +75,8 @@ const docs = content().docs;
         </li>
         {
           components.map((c) => (
-            <li class:list={{ here: c === current }}>
-              <a href={catalogHref(c)} class="comp" aria-current={c === current ? 'page' : undefined}>
+            <li class:list={{ here: c.id === current?.id }}>
+              <a href={catalogHref(c)} class="comp" aria-current={c.id === current?.id ? 'page' : undefined}>
                 <span class="name">{c.name}</span>
               </a>
               <ul class="stories">

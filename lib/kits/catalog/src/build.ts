@@ -1,29 +1,28 @@
 /**
- * Builds the catalogue's data from the component manifests and each kit's source:
- * `COMPONENTS.md` (what agents read, committed), `apps/site/data/kit.json` (what the site reads) and the
- * stories' crops. The last two are not committed: the Pages workflow writes them (`turbo run media`).
+ * Builds the catalogue's files from the component manifests and each kit's source: `COMPONENTS.md`
+ * and the kit index in `AGENTS.md` (what agents read, committed), and the stories' crops under
+ * `apps/site/media/kit/` (not committed). The site reads the model itself, with a loader of its own
+ * (`apps/site/src/loaders/kit.ts`), joined with those crops.
  *
- *   turbo run catalog                  play the kit scenarios in PNG mode, then write all three; fail
- *                                      on a manifest problem or a scenario that no longer matches
- *   turbo run catalog -- --no-shots    write all three from the PNGs already there, if any
- *   turbo run catalog -- --check       no PNGs needed: fail on a problem or a stale COMPONENTS.md or
- *                                      AGENTS.md index (the block between its `kit:index` markers)
+ *   turbo run catalog                  play the kit scenarios in PNG mode, crop them, and write the two
+ *                                      files; fail on a manifest problem or a scenario that no longer
+ *                                      matches
+ *   turbo run catalog -- --no-shots    write the two files only (`turbo run build` runs this)
+ *   turbo run catalog -- --check       fail on a problem or a stale COMPONENTS.md or AGENTS.md index
+ *                                      (the block between its `kit:index` markers)
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { cropShots } from "./crops.ts";
-import { here, loadModel, markdown, repoRoot, siteData, withIndex } from "./model.ts";
+import { here, loadModel, markdown, repoRoot, withIndex } from "./model.ts";
 
 const agents = join(repoRoot, "AGENTS.md");
-const outputs = {
-  components: join(here, "..", "COMPONENTS.md"),
-  // In the site's own folder, beside the content model: its pages read no data from outside it.
-  catalog: join(repoRoot, "apps/site/data/kit.json"),
-};
+const components = join(here, "..", "COMPONENTS.md");
 const check = process.argv.includes("--check");
+const shots = !check && !process.argv.includes("--no-shots");
 
-if (!check && !process.argv.includes("--no-shots")) {
+if (shots) {
   // The PNGs are not committed: this is where the e2e run draws them.
   // The scenarios load the catalogue's build, and every kit package has some of them.
   const run = (script: string, ...args: string[]) =>
@@ -41,9 +40,7 @@ if (!check && !process.argv.includes("--no-shots")) {
       ? packages.map((p) => run("lib/tools/drive/run.ts", p)).find((r) => r.status !== 0)
       : built;
   if (done && done.status !== 0) {
-    console.error(
-      "catalog: the kit scenarios failed; fix them, or use --no-shots for the PNGs there are",
-    );
+    console.error("catalog: the kit scenarios failed; fix them, or use --no-shots to skip them");
     process.exit(1);
   }
 }
@@ -56,7 +53,7 @@ if (model.problems.length > 0) {
 if (model.notMirrored.length > 0)
   console.log(`catalog: not yet mirrored:\n- ${model.notMirrored.join("\n- ")}`);
 
-const wanted = { components: markdown(model), catalog: siteData(model) };
+const componentsWanted = markdown(model);
 const agentsNow = readFileSync(agents, "utf8");
 const agentsWanted = withIndex(agentsNow, model);
 if (agentsWanted === undefined) {
@@ -66,30 +63,24 @@ if (agentsWanted === undefined) {
 if (check) {
   let stale = false;
   if (agentsNow !== agentsWanted) {
-    console.error(
-      `catalog: ${agents} has a stale kit index; run \`turbo run catalog -- --no-shots\``,
-    );
+    console.error(`catalog: ${agents} has a stale kit index; run \`pnpm turbo run build\``);
     stale = true;
   }
-  for (const k of ["components"] as const) {
-    const current = existsSync(outputs[k]) ? readFileSync(outputs[k], "utf8") : "";
-    if (current !== wanted[k]) {
-      console.error(
-        `catalog: ${outputs[k]} is out of date; run \`turbo run catalog -- --no-shots\``,
-      );
-      stale = true;
-    }
+  const current = existsSync(components) ? readFileSync(components, "utf8") : "";
+  if (current !== componentsWanted) {
+    console.error(`catalog: ${components} is out of date; run \`pnpm turbo run build\``);
+    stale = true;
   }
   if (stale) process.exit(1);
   console.log("catalog: ok");
   process.exit(0);
 }
 writeFileSync(agents, agentsWanted);
-for (const k of ["components", "catalog"] as const) {
-  mkdirSync(dirname(outputs[k]), { recursive: true });
-  writeFileSync(outputs[k], wanted[k]);
-}
-const crops = cropShots();
-console.log(
-  `catalog: ${crops.written} crop(s) written, ${crops.kept} unchanged, ${crops.removed} removed; COMPONENTS.md, apps/site/data/kit.json and the AGENTS.md index written`,
-);
+writeFileSync(components, componentsWanted);
+const written = "COMPONENTS.md and the AGENTS.md index written";
+if (shots) {
+  const crops = cropShots();
+  console.log(
+    `catalog: ${crops.written} crop(s) written, ${crops.kept} unchanged, ${crops.removed} removed; ${written}`,
+  );
+} else console.log(`catalog: ${written}`);

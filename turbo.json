@@ -89,8 +89,7 @@
         "!**/dist/**",
         "!apps/site/dist/**",
         "!apps/site/.astro/**",
-        "!apps/site/media/**",
-        "!apps/site/data/**"
+        "!apps/site/media/**"
       ]
     },
     "//#fmt": {
@@ -116,8 +115,7 @@
         "!**/dist/**",
         "!apps/site/dist/**",
         "!apps/site/.astro/**",
-        "!apps/site/media/**",
-        "!apps/site/data/**"
+        "!apps/site/media/**"
       ]
     },
     "//#readme": {
@@ -142,10 +140,11 @@
         "@agents/kit-catalog#build"
       ]
     },
-    // `pnpm turbo run build` also rewrites the generated README.md (the invariants spec says so when it is stale).
+    // `pnpm turbo run build` also rewrites the committed files generated from sources: README.md,
+    // COMPONENTS.md and the kit index in AGENTS.md (their freshness specs say so when they are stale).
     "//#build": {
       "command": null,
-      "dependsOn": ["//#readme"]
+      "dependsOn": ["//#readme", "//#catalog:docs"]
     },
     "@agents/drive#tui-test": {
       "command": ["node", "fetch-tui-test.ts"],
@@ -294,33 +293,13 @@
       "command": ["node", "skills/agent-plugin-dev/scripts/refresh-docs.ts"],
       "cache": false
     },
-    "//#site-data": {
-      "command": ["node", "lib/tools/build/site-data.ts"],
-      "inputs": [
-        "lib/tools/build/content.ts",
-        "lib/tools/build/site-data.ts",
-        ".claude-plugin/marketplace.json",
-        "apps/*/package.json",
-        "apps/*/README.md",
-        "skills/**",
-        "docs/**",
-        "apps/site/media/*/media.json",
-        "apps/site/media/*/media-vscode.json",
-        "!**/node_modules/**",
-        "!**/.turbo/**",
-        "!**/__pycache__/**",
-        "!**/.venv/**",
-        "!**/.*_cache/**"
-      ],
-      "outputs": ["apps/site/data/content.json"]
-    },
-    "//#catalog": { "command": ["node", "lib/kits/catalog/src/build.ts"], "cache": false },
-    "//#catalog:data": {
+    // `catalog -- --no-shots`: COMPONENTS.md and the kit index in AGENTS.md, from the kits' manifests
+    // and sources. Both are committed, so they are inputs too: a copy edited by hand is written again.
+    "//#catalog:docs": {
       "command": ["node", "lib/kits/catalog/src/build.ts", "--no-shots"],
       "inputs": [
         "lib/kits/**",
         "AGENTS.md",
-        "apps/site/media/kit/crops.json",
         "!**/node_modules/**",
         "!**/.turbo/**",
         "!**/__pycache__/**",
@@ -329,10 +308,13 @@
         "!**/.claude-plugin/types/**",
         "!**/dist/**",
         "!**/*.actual.*",
-        "!**/*.spec.ts"
+        "!**/*.spec.ts",
+        "!**/e2e/**"
       ],
-      "outputs": ["apps/site/data/kit.json"]
+      "outputs": ["AGENTS.md", "lib/kits/catalog/COMPONENTS.md"]
     },
+    // The renders too: plays the kit scenarios in PNG mode and crops them into apps/site/media/kit/.
+    "//#catalog": { "command": ["node", "lib/kits/catalog/src/build.ts"], "cache": false },
     // Builds the recording environment (VS Code, fonts, tools), so nix has it before a recorder
     // asks. No outputs: its hash is the point. Every recording depends on it, so a recording from
     // another environment misses the cache.

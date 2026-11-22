@@ -1,11 +1,11 @@
 /**
- * The UI kit's catalogue for the /dev/components/ pages: `data/kit.json` (the model `turbo run catalog`
- * writes) joined with the crops it keeps in `apps/site/media/kit/crops.json`.
+ * The UI kit's catalogue for the /dev/components/ pages: the `components` collection (see
+ * `src/loaders/kit.ts`: the catalogue's model joined with the crops `turbo run media` leaves in
+ * `apps/site/media/kit/`).
  */
-import type { ComponentModel, Model, StoryModel } from "../../../../lib/kits/catalog/src/model.ts";
+import { getCollection } from "astro:content";
+import type { ComponentModel, StoryModel } from "../../../../lib/kits/catalog/src/model.ts";
 import type { Harness } from "../../../../lib/kits/core/src/manifest.ts";
-import data from "../../data/kit.json";
-import cropList from "../../media/kit/crops.json";
 import { href, mediaUrl } from "./content.ts";
 
 export type { Harness };
@@ -18,35 +18,27 @@ export type Shot = { w: number; h: number; src: string; width: number; height: n
 export type Story = StoryModel & { shots: Partial<Record<Harness, Shot[]>> };
 export type Component = Omit<ComponentModel, "stories"> & { stories: Story[] };
 
-type Crop = { png: string; width: number; height: number };
-const crops = cropList as Record<string, Crop>;
-const model = data as unknown as Pick<Model, "kits" | "components">;
-
-function shotsOf(h: Harness, id: string): Shot[] {
-  const out: Shot[] = [];
-  for (const [key, c] of Object.entries(crops)) {
-    const m = /^([^/]+)\/(.+)@(\d+)x(\d+)$/.exec(key);
-    if (!m || m[1] !== h || m[2] !== id) continue;
-    out.push({
-      w: Number(m[3]),
-      h: Number(m[4]),
-      src: mediaUrl(c.png),
-      width: c.width,
-      height: c.height,
-    });
-  }
-  return out.sort((a, b) => a.w - b.w || a.h - b.h);
+/** The kit's components in the order of the catalogue, with each story's renders at their URLs, smallest first. */
+export async function getComponents(): Promise<Component[]> {
+  const entries = await getCollection("components");
+  return entries
+    .map((e) => e.data)
+    .sort((a, b) => a.position - b.position)
+    .map((c) => ({
+      ...c,
+      stories: c.stories.map((s) => ({
+        ...s,
+        shots: Object.fromEntries(
+          HARNESSES.map((h) => [
+            h,
+            (s.shots[h] ?? [])
+              .map(({ png, ...shot }): Shot => ({ ...shot, src: mediaUrl(png) }))
+              .sort((a, b) => a.w - b.w || a.h - b.h),
+          ]),
+        ) as Story["shots"],
+      })),
+    }));
 }
-
-export const components: Component[] = model.components.map((c) => ({
-  ...c,
-  stories: c.stories.map((s) => ({
-    ...s,
-    shots: Object.fromEntries(HARNESSES.map((h) => [h, shotsOf(h, s.id)])) as Story["shots"],
-  })),
-}));
-
-export const kits = model.kits;
 
 /** The overview is `/dev/`; a component has a page; a story is an anchor on it. */
 export const catalogHref = (c?: Component, s?: Story) =>

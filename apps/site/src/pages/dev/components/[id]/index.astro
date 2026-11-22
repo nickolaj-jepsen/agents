@@ -9,8 +9,8 @@ import Toolbar from '../../../../components/catalog/Toolbar.astro';
 import Api from '../../../../components/catalog/Api.astro';
 import {
   catalogHref,
-  components,
   differs,
+  getComponents,
   HARNESSES,
   implMark,
   sizesOf,
@@ -19,8 +19,8 @@ import {
   type Component,
 } from '../../../../lib/catalog.ts';
 
-export const getStaticPaths = (() =>
-  components.map((c) => ({ params: { id: c.id }, props: { c } }))) satisfies GetStaticPaths;
+export const getStaticPaths = (async () =>
+  (await getComponents()).map((c) => ({ params: { id: c.id }, props: { c } }))) satisfies GetStaticPaths;
 
 interface Props {
   c: Component;

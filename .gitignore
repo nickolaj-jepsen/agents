@@ -10,8 +10,6 @@ apps/site/dist/
 apps/site/.astro/
 # Recorded, not committed: `turbo run media` writes them, as the Pages workflow does before it builds.
 apps/site/media/
-# The site's content model, written by `turbo run site-data` from the markdown this repo holds.
-apps/site/data/
 
 # Turborepo
 .turbo

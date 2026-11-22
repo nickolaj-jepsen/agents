@@ -180,6 +180,10 @@
         "no-restricted-globals": "off"
       }
     },
+    {
+      "files": ["apps/site/src/content.config.ts", "apps/site/src/loaders/**"],
+      "rules": { "no-restricted-imports": "off" }
+    },
     // A mod runs in the mod engine, which has no Node and no pi-tui; the build bundles what it imports.
     {
       "files": ["apps/*/src/claude.*", "apps/*/src/claude/**"],
@@ -215,8 +219,9 @@
         ]
       }
     },
-    // The site reads its content as data (apps/site/data/), so its pages reach into lib/ for types only,
-    // and apps/site/ alone builds. Covers the frontmatter of .astro pages too.
+    // The site reads its content as collections (src/content.config.ts), so its pages reach into lib/ for
+    // types only; the loaders are the one place that reads the model's code. Covers the frontmatter of
+    // .astro pages too.
     {
       "files": ["apps/site/src/**"],
       "rules": {
@@ -227,13 +232,17 @@
               {
                 "regex": "^(\\.\\./)+lib/(tools|kits)/",
                 "allowTypeImports": true,
-                "message": "apps/site/src imports a value from outside apps/site/; only `import type` may. See docs/development.md#preview-the-published-site."
+                "message": "Pages import only types from lib/; the model is read by src/content.config.ts and src/loaders/, and the pages read its collections. See docs/development.md#preview-the-published-site."
               }
             ]
           }
         ],
         "no-restricted-globals": "off"
       }
+    },
+    {
+      "files": ["apps/site/src/content.config.ts", "apps/site/src/loaders/**"],
+      "rules": { "no-restricted-imports": "off" }
     },
     // Legacy files: they still draw around the kit. List only shrinks; never add a file here.
     {

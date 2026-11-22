@@ -74,7 +74,7 @@ function optimise(files: string[]): void {
 /**
  * Crops every screenshot there is into `apps/site/media/kit/` and rewrites `crops.json`. Crops of a
  * harness with screenshots this run that no longer has one are removed; a harness with none
- * keeps the crops it has (a fresh checkout, or `--no-shots`).
+ * keeps the crops it has (a fresh checkout).
  */
 export function cropShots(): { written: number; kept: number; removed: number } {
   const before = readCrops();

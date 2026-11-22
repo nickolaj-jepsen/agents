@@ -17,7 +17,7 @@ import { looksOf } from '../lib/posters.ts';
 import '../styles/home.css';
 import { renderInline } from '../lib/markdown.ts';
 
-const c = content();
+const c = await content();
 const intro = await renderInline(c.intro, 'docs/_intro.md');
 const inline = (md: string, file = 'README.md') => renderInline(md, file);
 const taglines = new Map(await Promise.all(c.plugins.map(async (p) => [p.name, await inline(p.tagline)] as const)));

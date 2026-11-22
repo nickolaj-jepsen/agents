@@ -19,6 +19,18 @@ type Node = {
 const SITE = "https://nickolaj-jepsen.github.io/agents/";
 const RAW = "https://raw.githubusercontent.com/nickolaj-jepsen/agents/main/";
 
+/** The names a link may land on, read before each render: a link to a plugin, skill or doc lands on its page. */
+let known = { plugins: new Set<string>(), skills: new Set<string>(), docs: new Set<string>() };
+
+async function readKnown(): Promise<void> {
+  const c = await content();
+  known = {
+    plugins: new Set(c.plugins.map((p) => p.name)),
+    skills: new Set(c.skills.map((s) => s.name)),
+    docs: new Set(c.docs.map((d) => d.slug)),
+  };
+}
+
 /** Where a link written in the repo file `from` should go on the site. */
 export function resolveLink(target: string, from: string, image = false): string {
   if (target.startsWith(SITE)) return href(target.slice(SITE.length));
@@ -27,13 +39,12 @@ export function resolveLink(target: string, from: string, image = false): string
   const folder = path.endsWith("/") || path === "";
   const resolved = posix.normalize(posix.join(posix.dirname(from), path)).replace(/\/$/, "");
   if (image) return resolved.startsWith("apps/site/media/") ? mediaUrl(resolved) : RAW + resolved;
-  const c = content();
   let m = /^apps\/([^/]+)(?:\/README\.md)?$/.exec(resolved);
-  if (m && c.plugins.some((p) => p.name === m![1])) return pluginHref(m[1]!) + hash;
+  if (m && known.plugins.has(m[1]!)) return pluginHref(m[1]!) + hash;
   m = /^skills\/([^/]+)(?:\/SKILL\.md)?$/.exec(resolved);
-  if (m && c.skills.some((s) => s.name === m![1])) return skillHref(m[1]!) + hash;
+  if (m && known.skills.has(m[1]!)) return skillHref(m[1]!) + hash;
   m = /^docs\/([^/_][^/]*)\.md$/.exec(resolved);
-  if (m && c.docs.some((d) => d.slug === m![1])) return docHref(m[1]!) + hash;
+  if (m && known.docs.has(m[1]!)) return docHref(m[1]!) + hash;
   if (resolved === "README.md" || resolved === ".") return href() + hash;
   return github(resolved, folder || !posix.extname(resolved)) + hash;
 }
@@ -87,6 +98,7 @@ function rendererFor(file: string) {
 
 /** `md` as HTML; `file` is the repo path it was read from, for its relative links. */
 export async function renderMarkdown(md: string, file: string): Promise<string> {
+  await readKnown();
   return (await (await rendererFor(file)).render(md)).code;
 }
 

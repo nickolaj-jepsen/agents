@@ -1,13 +1,14 @@
 ---
 import Shell from '../../components/catalog/Shell.astro';
 import Glyph from '../../components/Glyph.astro';
-import { catalogHref, components, HARNESSES, TITLES, type Component, type Harness } from '../../lib/catalog.ts';
+import { catalogHref, getComponents, HARNESSES, TITLES, type Component, type Harness } from '../../lib/catalog.ts';
 import { content, docHref, github } from '../../lib/content.ts';
 import { renderInline } from '../../lib/markdown.ts';
 
+const components = await getComponents();
 // What to read: the docs on this site, each with its opening paragraph, then the repo's guides.
 const docs = await Promise.all(
-  content().docs.map(async (d) => ({
+  (await content()).docs.map(async (d) => ({
     ...d,
     lead: await renderInline(d.body.split(/\n\s*\n/)[0] ?? '', d.path),
   })),

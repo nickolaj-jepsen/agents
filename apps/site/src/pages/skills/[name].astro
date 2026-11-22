@@ -10,8 +10,8 @@ import { renderInline, renderMarkdown } from '../../lib/markdown.ts';
 import { headings, linkReferences, requirements, whenToUse } from '../../lib/skill.ts';
 import '../../styles/skill.css';
 
-export const getStaticPaths = (() => {
-  const c = content();
+export const getStaticPaths = (async () => {
+  const c = await content();
   // The order of the home page: by category, in-progress last in each.
   const order = c.categories.flatMap((cat) => cat.skills.map((skill) => ({ skill, cat })));
   return order.map(({ skill, cat }, i) => ({

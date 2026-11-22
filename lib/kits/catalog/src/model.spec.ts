@@ -17,11 +17,11 @@ describe("component manifests", () => {
 
   it("match the committed COMPONENTS.md", () => {
     const committed = readFileSync(join(here, "..", "COMPONENTS.md"), "utf8");
-    expect(markdown(model), "run `turbo run catalog -- --no-shots`").toBe(committed);
+    expect(markdown(model), "run `pnpm turbo run build`").toBe(committed);
   });
 
   it("match the kit index in AGENTS.md", () => {
     const agents = readFileSync(join(repoRoot, "AGENTS.md"), "utf8");
-    expect(withIndex(agents, model), "run `turbo run catalog -- --no-shots`").toBe(agents);
+    expect(withIndex(agents, model), "run `pnpm turbo run build`").toBe(agents);
   });
 });

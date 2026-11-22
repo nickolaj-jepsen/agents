@@ -87,7 +87,7 @@ Their stories and manifests are under [`catalog/src/`](catalog/src), and the cat
 
 ```bash
 E2E_PNG=1 pnpm turbo run e2e --filter='@agents/kit-*' --force  # compare snapshots and write pictures
-pnpm turbo run catalog                                         # replay stories and regenerate crops and catalogue data
+pnpm turbo run catalog                                         # replay stories and regenerate the crops the site shows
 ```
 
-Commit the snapshots and the regenerated `catalog/COMPONENTS.md`. The site data and crops are generated, not committed. `pnpm turbo run catalog -- --check` validates the manifests without replaying.
+Commit the snapshots and the regenerated `catalog/COMPONENTS.md` and kit index in `AGENTS.md`, which `pnpm turbo run build` writes. The crops are generated, not committed, and the site reads the catalogue itself (`apps/site/src/loaders/kit.ts`). `pnpm turbo run catalog -- --check` validates the manifests without replaying.

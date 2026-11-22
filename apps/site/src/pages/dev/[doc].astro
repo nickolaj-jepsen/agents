@@ -5,8 +5,8 @@ import Pager from '../../components/Pager.astro';
 import { content, docHref, github, type Doc } from '../../lib/content.ts';
 import { renderMarkdown } from '../../lib/markdown.ts';
 
-export const getStaticPaths = (() =>
-  content().docs.map((doc, i, all) => ({
+export const getStaticPaths = (async () =>
+  (await content()).docs.map((doc, i, all) => ({
     params: { doc: doc.slug },
     props: { doc, prev: all[i - 1], next: all[i + 1] },
   }))) satisfies GetStaticPaths;

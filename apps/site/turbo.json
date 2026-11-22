@@ -4,15 +4,38 @@
     "check-types": { "command": null, "dependsOn": [] },
     "dev": {
       "command": ["./node_modules/.bin/astro", "dev"],
-      "dependsOn": ["//#site-data", "//#catalog:data"],
       "cache": false,
       "persistent": true,
       "interactive": false
     },
+    // The content loaders (src/loaders/) read the repo themselves, so what they read is an input: the
+    // apps' package.json and README.md, the skills, the docs, the marketplace, the kits' sources and the
+    // recorded media (media/ is the package's own). A later change moves these to the package graph.
     "build": {
       "command": ["./node_modules/.bin/astro", "build"],
-      "dependsOn": ["//#site-data", "//#catalog:data"],
-      "inputs": ["$TURBO_DEFAULT$", "media/**", "!dist/**", "!.astro/**"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "media/**",
+        "$TURBO_ROOT$/.claude-plugin/marketplace.json",
+        "$TURBO_ROOT$/lib/tools/build/content.ts",
+        "$TURBO_ROOT$/apps/*/package.json",
+        "$TURBO_ROOT$/apps/*/README.md",
+        "$TURBO_ROOT$/skills/**",
+        "$TURBO_ROOT$/docs/**",
+        "$TURBO_ROOT$/lib/kits/**",
+        "!dist/**",
+        "!.astro/**",
+        "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/.turbo/**",
+        "!$TURBO_ROOT$/**/__pycache__/**",
+        "!$TURBO_ROOT$/**/.venv/**",
+        "!$TURBO_ROOT$/**/.*_cache/**",
+        "!$TURBO_ROOT$/**/.claude-plugin/types/**",
+        "!$TURBO_ROOT$/**/dist/**",
+        "!$TURBO_ROOT$/**/*.actual.*",
+        "!$TURBO_ROOT$/**/*.spec.ts",
+        "!$TURBO_ROOT$/lib/kits/**/e2e/**"
+      ],
       "outputs": ["dist/**"]
     }
   }

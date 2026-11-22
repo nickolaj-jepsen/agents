@@ -1,21 +1,44 @@
 /**
- * The repo's content for the pages: `apps/site/data/content.json`, which `turbo run site-data` writes
- * from `scripts/content.ts` (the site's `dev` and `build` tasks run it first), plus the URLs the pages link with. The
- * pages read no file outside this folder, so the site builds from its own tree.
+ * The repo's content for the pages, from the collections `src/content.config.ts` declares (loaded
+ * from the sources by `src/loaders/content.ts`), plus the URLs the pages link with. Read when a page
+ * renders, so `astro dev` shows an edited README on the next request.
  */
-import type { Content, Doc, Plugin, Skill } from "../../../../lib/tools/build/content.ts";
-import model from "../../data/content.json";
+import { getCollection, getEntry } from "astro:content";
+import type { Category, Content, Doc, Plugin, Skill } from "../../../../lib/tools/build/content.ts";
 
 export type { Content, Doc, Plugin, Skill };
 
-const data = model as Content;
+/** The model, put together from its collections, in the order the loaders keep them. */
+export async function content(): Promise<Content> {
+  const [site, plugins, skills, categories, docs] = await Promise.all([
+    getEntry("site", "site"),
+    getCollection("plugins"),
+    getCollection("skills"),
+    getCollection("categories"),
+    getCollection("docs"),
+  ]);
+  const sorted = <D extends { position: number }>(entries: { data: D }[]): D[] =>
+    entries.map((e) => e.data).sort((a, b) => a.position - b.position);
+  const all = sorted(skills);
+  const byName = new Map(all.map((s) => [s.name, s]));
+  return {
+    ...site!.data,
+    plugins: sorted(plugins),
+    skills: all,
+    categories: sorted(categories).map((c): Category => ({
+      ...c,
+      skills: c.skills.map((n) => byName.get(n)!),
+    })),
+    docs: sorted(docs),
+  };
+}
 
-/** The model itself: already loaded, media and all, when `site-data` wrote it. */
-export const content = (): Content => data;
+// The constants of the model are the same in every build, so they are read once.
+const { meta } = (await getEntry("site", "site"))!.data;
 
-export const REPO_URL = data.meta.repoUrl;
-export const IN_PROGRESS = data.meta.inProgress;
-export const MARKETPLACE_ADD = data.meta.marketplaceAdd;
+export const REPO_URL = meta.repoUrl;
+export const IN_PROGRESS = meta.inProgress;
+export const MARKETPLACE_ADD = meta.marketplaceAdd;
 
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 
