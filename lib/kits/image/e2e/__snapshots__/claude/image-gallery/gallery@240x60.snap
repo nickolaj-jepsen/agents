@@ -1,0 +1,34 @@
+# kit/claude/image-gallery/gallery 240x60 @151,1 (89x15)
+Generated images with a very long caption that wraps instead of pushing the gallery
+beyond the terminal width.
+
+[image] landscape.png
+
+/home/me/landscape.png
+
+[image] portrait.png
+
+/home/me/portrait.png
+
+[image] 日本語 ＡＢ.png
+
+/home/me/a-very-long-directory-name/a-very-long-directory-name/a-very-long-directory-name
+/a-very-long-directory-name/a picture #1 日本語.png
+--- styles
+1x83
+1x26
+-
+1x21
+-
+1x22
+-
+1x20
+-
+1x21
+-
+1x23
+-
+1x89
+1x51
+--- legend
+1 fg=#999999

@@ -1,0 +1,16 @@
+# kit/claude/grouped-list/menu 70x60 @2,49 (66x5)
+Actions
+❯ 1 Commit the staged changes
+  2 Push main to origin                                    2 ahead
+  3 Open a worktree
+  4 Land a worktree                                     no worktr…
+--- styles
+1x7
+2 . 1 . 2x25
+.x2 1 .x53 3x10
+.x2 1
+.x2 3 . 3x15 .x37 3x10
+--- legend
+1 fg=#d77757
+2 bold
+3 fg=#999999

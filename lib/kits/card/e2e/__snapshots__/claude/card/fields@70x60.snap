@@ -1,0 +1,12 @@
+# kit/claude/card/fields 70x60 @2,51 (66x3)
+  D ● Use the existing schema.
+
+  Note: Rotate the credentials first.
+--- styles
+.x2 1 . 2 . 2x24
+-
+.x2 3x6
+--- legend
+1 fg=#d77757
+2 fg=#d77757 bold
+3 fg=#999999

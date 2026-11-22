@@ -1,9 +1,0 @@
-# kit/claude/buttons/wrap 70x60 @2,52 (66x2)
-1: back   2: next   3: skip   ↑↓ move
-1: quit   2: review   3: yes   4: more
---- styles
-1 .x9 1 2x6 .x3 1 2x6 .x3 2x7
-1 .x9 1 2x8 .x3 1 2x5 .x3 1 2x6
---- legend
-1 fg=#b1b9f9
-2 fg=#999999

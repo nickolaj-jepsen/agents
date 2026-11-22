@@ -6,11 +6,48 @@
     },
     "e2e": {
       "command": ["node", "../../tools/drive/drive.ts", "test", "kit-notice"],
-      "dependsOn": ["^topo", "@agents/kit-catalog#build"]
+      "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
     },
     "e2e:update": {
       "command": ["node", "../../tools/drive/drive.ts", "test", "kit-notice", "--update"],
-      "dependsOn": ["@agents/kit-catalog#build"]
+      "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
+    },
+    "media": {
+      "command": [
+        "nix",
+        "run",
+        "../../..#media",
+        "--",
+        "node",
+        "../../tools/drive/drive.ts",
+        "record",
+        "kit-notice"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/kit/notice/**",
+        "!$TURBO_ROOT$/apps/site/media/kit/notice/vscode-*",
+        "!$TURBO_ROOT$/apps/site/media/kit/notice/media-vscode.json"
+      ],
+      "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
+    },
+    "media:vscode": {
+      "command": [
+        "nix",
+        "run",
+        "../../..#media",
+        "--",
+        "node",
+        "../../tools/drive/drive.ts",
+        "record",
+        "kit-notice",
+        "--harness",
+        "vscode"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/kit/notice/vscode-*",
+        "$TURBO_ROOT$/apps/site/media/kit/notice/media-vscode.json"
+      ],
+      "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
     }
   }
 }

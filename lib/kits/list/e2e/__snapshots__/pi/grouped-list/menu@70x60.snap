@@ -1,0 +1,17 @@
+# kit/pi/grouped-list/menu 70x60 @2,2 (66x5)
+Actions
+❯ 1 Commit the staged changes
+  2 Push main to origin                                    2 ahead
+  3 Open a worktree
+  4 Land a worktree                                     no worktr…
+--- styles
+1x7
+2 . 1 . 2x25
+.x2 1 . 3x19 .x33 4x10
+.x2 1 . 3x15
+.x2 4 . 4x15 .x37 4x10
+--- legend
+1 fg=#a798d7
+2 fg=#dee0e1 bold
+3 fg=#dee0e1
+4 fg=#7e888e

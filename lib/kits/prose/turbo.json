@@ -23,7 +23,30 @@
         "record",
         "kit-prose"
       ],
-      "outputs": ["$TURBO_ROOT$/apps/site/media/kit/prose/**"],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/kit/prose/**",
+        "!$TURBO_ROOT$/apps/site/media/kit/prose/vscode-*",
+        "!$TURBO_ROOT$/apps/site/media/kit/prose/media-vscode.json"
+      ],
+      "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
+    },
+    "media:vscode": {
+      "command": [
+        "nix",
+        "run",
+        "../../..#media",
+        "--",
+        "node",
+        "../../tools/drive/drive.ts",
+        "record",
+        "kit-prose",
+        "--harness",
+        "vscode"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/kit/prose/vscode-*",
+        "$TURBO_ROOT$/apps/site/media/kit/prose/media-vscode.json"
+      ],
       "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
     }
   }

@@ -1,0 +1,7 @@
+# kit/claude/notice-line/context 70x60 @2,53 (66x1)
+…and check that each one retries after a 429, and that backoff do…
+--- styles
+1x55 2x7 1x4
+--- legend
+1 fg=#999999
+2 fg=#ff6b80 bold underline=single

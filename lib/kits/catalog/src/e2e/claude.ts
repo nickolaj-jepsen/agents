@@ -1,8 +1,8 @@
 /**
  * The Claude kit's catalogue: a scenario per story of the dev-only catalogue mod, named
  * `<component>/<state>`, each snapshot cropped to the component alone. Each kit package plays the
- * stories of its own components (`<package>/e2e/claude.scenarios.ts`), the catalogue those of the
- * legacy kit, all against the catalogue's build.
+ * stories of its own components (`<package>/e2e/claude.scenarios.ts`), all against the catalogue's
+ * build.
  */
 import { fileURLToPath } from "node:url";
 import { stageWidth, storyId, stories, type Story } from "../claude/stories.ts";

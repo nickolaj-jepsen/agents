@@ -1,0 +1,7 @@
+# kit/pi/notice-line/context 160x45 @2,2 (72x1)
+…and check that each one retries after a 429, and that backoff doubles …
+--- styles
+1x55 2x7 1x10
+--- legend
+1 fg=#7e888e
+2 fg=#ea7f81 bold underline=single

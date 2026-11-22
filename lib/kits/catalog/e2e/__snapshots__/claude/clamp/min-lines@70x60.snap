@@ -1,8 +1,0 @@
-# kit/claude/clamp/min-lines 70x60 @2,50 (66x2)
-width 22                width 30
-A short title.          A short title.
---- styles
-1x8 .x16 1x8
--
---- legend
-1 fg=#999999

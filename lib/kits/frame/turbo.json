@@ -20,7 +20,30 @@
         "record",
         "kit-frame"
       ],
-      "outputs": ["$TURBO_ROOT$/apps/site/media/kit/frame/**"],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/kit/frame/**",
+        "!$TURBO_ROOT$/apps/site/media/kit/frame/vscode-*",
+        "!$TURBO_ROOT$/apps/site/media/kit/frame/media-vscode.json"
+      ],
+      "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
+    },
+    "media:vscode": {
+      "command": [
+        "nix",
+        "run",
+        "../../..#media",
+        "--",
+        "node",
+        "../../tools/drive/drive.ts",
+        "record",
+        "kit-frame",
+        "--harness",
+        "vscode"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/kit/frame/vscode-*",
+        "$TURBO_ROOT$/apps/site/media/kit/frame/media-vscode.json"
+      ],
       "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
     }
   }

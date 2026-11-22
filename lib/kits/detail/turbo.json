@@ -23,7 +23,30 @@
         "record",
         "kit-detail"
       ],
-      "outputs": ["$TURBO_ROOT$/apps/site/media/kit/detail/**"],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/kit/detail/**",
+        "!$TURBO_ROOT$/apps/site/media/kit/detail/vscode-*",
+        "!$TURBO_ROOT$/apps/site/media/kit/detail/media-vscode.json"
+      ],
+      "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
+    },
+    "media:vscode": {
+      "command": [
+        "nix",
+        "run",
+        "../../..#media",
+        "--",
+        "node",
+        "../../tools/drive/drive.ts",
+        "record",
+        "kit-detail",
+        "--harness",
+        "vscode"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/kit/detail/vscode-*",
+        "$TURBO_ROOT$/apps/site/media/kit/detail/media-vscode.json"
+      ],
       "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
     }
   }

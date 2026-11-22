@@ -6,11 +6,25 @@
     },
     "e2e": {
       "command": ["node", "../../tools/drive/drive.ts", "test", "kit-image"],
-      "dependsOn": ["^topo", "@agents/kit-catalog#build"]
+      "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
     },
     "e2e:update": {
       "command": ["node", "../../tools/drive/drive.ts", "test", "kit-image", "--update"],
-      "dependsOn": ["@agents/kit-catalog#build"]
+      "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
+    },
+    "media": {
+      "command": [
+        "nix",
+        "run",
+        "../../..#media",
+        "--",
+        "node",
+        "../../tools/drive/drive.ts",
+        "record",
+        "kit-image"
+      ],
+      "outputs": ["$TURBO_ROOT$/apps/site/media/kit/image/**"],
+      "dependsOn": ["$TURBO_EXTENDS$", "@agents/kit-catalog#build"]
     }
   }
 }
