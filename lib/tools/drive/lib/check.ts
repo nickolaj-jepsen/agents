@@ -69,7 +69,7 @@ export async function capture(session: Session, r: Resolved): Promise<Capture[]>
     const expected = existsSync(snap) ? readFileSync(snap, "utf8") : undefined;
     const actual = await steadySnapshot(
       session,
-      `${r.plugin}/${r.harness}/${r.name} ${size[0]}x${size[1]}`,
+      `${r.label}/${r.harness}/${r.name} ${size[0]}x${size[1]}`,
       r,
       updating() ? undefined : expected,
     );

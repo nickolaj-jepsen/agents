@@ -74,7 +74,10 @@ export type Scenario = {
 };
 
 export type ScenarioSet = {
+  /** The package the scenarios belong to (`lib/packages.ts`): an app, or `kit-<name>`. */
   plugin: string;
+  /** What a snapshot's first line calls the plugin, when that is not the package (`kit` for every kit package's). */
+  label?: string;
   harness: HarnessName;
   /** Default region and masks for every scenario of the file. */
   region?: Region;
@@ -89,6 +92,8 @@ export const scenarios = (set: ScenarioSet) => set;
 
 export type Resolved = {
   plugin: string;
+  /** What a snapshot calls it. */
+  label: string;
   harness: HarnessName;
   name: string;
   about: string;
@@ -129,6 +134,7 @@ export function resolveScenario(set: ScenarioSet, name: string, seen: string[] =
   const base = s.from ? resolveScenario(set, s.from, [...seen, name]) : undefined;
   return {
     plugin: set.plugin,
+    label: set.label ?? set.plugin,
     harness: set.harness,
     name,
     about: s.about ?? base?.about ?? "",

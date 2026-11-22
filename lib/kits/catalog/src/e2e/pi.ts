@@ -41,6 +41,8 @@ const regionOf =
 export const piScenarios = (plugin: string, owns: (component: string) => boolean) =>
   scenarios({
     plugin,
+    // A snapshot's first line says `kit`, whichever package holds it.
+    label: "kit",
     harness: "pi",
     scenarios: Object.fromEntries(
       stories

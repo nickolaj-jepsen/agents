@@ -58,6 +58,8 @@ const band: Region = (grid) => {
 export const claudeScenarios = (plugin: string, owns: (component: string) => boolean) =>
   scenarios({
     plugin,
+    // A snapshot's first line says `kit`, whichever package holds it.
+    label: "kit",
     harness: "claude",
     scenarios: Object.fromEntries(
       stories

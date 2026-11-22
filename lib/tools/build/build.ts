@@ -140,13 +140,15 @@ if (pi)
     name: "pi",
     platform: "node",
     entry: { "pi/index": pi },
-    // pi supplies its own packages and TypeBox to an extension (`getAliases` in its extension loader).
+    // pi supplies its own packages and TypeBox to an extension (`getAliases` in its extension loader),
+    // so they are never bundled, whatever the package lists as peers: the kit's painter imports pi's.
     deps: {
       neverBundle: [
+        /^@earendil-works\/pi-(ai|agent-core|coding-agent|tui)(\/.*)?$/,
+        /^typebox(\/.*)?$/,
         ...Object.keys(pkg.peerDependencies ?? {}).map(
           (n) => new RegExp(`^${n.replace(/[/.]/g, "\\$&")}(/.*)?$`),
         ),
-        /^typebox(\/.*)?$/,
       ],
     },
   });

@@ -17,13 +17,14 @@ Run turbo through pnpm: it puts turbo on `PATH`. `check` covers the format check
 
 Turbo caches a task by its inputs, so a repeat run replays the output. CI writes a remote cache that local runs only read: `.envrc` sets `TURBO_CACHE=local:rw,remote:r`, and without direnv you export it yourself. To read the remote cache, run `turbo login` and `turbo link`, and set `TURBO_REMOTE_CACHE_SIGNATURE_KEY` to the key CI signs with. Without them every task runs on your machine.
 
-| Task                 | What it does                                                                                                                   |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `check:nix`          | `nix flake check`: the nix files and treefmt. Not part of `check`; CI runs it only when a `.nix` file or `flake.lock` changed. |
-| `test:claude`        | `claude plugin validate` and `test` on one plugin's Claude half, with the Claude Code the lockfile pins and a scratch `HOME`.  |
-| `e2e`, `e2e:update`  | One plugin's screen snapshots, compared or accepted. See the [replay guide](../lib/tools/drive/README.md#snapshots).           |
-| `lint:py`, `lint:sh` | ruff and shellcheck; `fmt:check` is the format check `check` runs.                                                             |
-| `plugin-docs`        | Refresh the upstream manuals in the agent-plugin-dev skill. `-- vMAJOR.MINOR.PATCH` picks the pi docs' release.                |
+| Task                 | What it does                                                                                                                                                                      |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `check:nix`          | `nix flake check`: the nix files and treefmt. Not part of `check`; CI runs it only when a `.nix` file or `flake.lock` changed.                                                    |
+| `build`              | Bundle an app or the kit catalogue into its gitignored `dist/` (the mod, its tests and the pi extension, in the shape Claude Code and pi load), and rewrite the generated README. |
+| `test:claude`        | `claude plugin validate --strict` and `test` on one plugin's built mod (`dist/`), with the Claude Code the lockfile pins and a scratch `HOME`.                                    |
+| `e2e`, `e2e:update`  | One plugin's screen snapshots, compared or accepted. See the [replay guide](../lib/tools/drive/README.md#snapshots).                                                              |
+| `lint:py`, `lint:sh` | ruff and shellcheck; `fmt:check` is the format check `check` runs.                                                                                                                |
+| `plugin-docs`        | Refresh the upstream manuals in the agent-plugin-dev skill. `-- vMAJOR.MINOR.PATCH` picks the pi docs' release.                                                                   |
 
 Tasks that give you a session (`e2e-live`, `kit-live`, `answer-demo`) are interactive. Run them with `--ui=tui`, select the task in turbo's list and press `i` to send it your keys. `Ctrl+Z` gives the keys back to turbo. Turbo stops what a task leaves running, so a session parked by `goto` dies with its task: drive `goto`, `cap` and `keys` with `node lib/tools/drive/cli.ts` itself, as the [replay guide](../lib/tools/drive/README.md#drive-a-parked-terminal-session) shows.
 
