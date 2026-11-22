@@ -1,6 +1,7 @@
 import type { Turn } from "@agents/drive/lib/harness.ts";
 import { gridLines, type Region } from "@agents/drive/lib/screen.ts";
 import { scenarios } from "@agents/drive/lib/scenario.ts";
+import { WT } from "./wt.ts";
 
 /** The editor between its two rules, and the footer under it. */
 const footer: Region = (grid) => {
@@ -26,7 +27,7 @@ export default scenarios({
   plugin: "worktree",
   harness: "pi",
   // Hermetic: its own config with this plugin alone, so nothing of the person's setup shows.
-  start: { hermetic: true, plugins: ["worktree"], turns: [] },
+  start: { hermetic: true, plugins: ["worktree"], turns: [], bin: { wt: WT } },
   // The notice wraps where the worktree's own path puts it, so the shot is the editor and the
   // footer, whose branch names the checkout the session runs in; a `wait` proves the notice.
   region: footer,
