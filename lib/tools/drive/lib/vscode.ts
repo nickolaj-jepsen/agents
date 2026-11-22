@@ -13,6 +13,16 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
+import {
+  chromium,
+  type Browser,
+  type CDPSession,
+  type ElementHandle,
+  type Frame,
+  type FrameLocator,
+  type Locator,
+  type Page,
+} from "playwright-core";
 import { checkoutMods, hermeticClaude, STUB_KEY, type Turn } from "./harness.ts";
 import { runEnv } from "./setup.ts";
 import type { Pattern } from "./screen.ts";
@@ -250,6 +260,8 @@ export async function launchVscode(
   const args = [
     `--ozone-platform=${!visible || env.WAYLAND_DISPLAY ? "wayland" : "x11"}`,
     "--disable-gpu",
+    // A prerendered page can leave a target that never answers, which fails every connect.
+    "--disable-features=Prerender2,SpeculationRulesPrerender2",
     "--password-store=basic",
     "--user-data-dir",
     join(runDir, "ud"),
@@ -335,19 +347,15 @@ export async function closeClaudeTab(runDir: string, start: VscodeStart) {
       "this scenario starts with other env, bin, hide or plugins than the window was given: use `goto`",
     );
   const webview = (t: Target_) => t.type === "iframe" && t.url.startsWith("vscode-webview://");
-  const page = (await listTargets(state.port)).find(
-    (t) => t.type === "page" && t.url.includes("workbench"),
-  );
-  if (!page) throw new Error("VS Code is not answering: run `goto` again");
-  const cdp = await Cdp.connect(page.webSocketDebuggerUrl);
+  const { browser, page } = await connect(state.port);
   try {
     // The Claude tab is the window's only editor.
-    await cdp.eval<void>(
+    await page.evaluate(
       "[...document.querySelectorAll('.part.editor .tab .tab-actions .action-label')].forEach((a) => a.click())",
     );
     for (let i = 0; i < 50 && (await listTargets(state.port)).some(webview); i++) await sleep(100);
   } finally {
-    cdp.close();
+    await browser.close();
   }
 }
 
@@ -397,115 +405,72 @@ export async function waitForVscodeClose(port: number, signal: AbortSignal) {
   }
 }
 
+/** The DevTools port's own list: it answers before any browser is attached and cannot hang. */
 async function listTargets(port: number): Promise<Target_[]> {
   const res = await fetch(`http://127.0.0.1:${port}/json/list`);
   return (await res.json()) as Target_[];
 }
 
-/** One CDP connection to a target. */
-class Cdp {
-  private id = 0;
-  private pending = new Map<number, [(v: unknown) => void, (e: Error) => void]>();
-  private ws: WebSocket;
-  private constructor(ws: WebSocket) {
-    this.ws = ws;
-    ws.onmessage = (m) => {
-      const d = JSON.parse(String(m.data)) as { id?: number; result?: unknown; error?: unknown };
-      const p = d.id === undefined ? undefined : this.pending.get(d.id);
-      if (!p || d.id === undefined) return;
-      this.pending.delete(d.id);
-      if (d.error) p[1](new Error(JSON.stringify(d.error)));
-      else p[0](d.result);
-    };
-    ws.onclose = () => {
-      const error = new Error("VS Code closed the DevTools connection");
-      for (const [, reject] of this.pending.values()) reject(error);
-      this.pending.clear();
-    };
+/**
+ * Attaches Playwright to the window and returns its workbench page. Closing the browser only
+ * lets go of the connection: VS Code runs on.
+ */
+async function connect(port: number): Promise<{ browser: Browser; page: Page }> {
+  let browser: Browser;
+  try {
+    browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`, { timeout: 30_000 });
+  } catch {
+    throw new Error("VS Code is not answering: run `goto` again");
   }
-  static async connect(url: string): Promise<Cdp> {
-    const ws = new WebSocket(url);
-    await new Promise<void>((resolve, reject) => {
-      ws.onopen = () => resolve();
-      ws.onerror = () => reject(new Error(`cannot connect to ${url}`));
-    });
-    return new Cdp(ws);
+  const page = browser
+    .contexts()
+    .flatMap((c) => c.pages())
+    .find((p) => p.url().includes("workbench"));
+  if (!page) {
+    await browser.close();
+    throw new Error("VS Code is not answering: run `goto` again");
   }
-  send<T = Record<string, unknown>>(method: string, params: object = {}): Promise<T> {
-    if (this.ws.readyState !== WebSocket.OPEN)
-      return Promise.reject(new Error("VS Code closed the DevTools connection"));
-    return new Promise((resolve, reject) => {
-      const id = ++this.id;
-      this.pending.set(id, [resolve as (v: unknown) => void, reject]);
-      this.ws.send(JSON.stringify({ id, method, params }));
-    });
-  }
-  async eval<T>(expression: string): Promise<T> {
-    const r = await this.send<{
-      result: { value: T };
-      exceptionDetails?: unknown;
-    }>("Runtime.evaluate", { expression, returnByValue: true, awaitPromise: true });
-    if (r.exceptionDetails) throw new Error(JSON.stringify(r.exceptionDetails).slice(0, 400));
-    return r.result.value;
-  }
-  close() {
-    this.ws.close();
-  }
+  return { browser, page };
 }
 
-type KeyDef = { key: string; code: string; vk: number; text?: string };
-
-const NAMED: Record<string, KeyDef> = {
-  enter: { key: "Enter", code: "Enter", vk: 13, text: "\r" },
-  escape: { key: "Escape", code: "Escape", vk: 27 },
-  esc: { key: "Escape", code: "Escape", vk: 27 },
-  tab: { key: "Tab", code: "Tab", vk: 9 },
-  backspace: { key: "Backspace", code: "Backspace", vk: 8 },
-  delete: { key: "Delete", code: "Delete", vk: 46 },
-  space: { key: " ", code: "Space", vk: 32, text: " " },
-  up: { key: "ArrowUp", code: "ArrowUp", vk: 38 },
-  down: { key: "ArrowDown", code: "ArrowDown", vk: 40 },
-  left: { key: "ArrowLeft", code: "ArrowLeft", vk: 37 },
-  right: { key: "ArrowRight", code: "ArrowRight", vk: 39 },
-  home: { key: "Home", code: "Home", vk: 36 },
-  end: { key: "End", code: "End", vk: 35 },
-  pageup: { key: "PageUp", code: "PageUp", vk: 33 },
-  pagedown: { key: "PageDown", code: "PageDown", vk: 34 },
+const NAMED: Record<string, string> = {
+  enter: "Enter",
+  escape: "Escape",
+  esc: "Escape",
+  tab: "Tab",
+  backspace: "Backspace",
+  delete: "Delete",
+  space: "Space",
+  up: "ArrowUp",
+  down: "ArrowDown",
+  left: "ArrowLeft",
+  right: "ArrowRight",
+  home: "Home",
+  end: "End",
+  pageup: "PageUp",
+  pagedown: "PageDown",
 };
-const MODIFIERS: Record<string, number> = {
-  alt: 1,
-  ctrl: 2,
-  control: 2,
-  meta: 4,
-  cmd: 4,
-  shift: 8,
+const MODIFIERS: Record<string, string> = {
+  alt: "Alt",
+  ctrl: "Control",
+  control: "Control",
+  meta: "Meta",
+  cmd: "Meta",
+  shift: "Shift",
 };
 
-/** "Enter", "Down", "a", "Ctrl+c", "Shift+Tab" as a CDP key and its modifier mask. */
-function parseKey(spec: string): { def: KeyDef; modifiers: number } {
+/** "Enter", "Down", "a", "Ctrl+c", "Shift+Tab" as the chord Playwright's keyboard takes. */
+function chord(spec: string): string {
   const parts = spec.split("+");
   const last = parts.length > 1 && parts.at(-1) === "" ? "+" : (parts.pop() as string);
-  let modifiers = 0;
-  for (const m of parts) {
-    const bit = MODIFIERS[m.toLowerCase()];
-    if (bit === undefined) throw new Error(`unknown modifier "${m}" in "${spec}"`);
-    modifiers |= bit;
-  }
+  const mods = parts.map((m) => {
+    const name = MODIFIERS[m.toLowerCase()];
+    if (!name) throw new Error(`unknown modifier "${m}" in "${spec}"`);
+    return name;
+  });
   const named = NAMED[last.toLowerCase()];
-  if (named) return { def: named, modifiers };
-  if ([...last].length !== 1) throw new Error(`unknown key "${spec}"`);
-  const upper = last.toUpperCase();
-  const code = /[a-z]/i.test(last) ? `Key${upper}` : /\d/.test(last) ? `Digit${last}` : "";
-  return {
-    def: {
-      key: last,
-      code,
-      vk: upper.charCodeAt(0),
-      // A chord with Ctrl or Alt types no character.
-      ...(modifiers & 3 ? {} : { text: last }),
-    },
-    modifiers,
-  };
+  if (!named && [...last].length !== 1) throw new Error(`unknown key "${spec}"`);
+  return [...mods, named ?? last].join("+");
 }
 
 const matcher = (p: Pattern) =>
@@ -517,117 +482,115 @@ export type Shot = { panel?: boolean };
 export class VscodeSession {
   readonly runDir: string;
   readonly state: VscodeState;
-  private page: Cdp;
-  private view: Cdp;
-  private constructor(runDir: string, state: VscodeState, page: Cdp, view: Cdp) {
+  private browser: Browser;
+  private page: Page;
+  /** The Claude webview's document, found again on each call: a reload replaces the frame. */
+  private view: FrameLocator;
+  private panel: Locator;
+  private cdp?: CDPSession;
+  private constructor(
+    runDir: string,
+    state: VscodeState,
+    browser: Browser,
+    page: Page,
+    webview: string,
+  ) {
     this.runDir = runDir;
     this.state = state;
+    this.browser = browser;
     this.page = page;
-    this.view = view;
+    const outer = `iframe.webview[name="${webview}"]`;
+    this.panel = page.locator(outer);
+    this.view = page.frameLocator(outer).frameLocator("#active-frame");
   }
 
   /** Connects to the window a `launchVscode` left in `runDir`, opening the Claude tab if needed. */
   static async attach(runDir: string): Promise<VscodeSession> {
     const state = JSON.parse(readFileSync(join(runDir, STATE), "utf8")) as VscodeState;
-    const page = (await listTargets(state.port)).find(
-      (t) => t.type === "page" && t.url.includes("workbench"),
-    );
-    if (!page) throw new Error("VS Code is not answering: run `goto` again");
-    const pageCdp = await Cdp.connect(page.webSocketDebuggerUrl);
-    // The Claude tab's webview is the one on screen, the target whose URL names its frame. A window
-    // can hold another, hidden: a second Claude tab, or the one a reload closed, still going.
-    const shownView = async () => {
-      const id = await pageCdp.eval<string | null>(`(() => {
-        let best = null;
-        for (const f of document.querySelectorAll('iframe.webview')) {
-          const r = f.getBoundingClientRect();
-          if (r.width < 50 || r.height < 50 || getComputedStyle(f).visibility === 'hidden') continue;
-          if (!best || r.width * r.height > best.area) best = { area: r.width * r.height, id: f.name || f.id };
+    const { browser, page } = await connect(state.port);
+    try {
+      // The Claude tab's webview is the one on screen. A window can hold another, hidden: a
+      // second Claude tab, or the one a reload closed, still going.
+      const shownView = () =>
+        page.evaluate<string | null>(`(() => {
+          let best = null;
+          for (const f of document.querySelectorAll('iframe.webview')) {
+            const r = f.getBoundingClientRect();
+            if (r.width < 50 || r.height < 50 || getComputedStyle(f).visibility === 'hidden') continue;
+            if (!best || r.width * r.height > best.area) best = { area: r.width * r.height, id: f.name || f.id };
+          }
+          return best && best.id;
+        })()`);
+      let view = await shownView();
+      if (!view) {
+        // A key sent before the workbench is up goes nowhere.
+        await page
+          .locator(".monaco-workbench .part.editor")
+          .waitFor({ state: "attached", timeout: 60_000 });
+        mark("attach: workbench DOM ready");
+        // A press before the extension has activated is lost; its status bar entry says it has.
+        await page
+          .locator('[id="Anthropic.claude-code"]')
+          .waitFor({ state: "attached", timeout: 30_000 });
+        mark("attach: extension active");
+        // Ctrl+Shift+Escape opens the Claude tab. A slow start can still lose the press, so it is
+        // sent again after 5 s with no Claude tab in the workbench (and not once there is one, or a
+        // second tab opens), and the webview is looked for in between.
+        const tab = page.locator('.tab[aria-label*="Claude"]');
+        const until = Date.now() + 60_000;
+        let sent = 0;
+        while (!view && Date.now() < until) {
+          if (Date.now() - sent > 5000 && (await tab.count()) === 0) {
+            await page.keyboard.press("Control+Shift+Escape");
+            sent = Date.now();
+          }
+          await sleep(200);
+          view = await shownView();
         }
-        return best && best.id;
-      })()`);
-      if (!id) return undefined;
-      return (await listTargets(state.port)).find(
-        (t) =>
-          t.type === "iframe" &&
-          t.url.startsWith("vscode-webview://") &&
-          t.url.includes(`id=${id}`),
-      );
-    };
-    let view = await shownView();
-    if (!view) {
-      // A key sent before the workbench is up goes nowhere.
-      for (let i = 0; i < 120; i++) {
-        if (
-          await pageCdp.eval<boolean>("!!document.querySelector('.monaco-workbench .part.editor')")
-        )
-          break;
-        await sleep(500);
-      }
-      mark("attach: workbench DOM ready");
-      // A press before the extension has activated is lost; its status bar entry says it has.
-      for (let i = 0; i < 120; i++) {
-        if (await pageCdp.eval<boolean>("!!document.getElementById('Anthropic.claude-code')"))
-          break;
-        await sleep(250);
-      }
-      mark("attach: extension active");
-      // Ctrl+Shift+Escape opens the Claude tab. A slow start can still lose the press, so it is
-      // sent again after 5 s with no Claude tab in the workbench (and not once there is one, or a
-      // second tab opens), and the webview is looked for in between.
-      const hasTab = () =>
-        pageCdp.eval<boolean>(
-          "[...document.querySelectorAll('.tab')].some((t) => /Claude/.test(t.getAttribute('aria-label') ?? ''))",
-        );
-      const until = Date.now() + 60_000;
-      let sent = 0;
-      while (!view && Date.now() < until) {
-        if (Date.now() - sent > 5000 && !(await hasTab())) {
-          await key(pageCdp, parseKey("Ctrl+Shift+Escape"));
-          sent = Date.now();
+        mark("attach: Claude tab open");
+        if (!view) throw new Error("the Claude tab did not open (is the extension installed?)");
+        // Ctrl+B hides the explorer, so the tab has the whole width and a resize reflows it the same
+        // way. It toggles: a reload's new tab finds it hidden already.
+        const box = await page.locator("#workbench\\.parts\\.sidebar").boundingBox();
+        if ((box?.width ?? 0) > 0) {
+          await page.keyboard.press("Control+b");
+          await sleep(500);
         }
-        await sleep(200);
-        view = await shownView();
       }
-      mark("attach: Claude tab open");
-      if (!view) throw new Error("the Claude tab did not open (is the extension installed?)");
-      // Ctrl+B hides the explorer, so the tab has the whole width and a resize reflows it the same
-      // way. It toggles: a reload's new tab finds it hidden already.
-      const sidebar = () =>
-        pageCdp.eval<boolean>(
-          "(document.getElementById('workbench.parts.sidebar')?.getBoundingClientRect().width ?? 0) > 0",
-        );
-      if (await sidebar()) {
-        await key(pageCdp, parseKey("Ctrl+b"));
-        await sleep(500);
-      }
+      mark("attach: explorer hidden");
+      const session = new VscodeSession(runDir, state, browser, page, view);
+      // The webview is ready once its document holds the prompt.
+      await session.wait(/\S/, { timeout: 60_000 });
+      mark("attach: webview has text");
+      if (state.size) await session.applySize(state.size);
+      return session;
+    } catch (error) {
+      await browser.close();
+      throw error;
     }
-    mark("attach: explorer hidden");
-    const viewCdp = await Cdp.connect(view.webSocketDebuggerUrl);
-    const session = new VscodeSession(runDir, state, pageCdp, viewCdp);
-    // The webview is ready once its document holds the prompt.
-    await session.wait(/\S/, { timeout: 60_000 });
-    mark("attach: webview has text");
-    if (state.size) await session.applySize(state.size);
-    return session;
   }
 
+  /** Lets go of the window, which stays open. */
   close() {
-    this.page.close();
-    this.view.close();
+    void this.browser.close().catch(() => undefined);
   }
 
-  private doc = "document.getElementById('active-frame').contentDocument";
+  /** The Claude webview's frame, to run script in. */
+  private async frame(): Promise<Frame> {
+    const frame = await (await this.view.owner().elementHandle({ timeout: 5000 })).contentFrame();
+    if (!frame) throw new Error("the Claude webview is not on screen");
+    return frame;
+  }
 
-  /** `js` evaluated in the Claude webview's document, whose `document` is the page of `#active-frame`. */
+  /** `js`, an expression, evaluated in the Claude webview's document. */
   async evalInView<T = unknown>(js: string): Promise<T> {
-    return this.view.eval<T>(`(function(document){ return (${js}); })(${this.doc})`);
+    return (await this.frame()).evaluate<T>(`(${js})`);
   }
 
   /** The visible text of the Claude webview. */
   async text(): Promise<string> {
     try {
-      return await this.view.eval<string>(`${this.doc}.body.innerText`);
+      return await this.view.locator("body").innerText({ timeout: 2000 });
     } catch {
       return "";
     }
@@ -664,26 +627,17 @@ export class VscodeSession {
     }
   }
 
-  private async mouse(x: number, y: number, clicks: number) {
-    const m = (type: string, extra: object) =>
-      this.view.send("Input.dispatchMouseEvent", { type, x, y, ...extra });
-    await m("mouseMoved", { button: "none", buttons: 0 });
-    for (let i = 1; i <= clicks; i++) {
-      await m("mousePressed", { button: "left", buttons: 1, clickCount: i });
-      await m("mouseReleased", { button: "left", buttons: 0, clickCount: i });
-    }
-  }
-
   /**
-   * The centre, in webview coordinates, of the visible element whose own text matches. Buttons,
-   * links and the like come first, then any element; within each, an exact text before a partial
-   * one, then document order.
+   * The visible element whose own text matches, as a handle. Buttons, links and the like come
+   * first, then any element; within each, an exact text before a partial one, then document order.
    */
-  private async locate(t: Target): Promise<{ x: number; y: number; label: string } | undefined> {
+  private async locate(t: Target): Promise<{ el: ElementHandle; label: string } | undefined> {
     const spec = typeof t === "object" && !(t instanceof RegExp) ? t : { text: t, nth: 0 };
     const m = matcher(spec.text);
-    return this.view.eval(`(() => {
-      const doc = ${this.doc};
+    const handle = await (
+      await this.frame()
+    ).evaluateHandle(`(() => {
+      const doc = document;
       const m = ${JSON.stringify(m)};
       const hit = (s) => m.re !== undefined ? new RegExp(m.re, m.flags).test(s) : s.includes(m.text);
       const own = (el) => [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim();
@@ -708,93 +662,67 @@ export class VscodeSession {
         tiers[(target.matches(ACTIVE) ? 0 : 2) + (exact(ownText) ? 0 : 1)].push(target);
       }
       const el = tiers.flat()[${spec.nth ?? 0}];
-      if (!el) return undefined;
-      el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-      let r = el.getBoundingClientRect();
-      const center = doc.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
-      if (!el.contains(center)) {
-        el.scrollIntoView({ block: 'center', inline: 'nearest' });
-        r = el.getBoundingClientRect();
-      }
-      return { x: r.x + r.width / 2, y: r.y + r.height / 2, label: (el.innerText || own(el) || '').trim().slice(0, 40) };
+      return { el: el ?? null, label: el ? (el.innerText || own(el) || '').trim().slice(0, 40) : '' };
     })()`);
+    const el = (await handle.getProperty("el")).asElement();
+    if (!el) return undefined;
+    return { el, label: (await (await handle.getProperty("label")).jsonValue()) as string };
+  }
+
+  /** `locate`, looking for a moment: the element may still be drawing. */
+  private async find(t: Target, verb: string) {
+    const spec = typeof t === "object" && !(t instanceof RegExp) ? t : { text: t, nth: 0 };
+    for (let i = 0; i < 20; i++) {
+      const found = await this.locate(t);
+      if (found) return found;
+      await sleep(150);
+    }
+    throw new Error(`nothing visible to ${verb} for ${spec.text} (nth ${spec.nth ?? 0})`);
   }
 
   /** Click the visible element whose own text matches; `{text, nth}` picks a later one. */
   async click(t: Target, clicks = 1): Promise<string> {
-    const spec = typeof t === "object" && !(t instanceof RegExp) ? t : { text: t, nth: 0 };
-    // The element may still be drawing: look for a moment before giving up.
-    let at: Awaited<ReturnType<VscodeSession["locate"]>>;
-    for (let i = 0; i < 20 && !at; i++) {
-      at = await this.locate(t);
-      if (!at) await sleep(150);
-    }
-    if (!at) throw new Error(`nothing visible to click for ${spec.text} (nth ${spec.nth ?? 0})`);
-    await this.mouse(at.x, at.y, clicks);
+    const { el, label } = await this.find(t, "click");
+    await el.click({ clickCount: clicks, timeout: 5000 });
     await this.settle();
-    return at.label;
+    return label;
   }
 
   /** Move the pointer onto the element, as `click` finds it. */
   async hover(t: Target) {
-    const at = await this.locate(t);
-    if (!at) throw new Error("nothing visible to hover");
-    await this.view.send("Input.dispatchMouseEvent", {
-      type: "mouseMoved",
-      x: at.x,
-      y: at.y,
-      button: "none",
-    });
+    const { el } = await this.find(t, "hover");
+    await el.hover({ timeout: 5000 });
     await this.settle();
   }
 
   /** Literal characters into the focused field; the message input when none is. */
   async type(text: string) {
-    const editable = await this.view.eval<boolean>(`(() => {
-      const a = ${this.doc}.activeElement;
+    const editable = await (
+      await this.frame()
+    ).evaluate<boolean>(`(() => {
+      const a = document.activeElement;
       return !!a && (a.isContentEditable || ['INPUT', 'TEXTAREA'].includes(a.tagName));
     })()`);
     if (!editable) {
       // A new tab's input can draw a moment after the rest of its page: look for a few seconds.
-      let r: { x: number; y: number } | null = null;
-      for (let i = 0; i < 30 && !r; i++) {
-        r = await this.view.eval<{ x: number; y: number } | null>(`(() => {
-          const b = ${this.doc}.querySelector('[aria-label="Message input"]');
-          if (!b) return null;
-          const r = b.getBoundingClientRect();
-          return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
-        })()`);
-        if (!r) await sleep(150);
+      try {
+        await this.view.locator('[aria-label="Message input"]').click({ timeout: 5000 });
+      } catch {
+        throw new Error("the message input is not on screen");
       }
-      if (!r) throw new Error("the message input is not on screen");
-      await this.mouse(r.x, r.y, 1);
       await sleep(250);
     }
-    await this.view.send("Input.insertText", { text });
+    await this.page.keyboard.insertText(text);
     await this.settle();
   }
 
   /** Named keys, in order: "Enter", "Escape", "Tab", "Down", "Ctrl+c", "a". */
   async press(keys: string | string[]) {
     for (const spec of Array.isArray(keys) ? keys : [keys]) {
-      await key(this.view, parseKey(spec));
+      await this.page.keyboard.press(chord(spec));
       await sleep(60);
     }
     await this.settle();
-  }
-
-  /** Where the Claude webview sits in the window, in page pixels. */
-  private async panelRect() {
-    return this.page.eval<{ x: number; y: number; width: number; height: number } | null>(`(() => {
-      let best = null;
-      for (const f of document.querySelectorAll('iframe.webview')) {
-        const r = f.getBoundingClientRect();
-        if (r.width < 50 || r.height < 50 || getComputedStyle(f).visibility === 'hidden') continue;
-        if (!best || r.width * r.height > best.width * best.height)
-          best = { x: r.x, y: r.y, width: r.width, height: r.height };
-      }
-      return best;
-    })()`);
   }
 
   /**
@@ -819,30 +747,16 @@ export class VscodeSession {
     let left = 0;
     while ((left = await this.undrawn()) > 0 && Date.now() < until) await sleep(200);
     if (left > 0) console.error(`shot: ${left} picture(s) of the panel not drawn after 10 s`);
-    await this.evalInView(`(() => {
-      if (document.getElementById('e2e-no-caret')) return;
-      const style = document.createElement('style');
-      style.id = 'e2e-no-caret';
-      style.textContent = '* { caret-color: transparent !important; }';
-      document.head.append(style);
-    })()`).catch(() => undefined);
-    const clip = o.panel ? await this.panelRect() : null;
-    const capture = async () =>
-      (
-        await this.page.send<{ data: string }>("Page.captureScreenshot", {
-          format: "png",
-          ...(clip ? { clip: { ...clip, scale: 1 } } : {}),
-        })
-      ).data;
+    const capture = () => (o.panel ? this.panel : this.page).screenshot({ type: "png" });
     let data = await capture();
     for (let i = 0; i < 10; i++) {
       await sleep(400);
       const next = await capture();
-      if (next === data) break;
+      if (next.equals(data)) break;
       data = next;
     }
     mkdirSync(dirname(file), { recursive: true });
-    writeFileSync(file, Buffer.from(data, "base64"));
+    writeFileSync(file, data);
     return file;
   }
 
@@ -863,33 +777,28 @@ export class VscodeSession {
 
   async useWindowSize() {
     if (!this.state.size) return;
-    await this.page.send("Emulation.clearDeviceMetricsOverride");
+    await (await this.emulation()).send("Emulation.clearDeviceMetricsOverride");
     delete this.state.size;
     writeFileSync(join(this.runDir, STATE), JSON.stringify(this.state));
   }
 
+  /**
+   * The raw DevTools session the size goes through: an override is undone only by the session that
+   * set it, and Playwright keeps no way back to the window's own size.
+   */
+  private async emulation() {
+    this.cdp ??= await this.page.context().newCDPSession(this.page);
+    return this.cdp;
+  }
+
   private async applySize([width, height]: [number, number]) {
-    await this.page.send("Emulation.setDeviceMetricsOverride", {
+    await (
+      await this.emulation()
+    ).send("Emulation.setDeviceMetricsOverride", {
       width,
       height,
       deviceScaleFactor: 1,
       mobile: false,
     });
   }
-}
-
-async function key(cdp: Cdp, { def, modifiers }: { def: KeyDef; modifiers: number }) {
-  const common = {
-    key: def.key,
-    code: def.code,
-    windowsVirtualKeyCode: def.vk,
-    nativeVirtualKeyCode: def.vk,
-    modifiers,
-  };
-  await cdp.send("Input.dispatchKeyEvent", {
-    type: def.text ? "keyDown" : "rawKeyDown",
-    ...common,
-    ...(def.text ? { text: def.text } : {}),
-  });
-  await cdp.send("Input.dispatchKeyEvent", { type: "keyUp", ...common });
 }

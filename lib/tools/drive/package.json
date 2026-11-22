@@ -15,6 +15,7 @@
     "@earendil-works/pi-coding-agent": "catalog:",
     "@microsoft/tui-test": "catalog:",
     "@types/node": "catalog:",
+    "playwright-core": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

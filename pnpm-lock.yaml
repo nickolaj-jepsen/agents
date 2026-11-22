@@ -185,6 +185,9 @@ catalogs:
     '@types/node':
       specifier: ^26.6.6
       version: 26.6.6
+    playwright-core:
+      specifier: 1.65.1
+      version: 1.65.1
     tsdown:
       specifier: ^0.23.7
       version: 0.23.7
@@ -916,6 +919,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
+      playwright-core:
+        specifier: 'catalog:'
+        version: 1.65.1
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -3909,6 +3915,11 @@ packages:
   pinkie@2.0.4:
     resolution: {integrity: sha512-MnUuEycAemtSaeFSjXKW/aroV7akBbY+Sv+RkyqFjgAe73F+MR0TBWKBRDkmfWq/HiFmdavfZ1G7h4SPZXaCSg==}
     engines: {node: '>=0.10.0'}
+
+  playwright-core@1.65.1:
+    resolution: {integrity: sha512-hqPpz7blSMPxWVdoeE1yiBSzXsKiVOd2k+kjCvmUywD2GPO2Dd9HfcWnq9NN0GHbNZDFgZ9JfBFr+X5/BLo0qw==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
@@ -7811,6 +7822,8 @@ snapshots:
       pinkie: 2.0.4
 
   pinkie@2.0.4: {}
+
+  playwright-core@1.65.1: {}
 
   possible-typed-array-names@1.1.0: {}
 
