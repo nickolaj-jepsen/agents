@@ -13,7 +13,9 @@ allowBuilds:
 # rerun the whole suite on every Dependabot bump. That is why the root holds turbo alone and the
 # linters live in lib/tools/lint/. The catalog states each shared version once; Dependabot updates it here.
 catalog:
-  "@anthropic-ai/claude-code": 2.1.328
+  # Held at 2.1.325, which the e2e snapshots were recorded on: 2.1.327 draws answer/table-code, docfix
+  # applied and dismissed and linear-issue at 70x24 differently. Re-record on it, then bump.
+  "@anthropic-ai/claude-code": 2.1.325
   "@earendil-works/pi-agent-core": 1.5.2
   "@earendil-works/pi-ai": 1.5.2
   "@earendil-works/pi-coding-agent": 1.5.2
