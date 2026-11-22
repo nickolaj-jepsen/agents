@@ -1,0 +1,17 @@
+{
+  "name": "@nickolaj-jepsen/worktree",
+  "version": "0.1.0",
+  "description": "Move a pi session into a git worktree with enter_worktree, and back to the primary checkout with exit_worktree",
+  "keywords": [
+    "pi-package"
+  ],
+  "type": "module",
+  "pi": {
+    "extensions": [
+      "./pi/index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  }
+}

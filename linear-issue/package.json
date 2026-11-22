@@ -1,0 +1,19 @@
+{
+  "name": "@nickolaj-jepsen/linear-issue",
+  "version": "0.1.0",
+  "description": "Draft a Linear issue from a note or the recent conversation with /linear, review it in a sheet, and file it",
+  "keywords": [
+    "pi-package"
+  ],
+  "type": "module",
+  "pi": {
+    "extensions": [
+      "./pi/index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  }
+}
