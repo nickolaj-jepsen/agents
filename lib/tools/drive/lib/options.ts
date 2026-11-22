@@ -17,6 +17,8 @@ export type Options = {
   jobs?: number | { claude?: number; pi?: number };
   /** Where run folders are made, in place of `/tmp`. */
   tmp?: string;
+  /** `shot`, `sweep` and `compare` of VS Code: device pixels per CSS pixel. */
+  scale?: number;
   /** `test`: the package whose scenarios run, and the pattern that picks tests. */
   package?: string;
   filter?: string;

@@ -464,6 +464,8 @@ export class VscodeSession {
   private view: FrameLocator;
   private panel: Locator;
   private cdp?: CDPSession;
+  /** Device pixels per CSS pixel the window is photographed at; the layout is the same at any. */
+  private scale = 1;
   private constructor(
     runDir: string,
     state: VscodeState,
@@ -723,7 +725,7 @@ export class VscodeSession {
     let left = 0;
     while ((left = await this.undrawn()) > 0 && Date.now() < until) await sleep(200);
     if (left > 0) console.error(`shot: ${left} picture(s) of the panel not drawn after 10 s`);
-    const capture = () => (o.panel ? this.panel : this.page).screenshot({ type: "png" });
+    const capture = () => this.capture(o);
     let data = await capture();
     for (let i = 0; i < 10; i++) {
       await sleep(400);
@@ -734,6 +736,28 @@ export class VscodeSession {
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, data);
     return file;
+  }
+
+  /**
+   * One PNG of the panel or window. Playwright's own screenshot ignores the scale of an override it
+   * did not set, so the DevTools capture is used: at clip scale 1 it takes the override's device scale, clipped to the same box.
+   */
+  private async capture(o: Shot): Promise<Buffer> {
+    if (this.scale === 1) return (o.panel ? this.panel : this.page).screenshot({ type: "png" });
+    let clip: { x: number; y: number; width: number; height: number } | null;
+    if (o.panel) clip = await this.panel.boundingBox();
+    else {
+      const [width, height] = await this.viewport();
+      clip = { x: 0, y: 0, width, height };
+    }
+    if (!clip) throw new Error("the Claude panel is not on screen");
+    const { data } = (await (
+      await this.emulation()
+    ).send("Page.captureScreenshot", {
+      format: "png",
+      clip: { ...clip, scale: 1 },
+    })) as { data: string };
+    return Buffer.from(data, "base64");
   }
 
   /**
@@ -767,13 +791,34 @@ export class VscodeSession {
     return this.cdp;
   }
 
+  /**
+   * Photographs at `scale` device pixels per CSS pixel from now on, at the window's size, which is
+   * all the layout depends on. Without a size of its own the window's current viewport is pinned,
+   * as the override is the only way to a scale; `useWindowSize` lets it go.
+   */
+  async setScale(scale: number) {
+    if (scale === this.scale) return;
+    this.scale = scale;
+    if (scale === 1 && !this.state.size) {
+      await (await this.emulation()).send("Emulation.clearDeviceMetricsOverride");
+      return;
+    }
+    const [width, height] = this.state.size ?? (await this.viewport());
+    await this.applySize([width, height]);
+    await this.settle(600, 6000);
+  }
+
+  private async viewport(): Promise<[number, number]> {
+    return this.page.evaluate<[number, number]>("[window.innerWidth, window.innerHeight]");
+  }
+
   private async applySize([width, height]: [number, number]) {
     await (
       await this.emulation()
     ).send("Emulation.setDeviceMetricsOverride", {
       width,
       height,
-      deviceScaleFactor: 1,
+      deviceScaleFactor: this.scale,
       mobile: false,
     });
   }

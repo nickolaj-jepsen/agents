@@ -6,6 +6,7 @@
  */
 import { join } from "node:path";
 import type { Kind } from "./find.ts";
+import { options } from "./options.ts";
 import type { Resolved } from "./scenario.ts";
 import { EXTREME_SIZES, Session } from "./session.ts";
 import type { VscodeSession } from "./vscode.ts";
@@ -191,12 +192,14 @@ export class VscodeTarget extends Base {
   resize(w: number, h: number) {
     return this.session.resize(w, h);
   }
-  shot(file: string | undefined, o: { window?: boolean }) {
+  async shot(file: string | undefined, o: { window?: boolean }) {
+    await this.session.setScale(options.scale ?? 1);
     return this.session.shot(file ?? join(this.session.runDir, `shot-${stamp()}.png`), {
       panel: !o.window,
     });
   }
   async sweep() {
+    await this.session.setScale(options.scale ?? 1);
     const before = this.session.state.size;
     const dir = join(this.session.runDir, "sweep");
     const out: string[] = [];
