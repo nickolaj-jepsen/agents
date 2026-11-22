@@ -234,8 +234,8 @@ export async function launchVscode(
   const args = [
     `--ozone-platform=${!visible || env.WAYLAND_DISPLAY ? "wayland" : "x11"}`,
     "--disable-gpu",
-    // A prerendered page can leave a target that never answers, which fails every connect.
-    "--disable-features=Prerender2,SpeculationRulesPrerender2",
+    // Avoid unresponsive prerender targets and desktop portal interactions in the drive profile.
+    "--disable-features=Prerender2,SpeculationRulesPrerender2,DbusSecretPortal,GlobalShortcutsPortal",
     "--password-store=basic",
     "--user-data-dir",
     join(runDir, "ud"),
