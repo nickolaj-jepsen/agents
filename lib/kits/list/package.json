@@ -9,7 +9,8 @@
   "dependencies": {
     "@agents/kit-buttons": "workspace:*",
     "@agents/kit-card": "workspace:*",
-    "@agents/kit-core": "workspace:*"
+    "@agents/kit-core": "workspace:*",
+    "@agents/kit-detail": "workspace:*"
   },
   "devDependencies": {
     "@agents/drive": "workspace:*",

@@ -1,0 +1,16 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "test": {
+      "command": ["./node_modules/.bin/vitest", "run"]
+    },
+    "e2e": {
+      "command": ["node", "../../tools/drive/drive.ts", "test", "kit-notice"],
+      "dependsOn": ["^topo", "@agents/kit-catalog#build"]
+    },
+    "e2e:update": {
+      "command": ["node", "../../tools/drive/drive.ts", "test", "kit-notice", "--update"],
+      "dependsOn": ["@agents/kit-catalog#build"]
+    }
+  }
+}

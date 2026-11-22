@@ -229,6 +229,9 @@ importers:
       '@agents/drive':
         specifier: workspace:*
         version: link:../../lib/tools/drive
+      '@agents/kit-band':
+        specifier: workspace:*
+        version: link:../../lib/kits/band
       '@agents/kit-buttons':
         specifier: workspace:*
         version: link:../../lib/kits/buttons
@@ -238,9 +241,18 @@ importers:
       '@agents/kit-core':
         specifier: workspace:*
         version: link:../../lib/kits/core
+      '@agents/kit-frame':
+        specifier: workspace:*
+        version: link:../../lib/kits/frame
       '@agents/kit-legacy':
         specifier: workspace:*
         version: link:../../lib/kits/legacy
+      '@agents/kit-notice':
+        specifier: workspace:*
+        version: link:../../lib/kits/notice
+      '@agents/kit-prose':
+        specifier: workspace:*
+        version: link:../../lib/kits/prose
       '@anthropic-ai/claude-code':
         specifier: 'catalog:'
         version: 2.1.330
@@ -307,6 +319,9 @@ importers:
       '@agents/drive':
         specifier: workspace:*
         version: link:../../lib/tools/drive
+      '@agents/kit-band':
+        specifier: workspace:*
+        version: link:../../lib/kits/band
       '@agents/kit-buttons':
         specifier: workspace:*
         version: link:../../lib/kits/buttons
@@ -319,12 +334,12 @@ importers:
       '@agents/kit-frame':
         specifier: workspace:*
         version: link:../../lib/kits/frame
-      '@agents/kit-legacy':
-        specifier: workspace:*
-        version: link:../../lib/kits/legacy
       '@agents/kit-list':
         specifier: workspace:*
         version: link:../../lib/kits/list
+      '@agents/kit-notice':
+        specifier: workspace:*
+        version: link:../../lib/kits/notice
       '@anthropic-ai/claude-code':
         specifier: 'catalog:'
         version: 2.1.330
@@ -388,9 +403,18 @@ importers:
       '@agents/drive':
         specifier: workspace:*
         version: link:../../lib/tools/drive
-      '@agents/kit-legacy':
+      '@agents/kit-core':
         specifier: workspace:*
-        version: link:../../lib/kits/legacy
+        version: link:../../lib/kits/core
+      '@agents/kit-frame':
+        specifier: workspace:*
+        version: link:../../lib/kits/frame
+      '@agents/kit-list':
+        specifier: workspace:*
+        version: link:../../lib/kits/list
+      '@agents/kit-notice':
+        specifier: workspace:*
+        version: link:../../lib/kits/notice
       '@anthropic-ai/claude-code':
         specifier: 'catalog:'
         version: 2.1.330
@@ -412,9 +436,15 @@ importers:
       '@agents/drive':
         specifier: workspace:*
         version: link:../../lib/tools/drive
-      '@agents/kit-legacy':
+      '@agents/kit-core':
         specifier: workspace:*
-        version: link:../../lib/kits/legacy
+        version: link:../../lib/kits/core
+      '@agents/kit-image':
+        specifier: workspace:*
+        version: link:../../lib/kits/image
+      '@agents/kit-notice':
+        specifier: workspace:*
+        version: link:../../lib/kits/notice
       '@anthropic-ai/claude-code':
         specifier: 'catalog:'
         version: 2.1.330
@@ -439,6 +469,9 @@ importers:
       '@agents/drive':
         specifier: workspace:*
         version: link:../../lib/tools/drive
+      '@agents/kit-band':
+        specifier: workspace:*
+        version: link:../../lib/kits/band
       '@agents/kit-buttons':
         specifier: workspace:*
         version: link:../../lib/kits/buttons
@@ -448,15 +481,21 @@ importers:
       '@agents/kit-core':
         specifier: workspace:*
         version: link:../../lib/kits/core
+      '@agents/kit-detail':
+        specifier: workspace:*
+        version: link:../../lib/kits/detail
       '@agents/kit-fields':
         specifier: workspace:*
         version: link:../../lib/kits/fields
       '@agents/kit-frame':
         specifier: workspace:*
         version: link:../../lib/kits/frame
-      '@agents/kit-legacy':
+      '@agents/kit-list':
         specifier: workspace:*
-        version: link:../../lib/kits/legacy
+        version: link:../../lib/kits/list
+      '@agents/kit-notice':
+        specifier: workspace:*
+        version: link:../../lib/kits/notice
       '@agents/kit-prose':
         specifier: workspace:*
         version: link:../../lib/kits/prose
@@ -542,6 +581,9 @@ importers:
       '@agents/build':
         specifier: workspace:*
         version: link:../../lib/tools/build
+      '@agents/kit-band':
+        specifier: workspace:*
+        version: link:../../lib/kits/band
       '@agents/kit-buttons':
         specifier: workspace:*
         version: link:../../lib/kits/buttons
@@ -563,12 +605,18 @@ importers:
       '@agents/kit-frame':
         specifier: workspace:*
         version: link:../../lib/kits/frame
+      '@agents/kit-image':
+        specifier: workspace:*
+        version: link:../../lib/kits/image
       '@agents/kit-legacy':
         specifier: workspace:*
         version: link:../../lib/kits/legacy
       '@agents/kit-list':
         specifier: workspace:*
         version: link:../../lib/kits/list
+      '@agents/kit-notice':
+        specifier: workspace:*
+        version: link:../../lib/kits/notice
       '@agents/kit-prose':
         specifier: workspace:*
         version: link:../../lib/kits/prose
@@ -617,9 +665,21 @@ importers:
       '@agents/drive':
         specifier: workspace:*
         version: link:../../lib/tools/drive
-      '@agents/kit-legacy':
+      '@agents/kit-band':
         specifier: workspace:*
-        version: link:../../lib/kits/legacy
+        version: link:../../lib/kits/band
+      '@agents/kit-buttons':
+        specifier: workspace:*
+        version: link:../../lib/kits/buttons
+      '@agents/kit-card':
+        specifier: workspace:*
+        version: link:../../lib/kits/card
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../../lib/kits/core
+      '@agents/kit-notice':
+        specifier: workspace:*
+        version: link:../../lib/kits/notice
       '@anthropic-ai/claude-code':
         specifier: 'catalog:'
         version: 2.1.330
@@ -696,6 +756,25 @@ importers:
         specifier: 'catalog:'
         version: 7.0.2
 
+  lib/kits/band:
+    dependencies:
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../tools/drive
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
   lib/kits/buttons:
     dependencies:
       '@agents/kit-card':
@@ -745,6 +824,9 @@ importers:
       '@agents/drive':
         specifier: workspace:*
         version: link:../../tools/drive
+      '@agents/kit-band':
+        specifier: workspace:*
+        version: link:../band
       '@agents/kit-buttons':
         specifier: workspace:*
         version: link:../buttons
@@ -763,12 +845,18 @@ importers:
       '@agents/kit-frame':
         specifier: workspace:*
         version: link:../frame
+      '@agents/kit-image':
+        specifier: workspace:*
+        version: link:../image
       '@agents/kit-legacy':
         specifier: workspace:*
         version: link:../legacy
       '@agents/kit-list':
         specifier: workspace:*
         version: link:../list
+      '@agents/kit-notice':
+        specifier: workspace:*
+        version: link:../notice
       '@agents/kit-prose':
         specifier: workspace:*
         version: link:../prose
@@ -887,6 +975,25 @@ importers:
         specifier: 'catalog:'
         version: 7.0.2
 
+  lib/kits/image:
+    dependencies:
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../tools/drive
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
   lib/kits/legacy:
     devDependencies:
       '@earendil-works/pi-coding-agent':
@@ -913,6 +1020,28 @@ importers:
       '@agents/kit-card':
         specifier: workspace:*
         version: link:../card
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../core
+      '@agents/kit-detail':
+        specifier: workspace:*
+        version: link:../detail
+    devDependencies:
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../tools/drive
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.6
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  lib/kits/notice:
+    dependencies:
       '@agents/kit-core':
         specifier: workspace:*
         version: link:../core
