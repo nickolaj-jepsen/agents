@@ -7,13 +7,13 @@ metadata:
   category: harnesses
 ---
 
-Start with the [layout reference](references/style.md) and an example from the [kit catalogue](../../kit/catalog/COMPONENTS.md). Sketch the busiest state at the narrowest and widest sizes. Design for each harness's controls rather than forcing one layout onto both.
+Start with the [layout reference](references/style.md) and an example from the [kit catalogue](../../lib/kits/catalog/COMPONENTS.md). Sketch the busiest state at the narrowest and widest sizes. Design for each harness's controls rather than forcing one layout onto both.
 
 - [Claude](references/claude.md): available surfaces, focus, graphical controls and their traps. Load `plugin-authoring` for the API.
 - [pi](references/pi.md): available surfaces, runtime traps and session logs.
 - [Offline upstream manuals](references/upstream.md): packaging and extension APIs.
-- [Kit guide](../../kit/README.md): change the shared kit instead of maintaining separate frames, text clamping or key hints in plugins.
-- [Replay guide](../../lib/tools/drive/README.md): write scenarios, drive a screen, take pictures and check snapshots.
+- [Kit guide](../../lib/kits/README.md): change the shared kit instead of maintaining separate frames, text clamping or key hints in plugins.
+- [Driver guide](../../lib/tools/drive/README.md): write scenarios, drive a screen, take pictures and check snapshots.
 
 Run repo tasks as `pnpm turbo run <task>`. Drive a session with `pnpm drive <verb>` instead (`pnpm drive --help` lists them): it is not a turbo task, because turbo stops what a task leaves running and `goto` would park nothing.
 

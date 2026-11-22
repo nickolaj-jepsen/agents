@@ -1,6 +1,6 @@
 # Plugin layout reference
 
-Draw with a kit component before making anything by hand. [`AGENTS.md`](../../../AGENTS.md) lists the components, the [catalogue](../../../kit/catalog/COMPONENTS.md) says what each can do on each surface, and the [kit guide](../../../kit/README.md) shows how to use and add one. The kit's [tokens](../../../kit/tokens.ts) are the reference for exact values.
+Draw with a kit component before making anything by hand. [`AGENTS.md`](../../../AGENTS.md) lists the components, the [catalogue](../../../lib/kits/catalog/COMPONENTS.md) says what each can do on each surface, and the [kit guide](../../../lib/kits/README.md) shows how to use and add one. The kit's [tokens](../../../lib/kits/core/src/tokens.ts) are the reference for exact values.
 
 ## Rules for every component
 
