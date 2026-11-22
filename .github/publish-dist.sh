@@ -10,7 +10,8 @@
 # DIST_SOURCE   the commit of main it was built from, named in the message; default: HEAD here
 set -eu
 
-built=${1:?usage: publish-dist.sh <built plugins folder>}
+# Absolute: the script works in a scratch clone, where a relative path means nothing.
+built=$(cd "${1:?usage: publish-dist.sh <built plugins folder>}" && pwd -P)
 branch=dist
 remote=${DIST_REMOTE:-$(git remote get-url origin)}
 source_rev=${DIST_SOURCE:-$(git rev-parse HEAD)}
