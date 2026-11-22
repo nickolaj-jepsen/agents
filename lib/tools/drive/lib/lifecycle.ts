@@ -22,7 +22,7 @@ import {
 } from "./sessions.ts";
 import { Session } from "./session.ts";
 import { stopStub } from "./stub.ts";
-import { DaemonTerm, tuiTest } from "./term.ts";
+import { tuiTest } from "./term.ts";
 import { DesktopTarget, TerminalTarget, VscodeTarget, type Target } from "./target.ts";
 import { liveVscode } from "./vscode-live.ts";
 import { loadVscodeSet, reachVscode, reloadVscode, resolveVscode } from "./vscode-scenario.ts";
@@ -41,10 +41,6 @@ export type Flags = WatchFlags & {
  * are the user's, not the checkout's, so the name carries the checkout.
  */
 const daemonBase = (name: string) => `d-${checkoutId}-${name}`;
-
-/** The daemon session a session runs in: a start that hit Claude's hiccup is `<name>-retry`. */
-const daemonName = (session: Session, fallback: string) =>
-  session.term instanceof DaemonTerm ? session.term.session : fallback;
 
 /** A failed start's folder: kept and named with `--keep`, else removed. */
 function keepOrRemove(runDir: string) {
@@ -91,7 +87,7 @@ export async function gotoSession(
       keepOrRemove(runDir);
       throw err;
     });
-    writeSession(name, { ...base, runDir, daemon: daemonName(session, daemon) });
+    writeSession(name, { ...base, runDir, daemon });
     const sz = await session.size();
     console.log(
       `on ${entry.package}/${harness}/${scenario} at ${sz.cols}x${sz.rows}; session ${name}; folder ${session.cwd}`,
@@ -200,7 +196,7 @@ export async function reloadSession(name: string, other?: string): Promise<void>
     }
     if (before && (before.cols !== r.size[0] || before.rows !== r.size[1]))
       await session.resize(before.cols, before.rows);
-    writeSession(name, { ...rec, runDir, daemon: daemonName(session, next) });
+    writeSession(name, { ...rec, runDir, daemon: next });
     await old.close();
     rmSync(rec.runDir, { recursive: true, force: true });
     const sz = await session.size();

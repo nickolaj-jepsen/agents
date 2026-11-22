@@ -1,6 +1,10 @@
 {
   "extends": ["//"],
   "tasks": {
+    // The driver's own specs: scripted dependencies and temporary folders, no agent and no build.
+    "test": {
+      "command": ["./node_modules/.bin/vitest", "run", "--config", "vitest.unit.config.ts"]
+    },
     // The harness is every app's and kit's: its code reaches their e2e, media and types by `^topo`.
     // `e2e.spec.ts` and `vitest.config.ts` are the harness too, so `*` stands.
     "topo": {

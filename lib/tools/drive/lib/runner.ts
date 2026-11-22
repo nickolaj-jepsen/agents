@@ -203,7 +203,7 @@ async function runChain(task: Task, out: Map<string, Outcome>, requeue: (t: Task
   }
 }
 
-export type Stats = { sessions: number; hiccups: number; seconds: number };
+export type Stats = { sessions: number; seconds: number };
 
 /** Plays every job's scenarios and returns what each came to, by `plugin/harness/name`. */
 export async function runAll(
@@ -262,7 +262,6 @@ export async function runAll(
     outcomes: out,
     stats: {
       sessions: startStats.starts - startedWith.starts,
-      hiccups: startStats.hiccups - startedWith.hiccups,
       seconds: (Date.now() - began) / 1000,
     },
   };

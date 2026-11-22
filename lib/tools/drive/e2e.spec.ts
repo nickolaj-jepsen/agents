@@ -42,7 +42,7 @@ beforeAll(async () => {
   outcomes = done.outcomes;
   console.error(
     `e2e: ${outcomes.size} scenarios in ${done.stats.sessions} sessions, ` +
-      `${done.stats.hiccups} start failure(s) retried, ${done.stats.seconds.toFixed(0)}s`,
+      `${done.stats.seconds.toFixed(0)}s`,
   );
 }, 3_600_000);
 

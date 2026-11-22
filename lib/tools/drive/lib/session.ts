@@ -89,10 +89,8 @@ const target = (t: Target) =>
 /** What Claude Code shows when its fullscreen renderer did not finish starting the last time. */
 const HICCUP = /fullscreen[^\n]*(did not|didn.t)[^\n]*finish|classic renderer/i;
 
-class StartHiccup extends Error {}
-
-/** How many sessions were started and how many of those hit the start failure. */
-export const startStats = { starts: 0, hiccups: 0 };
+/** How many sessions were started. */
+export const startStats = { starts: 0 };
 
 export type StepOptions = {
   /** `false` leaves the wait for the screen to be still to whatever comes next (a `wait` step). */
@@ -131,23 +129,12 @@ export class Session {
   }
 
   /**
-   * Starts the agent and waits for its prompt. Claude Code now and then comes up in its classic
-   * renderer ("fullscreen didn't finish starting last time"): that start is dropped and made once
-   * more, since nothing in it is the scenario's doing.
+   * Starts the agent and waits for its prompt. A start that fails is the only one it gets: Claude
+   * Code now and then comes up in its classic renderer ("fullscreen didn't finish starting last
+   * time"), and that is a failure carrying what it printed, not a start to make again.
    */
   static async open(o: OpenOptions): Promise<Session> {
     startStats.starts++;
-    try {
-      return await Session.openOnce(o);
-    } catch (err) {
-      if (!(err instanceof StartHiccup)) throw err;
-      startStats.hiccups++;
-      console.error(`e2e: ${o.name}: ${err.message}; starting it once more`);
-      return await Session.openOnce({ ...o, runDir: o.runDir, name: `${o.name}-retry` });
-    }
-  }
-
-  private static async openOnce(o: OpenOptions): Promise<Session> {
     const ownsRun = !o.runDir;
     const runDir = o.runDir ?? mkdtempSync(join(runBase(), "e2e-"));
     const cwd = join(runDir, o.project ?? "cwd");
@@ -208,7 +195,7 @@ export class Session {
     while (Date.now() - start < timeout) {
       text = await this.term.text().catch(() => "");
       if (this.harness === "claude" && HICCUP.test(text))
-        throw new StartHiccup(`claude started in its classic renderer`);
+        throw new Error(`claude started in its classic renderer; screen:\n${text}`);
       if (h.failed?.(text)) throw new Error(`${this.harness} failed to start; screen:\n${text}`);
       const keys = h.dialog(text);
       if (keys) {
@@ -219,7 +206,7 @@ export class Session {
         const rows = text.split("\n");
         const at = rows.findIndex((r) => r.startsWith("❯"));
         if (this.harness === "claude" && at >= 0 && at < (await this.term.size()).rows / 2)
-          throw new StartHiccup("claude started in its classic renderer");
+          throw new Error(`claude started in its classic renderer; screen:\n${text}`);
         await this.settle();
         return;
       }
