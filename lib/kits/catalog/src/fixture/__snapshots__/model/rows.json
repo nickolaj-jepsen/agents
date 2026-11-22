@@ -1,0 +1,14 @@
+{
+  "pi, claude-terminal": {
+    "text": "Where should the session store live?",
+    "pointer": true,
+    "bold": true,
+    "detail": 0
+  },
+  "vscode, desktop, mobile": {
+    "text": "Where should the session store live?",
+    "pointer": false,
+    "bold": false,
+    "detail": 0
+  }
+}

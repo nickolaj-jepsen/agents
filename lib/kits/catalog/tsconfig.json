@@ -1,5 +1,5 @@
 {
   "extends": "../../../tsconfig.base.node.json",
   "include": ["src", "e2e", "../new.ts"],
-  "exclude": ["src/**/*.tsx", "src/claude"]
+  "exclude": ["src/**/*.tsx", "src/claude", "src/fixture/messages.check.ts"]
 }

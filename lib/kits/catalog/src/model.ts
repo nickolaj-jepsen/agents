@@ -6,7 +6,8 @@
 import { existsSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { kitStories } from "./registry.ts";
+import { kitStories, kitStories2 } from "./registry.ts";
+import { answers, checkComponent2 } from "./schema2.ts";
 import {
   extractKit,
   referencedTypes,
@@ -21,6 +22,7 @@ import {
   surfaces,
   storyOf,
   type Component,
+  type ComponentV2,
   type Harness,
   type Support,
   type Surface,
@@ -108,10 +110,16 @@ async function storiesOf(harness: Harness): Promise<Map<string, Meta> | undefine
 }
 
 const load = async (file: string) =>
-  ((await import(/* @vite-ignore */ pathToFileURL(file).href)) as { default: Component }).default;
+  (
+    (await import(/* @vite-ignore */ pathToFileURL(file).href)) as {
+      default: Component | ComponentV2;
+    }
+  ).default;
+
+const isV2 = (c: Component | ComponentV2): c is ComponentV2 => "schema" in c && c.schema === 2;
 
 /** A kit component's own `manifest.ts` first, then the legacy `components/*.ts`. */
-async function manifests(): Promise<{ c: Component; where: string }[]> {
+async function manifests(): Promise<{ c: Component | ComponentV2; where: string }[]> {
   const folders = readdirSync(kitRoot, { withFileTypes: true })
     .filter(
       (d) =>
@@ -171,6 +179,11 @@ export async function loadModel(): Promise<Model> {
   const components: ComponentModel[] = list.map(({ c, where }) => {
     if (seen.has(c.id)) problems.push(`${where}: duplicate component id`);
     seen.add(c.id);
+    if (isV2(c)) {
+      const own = kitStories2.filter((s) => s.component === c.id);
+      problems.push(...checkComponent2(c, own, where));
+      return modelOf2(c, own, where.split("/")[0] ?? c.id);
+    }
 
     const isSystem = (h: Harness) => c.status?.[h] === "system";
     const status: ComponentModel["status"] = {};
@@ -369,6 +382,71 @@ export async function loadModel(): Promise<Model> {
   });
 
   return { kits, components, problems, notMirrored };
+}
+
+/**
+ * A component of schema 2, in the catalogue's terms: its parts as the exports, its answers
+ * derived from the table (pi, Claude Code's terminal, and VS Code for the graphical clients,
+ * a note saying where Desktop or mobile differ). Its API is not extracted yet.
+ */
+export function modelOf2(
+  c: ComponentV2,
+  own: readonly { state: string; about: string; settings?: string }[],
+  folder: string,
+) {
+  const parts = (d: "terminal" | "gui") =>
+    Object.entries(c.parts)
+      .filter(([, p]) => (p.drawings ?? ["terminal", "gui"]).includes(d))
+      .map(([name]) => name);
+  const impl = (d: "terminal" | "gui"): ImplState => ({ state: "exists", exports: parts(d) });
+  const features = c.features.map((f): FeatureModel => {
+    const a = answers(f);
+    const gui = a.vscode;
+    const others = (["desktop", "mobile"] as const).filter(
+      (s) => a[s].status !== gui.status || a[s].note !== gui.note,
+    );
+    return {
+      id: f.id,
+      label: f.label,
+      support: { pi: a.pi, claude: a["claude-terminal"] },
+      gui: others.length
+        ? {
+            status: gui.status,
+            note: [
+              gui.note,
+              ...others.map((s) => `${s}: ${a[s].status}${a[s].note ? `, ${a[s].note}` : ""}`),
+            ]
+              .filter(Boolean)
+              .join("; "),
+          }
+        : gui,
+      story: f.story ? { pi: f.story, claude: f.story, gui: f.story } : {},
+    };
+  });
+  const by = (): StoryModel["by"] => ({});
+  return {
+    id: c.id,
+    name: c.name,
+    purpose: c.purpose,
+    impl: { pi: impl("terminal"), claude: impl("terminal") },
+    guiImpl: impl("gui"),
+    status: { pi: "system", claude: "system", gui: "system" },
+    source: `${folder}/src/terminal.ts`,
+    features,
+    api: { pi: null, claude: null },
+    guiApi: null,
+    stories: own.map((s): StoryModel => ({
+      id: `${c.id}/${s.state}`,
+      state: s.state,
+      by: {
+        ...by(),
+        pi: { about: s.about, settings: s.settings },
+        claude: { about: s.about, settings: s.settings },
+      },
+      isGui: true,
+      missing: {},
+    })),
+  } satisfies ComponentModel;
 }
 
 function describe(i: ImplState): string {

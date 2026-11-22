@@ -13,7 +13,7 @@ import { sheetStories } from "@agents/kit-sheet/stories.ts";
 import { noticeLineStories } from "@agents/kit-notice/stories.ts";
 import { statusBandStories } from "@agents/kit-band/stories.ts";
 import { imageStories } from "@agents/kit-image/stories.ts";
-import type { KitStory } from "@agents/kit-core/stories.ts";
+import type { KitStory, Story } from "@agents/kit-core/stories.ts";
 
 /** Component package (`lib/kits/<name>`) to its stories. */
 export const kitPackages: Record<string, KitStory[]> = {
@@ -43,3 +43,9 @@ export const kitStories: KitStory[] = [
   ...statusBandStories,
   ...imageStories,
 ];
+
+/**
+ * The stories of components on schema 2: plain data (`<component>/src/stories.ts`), drawn by every
+ * surface the manifest says. A component moving to `schema: 2` swaps its entry above for one here.
+ */
+export const kitStories2: Story[] = [];

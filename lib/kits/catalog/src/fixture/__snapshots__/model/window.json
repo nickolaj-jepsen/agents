@@ -1,0 +1,14 @@
+{
+  "pi, claude-terminal": {
+    "text": "Retention",
+    "pointer": false,
+    "bold": false,
+    "detail": 40
+  },
+  "vscode, desktop, mobile": {
+    "text": "Retention",
+    "pointer": false,
+    "bold": false,
+    "detail": 0
+  }
+}

@@ -4,15 +4,23 @@
     "build": {
       "command": ["node", "../../tools/build/build.ts"]
     },
-    // The specs read what no package import reaches: every kit package's snapshots (parity) and the
-    // kit index in the root AGENTS.md.
+    // The specs read what no package import reaches: every kit package's snapshots (parity, and
+    // each view model's), the kit index in the root AGENTS.md, and what schema 2 derives answers from
+    // (the capability table, and every component's manifest, contract, view model and story data,
+    // which the specs load by folder, not by import).
     "test": {
       "command": ["./node_modules/.bin/vitest", "run"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",
         "$TURBO_ROOT$/AGENTS.md",
-        "$TURBO_ROOT$/lib/kits/*/e2e/__snapshots__/**/*.snap"
+        "$TURBO_ROOT$/lib/kits/*/e2e/__snapshots__/**/*.snap",
+        "$TURBO_ROOT$/lib/kits/*/e2e/__snapshots__/model/**",
+        "$TURBO_ROOT$/lib/kits/core/src/surfaces.ts",
+        "$TURBO_ROOT$/lib/kits/*/src/manifest.ts",
+        "$TURBO_ROOT$/lib/kits/*/src/contract.ts",
+        "$TURBO_ROOT$/lib/kits/*/src/model.ts",
+        "$TURBO_ROOT$/lib/kits/*/src/stories.ts"
       ]
     },
     "test:claude": {
@@ -27,8 +35,21 @@
     "types": {
       "command": ["node", "../../tools/drive/drive.ts", "types", "kit-catalog"]
     },
+    // The export assertions and the fixture's types read the capability table and the manifests'
+    // literals: a change to one reruns this, whichever package it is in.
     "check-types": {
-      "command": ["./node_modules/.bin/tsc", "-b", "tsconfig.json", "tsconfig.claude.json"]
+      "command": ["./node_modules/.bin/tsc", "-b", "tsconfig.json", "tsconfig.claude.json"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/tsconfig.base.node.json",
+        "!**/*.md",
+        "!**/__snapshots__/**",
+        "$TURBO_ROOT$/lib/kits/core/src/surfaces.ts",
+        "$TURBO_ROOT$/lib/kits/*/src/manifest.ts",
+        "$TURBO_ROOT$/lib/kits/*/src/contract.ts",
+        "$TURBO_ROOT$/lib/kits/*/src/stories.ts"
+      ]
     },
     "media": {
       "command": [

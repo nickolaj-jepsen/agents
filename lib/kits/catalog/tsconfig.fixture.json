@@ -1,0 +1,5 @@
+{
+  "extends": "../../../tsconfig.base.node.json",
+  "include": ["src/fixture/messages.check.ts"],
+  "compilerOptions": { "noEmit": true }
+}
