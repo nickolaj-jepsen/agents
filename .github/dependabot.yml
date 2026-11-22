@@ -1,5 +1,6 @@
-# One PR a day at most per ecosystem (flake inputs, npm packages, Python packages), each with
-# everything together; the Dependabot auto-merge workflow merges it once `CI gate` passes.
+# One PR per ecosystem (flake inputs, npm packages, Python packages) on the 1st and 15th, each with
+# everything together: every bump reruns tasks, and re-recording the site's media is dear. The
+# Dependabot auto-merge workflow merges it once `CI gate` passes.
 # Dependabot's 3-day cooldown on an input's new commits still applies.
 # `CI gate` reads the turbo remote cache's secrets, and Dependabot has its own: add TURBO_TOKEN and
 # TURBO_REMOTE_CACHE_SIGNATURE_KEY under the repo's Dependabot secrets, or its PRs run every task.
@@ -8,9 +9,9 @@ updates:
   - package-ecosystem: "nix"
     directory: "/"
     schedule:
-      # `daily` skips weekends; a cron expression doesn't.
+      # Twice a month needs a cron expression: `interval` has no such step.
       interval: "cron"
-      cronjob: "23 3 * * *"
+      cronjob: "23 3 1,15 * *"
     open-pull-requests-limit: 1
     groups:
       flake-inputs:
@@ -20,7 +21,7 @@ updates:
     directory: "/"
     schedule:
       interval: "cron"
-      cronjob: "23 3 * * *"
+      cronjob: "23 3 1,15 * *"
     open-pull-requests-limit: 1
     groups:
       npm-packages:
@@ -30,7 +31,7 @@ updates:
     directory: "/"
     schedule:
       interval: "cron"
-      cronjob: "23 3 * * *"
+      cronjob: "23 3 1,15 * *"
     open-pull-requests-limit: 1
     groups:
       python-packages:
