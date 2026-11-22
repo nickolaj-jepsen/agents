@@ -19,20 +19,25 @@ A **package** is an app (`docfix`) or a kit component (`kit-card`); `kit` is eve
 pnpm drive ls                                              # the packages, and the sessions parked now
 pnpm drive ls answer                                       # a package's scenarios, by harness
 pnpm drive live answer open --harness claude               # replay in your terminal; Ctrl+] stops it
-pnpm drive live answer open --harness pi                   # try the pi version instead
+pnpm drive live answer cards-open --harness pi             # try the pi version instead
 pnpm drive live answer form --harness vscode               # open a separate Linux VS Code window; close it to stop
 pnpm drive live answer long-body --harness desktop         # a fixture in Claude Desktop (Linux); --draft for a real model
-pnpm drive live answer open --harness pi --watch           # replay again on each save
-pnpm drive live kit-card card/live --harness pi --watch    # a kit story
+pnpm drive live answer cards-open --harness pi --watch              # replay on each save
+pnpm drive live answer cards-open --harness pi --watch --in-place   # keep the pi conversation
+pnpm drive live answer form --harness vscode --watch --in-place    # keep the visible Claude tab
+pnpm drive live kit-card card/live --harness pi --watch             # a kit story
 ```
 
 `--harness` is needed only when a scenario exists in several.
 
 The view fits your window once the scripted steps finish. To change the size **during** those steps, pass `--size 96x30` in terminal cells or `--size 900x700` in VS Code pixels. Claude Desktop is only launched: it has no `cap`, `keys` or `shot`.
 
-With `--watch`, each save under the app's `src/`, the kit packages it imports or the scenario's folder rebuilds the app (`lib/tools/build/build.ts`), starts the agent over and replays the steps. The old session stays on screen until the new one reaches the screen. If the new code fails to start, its error takes the screen's place; save again to retry. Tests, snapshots and build output don't count as saves.
+Claude, pi and VS Code use the same flags for `live` and `goto`:
 
-For Claude, `--watch --in-place` keeps the session and lets Claude reload the mod itself, which keeps what you clicked. Claude waits for the folder to go quiet first: a few seconds, or up to a minute when you save often. Type `/reload-plugins` to reload at once.
+- `--watch` rebuilds on edits to the app or its kits and replays the scenario. Terminal `live` keeps the old screen until the new one is ready; VS Code replaces the Claude tab in the same window. Edits to the scenario also trigger replay. Tests, snapshots and build outputs are ignored.
+- `--watch --in-place` reloads plugin edits in the running session, without replaying. Scenario edits still replay because the running agent does not read the fixture or scripted steps.
+
+In Claude and VS Code, Claude's mod watcher reloads the built files. It waits for the folder to go quiet (terminal Claude can take up to a minute after frequent edits); `/reload-plugins` applies changes at once. In pi, a dev-only extension asks pi to reload once the agent is idle, without typing into the prompt. Pi keeps the conversation but recreates its extension runtime: open extension overlays and unsaved plugin state may not survive. VS Code `live` opens a window you can interact with directly; `goto` uses a headless window.
 
 ## Drive a parked session
 

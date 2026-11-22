@@ -8,16 +8,9 @@ import { driveRoot, reach, type Resolved } from "./scenario.ts";
 import { Session } from "./session.ts";
 import { stopStub } from "./stub.ts";
 import { DaemonTerm } from "./term.ts";
-import { fileList, relevant, sourceDirs, rebuild, touchesScenario, watchSources } from "./watch.ts";
+import { fileList, watchScenario, withInPlaceReload, type WatchFlags } from "./watch.ts";
 
 const run = promisify(execFile);
-
-export type LiveOptions = {
-  /** Reload on each save of the scenario's sources (see `watch.ts`). */
-  watch?: boolean;
-  /** With `watch`: keep a Claude session and let it reload the mod itself, in its own time. */
-  inPlace?: boolean;
-};
 
 const removeRun = (dir: string) => {
   if (!options.keep) rmSync(dir, { recursive: true, force: true });
@@ -27,7 +20,12 @@ const removeRun = (dir: string) => {
  * The scenario played in a process of its own, so it reads every source as it is now, onto a
  * daemon session of `name`, left there for this one to show.
  */
-async function freshSession(r: Resolved, name: string, runDir: string): Promise<Session> {
+async function freshSession(
+  r: Resolved,
+  name: string,
+  runDir: string,
+  inPlace: boolean,
+): Promise<Session> {
   try {
     const { stdout } = await run(
       process.execPath,
@@ -44,6 +42,7 @@ async function freshSession(r: Resolved, name: string, runDir: string): Promise<
         runDir,
         "--size",
         `${r.size[0]}x${r.size[1]}`,
+        ...(inPlace ? ["--in-place"] : []),
       ],
       { maxBuffer: 16 * 1024 * 1024 },
     );
@@ -57,7 +56,7 @@ async function freshSession(r: Resolved, name: string, runDir: string): Promise<
   }
 }
 
-export async function live(r: Resolved, o: LiveOptions = {}) {
+export async function live(r: Resolved, o: WatchFlags = {}) {
   if (!process.stdin.isTTY || !process.stdout.isTTY)
     throw new Error("Run live mode in a terminal to interact with the scenario.");
 
@@ -72,7 +71,13 @@ export async function live(r: Resolved, o: LiveOptions = {}) {
 
   try {
     console.log(`Replaying ${r.plugin}/${r.harness}/${r.name}. Press Ctrl+] to leave live mode.`);
-    session = await reach(r, "daemon", `e2e-live-${process.pid}`, runDir);
+    const inPlace = !!o.watch && !!o.inPlace;
+    session = await reach(
+      inPlace ? withInPlaceReload(r, runDir) : r,
+      "daemon",
+      `e2e-live-${process.pid}`,
+      runDir,
+    );
     if (controller.signal.aborted) return;
     if (!(session.term instanceof DaemonTerm))
       throw new Error("Live mode requires the terminal daemon.");
@@ -93,32 +98,36 @@ export async function live(r: Resolved, o: LiveOptions = {}) {
         removeRun(old.runDir);
       }
     };
-    const watcher = watchSources(sourceDirs(r), async (saved) => {
-      const files = relevant(r.harness, saved);
-      if (controller.signal.aborted || files.length === 0) return;
-      if (!session) console.log(`\nSaved ${fileList(files)}: reloading…`);
-      try {
-        await rebuild(r);
-        // Claude reloads a mod whose file was written, keeping the screen, and says so in its
-        // transcript, as it does when the new code fails to load.
-        if (session && r.harness === "claude" && o.inPlace && !touchesScenario(r, files)) return;
-        const dir = mkdtempSync(join(tmpdir(), "e2e-live-"));
-        starting = freshSession(r, `e2e-live-${process.pid}-${++n}`, dir).catch((err: unknown) => {
-          removeRun(dir);
-          throw err;
-        });
-        const fresh = await starting;
-        starting = undefined;
-        if (controller.signal.aborted) {
-          await fresh.close();
-          removeRun(fresh.runDir);
-          return;
+    const watcher = watchScenario(r, r.harness, {
+      inPlaceRunDir: () => (inPlace && !controller.signal.aborted ? session?.runDir : undefined),
+      onSave: (files) => {
+        if (controller.signal.aborted) return false;
+        if (!session) console.log(`\nSaved ${fileList(files)}: reloading…`);
+      },
+      replay: async () => {
+        try {
+          const dir = mkdtempSync(join(tmpdir(), "e2e-live-"));
+          starting = freshSession(r, `e2e-live-${process.pid}-${++n}`, dir, inPlace).catch(
+            (err: unknown) => {
+              removeRun(dir);
+              throw err;
+            },
+          );
+          const fresh = await starting;
+          starting = undefined;
+          if (controller.signal.aborted) {
+            await fresh.close();
+            removeRun(fresh.runDir);
+            return;
+          }
+          await replace(fresh);
+        } catch (err) {
+          starting = undefined;
+          if (!controller.signal.aborted)
+            await replace(err instanceof Error ? err : new Error(String(err)));
         }
-        await replace(fresh);
-      } catch (err) {
-        starting = undefined;
-        await replace(err instanceof Error ? err : new Error(String(err)));
-      }
+      },
+      onError: (err) => console.error(err instanceof Error ? err.message : String(err)),
     });
     stopWatching = () => watcher.close();
 

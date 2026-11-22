@@ -15,6 +15,7 @@ import {
   gotoSession,
   liveSession,
   reloadSession,
+  replayVscode,
   stopSession,
   watchParked,
   type Flags,
@@ -26,6 +27,7 @@ import { record } from "./lib/record.ts";
 import { loadSet, reach, resolveScenario } from "./lib/scenario.ts";
 import { DEFAULT_SESSION, sessionName, sessionNames, readSession } from "./lib/sessions.ts";
 import { runTests } from "./lib/test.ts";
+import { rebuild, withInPlaceReload } from "./lib/watch.ts";
 import type { Target } from "./lib/target.ts";
 
 const size = (value: string): [number, number] => {
@@ -173,7 +175,7 @@ const flagged = (c: Command) =>
     )
     .option(
       "--in-place",
-      "with --watch on claude: keep the session and let Claude reload the mod itself",
+      "with --watch: reload plugin edits without restarting the session; scenario edits still replay",
     )
     .option("--draft", "desktop: open a prefilled draft for a real model, not a seeded session");
 
@@ -209,7 +211,7 @@ flagged(
     await gotoSession(session(), entry, scenario, o);
     if (o.watch) {
       // Stays up until a signal; the exit code of a stop is not an error.
-      await watchParked(session(), entry, scenario, !!o.inPlace);
+      await watchParked(session(), entry, scenario);
     }
   }),
 );
@@ -493,23 +495,51 @@ program
   .requiredOption("--daemon <name>")
   .requiredOption("--run <dir>")
   .option("--size <size>", "", size)
+  .option("--in-place")
   .action(
     verb(
       async (
         pkg: string,
         scenario: string,
-        o: { harness?: Kind; daemon: string; run: string; size?: [number, number] },
+        o: {
+          harness?: Kind;
+          daemon: string;
+          run: string;
+          size?: [number, number];
+          inPlace?: boolean;
+        },
       ) => {
         const owner = await findOwner(pkg, scenario, o.harness);
         if (owner.harness !== "claude" && owner.harness !== "pi")
           throw new Error("_reach is for terminal scenarios");
         const r = resolveScenario(await loadSet(owner.file), scenario);
         if (o.size) r.size = o.size;
-        const s = await reach(r, "daemon", o.daemon, o.run);
+        await rebuild(r);
+        const start = o.inPlace ? withInPlaceReload(r, o.run) : r;
+        const s = await reach(start, "daemon", o.daemon, o.run);
         const term = s.term as { session?: string };
         console.log(JSON.stringify({ session: term.session ?? o.daemon }));
       },
     ),
+  );
+
+program
+  .command("_replay-vscode", { hidden: true })
+  .description("rebuild and replay a scenario in a visible VS Code window")
+  .argument("<package>")
+  .argument("<scenario>")
+  .requiredOption("--run <dir>")
+  .option("--size <size>", "", size)
+  .action(
+    verb(async (pkg: string, scenario: string, o: { run: string; size?: [number, number] }) => {
+      const owner = await findOwner(pkg, scenario, "vscode");
+      const session = await replayVscode(owner.file, scenario, o.run, o.size);
+      try {
+        await session.useWindowSize();
+      } finally {
+        session.close();
+      }
+    }),
   );
 
 program

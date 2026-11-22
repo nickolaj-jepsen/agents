@@ -22,7 +22,14 @@ import {
   type Locator,
   type Page,
 } from "playwright-core";
-import { checkoutMods, hermeticClaude, sessionPath, STUB_KEY, type Turn } from "./harness.ts";
+import {
+  checkoutMods,
+  hermeticClaude,
+  modWatchEnv,
+  sessionPath,
+  STUB_KEY,
+  type Turn,
+} from "./harness.ts";
 import { runEnv } from "./setup.ts";
 import type { Pattern } from "./screen.ts";
 import type { Target } from "./session.ts";
@@ -54,13 +61,15 @@ export type VscodeState = {
   fixed?: string;
 };
 
-export type VscodeLaunch = { visible?: boolean; signal?: AbortSignal };
+export type VscodeLaunch = { visible?: boolean; watchPlugins?: boolean; signal?: AbortSignal };
 
 /** The part of a start that is in the window's environment, which only a new window changes. */
 export const fixedOf = (start: VscodeStart) =>
   JSON.stringify({ env: start.env, bin: start.bin, hide: start.hide, plugins: start.plugins });
 
 const STATE = "vscode.json";
+const CLAUDE_TAB = '.part.editor .tab[data-resource-name^="webview-claudeVSCodePanel-"]';
+const CLAUDE_VIEW = 'iframe.webview[src*="extensionId=Anthropic.claude-code"]';
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** With `--timing`, how long each phase of a start took, on stderr. */
@@ -150,7 +159,7 @@ export async function launchVscode(
   runDir: string,
   cwd: string,
   start: VscodeStart,
-  { visible = false, signal }: VscodeLaunch = {},
+  { visible = false, watchPlugins = false, signal }: VscodeLaunch = {},
 ): Promise<VscodeState> {
   if (visible && !process.env.WAYLAND_DISPLAY && !process.env.DISPLAY)
     throw new Error("VS Code live mode needs a desktop display.");
@@ -185,6 +194,8 @@ export async function launchVscode(
     }),
     ...(fonts && { FONTCONFIG_FILE: fonts }),
     ...start.env,
+    // The bundled Claude runs non-interactively, where the native mod watcher is off by default.
+    ...(watchPlugins && modWatchEnv),
   });
   // The window's own furniture is out of the way: no Copilot chat beside the Claude tab, no
   // welcome page, no update or sign-in nags. The explorer is hidden once the tab is open.
@@ -300,8 +311,8 @@ function ofRun(runDir: string): number[] {
 
 /**
  * Closes the Claude tab of the window a `launchVscode` left in `runDir`, and with it the tab's
- * `claude`. The next `attach` opens a new tab, whose `claude` reads the mods from disk again: the
- * extension's session neither reloads an edited mod nor starts a new process for a new session.
+ * `claude`. The next `attach` opens a new tab, whose `claude` reads the mods from disk again.
+ * This resets the conversation and fixture, unlike the native mod watcher.
  */
 export async function closeClaudeTab(runDir: string, start: VscodeStart) {
   const state = JSON.parse(readFileSync(join(runDir, STATE), "utf8")) as VscodeState;
@@ -309,14 +320,16 @@ export async function closeClaudeTab(runDir: string, start: VscodeStart) {
     throw new Error(
       "this scenario starts with other env, bin, hide or plugins than the window was given: use `goto`",
     );
-  const webview = (t: Target_) => t.type === "iframe" && t.url.startsWith("vscode-webview://");
+  const webview = (t: Target_) =>
+    t.type === "iframe" && t.url.includes("extensionId=Anthropic.claude-code");
   const { browser, page } = await connect(state.port);
   try {
-    // The Claude tab is the window's only editor.
-    await page.evaluate(
-      "[...document.querySelectorAll('.part.editor .tab .tab-actions .action-label')].forEach((a) => a.click())",
-    );
+    // The session title can be anything. Leave unrelated tabs in the visible window alone.
+    const actions = JSON.stringify(`${CLAUDE_TAB} .tab-actions .action-label`);
+    await page.evaluate(`document.querySelectorAll(${actions}).forEach((a) => a.click())`);
     for (let i = 0; i < 50 && (await listTargets(state.port)).some(webview); i++) await sleep(100);
+    if (await page.locator(CLAUDE_TAB).count())
+      throw new Error("could not close the Claude tab for replay; close it and save again");
   } finally {
     await browser.close();
   }
@@ -477,7 +490,7 @@ export class VscodeSession {
       const shownView = () =>
         page.evaluate<string | null>(`(() => {
           let best = null;
-          for (const f of document.querySelectorAll('iframe.webview')) {
+          for (const f of document.querySelectorAll(${JSON.stringify(CLAUDE_VIEW)})) {
             const r = f.getBoundingClientRect();
             if (r.width < 50 || r.height < 50 || getComputedStyle(f).visibility === 'hidden') continue;
             if (!best || r.width * r.height > best.area) best = { area: r.width * r.height, id: f.name || f.id };
@@ -499,7 +512,7 @@ export class VscodeSession {
         // Ctrl+Shift+Escape opens the Claude tab. A slow start can still lose the press, so it is
         // sent again after 5 s with no Claude tab in the workbench (and not once there is one, or a
         // second tab opens), and the webview is looked for in between.
-        const tab = page.locator('.tab[aria-label*="Claude"]');
+        const tab = page.locator(CLAUDE_TAB);
         const until = Date.now() + 60_000;
         let sent = 0;
         while (!view && Date.now() < until) {

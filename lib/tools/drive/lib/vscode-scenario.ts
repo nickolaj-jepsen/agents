@@ -131,7 +131,6 @@ export async function playVscode(session: VscodeSession, steps: VscodeStep[]) {
   }
 }
 
-/** Starts VS Code on the scenario and plays its steps; the window is left on the screen. */
 /**
  * Plays a scenario again in the window `reachVscode` left in `runDir`, without a new window: a
  * new Claude tab (so its `claude` reads the mods from disk again), the stub's turns from the
@@ -148,12 +147,18 @@ export async function reloadVscode(r: VscodeResolved, runDir: string): Promise<V
   await restartSession(runDir, r.start);
   mark("reload: fixture and stub reset");
   const session = await VscodeSession.attach(runDir);
-  if (r.size) await session.resize(r.size[0], r.size[1]);
-  await playVscode(session, r.steps);
-  mark("reload: steps played");
-  return session;
+  try {
+    if (r.size) await session.resize(r.size[0], r.size[1]);
+    await playVscode(session, r.steps);
+    mark("reload: steps played");
+    return session;
+  } catch (error) {
+    session.close();
+    throw error;
+  }
 }
 
+/** Starts VS Code on the scenario and plays its steps; the window is left on the screen. */
 export async function reachVscode(
   r: VscodeResolved,
   runDir: string,

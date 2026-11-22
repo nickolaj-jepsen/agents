@@ -5,11 +5,10 @@
  */
 import { spawn } from "node:child_process";
 import { rmSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join } from "node:path";
 import { resolveDesktop, type DesktopSet } from "./desktop-scenario.ts";
 import { launchDesktop, requireDesktop } from "./desktop.ts";
 import { loadAny, type Entry, type Kind } from "./find.ts";
-import { checkoutRoot } from "./harness.ts";
 import { live } from "./live.ts";
 import { options } from "./options.ts";
 import { loadSet, reach, resolveScenario } from "./scenario.ts";
@@ -28,21 +27,11 @@ import { DesktopTarget, TerminalTarget, VscodeTarget, type Target } from "./targ
 import { liveVscode } from "./vscode-live.ts";
 import { loadVscodeSet, reachVscode, reloadVscode, resolveVscode } from "./vscode-scenario.ts";
 import { stopVscode, VscodeSession } from "./vscode.ts";
-import {
-  fileList,
-  rebuild,
-  relevant,
-  sourceDirs,
-  touchesScenario,
-  watchSources,
-  type Buildable,
-} from "./watch.ts";
+import { fileList, rebuild, watchScenario, withInPlaceReload, type WatchFlags } from "./watch.ts";
 import type { Size } from "./session.ts";
 
-export type Flags = {
+export type Flags = WatchFlags & {
   size?: Size;
-  watch?: boolean;
-  inPlace?: boolean;
   /** Desktop: a prefilled draft for a real model, not the seeded session. */
   draft?: boolean;
 };
@@ -82,14 +71,23 @@ export async function gotoSession(
 ): Promise<void> {
   if (readSession(name)) await stopSession(name);
   const { harness } = entry;
-  const base = { harness, package: entry.package, scenario, file: entry.file, size: flags.size };
+  const inPlace = flags.watch && flags.inPlace;
+  const base = {
+    harness,
+    package: entry.package,
+    scenario,
+    file: entry.file,
+    size: flags.size,
+    inPlace,
+  };
 
   if (terminal(harness)) {
     const r = resolveScenario(await loadSet(entry.file), scenario);
     if (flags.size) r.size = flags.size;
     const runDir = newRunDir(name);
     const daemon = daemonBase(name);
-    const session = await reach(r, "daemon", daemon, runDir).catch((err: unknown) => {
+    const start = inPlace ? withInPlaceReload(r, runDir) : r;
+    const session = await reach(start, "daemon", daemon, runDir).catch((err: unknown) => {
       keepOrRemove(runDir);
       throw err;
     });
@@ -109,7 +107,7 @@ export async function gotoSession(
     // Written first, so a failed start still leaves something for `stop` to clean.
     writeSession(name, { ...base, runDir });
     try {
-      const { session, state } = await reachVscode(r, runDir);
+      const { session, state } = await reachVscode(r, runDir, { watchPlugins: inPlace });
       writeSession(name, { ...base, runDir, port: state.port });
       console.log(
         `on ${entry.package}/vscode/${scenario}; session ${name}; folder ${session.state.cwd}`,
@@ -191,7 +189,8 @@ export async function reloadSession(name: string, other?: string): Promise<void>
     const next = rec.daemon === base ? `${base}-next` : base;
     let session: Session;
     try {
-      session = await reach(r, "daemon", next, runDir);
+      const start = rec.inPlace ? withInPlaceReload(r, runDir) : r;
+      session = await reach(start, "daemon", next, runDir);
     } catch (err) {
       keepOrRemove(runDir);
       throw new Error(
@@ -210,19 +209,21 @@ export async function reloadSession(name: string, other?: string): Promise<void>
     return;
   }
 
-  const set = await loadVscodeSet(rec.file);
-  if (!set.scenarios[scenario])
-    throw new Error(
-      `no scenario ${rec.package} ${scenario}; has ${Object.keys(set.scenarios).join(", ")}`,
-    );
-  const r = resolveVscode(set, scenario);
+  const session = await replayVscode(rec.file, scenario, rec.runDir, rec.size);
+  try {
+    writeSession(name, { ...rec, scenario });
+    console.log(`on ${rec.package}/vscode/${scenario}; folder ${session.state.cwd}`);
+    console.log(await session.text());
+  } finally {
+    session.close();
+  }
+}
+
+export async function replayVscode(file: string, scenario: string, runDir: string, size?: Size) {
+  const r = resolveVscode(await loadVscodeSet(file), scenario);
   for (const line of await rebuild(r)) console.log(line);
-  if (rec.size) r.size = rec.size;
-  const session = await reloadVscode(r, rec.runDir);
-  writeSession(name, { ...rec, scenario });
-  console.log(`on ${rec.package}/vscode/${scenario}; folder ${session.state.cwd}`);
-  console.log(await session.text());
-  session.close();
+  if (size) r.size = size;
+  return reloadVscode(r, runDir);
 }
 
 // ---- stop
@@ -262,15 +263,12 @@ export async function liveSession(entry: Entry, scenario: string, flags: Flags):
     if (flags.size) r.size = flags.size;
     return live(r, { watch: flags.watch, inPlace: flags.inPlace });
   }
-  if (flags.watch)
-    throw new Error(
-      `--watch is not available for live ${harness}: \`goto --watch\` reloads a parked one`,
-    );
   if (harness === "vscode") {
     const r = resolveVscode(await loadVscodeSet(entry.file), scenario);
     if (flags.size) r.size = flags.size;
-    return liveVscode(r);
+    return liveVscode(r, flags);
   }
+  if (flags.watch) throw new Error("--watch is not available for desktop");
   requireDesktop();
   const r = resolveDesktop((await loadAny(entry.file)) as unknown as DesktopSet, scenario);
   const runDir = newRunDir("desktop-live");
@@ -288,42 +286,49 @@ const IN_PLACE =
 
 /**
  * `goto --watch`: on each batch of saves until a signal, `reload` (in a process of its own, so the
- * scenario is read anew), which prints the screen. With `inPlace`, a Claude session gets the rebuild
- * alone and reloads the mod itself, unless the scenario changed.
+ * scenario is read anew), which prints the screen. In-place sessions reload the code after a
+ * successful build and replay only when the scenario changes.
  */
-export async function watchParked(name: string, entry: Entry, scenario: string, inPlace: boolean) {
-  const r = (await resolveFor(entry.harness, entry.file, scenario)) as Buildable;
-  const harness = entry.harness === "pi" ? "pi" : "claude";
-  const dirs = sourceDirs(r);
-  console.log(
-    `watching ${dirs.map((d) => relative(checkoutRoot, d)).join(", ")}; Ctrl+C stops watching and leaves the session parked`,
-  );
-  const watcher = watchSources(
-    dirs,
-    async (saved) => {
-      const files = relevant(harness, saved);
-      if (files.length === 0) return;
-      console.log(`\n${new Date().toTimeString().slice(0, 8)} saved ${fileList(files)}`);
-      if (!readSession(name)) return void console.log("no session is parked: `goto` again");
-      if (entry.harness === "claude" && inPlace && !touchesScenario(r, files)) {
-        for (const line of await rebuild(r)) console.log(line);
-        console.log(IN_PLACE);
-        return;
+export async function watchParked(name: string, entry: Entry, scenario: string) {
+  const harness = entry.harness;
+  if (harness === "desktop") throw new Error("--watch is not available for desktop");
+  const r = await resolveFor(harness, entry.file, scenario);
+  let watching = true;
+  console.log("Watching sources; Ctrl+C stops watching and leaves the session parked.");
+  const watcher = watchScenario(r, harness, {
+    onSave: (files) => {
+      if (!readSession(name)) {
+        console.log("no session is parked: `goto` again");
+        return false;
       }
-      const code = await new Promise<number | null>((resolve) =>
+      console.log(`\n${new Date().toTimeString().slice(0, 8)} saved ${fileList(files)}`);
+    },
+    inPlaceRunDir: () => {
+      const rec = readSession(name);
+      return watching && rec?.harness === harness && rec.inPlace ? rec.runDir : undefined;
+    },
+    onBuild: (lines) => {
+      for (const line of lines) console.log(line);
+      console.log(harness === "pi" ? "pi reloads when idle; `cap` to see it" : IN_PLACE);
+    },
+    replay: async () => {
+      const code = await new Promise<number | null>((resolve, reject) =>
         spawn(
           process.execPath,
           [join(import.meta.dirname, "..", "drive.ts"), "reload", "--session", name],
           { stdio: "inherit" },
-        ).once("exit", resolve),
+        )
+          .once("exit", resolve)
+          .once("error", reject),
       );
       if (code !== 0) console.log("waiting for the next save");
     },
-    { onError: (err) => console.error(err instanceof Error ? err.message : err) },
-  );
+    onError: (err) => console.error(err instanceof Error ? err.message : err),
+  });
   await new Promise<void>((resolve) => {
     for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const) process.once(signal, resolve);
   });
+  watching = false;
   watcher.close();
   console.log("stopped watching; the session is still parked (`stop` ends it)");
 }

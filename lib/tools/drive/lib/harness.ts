@@ -69,6 +69,7 @@ export interface Harness {
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const checkoutRoot = repoRoot;
+export const modWatchEnv = { CLAUDE_CODE_PLUGIN_DIR_WATCH: "1" };
 
 /**
  * `claude` or `pi` from this package's pinned npm dependencies, which the tasks' cache key stands

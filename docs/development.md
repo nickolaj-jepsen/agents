@@ -60,8 +60,8 @@ A session of an agent is not a turbo task: turbo stops what a task leaves runnin
 pnpm install                                        # prepare a new checkout
 pnpm drive ls answer                                # list saved screens
 pnpm drive live answer open --harness claude        # try a Claude card; Ctrl+] stops the replay
-pnpm drive live answer open --harness pi            # try the pi version; Ctrl+] stops the replay
-pnpm drive live answer form --harness vscode        # Linux with the extension installed; close the window to stop
+pnpm drive live answer cards-open --harness pi      # try the pi version; Ctrl+] stops the replay
+pnpm drive live answer form --harness vscode --watch --in-place  # visible window, reload plugin edits without restarting
 ```
 
 The replay stops on a question card and hands you the controls. Pick an option or resize the window. See [the driver's guide](../lib/tools/drive/README.md) to write scenarios, take pictures or update snapshots.

@@ -47,6 +47,8 @@ export type SessionRecord = {
   pid?: number;
   /** `--size` as given to `goto`, which a reload starts at again. */
   size?: readonly [number, number];
+  /** The session was launched with `--watch --in-place`. */
+  inPlace?: boolean;
 };
 
 /** A session name is part of a file name and of a socket path: short, and nothing that needs quoting. */
