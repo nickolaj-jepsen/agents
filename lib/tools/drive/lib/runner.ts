@@ -13,6 +13,7 @@ import { options } from "./options.ts";
 import { availableParallelism } from "node:os";
 import { gateCapture, type Capture } from "./check.ts";
 import type { HarnessName } from "./harness.ts";
+import { openPool } from "./pool.ts";
 import {
   failShot,
   play,
@@ -241,31 +242,19 @@ export async function runAll(
     const queue = queues[harness];
     // Longest first, so the pool does not end on one long chain.
     queue.sort((a, b) => b.chain.next.length - a.chain.next.length);
-    const requeue = (t: Task) => queue.push(t);
-    let running = 0;
-    const worker = async () => {
-      for (;;) {
-        const task = queue.shift();
-        if (!task) {
-          // A chain that is still running may hand the rest of its scenarios back.
-          if (running === 0) return;
-          await new Promise((r) => setTimeout(r, 100));
-          continue;
-        }
-        running++;
-        try {
-          await runChain(stage, task, out, requeue);
-        } catch (error) {
-          out.set(key(task.set.plugin, harness, task.chain.head), {
-            captures: [],
-            error: error as Error,
-          });
-        } finally {
-          running--;
-        }
+    // A broken chain hands its untouched scenarios back while its worker still runs.
+    const pool = openPool<Task>(poolSize(harness), async (task) => {
+      try {
+        await runChain(stage, task, out, (t) => pool.push(t));
+      } catch (error) {
+        out.set(key(task.set.plugin, harness, task.chain.head), {
+          captures: [],
+          error: error as Error,
+        });
       }
-    };
-    await Promise.all(Array.from({ length: Math.min(poolSize(harness), queue.length) }, worker));
+    });
+    for (const task of queue) pool.push(task);
+    await pool.drain();
   });
   await Promise.all(pools);
   return {

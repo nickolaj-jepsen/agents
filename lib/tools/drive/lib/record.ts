@@ -36,6 +36,7 @@ import { WRITES } from "./linear-mcp.ts";
 import { photograph, publish, retainFailure } from "./media.ts";
 import { options } from "./options.ts";
 import type { E2EPackage } from "./packages.ts";
+import { boundedAll } from "./pool.ts";
 import { realStage, runAll } from "./runner.ts";
 import { loadSet, play, resolveScenario, type ScenarioSet } from "./scenario.ts";
 import { Session } from "./session.ts";
@@ -259,22 +260,12 @@ async function play1(
   }
 }
 
-/** Pool of `n` workers over `jobs`. */
-async function pool<T>(jobs: (() => Promise<T>)[], n: number): Promise<PromiseSettledResult<T>[]> {
-  const results: PromiseSettledResult<T>[] = Array.from({ length: jobs.length });
-  let next = 0;
-  await Promise.all(
-    Array.from({ length: Math.min(n, jobs.length) }, async () => {
-      while (next < jobs.length) {
-        const i = next++;
-        results[i] = await jobs[i]!().then(
-          (value) => ({ status: "fulfilled", value }) as const,
-          (reason) => ({ status: "rejected", reason }) as const,
-        );
-      }
-    }),
-  );
-  return results;
+/**
+ * Plays a package's jobs with the `--jobs` it was given (2 by default), in the order it queued
+ * them, and keeps every verdict: one failed scenario is that scenario's, and the rest still play.
+ */
+export function recordJobs<T>(jobs: readonly (() => Promise<T>)[], limit?: number) {
+  return boundedAll(jobs, limit ?? 2, (job) => job());
 }
 
 async function recordTerminal(p: E2EPackage, o: RecordOptions, named: boolean) {
@@ -301,7 +292,7 @@ async function recordTerminal(p: E2EPackage, o: RecordOptions, named: boolean) {
   for (const [name, s] of stills)
     jobs.push({ name, harness: s.harness ?? "claude", record: false });
 
-  const results = await pool(
+  const results = await recordJobs(
     jobs.map((j) => async () => {
       const t = Date.now();
       await play1(set, j.name, j.harness, stage, j.record);
@@ -309,7 +300,7 @@ async function recordTerminal(p: E2EPackage, o: RecordOptions, named: boolean) {
         `record: ${plugin}/${j.record || j.name} ${((Date.now() - t) / 1000).toFixed(0)}s`,
       );
     }),
-    o.jobs ?? 2,
+    o.jobs,
   );
   const failed = results.flatMap((r, i) =>
     r.status === "rejected" ? [{ job: jobs[i]!, why: r.reason }] : [],

@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, expect, it } from "vitest";
 import { settleCapture, type Capture } from "./check.ts";
+import { options } from "./options.ts";
 import { runAll, type Stage } from "./runner.ts";
 import type { Resolved, Scenario, ScenarioSet } from "./scenario.ts";
 import type { Session } from "./session.ts";
@@ -221,4 +222,73 @@ it("hands a known failure that played to its capture, leaving the rule to the ga
   // Media is not the gate: a known failure that played is still a screen to record.
   expect(known.captures.map((c) => c.actual)).toEqual(["known"]);
   expect(captured).toEqual([`head at ${opened[0]!.id}`, `known at ${opened[0]!.id}`]);
+});
+
+it("keeps each harness's --jobs limit while the queue takes added work", async () => {
+  // A latch every session is held at, so concurrency is proved by what started, not by timings.
+  let release: () => void = () => {};
+  let reachBoth: () => void = () => {};
+  const both = new Promise<void>((r) => (reachBoth = r));
+  const held = new Promise<void>((r) => (release = r));
+  const active: Record<string, number> = { claude: 0, pi: 0 };
+  const most: Record<string, number> = { claude: 0, pi: 0 };
+  const opened: string[] = [];
+  const stage: Stage = {
+    reach: async (r) => {
+      const harness = r.harness;
+      active[harness]!++;
+      most[harness] = Math.max(most[harness]!, active[harness]!);
+      opened.push(`${harness}/${r.name}`);
+      if (active.claude === 2 && active.pi === 1) reachBoth();
+      await held;
+      active[harness]!--;
+      return {
+        size: async () => r.size,
+        resize: async () => undefined,
+        settle: async () => undefined,
+        close: async () => undefined,
+      } as unknown as Session;
+    },
+    capture: async (_session, r) => [shot(r, r.name)],
+    failShot: async () => undefined,
+  };
+  const scenario = { size: [70, 24] as const, steps: [], fresh: true };
+  const sets: ScenarioSet[] = [
+    {
+      plugin: "fake",
+      harness: "claude",
+      scenarios: { a: scenario, b: scenario, c: scenario, d: scenario },
+    },
+    { plugin: "fake", harness: "pi", scenarios: { e: scenario, f: scenario, g: scenario } },
+  ];
+  const before = options.jobs;
+  options.jobs = { claude: 2, pi: 1 };
+  try {
+    const run = runAll(sets, () => true, stage);
+    // Each pool fills to its own limit and no further: claude has 2 sessions, pi 1, though both
+    // have work left to start.
+    await both;
+    expect(most).toEqual({ claude: 2, pi: 1 });
+    expect(opened.length).toBe(3);
+    release();
+    const { outcomes } = await run;
+
+    // Held sessions free their workers, so the rest of every queue still played exactly once.
+    expect(outcomes.size).toBe(7);
+    expect(outcomes.get("fake/claude/a")?.error).toBeUndefined();
+    expect(outcomes.get("fake/pi/g")?.error).toBeUndefined();
+    expect(opened.sort()).toEqual([
+      "claude/a",
+      "claude/b",
+      "claude/c",
+      "claude/d",
+      "pi/e",
+      "pi/f",
+      "pi/g",
+    ]);
+    // Every scenario started once, and neither pool ever went over its limit.
+    expect(most).toEqual({ claude: 2, pi: 1 });
+  } finally {
+    options.jobs = before;
+  }
 });
