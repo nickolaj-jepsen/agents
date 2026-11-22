@@ -13,7 +13,7 @@ const asks = (fixture: string): VscodeScenario["start"] => ({
 const asked: VscodeStep[] = [
   { type: "ask" },
   { press: "Enter" },
-  { wait: /0\/\d+ answered/, timeout: 30_000 },
+  { wait: /0 of \d+ answered/, timeout: 30_000 },
 ];
 
 export default vscodeScenarios({
@@ -34,9 +34,9 @@ export default vscodeScenarios({
       from: "form",
       about: "a selected option keeps its detail and updates the footer",
       steps: [
-        { click: /○\s+B\s+Postgres/ },
-        { wait: /●\s+B\s+Postgres/ },
-        { wait: "1/3 answered" },
+        // An answer is a Button of its letter: the first B is Q1's.
+        { click: { text: /^B$/, nth: 0 } },
+        { wait: "1 of 3 answered" },
         { wait: "Clear answer" },
       ],
     },
@@ -46,7 +46,8 @@ export default vscodeScenarios({
       steps: [
         { click: "Message input" },
         { type: "Unsent chat draft." },
-        { click: "Write your own answer" },
+        // The write-in's letter follows the options: Q1 has three.
+        { click: { text: /^D$/, nth: 0 } },
         { click: "Type an answer" },
         { type: "Use the existing schema." },
         { press: "Enter" },
@@ -60,7 +61,8 @@ export default vscodeScenarios({
       size: [420, 800],
       steps: [
         ...asked,
-        { click: "Write your own answer" },
+        // Q1 has two options, so its write-in is C.
+        { click: { text: /^C$/, nth: 0 } },
         { click: "Type an answer" },
         { type: "数据库 / café / follow the existing migration plan. ".repeat(15).trim() },
         { click: "Add line" },
@@ -72,8 +74,8 @@ export default vscodeScenarios({
       from: "editing-many",
       about: "picking on another card keeps both lines and applies the choice",
       steps: [
-        { click: /○\s+B\s+Option B for 2/ },
-        { wait: "2/12 answered" },
+        { click: { text: /^B$/, nth: 1 } },
+        { wait: "2 of 12 answered" },
         { wait: /Answer: 数据库.*\s+Keep the current indexes\./ },
       ],
     },
@@ -122,7 +124,7 @@ export default vscodeScenarios({
       about: "clearing a choice leaves the question's note in place",
       steps: [
         { click: "Clear answer" },
-        { wait: "0/3 answered" },
+        { wait: "0 of 3 answered" },
         { wait: "Use the managed instance." },
         { wait: "Edit note" },
       ],
@@ -131,7 +133,7 @@ export default vscodeScenarios({
       about: "a very long heading wraps beside the question number and answer mark",
       start: asks("long-title"),
       size: [420, 800],
-      steps: [...asked, { click: /○\s+A\s+Yes/ }, { wait: "1/1 answered" }],
+      steps: [...asked, { click: { text: /^A$/, nth: 0 } }, { wait: "1 of 1 answered" }],
     },
     "long-body": {
       about: "the full question body is in the transcript",
@@ -155,19 +157,61 @@ export default vscodeScenarios({
       steps: [
         ...asked,
         { wait: "default bar" },
-        { click: /○\s+Route to \/grill-me/ },
-        { wait: /●\s+Route to \/grill-me/ },
-        { wait: "1/2 answered" },
+        // Q1 has a row and the write-in (A, B); Q2's second row is the second B.
+        { click: { text: /^B$/, nth: 1 } },
+        { wait: "1 of 2 answered" },
       ],
+    },
+    menu: {
+      about: "a list of alternatives is one card whose rows keep the list's numbers",
+      start: asks("menu"),
+      steps: [...asked, { wait: "Accept it and label it" }],
+    },
+    lone: {
+      about: "one question with lettered options is one card, not a round",
+      start: asks("lone"),
+      steps: [...asked, { wait: "where the cache lives" }, { wait: /On disk/ }],
+    },
+    closing: {
+      about: "what the message says after its last question is drawn under the cards",
+      start: asks("closing"),
+      steps: [...asked, { wait: "shared understanding" }, { wait: "write the plan to the notes" }],
+    },
+    numbered: {
+      about: "numbered questions with write-in answers only",
+      start: asks("numbered"),
+      steps: [...asked, { wait: "Should we use a monorepo?" }, { wait: "Pick a license?" }],
+    },
+    revisited: {
+      about:
+        "a question come back to, an option that is only its letter, and numbered questions under the last one are all cards",
+      start: asks("revisited"),
+      steps: [...asked, { wait: "Who holds the spare key?" }, { wait: "Is the slab still sound?" }],
     },
     "recommend-no": {
       about: "a recommendation of No is a choice, not an affirmative answer",
       start: asks("recommend-no"),
+      steps: [...asked, { click: { text: /^A$/, nth: 0 } }, { wait: "1 of 1 answered" }],
+    },
+    band: {
+      about:
+        "/answer opens the form above the prompt: a title and Close, the steps, the question, its answers and a note",
+      start: asks("details"),
       steps: [
         ...asked,
-        { click: /○\s+No\s+A plain reply is enough/ },
-        { wait: /●\s+No\s+A plain reply is enough/ },
+        { type: "/answer" },
+        { press: "Enter" },
+        { wait: "Close" },
+        // The transcript's three questions stand behind the form: its B is the fourth.
+        { click: { text: /^B$/, nth: 3 } },
+        { wait: "Next" },
       ],
+    },
+    "band-review": {
+      from: "band",
+      about:
+        "the form's last step: each question with its answer, a note for the round, Send and Fill the prompt",
+      steps: [{ click: /^Review$/ }, { wait: "Fill the prompt" }],
     },
     recommended: {
       about: "a recommendation without multiple-choice options can still be accepted",
