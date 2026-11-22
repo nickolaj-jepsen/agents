@@ -78,29 +78,31 @@ describe("changing one session at a time", () => {
     // The lock's endpoint comes from the registry when its module loads: this spec's own registry.
     process.env.XDG_STATE_HOME = dir;
     const { withSessionLock } = await import("./lock.ts");
-    /** Holds `name`'s lock for `ms`, and leaves when it let go (`0` until then). */
-    const holdFor = (name: string, ms: number) => {
-      const held = { released: 0 };
-      const done = withSessionLock(name, async () => {
-        await new Promise((r) => setTimeout(r, ms));
-        held.released = Date.now();
-      });
-      return { held, done };
-    };
-
-    // Another name is another lock: `b` is stopped while `default` is held.
-    const { held, done } = holdFor("default", 2500);
-    await new Promise((r) => setTimeout(r, 100));
-    const other = await driveAsync("stop", "--session", "b");
-    expect(other.status).toBe(0);
-    expect(held.released).toBe(0);
-
-    // A stop of `default` cannot exit before the lock is let go.
-    const same = await driveAsync("stop");
-    expect(same.status).toBe(0);
-    expect(held.released).not.toBe(0);
+    let signalTaken!: () => void;
+    let release!: () => void;
+    const taken = new Promise<void>((resolve) => (signalTaken = resolve));
+    const released = new Promise<void>((resolve) => (release = resolve));
+    const done = withSessionLock("default", async () => {
+      signalTaken();
+      await released;
+    });
+    await taken;
+    const same = driveAsync("stop");
+    try {
+      const other = driveAsync("stop", "--session", "b");
+      const first = await Promise.race([
+        other.then(({ status }) => ({ name: "b", status })),
+        same.then(({ status }) => ({ name: "default", status })),
+      ]);
+      expect(first).toEqual({ name: "b", status: 0 });
+    } finally {
+      release();
+      await done;
+    }
     // Nothing was parked: what it waited for is the name's lock, not a session.
-    expect(same.stdout).toMatch(/nothing was running in default/);
-    await done;
+    expect(await same).toMatchObject({
+      status: 0,
+      stdout: expect.stringMatching(/nothing was running in default/),
+    });
   }, 30_000);
 });

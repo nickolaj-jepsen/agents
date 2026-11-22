@@ -82,14 +82,17 @@ describe("a session name", () => {
   });
 
   it("never makes another name wait", async () => {
-    const a = join(dir, "a.log");
-    const b = join(dir, "b.log");
-    const startedAt = Date.now();
-    const children = [hold("a", a, 400), hold("b", b, 400)];
-    expect(await Promise.all(children.map((c) => c.exited))).toEqual([0, 0]);
-    expect(Date.now() - startedAt).toBeLessThan(780);
-    expect(lines(a)).toEqual(["start", "end"]);
-    expect(lines(b)).toEqual(["start", "end"]);
+    const log = join(dir, "a.log");
+    const { child, exited } = hold("a", log, 60_000);
+    try {
+      await started(log);
+      await expect(
+        lock.withSessionLock("b", async () => lines(log), { timeout: 0 }),
+      ).resolves.toEqual(["start"]);
+    } finally {
+      child.kill("SIGKILL");
+      await exited;
+    }
   });
 
   it("releases the lock when its holder is killed", async () => {
