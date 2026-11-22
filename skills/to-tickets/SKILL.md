@@ -61,7 +61,7 @@ Iterate until the user approves the breakdown.
 
 ### 5. Save the approved tickets
 
-Write one file per ticket under `tickets/<NN>-<slug>.md` in the workflow folder. Number blockers first. Preserve existing ticket numbers and status when revising; never silently replace completed work. A ticket is available when all its blockers are done.
+Write one file per ticket under `tickets/<NN>-<slug>.md` in the workflow folder. Number blockers first. Preserve existing ticket numbers and status when revising; never silently replace completed work. A ticket is available to an agent only when its status is `ready-for-agent` and all its blockers are done.
 
 <local-ticket-template>
 
