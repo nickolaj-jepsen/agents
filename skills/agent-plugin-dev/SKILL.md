@@ -15,9 +15,20 @@ Start with the [layout reference](references/style.md) and an example from the [
 - [Kit guide](../../lib/kits/README.md): change the shared kit instead of maintaining separate frames, text clamping or key hints in plugins.
 - [Driver guide](../../lib/tools/drive/README.md): write scenarios, drive a screen, take pictures and check snapshots.
 
-Run repo tasks as `pnpm turbo run <task>`. Drive a session with `pnpm drive <verb>` instead (`pnpm drive --help` lists them): it is not a turbo task, because turbo stops what a task leaves running and `goto` would park nothing.
+Run repo tasks as `pnpm turbo run <task>`. Drive a session with `pnpm drive <verb>` instead (`pnpm drive --help` lists them): it is not a turbo task, because turbo stops what a task leaves running and `goto` would park nothing. A parked claude or pi session is read and driven through the tui-test CLI with `pnpm drive terminal <command>`; a VS Code session with drive's own `cap`, `click`, `wait`, `shot` and `resize`.
 
-If a plugin does nothing, look at the running session before guessing. In pi, startup `cap` shows `[Extension issues]`; in Claude, the session debug log shows rejected hooks and trees.
+```bash
+pnpm drive goto <package> <scenario> --harness pi   # park the real agent on that screen
+pnpm drive terminal text                            # the screen as text
+pnpm drive terminal click text "…"                  # click visible text
+pnpm drive terminal expect text "…"                 # verify it changed
+pnpm drive terminal screenshot -o /tmp/shot.png     # look at the pixels
+pnpm drive stop                                     # end it and clean up
+```
+
+`pnpm drive terminal help` and `pnpm drive terminal usage` are the CLI's own guide.
+
+If a plugin does nothing, look at the running session before guessing. In pi, `pnpm drive terminal text` shows `[Extension issues]` at startup; in Claude, the session debug log shows rejected hooks and trees.
 
 ## Before handing back
 

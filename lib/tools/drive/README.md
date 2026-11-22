@@ -4,12 +4,12 @@ Run from the repository root after [dev setup](../../../docs/development.md#set-
 
 A **package** is an app (`docfix`) or a kit component (`kit-card`); `kit` is every kit package and `apps` every app. A **scenario** is a named screen of a package, written for one harness in `src/e2e/` (apps) or `e2e/` (kit packages). A **session** is a parked agent on a scenario's screen.
 
-| Harness   | What it is                                                 | Scenario file          | Verbs                                     |
-| --------- | ---------------------------------------------------------- | ---------------------- | ----------------------------------------- |
-| `claude`  | Claude Code in a terminal                                  | `claude.scenarios.ts`  | all but `eval`                            |
-| `pi`      | pi in a terminal                                           | `pi.scenarios.ts`      | all but `eval`                            |
-| `vscode`  | Claude Code in a VS Code window on its own display (Linux) | `vscode.scenarios.ts`  | all but `snap` and `test`                 |
-| `desktop` | Claude Desktop (Linux), launched on a seeded session       | `desktop.scenarios.ts` | `live` and `goto` only, without `--watch` |
+| Harness   | What it is                                                 | Scenario file          | Verbs                                                                                        |
+| --------- | ---------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------- |
+| `claude`  | Claude Code in a terminal                                  | `claude.scenarios.ts`  | all but `eval`; the screen through `terminal`                                                |
+| `pi`      | pi in a terminal                                           | `pi.scenarios.ts`      | all but `eval`; the screen through `terminal`                                                |
+| `vscode`  | Claude Code in a VS Code window on its own display (Linux) | `vscode.scenarios.ts`  | all but `snap` and `test`; the screen through `cap`, `keys`, `click`, `wait`, `shot`, `eval` |
+| `desktop` | Claude Desktop (Linux), launched on a seeded session       | `desktop.scenarios.ts` | `live` and `goto` only, without `--watch`                                                    |
 
 `site.scenarios.ts` holds a package's recording, which `record` plays, not a harness. `drive test` runs the `claude` and `pi` scenarios; the tests are part of `check`, one `e2e` task per package.
 
@@ -30,7 +30,7 @@ pnpm drive live kit-card card/live --harness pi --watch             # a kit stor
 
 `--harness` is needed only when a scenario exists in several.
 
-The view fits your window once the scripted steps finish. To change the size **during** those steps, pass `--size 96x30` in terminal cells or `--size 900x700` in VS Code pixels. Claude Desktop is only launched: it has no `cap`, `keys` or `shot`.
+The view fits your window once the scripted steps finish. To change the size **during** those steps, pass `--size 96x30` in terminal cells or `--size 900x700` in VS Code pixels. Claude Desktop is only launched: it has no screen verbs.
 
 Claude, pi and VS Code use the same flags for `live` and `goto`:
 
@@ -41,26 +41,40 @@ In Claude and VS Code, Claude's mod watcher reloads the built files. It waits fo
 
 ## Drive a parked session
 
-`goto` parks a session of any harness on a scenario's screen; the other verbs act on it from separate commands. A session has a name, `--session NAME` (default `default`), and sessions of different names run at once. Names belong to the checkout: each worktree has its own `default`, and `stop --all` stops only this checkout's sessions. Their state is one file each under `${XDG_STATE_HOME:-~/.local/state}/agent-tools-e2e/sessions/<checkout>/`, holding the harness, the run folder and the daemon or DevTools port.
+`goto` parks a session of any harness on a scenario's screen; the other commands act on it from separate invocations. A session has a name, `--session NAME` (default `default`), and sessions of different names run at once. Names belong to the checkout: each worktree has its own `default`, and `stop --all` stops only this checkout's sessions. Their state is one file each under `${XDG_STATE_HOME:-~/.local/state}/agent-tools-e2e/sessions/<checkout>/`, holding the harness, the run folder and the daemon or DevTools port.
+
+The verbs are `ls live goto reload terminal cap snap keys type paste click hover wait resize shot sweep stop eval compare test record cast types`. A verb a harness can't do says so, and names what does.
+
+### A terminal session
+
+A parked claude or pi session is read and driven through the tui-test CLI the repo pins. `drive terminal` chooses the session and its daemon, writes them in front of the command and passes the rest through, so the syntax is the CLI's own: what `drive terminal help` and `drive terminal usage` print is what to use. Its stdout, its `--json` output and the status it exits with come back as it gave them.
 
 ```bash
-pnpm drive goto docfix queue --harness pi                   # park a session at the queue
-pnpm drive cap                                              # read the screen as text
-pnpm drive keys Down Enter                                  # act on the focused row
-pnpm drive click "docs/hosts.md"                            # click visible text; --nth N, --double
-pnpm drive shot                                             # a PNG of the screen; prints the path
-pnpm drive sweep                                            # PNGs at all four test sizes (VS Code: narrow and wide)
-pnpm drive reload                                           # after an edit: rebuild, replay in a fresh session
-pnpm drive stop                                             # end the session
+pnpm drive goto answer cards-open --harness pi          # park pi on that screen
+pnpm drive terminal text                                # the screen as text
+pnpm drive terminal click text "B ○ Postgres"           # click visible text; --nth N, --clicks 2
+pnpm drive terminal expect text "B ● Postgres"          # wait for it; exits 1 when it never shows
+pnpm drive terminal screenshot -o /tmp/shot.png         # a PNG of the screen
+pnpm drive terminal --json get size                     # structured output, as the CLI prints it
+pnpm drive sweep                                        # the four test sizes, for a layout check
+pnpm drive snap                                         # the scenario's own snapshot: its region and masks
+pnpm drive reload                                       # after an edit: rebuild, replay in a fresh session
+pnpm drive stop                                         # end the session, its daemon, stub and folder
 
-pnpm drive goto docfix queue --harness claude --session b   # a second one beside it
-pnpm drive cap --session b
+pnpm drive goto answer cards-open --harness pi --session b   # a second one beside it
+pnpm drive terminal --session b text                         # --session is drive's, before the command
 pnpm drive stop --all
 ```
 
-The verbs are `ls live goto reload cap snap keys type paste click hover wait resize shot sweep stop eval compare test record cast types`. A verb a harness can't do says so: `snap` (the scenario's snapshot of the screen as it is now) is for the terminal agents, `eval` (an expression in the Claude webview) for VS Code, and desktop has only `live` and `goto`.
+`drive terminal` refuses what would take the session away from `drive`: `run`, `open`, `restart`, `close`, `daemon`, `kill`, `signal` and `sessions`, and a `--session` written after the command, where the CLI's own options start. `goto`, `reload` and `stop` own the lifecycle. The daemon is the driver's, not yours: it is found through `TUI_TEST_HOME`, so bare `tui-test` cannot reach it.
 
-Saving doesn't reload a parked session; `reload` does, at the session's current size. If the new session fails to start, `reload` prints why and leaves the old one parked. In VS Code it opens a new Claude tab in the same window, and may name another scenario of the package. `goto ... --watch` takes the same flags as live mode, reloads on each save and prints the screen; Ctrl+C stops watching and leaves the session parked. A failed start removes its run folder unless `--keep` is given, which prints its path. The driver finds tui-test via `TUI_TEST_BIN`, then `PATH`, then the release the repo pins, which it downloads and checks on first use (`pnpm turbo run @agents/drive#tui-test` fetches it ahead of time).
+### A VS Code session
+
+A VS Code session has no tui-test equivalent, so drive's own verbs drive it: `cap` reads the panel, `click` and `keys` act, `wait` waits for a pattern, `shot` photographs it, and `resize` and `eval` change the window and its DOM. See [VS Code](#vs-code).
+
+### Reload and stop
+
+Saving doesn't reload a parked session; `reload` does, at the session's current size. If the new session fails to start, `reload` prints why and leaves the old one parked. In VS Code it opens a new Claude tab in the same window, and may name another scenario of the package. `goto ... --watch` takes the same flags as live mode, reloads on each save and prints the screen; Ctrl+C stops watching and leaves the session parked. A failed start removes its run folder unless `--keep` is given, which prints its path. `stop` ends the session, its daemon or window, its stub and its run folder. `snap` (the scenario's snapshot of the screen as it is now, with its region and masks) is for the terminal agents and `eval` (an expression in the Claude webview) for VS Code; desktop has only `live` and `goto`. The driver finds tui-test via `TUI_TEST_BIN`, then `PATH`, then the release the repo pins, which it downloads and checks on first use (`pnpm turbo run @agents/drive#tui-test` fetches it ahead of time); `terminal` uses the same binary.
 
 ## Write a scenario
 

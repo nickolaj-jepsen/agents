@@ -52,7 +52,7 @@ Run each as `pnpm turbo run <task>`, with `--filter=<package>` for one package. 
 | `skills:refresh`    | Refresh the upstream manuals in the agent-plugin-dev skill. `-- vMAJOR.MINOR.PATCH` picks the pi docs' release.                                                                                                                      | Not cached.                                                                                                      |
 | `kit-new`           | `-- <name>` scaffolds a kit component; see [the kit guide](../lib/kits/README.md#add-or-change-a-component).                                                                                                                         | Not cached.                                                                                                      |
 
-A session of an agent is not a turbo task: turbo stops what a task leaves running, and `goto` would park nothing. `pnpm drive live` replays a scenario in your terminal, and `pnpm drive goto` parks one that `cap`, `keys` and `shot` drive from separate commands; see [the driver's guide](../lib/tools/drive/README.md#drive-a-parked-session).
+A session of an agent is not a turbo task: turbo stops what a task leaves running, and `goto` would park nothing. `pnpm drive live` replays a scenario in your terminal, and `pnpm drive goto` parks one that `pnpm drive terminal` (a claude or pi session, through the tui-test CLI the repo pins) and drive's own verbs (a VS Code session) drive from separate commands; see [the driver's guide](../lib/tools/drive/README.md#drive-a-parked-session).
 
 ## Try the answer form
 

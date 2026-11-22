@@ -238,7 +238,7 @@ export function tuiTestBin(): string {
 }
 
 /** The CLI's environment: the daemon it starts inherits it, which is how it finds fonts. */
-function cliEnv(): NodeJS.ProcessEnv {
+export function tuiTestEnv(): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     TUI_TEST_HOME: daemonHome(),
@@ -253,7 +253,7 @@ function cliEnv(): NodeJS.ProcessEnv {
 export async function tuiTest(args: string[]): Promise<string> {
   try {
     const { stdout } = await run(tuiTestBin(), args, {
-      env: cliEnv(),
+      env: tuiTestEnv(),
       maxBuffer: 64 * 1024 * 1024,
     });
     return stdout;
@@ -346,7 +346,7 @@ export class DaemonTerm implements Term {
 
     signal.throwIfAborted();
     const child = spawn(tuiTestBin(), ["--session", this.session, "monitor", "--interactive"], {
-      env: cliEnv(),
+      env: tuiTestEnv(),
       stdio: "inherit",
       signal,
     });

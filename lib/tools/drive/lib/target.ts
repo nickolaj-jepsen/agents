@@ -91,7 +91,24 @@ abstract class Base implements Target {
   detach() {}
 }
 
-/** claude and pi: a terminal behind the tui-test daemon. */
+/**
+ * What `drive terminal` answers for a parked claude or pi session, in the CLI's own words, so an
+ * agent learns the native verb instead of a second vocabulary for the same screen. `snap` (the
+ * scenario's region and masks) and `sweep` (the four test sizes) have no single native command.
+ */
+const NATIVE: Record<string, string> = {
+  cap: "use `drive terminal text`",
+  keys: "use `drive terminal key press <KEY>...`",
+  type: "use `drive terminal type <TEXT>`",
+  paste: "use `drive terminal write`; a bracketed paste is \\x1b[200~ … \\x1b[201~",
+  click: "use `drive terminal click text <TEXT>`, with its --nth, --clicks and --regex",
+  hover: "use `drive terminal find text <TEXT>`, then `drive terminal mouse move <X> <Y>`",
+  wait: "use `drive terminal expect text <PATTERN>` (it waits, then fails the call), or `drive terminal wait idle`",
+  resize: "use `drive terminal resize <COLS> <ROWS>`",
+  shot: "use `drive terminal screenshot -o <PATH>`; `drive sweep` still takes the four sizes",
+};
+
+/** claude and pi: a terminal behind the tui-test daemon, driven through `drive terminal`. */
 export class TerminalTarget extends Base {
   readonly kind: Kind;
   readonly session: Session;
@@ -100,34 +117,37 @@ export class TerminalTarget extends Base {
     this.kind = kind;
     this.session = session;
   }
-  text() {
-    return this.session.text();
+  private native(verb: string): never {
+    throw new Error(
+      `${verb} is not available for ${this.kind} sessions: ${NATIVE[verb]}; \`drive terminal help\` is the CLI's own guide`,
+    );
   }
-  keys(keys: string[]) {
-    return this.session.press(keys);
+  text(): Promise<string> {
+    return this.native("cap");
   }
-  type(text: string) {
-    return this.session.type(text);
+  keys(): Promise<void> {
+    return this.native("keys");
   }
-  paste(text: string) {
-    return this.session.paste(text);
+  type(): Promise<void> {
+    return this.native("type");
   }
-  async click(at: Spot, double: boolean) {
-    await this.session.click(at, double ? 2 : 1);
-    return undefined;
+  paste(): Promise<void> {
+    return this.native("paste");
   }
-  hover(at: Spot) {
-    return this.session.hover(at);
+  click(): Promise<string | undefined> {
+    return this.native("click");
   }
-  wait(pattern: RegExp, seconds: number) {
-    return this.session.wait(pattern, { timeout: seconds * 1000 });
+  hover(): Promise<void> {
+    return this.native("hover");
   }
-  resize(cols: number, rows: number) {
-    return this.session.resize(cols, rows);
+  wait(): Promise<void> {
+    return this.native("wait");
   }
-  shot(file: string | undefined, o: { window?: boolean }) {
-    if (o.window) this.no("shot --window", "a terminal's screen is the whole window");
-    return this.session.png(file ?? join(this.session.runDir, `shot-${stamp()}.png`));
+  resize(): Promise<void> {
+    return this.native("resize");
+  }
+  shot(): Promise<string> {
+    return this.native("shot");
   }
   async sweep() {
     const before = await this.session.size();

@@ -27,6 +27,7 @@ import { e2ePackages } from "./lib/packages.ts";
 import { record } from "./lib/record.ts";
 import { loadSet, reach, resolveScenario } from "./lib/scenario.ts";
 import { DEFAULT_SESSION, sessionName, sessionNames, readSession } from "./lib/sessions.ts";
+import { runTerminal, terminalCall } from "./lib/terminal.ts";
 import { runTests } from "./lib/test.ts";
 import { rebuild, withInPlaceReload } from "./lib/watch.ts";
 import type { Target } from "./lib/target.ts";
@@ -94,12 +95,17 @@ const program = new Command("drive")
   .addHelpText(
     "after",
     `
+cap, keys, type, paste, click, hover, wait, resize and shot drive a VS Code session; a parked
+claude or pi session takes the same commands through \`drive terminal\`, in the tui-test CLI's own
+syntax. snap is the scenario's own snapshot, sweep photographs the test sizes.
+
 Examples:
   drive ls docfix                          the scenarios of docfix, by harness
   drive goto docfix queue --harness pi     park pi on that screen, then
-  drive cap                                read it as text
-  drive keys Down Enter                    act on it
-  drive shot                               write a PNG; prints the path
+  drive terminal text                      read it as text
+  drive terminal click text "hosts.md"     click visible text
+  drive terminal expect text "opened"      assert the screen; exit 1 when it does not
+  drive terminal screenshot -o shot.png    write a PNG
   drive stop
   drive live answer long-body --harness desktop   open a fixture in Claude Desktop
   drive test docfix -t band                one scenario's snapshots
@@ -113,16 +119,21 @@ program.hook("preAction", () => {
 
 const session = () => sessionName(program.opts<{ session?: string }>().session);
 
+/** A verb's failure is its message, and the exit code says so. */
+function die(err: unknown): never {
+  // A source that does not parse is named only in the stack's head, with its line and a caret.
+  const head = err instanceof SyntaxError ? err.stack?.split(/\n\s+at /)[0] : undefined;
+  console.error(head ?? (err instanceof Error ? err.message : err));
+  process.exit(1);
+}
+
 /** Runs a verb; its error is its message, and the exit code says so. */
 function verb<A extends unknown[]>(fn: (...args: A) => Promise<void>) {
   return async (...args: A) => {
     try {
       await fn(...args);
     } catch (err) {
-      // A source that does not parse is named only in the stack's head, with its line and a caret.
-      const head = err instanceof SyntaxError ? err.stack?.split(/\n\s+at /)[0] : undefined;
-      console.error(head ?? (err instanceof Error ? err.message : err));
-      process.exit(1);
+      die(err);
     }
     process.exit(0);
   };
@@ -260,7 +271,44 @@ program
 
 const out = async (t: Target) => console.log(await t.text());
 
-program.command("cap").description("the screen as text").action(onSession(out));
+program
+  .command("terminal")
+  .description(
+    "a parked claude or pi session through the tui-test CLI the repo pins: its command and arguments pass through",
+  )
+  .argument("[args...]", "a tui-test command and its arguments")
+  .allowUnknownOption()
+  .allowExcessArguments()
+  .addHelpText(
+    "after",
+    `
+The session and its daemon are chosen here, so the tree the CLI reads, clicks and photographs is
+the one goto parked. Its output, structured output (--json) and exit status come back as it gave
+them; \`drive terminal help\` and \`drive terminal usage\` are its own guide.
+
+  drive terminal text                            the screen as text
+  drive terminal click text "hosts.md"           click visible text (--nth N, --clicks 2, --regex)
+  drive terminal expect text "Opened"            assert the screen; exits 1 when it is not there
+  drive terminal screenshot -o /tmp/shot.png     a PNG of the screen
+  drive terminal resize 100 30                   columns by rows
+  drive terminal wait idle                       until the screen stops repainting
+
+Commands that launch, replace or tear down the session (run, open, restart, close, daemon, kill,
+signal, sessions) are refused: goto, reload and stop own the lifecycle. So is a --session after the
+command: write drive's own before it (\`drive terminal --session b text\`), because there it names
+the parked session and is never handed to the CLI.`,
+  )
+  .action(() => {
+    try {
+      const call = terminalCall(process.argv.slice(2));
+      if (!call) throw new Error("give a tui-test command: `drive terminal help` lists them");
+      process.exit(runTerminal(call.args, sessionName(call.session)));
+    } catch (err) {
+      die(err);
+    }
+  });
+
+program.command("cap").description("the screen as text (VS Code)").action(onSession(out));
 
 program
   .command("snap")
