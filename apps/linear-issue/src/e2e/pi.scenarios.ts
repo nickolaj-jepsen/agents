@@ -110,7 +110,7 @@ export default scenarios({
       size: [112, 28],
       sizes: [[112, 28]],
       fresh: true,
-      steps: [{ press: ["Down", "Down"] }, { wait: /↑ \d+ more/ }],
+      steps: [{ press: "Down" }, { wait: "↑ 4 more" }, { press: "Down" }, { wait: "↑ 7 more" }],
     },
     chip: {
       about: "esc: the draft put aside, a line above the prompt with Open and Discard to press",

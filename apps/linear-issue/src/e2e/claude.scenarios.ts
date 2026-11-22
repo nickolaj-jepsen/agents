@@ -15,6 +15,10 @@ const drafted: Step[] = [
 /** And until the search for a duplicate has its answer. */
 const settled: Step[] = [...drafted, { wait: "Looking for an issue", gone: true, timeout: 30_000 }];
 
+// Snapshot sizes can cross the box/sidebar boundary and return the keyboard to the prompt.
+// Clicking the pane title gives the keyboard back without activating a draft control.
+const paneKeys: Step = { click: "Linear draft" };
+
 /** The stand-in server signed out: it lists only the tool that signs in. */
 const signedOut = {
   linear: {
@@ -54,12 +58,12 @@ export default scenarios({
       about: "enter on a duplicate: the issue there is, and the comment or the new issue to send",
       from: "duplicate",
       // An Enter right after the duplicate is found is not taken: it was typed for Create.
-      steps: [{ sleep: 800 }, { press: "Enter" }, { wait: "Send comment" }],
+      steps: [{ sleep: 800 }, paneKeys, { press: "Enter" }, { wait: "Send comment" }],
     },
     priority: {
       about: "p: the priorities open under their row, the one set under the pointer",
       from: "draft",
-      steps: [{ press: "p" }, { wait: "No priority" }],
+      steps: [paneKeys, { press: "p" }, { wait: "No priority" }],
     },
     labels: {
       about: "l, then b: the labels open under their row, a second one ticked",
