@@ -1,7 +1,7 @@
 import { region, type Region } from "@agents/drive/lib/screen.ts";
 import { scenarios, type Scenario, type Step } from "@agents/drive/lib/scenario.ts";
 import type { Session } from "@agents/drive/lib/session.ts";
-import { says } from "./fixture.ts";
+import { fixtureScenarios, says } from "./fixture.ts";
 
 const keys = (...names: string[]): Step[] => names.map((press) => ({ press }));
 const ask: Step[] = [{ type: "ask" }, { press: "Enter" }];
@@ -44,11 +44,17 @@ const CARDS: Region = (grid) => {
   return found && { ...found, y: found.y + 1 };
 };
 
+/** Every fixture without a scenario of its own, to look at: `drive live answer <fixture>`. */
+const withFixtures = (own: Record<string, Scenario>): Record<string, Scenario> => ({
+  ...own,
+  ...fixtureScenarios("claude", Object.keys(own), (name) => turn(name)),
+});
+
 export default scenarios({
   plugin: "answer",
   harness: "claude",
   region: CARDS,
-  scenarios: {
+  scenarios: withFixtures({
     open: {
       about: "/answer brings the first transcript card into view",
       start: turn("two-q"),
@@ -390,5 +396,5 @@ export default scenarios({
         { wait: /C ●\s+Fold it into the funnel/ },
       ],
     },
-  },
+  }),
 });

@@ -1,6 +1,6 @@
 import { region, type Region } from "@agents/drive/lib/screen.ts";
 import { scenarios, type Scenario, type Step } from "@agents/drive/lib/scenario.ts";
-import { message, says } from "./fixture.ts";
+import { fixtureScenarios, message, says } from "./fixture.ts";
 
 const cards = (fixture: string, ...args: string[]): Scenario["start"] => ({
   hermetic: true,
@@ -21,11 +21,17 @@ const CARD = withoutScrollbar(region.rows(/^│\s+(?:❯ )?Q1  /, promptRule));
 const REVIEW = withoutScrollbar(region.rows(/^│\s+(?:❯ )?\d+ of \d+ answered/, promptRule));
 const FULL_CARD = withoutScrollbar(region.full);
 
+/** Every fixture without a scenario of its own, to look at: `drive live answer <fixture>`. */
+const withFixtures = (own: Record<string, Scenario>): Record<string, Scenario> => ({
+  ...own,
+  ...fixtureScenarios("pi", Object.keys(own), (name) => cards(name)),
+});
+
 export default scenarios({
   plugin: "answer",
   harness: "pi",
   region: CARD,
-  scenarios: {
+  scenarios: withFixtures({
     // ---- fullscreen transcript cards
 
     "cards-open": {
@@ -416,5 +422,5 @@ export default scenarios({
       region: FULL_CARD,
       steps: [...CARD_ASK, { wait: /❯ \d+  / }],
     },
-  },
+  }),
 });
