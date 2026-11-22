@@ -7,7 +7,8 @@
     media = pkgs.callPackage ./pkgs/media-environment.nix {};
     mediaPackages = media.packages ++ media.graphicsPackages ++ media.vscodePackages;
     # A file naming every tool and path the recorders use: its store path changes with any of them,
-    # so `AGENTS_MEDIA_ENV` is the part of turbo's cache key that stands for this environment.
+    # and building it fetches them all. `//#media-env` builds it, so turbo's key for a recording
+    # changes when the environment does.
     mediaEnvironment = pkgs.writeText "agents-media-environment" (
       pkgs.lib.concatMapStringsSep "\n" toString (
         mediaPackages
@@ -38,16 +39,24 @@
       '';
     };
 
-    # What `turbo run //#media` needs and nothing of the machine's: VS Code and its Claude
-    # extension, the fonts, the tools the scenarios call (the agents themselves come from
-    # node_modules). The Pages workflow records in it; so can anyone, signed out.
-    devShells.media = pkgs.mkShell (media.graphicsEnv
-      // media.vscodeEnv
-      // {
+    packages.mediaEnvironment = mediaEnvironment;
+
+    # Runs a command in the recording environment and nothing of the machine's: VS Code and its
+    # Claude extension, the fonts, the tools the scenarios call (the agents themselves come from
+    # node_modules). The media tasks of turbo and the Pages workflow record in it; so can anyone,
+    # signed out: `nix run .#media -- <command>`.
+    apps.media = {
+      type = "app";
+      program = pkgs.lib.getExe (pkgs.writeShellApplication {
         name = "agents-media";
-        packages = mediaPackages ++ [pkgs.pnpm_12];
-        inherit (media) FONTCONFIG_FILE;
-        AGENTS_MEDIA_ENV = "${mediaEnvironment}";
+        runtimeInputs = mediaPackages ++ [pkgs.pnpm_12];
+        text = ''
+          ${pkgs.lib.concatStringsSep "\n" (pkgs.lib.mapAttrsToList (name: value: "export ${name}=${pkgs.lib.escapeShellArg value}") (media.graphicsEnv
+            // media.vscodeEnv
+            // {inherit (media) FONTCONFIG_FILE;}))}
+          exec "$@"
+        '';
       });
+    };
   };
 }

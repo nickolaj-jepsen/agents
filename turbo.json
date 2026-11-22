@@ -287,22 +287,7 @@
       ]
     },
     "//#capture-cast": {
-      "command": [
-        "nix",
-        "--experimental-features",
-        "nix-command flakes",
-        "shell",
-        "--inputs-from",
-        ".",
-        "nixpkgs#nodejs",
-        "nixpkgs#xvfb-run",
-        "nixpkgs#xauth",
-        "nixpkgs#kitty",
-        "nixpkgs#ffmpeg-full",
-        "-c",
-        "node",
-        "lib/tools/drive/capture-cast.ts"
-      ],
+      "command": ["nix", "run", ".#media", "--", "node", "lib/tools/drive/capture-cast.ts"],
       "cache": false
     },
     "//#plugin-docs": {
@@ -348,10 +333,24 @@
       ],
       "outputs": ["apps/site/data/kit.json"]
     },
-    // Record inside `nix develop .#media`, which exports AGENTS_MEDIA_ENV: a hash of its tools, fonts
-    // and VS Code, so a recording from another environment misses the cache. The recorders are tasks of
-    // the e2e package, not root tasks: a root task is keyed on this file, and a recording is dear.
-    // `turbo run media` is all three; `site#build` reads whatever they left under apps/site/.
+    // Builds the recording environment (VS Code, fonts, tools), so nix has it before a recorder
+    // asks. No outputs: its hash is the point. Every recording depends on it, so a recording from
+    // another environment misses the cache.
+    "//#media-env": {
+      "command": ["nix", "build", ".#mediaEnvironment", "--no-link"],
+      "inputs": ["pkgs/media-environment.nix", "devshell.nix", "flake.nix", "flake.lock"],
+      "outputs": [],
+      "passThroughEnv": [
+        "NIX_*",
+        "SSL_CERT_FILE",
+        "XDG_CACHE_HOME",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME"
+      ]
+    },
+    // Record inside `nix run .#media -- <command>`, the recording environment. The recorders are
+    // tasks of the drive package, not root tasks: a root task is keyed on this file, and a recording
+    // is dear. `turbo run media` is all three; `site#build` reads whatever they left under apps/site/.
     "//#media": {
       "dependsOn": [
         "@agents/drive#media:kit",
@@ -360,10 +359,22 @@
       ]
     },
     "@agents/drive#media:kit": {
-      "command": ["env", "E2E_UPDATE=1", "node", "../kits/catalog/src/build.ts"],
-      "dependsOn": ["//#dist"],
-      "env": ["AGENTS_MEDIA_ENV"],
+      "command": [
+        "nix",
+        "run",
+        ".#media",
+        "--",
+        "env",
+        "E2E_UPDATE=1",
+        "node",
+        "../kits/catalog/src/build.ts"
+      ],
+      "dependsOn": ["//#dist", "//#media-env"],
       "passThroughEnv": [
+        "NIX_*",
+        "SSL_CERT_FILE",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME",
         "XDG_STATE_HOME",
         "XDG_CACHE_HOME",
         "XDG_RUNTIME_DIR",
@@ -423,10 +434,13 @@
       "outputs": ["$TURBO_ROOT$/apps/site/media/kit/**", "$TURBO_ROOT$/apps/site/data/kit.json"]
     },
     "@agents/drive#site-shots": {
-      "command": ["node", "site.ts"],
-      "dependsOn": ["//#dist", "@agents/drive#tui-test"],
-      "env": ["AGENTS_MEDIA_ENV"],
+      "command": ["nix", "run", ".#media", "--", "node", "site.ts"],
+      "dependsOn": ["//#dist", "@agents/drive#tui-test", "//#media-env"],
       "passThroughEnv": [
+        "NIX_*",
+        "SSL_CERT_FILE",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME",
         "XDG_STATE_HOME",
         "XDG_CACHE_HOME",
         "XDG_RUNTIME_DIR",
@@ -488,14 +502,21 @@
     },
     "@agents/drive#site-vscode": {
       "command": [
+        "nix",
+        "run",
+        ".#media",
+        "--",
         "sh",
         "-c",
         "if [ \"$(uname -s)\" = Linux ]; then exec node site-vscode.ts \"$@\"; fi; echo \"site-vscode: needs a Linux compositor, skipped\"",
         "site-vscode"
       ],
-      "dependsOn": ["//#dist"],
-      "env": ["AGENTS_MEDIA_ENV"],
+      "dependsOn": ["//#dist", "//#media-env"],
       "passThroughEnv": [
+        "NIX_*",
+        "SSL_CERT_FILE",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME",
         "XDG_STATE_HOME",
         "XDG_CACHE_HOME",
         "XDG_RUNTIME_DIR",

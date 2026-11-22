@@ -1,5 +1,5 @@
-# The recording environment of `nix develop .#media`, which `turbo run //#media` runs in: the tools,
-# fonts and VS Code the recorders call. The agents themselves come from node_modules.
+# The recording environment of `nix run .#media -- <command>`, which the media tasks of turbo run
+# in: the tools, fonts and VS Code the recorders call. The agents themselves come from node_modules.
 {
   buildEnv,
   cage,
