@@ -27,7 +27,7 @@ For Claude, `--watch --in-place` keeps the session and lets Claude reload the mo
 
 ## Drive a parked session
 
-`goto` parks a session of any harness on a scenario's screen; the other verbs act on it from separate commands. A session has a name, `--session NAME` (default `default`), and sessions of different names run at once. Their state is one file each under `${XDG_STATE_HOME:-~/.local/state}/agent-tools-e2e/sessions/`, holding the harness, the run folder and the daemon or DevTools port.
+`goto` parks a session of any harness on a scenario's screen; the other verbs act on it from separate commands. A session has a name, `--session NAME` (default `default`), and sessions of different names run at once. Names belong to the checkout: each worktree has its own `default`, and `stop --all` stops only this checkout's sessions. Their state is one file each under `${XDG_STATE_HOME:-~/.local/state}/agent-tools-e2e/sessions/<checkout>/`, holding the harness, the run folder and the daemon or DevTools port.
 
 ```bash
 pnpm drive goto docfix queue --harness pi                   # park a session at the queue

@@ -14,6 +14,7 @@ import { live } from "./live.ts";
 import { options } from "./options.ts";
 import { loadSet, reach, resolveScenario } from "./scenario.ts";
 import {
+  checkoutId,
   newRunDir,
   readSession,
   removeSession,
@@ -46,8 +47,11 @@ export type Flags = {
   draft?: boolean;
 };
 
-/** The daemon's session name for a session of ours; a reload starts `-next` beside it. */
-const daemonBase = (name: string) => `d-${name}`;
+/**
+ * The daemon's session name for a session of ours; a reload starts `-next` beside it. The daemons
+ * are the user's, not the checkout's, so the name carries the checkout.
+ */
+const daemonBase = (name: string) => `d-${checkoutId}-${name}`;
 
 /** The daemon session a session runs in: a start that hit Claude's hiccup is `<name>-retry`. */
 const daemonName = (session: Session, fallback: string) =>
