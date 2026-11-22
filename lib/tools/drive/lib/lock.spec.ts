@@ -1,7 +1,6 @@
 /**
  * One command changes a parked session at a time, and a command that dies holding the lock leaves
- * it free: the lock is a socket the kernel keeps for the process's life, not a file it must tidy.
- * Different session names are different sockets, so they never wait for one another.
+ * it free: the kernel owns the lock, and different session names never wait for one another.
  */
 import { spawn } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -71,14 +70,11 @@ async function started(log: string, timeout = 20_000) {
 }
 
 describe("a session name", () => {
-  it("serializes the processes changing it", async () => {
-    const log = join(dir, "same.log");
-    const startedAt = Date.now();
-    const children = [0, 1, 2].map(() => hold("default", log, 300));
+  it.each([undefined, "file"] as const)("serializes processes with backend %s", async (backend) => {
+    const log = join(dir, `same-${backend}.log`);
+    const children = [0, 1, 2].map(() => hold("default", log, 300, backend));
     expect(await Promise.all(children.map((c) => c.exited))).toEqual([0, 0, 0]);
-    // Each one starts only after the one before it ended.
     expect(lines(log)).toEqual(["start", "end", "start", "end", "start", "end"]);
-    expect(Date.now() - startedAt).toBeGreaterThanOrEqual(850);
   });
 
   it("never makes another name wait", async () => {
@@ -111,7 +107,7 @@ describe("a session name", () => {
     expect(Date.now() - taken).toBeLessThan(2000);
   });
 
-  it("releases a socket file whose holder was killed", async () => {
+  it("releases the advisory lock when the drive process is killed", async () => {
     const log = join(dir, "file.log");
     const { child, exited } = hold("default", log, 60_000, "file");
     await started(log);

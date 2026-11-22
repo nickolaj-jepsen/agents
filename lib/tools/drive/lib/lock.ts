@@ -1,53 +1,24 @@
 /**
- * One drive command changes a parked session at a time: `goto`, `reload` and `stop` of a name take
- * the name's lock before they read its record, and a second command waits. Different names never
- * share a lock, so inspecting one plugin does not stop another run.
- *
- * The lock is a socket the kernel keeps for as long as the process that took it: abstract on Linux
- * (no file at all), else a socket file, where a killed holder's file is recognised as dead and
- * unlinked. Process death therefore releases the lock; it is not a promise that the command's
- * children went with it.
+ * One drive command changes a parked session at a time. The kernel owns each name's lock: an
+ * abstract socket on Linux, an advisory file lock on other Unix hosts. Process death releases
+ * the lock; it does not guarantee that any child resources also went away.
  */
+import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, unlinkSync } from "node:fs";
-import { connect, createServer, type Server } from "node:net";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { mkdirSync } from "node:fs";
+import { createServer, type Server } from "node:net";
+import { dirname } from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 import { sessionFile } from "./sessions.ts";
 
 export type LockBackend = "abstract" | "file";
 
-export type LockOptions = {
-  /** How long to wait for the current holder; a long reload is still a wait, not a failure. */
-  timeout?: number;
-  /** How often to look again. */
-  poll?: number;
-  /** `file` everywhere but Linux, where an abstract socket needs no folder. */
-  backend?: LockBackend;
-};
+type LockOptions = { timeout?: number; poll?: number; backend?: LockBackend };
 
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-/**
- * Where a file-backed lock lives. A socket path holds about 100 bytes, which a session's registry
- * path may not fit in, so these go to `/tmp` (as run folders do) under the record's own hash.
- */
-const locksDir = (): string => {
-  const base = process.platform === "win32" ? tmpdir() : "/tmp";
-  return join(
-    base,
-    `agent-tools-e2e-locks-${typeof process.getuid === "function" ? process.getuid() : "me"}`,
+const busy = (name: string, timeout: number) =>
+  new Error(
+    `session ${name} is being changed by another drive command; gave up after ${timeout / 1000}s`,
   );
-};
-
-/** This checkout and session, short enough for a socket path. */
-const lockKey = (name: string) =>
-  createHash("sha256").update(sessionFile(name)).digest("hex").slice(0, 16);
-
-const endpoint = (name: string, backend: LockBackend) =>
-  backend === "abstract" ? `\0drive-${lockKey(name)}` : join(locksDir(), `${lockKey(name)}.lock`);
-
-const defaultBackend = (): LockBackend => (process.platform === "linux" ? "abstract" : "file");
 
 function listen(path: string): Promise<Server> {
   return new Promise((resolve, reject) => {
@@ -55,77 +26,78 @@ function listen(path: string): Promise<Server> {
     server.once("error", reject);
     server.listen(path, () => {
       server.removeListener("error", reject);
-      // A socket of ours, for a command's duration only: never let it take the process down.
       server.on("error", () => undefined);
       resolve(server);
     });
   });
 }
 
-/** Whether anyone answers at a socket file, which a killed holder's leaves behind. */
-function answered(path: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    const socket = connect(path);
-    socket.once("connect", () => {
-      socket.destroy();
-      resolve(true);
-    });
-    socket.once("error", () => resolve(false));
-  });
-}
-
-async function acquire(
-  name: string,
-  backend: LockBackend,
-  timeout: number,
-  poll: number,
-): Promise<() => Promise<void>> {
-  const path = endpoint(name, backend);
-  if (backend === "file") mkdirSync(locksDir(), { recursive: true });
+async function acquireSocket(name: string, timeout: number, poll: number) {
+  const key = createHash("sha256").update(sessionFile(name)).digest("hex").slice(0, 16);
   const until = Date.now() + timeout;
   for (;;) {
     try {
-      const server = await listen(path);
-      return async () => {
-        await new Promise<void>((resolve) => server.close(() => resolve()));
-        if (backend === "file")
-          try {
-            unlinkSync(path);
-          } catch {
-            /* gone already */
-          }
-      };
+      const server = await listen(`\0drive-${key}`);
+      return () => new Promise<void>((resolve) => server.close(() => resolve()));
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== "EADDRINUSE") throw err;
-      // The abstract socket goes with its holder; a socket file stays. Only a file no one answers
-      // on is dead: unlinking a live one would give the next command a second lock.
-      if (backend === "file" && !(await answered(path)))
-        try {
-          unlinkSync(path);
-        } catch {
-          /* gone already */
-        }
-      if (Date.now() >= until)
-        throw new Error(
-          `session ${name} is being changed by another drive command; gave up after ${timeout / 1000}s`,
-        );
+      if (Date.now() >= until) throw busy(name, timeout);
       await sleep(poll);
     }
   }
 }
 
-/** Runs `fn` holding session `name` of this checkout; the lock goes when it returns, or it dies. */
+// Node has no flock binding. The dev shell's Python keeps the descriptor open until drive closes
+// the pipe (also on death). Never unlink the file: a contender may already be waiting on that inode.
+const flock = `
+import fcntl, select, sys, time
+path, timeout, poll = sys.argv[1:]
+end = time.monotonic() + float(timeout)
+with open(path, "a") as lock:
+    while True:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            break
+        except BlockingIOError:
+            left = end - time.monotonic()
+            if left <= 0:
+                sys.exit(75)
+            if select.select([sys.stdin], [], [], min(left, float(poll)))[0]:
+                sys.exit(0)
+    print("locked", flush=True)
+    sys.stdin.read()
+`;
+
+async function acquireFile(name: string, timeout: number, poll: number) {
+  const path = `${sessionFile(name)}.lock`;
+  mkdirSync(dirname(path), { recursive: true });
+  const child = spawn("python3", ["-c", flock, path, String(timeout / 1000), String(poll / 1000)], {
+    stdio: ["pipe", "pipe", "inherit"],
+  });
+  child.stdin.on("error", () => undefined);
+  const closed = new Promise<number | null>((resolve) => child.once("close", resolve));
+  await new Promise<void>((resolve, reject) => {
+    child.stdout.once("data", () => resolve());
+    child.once("error", reject);
+    void closed.then((code) => {
+      reject(code === 75 ? busy(name, timeout) : new Error(`file lock helper exited (${code})`));
+    });
+  });
+  return async () => {
+    child.stdin.end();
+    await closed;
+  };
+}
+
+/** Runs `fn` holding this checkout's lock for `name`, even while other commands wait on it. */
 export async function withSessionLock<T>(
   name: string,
   fn: () => Promise<T>,
   o: LockOptions = {},
 ): Promise<T> {
-  const release = await acquire(
-    name,
-    o.backend ?? defaultBackend(),
-    o.timeout ?? 300_000,
-    o.poll ?? 50,
-  );
+  const backend = o.backend ?? (process.platform === "linux" ? "abstract" : "file");
+  const acquire = backend === "abstract" ? acquireSocket : acquireFile;
+  const release = await acquire(name, o.timeout ?? 300_000, o.poll ?? 50);
   try {
     return await fn();
   } finally {
