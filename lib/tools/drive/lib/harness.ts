@@ -207,7 +207,23 @@ const COMMON_ENV = { AGENT_HUB_HIDDEN: "1", WT_NO_AUTOCLOSE: "1" };
 // A hermetic session draws the same colours whatever terminal started the run: without it, a
 // shell with no COLORTERM (CI) gets the 256-colour palette. Claude's `ctrl+g to edit in <editor>`
 // hint names $VISUAL or $EDITOR, so the editor is pinned too.
-const HERMETIC_ENV = { COLORTERM: "truecolor", EDITOR: "nvim", VISUAL: "nvim" };
+// It also names the terminal: Claude reads the host's $TERM_PROGRAM, and the key it shows for a new
+// line is Shift+Enter in Ghostty but `\` Enter in a terminal it doesn't know (CI), which lays an
+// editor's hint out differently. The snapshots are Ghostty's, so that is what a session is told.
+const HERMETIC_ENV = {
+  COLORTERM: "truecolor",
+  EDITOR: "nvim",
+  VISUAL: "nvim",
+  TERM_PROGRAM: "ghostty",
+};
+// What Claude checks for a terminal's name before $TERM_PROGRAM, so the host's can't win.
+const HERMETIC_UNSET = [
+  "CURSOR_TRACE_ID",
+  "VSCODE_GIT_ASKPASS_MAIN",
+  "__CFBundleIdentifier",
+  "VisualStudioVersion",
+  "TERMINAL_EMULATOR",
+];
 
 export const claude: Harness = {
   name: "claude",
@@ -260,7 +276,7 @@ export const claude: Harness = {
         ...path,
         ...start.env,
       },
-      unset: UNSET,
+      unset: hermetic ? [...UNSET, ...HERMETIC_UNSET] : UNSET,
       ...size,
     };
   },
