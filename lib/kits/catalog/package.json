@@ -24,7 +24,7 @@
     "@earendil-works/pi-tui": "catalog:",
     "@types/node": "catalog:",
     "tsdown": "catalog:",
-    "typescript": "~6.0.3",
+    "typescript": "~7.0.2",
     "vitest": "catalog:",
     "yaml": "catalog:"
   },
