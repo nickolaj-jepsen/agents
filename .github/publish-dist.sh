@@ -53,6 +53,6 @@ if git diff --cached --quiet; then
   exit 0
 fi
 
-git commit --quiet -m "publish $(printf %.7s "$source_rev")" -m "Built from $source_rev by CI."
+git commit --quiet -m "publish $(printf %.7s "$source_rev")" -m "Built from $source_rev."
 git push --quiet origin "$branch"
 echo "publish-dist: pushed $(git rev-parse --short HEAD) to $branch"
