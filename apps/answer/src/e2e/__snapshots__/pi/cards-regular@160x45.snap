@@ -1,5 +1,9 @@
 # answer/pi/cards-regular 160x45 @0,0 (160x45)
 
+ Warning: fd not found. Offline mode enabled, skipping download.
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
+
+
  ask
 
 
@@ -40,66 +44,63 @@
 
 
 
-
-
-
-
 --- styles
-1x160
-1 2x3 1x156
-1x160
 -
-. 3x15
+. 1x63
+. 1x68
 -
-. 4x2 3x2
-. 4x2 3x2
+2x160
+2 3x3 2x156
+2x160
 -
-. 3x16
+. 4x15
 -
-. 4x2 3x2
-. 4x2 3x2
+. 5x2 4x2
+. 5x2 4x2
 -
-5 .x2 6 . 4x4 6x11
-5
-5 .x4 4 . 7
-5 .x4 4 . 8 . 8x8
-5 .x4 4 . 7 . 7x21
-5 .x4 7x16
+. 4x16
 -
+. 5x2 4x2
+. 5x2 4x2
 -
-7 .x4 7x4 6x12
-7
-7 .x4 7 . 7
-7 .x4 7 . 7
-7 .x4 7 . 7 . 7x21
-7 .x4 7x16
+6 .x2 7 . 5x4 7x11
+6
+6 .x4 5 . 8
+6 .x4 5 . 9 . 9x8
+6 .x4 5 . 8 . 8x21
+6 .x4 8x16
 -
 -
-7 .x4 9x15 .x2 8x11
--
-. ax5 .x2 7x8 .x2 9x5 . 7x3 .x2 9x4 . 7x3 .x2 9x6 . 7x3 .x2 9x6 . 7x5 .x2 7x7 .x2 9x5 . 7x3
-bx160
-c
-bx160
-7x5
-7x160
+8 .x4 8x4 7x12
+8
+8 .x4 8 . 8
+8 .x4 8 . 8
+8 .x4 8 . 8 . 8x21
+8 .x4 8x16
 -
 -
+8 .x4 ax15 .x2 9x11
 -
--
+. bx5 .x2 8x8 .x2 ax5 . 8x3 .x2 ax4 . 8x3 .x2 ax6 . 8x3 .x2 ax6 . 8x5 .x2 8x7 .x2 ax5 . 8x3
+cx160
+d
+cx160
+8x5
+8x160
 -
 -
 -
 --- legend
-1 bg=#213b49
-2 fg=#dee0e1 bg=#213b49
-3 bold
-4 fg=#a798d7
-5 fg=#68b78d
-6 fg=#dee0e1 bold
-7 fg=#7e888e
-8 fg=#a798d7 bold
-9 fg=#dee0e1
-a fg=#dee0e1 inverse
-b fg=#6c767b
-c inverse
+1 fg=#cd9a22
+2 bg=#213b49
+3 fg=#dee0e1 bg=#213b49
+4 bold
+5 fg=#a798d7
+6 fg=#68b78d
+7 fg=#dee0e1 bold
+8 fg=#7e888e
+9 fg=#a798d7 bold
+a fg=#dee0e1
+b fg=#dee0e1 inverse
+c fg=#6c767b
+d inverse

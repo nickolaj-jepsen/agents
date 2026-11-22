@@ -1,5 +1,9 @@
 # answer/pi/none 70x24 @0,0 (70x24)
 
+ Warning: fd not found. Offline mode enabled, skipping download.
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
+
+
  ask
 
 
@@ -14,44 +18,41 @@
 
 
 
-
-
-
-
 ──────────────────────────────────────────────────────────────────────
 
 ──────────────────────────────────────────────────────────────────────
 <tmp>
 ••••/200k (auto)                                                replay
 --- styles
-1x70
-1 2x3 1x66
-1x70
+-
+. 1x63
+. 1x68
+-
+2x70
+2 3x3 2x66
+2x70
 -
 -
 -
-. 3x3
-. 3x3
+. 4x3
+. 4x3
 -
 -
 -
-. 4x52
+. 5x52
 -
 -
 -
--
--
--
--
+6x70
+7
+6x70
+5x5
 5x70
-6
-5x70
-4x5
-4x70
 --- legend
-1 bg=#213b49
-2 fg=#dee0e1 bg=#213b49
-3 fg=#a798d7
-4 fg=#7e888e
-5 fg=#6c767b
-6 inverse
+1 fg=#cd9a22
+2 bg=#213b49
+3 fg=#dee0e1 bg=#213b49
+4 fg=#a798d7
+5 fg=#7e888e
+6 fg=#6c767b
+7 inverse

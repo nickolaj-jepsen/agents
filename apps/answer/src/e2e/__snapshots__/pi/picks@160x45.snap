@@ -1,4 +1,7 @@
 # answer/pi/picks 160x45 @0,0 (159x45)
+ Warning: fd not found. Offline mode enabled, skipping download.
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
+
 
  ask
 
@@ -35,9 +38,6 @@
 
 │    0 of 2 answered  Fill prompt
 
-
-
-
  Answer [alt+a]  1  0/2 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -45,58 +45,59 @@
 <tmp>
 ••••/200k (auto)                                                                                                                                          repla
 --- styles
-1x159
-1 2x3 1x155
-1x159
+. 1x63
+. 1x68
+-
+2x159
+2 3x3 2x155
+2x159
 -
 -
 -
-. 3x3
-. 3x3
+. 4x3
+. 4x3
 -
-. 4x12
+. 5x12
 -
-5 .x2 6 . 3x3 6x41
-5
-5
-5
-5 .x4 3 . 7 .x9 7x13
-5 .x4 3 . 7 . 7x14
-5 .x4 7x16
-5
-5 .x4 7x21
--
--
-7 .x4 7x3 6x45
-7
-7
-7
-7 .x4 7 . 7
-7 .x4 7 . 7 .x19 7x13
-7 .x4 7 . 7 . 7x14
-7 .x4 7x16
-7
-7 .x4 7x34
+6 .x2 7 . 4x3 7x41
+6
+6
+6
+6 .x4 4 . 8 .x9 8x13
+6 .x4 4 . 8 . 8x14
+6 .x4 8x16
+6
+6 .x4 8x21
 -
 -
-7 .x4 5x15 .x2 5x11
+8 .x4 8x3 7x45
+8
+8
+8
+8 .x4 8 . 8
+8 .x4 8 . 8 .x19 8x13
+8 .x4 8 . 8 . 8x14
+8 .x4 8x16
+8
+8 .x4 8x34
 -
 -
+8 .x4 6x15 .x2 6x11
 -
--
-. 5x6 . 7x7 .x2 7x15
+. 6x6 . 8x7 .x2 8x15
+9x159
+a
+9x159
+8x5
 8x159
-9
-8x159
-7x5
-7x159
 --- legend
-1 bg=#213b49
-2 fg=#dee0e1 bg=#213b49
-3 fg=#a798d7
-4 bold
-5 fg=#dee0e1
-6 fg=#dee0e1 bold
-7 fg=#7e888e
-8 fg=#6c767b
-9 inverse
+1 fg=#cd9a22
+2 bg=#213b49
+3 fg=#dee0e1 bg=#213b49
+4 fg=#a798d7
+5 bold
+6 fg=#dee0e1
+7 fg=#dee0e1 bold
+8 fg=#7e888e
+9 fg=#6c767b
+a inverse

@@ -1,9 +1,9 @@
 # docfix/pi/applied 70x24 @0,0 (70x24)
 
+ Warning: fd not found. Offline mode enabled, skipping download.
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
+
  The apply prompt is in the editor: read it, then Enter to send
-
-
-
 
 
 
@@ -25,7 +25,10 @@ notice gets filed with docfix as usual. Don't commit.
 docs 3
 --- styles
 -
-. 1x62
+. 1x63
+. 1x68
+-
+. 2x62
 -
 -
 -
@@ -33,22 +36,20 @@ docs 3
 -
 -
 -
+3x70
 -
 -
 -
+-
+-
+-
+.x53 4
+3x70
+2x5
 2x70
--
--
--
--
--
--
-.x53 3
-2x70
-1x5
-1x70
 -
 --- legend
-1 fg=#7e888e
-2 fg=#6c767b
-3 inverse
+1 fg=#cd9a22
+2 fg=#7e888e
+3 fg=#6c767b
+4 inverse

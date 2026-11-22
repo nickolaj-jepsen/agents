@@ -1,5 +1,9 @@
 # answer/pi/cards-fill 160x45 @0,0 (159x45)
 
+ Warning: fd not found. Offline mode enabled, skipping download.
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
+
+
  ask
 
 
@@ -31,10 +35,6 @@
 
 │  ❯ 2 of 2 answered  Fill prompt
 
-
-
-
-
  Answer [alt+a]  Review  2/2 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 Q1: B
@@ -45,60 +45,61 @@ a draft for later
 <tmp>
 ••••/200k (auto)                                                                                                                                          repla
 --- styles
-1x159
-1 2x3 1x155
-1x159
 -
-. 3x15
+. 1x63
+. 1x68
 -
-. 4x2 3x2
-. 4x2 3x2
+2x159
+2 3x3 2x155
+2x159
 -
-. 3x16
+. 4x15
 -
-. 4x2 3x2
-. 4x2 3x2
+. 5x2 4x2
+. 5x2 4x2
 -
-5 .x4 6x4 7x11
-5
-5 .x4 6 . 6
-5 .x4 6 . 8 . 8x8
-5 .x4 6 . 6 . 6x21
-5 .x4 6x16
+. 4x16
 -
+. 5x2 4x2
+. 5x2 4x2
 -
-5 .x4 6x4 7x12
-5
-5 .x4 6 . 8 . 8x3
-5 .x4 6 . 6
-5 .x4 6 . 6 . 6x21
-5 .x4 6x16
+6 .x4 7x4 8x11
+6
+6 .x4 7 . 7
+6 .x4 7 . 9 . 9x8
+6 .x4 7 . 7 . 7x21
+6 .x4 7x16
 -
 -
-5 .x2 7 . 7x15 .x2 8x11
+6 .x4 7x4 8x12
+6
+6 .x4 7 . 9 . 9x3
+6 .x4 7 . 7
+6 .x4 7 . 7 . 7x21
+6 .x4 7x16
+-
+-
+6 .x2 8 . 8x15 .x2 9x11
+-
+. ax6 . 7x7 .x2 7x20
+bx159
 -
 -
 -
--
--
-. 9x6 . 6x7 .x2 6x20
-ax159
--
--
--
-.x17 b
-ax159
-6x5
-6x159
+.x17 c
+bx159
+7x5
+7x159
 --- legend
-1 bg=#213b49
-2 fg=#dee0e1 bg=#213b49
-3 bold
-4 fg=#a798d7
-5 fg=#68b78d
-6 fg=#7e888e
-7 fg=#dee0e1 bold
-8 fg=#a798d7 bold
-9 fg=#dee0e1
-a fg=#6c767b
-b inverse
+1 fg=#cd9a22
+2 bg=#213b49
+3 fg=#dee0e1 bg=#213b49
+4 bold
+5 fg=#a798d7
+6 fg=#68b78d
+7 fg=#7e888e
+8 fg=#dee0e1 bold
+9 fg=#a798d7 bold
+a fg=#dee0e1
+b fg=#6c767b
+c inverse

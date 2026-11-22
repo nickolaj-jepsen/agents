@@ -1,4 +1,4 @@
-# linear-issue/pi/filed 160x45 @0,1 (160x2)
+# linear-issue/pi/filed 160x45 @0,4 (160x2)
 ✓ PLT-431  Honor Retry-After when the sync worker backs off after a 429
   https://linear.app/example/issue/PLT-431
 --- styles

@@ -1,9 +1,9 @@
 # docfix/pi/applied 160x45 @0,0 (160x45)
 
+ Warning: fd not found. Offline mode enabled, skipping download.
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
+
  The apply prompt is in the editor: read it, then Enter to send
-
-
-
 
 
 
@@ -46,7 +46,10 @@ Name every doc you changed beyond the ones above. Anything else you notice gets 
 docs 3
 --- styles
 -
-. 1x62
+. 1x63
+. 1x68
+-
+. 2x62
 -
 -
 -
@@ -69,28 +72,26 @@ docs 3
 -
 -
 -
+3x160
 -
 -
 -
+-
+-
+-
+-
+-
+-
+-
+-
+-
+.x121 4
+3x160
+2x5
 2x160
--
--
--
--
--
--
--
--
--
--
--
--
-.x121 3
-2x160
-1x5
-1x160
 -
 --- legend
-1 fg=#7e888e
-2 fg=#6c767b
-3 inverse
+1 fg=#cd9a22
+2 fg=#7e888e
+3 fg=#6c767b
+4 inverse

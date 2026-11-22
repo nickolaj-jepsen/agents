@@ -1,4 +1,4 @@
-# answer/pi/cards-long 160x45 @0,16 (159x25)
+# answer/pi/cards-long 160x45 @0,18 (159x23)
 │  ❯ Q1  Which one?
 │
 │    A ○ a very long option text that keeps going and going a very long option text
@@ -19,8 +19,6 @@
 
 
 │    0 of 1 answered  Fill prompt
-
-
 
  Answer [alt+a]  Q1  0/1 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -45,8 +43,6 @@
 -
 -
 4 .x4 1x15 .x2 1x11
--
--
 -
 . 1x6 . 4x7 .x2 4x16
 5x159

@@ -1,7 +1,7 @@
 # docfix/pi/dismissed 160x45 @0,0 (160x45)
 
-
-
+ Warning: fd not found. Offline mode enabled, skipping download.
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
 
 
 
@@ -46,6 +46,8 @@
 docs 2
 --- styles
 -
+. 1x63
+. 1x68
 -
 -
 -
@@ -82,15 +84,14 @@ docs 2
 -
 -
 -
--
--
-1x160
-2
-1x160
-3x5
-3x160
+2x160
+3
+2x160
+4x5
+4x160
 -
 --- legend
-1 fg=#6c767b
-2 inverse
-3 fg=#7e888e
+1 fg=#cd9a22
+2 fg=#6c767b
+3 inverse
+4 fg=#7e888e

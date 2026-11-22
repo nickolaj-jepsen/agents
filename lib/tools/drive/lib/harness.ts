@@ -281,8 +281,10 @@ export const pi: Harness = {
       PI_OFFLINE: "1",
       ...start.env,
     };
-    if (start.bin || start.hide)
-      env.PATH = sessionPath(run.runDir, start.bin ?? {}, start.hide ?? []);
+    // Offline, pi warns at startup about each of fd and rg it can't find, which moves everything
+    // under it: a hermetic session never finds them, so it draws the same on every machine.
+    const hide = [...(start.hide ?? []), ...(start.hermetic ? ["fd", "rg"] : [])];
+    if (start.bin || hide.length) env.PATH = sessionPath(run.runDir, start.bin ?? {}, hide);
     if (start.turns) {
       const file = join(run.runDir, "turns.json");
       writeFileSync(file, JSON.stringify(start.turns));

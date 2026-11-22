@@ -1,4 +1,4 @@
-# answer/pi/cards-markdown 160x45 @0,13 (159x28)
+# answer/pi/cards-markdown 160x45 @0,17 (159x24)
 │  ❯ Q1  Should the endpoint send one JSON response with a kind field, and send
 │        redirects as a 200 response body that page.tsx acts on?
 │
@@ -17,10 +17,6 @@
 
 
 │    0 of 1 answered  Fill prompt
-
-
-
-
 
 
 
@@ -46,10 +42,6 @@
 -
 -
 4 .x4 1x15 .x2 1x11
--
--
--
--
 -
 -
 -
