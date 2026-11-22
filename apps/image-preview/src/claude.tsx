@@ -14,12 +14,23 @@ import {
   type Preview,
 } from "./lib/images";
 import { imageLinks } from "./lib/links";
-import { imageGallery, kitOf } from "@agents/kit-legacy/claude/ui.tsx";
+import { imageGallery } from "@agents/kit-image/terminal.ts";
+import type { ImageGalleryOptions, ImageItem } from "@agents/kit-image/contract.ts";
+import { blank } from "@agents/kit-core/lines.ts";
+import { notice } from "@agents/kit-notice/terminal.ts";
+import { paintLines, stack } from "@agents/kit-core/paint/claude.tsx";
 
 const fullSize = (viewport?: { columns: number; rows: number }) => ({
   columns: Math.max(1, Math.min(144, (viewport?.columns ?? 84) - 4)),
   rows: Math.max(1, Math.min(42, Math.floor((viewport?.rows ?? 48) * 0.6))),
 });
+/** The images as the terminal draws them: the kit's lines, painted with the event's elements. */
+const gallery = (
+  els: Parameters<typeof paintLines>[0],
+  images: readonly ImageItem[],
+  options: ImageGalleryOptions,
+) => paintLines(els, imageGallery(images, options));
+
 const thumbnail = { columns: 24, rows: 6 };
 
 function remember<T>(map: Map<string, T>, key: string, value: T, cap: number) {
@@ -181,29 +192,21 @@ export const register: Register = (on) => {
     const native = await next(e);
     if (!first) return native;
     const els = $.ui.resolve(e);
-    const { Box, Text } = els;
-    return (
-      <Box flexDirection="column">
-        {native}
-        <Box flexDirection="column" marginLeft={2}>
-          {imageGallery(kitOf(els, e), [{ ...first, path: undefined }], {
-            ...thumbnail,
-            columns: Math.min(thumbnail.columns, fullSize(e.viewport).columns),
-          })}
-          {count > 1 ? <Text dimColor>{`+${count - 1} more`}</Text> : null}
-        </Box>
-      </Box>
-    );
+    const columns = Math.min(thumbnail.columns, fullSize(e.viewport).columns);
+    const lines = [
+      ...imageGallery([{ ...first, path: undefined }], { ...thumbnail, columns }),
+      ...(count > 1 ? notice(`+${count - 1} more`, columns, "dim") : []),
+    ];
+    return stack(els, native, paintLines(els, lines, { indent: 2 }));
   });
 
   on("ui.render", { component: "ToolResult" }, async ($, e, next) => {
     if (e.surface !== "terminal" || e.props.isErrored) return next(e);
     const els = $.ui.resolve(e);
-    const kit = kitOf(els, e);
     if (e.props.tool === "Read") {
       const key = e.props.tool_use_id;
       const image = await fromRead($, e.props.output, readPaths.get(key), key, readJpegCache);
-      return image ? imageGallery(kit, [image], fullSize(e.viewport)) : next(e);
+      return image ? gallery(els, [image], fullSize(e.viewport)) : next(e);
     }
     if (e.props.tool !== "SendUserFile") return next(e);
     const native = await next(e);
@@ -212,14 +215,13 @@ export const register: Register = (on) => {
       const preview = await loadLocal($, image, localCache);
       if (preview) images.push({ ...preview, key: `${index}:${preview.key}`, path: undefined });
     }
-    return images.length ? (
-      <els.Box flexDirection="column" rowGap={1}>
-        {native}
-        {imageGallery(kit, images, fullSize(e.viewport))}
-      </els.Box>
-    ) : (
-      native
-    );
+    return images.length
+      ? stack(
+          els,
+          native,
+          paintLines(els, [blank(), ...imageGallery(images, fullSize(e.viewport))]),
+        )
+      : native;
   });
 
   on("turn.complete", async ($, e, next) => {
@@ -244,6 +246,6 @@ export const register: Register = (on) => {
   on("ui.render", { component: "Placed" }, ($, e, next) => {
     if (e.surface !== "terminal" || e.props.plugin !== "image-preview") return next(e);
     const image = placed.get(e.props.id);
-    return image ? imageGallery(kitOf($.ui.resolve(e), e), [image], fullSize(e.viewport)) : next(e);
+    return image ? gallery($.ui.resolve(e), [image], fullSize(e.viewport)) : next(e);
   });
 };

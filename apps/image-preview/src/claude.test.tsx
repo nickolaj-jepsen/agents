@@ -1,5 +1,7 @@
 import type { On } from "claude-code";
 import { expect, test } from "claude-code/testing";
+import { notice } from "@agents/kit-notice/terminal.ts";
+import { paintLines } from "@agents/kit-core/paint/claude.tsx";
 
 const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAkCAYAAAA5DDySAAAAdklEQVR42u3ZsRGAIAwFUIZxAAtHsLO2ZyVXYyHcAAu5Q8wrfpm78JrkQtqOXFtZ1r2Z2esTAAAAAAAAEBjg7w98qgfQo4FyncMCAAAAAADeAPQYMyMBPrEJAgAAAAAAAJMC2AQBAHARAgAAQFwAP0MAAIQGuAEhKJcojry0RgAAAABJRU5ErkJggg==";
@@ -34,8 +36,7 @@ function world(on: On) {
     return { value: { isPlaced: true, requestId: e.id } };
   });
   on("ui.render", ($, e) => {
-    const { Text } = $.ui.resolve(e);
-    return <Text>{`host ${e.component}`}</Text>;
+    return paintLines($.ui.resolve(e), notice(`host ${e.component}`, 80, "text"));
   });
   return { reads, placed };
 }
