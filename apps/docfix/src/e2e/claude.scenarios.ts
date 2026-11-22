@@ -187,7 +187,8 @@ export default scenarios({
       about: "a click on Next in the reader: the second, migrated piece of evidence",
       from: "reader",
       sizes: [[160, 45]],
-      steps: [{ click: "Next [n]" }, { wait: "Evidence 2 of 2" }],
+      // Get the pane's keyboard focus back if the parent was resized for its snapshots.
+      steps: [{ click: "Doc suggestions" }, { click: "Next [n]" }, { wait: "Evidence 2 of 2" }],
     },
     readerBack: {
       about: "Escape in the reader goes back to the queue; the pane stays",
