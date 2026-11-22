@@ -25,7 +25,15 @@ export async function loadTypes(app: string, timeoutSeconds = 90): Promise<strin
   });
   try {
     const until = Date.now() + timeoutSeconds * 1000;
-    while (!existsSync(types)) {
+    // Claude creates the directory before writing the files. Closing it as soon as the directory
+    // appears can leave an empty but cacheable types task.
+    const files = [
+      "tsconfig.json",
+      "claude-code/index.d.ts",
+      "claude-code-mcp/index.d.ts",
+      "claude-code-tools/index.d.ts",
+    ];
+    while (!files.every((file) => existsSync(join(types, file)))) {
       if (Date.now() > until)
         throw new Error(`Claude did not write ${types} in ${timeoutSeconds}s`);
       await sleep(250);
