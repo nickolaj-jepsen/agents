@@ -1,8 +1,8 @@
 /**
  * The tui-test daemon CLI, pinned to a release. The npm package is the library only; the daemon
- * the e2e `goto`, `cap`, `keys` and live mode drive ships as a static binary on the release page.
- * `fetchTuiTest` puts it under `e2e/node_modules/.cache/tui-test/<version>/<target>/`, which the
- * `@agents/e2e#tui-test` task caches as its output. The version tracks `@microsoft/tui-test`; bump both.
+ * `drive goto`, `cap`, `keys` and live mode drive ships as a static binary on the release page.
+ * `fetchTuiTest` puts it under `lib/tools/drive/node_modules/.cache/tui-test/<version>/<target>/`, which the
+ * `@agents/drive#tui-test` task caches as its output. The version tracks `@microsoft/tui-test`; bump both.
  */
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";

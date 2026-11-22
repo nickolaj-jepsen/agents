@@ -99,9 +99,9 @@ in {
     CAST_MESA = "${mesa}/lib";
   };
 
-  # The VS Code pictures (`site-vscode`): VS Code and its Claude Code extension from this nixpkgs,
+  # The VS Code pictures (`drive record --harness vscode`): VS Code and its Claude Code extension from this nixpkgs,
   # and cage for a display. The driver takes them from these variables instead of the machine's
-  # `code`, `~/.vscode/extensions` and `nix run nixpkgs#cage` (e2e/lib/vscode.ts). The extension
+  # `code`, `~/.vscode/extensions` and `nix run nixpkgs#cage` (lib/tools/drive/lib/vscode.ts). The extension
   # runs the `claude` it bundles, of its own version, not the workspace's.
   vscodePackages =
     [

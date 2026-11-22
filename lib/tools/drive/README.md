@@ -1,8 +1,17 @@
-# Plugin screen tests and recordings
+# `pnpm drive`
 
-Run from the repository root after [dev setup](../../../docs/development.md#set-up-and-check-a-change). `pnpm drive` is the one driver: it parks real Claude Code, pi, Claude Code in VS Code and Claude Desktop on a scenario's screen, runs the scenarios as tests with canned turns, and records the site's media. The tests are part of `check`, one `e2e` task per plugin.
+Run from the repository root after [dev setup](../../../docs/development.md#set-up-and-check-a-change). `pnpm drive` is the one driver: it parks real Claude Code, pi, Claude Code in VS Code and Claude Desktop on a scenario's screen, runs the scenarios as tests with canned turns, and records the site's media. `pnpm drive --help` and `pnpm drive <verb> --help` list every verb and flag.
 
-`pnpm drive --help` and `pnpm drive <verb> --help` list every verb and flag.
+A **package** is an app (`docfix`) or a kit component (`kit-card`); `kit` is every kit package and `apps` every app. A **scenario** is a named screen of a package, written for one harness in `src/e2e/` (apps) or `e2e/` (kit packages). A **session** is a parked agent on a scenario's screen.
+
+| Harness   | What it is                                                 | Scenario file          | Verbs                                     |
+| --------- | ---------------------------------------------------------- | ---------------------- | ----------------------------------------- |
+| `claude`  | Claude Code in a terminal                                  | `claude.scenarios.ts`  | all but `eval`                            |
+| `pi`      | pi in a terminal                                           | `pi.scenarios.ts`      | all but `eval`                            |
+| `vscode`  | Claude Code in a VS Code window on its own display (Linux) | `vscode.scenarios.ts`  | all but `snap` and `test`                 |
+| `desktop` | Claude Desktop (Linux), launched on a seeded session       | `desktop.scenarios.ts` | `live` and `goto` only, without `--watch` |
+
+`site.scenarios.ts` holds a package's recording, which `record` plays, not a harness. `drive test` runs the `claude` and `pi` scenarios; the tests are part of `check`, one `e2e` task per package.
 
 ## Live mode
 
@@ -14,10 +23,10 @@ pnpm drive live answer open --harness pi                   # try the pi version 
 pnpm drive live answer form --harness vscode               # open a separate Linux VS Code window; close it to stop
 pnpm drive live answer long-body --harness desktop         # a fixture in Claude Desktop (Linux); --draft for a real model
 pnpm drive live answer open --harness pi --watch           # replay again on each save
-pnpm drive live kit-card live --harness pi --watch         # a kit story
+pnpm drive live kit-card card/live --harness pi --watch    # a kit story
 ```
 
-`<package>` is an app (`docfix`) or a kit component (`kit-card`); `kit` is every kit package and `apps` every app. `--harness` is needed only when a scenario exists in several.
+`--harness` is needed only when a scenario exists in several.
 
 The view fits your window once the scripted steps finish. To change the size **during** those steps, pass `--size 96x30` in terminal cells or `--size 900x700` in VS Code pixels. Claude Desktop is only launched: it has no `cap`, `keys` or `shot`.
 
@@ -56,6 +65,7 @@ Copy the pattern in [docfix's Claude scenarios](../../../apps/docfix/src/e2e/cla
 - Use `setup` to create a fixture, never your real repository or notes store. A driver must carry the [fixture environment](lib/setup.ts) into git and the agent so neither reaches your hooks, notes or worktrees. Run folders are under `/tmp` by default so a user's longer `TMPDIR` doesn't change line wrapping.
 - Wait for text that the step introduces, not a title already in the transcript. Use `slashCommand` for a newly loaded Claude mod: the prompt may be ready before the command is registered.
 - Crop to the plugin surface with [a region](lib/screen.ts). Use `extreme: true` for a state with long text, wide characters and more items than fit. If initial size changes layout, set `size` explicitly; the driver resizes a running session for snapshots.
+- A kit package writes none of this: its `e2e/claude.scenarios.ts` and `pi.scenarios.ts` turn its stories into scenarios (see [the kit guide](../../kits/README.md#add-or-change-a-component)).
 - `snapshots: false` makes a screen for `live` and `goto` only, with no test. The answer app's fixtures are such scenarios of Claude, pi and Desktop (`drive live answer long-body --harness desktop`).
 
 ## Snapshots
@@ -104,27 +114,39 @@ Desktop needs `claude` and `claude-desktop` on PATH. Sign in to the isolated tes
 
 ## Site media
 
+The site's pictures and demos are recorded, not committed. A package's `site.scenarios.ts` says what to record, and `record` writes it to `apps/site/media/<package>/`, emptying what it wrote before so no file outlives its scenario. A kit package's pictures go to `apps/site/media/kit/<name>/`. The site builds without any of it and warns about what is missing.
+
+Record in the media environment: `nix run .#media -- <drive verb>` runs the driver with VS Code, the fonts and the tools the scenarios call, and any other command runs as given.
+
 ```bash
-pnpm turbo run media                                    # every package's media (terminal and VS Code), or restore them from the cache
-pnpm turbo run media --filter=@nickolaj-jepsen/docfix   # one package's, as `media:vscode` is its VS Code pictures
-nix run .#media -- record docfix                        # rerecord one package: its terminal demo, stills and VS Code pictures
-nix run .#media -- record docfix --harness vscode       # only its VS Code pictures (Linux)
-nix run .#media -- record kit-card                      # a kit package's story pictures
-nix run .#media -- record                               # every package
+nix run .#media -- record docfix                   # one package: its terminal demo, stills and VS Code pictures
+nix run .#media -- record docfix --harness vscode  # only its VS Code pictures (Linux); `terminal` for the rest
+nix run .#media -- record kit-card                 # a kit package's story pictures
+nix run .#media -- record                          # every package
 ```
 
-Record in the media environment: `nix run .#media -- <drive verb>` runs the driver in it, with VS Code, the fonts and the tools the scenarios call (any other command runs as given). The `//#media-env` task builds it, so its hash is part of each recording's cache key and a recording from another environment is never restored. A recording whose inputs didn't change is restored, not replayed; add `--force` to record it anyway. `record <package>` writes only `apps/site/media/<package>/` (a kit package's pictures go to `apps/site/media/kit/<name>/`, with a `crops.json` of their own) and removes what it wrote before, so no file outlives its scenario. The site builds without any of it.
+Turbo runs the same through each package's `media` task (the terminal's media) and `media:vscode` (VS Code's, Linux only). The `//#media-env` task builds the environment first, so its hash is part of each recording's cache key and a recording from another environment is never restored. A recording whose inputs didn't change is restored, not replayed; add `--force` to record it anyway.
 
-The site reads generated files under `apps/site/media/`; don't commit them.
+```bash
+pnpm turbo run media                                    # every package's media, or restore it from the cache
+pnpm turbo run media --filter=@nickolaj-jepsen/docfix   # one package's terminal media
+pnpm turbo run media:vscode --filter=@nickolaj-jepsen/docfix
+```
 
-Use `apps/<plugin>/src/e2e/site.scenarios.ts` for a demo tour, its stills, and any VS Code pictures. [docfix's recording](../../../apps/docfix/src/e2e/site.scenarios.ts) is a working example; [the types](lib/site.ts) describe what the runner reads. Keep tours short and inspect the video for unintended account details, private paths, or distractions. If a capture is over budget, shorten the tour before changing the limits. Match side calls to their own canned turn with `match` rather than relying on their order. Use the [fake Linear server](lib/linear-mcp.ts) for Linear scenarios, not a logged-in account.
+Write `apps/<plugin>/src/e2e/site.scenarios.ts` for a demo tour, its stills, and any VS Code pictures. [docfix's recording](../../../apps/docfix/src/e2e/site.scenarios.ts) is a working example; [the types](lib/site.ts) describe what the runner reads. Keep tours short and inspect the video for unintended account details, private paths, or distractions. If a capture is over budget, shorten the tour before changing the limits. Match side calls to their own canned turn with `match` rather than relying on their order. Use the [fake Linear server](lib/linear-mcp.ts) for Linear scenarios, not a logged-in account. The terminal's colours and geometry are in [`tui-test.toml`](tui-test.toml).
 
 ### Capture inline graphics
 
 Set `capture: "kitty"` for a demo or still with terminal images. The ordinary rasterizer doesn't render Kitty image placeholders. Run `nix run .#media -- record image-preview` to replay in Kitty on a private display (Linux).
 
-To export an existing trusted asciicast v2 without rerunning a scenario, use `nix run .#media -- cast /path/to/demo.mp4.tui-test.cast ./image-preview`. It replays the cast's terminal escape sequences and overwrites the output prefix's `.mp4` and `.png`; it doesn't update the site's media.
+`cast` exports an existing trusted asciicast v2 without rerunning a scenario:
+
+```bash
+nix run .#media -- cast /path/to/demo.mp4.tui-test.cast ./image-preview   # --require-graphics fails when the cast has no Kitty graphics
+```
+
+It replays the cast's terminal escape sequences and overwrites the output prefix's `.mp4` and `.png`; it doesn't update the site's media.
 
 ## Load a mod's types
 
-`pnpm drive types <app>` starts a hermetic Claude with the app's build, waits for `dist/.claude-plugin/types/` to appear and stops.
+Claude writes the API types a Claude half is written against only when it loads the mod. `pnpm drive types <app>` starts a hermetic Claude with the app's build (`kit-catalog` works too), waits for `dist/.claude-plugin/types/` to appear and stops. The package's `types` task runs it, and `check-types` reads what it wrote. Run `pnpm turbo run types` after a Claude Code upgrade.

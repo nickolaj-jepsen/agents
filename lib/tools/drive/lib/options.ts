@@ -1,6 +1,5 @@
 /**
- * What the flags of `drive` set for a run: one object, read where the E2E_* environment variables
- * used to be read. Setting it also hands it to the processes the run starts (vitest's workers, the
+ * What the flags of `drive` set for a run: one object, read wherever a run needs a flag. Setting it also hands it to the processes the run starts (vitest's workers, the
  * fresh process that replays a scenario for live mode) through a single internal variable, so the
  * flags reach them; nothing here is meant to be set by hand.
  */

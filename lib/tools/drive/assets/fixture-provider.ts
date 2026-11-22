@@ -5,7 +5,7 @@
  *
  * Usage:
  *   FIXTURE=$PWD/turns.json pi \
- *     --extension e2e/assets/fixture-provider.ts \
+ *     --extension lib/tools/drive/assets/fixture-provider.ts \
  *     --provider fixture --model replay
  *
  * turns.json holds one entry per assistant turn, consumed in order; each carries any of

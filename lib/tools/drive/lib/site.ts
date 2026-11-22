@@ -50,7 +50,7 @@ export type SiteDemo = SiteScenario & {
 export type SiteVscode = {
   /** One sentence under the picture. */
   caption: string;
-  /** The scenario of `e2e/<plugin>/vscode.scenarios.ts` that reaches the screen. */
+  /** The scenario of `apps/<plugin>/src/e2e/vscode.scenarios.ts` that reaches the screen. */
   scenario: string;
   /** Played after the scenario's own steps, for a screen it stops short of. */
   steps?: VscodeStep[];

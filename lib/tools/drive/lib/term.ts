@@ -15,7 +15,7 @@ import { FONT_FAMILIES, fakeFontHome, realHome } from "./fonts.ts";
 import { fetchedBin } from "./tui-test-release.ts";
 
 const run = promisify(execFile);
-/** The terminal's colours and how a picture is drawn: e2e/tui-test.toml. */
+/** The terminal's colours and how a picture is drawn: lib/tools/drive/tui-test.toml. */
 const TUI_TEST_CONFIG = join(import.meta.dirname, "..", "tui-test.toml");
 
 /**
