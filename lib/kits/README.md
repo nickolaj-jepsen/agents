@@ -110,7 +110,21 @@ Test the mouse first. Hover and click every control in a real session on each cl
 
 To change how something looks everywhere, edit its `src/terminal.ts` or `core/src/tokens.ts` and record again. Both clients change together.
 
+## Schema 2: one API, five surfaces
+
+A component may opt into `schema: 2` in its `manifest.ts`; the old schema keeps working until every component has moved. It is proved on a throwaway component, [`catalog/src/fixture/`](catalog/src/fixture/), and its specs ([`schema2.spec.ts`](catalog/src/schema2.spec.ts)) show each check firing.
+
+- **Surfaces** are `pi`, `claude-terminal`, `vscode`, `desktop` and `mobile`, each drawn by `terminal` or `gui`. [`surfaces.ts`](core/src/surfaces.ts) is the one table of what each can do. A fact has a value, a note and a source; one nobody has checked is `unverified()`, and the types treat it as absent. Add a fact when you learn one, with where you checked it.
+- **Contracts** hold the model every surface honours. A field that needs a capability is named in a `needs` table (`focused: "keyFocus:kit|ring"`), and `Props<Model, typeof needs, S>` keeps the fields surface `S` can honour (on a union, those all of them can). Passing the rest is a type error naming the field. A drawing narrows with `can(ctx, "inputRows:many")`, never by a surface's name. List the model's fields with `modelFields<Model>()([...])`, which fails on one left out.
+- **Manifests** are `as const`. They declare `parts` (the exports of each drawing, `none: <why>` for a drawing without one) and features that name the `fields` they cover and the capabilities they `need`. A feature's answer on each surface is derived from the table, never written; a `limits` entry makes it `partial` for a limit of the component itself. The catalogue fails on a model field or a gated field that no feature covers.
+- **Exports** are held by `exports.check.ts`, compiled by `check-types`: `assertExports<typeof import("./gui.tsx"), PartsOf<typeof manifest, "gui">>(true)` fails on a stray export or a missing part. Helpers go in `internal.ts`, which apps may not import (the lint says so).
+- **Stories** are plain data in `stories.ts`: one model and each drawing's `ext`. What needs a host element (an `Input`) is described as data and built by [`catalog/src/adapters.tsx`](catalog/src/adapters.tsx). The manifest says which surfaces draw a story: those where a feature that names it is not `no`.
+- **View models** (`src/model.ts`, pure, `view(model, surface)`) are snapshotted per story on all five surfaces, with the same decisions grouped, in `e2e/__snapshots__/model/`. That is the parity check; nothing is mounted.
+- **Events** go through the drawing context, the same on every surface: `press(hit)`, `input(hit, text)` and `submit(hit, text)` (`Gui` for the graphical drawings, `terminalCtx` and `piCtx` for the terminals).
+
 ## What still differs between the clients
+
+The facts about each host, with their evidence, are the capability table, [`core/src/surfaces.ts`](core/src/surfaces.ts); this is the prose behind the terminals' rows.
 
 - **Hover.** pi reports the pointer, and the row under it gets a bold label. Claude Code inverts a `Button` under the pointer and nothing turns that off, so the painter swaps the row's colours first: the row keeps them and sits on a soft fill.
 - **Keyboard focus on Claude Code.** The engine inverts whatever its focus ring rests on. A site that wants the kit's pointer and bold label instead keeps the ring on a button that draws nothing (`ring` in the painter) and turns the ring's moves into its own focus in a `ui.focus` hook (`ringMove`).

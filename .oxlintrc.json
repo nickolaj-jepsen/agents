@@ -16,6 +16,24 @@
     "apps/site/.astro/**"
   ],
   "overrides": [
+    // A component's `internal.ts` is for its own files and the catalogue. An override replaces a
+    // rule's options whole, so each one below that sets `no-restricted-imports` restates this pattern.
+    {
+      "files": ["apps/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@agents/kit-*/internal.ts"],
+                "message": "internal.ts is a component's own helpers, shared between its drawings and the catalogue, not its API. Use what the component's drawing exports (the parts its manifest declares)."
+              }
+            ]
+          }
+        ]
+      }
+    },
     {
       "files": [
         "apps/*/src/pi.ts",
@@ -57,6 +75,10 @@
               {
                 "group": ["@agents/kit-legacy/pi/**"],
                 "message": "This is pi's legacy kit. Use the kit's components (lib/kits/<component>/, listed in AGENTS.md) instead."
+              },
+              {
+                "group": ["@agents/kit-*/internal.ts"],
+                "message": "internal.ts is a component's own helpers, shared between its drawings and the catalogue, not its API. Use what the component's drawing exports (the parts its manifest declares)."
               }
             ]
           }
@@ -150,6 +172,7 @@
                   "!../**",
                   "!@agents/kit-*/**",
                   "!@agents/kit-legacy/**",
+                  "@agents/kit-*/internal.ts",
                   "../pi/**",
                   "../../pi/**",
                   "../pi.ts",
@@ -157,7 +180,7 @@
                   "../../claude/**",
                   "../claude.*"
                 ],
-                "message": "A lib has no Node builtin and no package but the kit's (@agents/kit-*), and imports only its own files. See docs/development.md#change-or-add-a-plugin."
+                "message": "A lib has no Node builtin and no package but the kit's (@agents/kit-*), and imports only its own files; a component's `internal.ts` is not its API. See docs/development.md#change-or-add-a-plugin."
               }
             ]
           }
@@ -205,6 +228,10 @@
               {
                 "group": ["node:*"],
                 "message": "A mod runs in Claude Code's mod engine, which has no Node. See docs/development.md#change-or-add-a-plugin."
+              },
+              {
+                "group": ["@agents/kit-*/internal.ts"],
+                "message": "internal.ts is a component's own helpers, shared between its drawings and the catalogue, not its API. Use what the component's drawing exports (the parts its manifest declares)."
               }
             ]
           }
@@ -233,6 +260,10 @@
                 "regex": "^(\\.\\./)+lib/(tools|kits)/",
                 "allowTypeImports": true,
                 "message": "Pages import only types from lib/; the model is read by src/content.config.ts and src/loaders/, and the pages read its collections. See docs/development.md#preview-the-published-site."
+              },
+              {
+                "group": ["@agents/kit-*/internal.ts"],
+                "message": "internal.ts is a component's own helpers, shared between its drawings and the catalogue, not its API. Use what the component's drawing exports (the parts its manifest declares)."
               }
             ]
           }
