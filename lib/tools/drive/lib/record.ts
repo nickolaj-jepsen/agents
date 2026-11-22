@@ -5,6 +5,8 @@
  *
  * - an app's tour and stills (`site.scenarios.ts`, terminal): `demo.mp4`, `<still>.png`, `media.json`;
  * - its pictures in VS Code (`site.scenarios.ts`' `vscode`): `vscode-<name>.png`, `media-vscode.json`;
+ * - a kit package's graphical stories in VS Code (its `vscode.scenarios.ts`), at the window's size and in a
+ *   narrow pane: `vscode-<component>-<state>[-narrow].png` and `media-vscode.json`, in the package's own folder;
  * - a kit package's stories (its `claude`/`pi` scenarios) as crops, in its own folder
  *   `apps/site/media/kit/<package>/<harness>/<story>@WxH.png`, listed in that folder's `crops.json`.
  *
@@ -53,15 +55,22 @@ import {
   VSCODE_SIZE,
   ZOOM,
   type SiteSet,
+  type SiteVscode,
 } from "./site.ts";
-import { loadVscodeSet, reachVscode, reloadVscode, resolveVscode } from "./vscode-scenario.ts";
+import {
+  loadVscodeSet,
+  reachVscode,
+  reloadVscode,
+  resolveVscode,
+  type VscodeSet,
+} from "./vscode-scenario.ts";
 import { fixedOf, stopVscode, VscodeSession } from "./vscode.ts";
 
 const mediaRoot = join(checkoutRoot, "apps", "site", "media");
 const rel = (name: string) => relative(checkoutRoot, name);
 
 export type RecordOptions = {
-  /** Only the terminal's media or only VS Code's; both when left out. Kit packages are terminal's. */
+  /** Only the terminal's media or only VS Code's; both when left out. */
   harness?: "terminal" | "vscode";
   /** Scenarios of one package at once, in place of 2. */
   jobs?: number;
@@ -77,6 +86,7 @@ export async function record(name: string | undefined, o: RecordOptions = {}): P
     try {
       if (p.name.startsWith("kit-")) {
         if (o.harness !== "vscode") await recordKit(p, only);
+        if (o.harness !== "terminal") await recordVscode(p, only, o.harness === "vscode");
       } else {
         if (o.harness !== "vscode") await recordTerminal(p, o, only);
         if (o.harness !== "terminal") await recordVscode(p, only, o.harness === "vscode");
@@ -371,17 +381,44 @@ async function failedShot(runDir: string, file: string) {
   }
 }
 
+/**
+ * A kit package's pictures: each graphical story of its `vscode.scenarios.ts` at the window's size
+ * and again at a phone pane's width (the narrow layout the house rules cap).
+ */
+const kitPictures = (set: VscodeSet): [string, SiteVscode][] =>
+  Object.entries(set.scenarios).flatMap(([id, s]): [string, SiteVscode][] => {
+    const name = id.replace("/", "-");
+    const about = s.about ?? id;
+    return [
+      [name, { caption: about, scenario: id }],
+      [
+        `${name}-narrow`,
+        { caption: `${about}, in a narrow pane`, scenario: id, steps: [{ resize: [420, 800] }] },
+      ],
+    ];
+  });
+
 async function recordVscode(p: E2EPackage, named: boolean, asked: boolean) {
+  const kit = p.name.startsWith("kit-");
   const site = siteFile(p);
   const vscodeFile = join(p.e2e, "vscode.scenarios.ts");
-  if (!existsSync(site) || !existsSync(vscodeFile)) {
-    if (named)
-      throw new Error(`no site.scenarios.ts and vscode.scenarios.ts in ${p.name}'s e2e folder`);
+  if (!existsSync(vscodeFile) || (!kit && !existsSync(site))) {
+    // A kit package with no VS Code stories is no mistake unless its VS Code pictures were asked for.
+    if (named && (!kit || asked))
+      throw new Error(
+        kit
+          ? `no vscode.scenarios.ts in ${p.name}'s e2e folder`
+          : `no site.scenarios.ts and vscode.scenarios.ts in ${p.name}'s e2e folder`,
+      );
     return;
   }
   const plugin = p.name;
-  const set = (await loadSet(site)) as unknown as SiteSet;
-  const pictures = Object.entries(set.vscode ?? {});
+  // A kit package keeps its media in a folder of its own, under `kit/`.
+  const folder = kit ? `kit/${kitFolder(p)}` : plugin;
+  const scenarios = await loadVscodeSet(vscodeFile);
+  const pictures = kit
+    ? kitPictures(scenarios)
+    : Object.entries(((await loadSet(site)) as unknown as SiteSet).vscode ?? {});
   if (pictures.length === 0) return;
   if (process.platform !== "linux") {
     // Asked for by `--harness vscode` (the `media:vscode` task), a skip would be a success with no
@@ -390,7 +427,6 @@ async function recordVscode(p: E2EPackage, named: boolean, asked: boolean) {
     console.error(`record: ${plugin}: VS Code pictures need a Linux compositor, skipped`);
     return;
   }
-  const scenarios = await loadVscodeSet(vscodeFile);
   const stage = mkdtempSync(join(tmpdir(), `site-vscode-${plugin}-`));
   // A window per start that its environment fixes (`fixedOf`): a picture whose scenario starts
   // like the last one's is a new tab in the same window, which takes half as long.
@@ -451,7 +487,7 @@ async function recordVscode(p: E2EPackage, named: boolean, asked: boolean) {
     const png = join(stage, `vscode-${n}.png`);
     squeeze(png, BUDGET.png);
     return {
-      png: `apps/site/media/${plugin}/vscode-${n}.png`,
+      png: `apps/site/media/${folder}/vscode-${n}.png`,
       caption: pic.caption,
       harness: "claude",
       surface: "vscode",
@@ -460,7 +496,7 @@ async function recordVscode(p: E2EPackage, named: boolean, asked: boolean) {
   });
   writeFileSync(join(stage, VSCODE_MANIFEST), `${JSON.stringify({ stills }, null, 2)}\n`);
   // The terminal's media share the folder and stay.
-  commit(plugin, stage, isVscodeFile);
+  commit(folder, stage, isVscodeFile);
 }
 
 // ---- a kit package
@@ -541,8 +577,11 @@ async function recordKit(p: E2EPackage, named: boolean) {
     if (statSync(f).size > BUDGET.png)
       console.error(`record: ${rel(f)} is ${kb(f)}, over its ${BUDGET.png / 1024} KB budget`);
   // The package's own folder, emptied first; the site's loader joins every package's `crops.json`.
+  // The VS Code pictures share the folder and stay.
   const dest = join(mediaRoot, "kit", kitFolder(p));
-  rmSync(dest, { recursive: true, force: true });
+  if (existsSync(dest))
+    for (const f of readdirSync(dest))
+      if (!isVscodeFile(f)) rmSync(join(dest, f), { recursive: true, force: true });
   for (const f of written) {
     const to = join(dest, relative(stage, f));
     mkdirSync(dirname(to), { recursive: true });

@@ -63,6 +63,7 @@ Copy the pattern in [docfix's Claude scenarios](../../../apps/docfix/src/e2e/cla
 
 - Start with `start: { hermetic: true, plugins: ["<plugin>"], turns: [] }` on the set. `start.mcp` names stand-in MCP servers: Claude gets them as its config, and a hermetic pi gets them in its `mcp.json` for a plugin that reads it (pi's own MCP support stays off). A hermetic Claude is told it runs in Ghostty whatever terminal started the run, so the key its editors name for a new line (Shift+Enter, not `\` Enter) and the width their hints need are the same on every machine. Add [canned turns](lib/harness.ts) when the screen needs a model response. A non-hermetic run uses your own config; don't send a real prompt just to reach a screen.
 - Use `setup` to create a fixture, never your real repository or notes store. A driver must carry the [fixture environment](lib/setup.ts) into git and the agent so neither reaches your hooks, notes or worktrees. Run folders are under `/tmp` by default so a user's longer `TMPDIR` doesn't change line wrapping.
+- `start.bin` puts stand-in programs first on the agent's PATH; `start.hide` names programs on your PATH that it must not find (a scenario for a missing tool). The fixture environment also points hunspell's `WORDLIST` into the run folder, so your personal word list never changes what spellfix flags.
 - Wait for text that the step introduces, not a title already in the transcript. Use `slashCommand` for a newly loaded Claude mod: the prompt may be ready before the command is registered.
 - Crop to the plugin surface with [a region](lib/screen.ts). Use `extreme: true` for a state with long text, wide characters and more items than fit. If initial size changes layout, set `size` explicitly; the driver resizes a running session for snapshots.
 - A kit package writes none of this: its `e2e/claude.scenarios.ts` and `pi.scenarios.ts` turn its stories into scenarios (see [the kit guide](../../kits/README.md#add-or-change-a-component)).
@@ -96,6 +97,7 @@ pnpm drive reload                                              # read edited mod
 pnpm drive stop                                                # close the window and its stub
 ```
 
+- The kit's graphical stories have scenarios too: `pnpm drive goto kit-prose prose/blocks --harness vscode --size 420x800`. `nix run .#media -- record kit-prose --harness vscode` photographs each at the window's size and at a narrow pane, as `apps/site/media/kit/<name>/vscode-<component>-<state>[-narrow].png`.
 - `reload` can replay a different scenario of the same package. Use `goto` when launch options change; the extension's own **New session** doesn't reload code. For parallel windows give each its own `--session`.
 - `wait` can't match an input placeholder. Wait for a label instead. If a shot shows icon alt text after `reload`, run `goto` and take it again.
 - A mod that reads the prompt while rendering doesn't redraw on typing. If testing it requires a redraw, resize below the prompt's maximum width, then back; see [spellfix's recording](../../../apps/spellfix/src/e2e/site.scenarios.ts).
