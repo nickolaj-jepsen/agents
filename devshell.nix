@@ -49,11 +49,17 @@
       type = "app";
       program = pkgs.lib.getExe (pkgs.writeShellApplication {
         name = "agents-media";
-        runtimeInputs = mediaPackages ++ [pkgs.pnpm_12];
+        runtimeInputs = mediaPackages ++ [pkgs.nodejs_24 pkgs.pnpm_12];
         text = ''
           ${pkgs.lib.concatStringsSep "\n" (pkgs.lib.mapAttrsToList (name: value: "export ${name}=${pkgs.lib.escapeShellArg value}") (media.graphicsEnv
             // media.vscodeEnv
             // {inherit (media) FONTCONFIG_FILE;}))}
+          # `nix run .#media -- <drive verb>` is the driver in this environment (`record docfix`);
+          # any other command runs as it is.
+          case "''${1:-}" in
+            ls|live|goto|reload|cap|snap|keys|type|paste|click|hover|wait|resize|shot|sweep|stop|eval|test|record|cast|types)
+              exec node "''${AGENTS_ROOT:-$PWD}/lib/tools/drive/drive.ts" "$@" ;;
+          esac
           exec "$@"
         '';
       });

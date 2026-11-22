@@ -2,9 +2,9 @@
  * Runs scenarios side by side and along chains: a joinable child (`from`, with no `setup` or `start`
  * of its own and not `fresh`) plays in its parent's session, its siblings that can `reset` take
  * turns before it, and the deepest one carries on. Sessions are isolated by folder and by the
- * stub's port, so a pool of them runs at once; each harness has its own size (`E2E_JOBS_CLAUDE`,
- * `E2E_JOBS_PI`, or `E2E_JOBS` for both).
+ * stub's port, so a pool of them runs at once; `--jobs` sets the size of each harness's pool (`N`, or `claude=N,pi=M`).
  */
+import { options } from "./options.ts";
 import { cpus } from "node:os";
 import { capture, differs, type Capture } from "./check.ts";
 import type { HarnessName } from "./harness.ts";
@@ -118,8 +118,8 @@ const cpuCount = () => Math.max(1, cpus().length);
 
 /** Sessions at once per harness: Claude Code is the heavier, and starts less reliably when crowded. */
 export function poolSize(harness: HarnessName): number {
-  const named = Number(process.env[`E2E_JOBS_${harness.toUpperCase()}`] ?? process.env.E2E_JOBS);
-  if (Number.isFinite(named) && named >= 1) return Math.floor(named);
+  const named = typeof options.jobs === "object" ? options.jobs[harness] : options.jobs;
+  if (named && named >= 1) return Math.floor(named);
   return harness === "claude"
     ? Math.max(1, Math.min(4, Math.floor(cpuCount() / 4)))
     : Math.max(1, Math.min(8, Math.floor(cpuCount() / 2)));

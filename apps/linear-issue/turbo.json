@@ -11,10 +11,10 @@
       "command": ["sh", "../../lib/tools/build/claude-plugin-test.sh"]
     },
     "e2e": {
-      "command": ["node", "../../lib/tools/drive/run.ts"]
+      "command": ["node", "../../lib/tools/drive/drive.ts", "test", "linear-issue"]
     },
     "e2e:update": {
-      "command": ["node", "../../lib/tools/drive/run.ts", "-u"]
+      "command": ["node", "../../lib/tools/drive/drive.ts", "test", "linear-issue", "--update"]
     }
   }
 }

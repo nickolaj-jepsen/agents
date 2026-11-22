@@ -2,11 +2,11 @@
   "extends": ["//"],
   "tasks": {
     "e2e": {
-      "command": ["node", "../../tools/drive/run.ts"],
+      "command": ["node", "../../tools/drive/drive.ts", "test", "kit-buttons"],
       "dependsOn": ["^topo", "@agents/kit-catalog#build"]
     },
     "e2e:update": {
-      "command": ["node", "../../tools/drive/run.ts", "-u"],
+      "command": ["node", "../../tools/drive/drive.ts", "test", "kit-buttons", "--update"],
       "dependsOn": ["@agents/kit-catalog#build"]
     }
   }

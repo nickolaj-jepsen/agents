@@ -45,11 +45,11 @@ const files: Record<string, string> = {
     tasks: {
       test: { command: ["./node_modules/.bin/vitest", "run"] },
       e2e: {
-        command: ["node", "../../tools/drive/run.ts"],
+        command: ["node", "../../tools/drive/drive.ts", "test", `kit-${name}`],
         dependsOn: ["^topo", "@agents/kit-catalog#build"],
       },
       "e2e:update": {
-        command: ["node", "../../tools/drive/run.ts", "-u"],
+        command: ["node", "../../tools/drive/drive.ts", "test", `kit-${name}`, "--update"],
         dependsOn: ["@agents/kit-catalog#build"],
       },
     },

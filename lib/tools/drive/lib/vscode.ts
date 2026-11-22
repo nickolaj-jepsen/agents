@@ -1,4 +1,5 @@
 // Each command reconnects to the detached VS Code window over its saved DevTools port.
+import { options } from "./options.ts";
 import { execFileSync, spawn } from "node:child_process";
 import { createServer } from "node:net";
 import {
@@ -64,11 +65,10 @@ export const fixedOf = (start: VscodeStart) =>
 const STATE = "vscode.json";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** With E2E_TIMING=1, how long each phase of a start took, on stderr. */
+/** With `--timing`, how long each phase of a start took, on stderr. */
 const born = Date.now();
 export const mark = (what: string) => {
-  if (process.env.E2E_TIMING)
-    console.error(`[timing] ${((Date.now() - born) / 1000).toFixed(1)}s ${what}`);
+  if (options.timing) console.error(`[timing] ${((Date.now() - born) / 1000).toFixed(1)}s ${what}`);
 };
 
 const freePort = () =>

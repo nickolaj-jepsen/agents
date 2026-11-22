@@ -5,10 +5,10 @@
       "command": ["node", "../../lib/tools/build/build.ts"]
     },
     "e2e": {
-      "command": ["node", "../../lib/tools/drive/run.ts"]
+      "command": ["node", "../../lib/tools/drive/drive.ts", "test", "worktree"]
     },
     "e2e:update": {
-      "command": ["node", "../../lib/tools/drive/run.ts", "-u"]
+      "command": ["node", "../../lib/tools/drive/drive.ts", "test", "worktree", "--update"]
     }
   }
 }

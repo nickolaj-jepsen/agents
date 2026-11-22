@@ -11,12 +11,12 @@
  * to a minute, measured), so in-place is opt-in.
  */
 import { execFile } from "node:child_process";
-import { existsSync, readdirSync, watch, type FSWatcher } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { promisify } from "node:util";
+import { watch as chokidar } from "chokidar";
 import { checkoutRoot, type HarnessName } from "./harness.ts";
 import { e2ePackage, repoRoot } from "./packages.ts";
-import type { Resolved } from "./scenario.ts";
 
 const run = promisify(execFile);
 
@@ -31,22 +31,54 @@ const SOURCE = /\.(tsx?|[cm]?js|json)$/;
 /** True for a repo-relative path whose change can change what a session draws. */
 export const isSource = (rel: string) => SOURCE.test(rel) && !NOISE.test(rel);
 
+/** What a session is built from: the package of its scenario and the apps it asks to load. */
+export type Buildable = { plugin: string; start: { plugins?: string[] } };
+
 /** The built apps a scenario loads: its own, if it is an app's, and those it names. */
-const appsOf = (r: Resolved) =>
+const appsOf = (r: Buildable) =>
   [...new Set([r.plugin, ...(r.start.plugins ?? [])])].filter((name) =>
     existsSync(join(repoRoot, "apps", name, "package.json")),
   );
 
-/** The folders a scenario's screen comes from: its apps' sources, the kit's and its own scenario folder. */
-export function sourceDirs(r: Resolved): string[] {
-  const kits = existsSync(join(repoRoot, "lib/kits"))
-    ? readdirSync(join(repoRoot, "lib/kits")).map((c) => join(repoRoot, "lib/kits", c, "src"))
-    : [];
-  return [
-    ...appsOf(r).map((p) => join(checkoutRoot, "apps", p, "src")),
-    ...kits,
-    e2ePackage(r.plugin)?.e2e ?? "",
-  ].filter((dir) => dir && existsSync(dir));
+/** `@agents/kit-<c>` is `lib/kits/<c>`. */
+const KIT = "@agents/kit-";
+const kitDir = (name: string) =>
+  name.startsWith(KIT) ? join(repoRoot, "lib/kits", name.slice(KIT.length)) : undefined;
+
+/** The kit packages a package imports, and those they do. */
+function kitDeps(dir: string, seen = new Set<string>()): Set<string> {
+  const file = join(dir, "package.json");
+  if (!existsSync(file)) return seen;
+  const pkg = JSON.parse(readFileSync(file, "utf8")) as Record<string, Record<string, string>>;
+  for (const name of Object.keys({ ...pkg.dependencies, ...pkg.devDependencies })) {
+    const kit = kitDir(name);
+    if (kit && existsSync(kit) && !seen.has(kit)) {
+      seen.add(kit);
+      kitDeps(kit, seen);
+    }
+  }
+  return seen;
+}
+
+/**
+ * The folders a scenario's screen comes from: the sources of its apps and of the kit packages they
+ * import, those of the catalogue and the kit package for a kit's own scenarios, and its scenario folder.
+ */
+export function sourceDirs(r: Buildable): string[] {
+  const roots = [
+    ...appsOf(r).map((p) => join(repoRoot, "apps", p)),
+    ...(r.plugin.startsWith("kit-")
+      ? [join(repoRoot, "lib/kits/catalog"), join(repoRoot, "lib/kits", r.plugin.slice(4))]
+      : []),
+  ];
+  const dirs = new Set<string>();
+  for (const root of roots) {
+    dirs.add(root);
+    for (const kit of kitDeps(root)) dirs.add(kit);
+  }
+  return [...[...dirs].map((dir) => join(dir, "src")), e2ePackage(r.plugin)?.e2e ?? ""].filter(
+    (dir) => dir && existsSync(dir),
+  );
 }
 
 /** The other agent's half of an app or of the catalogue: a pi screen does not read `claude`. */
@@ -60,7 +92,7 @@ export const relevant = (harness: HarnessName, files: string[]) =>
   files.filter((f) => !OTHER_HALF[harness].test(f));
 
 /** A batch of saves touched the scenario's own files, which only a fresh start reads. */
-export const touchesScenario = (r: Resolved, files: string[]) => {
+export const touchesScenario = (r: { plugin: string }, files: string[]) => {
   const e2e = e2ePackage(r.plugin)?.e2e;
   return !!e2e && files.some((f) => f.startsWith(relative(checkoutRoot, e2e) + "/"));
 };
@@ -69,7 +101,7 @@ export const touchesScenario = (r: Resolved, files: string[]) => {
  * Builds what a session of the scenario loads, in a process of its own so it reads the sources as
  * they are now: its apps and, for a kit scenario, the catalogue. Its lines, if any.
  */
-export async function rebuild(r: Resolved): Promise<string[]> {
+export async function rebuild(r: Buildable): Promise<string[]> {
   const dirs = [
     ...appsOf(r).map((p) => join(checkoutRoot, "apps", p)),
     ...(r.plugin.startsWith("kit-") ? [join(checkoutRoot, "lib/kits/catalog")] : []),
@@ -94,8 +126,8 @@ export async function rebuild(r: Resolved): Promise<string[]> {
 export type Watch = { close(): void };
 
 /**
- * Watches `dirs` and calls `handler` with the repo-relative sources saved, `quiet` ms after the
- * last save of a batch. One handler runs at a time; saves made meanwhile make the next batch.
+ * Watches `dirs` (chokidar) and calls `handler` with the repo-relative sources saved, `quiet` ms
+ * after the last save of a batch. One handler runs at a time; saves made meanwhile make the next batch.
  */
 export function watchSources(
   dirs: string[],
@@ -122,21 +154,27 @@ export function watchSources(
       });
   };
 
-  const watchers: FSWatcher[] = dirs.map((dir) =>
-    watch(dir, { recursive: true }, (_event, name) => {
-      if (closed || !name) return;
-      const rel = relative(checkoutRoot, join(dir, name.toString()));
-      if (!isSource(rel)) return;
-      pending.add(rel);
-      clearTimeout(timer);
-      timer = setTimeout(flush, quiet);
-    }),
-  );
+  const rel = (path: string) => relative(checkoutRoot, path);
+  const watcher = chokidar(dirs, {
+    ignoreInitial: true,
+    // Folders are walked unless they are noise (node_modules, a build's output); a file must be a source.
+    ignored: (path, stats) =>
+      stats?.isFile()
+        ? !isSource(rel(path))
+        : /(^|\/)(node_modules|dist|__snapshots__)$/.test(rel(path)),
+  });
+  const saved = (path: string) => {
+    if (closed || !isSource(rel(path))) return;
+    pending.add(rel(path));
+    clearTimeout(timer);
+    timer = setTimeout(flush, quiet);
+  };
+  watcher.on("add", saved).on("change", saved).on("unlink", saved);
   return {
     close() {
       closed = true;
       clearTimeout(timer);
-      for (const w of watchers) w.close();
+      void watcher.close();
     },
   };
 }

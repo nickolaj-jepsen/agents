@@ -1,9 +1,10 @@
 /**
  * Captures a scenario's screen at each of its sizes and compares it with the stored
- * snapshot. A difference fails; `E2E_UPDATE=1` (or `vitest -u`) accepts it. The PNG
+ * snapshot. A difference fails; `drive test --update` accepts it. The PNG
  * beside each snapshot is for review and is never compared: it is not committed, and a run
- * draws it only on request (`E2E_PNG=1`) or as the evidence of a difference.
+ * draws it only on request (`drive test --png`) or as the evidence of a difference.
  */
+import { options } from "./options.ts";
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { snapshotPath, type Resolved } from "./scenario.ts";
@@ -19,10 +20,10 @@ export type Capture = {
   png: string;
 };
 
-const actualOf = (path: string) => path.replace(/\.(snap|png)$/, ".actual.$1");
+export const actualOf = (path: string) => path.replace(/\.(snap|png)$/, ".actual.$1");
 
 /** Whether a run draws a PNG beside every snapshot. */
-export const wantsPng = () => !!process.env.E2E_PNG && process.env.E2E_PNG !== "0";
+export const wantsPng = () => !!options.png;
 
 /** How long a snapshot that is not yet the stored one is read again, and how often. */
 export const STEADY = { timeout: 4000, poll: 150 };
@@ -81,7 +82,7 @@ export async function capture(session: Session, r: Resolved): Promise<Capture[]>
   return out;
 }
 
-export const updating = () => !!process.env.E2E_UPDATE && process.env.E2E_UPDATE !== "0";
+export const updating = () => !!options.update;
 
 /** Whether the screen is not what the snapshot holds (an update accepts anything). */
 export const differs = (c: Capture) => !updating() && c.expected !== c.actual;
@@ -101,6 +102,6 @@ export function settleCapture(c: Capture): string | undefined {
   }
   writeFileSync(actualOf(c.snap), c.actual);
   return c.expected === undefined
-    ? `no snapshot at ${c.snap}; accept it with E2E_UPDATE=1`
-    : `differs from ${c.snap} (this run: ${actualOf(c.snap)}, ${actualOf(c.png)}); accept with E2E_UPDATE=1`;
+    ? `no snapshot at ${c.snap}; accept it with \`drive test --update\``
+    : `differs from ${c.snap} (this run: ${actualOf(c.snap)}, ${actualOf(c.png)}); accept with \`drive test --update\``;
 }

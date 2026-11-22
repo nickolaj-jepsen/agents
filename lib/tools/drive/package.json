@@ -7,7 +7,9 @@
     "./*": "./*"
   },
   "dependencies": {
-    "@agents/kit-core": "workspace:*"
+    "@agents/kit-core": "workspace:*",
+    "chokidar": "catalog:",
+    "commander": "catalog:"
   },
   "devDependencies": {
     "@anthropic-ai/claude-code": "catalog:",

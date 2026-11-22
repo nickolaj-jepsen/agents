@@ -5,11 +5,11 @@
  *
  * A file `<harness>.scenarios.ts` in a package's e2e folder (`lib/packages.ts`) default-exports `scenarios({...})`.
  */
-import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { HarnessName, StartOptions } from "./harness.ts";
-import { e2ePackage, e2ePackages } from "./packages.ts";
+import { entries } from "./find.ts";
+import { e2ePackage } from "./packages.ts";
 import type { Mask, Pattern, Region } from "./screen.ts";
 import {
   EXTREME_SIZES,
@@ -66,6 +66,11 @@ export type Scenario = {
   extreme?: boolean;
   /** The sizes to snapshot at, in place of the usual two or four. */
   sizes?: Size[];
+  /**
+   * `false`: a screen to look at (`drive live`, `goto`), with no snapshot and no test: the e2e run
+   * leaves it out. For a fixture that has no committed screen.
+   */
+  snapshots?: false;
   /**
    * A known failure: why. The test passes while the scenario fails (a step throws or the
    * snapshot differs) and fails once it starts passing, so the day it is fixed it says so.
@@ -268,21 +273,17 @@ export async function failShot(session: Session, r: Resolved) {
 export const driveRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 /**
- * Every `<harness>.scenarios.ts` of the packages with e2e scenarios, or of `plugin`'s alone; `kit` is
- * every kit package, since a story is named for its component and not for the package that owns it.
+ * Every terminal `<harness>.scenarios.ts` (claude, pi) of the packages `plugin` stands for, or of all
+ * packages with e2e scenarios: `kit` is every kit package and `apps` every app.
  */
 export function scenarioFiles(
   plugin?: string,
 ): { plugin: string; harness: HarnessName; file: string }[] {
-  const out: { plugin: string; harness: HarnessName; file: string }[] = [];
-  for (const p of e2ePackages()) {
-    if (plugin && p.name !== plugin && !(plugin === "kit" && p.name.startsWith("kit-"))) continue;
-    for (const harness of ["claude", "pi"] as const) {
-      const file = join(p.e2e, `${harness}.scenarios.ts`);
-      if (existsSync(file)) out.push({ plugin: p.name, harness, file });
-    }
-  }
-  return out;
+  return entries(plugin || undefined, ["claude", "pi"]).map((e) => ({
+    plugin: e.package,
+    harness: e.harness as HarnessName,
+    file: e.file,
+  }));
 }
 
 export async function loadSet(file: string): Promise<ScenarioSet> {

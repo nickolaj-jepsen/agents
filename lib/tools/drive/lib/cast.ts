@@ -59,7 +59,7 @@ function virtualUploads(frame: string) {
 }
 
 function kittyTheme() {
-  const config = readFileSync(new URL("./tui-test.toml", import.meta.url), "utf8");
+  const config = readFileSync(new URL("../tui-test.toml", import.meta.url), "utf8");
   const colors = config.split("[profiles.default.colors]")[1]?.split("[")[0] ?? "";
   const palette = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"];
   const names = [...palette, ...palette.map((name) => `bright_${name}`)];
@@ -69,7 +69,8 @@ function kittyTheme() {
   });
 }
 
-async function play(cast: string, scratch: string) {
+/** Replays a cast in the Kitty window `captureCast` opened, recording it; run by `drive _cast-play`. */
+export async function playCast(cast: string, scratch: string) {
   const { width, height, output } = readCast(cast);
   if (process.stdout.columns !== width || process.stdout.rows !== height)
     throw new Error(`Kitty did not open at the cast's ${width}×${height} cell size`);
@@ -176,7 +177,14 @@ async function play(cast: string, scratch: string) {
   }
 }
 
-function capture(cast: string, prefix: string, requireGraphics: boolean) {
+/**
+ * Replays a trusted asciicast in Kitty on a private X11 display and writes `<prefix>.mp4` and
+ * `<prefix>.png` from it (Linux). With `requireGraphics`, a cast with no Kitty graphics is an error.
+ */
+export function captureCast(cast: string, prefix: string, requireGraphics: boolean) {
+  if (process.platform !== "linux") throw new Error("cast capture requires Linux");
+  cast = resolve(cast);
+  prefix = resolve(prefix);
   const { width, height, output } = readCast(cast);
   if (requireGraphics && !output.some(([, data]) => data.includes("\x1b_G")))
     throw new Error(
@@ -211,8 +219,8 @@ function capture(cast: string, prefix: string, requireGraphics: boolean) {
         ...options.flatMap((option) => ["-o", option]),
         "-e",
         process.execPath,
-        fileURLToPath(import.meta.url),
-        "--play",
+        fileURLToPath(new URL("../drive.ts", import.meta.url)),
+        "_cast-play",
         cast,
         scratch,
       ],
@@ -261,26 +269,4 @@ function capture(cast: string, prefix: string, requireGraphics: boolean) {
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
-}
-
-const args = process.argv.slice(2);
-try {
-  if (args[0] === "--play" && args.length === 3) {
-    try {
-      await play(args[1]!, args[2]!);
-    } catch (err) {
-      writeFileSync(join(args[2]!, "error"), err instanceof Error ? err.message : String(err));
-      process.exitCode = 1;
-    }
-  } else {
-    const requireGraphics = args[0] === "--require-graphics";
-    const [cast, prefix, ...extra] = args.slice(requireGraphics ? 1 : 0);
-    if (!cast || !prefix || extra.length)
-      throw new Error("usage: turbo run capture-cast -- <trusted.cast> <output-prefix>");
-    if (process.platform !== "linux") throw new Error("cast capture requires Linux");
-    capture(resolve(cast), resolve(prefix), requireGraphics);
-  }
-} catch (err) {
-  console.error(`capture-cast: ${err instanceof Error ? err.message : err}`);
-  process.exitCode = 1;
 }

@@ -4,6 +4,9 @@
   "private": true,
   "repository": "github:nickolaj-jepsen/agents",
   "type": "module",
+  "scripts": {
+    "drive": "node lib/tools/drive/drive.ts"
+  },
   "devDependencies": {
     "turbo": "2.11.13"
   },

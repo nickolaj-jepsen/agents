@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { options } from "./options.ts";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -19,7 +20,7 @@ export type LiveOptions = {
 };
 
 const removeRun = (dir: string) => {
-  if (!process.env.E2E_KEEP) rmSync(dir, { recursive: true, force: true });
+  if (!options.keep) rmSync(dir, { recursive: true, force: true });
 };
 
 /**
@@ -31,13 +32,13 @@ async function freshSession(r: Resolved, name: string, runDir: string): Promise<
     const { stdout } = await run(
       process.execPath,
       [
-        join(driveRoot, "cli.ts"),
+        join(driveRoot, "drive.ts"),
         "_reach",
         r.plugin,
         r.name,
         "--harness",
         r.harness,
-        "--session",
+        "--daemon",
         name,
         "--run",
         runDir,

@@ -1,18 +1,26 @@
 /**
  * Plays every scenario of an app or kit package in its real agent and compares the screen
  * at each size with its stored snapshot. It starts Claude Code and pi, so it runs as the `e2e` task
- * of each package that has scenarios (`node run.ts <package>`), not as part of the generic `test`.
+ * of each package that has scenarios (`drive test <package>`), not as part of the generic `test`.
  *
  * The scenarios run first, together, in `lib/runner.ts` (sessions side by side, a chain of
  * scenarios in one session); the tests then read what each came to.
  */
 import { beforeAll, describe, expect, it } from "vitest";
 import { settleCapture } from "./lib/check.ts";
+import { options } from "./lib/options.ts";
 import { loadSet, resolveScenario, scenarioFiles, type ScenarioSet } from "./lib/scenario.ts";
 import { runAll, type Outcome } from "./lib/runner.ts";
 
 const sets: ScenarioSet[] = [];
-for (const { file } of scenarioFiles(process.env.E2E_PLUGIN)) sets.push(await loadSet(file));
+for (const { file } of scenarioFiles(options.package)) {
+  const set = await loadSet(file);
+  // A screen with `snapshots: false` is for live mode and `goto`: no test, no snapshot.
+  const scenarios = Object.fromEntries(
+    Object.entries(set.scenarios).filter(([, s]) => s.snapshots !== false),
+  );
+  sets.push({ ...set, scenarios });
+}
 
 // A known failure passes while it fails (`expectFail`), and fails the day it is fixed.
 const titleOf = (set: ScenarioSet, name: string) => {
@@ -21,7 +29,7 @@ const titleOf = (set: ScenarioSet, name: string) => {
 };
 
 /** Mirrors `vitest -t`: the pattern is tested against the whole test name. */
-const filter = process.env.E2E_FILTER ? new RegExp(process.env.E2E_FILTER) : undefined;
+const filter = options.filter ? new RegExp(options.filter) : undefined;
 const wanted = (plugin: string, harness: string, name: string) => {
   if (!filter) return true;
   const set = sets.find((s) => s.plugin === plugin && s.harness === harness);

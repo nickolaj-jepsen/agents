@@ -29,7 +29,6 @@ if (shots) {
     spawnSync(process.execPath, [join(repoRoot, script), ...args], {
       cwd: repoRoot,
       stdio: "inherit",
-      env: { ...process.env, E2E_PNG: "1" },
     });
   const packages = readdirSync(join(repoRoot, "lib/kits"), { withFileTypes: true })
     .filter((d) => d.isDirectory() && existsSync(join(repoRoot, "lib/kits", d.name, "e2e")))
@@ -37,7 +36,9 @@ if (shots) {
   const built = run("lib/tools/build/build.ts", "lib/kits/catalog");
   const done =
     built.status === 0
-      ? packages.map((p) => run("lib/tools/drive/run.ts", p)).find((r) => r.status !== 0)
+      ? packages
+          .map((p) => run("lib/tools/drive/drive.ts", "test", p, "--png"))
+          .find((r) => r.status !== 0)
       : built;
   if (done && done.status !== 0) {
     console.error("catalog: the kit scenarios failed; fix them, or use --no-shots to skip them");

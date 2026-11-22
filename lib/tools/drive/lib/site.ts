@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { checkoutRoot, type HarnessName } from "./harness.ts";
@@ -216,4 +216,35 @@ export function squeeze(file: string, budget: number) {
     throw new Error(
       `${relative(checkoutRoot, file)} is ${kb(file)}, over its ${budget / 1024} KB budget`,
     );
+}
+
+/**
+ * pngquant, then oxipng: a UI's flat colours and its text keep their edges in a palette at a
+ * fraction of the size. 98 and 99 are a file pngquant left as it was.
+ */
+export function optimise(files: string[]) {
+  if (files.length === 0) return;
+  const script = [
+    'pngquant --quality 85-100 --speed 1 --strip --skip-if-larger --force --ext .png -- "$@"; s=$?',
+    '{ [ $s -eq 0 ] || [ $s -eq 98 ] || [ $s -eq 99 ]; } && oxipng --quiet --opt 4 --strip safe -- "$@"',
+  ].join("; ");
+  const args = ["-c", script, "sh", ...files];
+  const run =
+    onPath("pngquant") && onPath("oxipng")
+      ? spawnSync("sh", args, { stdio: "inherit" })
+      : spawnSync(
+          "nix",
+          [
+            "shell",
+            "--inputs-from",
+            checkoutRoot,
+            "nixpkgs#pngquant",
+            "nixpkgs#oxipng",
+            "--command",
+            "sh",
+            ...args,
+          ],
+          { stdio: "inherit" },
+        );
+  if (run.status !== 0) throw new Error("pngquant or oxipng failed");
 }

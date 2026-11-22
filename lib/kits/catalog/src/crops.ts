@@ -2,14 +2,10 @@
  * Crops each kit scenario's screenshot (each kit package's `e2e/__snapshots__/`, git-ignored) to the scenario's
  * region (the `@x,y (wxh)` of its `.snap` header), so the site shows the component and not the
  * terminal round it, and writes them under `apps/site/media/kit/`, listed in `crops.json` with a
- * pixel size and a hash: an unchanged crop is not rewritten, so a run leaves no churn.
- *
- * tui-test's screenshot is a window: purple padding, a title bar, then the cell grid, at a
- * fixed cell size. The geometry below was read off those images, so a screenshot whose size
- * does not match it for its grid is skipped rather than cropped wrong.
+ * pixel size and a hash: an unchanged crop is not rewritten, so a run leaves no churn. The cutting
+ * itself is the driver's (`lib/crop.ts`), which `drive record kit-<name>` uses too.
  */
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -20,13 +16,9 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { crop, decode, encode } from "./png.ts";
+import { cropToRegion } from "@agents/drive/lib/crop.ts";
 import { repoRoot, snapshotRoots } from "./model.ts";
 import { harnesses } from "@agents/kit-core/manifest.ts";
-
-const cell = { w: 10, h: 21 };
-const origin = { x: 39, y: 65 };
-const margin = { right: 39, bottom: 39 };
 
 const repo = repoRoot;
 export const cropsDir = join(repo, "apps/site/media/kit");
@@ -90,42 +82,25 @@ export function cropShots(): { written: number; kept: number; removed: number } 
         const [, story, w, h] = m as unknown as [string, string, string, string];
         const snap = full.replace(/\.png$/, ".snap");
         if (!existsSync(snap)) continue;
-        const r = /@(\d+),(\d+) \((\d+)x(\d+)\)/.exec(
-          readFileSync(snap, "utf8").split("\n", 1)[0]!,
-        );
-        if (!r) continue;
         const cols = Number(w);
         const rows = Number(h);
-        const img = decode(readFileSync(full));
-        if (
-          img.w !== origin.x + cell.w * cols + margin.right ||
-          img.h !== origin.y + cell.h * rows + margin.bottom
-        ) {
+        const cut = cropToRegion(
+          readFileSync(full),
+          readFileSync(snap, "utf8").split("\n", 1)[0]!,
+          cols,
+          rows,
+        );
+        if (!cut) {
           console.warn(`catalog: ${relative(repo, full)} is not a ${cols}x${rows} window; skipped`);
           continue;
         }
-        const x0 = Math.max(0, Number(r[1]));
-        const y0 = Math.max(0, Number(r[2]));
-        const x1 = Math.min(cols, Number(r[1]) + Number(r[3]));
-        const y1 = Math.min(rows, Number(r[2]) + Number(r[4]));
-        const cut = crop(
-          img,
-          origin.x + x0 * cell.w,
-          origin.y + y0 * cell.h,
-          (x1 - x0) * cell.w,
-          (y1 - y0) * cell.h,
-        );
         const key = `${harness}/${story}@${cols}x${rows}`;
         const out = join(cropsDir, `${key}.png`);
-        const hash = createHash("sha256")
-          .update(`${cut.w}x${cut.h}x${cut.channels}`)
-          .update(cut.data)
-          .digest("hex")
-          .slice(0, 16);
-        after[key] = { png: relative(repo, out), width: cut.w, height: cut.h, hash };
+        const hash = cut.hash;
+        after[key] = { png: relative(repo, out), width: cut.width, height: cut.height, hash };
         if (before[key]?.hash === hash && existsSync(out)) continue;
         mkdirSync(dirname(out), { recursive: true });
-        writeFileSync(out, encode(cut));
+        writeFileSync(out, cut.png);
         changed.push(out);
       }
   }

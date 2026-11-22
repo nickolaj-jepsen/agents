@@ -2,6 +2,7 @@
  * A running agent and the verbs a scenario, a test or the CLI drives it with.
  * Mouse targets are visible text; sizes are columns by rows.
  */
+import { options } from "./options.ts";
 import { accessSync, constants, mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -64,11 +65,11 @@ function track(session: Session) {
 /**
  * Where a run's folder is made: `/tmp`, not `$TMPDIR`, so its path is as long whoever starts the
  * run (an agent's session sets a `$TMPDIR` of its own), and a path a screen wraps wraps at the same
- * place. `E2E_TMP` names another; without a writable `/tmp`, the temp dir. Resolved, as the agents
+ * place. `--tmp` names another; without a writable `/tmp`, the temp dir. Resolved, as the agents
  * show it (`/private/tmp` on macOS).
  */
 function runBase(): string {
-  if (process.env.E2E_TMP) return realpathSync(process.env.E2E_TMP);
+  if (options.tmp) return realpathSync(options.tmp);
   try {
     accessSync("/tmp", constants.W_OK);
     return realpathSync("/tmp");
@@ -364,7 +365,6 @@ export class Session {
     live.delete(this);
     await this.term.close();
     stopStub(this.runDir);
-    if (this.ownsRun && !process.env.E2E_KEEP)
-      rmSync(this.runDir, { recursive: true, force: true });
+    if (this.ownsRun && !options.keep) rmSync(this.runDir, { recursive: true, force: true });
   }
 }

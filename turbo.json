@@ -59,20 +59,12 @@
         "!tsconfig.json",
         "!**/*.spec.ts"
       ],
-      "env": ["E2E_UPDATE", "E2E_PNG", "E2E_TMP"],
-      "passThroughEnv": ["E2E_JOBS", "E2E_JOBS_CLAUDE", "E2E_JOBS_PI", "E2E_KEEP", "E2E_TIMING"]
+      // The flags of `drive test` are the command's, never the environment's.
+      "env": []
     },
     "e2e:update": {
       "dependsOn": ["build"],
-      "cache": false,
-      "passThroughEnv": [
-        "E2E_JOBS",
-        "E2E_JOBS_CLAUDE",
-        "E2E_JOBS_PI",
-        "E2E_KEEP",
-        "E2E_PNG",
-        "E2E_TMP"
-      ]
+      "cache": false
     },
     // The root's dependencies are in every task's hash, so the root holds turbo alone. oxlint, oxfmt and
     // shellcheck live in `lib/tools/lint/` and the tasks name them by path; its `package.json` is their
@@ -151,144 +143,6 @@
       "inputs": ["fetch-tui-test.ts", "lib/tui-test-release.ts"],
       "outputs": ["node_modules/.cache/tui-test/**"]
     },
-    // Turbo stops what a task leaves behind, so a session parked by `goto` dies with its task:
-    // drive `goto`, `cap` and `keys` with `node lib/tools/drive/cli.ts` itself. This runs verbs that finish.
-    "//#e2e:cli": {
-      "command": ["node", "lib/tools/drive/cli.ts"],
-      "dependsOn": ["//#dist", "@agents/drive#tui-test"],
-      "cache": false,
-      "passThroughEnv": [
-        "XDG_STATE_HOME",
-        "XDG_CACHE_HOME",
-        "XDG_RUNTIME_DIR",
-        "TUI_TEST_BIN",
-        "DISPLAY",
-        "WAYLAND_DISPLAY",
-        "FONTCONFIG_FILE",
-        "E2E_KEEP",
-        "E2E_TIMING",
-        "E2E_VSCODE_SESSION",
-        "E2E_VSCODE_CODE",
-        "E2E_VSCODE_EXTENSIONS",
-        "E2E_VSCODE_CAGE",
-        "E2E_VSCODE_FONTCONFIG_FILE"
-      ]
-    },
-    "//#e2e:vscode": {
-      "command": ["node", "lib/tools/drive/vscode.ts"],
-      "dependsOn": ["//#dist"],
-      "cache": false,
-      "passThroughEnv": [
-        "XDG_STATE_HOME",
-        "XDG_CACHE_HOME",
-        "XDG_RUNTIME_DIR",
-        "TUI_TEST_BIN",
-        "DISPLAY",
-        "WAYLAND_DISPLAY",
-        "FONTCONFIG_FILE",
-        "E2E_KEEP",
-        "E2E_TIMING",
-        "E2E_VSCODE_SESSION",
-        "E2E_VSCODE_CODE",
-        "E2E_VSCODE_EXTENSIONS",
-        "E2E_VSCODE_CAGE",
-        "E2E_VSCODE_FONTCONFIG_FILE"
-      ]
-    },
-    "//#e2e-live": {
-      "command": ["node", "lib/tools/drive/cli.ts", "live"],
-      "dependsOn": ["//#dist", "@agents/drive#tui-test"],
-      "cache": false,
-      "persistent": true,
-      "interactive": true,
-      "passThroughEnv": [
-        "XDG_STATE_HOME",
-        "XDG_CACHE_HOME",
-        "XDG_RUNTIME_DIR",
-        "TUI_TEST_BIN",
-        "DISPLAY",
-        "WAYLAND_DISPLAY",
-        "FONTCONFIG_FILE",
-        "E2E_KEEP",
-        "E2E_TIMING",
-        "E2E_VSCODE_SESSION",
-        "E2E_VSCODE_CODE",
-        "E2E_VSCODE_EXTENSIONS",
-        "E2E_VSCODE_CAGE",
-        "E2E_VSCODE_FONTCONFIG_FILE"
-      ]
-    },
-    "//#kit-live": {
-      "command": ["node", "lib/tools/drive/cli.ts", "live", "kit", "--watch"],
-      "dependsOn": ["//#dist", "@agents/drive#tui-test"],
-      "cache": false,
-      "persistent": true,
-      "interactive": true,
-      "passThroughEnv": [
-        "XDG_STATE_HOME",
-        "XDG_CACHE_HOME",
-        "XDG_RUNTIME_DIR",
-        "TUI_TEST_BIN",
-        "DISPLAY",
-        "WAYLAND_DISPLAY",
-        "FONTCONFIG_FILE",
-        "E2E_KEEP",
-        "E2E_TIMING",
-        "E2E_VSCODE_SESSION",
-        "E2E_VSCODE_CODE",
-        "E2E_VSCODE_EXTENSIONS",
-        "E2E_VSCODE_CAGE",
-        "E2E_VSCODE_FONTCONFIG_FILE"
-      ]
-    },
-    "//#answer-demo": {
-      "command": ["node", "apps/answer/src/e2e/live.ts"],
-      "dependsOn": ["//#dist", "@agents/drive#tui-test"],
-      "cache": false,
-      "persistent": true,
-      "interactive": true,
-      "passThroughEnv": [
-        "XDG_STATE_HOME",
-        "XDG_CACHE_HOME",
-        "XDG_RUNTIME_DIR",
-        "TUI_TEST_BIN",
-        "DISPLAY",
-        "WAYLAND_DISPLAY",
-        "FONTCONFIG_FILE",
-        "E2E_KEEP",
-        "E2E_TIMING",
-        "E2E_VSCODE_SESSION",
-        "E2E_VSCODE_CODE",
-        "E2E_VSCODE_EXTENSIONS",
-        "E2E_VSCODE_CAGE",
-        "E2E_VSCODE_FONTCONFIG_FILE"
-      ]
-    },
-    "//#claude-desktop-dev": {
-      "command": ["node", "lib/tools/drive/desktop.ts"],
-      "dependsOn": ["//#dist"],
-      "cache": false,
-      "passThroughEnv": [
-        "XDG_STATE_HOME",
-        "XDG_CACHE_HOME",
-        "XDG_RUNTIME_DIR",
-        "TUI_TEST_BIN",
-        "DISPLAY",
-        "WAYLAND_DISPLAY",
-        "FONTCONFIG_FILE",
-        "E2E_KEEP",
-        "E2E_TIMING",
-        "E2E_VSCODE_SESSION",
-        "E2E_VSCODE_CODE",
-        "E2E_VSCODE_EXTENSIONS",
-        "E2E_VSCODE_CAGE",
-        "E2E_VSCODE_FONTCONFIG_FILE"
-      ]
-    },
-    "//#capture-cast": {
-      "command": ["nix", "run", ".#media", "--", "node", "lib/tools/drive/capture-cast.ts"],
-      "cache": false
-    },
     "//#plugin-docs": {
       "command": ["node", "skills/agent-plugin-dev/scripts/refresh-docs.ts"],
       "cache": false
@@ -341,16 +195,7 @@
       ]
     },
     "@agents/drive#media:kit": {
-      "command": [
-        "nix",
-        "run",
-        ".#media",
-        "--",
-        "env",
-        "E2E_UPDATE=1",
-        "node",
-        "../kits/catalog/src/build.ts"
-      ],
+      "command": ["nix", "run", ".#media", "--", "node", "drive.ts", "record", "kit"],
       "dependsOn": ["//#dist", "//#media-env"],
       "passThroughEnv": [
         "NIX_*",
@@ -366,13 +211,6 @@
         "FONTCONFIG_FILE",
         "CAST_FFMPEG",
         "CAST_MESA",
-        "SITE_JOBS",
-        "E2E_JOBS",
-        "E2E_JOBS_CLAUDE",
-        "E2E_JOBS_PI",
-        "E2E_KEEP",
-        "E2E_TIMING",
-        "E2E_TMP",
         "E2E_VSCODE_CODE",
         "E2E_VSCODE_EXTENSIONS",
         "E2E_VSCODE_CAGE",
@@ -382,9 +220,7 @@
         "lib/**",
         "assets/**",
         "tui-test.toml",
-        "run.ts",
-        "e2e.spec.ts",
-        "vitest.config.ts",
+        "*.ts",
         "$TURBO_ROOT$/lib/kits/**",
         "$TURBO_ROOT$/AGENTS.md",
         "!**/node_modules/**",
@@ -407,16 +243,25 @@
         "!$TURBO_ROOT$/**/*.spec.ts",
         "!$TURBO_ROOT$/**/*.test.ts",
         "!$TURBO_ROOT$/**/*.test.tsx",
-        "!site-vscode.ts",
-        "!vscode.ts",
         "!lib/vscode.ts",
         "!lib/vscode-scenario.ts",
         "!*/vscode.scenarios.ts"
       ],
-      "outputs": ["$TURBO_ROOT$/apps/site/media/kit/**", "$TURBO_ROOT$/apps/site/data/kit.json"]
+      "outputs": ["$TURBO_ROOT$/apps/site/media/kit/**"]
     },
     "@agents/drive#site-shots": {
-      "command": ["nix", "run", ".#media", "--", "node", "site.ts"],
+      "command": [
+        "nix",
+        "run",
+        ".#media",
+        "--",
+        "node",
+        "drive.ts",
+        "record",
+        "apps",
+        "--harness",
+        "terminal"
+      ],
       "dependsOn": ["//#dist", "@agents/drive#tui-test", "//#media-env"],
       "passThroughEnv": [
         "NIX_*",
@@ -432,13 +277,6 @@
         "FONTCONFIG_FILE",
         "CAST_FFMPEG",
         "CAST_MESA",
-        "SITE_JOBS",
-        "E2E_JOBS",
-        "E2E_JOBS_CLAUDE",
-        "E2E_JOBS_PI",
-        "E2E_KEEP",
-        "E2E_TIMING",
-        "E2E_TMP",
         "E2E_VSCODE_CODE",
         "E2E_VSCODE_EXTENSIONS",
         "E2E_VSCODE_CAGE",
@@ -468,8 +306,6 @@
         "!$TURBO_ROOT$/**/*.spec.ts",
         "!$TURBO_ROOT$/**/*.test.ts",
         "!$TURBO_ROOT$/**/*.test.tsx",
-        "!site-vscode.ts",
-        "!vscode.ts",
         "!lib/vscode.ts",
         "!lib/vscode-scenario.ts",
         "!*/vscode.scenarios.ts",
@@ -490,8 +326,7 @@
         "--",
         "sh",
         "-c",
-        "if [ \"$(uname -s)\" = Linux ]; then exec node site-vscode.ts \"$@\"; fi; echo \"site-vscode: needs a Linux compositor, skipped\"",
-        "site-vscode"
+        "if [ \"$(uname -s)\" = Linux ]; then exec node drive.ts record apps --harness vscode; fi; echo \"site-vscode: needs a Linux compositor, skipped\""
       ],
       "dependsOn": ["//#dist", "//#media-env"],
       "passThroughEnv": [
@@ -508,13 +343,6 @@
         "FONTCONFIG_FILE",
         "CAST_FFMPEG",
         "CAST_MESA",
-        "SITE_JOBS",
-        "E2E_JOBS",
-        "E2E_JOBS_CLAUDE",
-        "E2E_JOBS_PI",
-        "E2E_KEEP",
-        "E2E_TIMING",
-        "E2E_TMP",
         "E2E_VSCODE_CODE",
         "E2E_VSCODE_EXTENSIONS",
         "E2E_VSCODE_CAGE",

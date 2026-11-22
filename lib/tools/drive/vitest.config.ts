@@ -1,9 +1,7 @@
 import { defineConfig } from "vitest/config";
 
-// `-u` accepts snapshots the way vitest's own do: the workers read E2E_UPDATE.
-if (process.argv.includes("-u") || process.argv.includes("--update")) process.env.E2E_UPDATE = "1";
-
-// Run by `node run.ts`, the `e2e` task of each app and kit package; not by the generic `test`.
+// Run by `drive test <package>`, the `e2e` task of each app and kit package; not by the generic
+// `test`. Its flags reach the workers through `lib/options.ts`.
 export default defineConfig({
   esbuild: { tsconfigRaw: "{}" },
   test: {
