@@ -74,7 +74,10 @@
   allNames = lib.unique (lib.concatMap closure (lib.attrNames plugins));
 
   pnpmDeps = fetchPnpmDeps {
-    pname = "agents";
+    # A fixed-output fetch whose name and hash stay the same is taken from the store as it is,
+    # however the lockfile changed, so a stale hash would pass. The lockfile's digest in the name
+    # (the fetch is named after `pname` alone) makes every lockfile change a fetch nix must verify.
+    pname = "agents-${builtins.substring 0 12 (builtins.hashFile "sha256" (root + "/pnpm-lock.yaml"))}";
     src = sourceOf allNames;
     pnpm = pnpm_12;
     fetcherVersion = 5;
