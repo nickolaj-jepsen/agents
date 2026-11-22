@@ -6,8 +6,7 @@
  * pure function from the state, the width and the height to styled lines, each control with its
  * `hit`, and the reducer the keys and clicks of both clients go through.
  *
- * It imports the kit from the mod's copy (`../claude/kit/`, written by `turbo run kit-sync`): a Claude
- * Code mod cannot import outside its plugin, and pi reads the same files.
+ * It imports the kit packages, which the build bundles into the mod and the pi extension.
  */
 import type { Button } from "@agents/kit-buttons/contract.ts";
 import { buttonRow } from "@agents/kit-buttons/terminal.ts";

@@ -1,7 +1,7 @@
 /**
  * The mod over the core, whose queue logic has its own tests (`core/docfix.spec.ts`): here the
  * tool's file IO, the count above the prompt, and the pane: what a row is set to, its folding and its keys.
- * What closing carries out needs a person's close, which only a session has (e2e/docfix).
+ * What closing carries out needs a person's close, which only a session has (the scenarios in `src/e2e/`).
  */
 import type { On } from "claude-code";
 import { expect, test } from "claude-code/testing";

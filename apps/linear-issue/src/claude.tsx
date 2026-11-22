@@ -76,7 +76,7 @@ async function warnDrift($: EngineInterface) {
   if ((await $.store.get("warnedVersion").catch(() => undefined)) === version) return;
   await $.store.set("warnedVersion", version);
   $.ui.toast(
-    `linear-issue: the You should know card no longer has "${ANCHOR}", so its Linear button is hidden; update plugins/linear-issue`,
+    `linear-issue: the You should know card no longer has "${ANCHOR}", so its Linear button is hidden; update apps/linear-issue`,
   );
 }
 

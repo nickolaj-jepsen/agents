@@ -15,8 +15,8 @@ const docs = await Promise.all(
 );
 const guides = [
   ['AGENTS.md', 'What an agent working here reads first'],
-  ['kit/README.md', 'The UI kit, and how this catalogue is built'],
-  ['e2e/README.md', 'The end-to-end screens and the site’s media'],
+  ['lib/kits/README.md', 'The UI kit, and how this catalogue is built'],
+  ['lib/tools/drive/README.md', 'pnpm drive: real agents, screen tests and the site’s media'],
   ['skills/agent-plugin-dev/references/style.md', 'The house style of plugin screens'],
 ] as const;
 
@@ -106,7 +106,7 @@ const storyCount = (r: number, of: number) => (r === of ? `${of} ${of === 1 ? 's
     </div>
     <p class="kit-how">
       Each component as each harness draws it: what the kit exports there and how many of its features
-      work (<span class="count yes"><span aria-hidden="true">✓</span> yes</span>, <span class="count partial"><span aria-hidden="true">~</span> partly</span>, <span class="count no"><span aria-hidden="true">✗</span> no</span>), or why it can't. Its manifest is <a href={github('kit/catalog/components/')}><code>kit/catalog/components/</code></a>, and <code>turbo run catalog</code> rebuilds the renders, this model and <a href={github('kit/catalog/COMPONENTS.md')}><code>COMPONENTS.md</code></a>.
+      work (<span class="count yes"><span aria-hidden="true">✓</span> yes</span>, <span class="count partial"><span aria-hidden="true">~</span> partly</span>, <span class="count no"><span aria-hidden="true">✗</span> no</span>), or why it can't. Each component's manifest is <code>src/manifest.ts</code> in its package under <a href={github('lib/kits/')}><code>lib/kits/</code></a>, and <code>turbo run catalog:docs</code> rewrites <a href={github('lib/kits/catalog/COMPONENTS.md')}><code>COMPONENTS.md</code></a>.
     </p>
 
     <div class="table scroll" role="region" aria-label="Components by harness" tabindex="0">
