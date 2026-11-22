@@ -604,18 +604,38 @@
       ],
       "inputs": ["**/*.sh", "lib/tools/lint/package.json"]
     },
-    // Not part of `check`: the one task that needs nix. It reads the flake's nix files and lock; the
-    // treefmt check it runs formats nix files only, so nothing else in the tree reaches its result.
-    // CI runs it when this key misses (see .github/workflows/ci.yml).
+    // Not part of `check`: the one task that needs nix. `nix flake check` builds every plugin
+    // (`packages.plugins`, and each Claude half through `lib.mkClaudePlugin`), so it keys on the nix
+    // files, the lockfile and the hash that pins it, and the sources nix builds from: the apps, the kits
+    // and the build tool, less what only tests and recordings read. A stale `pkgs/pnpm-deps.hash` fails it;
+    // `nix run .#update-deps-hash` rewrites it. CI runs it when this key misses (see
+    // .github/workflows/ci.yml).
     "//#check:nix": {
-      "command": ["nix", "flake", "check", "--print-build-logs"],
+      "command": [
+        "sh",
+        "-c",
+        "nix flake check --print-build-logs || { status=$?; echo 'check:nix failed. If nix reported a hash mismatch in agents-pnpm-deps, the lockfile changed: run `nix run .#update-deps-hash` and commit pkgs/pnpm-deps.hash.' >&2; exit $status; }"
+      ],
       "inputs": [
         "**/*.nix",
         "flake.lock",
+        "pkgs/pnpm-deps.hash",
+        "package.json",
+        "pnpm-lock.yaml",
+        "pnpm-workspace.yaml",
+        "apps/*/**",
+        "lib/kits/*/**",
+        "lib/tools/build/**",
+        "!apps/site/**",
+        "!lib/kits/catalog/**",
+        "!**/e2e/**",
+        "!**/src/e2e/**",
         "!**/node_modules/**",
         "!**/.turbo/**",
         "!**/.venv/**",
-        "!apps/site/dist/**"
+        "!**/dist/**",
+        "!**/.claude-plugin/types/**",
+        "!**/*.spec.ts"
       ],
       "passThroughEnv": [
         "NIX_*",

@@ -1,39 +1,35 @@
 # One plugin's Claude half, validated and tested against a given claude-code, so a bump that
 # breaks its API (or drops a keybinding action a plugin borrows) fails the build. The flake's
-# `lib.mkClaudePlugin` applies it to each plugin.
+# `lib.mkClaudePlugin` applies it to each plugin's build.
 {
   stdenvNoCC,
   claude-code,
   name,
-  # The plugin's folder in the flake's source (`lib.plugins.<name>.path`).
-  src,
+  # The plugin's build (`packages.<system>.<name>`): the folder `lib/tools/build/build.ts` wrote.
+  dist,
 }:
 stdenvNoCC.mkDerivation {
   name = "claude-code-${name}";
-  # A copy of the folder alone, so an edit elsewhere in the repo leaves the build cached.
-  src = builtins.path {
-    path = src;
-    name = "claude-code-${name}-src";
-  };
+  dontUnpack = true;
+  dontFixup = true;
   nativeBuildInputs = [claude-code];
   buildPhase = ''
     runHook preBuild
     export HOME="$TMPDIR"
-    claude plugin validate .
+    cp -r ${dist} plugin
+    chmod -R u+w plugin
+    cd plugin
+    claude plugin validate --strict .
     claude plugin test .
+    cd ..
     runHook postBuild
   '';
-  # What a mod loads: the rest of the folder (package.json, tsconfigs, tests, the pi half) is the
-  # repo's own.
+  # What a mod loads, with the API types the engine laid while it was tested (a store path is not
+  # writable at load time). The pi half, its manifest and the tests are the repo's own.
   installPhase = ''
     runHook preInstall
-    mkdir -p $out
-    cp -r .claude-plugin hooks claude $out/
-    rm -f $out/claude/*.test.ts $out/claude/*.test.tsx $out/claude/tsconfig.json
-    if [ -d core ]; then
-      cp -r core $out/
-      rm -f $out/core/*.spec.ts
-    fi
+    mv plugin $out
+    rm -rf $out/pi $out/package.json $out/*.test.ts
     runHook postInstall
   '';
 }
