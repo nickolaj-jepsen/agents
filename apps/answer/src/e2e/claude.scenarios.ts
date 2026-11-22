@@ -9,6 +9,13 @@ const answer: Step[] = [{ type: "/answer" }, { press: "Enter" }];
 // `/answer` brings the card with the keyboard into view: wait for its heading, or a tall card is
 // snapped while it still scrolls.
 const round: Step[] = [...ask, { wait: /(?:^|\s)Q?1\/\d/ }, ...answer, { wait: /▎ ❯ \S+ {2}/ }];
+// Claude keeps the transcript pinned to its end until something scrolls it, and the card's own
+// scrolls (the mod's, after a pick or a save) let go of it. The "◐ medium · /effort" hint going,
+// about nine seconds after the start, pins it again, so a screen that fits at the scenario's size
+// and not at 70x24 would be snapshotted scrolled to the top or the end by whether the last scroll
+// came before the hint went. A screen that resizes through a larger size and back is pinned
+// whatever the order, which is the one these snapshots hold.
+const pinned: Step[] = [{ resize: [160, 45] }, { resize: [96, 34] }];
 const turn = (fixture: string): Scenario["start"] => ({
   hermetic: true,
   plugins: ["answer"],
@@ -59,7 +66,7 @@ export default scenarios({
       about: "/answer brings the first transcript card into view",
       start: turn("two-q"),
       size: [96, 34],
-      steps: [...round, { wait: /❯\s+Q1\s+Use SQLite/ }],
+      steps: [...round, { wait: /❯\s+Q1\s+Use SQLite/ }, ...pinned],
     },
     closing: {
       about: "what the message says after its last question is drawn after the cards",
@@ -184,6 +191,7 @@ export default scenarios({
         { press: "Enter" },
         { wait: /C ●\s+An embedded store/ },
         { wait: "Q1/2" },
+        ...pinned,
       ],
     },
     "long-draft": {
@@ -226,6 +234,7 @@ export default scenarios({
         { wait: /Note:.*⏎ save/, gone: true },
         { wait: "Second line" },
         { run: expectPrompt("draft to keep") },
+        ...pinned,
       ],
     },
     "write-cancel": {
