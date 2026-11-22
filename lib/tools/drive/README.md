@@ -148,7 +148,9 @@ Desktop needs `claude` and `claude-desktop` on PATH. Sign in to the isolated tes
 
 ## Site media
 
-The site's pictures and demos are recorded, not committed. A package's `site.scenarios.ts` says what to record, and `record` writes it to `apps/site/media/<package>/`, emptying what it wrote before so no file outlives its scenario. A kit package's pictures go to `apps/site/media/kit/<name>/`. The site builds without any of it and warns about what is missing.
+The site's pictures and demos are recorded, not committed. A package's `site.scenarios.ts` says what to record, and `record` writes it to `apps/site/media/<package>/`, replacing the files its own recorder wrote so no file outlives its scenario and the other recorder's stay. A kit package's pictures go to `apps/site/media/kit/<name>/`. The site builds without any of it and warns about what is missing.
+
+A recording stages its files in a folder of its own and publishes them only when every scenario came out and fits its budget, so a failed capture leaves the published media as they were. The failure keeps that staging folder — the screenshots a broken step left or a screen it could not photograph — and prints where it is, for inspection without replaying the recording; `--keep` and `--timing` are not needed for it. Recording depends on no stored snapshot and no test flag: a scenario marked as a known failure is recorded like any other, and a VS Code panel whose pictures are still undrawn fails its first capture instead of being given a fresh window.
 
 Record in the media environment: `nix run .#media -- <drive verb>` runs the driver with VS Code, the fonts and the tools the scenarios call, and any other command runs as given.
 

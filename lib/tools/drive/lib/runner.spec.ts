@@ -193,3 +193,32 @@ it("sends the scenarios after a broken reset to fresh sessions", async () => {
   expect(fresh.id).not.toBe(shared());
   expect(after.captures[0]?.actual).toBe(`after at ${fresh.id}`);
 });
+
+it("hands a known failure that played to its capture, leaving the rule to the gate", async () => {
+  const { opened, reach, captureOf } = sessions();
+  const captured: string[] = [];
+  const stage: Stage = {
+    reach,
+    capture: async (session, r) => {
+      captured.push(`${r.name} at ${captureOf(session).id}`);
+      return [shot(r, r.name)];
+    },
+    failShot: async () => undefined,
+  };
+  const { outcomes } = await runAll(
+    [
+      set({
+        head: { size: [70, 24], steps: [] },
+        known: { from: "head", size: [70, 24], steps: [], expectFail: "broken until fixed" },
+      }),
+    ],
+    () => true,
+    stage,
+  );
+
+  const known = outcomes.get("fake/pi/known")!;
+  expect(known.error).toBeUndefined();
+  // Media is not the gate: a known failure that played is still a screen to record.
+  expect(known.captures.map((c) => c.actual)).toEqual(["known"]);
+  expect(captured).toEqual([`head at ${opened[0]!.id}`, `known at ${opened[0]!.id}`]);
+});

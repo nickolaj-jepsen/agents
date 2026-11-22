@@ -18,7 +18,7 @@ writeFileSync(join(snapDir, "look@70x24.snap"), "the stored screen");
 const previousRoot = process.env.AGENTS_DRIVE_ROOT;
 process.env.AGENTS_DRIVE_ROOT = root;
 
-const { capture, captureMedia } = await import("./check.ts");
+const { capture, captureMedia, gateCapture } = await import("./check.ts");
 const { setOptions } = await import("./options.ts");
 const { resolveScenario } = await import("./scenario.ts");
 
@@ -85,4 +85,27 @@ it("still compares the gate's capture with the stored snapshot, and acceptance s
   setOptions({ update: true });
   const accepted = await capture(session("anything"), look);
   expect(accepted[0]).toMatchObject({ actual: "anything", expected: "the stored screen" });
+});
+
+it("leaves a known failure to the gate without comparing its screen", async () => {
+  setOptions({ png: false, update: false });
+  const known: Resolved = resolveScenario(
+    {
+      ...set,
+      scenarios: {
+        ...set.scenarios,
+        known: { size: [70, 24], sizes: [[70, 24]], steps: [], expectFail: "broken until fixed" },
+      },
+    },
+    "known",
+  );
+  const drawn: string[] = [];
+  expect(
+    await gateCapture(
+      session("the screen now", (p) => drawn.push(p)),
+      known,
+    ),
+  ).toEqual([]);
+  // No comparison and no evidence: the gate does not read a known failure's screen.
+  expect(drawn).toEqual([]);
 });

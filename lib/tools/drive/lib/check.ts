@@ -109,6 +109,15 @@ export async function captureMedia(session: Session, r: Resolved): Promise<Captu
   return out;
 }
 
+/**
+ * The gate's capture: a scenario known to fail is no screen to compare, so it leaves none. Its
+ * steps still played, and its failure is the verdict's; what it drew is not evidence a run reads.
+ */
+export async function gateCapture(session: Session, r: Resolved): Promise<Capture[]> {
+  if (r.expectFail) return [];
+  return capture(session, r);
+}
+
 export const updating = () => !!options.update;
 
 /** Whether the screen is not what the snapshot holds (an update accepts anything). */

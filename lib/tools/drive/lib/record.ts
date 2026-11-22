@@ -10,12 +10,12 @@
  * - a kit package's stories (its `claude`/`pi` scenarios) as crops, in its own folder
  *   `apps/site/media/kit/<package>/<harness>/<story>@WxH.png`, listed in that folder's `crops.json`.
  *
- * A package whose run fails keeps its old files: the media are staged in a folder of their own and
- * moved in only when every scenario came out and fits its budget.
+ * A package whose run fails keeps its old files and its staging folder, which it names: the media
+ * are staged in a folder of their own and moved in only when every scenario came out and fits its
+ * budget. Publishing one recorder's files leaves the other recorder's in the folder.
  */
 import { execFile, execFileSync } from "node:child_process";
 import {
-  copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -33,6 +33,7 @@ import { cropToRegion } from "./crop.ts";
 import { entries, packagesNamed } from "./find.ts";
 import { checkoutRoot } from "./harness.ts";
 import { WRITES } from "./linear-mcp.ts";
+import { photograph, publish, retainFailure } from "./media.ts";
 import { options } from "./options.ts";
 import type { E2EPackage } from "./packages.ts";
 import { realStage, runAll } from "./runner.ts";
@@ -103,24 +104,12 @@ const siteFile = (p: E2EPackage) => join(p.e2e, "site.scenarios.ts");
 
 // ---- a package's folder
 
-/** Moves the staged files in, after removing the folder's old ones that `mine` says are this recorder's. */
+/** Publishes a staged run into the package's folder, leaving the other recorder's files alone. */
 function commit(pkg: string, stage: string, mine: (file: string) => boolean) {
   const dest = join(mediaRoot, pkg);
-  mkdirSync(dest, { recursive: true });
+  publish(dest, stage, mine);
   for (const f of readdirSync(dest))
-    if (mine(f)) rmSync(join(dest, f), { recursive: true, force: true });
-  const copy = (from: string, to: string) => {
-    mkdirSync(to, { recursive: true });
-    for (const e of readdirSync(from, { withFileTypes: true })) {
-      if (e.isDirectory()) copy(join(from, e.name), join(to, e.name));
-      else {
-        copyFileSync(join(from, e.name), join(to, e.name));
-        console.error(`record: ${rel(join(to, e.name))} ${kb(join(to, e.name))}`);
-      }
-    }
-  };
-  copy(stage, dest);
-  rmSync(stage, { recursive: true, force: true });
+    if (mine(f)) console.error(`record: ${rel(join(dest, f))} ${kb(join(dest, f))}`);
 }
 
 // ---- terminal
@@ -264,7 +253,9 @@ async function play1(
     throw err;
   } finally {
     await session.close();
-    rmSync(runDir, { recursive: true, force: true });
+    // A failed screen's run folder is kept and named with `--keep`, as every other run's.
+    if (options.keep) console.error(`kept the run folder: ${runDir}`);
+    else rmSync(runDir, { recursive: true, force: true });
   }
 }
 
@@ -328,8 +319,8 @@ async function recordTerminal(p: E2EPackage, o: RecordOptions, named: boolean) {
       console.error(
         `record: ${plugin}/${f.job.record || f.job.name} failed: ${String((f.why as Error).message ?? f.why).slice(0, 1500)}`,
       );
-    console.error(`record: ${plugin}: kept the old media; the failed screens are in ${stage}`);
-    throw new Error(`${failed.length} scenario(s) failed`);
+    console.error(`record: ${plugin}: kept the old media`);
+    throw retainFailure(stage, `${failed.length} scenario(s) failed`);
   }
 
   const relPath = (name: string) => `apps/site/media/${plugin}/${name}`;
@@ -453,22 +444,16 @@ async function recordVscode(p: E2EPackage, named: boolean, asked: boolean) {
       };
       const png = join(stage, `vscode-${name}.png`);
       const reloaded = window?.fixed === fixedOf(r.start);
-      let session = reloaded ? await reloadVscode(r, window!.runDir) : await fresh();
-      try {
-        await session.shot(png, { panel: true });
-        // A reload's tab can leave a mod's pictures undrawn for good, their alt text in their
-        // place; a window of its own draws them.
-        if (reloaded && (await session.undrawn()) > 0) {
-          console.error(`record: ${plugin}/${name}: pictures not drawn, again in a new window`);
-          session.close();
-          session = await fresh();
-          await session.shot(png, { panel: true });
-        }
-        const left = await session.undrawn();
-        if (left > 0) throw new Error(`${left} picture(s) of the panel not drawn`);
-      } finally {
-        session.close();
-      }
+      // The first capture is the picture kept: a tab that left a mod's pictures undrawn fails it,
+      // rather than being tried again in a window that would draw them.
+      await photograph(async () => {
+        const session = reloaded ? await reloadVscode(r, window!.runDir) : await fresh();
+        return {
+          shot: (file) => session.shot(file, { panel: true }),
+          undrawn: () => session.undrawn(),
+          close: () => session.close(),
+        };
+      }, png);
       console.error(`record: ${plugin}/vscode-${name} ${((Date.now() - t) / 1000).toFixed(0)}s`);
     }
   } catch (err) {
@@ -476,8 +461,8 @@ async function recordVscode(p: E2EPackage, named: boolean, asked: boolean) {
     console.error(
       `record: ${plugin}/vscode-${name} failed: ${String((err as Error).message ?? err).slice(0, 1500)}`,
     );
-    console.error(`record: ${plugin}: kept the old pictures; the failed screen is in ${stage}`);
-    throw new Error(`${name} failed`);
+    console.error(`record: ${plugin}: kept the old pictures`);
+    throw retainFailure(stage, `${name} failed`);
   } finally {
     await close();
   }
@@ -566,28 +551,26 @@ async function recordKit(p: E2EPackage, named: boolean) {
       };
     }
   }
-  for (const shot of actuals) rmSync(shot, { force: true });
   if (failures.length > 0) {
-    rmSync(stage, { recursive: true, force: true });
-    throw new Error(`${failures.length} scenario(s) failed:\n- ${failures.join("\n- ")}`);
+    // The screenshots the stories that did play left stay in their scenario folders as evidence,
+    // beside the stage that holds the crops made before the failure.
+    console.error(`record: ${p.name}: kept the old pictures`);
+    throw retainFailure(
+      stage,
+      `${failures.length} scenario(s) failed:\n- ${failures.join("\n- ")}`,
+    );
   }
+  for (const shot of actuals) rmSync(shot, { force: true });
   optimise(written);
   for (const f of written)
     if (statSync(f).size > BUDGET.png)
       console.error(`record: ${rel(f)} is ${kb(f)}, over its ${BUDGET.png / 1024} KB budget`);
-  // The package's own folder, emptied first; the site's loader joins every package's `crops.json`.
-  // The VS Code pictures share the folder and stay.
-  const dest = join(mediaRoot, "kit", kitFolder(p));
-  if (existsSync(dest))
-    for (const f of readdirSync(dest))
-      if (!isVscodeFile(f)) rmSync(join(dest, f), { recursive: true, force: true });
-  for (const f of written) {
-    const to = join(dest, relative(stage, f));
-    mkdirSync(dirname(to), { recursive: true });
-    copyFileSync(f, to);
-    console.error(`record: ${rel(to)} ${kb(to)}`);
-  }
+  // The site's loader joins every package's `crops.json`; the VS Code pictures share the folder.
   const sorted = Object.fromEntries(Object.entries(crops).sort(([a], [b]) => a.localeCompare(b)));
-  writeFileSync(join(dest, "crops.json"), `${JSON.stringify(sorted, null, 2)}\n`);
-  rmSync(stage, { recursive: true, force: true });
+  writeFileSync(join(stage, "crops.json"), `${JSON.stringify(sorted, null, 2)}\n`);
+  const dest = join(mediaRoot, "kit", kitFolder(p));
+  const mine = (f: string) => !isVscodeFile(f);
+  publish(dest, stage, mine);
+  for (const f of readdirSync(dest))
+    if (mine(f)) console.error(`record: ${rel(join(dest, f))} ${kb(join(dest, f))}`);
 }

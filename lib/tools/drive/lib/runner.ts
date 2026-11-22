@@ -11,7 +11,7 @@
  */
 import { options } from "./options.ts";
 import { availableParallelism } from "node:os";
-import { capture, type Capture } from "./check.ts";
+import { gateCapture, type Capture } from "./check.ts";
 import type { HarnessName } from "./harness.ts";
 import {
   failShot,
@@ -36,7 +36,7 @@ export type Stage = {
 };
 
 /** A real session with its steps: the gate's stage unless a caller reads the screen another way. */
-export const realStage: Stage = { reach, capture, failShot };
+export const realStage: Stage = { reach, capture: gateCapture, failShot };
 
 export type Job = { plugin: string; harness: HarnessName; name: string; set: ScenarioSet };
 
@@ -148,9 +148,12 @@ type Task = { set: ScenarioSet; chain: Chain };
 const key = (plugin: string, harness: string, name: string) => `${plugin}/${harness}/${name}`;
 let seq = 0;
 
-/** Plays one scenario's captures; the session is on its screen already. */
+/**
+ * Plays one scenario's captures; the session is on its screen already. A scenario that is known to
+ * fail is captured like any other: whether its screen is compared, or drawn at all, is the stage's
+ * rule, so a recording keeps the screen the gate passes over.
+ */
 async function snap(stage: Stage, session: Session, r: Resolved): Promise<Outcome> {
-  if (r.expectFail) return { captures: [] };
   return { captures: await stage.capture(session, r) };
 }
 
