@@ -38,13 +38,13 @@ Use the [kit](../../../kit/README.md) for Desktop and VS Code. Pass the render e
 These quirks were observed in the VS Code extension at 2.1.327. Recheck them after upgrading:
 
 - A `Button` label doesn't wrap. `dimColor`, not `variant`, makes the button quiet in the versions tested. A long label can overflow a narrow pane.
-- An `Input` is one line. Clicking a button that reveals an input doesn't necessarily focus it; test Tab and typing. `wait` can't see placeholder text. For scripted native inputs or selects, use the setter and dispatch the corresponding event, as in [linear-issue's VS Code scenarios](../../../e2e/linear-issue/vscode.scenarios.ts).
-- Typing doesn't emit the terminal's prompt-edit events or redraw the band. The band redraws only when its props change: a turn starts or ends, or the prompt box changes width. A band that reads `$.prompt.read()` when it renders can stay blank or stale until then. See the [replay guide](../../../e2e/README.md#vs-code) for a resize workaround.
+- An `Input` is one line. Clicking a button that reveals an input doesn't necessarily focus it; test Tab and typing. `wait` can't see placeholder text. For scripted native inputs or selects, use the setter and dispatch the corresponding event, as in [linear-issue's VS Code scenarios](../../../apps/linear-issue/src/e2e/vscode.scenarios.ts).
+- Typing doesn't emit the terminal's prompt-edit events or redraw the band. The band redraws only when its props change: a turn starts or ends, or the prompt box changes width. A band that reads `$.prompt.read()` when it renders can stay blank or stale until then. See the [replay guide](../../../lib/tools/drive/README.md#vs-code) for a resize workaround.
 - `$.ui.scroll` can't jump to an element inside an `AssistantMessage` the mod renders: the call is denied or does nothing. Don't offer a transcript jump control that depends on it.
 
 ## Test a mod
 
-Use `await $.ui.mount({ ...PANE, surface })` for `vscode` and `desktop`. Exercise actions with `ui.press({ key })` and call the kit's `expectNative` from `./checks`. This tests the element tree, not how the host closes a pane or transfers focus. Use the VS Code driver below and check [Desktop](../../../e2e/README.md#claude-desktop) by hand.
+Use `await $.ui.mount({ ...PANE, surface })` for `vscode` and `desktop`. Exercise actions with `ui.press({ key })` and call the kit's `expectNative` from `./checks`. This tests the element tree, not how the host closes a pane or transfers focus. Use the VS Code driver below and check [Desktop](../../../lib/tools/drive/README.md#claude-desktop) by hand.
 
 If a wrapper injects flags before `plugin test` and Claude reports “not run from this spelling,” use the repo's pinned Claude, which the `test:claude` task runs with a scratch `HOME`:
 
@@ -54,16 +54,16 @@ pnpm turbo run test:claude --filter=@nickolaj-jepsen/docfix  # validate and test
 
 ### Looking at a graphical screen
 
-Run from the repo root with the [VS Code driver prerequisites](../../../e2e/README.md#vs-code). Inspect the real narrow and wide layouts before lifting any height caps. The full-height shot shows the contents below the scroll edge, not what fits on screen.
+Run from the repo root with the [VS Code driver prerequisites](../../../lib/tools/drive/README.md#vs-code). Inspect the real narrow and wide layouts before lifting any height caps. The full-height shot shows the contents below the scroll edge, not what fits on screen.
 
 ```bash
 out=$(mktemp -d)                                      # keep screenshots together
-node lib/tools/drive/vscode.ts goto docfix open --size 420x800      # open the narrow panel with evidence expanded
-node lib/tools/drive/vscode.ts shot "$out/narrow.png"               # check wrapping, clipping and scroll
-node lib/tools/drive/vscode.ts resize 1280 720                      # switch to the wide layout
-node lib/tools/drive/vscode.ts shot "$out/wide.png"                 # check the wide panel before changing its CSS
-node lib/tools/drive/vscode.ts resize 420 1500                      # return to a narrow viewport with extra height
-node lib/tools/drive/vscode.ts eval '(() => { const s = document.createElement("style"); s.textContent = "[class*=paneBody_],[class*=abovePrompt_],[class*=band_]{max-height:none!important}"; document.head.appendChild(s); })()'  # lift caps in this webview only
-node lib/tools/drive/vscode.ts shot "$out/full.png"                 # inspect content below the usual scroll edge
-node lib/tools/drive/vscode.ts stop                                # close the test window
+pnpm drive goto docfix open --harness vscode --size 420x800 # open the narrow panel with evidence expanded
+pnpm drive shot "$out/narrow.png"               # check wrapping, clipping and scroll
+pnpm drive resize 1280 720                      # switch to the wide layout
+pnpm drive shot "$out/wide.png"                 # check the wide panel before changing its CSS
+pnpm drive resize 420 1500                      # return to a narrow viewport with extra height
+pnpm drive eval '(() => { const s = document.createElement("style"); s.textContent = "[class*=paneBody_],[class*=abovePrompt_],[class*=band_]{max-height:none!important}"; document.head.appendChild(s); })()'  # lift caps in this webview only
+pnpm drive shot "$out/full.png"                 # inspect content below the usual scroll edge
+pnpm drive stop                                # close the test window
 ```

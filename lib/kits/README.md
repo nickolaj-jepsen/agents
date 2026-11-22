@@ -54,12 +54,12 @@ The kit keeps no state and registers no hooks. A plugin holds the state (what is
 ```bash
 pnpm turbo run kit-new -- status-line                                          # scaffold lib/kits/status-line/ and register its stories
 pnpm install                                                                   # link the new package
-pnpm turbo run kit-live --ui=tui -- status-line/default --harness pi           # watch it in a real session; rebuilds on save
+pnpm drive live kit-status-line default --harness pi --watch                   # watch it in a real session; rebuilds on save
 pnpm turbo run e2e:update --filter=@agents/kit-status-line                     # record it in pi and Claude Code
 pnpm turbo run test --filter=@agents/kit-catalog                               # the parity check reads those snapshots
 ```
 
-`kit-live` is an interactive task: the [replay guide](../tools/drive/README.md#live-mode) says how to type into it.
+`drive live` runs in your terminal: the [replay guide](../tools/drive/README.md#live-mode) says how to use it.
 
 1. Put the types in `src/contract.ts` and draw in `src/terminal.ts`. Use roles from `lines.ts` and glyphs from `tokens.ts`, never a colour or a literal glyph. Give each control a `hit`, on its row or on its spans.
 2. Add a story per state in the component's `src/stories.ts`. A story is one call that returns lines for a width.
@@ -86,7 +86,7 @@ To change how something looks everywhere, edit its `src/terminal.ts` or `core/sr
 Their stories and manifests are under [`catalog/src/`](catalog/src), and the catalogue is built from both:
 
 ```bash
-E2E_PNG=1 pnpm turbo run e2e --filter='@agents/kit-*' --force  # compare snapshots and write pictures
+pnpm drive test kit --png                                      # compare snapshots and write pictures
 pnpm turbo run catalog                                         # replay stories and regenerate the crops the site shows
 ```
 

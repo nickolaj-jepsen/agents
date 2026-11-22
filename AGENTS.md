@@ -3,6 +3,7 @@
 Plugins for Claude Code and pi, and installable skills, distributed as a flake. Start with the [developer guide](docs/development.md) for setup, plugin layout, checks, packaging and site changes. Home-manager loads this flake; that configuration lives outside this repo.
 
 - Use turbo for repo commands: `pnpm turbo run <task>`, with the tasks listed in `turbo.json`. Run `pnpm turbo run fmt` before handing back changes. `pnpm turbo run test` is the quick check; `pnpm turbo run check` is the gate CI runs.
+- Drive real agents with `pnpm drive <verb>` (`pnpm drive --help`, [the driver's guide](lib/tools/drive/README.md)), not through turbo: `live` and `goto` with `cap`, `keys`, `shot` and `stop`, `test` for snapshots, `record` for site media.
 - Don't edit the root README directly. Run `pnpm turbo run readme` after editing plugin or skill frontmatter or `docs/_intro.md` or `docs/_install.md`. It fails if any plugin folder lacks a `README.md`.
 - Stage new files before running nix commands; otherwise Nix won't see them. `nix fmt` formats the nix files, which `fmt` leaves alone, and `pnpm turbo run check:nix` checks them; `check` doesn't run it.
 - A mod and a pi extension are bundled from `apps/<name>/src` into the gitignored `apps/<name>/dist` by `pnpm turbo run build`, and the kit is imported as the packages `@agents/kit-*`: there are no copies to sync. See [the kit guide](lib/kits/README.md).

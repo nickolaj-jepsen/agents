@@ -26,7 +26,7 @@ Turbo caches a task by its inputs, so a repeat run replays the output. CI writes
 | `lint:py`, `lint:sh` | ruff and shellcheck; `fmt:check` is the format check `check` runs.                                                                                                                    |
 | `plugin-docs`        | Refresh the upstream manuals in the agent-plugin-dev skill. `-- vMAJOR.MINOR.PATCH` picks the pi docs' release.                                                                       |
 
-Tasks that give you a session (`e2e-live`, `kit-live`, `answer-demo`) are interactive. Run them with `--ui=tui`, select the task in turbo's list and press `i` to send it your keys. `Ctrl+Z` gives the keys back to turbo. Turbo stops what a task leaves running, so a session parked by `goto` dies with its task: drive `goto`, `cap` and `keys` with `node lib/tools/drive/cli.ts` itself, as the [replay guide](../lib/tools/drive/README.md#drive-a-parked-terminal-session) shows.
+A session of an agent is not a turbo task: `pnpm drive live` replays a scenario in your terminal, and `pnpm drive goto` parks one that `cap`, `keys` and `shot` drive from separate commands, as the [replay guide](../lib/tools/drive/README.md#drive-a-parked-session) shows.
 
 Claude writes a mod's API types only when it loads the mod in a real session, into the mod's `dist/.claude-plugin/types/`, and there is no turbo task for that (a build keeps them). After upgrading Claude Code, run `lib/tools/build/dev-setup-claude.sh` with `claude` on `PATH`; it builds every mod, loads each once, waits for the types and tells you to restart the editor's TypeScript server. An app's `tsconfig.json` leaves its Claude half out, so `check-types` needs no session; to check it, take the `exclude` out of the tsconfig and add `dist/.claude-plugin/types` to its `typeRoots`. `test:claude` validates and tests the built mods without that step. pi's packages come from `pnpm install`, so pi halves need no setup.
 
@@ -34,13 +34,13 @@ Claude writes a mod's API types only when it loads the mod in a real session, in
 
 ```bash
 pnpm install                                                       # prepare a new checkout
-pnpm turbo run e2e:cli -- ls answer                                # list saved screens
-pnpm turbo run e2e-live --ui=tui -- answer open --harness claude   # try a Claude card; Ctrl+] stops the replay
-pnpm turbo run e2e-live --ui=tui -- answer open --harness pi       # try the pi version; Ctrl+] stops the replay
-pnpm turbo run e2e-live --ui=tui -- answer form --harness vscode   # Linux with the extension installed; close the window to stop
+pnpm drive ls answer                                # list saved screens
+pnpm drive live answer open --harness claude        # try a Claude card; Ctrl+] stops the replay
+pnpm drive live answer open --harness pi            # try the pi version; Ctrl+] stops the replay
+pnpm drive live answer form --harness vscode        # Linux with the extension installed; close the window to stop
 ```
 
-The replay stops on a question card and hands you the controls: select `e2e-live` in turbo's list and press `i`. Pick an option or resize the window. See the [replay guide](../lib/tools/drive/README.md#live-mode) to write scenarios, take pictures or update snapshots.
+The replay stops on a question card and hands you the controls. Pick an option or resize the window. See the [replay guide](../lib/tools/drive/README.md#live-mode) to write scenarios, take pictures or update snapshots.
 
 ## Change or add a plugin
 
