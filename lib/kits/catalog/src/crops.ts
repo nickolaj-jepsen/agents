@@ -1,5 +1,5 @@
 /**
- * Crops each kit scenario's screenshot (`lib/kits/*/e2e/__snapshots__/`, git-ignored) to the scenario's
+ * Crops each kit scenario's screenshot (each kit package's `e2e/__snapshots__/`, git-ignored) to the scenario's
  * region (the `@x,y (wxh)` of its `.snap` header), so the site shows the component and not the
  * terminal round it, and writes them under `apps/site/media/kit/`, listed in `crops.json` with a
  * pixel size and a hash: an unchanged crop is not rewritten, so a run leaves no churn.

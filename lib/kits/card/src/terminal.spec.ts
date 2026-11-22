@@ -1,17 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { visibleWidth } from "@earendil-works/pi-tui";
-import { textOf, widthOf } from "@agents/kit-core/lines.ts";
-import { paintLines } from "@agents/kit-core/paint/pi.ts";
+import { textOf } from "@agents/kit-core/lines.ts";
 import { choiceKey, choiceReduce, type ChoiceListState } from "./contract.ts";
 import { liveChoices } from "./stories.ts";
 import { choice, choiceList, closing, heading, note, railRole, steps } from "./terminal.ts";
-
-const plain = {
-  fg: (_c: string, t: string) => t,
-  bold: (t: string) => t,
-  italic: (t: string) => t,
-  underline: (t: string) => t,
-} as never;
 
 describe("a choice", () => {
   const item = { key: "A", text: "Write your own answer" };

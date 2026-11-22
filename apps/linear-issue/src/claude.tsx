@@ -165,7 +165,7 @@ async function file($: EngineInterface, { asComment = false, open = false }) {
 }
 
 /** What a key or a click on the terminal's screen asked for, beyond the view's own change. */
-async function run($: EngineInterface, effect: Effect) {
+async function runEffect($: EngineInterface, effect: Effect) {
   switch (effect.do) {
     case "hide":
       return hidePane($);
@@ -192,7 +192,7 @@ async function send($: EngineInterface, given: Intent, drawn = lastDrawn) {
     v.step === "body" && "enter" in given && typedBody !== undefined ? { text: typedBody } : given;
   const acted = act(f, v, intent, drawn, await $.clock.now());
   if (acted.view !== v) await update($, view, () => acted.view);
-  for (const effect of acted.effects) await run($, effect);
+  for (const effect of acted.effects) await runEffect($, effect);
   // The engine keeps its ring by place, so it is put on a text field when that is drawn, and
   // back on the parked button when it goes. Denied when the pane lost the keyboard.
   const typing = typingOf(acted.view);

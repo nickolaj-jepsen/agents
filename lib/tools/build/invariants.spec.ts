@@ -43,7 +43,7 @@ describe(".claude-plugin/marketplace.json", () => {
     const stray = published.filter((p) => !halves.has(p.name)).map((p) => p.name);
     expect(
       stray,
-      `remove from .claude-plugin/marketplace.json, or add a `claude` field to apps/<name>/package.json: ${stray.join(", ")}`,
+      `remove from .claude-plugin/marketplace.json, or add a \`claude\` field to apps/<name>/package.json: ${stray.join(", ")}`,
     ).toEqual([]);
   });
 

@@ -111,7 +111,7 @@ async function manifests(): Promise<{ c: Component; where: string }[]> {
   const folders = readdirSync(kitRoot, { withFileTypes: true })
     .filter(
       (d) =>
-        d.isDirectory() && d.name !== "catalog" && existsSync(join(kitRoot, d.name, "src/manifest.ts")),
+        d.isDirectory() && d.name !== "catalog" && d.name !== "core" && existsSync(join(kitRoot, d.name, "src/manifest.ts")),
     )
     .map((d) => d.name)
     .sort();

@@ -6,8 +6,8 @@
  * here is a regression test: there are no snapshots, and `turbo run e2e` does not read these files.
  */
 import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { e2ePackages } from "./packages.ts";
 import type { Pattern } from "./screen.ts";
 import { setupContext, type SetupContext } from "./setup.ts";

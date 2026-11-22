@@ -55,7 +55,7 @@
             ],
             "patterns": [
               {
-                "group": ["@agents/kit-legacy/**"],
+                "group": ["@agents/kit-legacy/pi/**", "@agents/kit-legacy/claude/ui.tsx"],
                 "message": "This is the legacy kit. Use the kit's components (lib/kits/<component>/, listed in AGENTS.md) instead."
               }
             ]
@@ -195,7 +195,7 @@
             ],
             "patterns": [
               {
-                "group": ["@agents/kit-legacy/**"],
+                "group": ["@agents/kit-legacy/pi/**", "@agents/kit-legacy/claude/ui.tsx"],
                 "message": "This is the legacy kit. Use the kit's components (lib/kits/<component>/, listed in AGENTS.md) instead."
               },
               {

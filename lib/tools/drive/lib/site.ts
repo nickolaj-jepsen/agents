@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { checkoutRoot, type HarnessName } from "./harness.ts";
 import { e2ePackage, e2ePackages } from "./packages.ts";
