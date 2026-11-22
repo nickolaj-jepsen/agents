@@ -502,9 +502,13 @@ async function recordKit(p: E2EPackage, named: boolean) {
 
   const sets: ScenarioSet[] = [];
   for (const f of files) sets.push(await loadSet(f.file));
-  const { outcomes } = await runAll(sets, () => true, { ...realStage, capture: captureMedia });
-
   const stage = mkdtempSync(join(tmpdir(), `site-${p.name}-`));
+  const { outcomes } = await runAll(sets, () => true, {
+    ...realStage,
+    capture: captureMedia,
+  }).catch((error: unknown) => {
+    throw retainFailure(stage, String(error));
+  });
   const crops: Record<string, Crop> = {};
   const written: string[] = [];
   const failures: string[] = [];
@@ -519,20 +523,24 @@ async function recordKit(p: E2EPackage, named: boolean) {
     const story = named.join("/");
     for (const c of outcome.captures) {
       const shot = actualOf(c.png);
-      if (!existsSync(shot)) continue;
-      actuals.push(shot);
       const [cols, rows] = c.size;
-      const cut = cropToRegion(readFileSync(shot), c.actual.split("\n", 1)[0]!, cols, rows);
-      if (!cut) {
-        console.error(
-          `record: ${p.name}/${story}@${cols}x${rows} is not a ${cols}x${rows} window; skipped`,
-        );
-        continue;
-      }
       const name = `${harness}/${story}@${cols}x${rows}`;
       const out = join(stage, `${name}.png`);
-      mkdirSync(dirname(out), { recursive: true });
-      writeFileSync(out, cut.png);
+      let cut: NonNullable<ReturnType<typeof cropToRegion>>;
+      try {
+        const png = readFileSync(shot);
+        mkdirSync(dirname(out), { recursive: true });
+        // Keep the uncropped capture in the stage if cropping it fails.
+        writeFileSync(out, png);
+        const crop = cropToRegion(png, c.actual.split("\n", 1)[0]!, cols, rows);
+        if (!crop) throw new Error(`not a ${cols}x${rows} terminal window`);
+        cut = crop;
+        writeFileSync(out, cut.png);
+        actuals.push(shot);
+      } catch (error) {
+        failures.push(`${p.name}/${name}: ${String(error)}`);
+        continue;
+      }
       written.push(out);
       crops[name] = {
         png: `apps/site/media/kit/${kitFolder(p)}/${name}.png`,
