@@ -40,6 +40,8 @@ export const runEnv = (runDir: string) => ({
   AGENT_NOTES_DATA: join(runDir, "agent-notes", "data"),
   AGENT_NOTES_STATE: join(runDir, "agent-notes", "state"),
   WT_WORKTREE_ROOT: join(runDir, "worktrees"),
+  // hunspell's personal word list: the person's own would accept words a scenario expects flagged.
+  WORDLIST: join(runDir, "hunspell", "personal.dic"),
 });
 
 /** The `SetupContext` of a run: its folder for the agent and the scratch beside it. */

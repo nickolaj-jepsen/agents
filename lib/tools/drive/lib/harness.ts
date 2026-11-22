@@ -1,5 +1,5 @@
 /** How each agent is started and when it is ready. */
-import { chmodSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { distOf, repoRoot } from "./packages.ts";
@@ -24,6 +24,8 @@ export type Turn = {
 export type StartOptions = {
   /** Programs the agent finds first on its PATH, by name: the script text of each. */
   bin?: Record<string, string>;
+  /** Programs the session must not find, though they are on this machine's PATH. */
+  hide?: string[];
   /**
    * A config folder of its own instead of the person's, so nothing of them shows: what the site
    * media are made on. Needs `turns`; Claude runs plain `claude` with every mod of this checkout,
@@ -150,15 +152,39 @@ export function hermeticClaude(
   return { CLAUDE_CONFIG_DIR: dir, ANTHROPIC_API_KEY: STUB_KEY };
 }
 
-/** `bin`'s scripts as executables in a folder of the run, and the PATH with it first. */
-function withBin(run: Run, bin: Record<string, string>): string {
-  const dir = join(run.runDir, "bin");
-  mkdirSync(dir, { recursive: true });
+/**
+ * A PATH for the session: `bin`'s scripts first, then a folder of links to every command of this
+ * process's PATH but `hide`'s and `bin`'s. A PATH cannot mask a command a later directory has, so
+ * a program a scenario wants missing is left out of the links.
+ */
+export function sessionPath(runDir: string, bin: Record<string, string>, hide: string[]): string {
+  const stand = join(runDir, "bin");
+  const links = join(runDir, "path");
+  mkdirSync(stand, { recursive: true });
+  mkdirSync(links, { recursive: true });
   for (const [name, script] of Object.entries(bin)) {
-    writeFileSync(join(dir, name), script);
-    chmodSync(join(dir, name), 0o755);
+    writeFileSync(join(stand, name), script);
+    chmodSync(join(stand, name), 0o755);
   }
-  return `${dir}:${process.env.PATH ?? ""}`;
+  const skip = new Set([...hide, ...Object.keys(bin)]);
+  for (const dir of (process.env.PATH ?? "").split(":").filter(Boolean)) {
+    let names: string[];
+    try {
+      names = readdirSync(dir);
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      if (skip.has(name)) continue;
+      skip.add(name);
+      try {
+        symlinkSync(join(dir, name), join(links, name));
+      } catch {
+        /* not linkable */
+      }
+    }
+  }
+  return `${stand}:${links}`;
 }
 
 /** Markers of a parent agent's session: a test session must not think it is a child of one. */
@@ -187,7 +213,10 @@ export const claude: Harness = {
   name: "claude",
   launch(run, start, size) {
     const hermetic = start.hermetic ? hermeticClaude(run) : undefined;
-    const path = start.bin ? { PATH: withBin(run, start.bin) } : undefined;
+    const path =
+      start.bin || start.hide
+        ? { PATH: sessionPath(run.runDir, start.bin ?? {}, start.hide ?? []) }
+        : undefined;
     let mcp: string[] = [];
     if (start.mcp) {
       const file = join(run.runDir, "mcp.json");
@@ -252,7 +281,8 @@ export const pi: Harness = {
       PI_OFFLINE: "1",
       ...start.env,
     };
-    if (start.bin) env.PATH = withBin(run, start.bin);
+    if (start.bin || start.hide)
+      env.PATH = sessionPath(run.runDir, start.bin ?? {}, start.hide ?? []);
     if (start.turns) {
       const file = join(run.runDir, "turns.json");
       writeFileSync(file, JSON.stringify(start.turns));

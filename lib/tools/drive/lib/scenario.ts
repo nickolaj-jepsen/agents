@@ -127,6 +127,7 @@ const merge = (a: StartOptions, b: StartOptions = {}): StartOptions => ({
   hermetic: b.hermetic ?? a.hermetic,
   plugins: b.plugins ?? a.plugins,
   bin: b.bin ?? a.bin,
+  hide: b.hide ?? a.hide,
 });
 
 export function resolveScenario(set: ScenarioSet, name: string, seen: string[] = []): Resolved {

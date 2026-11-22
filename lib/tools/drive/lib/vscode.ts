@@ -3,14 +3,12 @@ import { options } from "./options.ts";
 import { execFileSync, spawn } from "node:child_process";
 import { createServer } from "node:net";
 import {
-  chmodSync,
   closeSync,
   mkdirSync,
   openSync,
   readFileSync,
   readdirSync,
   realpathSync,
-  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
@@ -24,7 +22,7 @@ import {
   type Locator,
   type Page,
 } from "playwright-core";
-import { checkoutMods, hermeticClaude, STUB_KEY, type Turn } from "./harness.ts";
+import { checkoutMods, hermeticClaude, sessionPath, STUB_KEY, type Turn } from "./harness.ts";
 import { runEnv } from "./setup.ts";
 import type { Pattern } from "./screen.ts";
 import type { Target } from "./session.ts";
@@ -81,41 +79,6 @@ const freePort = () =>
       server.close(() => resolve(port));
     });
   });
-
-/**
- * A PATH for the session: `bin`'s scripts first, then a folder of links to every command of this
- * process's PATH but `hide`'s and `bin`'s. A PATH cannot mask a command a later directory has, so
- * a program a scenario wants missing is left out of the links.
- */
-function sessionPath(runDir: string, bin: Record<string, string>, hide: string[]): string {
-  const stand = join(runDir, "bin");
-  const links = join(runDir, "path");
-  mkdirSync(stand, { recursive: true });
-  mkdirSync(links, { recursive: true });
-  for (const [name, script] of Object.entries(bin)) {
-    writeFileSync(join(stand, name), script);
-    chmodSync(join(stand, name), 0o755);
-  }
-  const skip = new Set([...hide, ...Object.keys(bin)]);
-  for (const dir of (process.env.PATH ?? "").split(":").filter(Boolean)) {
-    let names: string[];
-    try {
-      names = readdirSync(dir);
-    } catch {
-      continue;
-    }
-    for (const name of names) {
-      if (skip.has(name)) continue;
-      skip.add(name);
-      try {
-        symlinkSync(join(dir, name), join(links, name));
-      } catch {
-        /* not linkable */
-      }
-    }
-  }
-  return `${stand}:${links}`;
-}
 
 const quote = (s: string) => `'${s.replaceAll("'", `'\\''`)}'`;
 
