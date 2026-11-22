@@ -91,29 +91,41 @@ export default vscodeScenarios({
       steps: drafted,
     },
     labels: {
-      about: "a draft with three labels: each a property under the title, after its dot",
+      about: "a draft with three labels: one Labels property, the names after it",
       setup: repo,
       start: start(draft({ labels: ["Bug", "Feature", "reliability"] })),
       steps: drafted,
     },
     edit: {
-      about: "Edit pressed: the fields open in a well in place of the summary, Done closes them",
+      about: "Edit pressed: the title in its field, in place of the heading, with Done",
       setup: repo,
       start: start(draft()),
-      steps: [...drafted, { click: "Edit" }, { wait: "Edit the issue" }],
+      steps: [...drafted, { click: "Edit" }, { wait: "Done" }],
+    },
+    priority: {
+      about: "the priority pressed: its Select in place of the value, with Done",
+      setup: repo,
+      start: start(draft()),
+      steps: [...drafted, { click: "Medium" }, { wait: "Done" }],
     },
     team: {
-      about: "another team picked while editing: its statuses and projects load, its labels stay",
+      about: "another team picked: its statuses and projects load, its labels stay",
       setup: repo,
       start: start(draft({ labels: ["Bug", "Feature", "reliability"] })),
       steps: [
         ...drafted,
-        { click: "Edit" },
-        { wait: "Edit the issue" },
+        { click: "Platform (PLT)" },
+        { wait: "Done" },
         // The Select is a native one: set it and raise the change the page listens for.
         { run: async (v) => void (await v.evalInView(pick(0, "MOB"))) },
         { sleep: 2000 },
       ],
+    },
+    "labels-edit": {
+      about: "the labels pressed: each turned off or on, the field that finds another",
+      setup: repo,
+      start: start(draft({ labels: ["Bug", "Feature", "reliability"] })),
+      steps: [...drafted, { click: "Bug, Feature, Area/reliability" }, { wait: "Done" }],
     },
     "label-search": {
       about: "a label being found: what is typed offers the labels that match, a press adds one",
@@ -121,14 +133,15 @@ export default vscodeScenarios({
       start: start(draft()),
       steps: [
         ...drafted,
-        { click: "Edit" },
-        { wait: "Edit the issue" },
+        { click: "Bug" },
+        { wait: "Done" },
         { run: async (v) => void (await v.evalInView(fill("Find a label to add", "per"))) },
         { wait: "Area/performance" },
       ],
     },
     "long-title": {
-      about: "a title far longer than a line: whole in the summary, a one-line field when edited",
+      about:
+        "a title far longer than a line: whole under the heading, a one-line field when edited",
       setup: repo,
       start: start(
         draft({
