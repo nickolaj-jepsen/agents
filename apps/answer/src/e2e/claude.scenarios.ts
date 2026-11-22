@@ -330,7 +330,10 @@ export default scenarios({
         { resize: [70, 24] },
         { wait: /A–H pick.*I write.*n note.*r review.*keys here/ },
         { press: "h" },
+        // Keep the narrow width but make the option visible when it falls below the fold.
+        { resize: [70, 32] },
         { wait: "H ● Option H for 3" },
+        { resize: [70, 24] },
         { press: "j" },
         { wait: "Q4/12" },
         { press: "x" },
