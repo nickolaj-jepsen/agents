@@ -2,6 +2,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { realHome } from "./fonts.ts";
 
 /** What a scenario's `setup` gets to fill the folder the agent runs in. */
 export type SetupContext = {
@@ -46,7 +47,7 @@ export const runEnv = (runDir: string) => ({
 
 /** The `SetupContext` of a run: its folder for the agent and the scratch beside it. */
 export function setupContext(runDir: string, cwd: string): SetupContext {
-  const env = { ...process.env, ...FIXTURE_GIT_ENV, ...runEnv(runDir) };
+  const env = { ...process.env, HOME: realHome, ...FIXTURE_GIT_ENV, ...runEnv(runDir) };
   const git = (...args: string[]) =>
     void execFileSync("git", ["-c", "core.hooksPath=/dev/null", ...args], {
       cwd,

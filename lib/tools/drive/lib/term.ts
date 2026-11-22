@@ -8,7 +8,7 @@
  */
 import { execFile, execFileSync, spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 import { promisify } from "node:util";
 import { TuiTest } from "@microsoft/tui-test";
 import { FONT_FAMILIES, fakeFontHome, realHome } from "./fonts.ts";
@@ -123,9 +123,6 @@ function toGrid(flat: Record<string, unknown>[], cols: number, rows: number): Gr
   return grid.map((row) => Array.from({ length: cols }, (_, i) => row[i] ?? blank));
 }
 
-/** The screenshot in progress, so the next waits for it. */
-let shots: Promise<void> = Promise.resolve();
-
 export class LibTerm implements Term {
   private t: TuiTest;
   private constructor(t: TuiTest) {
@@ -133,8 +130,6 @@ export class LibTerm implements Term {
   }
 
   static async launch(spec: LaunchSpec, session: string): Promise<LibTerm> {
-    process.env.TUI_TEST_RECORDING_FONT_FAMILIES = FONT_FAMILIES;
-    process.env.TUI_TEST_CONFIG = TUI_TEST_CONFIG;
     const t = new TuiTest(session);
     const { program, args } = wrap(spec);
     await t.run(program, args, {
@@ -169,41 +164,14 @@ export class LibTerm implements Term {
   move = (x: number, y: number) => this.t.mouse.move(x, y);
   resize = (cols: number, rows: number) => this.t.resize(cols, rows);
 
+  // Only failure evidence uses this renderer. Vitest forks this worker with its font home already
+  // set, so it can draw the original live screen without changing HOME or rerunning the scenario.
   async screenshot(path: string, opts: ImageOptions = {}) {
-    // The rasterizer finds fonts under $HOME only; swap it for the call. One at a time, since
-    // the swap is the whole process's and sessions run side by side.
-    const turn = shots;
-    let done!: () => void;
-    shots = new Promise<void>((resolve) => (done = resolve));
-    await turn;
-    const home = fakeFontHome();
-    const saved = process.env.HOME;
-    if (home) process.env.HOME = home;
-    try {
-      await this.t.screenshot(path, opts);
-    } finally {
-      process.env.HOME = saved;
-      done();
-    }
+    await this.t.screenshot(path, opts);
   }
 
-  // The recording rasterizes frames when it stops, and wants the fonts like a screenshot does.
-  startRecording = (path: string, opts: RecordOptions = {}) => this.t.startRecording(path, opts);
-  async stopRecording() {
-    const turn = shots;
-    let done!: () => void;
-    shots = new Promise<void>((resolve) => (done = resolve));
-    await turn;
-    const home = fakeFontHome();
-    const saved = process.env.HOME;
-    if (home) process.env.HOME = home;
-    try {
-      await this.t.stopRecording();
-    } finally {
-      process.env.HOME = saved;
-      done();
-    }
-  }
+  startRecording = () => Promise.reject(new Error("recording requires the terminal daemon"));
+  stopRecording = () => Promise.reject(new Error("recording requires the terminal daemon"));
 
   async close() {
     await this.t.close().catch(() => undefined);
@@ -242,7 +210,18 @@ export function tuiTestBin(): string {
  * told where its `ffmpeg` is without this process's PATH changing under another session's feet.
  */
 export function pathWith(prefix: string | undefined, env: NodeJS.ProcessEnv = process.env) {
-  return prefix ? `${prefix}:${env.PATH ?? ""}` : undefined;
+  return prefix ? [prefix, env.PATH].filter(Boolean).join(delimiter) : undefined;
+}
+
+/** Native failure pictures use a fixed font environment in the isolated Vitest process. */
+export function snapshotWorkerEnv(): Record<string, string> {
+  const home = fakeFontHome();
+  return {
+    ...(home ? { HOME: home } : {}),
+    DRIVE_TEST_REAL_HOME: realHome,
+    TUI_TEST_RECORDING_FONT_FAMILIES: FONT_FAMILIES,
+    TUI_TEST_CONFIG,
+  };
 }
 
 /** The CLI's environment: the daemon it starts inherits it, which is how it finds fonts. */

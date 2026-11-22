@@ -2,7 +2,7 @@
  * tui-test's PNG screenshots need outline fonts it can find itself: it scans
  * `~/.local/share/fonts` and a few `/usr` paths, none of which exist on NixOS. So
  * this lays a folder of links to the fonts fontconfig knows and hands that out as
- * `HOME` for the one call that rasterizes (and for a daemon, which reads it at start).
+ * `HOME` to the daemon and test worker when they start, never switching it during capture.
  */
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readdirSync, symlinkSync, existsSync } from "node:fs";
@@ -20,7 +20,8 @@ const WANTED = [
   "Unifont",
 ];
 
-export const realHome = homedir();
+// The test worker's HOME is for rasterization only; spawned agents still need their real home.
+export const realHome = process.env.DRIVE_TEST_REAL_HOME ?? homedir();
 
 const cacheRoot = () =>
   join(process.env.XDG_CACHE_HOME ?? join(realHome, ".cache"), "agent-tools-e2e");

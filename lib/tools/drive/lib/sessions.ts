@@ -16,13 +16,13 @@ import {
   writeFileSync,
 } from "node:fs";
 import { createHash } from "node:crypto";
-import { homedir } from "node:os";
+import { realHome } from "./fonts.ts";
 import { join } from "node:path";
 import type { Kind } from "./find.ts";
 import { repoRoot } from "./packages.ts";
 
 export const stateRoot = join(
-  process.env.XDG_STATE_HOME ?? join(homedir(), ".local", "state"),
+  process.env.XDG_STATE_HOME ?? join(realHome, ".local", "state"),
   "agent-tools-e2e",
 );
 /** This checkout, short: it scopes the session files and the tui-test daemons' names. */

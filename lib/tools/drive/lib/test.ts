@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { packagesNamed } from "./find.ts";
 import { type Options, setOptions } from "./options.ts";
 import { driveRoot } from "./scenario.ts";
+import { snapshotWorkerEnv } from "./term.ts";
 
 /** Runs the package's tests; true when they all passed. */
 export async function runTests(
@@ -25,6 +26,8 @@ export async function runTests(
       watch: false,
       config: join(driveRoot, "vitest.config.ts"),
       root: driveRoot,
+      pool: "forks",
+      env: o.png ? undefined : snapshotWorkerEnv(),
       // The runner plays only the scenarios the pattern picks (`options.filter`); vitest then runs those tests.
       testNamePattern: o.filter,
     },

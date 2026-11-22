@@ -3,7 +3,7 @@
  * region, volatile values masked, then written as rows of text, a grid of style ids
  * and a legend. Text and styles diff as plain lines, so a review reads like any diff.
  */
-import { homedir } from "node:os";
+import { realHome } from "./fonts.ts";
 import type { Cell, Grid } from "./term.ts";
 
 export type Pattern = string | RegExp;
@@ -201,7 +201,7 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  * footer shows a run folder whose `$TMPDIR` is there.
  */
 const spellings = (path: string) => {
-  const home = homedir();
+  const home = realHome;
   return path.startsWith(`${home}/`) ? [path, `~${path.slice(home.length)}`] : [path];
 };
 

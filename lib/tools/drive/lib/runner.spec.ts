@@ -9,9 +9,22 @@ import { join } from "node:path";
 import { afterAll, expect, it } from "vitest";
 import { settleCapture, type Capture } from "./check.ts";
 import { options } from "./options.ts";
-import { runAll, type Stage } from "./runner.ts";
+import { mediaStage, realStage, runAll, type Stage } from "./runner.ts";
 import type { Resolved, Scenario, ScenarioSet } from "./scenario.ts";
 import type { Session } from "./session.ts";
+
+it("keeps the text gate fast and selects the daemon when pictures are requested", () => {
+  const before = options.png;
+  try {
+    options.png = false;
+    expect(realStage.backend).toBe("lib");
+    expect(mediaStage.backend).toBe("daemon");
+    options.png = true;
+    expect(realStage.backend).toBe("daemon");
+  } finally {
+    options.png = before;
+  }
+});
 
 const dir = mkdtempSync(join(tmpdir(), "drive-runner-"));
 afterAll(() => rmSync(dir, { recursive: true, force: true }));

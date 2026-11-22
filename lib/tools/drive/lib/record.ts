@@ -183,6 +183,8 @@ type Media = { videos: Video[]; stills: Still[] };
  * Plays one scenario's agent to its steps and shoots its last screen as `<file>.png`; a demo
  * (`record`) is recorded as `<file>.mp4` too, with `<file>.png` as its poster.
  */
+let recordingSession = 0;
+
 async function play1(
   set: SiteSet,
   name: string,
@@ -208,7 +210,7 @@ async function play1(
     setup: r.setup,
     size: r.size,
     backend: "daemon",
-    name: `site-${set.plugin}-${record || name}`,
+    name: `site-${process.pid}-${++recordingSession}`,
     runDir,
     project: scenario?.project ?? "app",
     path: ffmpeg,
@@ -235,13 +237,15 @@ async function play1(
         await session.stopRecording();
       }
       // A process of its own: the capture blocks on Kitty, and the other scenarios run meanwhile.
-      await promisify(execFile)(process.execPath, [
-        join(import.meta.dirname, "..", "drive.ts"),
-        "cast",
-        "--require-graphics",
-        cast,
-        prefix,
-      ]);
+      await promisify(execFile)(
+        process.execPath,
+        [join(import.meta.dirname, "..", "drive.ts"), "cast", "--require-graphics", cast, prefix],
+        {
+          env: ffmpeg
+            ? { ...process.env, CAST_FFMPEG: process.env.CAST_FFMPEG || join(ffmpeg, "ffmpeg") }
+            : process.env,
+        },
+      );
       if (!record) rmSync(`${prefix}.mp4`);
       rmSync(cast);
     } else if (record) {
@@ -306,8 +310,8 @@ async function recordTerminal(p: E2EPackage, o: RecordOptions, named: boolean) {
   }
   // The recorder's own PATH, handed to each recording session: a screenshot beside it, or the
   // gate, keeps the environment the run started with.
-  const ffmpeg = ffmpegBin(ffmpegOnPath());
   const stage = mkdtempSync(join(tmpdir(), `site-${plugin}-`));
+  const ffmpeg = ffmpegBin(ffmpegOnPath());
   type Job = { name: string; harness: "claude" | "pi"; record: false | string };
   const jobs: Job[] = [];
   for (const d of demos) jobs.push({ name: "demo", harness: d.harness, record: d.base });
@@ -323,7 +327,9 @@ async function recordTerminal(p: E2EPackage, o: RecordOptions, named: boolean) {
       );
     }),
     o.jobs,
-  );
+  ).finally(() => {
+    if (ffmpeg) rmSync(ffmpeg, { recursive: true, force: true });
+  });
   const failed = results.flatMap((r, i) =>
     r.status === "rejected" ? [{ job: jobs[i]!, why: r.reason }] : [],
   );
