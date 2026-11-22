@@ -159,6 +159,20 @@ export const MANY: Suggestion[] = Array.from({ length: 28 }, (_, i) =>
   ),
 );
 
+/** One doc with more suggestions than a group shows before its `N more` button. */
+export const LONG_DOC: Suggestion[] = Array.from({ length: 16 }, (_, i) =>
+  suggestion(
+    {
+      id: `long-${String(i).padStart(2, "0")}`,
+      target: "docs/hosts.md",
+      kind: KINDS[i % 3]!,
+      claim: `Claim number ${i + 1} about docs/hosts.md: the page no longer matches what the code does.`,
+    },
+    1 + ((i * 5) % 30),
+    1 + (i % 3),
+  ),
+);
+
 const LONG_PATH =
   "docs/a-very-long-directory-name/with/several/nested/levels/and-an-equally-long-file-name-for-the-guide.md";
 const PROSE =

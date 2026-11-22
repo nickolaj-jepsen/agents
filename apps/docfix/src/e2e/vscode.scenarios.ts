@@ -1,5 +1,5 @@
 import { vscodeScenarios } from "@agents/drive/lib/vscode-scenario.ts";
-import { checkout, EXTREME, fileSuggestions, MANY, STRUCTURED } from "./fixture.ts";
+import { checkout, EXTREME, fileSuggestions, LONG_DOC, MANY, STRUCTURED } from "./fixture.ts";
 
 const open = [{ type: "/docfix" }, { press: "Enter" }];
 
@@ -69,13 +69,24 @@ export default vscodeScenarios({
       ],
     },
     many: {
-      about: "more suggestions than a screen holds: the first few and a button for the rest",
+      about:
+        "more suggestions than a screen holds, a few to a doc: every row is listed and the pane scrolls",
       setup: (ctx) => {
         checkout(ctx);
         fileSuggestions(ctx, MANY);
       },
       start: reply,
-      steps: [...open, { wait: "Show 16 more" }],
+      steps: [...open, { wait: "docs/updates.md" }],
+    },
+    longDoc: {
+      about:
+        "one doc with more suggestions than a group shows: its first twelve and a button for the rest",
+      setup: (ctx) => {
+        checkout(ctx);
+        fileSuggestions(ctx, LONG_DOC);
+      },
+      start: reply,
+      steps: [...open, { wait: "4 more" }],
     },
     extreme: {
       about: "the longest text in every field, a long path and wide characters",
