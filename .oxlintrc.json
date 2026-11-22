@@ -55,8 +55,8 @@
             ],
             "patterns": [
               {
-                "group": ["@agents/kit-legacy/pi/**", "@agents/kit-legacy/claude/ui.tsx"],
-                "message": "This is the legacy kit. Use the kit's components (lib/kits/<component>/, listed in AGENTS.md) instead."
+                "group": ["@agents/kit-legacy/pi/**"],
+                "message": "This is pi's legacy kit. Use the kit's components (lib/kits/<component>/, listed in AGENTS.md) instead."
               }
             ]
           }
@@ -199,8 +199,8 @@
             ],
             "patterns": [
               {
-                "group": ["@agents/kit-legacy/pi/**", "@agents/kit-legacy/claude/ui.tsx"],
-                "message": "This is the legacy kit. Use the kit's components (lib/kits/<component>/, listed in AGENTS.md) instead."
+                "group": ["@agents/kit-legacy/pi/**"],
+                "message": "This is pi's legacy kit. Use the kit's components (lib/kits/<component>/, listed in AGENTS.md) instead."
               },
               {
                 "group": ["node:*"],
@@ -247,22 +247,8 @@
     // Legacy files: they still draw around the kit. List only shrinks; never add a file here.
     {
       "files": [
-        "apps/answer/src/claude.test.tsx",
-        "apps/answer/src/claude.tsx",
-        "apps/answer/src/claude/transcript.tsx",
         "apps/answer/src/pi/offer.ts",
         "apps/answer/src/pi/transcript.ts",
-        "apps/docfix/src/claude/evidence.tsx",
-        "apps/docfix/src/claude.tsx",
-        "apps/git-menu/src/claude.tsx",
-        "apps/image-preview/src/claude.test.tsx",
-        "apps/image-preview/src/claude.tsx",
-        "apps/linear-issue/src/claude/gui.tsx",
-        "apps/linear-issue/src/claude.test.tsx",
-        "apps/linear-issue/src/claude.tsx",
-        "apps/spellfix/src/claude/band.tsx",
-        "apps/spellfix/src/claude.tsx",
-        "apps/spellfix/src/claude.test.tsx",
         "apps/spellfix/src/pi.ts",
         "apps/transcript-tweaks/src/pi/condense.ts"
       ],
