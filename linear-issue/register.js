@@ -4132,7 +4132,7 @@ async function warnDrift($) {
 	const { version } = await $.session.version();
 	if (await $.store.get("warnedVersion").catch(() => void 0) === version) return;
 	await $.store.set("warnedVersion", version);
-	$.ui.toast(`linear-issue: the You should know card no longer has "${ANCHOR}", so its Linear button is hidden; update plugins/linear-issue`);
+	$.ui.toast(`linear-issue: the You should know card no longer has "${ANCHOR}", so its Linear button is hidden; update apps/linear-issue`);
 }
 /** What the shared drafting asks of a client, with the draft this file keeps. */
 function host($) {
