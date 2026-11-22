@@ -20,6 +20,7 @@ import {
   watchParked,
   type Flags,
 } from "./lib/lifecycle.ts";
+import { compare } from "./lib/compare.ts";
 import { loadTypes } from "./lib/mod-types.ts";
 import { setOptions } from "./lib/options.ts";
 import { e2ePackages } from "./lib/packages.ts";
@@ -57,6 +58,20 @@ const jobs = (value: string): number | { claude?: number; pi?: number } => {
 const count = (value: string) => {
   const n = Number(value);
   if (!Number.isInteger(n) || n < 1) throw new InvalidArgumentError("a whole number of 1 or more");
+  return n;
+};
+
+const scaleOption = () =>
+  new Option(
+    "--scale <n>",
+    "VS Code: device pixels per CSS pixel, 2 by default; 1 for the window's own density. The layout is the same",
+  )
+    .argParser(scale)
+    .default(2);
+
+const scale = (value: string) => {
+  const n = Number(value);
+  if (!(n >= 1 && n <= 4)) throw new InvalidArgumentError("a number from 1 to 4");
   return n;
 };
 
@@ -364,8 +379,10 @@ program
   .description("a PNG of the screen; prints the path")
   .argument("[file]")
   .option("--window", "VS Code: the whole window, not the Claude panel")
+  .addOption(scaleOption())
   .action(
-    verb(async (file: string | undefined, o: { window?: boolean }) => {
+    verb(async (file: string | undefined, o: { window?: boolean; scale: number }) => {
+      setOptions({ scale: o.scale });
       const { target } = await attach(session());
       try {
         console.log(await target.shot(file, o));
@@ -380,9 +397,31 @@ program
   .description(
     "PNGs at the sizes a screen has to hold at (terminal: 70x24 to 240x60; VS Code: narrow and wide); prints the paths",
   )
+  .addOption(scaleOption())
   .action(
-    onSession(async (t) => {
-      for (const path of await t.sweep()) console.log(path);
+    verb(async (o: { scale: number }) => {
+      setOptions({ scale: o.scale });
+      const { target } = await attach(session());
+      try {
+        for (const path of await target.sweep()) console.log(path);
+      } finally {
+        target.detach();
+      }
+    }),
+  );
+
+program
+  .command("compare")
+  .description(
+    "photograph a package's VS Code scenarios here and in another checkout, wide and narrow, and write a page that sets each pair side by side; prints its path",
+  )
+  .argument("<package>", "an app or kit-<component>")
+  .requiredOption("--base <path>", "the other checkout, installed and built (a worktree of main)")
+  .option("--out <dir>", "write the pictures and index.html here, not to a new folder in /tmp")
+  .addOption(scaleOption())
+  .action(
+    verb(async (pkg: string, o: { base: string; out?: string; scale: number }) => {
+      console.log(await compare(pkg, o));
     }),
   );
 

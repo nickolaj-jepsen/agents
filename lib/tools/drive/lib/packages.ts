@@ -8,7 +8,13 @@ import { existsSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
+/**
+ * The checkout the driver works on: the one it is in, or with `AGENTS_DRIVE_ROOT` another, whose
+ * scenarios and builds it plays (`compare` runs this checkout's driver on the base that way).
+ */
+export const repoRoot =
+  process.env.AGENTS_DRIVE_ROOT ??
+  resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
 
 export type E2EPackage = {
   /** `answer`, `kit-buttons`. */

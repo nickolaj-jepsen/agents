@@ -58,7 +58,7 @@ pnpm drive cap --session b
 pnpm drive stop --all
 ```
 
-The verbs are `ls live goto reload cap snap keys type paste click hover wait resize shot sweep stop eval test record cast types`. A verb a harness can't do says so: `snap` (the scenario's snapshot of the screen as it is now) is for the terminal agents, `eval` (an expression in the Claude webview) for VS Code, and desktop has only `live` and `goto`.
+The verbs are `ls live goto reload cap snap keys type paste click hover wait resize shot sweep stop eval compare test record cast types`. A verb a harness can't do says so: `snap` (the scenario's snapshot of the screen as it is now) is for the terminal agents, `eval` (an expression in the Claude webview) for VS Code, and desktop has only `live` and `goto`.
 
 Saving doesn't reload a parked session; `reload` does, at the session's current size. If the new session fails to start, `reload` prints why and leaves the old one parked. In VS Code it opens a new Claude tab in the same window, and may name another scenario of the package. `goto ... --watch` takes the same flags as live mode, reloads on each save and prints the screen; Ctrl+C stops watching and leaves the session parked. A failed start removes its run folder unless `--keep` is given, which prints its path. The driver finds tui-test via `TUI_TEST_BIN`, then `PATH`, then the release the repo pins, which it downloads and checks on first use (`pnpm turbo run @agents/drive#tui-test` fetches it ahead of time).
 
@@ -102,7 +102,20 @@ pnpm drive reload                                              # read edited mod
 pnpm drive stop                                                # close the window and its stub
 ```
 
+- `shot` and `sweep` photograph VS Code at a device scale of 2, so text and icons are sharp when the picture is opened. The layout, which is the window's size in CSS pixels, is the same as at scale 1; zooming VS Code is not an option because it would change it. `--scale 1` gives the window's own density. `record` and the site's media keep scale 1.
+
 - The kit's graphical stories have scenarios too: `pnpm drive goto kit-prose prose/blocks --harness vscode --size 420x800`. `nix run .#media -- record kit-prose --harness vscode` photographs each at the window's size and at a narrow pane, as `apps/site/media/kit/<name>/vscode-<component>-<state>[-narrow].png`.
+- `compare` answers "is this screen at least as good as `main`'s?" in one command: it photographs every VS Code scenario of a package in this checkout and in another, wide (1280x720) and narrow (420x800), and writes a page that sets each pair side by side.
+
+  ```bash
+  git worktree add --detach ../agents-main origin/main
+  (cd ../agents-main && pnpm install && pnpm turbo run build --filter=./apps/docfix)   # the base must be built
+  pnpm turbo run build --filter=./apps/docfix                                          # and this checkout
+  pnpm drive compare docfix --base ../agents-main                  # prints <folder>/index.html; --out DIR, --scale N
+  ```
+
+  Each scenario is parked as `goto` does, photographed, resized to 420x800 and photographed again, once per side; the two sides run at the same time, each in a session of its own name, so nothing else's session is touched. Both sides are played by this checkout's driver, so they are photographed alike. The page labels each side with its branch and short sha. A scenario that exists on one side only is shown alone and marked; one that fails to park is listed with its log (`*.log` beside the pictures) and the run goes on. The pictures show the parked state, before any interaction the scenario's description mentions. Allow about 25 seconds per scenario per side. A side whose `dist/` is missing fails at once with the build command.
+
 - `reload` can replay a different scenario of the same package. Use `goto` when launch options change; the extension's own **New session** doesn't reload code. For parallel windows give each its own `--session`.
 - `wait` can't match an input placeholder. Wait for a label instead. If a shot shows icon alt text after `reload`, run `goto` and take it again.
 - A mod that reads the prompt while rendering doesn't redraw on typing. If testing it requires a redraw, resize below the prompt's maximum width, then back; see [spellfix's recording](../../../apps/spellfix/src/e2e/site.scenarios.ts).
