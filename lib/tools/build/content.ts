@@ -220,8 +220,12 @@ function loadPlugins(root: string): Plugin[] {
     );
 }
 
+/** What a tool leaves in a skill's folder: never part of the skill. */
+const LEFTOVERS = new Set([".turbo", "node_modules", "__pycache__", ".venv"]);
+
 function listFiles(dir: string, base = dir): string[] {
   return readdirSync(dir, { withFileTypes: true })
+    .filter((e) => !LEFTOVERS.has(e.name))
     .flatMap((e) =>
       e.isDirectory() ? listFiles(join(dir, e.name), base) : [relative(base, join(dir, e.name))],
     )
