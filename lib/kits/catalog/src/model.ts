@@ -31,12 +31,6 @@ export const here = dirname(fileURLToPath(import.meta.url));
 /** The checkout: `lib/kits/catalog/src` is four folders down. */
 export const repoRoot = join(here, "..", "..", "..", "..");
 
-/** The folders of the kit packages (`lib/kits/<name>`) that have scenarios, whose snapshots the catalogue reads. */
-export const snapshotRoots = (harness: string): string[] =>
-  readdirSync(join(repoRoot, "lib/kits"), { withFileTypes: true })
-    .filter((d) => d.isDirectory())
-    .map((d) => join(repoRoot, "lib/kits", d.name, "e2e/__snapshots__", harness))
-    .filter((dir) => existsSync(dir));
 // `lib/kits`: a manifest's `source` is a path under it.
 const kitRoot = join(here, "..", "..");
 

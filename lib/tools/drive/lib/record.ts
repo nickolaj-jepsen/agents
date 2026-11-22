@@ -1,17 +1,17 @@
 /**
  * `drive record [package]`: plays a package's site scenarios and writes its media under
- * `apps/site/media/<package>/` (a kit package's: `apps/site/media/kit/`), and nothing anywhere else. The folder's old files of the same
+ * `apps/site/media/<package>/` (a kit package's: `apps/site/media/kit/<name>/`), and nothing anywhere else. The folder's old files of the same
  * kind are removed when the new ones are moved in, so none outlives its scenario.
  *
  * - an app's tour and stills (`site.scenarios.ts`, terminal): `demo.mp4`, `<still>.png`, `media.json`;
  * - its pictures in VS Code (`site.scenarios.ts`' `vscode`): `vscode-<name>.png`, `media-vscode.json`;
- * - a kit package's stories (its `claude`/`pi` scenarios) as crops, in the folder all kit packages share,
- *   `apps/site/media/kit/<harness>/<story>@WxH.png` listed in `crops.json`: only the package's own are replaced.
+ * - a kit package's stories (its `claude`/`pi` scenarios) as crops, in its own folder
+ *   `apps/site/media/kit/<package>/<harness>/<story>@WxH.png`, listed in that folder's `crops.json`.
  *
  * A package whose run fails keeps its old files: the media are staged in a folder of their own and
  * moved in only when every scenario came out and fits its budget.
  */
-import { execFile, execFileSync, spawnSync } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
 import {
   copyFileSync,
   existsSync,
@@ -79,7 +79,7 @@ export async function record(name: string | undefined, o: RecordOptions = {}): P
         if (o.harness !== "vscode") await recordKit(p, only);
       } else {
         if (o.harness !== "vscode") await recordTerminal(p, o, only);
-        if (o.harness !== "terminal") await recordVscode(p, only);
+        if (o.harness !== "terminal") await recordVscode(p, only, o.harness === "vscode");
       }
     } catch (err) {
       bad++;
@@ -371,7 +371,7 @@ async function failedShot(runDir: string, file: string) {
   }
 }
 
-async function recordVscode(p: E2EPackage, named: boolean) {
+async function recordVscode(p: E2EPackage, named: boolean, asked: boolean) {
   const site = siteFile(p);
   const vscodeFile = join(p.e2e, "vscode.scenarios.ts");
   if (!existsSync(site) || !existsSync(vscodeFile)) {
@@ -384,6 +384,9 @@ async function recordVscode(p: E2EPackage, named: boolean) {
   const pictures = Object.entries(set.vscode ?? {});
   if (pictures.length === 0) return;
   if (process.platform !== "linux") {
+    // Asked for by `--harness vscode` (the `media:vscode` task), a skip would be a success with no
+    // pictures, which turbo caches as the task's result; a recording of both is just short of them.
+    if (asked) throw new Error("VS Code pictures need a Linux compositor");
     console.error(`record: ${plugin}: VS Code pictures need a Linux compositor, skipped`);
     return;
   }
@@ -462,6 +465,9 @@ async function recordVscode(p: E2EPackage, named: boolean) {
 
 // ---- a kit package
 
+/** A kit package's folder under `apps/site/media/kit/`: `kit-card` writes `card/`. */
+const kitFolder = (p: E2EPackage) => p.name.slice("kit-".length);
+
 /** A kit story's picture, keyed `<harness>/<story>@<w>x<h>` in `crops.json`; `png` is repo-relative. */
 type Crop = { png: string; width: number; height: number; hash: string };
 
@@ -476,13 +482,11 @@ async function recordKit(p: E2EPackage, named: boolean) {
     if (named) throw new Error(`${p.name} has no claude or pi scenarios`);
     return;
   }
-  // The stories load the catalogue's build.
-  const built = spawnSync(
-    process.execPath,
-    [join(checkoutRoot, "lib/tools/build/build.ts"), join(checkoutRoot, "lib/kits/catalog")],
-    { stdio: "inherit" },
-  );
-  if (built.status !== 0) throw new Error("the catalogue did not build");
+  // The stories load the catalogue's build, which `pnpm turbo run build` writes.
+  if (!existsSync(join(checkoutRoot, "lib/kits/catalog/dist/.claude-plugin/plugin.json")))
+    throw new Error(
+      "the catalogue is not built; run `pnpm turbo run build --filter=@agents/kit-catalog`",
+    );
 
   const sets: ScenarioSet[] = [];
   for (const f of files) sets.push(await loadSet(f.file));
@@ -520,7 +524,7 @@ async function recordKit(p: E2EPackage, named: boolean) {
       writeFileSync(out, cut.png);
       written.push(out);
       crops[name] = {
-        png: `apps/site/media/kit/${name}.png`,
+        png: `apps/site/media/kit/${kitFolder(p)}/${name}.png`,
         width: cut.width,
         height: cut.height,
         hash: cut.hash,
@@ -536,29 +540,16 @@ async function recordKit(p: E2EPackage, named: boolean) {
   for (const f of written)
     if (statSync(f).size > BUDGET.png)
       console.error(`record: ${rel(f)} is ${kb(f)}, over its ${BUDGET.png / 1024} KB budget`);
-  // The kit's pictures of every package share one folder, which the site reads (`crops.json`); this
-  // package's own are replaced and the others' stay.
-  const dest = join(mediaRoot, "kit");
-  const manifest = join(dest, "crops.json");
-  const all: Record<string, Crop> = existsSync(manifest)
-    ? (JSON.parse(readFileSync(manifest, "utf8")) as Record<string, Crop>)
-    : {};
-  const mine = new Set(
-    sets.flatMap((set) => Object.keys(set.scenarios).map((n) => `${set.harness}/${n}`)),
-  );
-  for (const [key, c] of Object.entries(all))
-    if (mine.has(key.replace(/@\d+x\d+$/, ""))) {
-      rmSync(join(checkoutRoot, c.png), { force: true });
-      delete all[key];
-    }
+  // The package's own folder, emptied first; the site's loader joins every package's `crops.json`.
+  const dest = join(mediaRoot, "kit", kitFolder(p));
+  rmSync(dest, { recursive: true, force: true });
   for (const f of written) {
     const to = join(dest, relative(stage, f));
     mkdirSync(dirname(to), { recursive: true });
     copyFileSync(f, to);
     console.error(`record: ${rel(to)} ${kb(to)}`);
   }
-  const merged = { ...all, ...crops };
-  const sorted = Object.fromEntries(Object.entries(merged).sort(([a], [b]) => a.localeCompare(b)));
-  writeFileSync(manifest, `${JSON.stringify(sorted, null, 2)}\n`);
+  const sorted = Object.fromEntries(Object.entries(crops).sort(([a], [b]) => a.localeCompare(b)));
+  writeFileSync(join(dest, "crops.json"), `${JSON.stringify(sorted, null, 2)}\n`);
   rmSync(stage, { recursive: true, force: true });
 }

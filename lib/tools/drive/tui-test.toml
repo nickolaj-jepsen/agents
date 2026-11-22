@@ -2,9 +2,9 @@
 #
 # The colours are the person's terminal: the fireproof theme in ~/nixos/modules/base/theme.nix, as
 # ghostty gets it (bg, fg, the cursor in fg, and the palette as the *Alt shades for 0-7 and the
-# plain ones for 8-15). This is the one place they are written down; the site's media and the kit
-# catalogue's crops (kit/catalog/crops.ts) read the geometry below, so change a padding or the font
-# size and re-run `turbo run site-shots` and `turbo run catalog`.
+# plain ones for 8-15). This is the one place they are written down; the site's media and the
+# kit packages' crops (`drive record kit-<name>`) read the geometry below, so change a padding or the
+# font size and re-run `turbo run media`.
 
 [profiles.default.colors]
 background = "#1C1B1A"

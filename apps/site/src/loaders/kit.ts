@@ -1,7 +1,7 @@
 /**
  * The UI kit's catalogue as a collection of components, read by the catalogue's own model
  * (`lib/kits/catalog/src/model.ts`, which also writes COMPONENTS.md) and joined with the crops of the
- * stories' renders that `turbo run media` leaves in `apps/site/media/kit/`. A render that is not
+ * stories' renders that each kit package's `media` task leaves in `apps/site/media/kit/<package>/`. A render that is not
  * there is warned about, and the page says its story has none yet.
  */
 import { existsSync } from "node:fs";
@@ -32,7 +32,7 @@ function rendersOf(crops: Crops, id: string): Record<string, Render[]> {
 }
 
 /** The sources of the model: each kit package's `src/` (manifests, stories, the exports it reads) and the crops' list. */
-const sources = [/^lib\/kits\/[^/]+\/src\//, /^apps\/site\/media\/kit\/crops\.json$/];
+const sources = [/^lib\/kits\/[^/]+\/src\//, /^apps\/site\/media\/kit\/[^/]+\/crops\.json$/];
 
 export function kitLoader(): Loader {
   return {

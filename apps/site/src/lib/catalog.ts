@@ -1,7 +1,7 @@
 /**
  * The UI kit's catalogue for the /dev/components/ pages: the `components` collection (see
- * `src/loaders/kit.ts`: the catalogue's model joined with the crops `turbo run media` leaves in
- * `apps/site/media/kit/`).
+ * `src/loaders/kit.ts`: the catalogue's model joined with the crops each kit package's `media` task
+ * leaves in `apps/site/media/kit/<package>/`).
  */
 import { getCollection } from "astro:content";
 import type { ComponentModel, StoryModel } from "../../../../lib/kits/catalog/src/model.ts";

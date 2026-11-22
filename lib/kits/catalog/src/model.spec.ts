@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { here, loadModel, markdown, repoRoot, withIndex, type Model } from "./model.ts";
 
-// As `turbo run catalog -- --check`: no PNG, no network. The compiler reading the kits is slow on a
+// As `node src/build.ts --check`: no PNG, no network. The compiler reading the kits is slow on a
 // cold build, hence the timeout.
 describe("component manifests", () => {
   let model: Model;

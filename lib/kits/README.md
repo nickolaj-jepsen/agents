@@ -87,7 +87,7 @@ Their stories and manifests are under [`catalog/src/`](catalog/src), and the cat
 
 ```bash
 pnpm drive test kit --png                                      # compare snapshots and write pictures
-pnpm turbo run catalog                                         # replay stories and regenerate the crops the site shows
+pnpm turbo run media                                           # replay stories and record the crops the site shows
 ```
 
-Commit the snapshots and the regenerated `catalog/COMPONENTS.md` and kit index in `AGENTS.md`, which `pnpm turbo run build` writes. The crops are generated, not committed, and the site reads the catalogue itself (`apps/site/src/loaders/kit.ts`). `pnpm turbo run catalog -- --check` validates the manifests without replaying.
+Commit the snapshots and the regenerated `catalog/COMPONENTS.md` and kit index in `AGENTS.md`, which `pnpm turbo run build` writes. The crops are generated, not committed, and the site reads the catalogue itself (`apps/site/src/loaders/kit.ts`). `node lib/kits/catalog/src/build.ts --check` validates the manifests and the generated files without writing.
