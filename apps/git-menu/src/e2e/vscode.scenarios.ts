@@ -45,7 +45,7 @@ export default vscodeScenarios({
       about: "/open plan with more notes than a screen holds",
       setup: withNotes(MANY_NOTES),
       start: start("pr"),
-      steps: [...plan, { wait: "Show 8 more" }],
+      steps: [...plan, { wait: "8 more" }],
     },
     "notes-none": {
       about: "/open plan in a checkout with no notes",
