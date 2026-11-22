@@ -1,0 +1,76 @@
+# spellfix/claude/add 160x45 @0,11 (160x34)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+⚠ 1 misspelled close ctrl+q                                                                                                                                 [-]
+…Please fix teh handler before it breaks…
+the (Haiku) [1]  the [2]  eh [3]  tech [4]  tee [5]  tea [6]  skip [s]  fix all [a]  add word [d]
+Fix all changes teh → the
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ Please fix teh handler before it breaks
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⏸ manual mode on
+--- styles
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+1x14 2x13 .x129 2x3
+2x12 3x3 2x26
+.x12 2x3 .x6 2x3 .x5 2x3 .x7 2x3 .x6 2x3 .x6 2x3 .x7 2x3 .x10 2x3 .x11 2x3
+2x25
+-
+4x160
+.x41 5
+4x160
+.x2 2x16
+--- legend
+1 fg=#ffc107
+2 fg=#999999
+3 fg=#ff6b80 bold underline=single
+4 fg=#888888
+5 inverse

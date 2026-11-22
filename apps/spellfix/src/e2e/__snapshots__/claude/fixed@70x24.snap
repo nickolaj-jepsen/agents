@@ -1,0 +1,32 @@
+# spellfix/claude/fixed 70x24 @0,11 (70x13)
+
+
+
+
+
+
+Fixed teh → the, seperate → separate                              [-]
+undo [8]  dismiss [9]
+
+──────────────────────────────────────────────────────────────────────
+❯ Please fix the handler, it should separate the orders
+──────────────────────────────────────────────────────────────────────
+  ⏸ manual mode on
+--- styles
+-
+-
+-
+-
+-
+-
+.x66 1x3
+.x5 1x3 .x10 1x3
+-
+2x70
+.x55 3
+2x70
+.x2 1x16
+--- legend
+1 fg=#999999
+2 fg=#888888
+3 inverse
