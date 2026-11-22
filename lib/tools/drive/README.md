@@ -9,7 +9,7 @@ A **package** is an app (`docfix`) or a kit component (`kit-card`); `kit` is eve
 | `claude`  | Claude Code in a terminal                                  | `claude.scenarios.ts`  | all but `eval`; the screen through `terminal`                                                |
 | `pi`      | pi in a terminal                                           | `pi.scenarios.ts`      | all but `eval`; the screen through `terminal`                                                |
 | `vscode`  | Claude Code in a VS Code window on its own display (Linux) | `vscode.scenarios.ts`  | all but `snap` and `test`; the screen through `cap`, `keys`, `click`, `wait`, `shot`, `eval` |
-| `desktop` | Claude Desktop (Linux), launched on a seeded session       | `desktop.scenarios.ts` | `live` and `goto` only, without `--watch`                                                    |
+| `desktop` | Claude Desktop (Linux), launched on a seeded session       | `desktop.scenarios.ts` | `live` and `goto` only                                                                       |
 
 `site.scenarios.ts` holds a package's recording, which `record` plays, not a harness. `drive test` runs the `claude` and `pi` scenarios; the tests are part of `check`, one `e2e` task per package.
 
@@ -32,7 +32,7 @@ pnpm drive live kit-card card/live --harness pi --watch             # a kit stor
 
 The view fits your window once the scripted steps finish. To change the size **during** those steps, pass `--size 96x30` in terminal cells or `--size 900x700` in VS Code pixels. Claude Desktop is only launched: it has no screen verbs.
 
-Claude, pi and VS Code use the same flags for `live` and `goto`:
+`live` and `goto` take the same start flags, `--size` and `--draft` where they apply. Watching is `live`'s alone: it is the workflow a person iterates in, while a parked session an agent inspects changes only on `reload`.
 
 - `--watch` rebuilds on edits to the app or its kits and replays the scenario. Terminal `live` keeps the old screen until the new one is ready; VS Code replaces the Claude tab in the same window. Edits to the scenario also trigger replay. Tests, snapshots and build outputs are ignored.
 - `--watch --in-place` reloads plugin edits in the running session, without replaying. Scenario edits still replay because the running agent does not read the fixture or scripted steps.
@@ -74,7 +74,7 @@ A VS Code session has no tui-test equivalent, so drive's own verbs drive it: `ca
 
 ### Reload and stop
 
-Saving doesn't reload a parked session; `reload` does, at the session's current size. If the new session fails to start, `reload` prints why and leaves the old one parked. In VS Code it opens a new Claude tab in the same window, and may name another scenario of the package. `goto ... --watch` takes the same flags as live mode, reloads on each save and prints the screen; Ctrl+C stops watching and leaves the session parked. A failed start removes its run folder unless `--keep` is given, which prints its path. `stop` ends the session, its daemon or window, its stub and its run folder. `snap` (the scenario's snapshot of the screen as it is now, with its region and masks) is for the terminal agents and `eval` (an expression in the Claude webview) for VS Code; desktop has only `live` and `goto`. The driver finds tui-test via `TUI_TEST_BIN`, then `PATH`, then the release the repo pins, which it downloads and checks on first use (`pnpm turbo run @agents/drive#tui-test` fetches it ahead of time); `terminal` uses the same binary.
+Saving doesn't reload a parked session; `reload` does, at the session's current size. Watching belongs to the foreground: `goto` takes no `--watch`, so a parked screen changes only when the agent asks, and the screen it inspected is the one it acts on. If the new session fails to start, `reload` prints why and leaves the old one parked. In VS Code it opens a new Claude tab in the same window, and may name another scenario of the package. A failed start removes its run folder unless `--keep` is given, which prints its path. `stop` ends the session, its daemon or window, its stub and its run folder. `snap` (the scenario's snapshot of the screen as it is now, with its region and masks) is for the terminal agents and `eval` (an expression in the Claude webview) for VS Code; desktop has only `live` and `goto`. The driver finds tui-test via `TUI_TEST_BIN`, then `PATH`, then the release the repo pins, which it downloads and checks on first use (`pnpm turbo run @agents/drive#tui-test` fetches it ahead of time); `terminal` uses the same binary.
 
 ## Write a scenario
 

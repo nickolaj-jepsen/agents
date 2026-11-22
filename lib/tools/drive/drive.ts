@@ -17,7 +17,6 @@ import {
   reloadSession,
   replayVscode,
   stopSession,
-  watchParked,
   type Flags,
 } from "./lib/lifecycle.ts";
 import { compare } from "./lib/compare.ts";
@@ -187,7 +186,8 @@ program
 
 // ---- starting and stopping
 
-const flagged = (c: Command) =>
+/** The flags a start takes: what it shows, and at what size; `--draft` is Desktop's own. */
+const startOptions = (c: Command) =>
   c
     .addOption(harnessOption())
     .option(
@@ -195,6 +195,11 @@ const flagged = (c: Command) =>
       "the size the steps run at: COLSxROWS, or WIDTHxHEIGHT in VS Code",
       size,
     )
+    .option("--draft", "desktop: open a prefilled draft for a real model, not a seeded session");
+
+/** Watching is the foreground's: `live` rebuilds and replays on a save until it is closed. */
+const watchOptions = (c: Command) =>
+  c
     .option(
       "--watch",
       "on each save under the package, its kits or the scenario's folder, rebuild and replay",
@@ -202,43 +207,37 @@ const flagged = (c: Command) =>
     .option(
       "--in-place",
       "with --watch: reload plugin edits without restarting the session; scenario edits still replay",
-    )
-    .option("--draft", "desktop: open a prefilled draft for a real model, not a seeded session");
+    );
 
 type StartFlags = Flags & { harness?: Kind };
 
-flagged(
-  program
-    .command("live")
-    .description(
-      "replay a scenario in the foreground, then interact and resize; Ctrl+] stops a terminal one, closing the window a VS Code one",
-    )
-    .argument("<package>")
-    .argument("<scenario>"),
+watchOptions(
+  startOptions(
+    program
+      .command("live")
+      .description(
+        "replay a scenario in the foreground, then interact and resize; Ctrl+] stops a terminal one, closing the window a VS Code one; --watch replays on each save",
+      )
+      .argument("<package>")
+      .argument("<scenario>"),
+  ),
 ).action(
   verb(async (pkg: string, scenario: string, o: StartFlags) => {
     await liveSession(await findOwner(pkg, scenario, o.harness), scenario, o);
   }),
 );
 
-flagged(
+startOptions(
   program
     .command("goto")
     .description(
-      "start the agent on a scenario's screen and leave it parked under --session; --watch stays in the foreground, Ctrl+C stops watching",
+      "start the agent on a scenario's screen and leave it parked under --session; `reload` plays an edited one there",
     )
     .argument("<package>")
     .argument("<scenario>"),
 ).action(
   verb(async (pkg: string, scenario: string, o: StartFlags) => {
-    const entry = await findOwner(pkg, scenario, o.harness);
-    if (o.watch && entry.harness === "desktop")
-      throw new Error("--watch is not available for desktop");
-    await gotoSession(session(), entry, scenario, o);
-    if (o.watch) {
-      // Stays up until a signal; the exit code of a stop is not an error.
-      await watchParked(session(), entry, scenario);
-    }
+    await gotoSession(session(), await findOwner(pkg, scenario, o.harness), scenario, o);
   }),
 );
 
