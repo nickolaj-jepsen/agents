@@ -6,6 +6,7 @@
  * come back untouched. What is not passed through is the lifecycle: the CLI could start a session
  * of its own, restart it or close it, and `drive` owns that (`goto`, `reload`, `stop`).
  */
+import type { Option } from "commander";
 import { spawnSync } from "node:child_process";
 import { DEFAULT_SESSION, readSession, type SessionRecord } from "./sessions.ts";
 import { tuiTestBin, tuiTestEnv } from "./term.ts";
@@ -33,9 +34,6 @@ const VALUE_OPTIONS = new Set([
   "--diagnostic-context",
 ]);
 
-/** drive's own flags before a verb. */
-const DRIVE_FLAGS = new Set(["--keep", "--timing", "-h", "--help", "-V", "--version"]);
-
 export type TerminalCall = { args: string[]; session?: string };
 
 /**
@@ -43,15 +41,17 @@ export type TerminalCall = { args: string[]; session?: string };
  * the verb names the parked session, as it does for every verb; `--keep` and the help flags come
  * before the verb too. What follows `terminal` is the CLI's, and `planTerminal` reads it.
  */
-export function terminalCall(argv: string[]): TerminalCall | undefined {
+export function terminalCall(argv: string[], globals: readonly Option[]): TerminalCall | undefined {
   let session: string | undefined;
   let i = 0;
   for (; i < argv.length; i++) {
     const arg = argv[i]!;
-    if (arg === "--session") session = argv[++i];
-    else if (arg.startsWith("--session=")) session = arg.slice("--session=".length);
-    else if (DRIVE_FLAGS.has(arg)) continue;
-    else break;
+    const equals = arg.indexOf("=");
+    const flag = equals === -1 ? arg : arg.slice(0, equals);
+    const option = globals.find(({ short, long }) => flag === short || flag === long);
+    if (!option) break;
+    const value = equals !== -1 ? arg.slice(equals + 1) : option.required ? argv[++i] : undefined;
+    if (option.long === "--session") session = value;
   }
   if (argv[i] !== "terminal") return undefined;
   return { args: argv.slice(i + 1), ...(session === undefined ? {} : { session }) };

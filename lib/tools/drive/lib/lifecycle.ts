@@ -76,11 +76,12 @@ async function goto(name: string, entry: Entry, scenario: string, flags: Flags) 
     if (flags.size) r.size = flags.size;
     const runDir = newRunDir(name);
     const daemon = daemonBase(name);
-    const session = await reach(r, "daemon", daemon, runDir).catch((err: unknown) => {
-      keepOrRemove(runDir);
-      throw err;
+    const session = await publishTerminal({
+      name,
+      runDir,
+      start: () => reach(r, "daemon", daemon, runDir),
+      publish: () => writeSession(name, { ...base, runDir, daemon }),
     });
-    writeSession(name, { ...base, runDir, daemon });
     const sz = await session.size();
     console.log(
       `on ${entry.package}/${harness}/${scenario} at ${sz.cols}x${sz.rows}; session ${name}; folder ${session.cwd}`,

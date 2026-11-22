@@ -299,7 +299,7 @@ the parked session and is never handed to the CLI.`,
   )
   .action(() => {
     try {
-      const call = terminalCall(process.argv.slice(2));
+      const call = terminalCall(process.argv.slice(2), program.options);
       if (!call) throw new Error("give a tui-test command: `drive terminal help` lists them");
       process.exit(runTerminal(call.args, sessionName(call.session)));
     } catch (err) {

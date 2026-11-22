@@ -10,6 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import type { SessionRecord } from "./sessions.ts";
+import { Option } from "commander";
 import { planTerminal, runTerminal, terminalCall } from "./terminal.ts";
 
 const dir = mkdtempSync(join(tmpdir(), "drive-terminal-"));
@@ -194,24 +195,30 @@ exit 3
 });
 
 describe("finding the verb", () => {
-  it("takes the arguments after `terminal`, past drive's own flags", () => {
-    expect(terminalCall(["terminal", "text"])).toEqual({ args: ["text"] });
-    expect(terminalCall(["--keep", "terminal", "text"])).toEqual({ args: ["text"] });
-    expect(terminalCall(["--timing", "--session", "b", "terminal", "text"])).toEqual({
+  const globals = [
+    new Option("--session <name>"),
+    new Option("--extra <word>"),
+    new Option("--keep"),
+  ];
+  const call = (argv: string[]) => terminalCall(argv, globals);
+
+  it("takes the arguments after `terminal`, past registered global options", () => {
+    expect(call(["terminal", "text"])).toEqual({ args: ["text"] });
+    expect(call(["--keep", "terminal", "text"])).toEqual({ args: ["text"] });
+    expect(call(["--extra", "terminal", "--session", "b", "terminal", "text"])).toEqual({
       args: ["text"],
       session: "b",
     });
-    expect(terminalCall(["--session=b", "terminal", "--json", "state"])).toEqual({
+    expect(call(["--session=b", "terminal", "--json", "state"])).toEqual({
       args: ["--json", "state"],
       session: "b",
     });
   });
 
   it("is not fooled by another verb's package or scenario named terminal", () => {
-    expect(terminalCall(["goto", "terminal", "queue"])).toBeUndefined();
-    expect(terminalCall(["ls", "terminal"])).toBeUndefined();
-    // `--session terminal` names a session, leaving `text` as the verb.
-    expect(terminalCall(["--session", "terminal", "text"])).toBeUndefined();
-    expect(terminalCall(["--help"])).toBeUndefined();
+    expect(call(["goto", "terminal", "queue"])).toBeUndefined();
+    expect(call(["ls", "terminal"])).toBeUndefined();
+    expect(call(["--session", "terminal", "text"])).toBeUndefined();
+    expect(call(["--help"])).toBeUndefined();
   });
 });
