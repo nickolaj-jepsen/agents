@@ -1,21 +1,14 @@
-Install the mods from the marketplace:
+**One skill:** install `grill-me` with the [skills CLI](https://github.com/vercel-labs/skills), or substitute another skill’s name.
+
+```bash
+npx skills add nickolaj-jepsen/agents --skill grill-me
+```
+
+**One Claude Code plugin:** add the marketplace once, then install the plugin you want.
 
 ```bash
 claude plugin marketplace add nickolaj-jepsen/agents
-claude plugin install linear-issue@nickolaj-jepsen
-claude plugin install answer@nickolaj-jepsen
 claude plugin install spellfix@nickolaj-jepsen
 ```
 
-Install the skills, all of them or one by name, with [`npx skills`](https://github.com/vercel-labs/skills)
-or as one Claude Code plugin:
-
-```bash
-npx skills add nickolaj-jepsen/agents
-npx skills add nickolaj-jepsen/agents --skill land
-claude plugin install skills@nickolaj-jepsen
-```
-
-CI validates and tests each plugin against the Claude Code version the repo pins, and
-`lib.mkClaudePlugin` does the same against whichever version a consumer passes it. A marketplace
-install gets no such check, so a Claude Code update can break one.
+For the whole skill collection in Claude Code, install `skills@nickolaj-jepsen` from the same marketplace. For pi, see the install instructions on the [plugin’s page](https://nickolaj-jepsen.github.io/agents/plugins/).
