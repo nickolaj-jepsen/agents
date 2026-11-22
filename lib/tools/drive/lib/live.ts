@@ -8,6 +8,7 @@ import { driveRoot, reach, type Resolved } from "./scenario.ts";
 import { Session } from "./session.ts";
 import { stopStub } from "./stub.ts";
 import { DaemonTerm } from "./term.ts";
+import { drainForeground } from "./foreground.ts";
 import { fileList, watchScenario, withInPlaceReload, type WatchFlags } from "./watch.ts";
 
 const run = promisify(execFile);
@@ -68,6 +69,8 @@ export async function live(r: Resolved, o: WatchFlags = {}) {
   let session: Session | undefined;
   let stopWatching = async () => {};
   let starting: Promise<Session> | undefined;
+  // What takes the screen's place once a reload is done; `drainForeground` ends it if the exit races it.
+  let next: Session | Error | undefined;
 
   try {
     console.log(`Replaying ${r.plugin}/${r.harness}/${r.name}. Press Ctrl+] to leave live mode.`);
@@ -83,8 +86,7 @@ export async function live(r: Resolved, o: WatchFlags = {}) {
       throw new Error("Live mode requires the terminal daemon.");
     if (!o.watch) return await session.term.interact(controller.signal);
 
-    // What takes the screen's place once a reload is done, and the loop's wake-up when none shows.
-    let next: Session | Error | undefined;
+    // The loop's wake-up when no reload has shown yet.
     let wake = () => {};
     let n = 0;
     const replace = async (outcome: Session | Error) => {
@@ -157,21 +159,17 @@ export async function live(r: Resolved, o: WatchFlags = {}) {
       else if (outcome) session = outcome;
     }
   } finally {
-    // No save starts work after this point, and the batch already in flight settles before the
-    // sessions it can replace are closed: a replay cannot take the screen after the person left.
-    await stopWatching();
-    try {
-      const late = await starting?.catch(() => undefined);
-      if (late) {
-        await late.close();
-        removeRun(late.runDir);
-      }
-      if (session) await session.close();
-      else stopStub(runDir);
-    } finally {
-      for (const signal of signals) process.off(signal, interrupt);
-      if (session) removeRun(session.runDir);
-      removeRun(runDir);
-    }
+    // Ctrl+] ends the monitor without a signal, so the abort is raised here before anything waits.
+    // A save that reaches its replay from now on sees it and ends its own candidate; the batch
+    // already in flight then settles, and whatever it confirmed is ended rather than left staged.
+    await drainForeground({
+      abort: () => controller.abort(),
+      stopWatching,
+      session,
+      staged: next,
+      starting,
+      origin: { runDir, stopStub: () => stopStub(runDir) },
+    });
+    for (const signal of signals) process.off(signal, interrupt);
   }
 }

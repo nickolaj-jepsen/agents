@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { options } from "./options.ts";
 import { driveRoot } from "./scenario.ts";
 import { newRunDir } from "./sessions.ts";
+import { waitForChildClose } from "./foreground.ts";
 import { reachVscode, type VscodeResolved } from "./vscode-scenario.ts";
 import { stopVscode, waitForVscodeClose } from "./vscode.ts";
 import { fileList, watchScenario, type Watch, type WatchFlags } from "./watch.ts";
@@ -40,23 +41,21 @@ export async function liveVscode(r: VscodeResolved, o: WatchFlags = {}) {
         },
         replay: async () => {
           // Load the scenario and its imports from disk rather than from this process's cache.
-          const code = await new Promise<number | null>((resolve, reject) =>
-            spawn(
-              process.execPath,
-              [
-                join(driveRoot, "drive.ts"),
-                "_replay-vscode",
-                r.plugin,
-                r.name,
-                "--run",
-                runDir,
-                ...(r.size ? ["--size", `${r.size[0]}x${r.size[1]}`] : []),
-              ],
-              { stdio: "inherit", signal: controller.signal },
-            )
-              .once("exit", resolve)
-              .once("error", reject),
+          const child = spawn(
+            process.execPath,
+            [
+              join(driveRoot, "drive.ts"),
+              "_replay-vscode",
+              r.plugin,
+              r.name,
+              "--run",
+              runDir,
+              ...(r.size ? ["--size", `${r.size[0]}x${r.size[1]}`] : []),
+            ],
+            { stdio: "inherit", signal: controller.signal },
           );
+          // The spawn reports its abort before the child is gone; its run folder waits for `close`.
+          const code = await waitForChildClose(child, controller.signal);
           if (code !== 0 && !controller.signal.aborted) console.log("Waiting for the next save.");
         },
         onError: (err) => {
