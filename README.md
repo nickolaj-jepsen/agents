@@ -120,8 +120,23 @@ Each starts the real program and drives it with keys, screenshots and logs.
 
 My variants of public skills. Prefer the originals.
 
+- [code-review](https://nickolaj-jepsen.github.io/agents/skills/code-review/): Review a diff separately for standards and spec compliance. Adapted from [Matt Pocock’s code-review](https://github.com/mattpocock/skills).
+- [codebase-design](https://nickolaj-jepsen.github.io/agents/skills/codebase-design/): Evaluate module depth, interfaces and seams. Adapted from [Matt Pocock’s codebase-design](https://github.com/mattpocock/skills).
+- [domain-modeling](https://nickolaj-jepsen.github.io/agents/skills/domain-modeling/): Record domain terms and architectural decisions as they become clear. Adapted from [Matt Pocock’s domain-modeling](https://github.com/mattpocock/skills).
 - [grill-me](https://nickolaj-jepsen.github.io/agents/skills/grill-me/): the `/grill-me` entry point to `grilling`. Reworked from the latest version of [Matt Pocock's `grill-me`](https://github.com/mattpocock/skills).
+- [grill-with-docs](https://nickolaj-jepsen.github.io/agents/skills/grill-with-docs/): Interview in rounds and capture agreed domain terms and decisions. Adapted from [Matt Pocock’s grill-with-docs](https://github.com/mattpocock/skills).
 - [grilling](https://nickolaj-jepsen.github.io/agents/skills/grilling/): interviews you about a plan in rounds; other skills call it. Reworked from the latest version of [Matt Pocock's `grill-me`](https://github.com/mattpocock/skills).
+- [implement](https://nickolaj-jepsen.github.io/agents/skills/implement/): Implement a ticket at agreed seams and review the change. Adapted from [Matt Pocock’s implement](https://github.com/mattpocock/skills).
+- [implement-spec](https://nickolaj-jepsen.github.io/agents/skills/implement-spec/): Implement a workflow’s ticket graph on an integration branch. Adapted from [Matt Pocock’s implement-spec](https://github.com/mattpocock/skills).
+- [improve-codebase-architecture](https://nickolaj-jepsen.github.io/agents/skills/improve-codebase-architecture/): Explore deeper module designs with a visual report and interview. Adapted from [Matt Pocock’s improve-codebase-architecture](https://github.com/mattpocock/skills).
+- [matt-retro](https://nickolaj-jepsen.github.io/agents/skills/matt-retro/): Find changes to the agent environment that would have helped a session. Adapted from [Matt Pocock’s retro](https://github.com/mattpocock/skills).
+- [research](https://nickolaj-jepsen.github.io/agents/skills/research/): Save findings from primary sources to the workflow notes. Adapted from [Matt Pocock’s research](https://github.com/mattpocock/skills).
+- [tdd](https://nickolaj-jepsen.github.io/agents/skills/tdd/): Build one tested behavior at a time at an agreed seam. Adapted from [Matt Pocock’s tdd](https://github.com/mattpocock/skills).
+- [to-spec](https://nickolaj-jepsen.github.io/agents/skills/to-spec/): Write the agreed feature and test seams to a workflow spec. Adapted from [Matt Pocock’s to-spec](https://github.com/mattpocock/skills).
+- [to-tickets](https://nickolaj-jepsen.github.io/agents/skills/to-tickets/): Split a spec into local tickets with explicit blockers. Adapted from [Matt Pocock’s to-tickets](https://github.com/mattpocock/skills).
+- [wait-what](https://nickolaj-jepsen.github.io/agents/skills/wait-what/): Explain the last message again in plain technical English. Adapted from [Matt Pocock’s wait-what](https://github.com/mattpocock/skills).
+- [wizard](https://nickolaj-jepsen.github.io/agents/skills/wizard/): Generate a guided shell script for the steps only a human can do. Adapted from [Matt Pocock’s wizard](https://github.com/mattpocock/skills).
+- [writing-for-agents](https://nickolaj-jepsen.github.io/agents/skills/writing-for-agents/): Write instructions that agents can follow and verify. Adapted from [Matt Pocock’s writing-for-agents](https://github.com/mattpocock/skills).
 
 ## Development
 
