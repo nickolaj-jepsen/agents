@@ -1,7 +1,0 @@
-{
-  "extends": ["//"],
-  "tasks": {
-    "e2e": { "command": ["node", "../run.ts"] },
-    "e2e:update": { "command": ["node", "../run.ts", "-u"] }
-  }
-}

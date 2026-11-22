@@ -1,6 +1,0 @@
-{
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "tsBuildInfoFile": "${configDir}/node_modules/.cache/core.tsbuildinfo" },
-  "include": ["core/**/*.ts", "claude/kit/**/*.ts"],
-  "exclude": ["core/**/*.spec.ts"]
-}
