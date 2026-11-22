@@ -5,7 +5,6 @@ import {
   formId,
   offer,
   hasWork,
-  recommendationChoice,
   startLines,
   tailOf,
   step as stepForm,
@@ -17,32 +16,36 @@ import {
   controlBar,
   questionCard,
   nativeRound,
+  preamble,
+  roundPress,
+  spacer,
   ROUND_FOCUS,
   entryLetter,
   writeLetter,
+  writerBand,
+  type Els,
   type RoundActions,
+  type Writing,
 } from "./claude/transcript";
 import type { Action, Current, Editing, Entry, Held, RoundEditor, View } from "./claude/types.d.ts";
+import type { Button } from "@agents/kit-buttons/contract.ts";
+import { buttonRow } from "@agents/kit-buttons/gui.tsx";
+import { statusBand } from "@agents/kit-band/gui.tsx";
 import {
-  actionBar,
-  choice,
-  clamp,
-  excerpt,
-  fieldRow,
-  kitOf,
-  list,
-  onlyOwnRows,
-  paneTitle,
-  prose,
-  roleProps,
-  stack,
-  statusBand,
-  tokens,
-  type Kit,
-  type Action as ActionSpec,
-  type ChoiceOption,
-  type ListItem,
-} from "@agents/kit-legacy/claude/ui.tsx";
+  choice as choiceGui,
+  heading as headingGui,
+  note as noteGui,
+  sections,
+  steps,
+  summary as summaryGui,
+  type CardGuiOptions,
+} from "@agents/kit-card/gui.tsx";
+import { frameTop } from "@agents/kit-frame/gui.tsx";
+import { keyAddress } from "@agents/kit-core/paint/claude.tsx";
+import { column, type Gui } from "@agents/kit-core/paint/gui.tsx";
+import { stack } from "@agents/kit-core/paint/claude.tsx";
+import { forSurface, guiOf, onlyOwnRows } from "@agents/kit-core/paint/host.tsx";
+import { prose as proseGui } from "@agents/kit-prose/gui.tsx";
 
 const PLUGIN = "answer";
 const WRITE = "write";
@@ -52,7 +55,9 @@ const NOTE = "note";
  * until it is drawn with another value, so each opening gets an address of its own: one opened
  * after a cancel would otherwise come back holding the cancelled text.
  */
-const keyOf = (field: typeof WRITE | typeof NOTE) => `${field}-field-${opened}`;
+const hitOf = (field: typeof WRITE | typeof NOTE) => `${field}-field-${opened}`;
+/** The kit keys a field's Input from its hit; the terminal's Input is keyed alike. */
+const keyOf = (field: typeof WRITE | typeof NOTE) => `${field}:${hitOf(field)}`;
 let opened = 0;
 // What the row says focuses the band; the binding itself is in keybindings.json.
 const CHORD = "alt+a";
@@ -144,7 +149,10 @@ async function pressElsewhere($: EngineInterface, id: string): Promise<boolean> 
 }
 
 /** The ring's place on what is shown: the answer or the recommendation, or the review's button. */
-const home = (view: View) => (view.item ? `e${view.item.start}` : "fill");
+/** The Button of an answer: the kit keys a letter's Button from its `hit`. */
+const answerKey = (entry: number) => `key:e${entry}`;
+
+const home = (view: View) => (view.item ? answerKey(view.item.start) : "fill");
 
 /** One step of the draft, and what it now shows; null with no form to step. */
 async function step($: EngineInterface, action: Action): Promise<View | null> {
@@ -212,7 +220,7 @@ async function choose($: EngineInterface, entry: Entry, index: number) {
   if (entry.isChosen && !c.view.item?.isSeveral) return move($, { do: "next" });
   // Observed, not documented: the note field takes the keys only from a ring below its place, so
   // the ring goes below first.
-  await focus($, `e${index + 1}`);
+  await focus($, answerKey(index + 1));
   if (await step($, { do: "pick", entry: index })) await askAbout($, NOTE);
 }
 
@@ -670,17 +678,6 @@ function roundActions(
             .scroll({ to: { key: `question-${index}-card` }, block: "start" })
             .catch(() => undefined);
       }),
-    details:
-      surface !== "desktop"
-        ? undefined
-        : (index) =>
-            press(() =>
-              update($, current, (c) => {
-                if (c?.transcript !== id || c.writer) return c;
-                const at = over(c, stepForm(c.held, { do: "go", step: index }));
-                return { ...at, isBodyOpen: c.view.step !== index || !c.isBodyOpen };
-              }),
-            ),
     pick: (question, entry) => press(() => changeRound($, id, question, { do: "pick", entry })),
     edit,
     clear: (question) => press(() => changeRound($, id, question, { do: "clear" })),
@@ -783,173 +780,315 @@ async function pressRoundKey($: EngineInterface, id: string, key: string) {
     });
 }
 
-function writingMode(
-  $: EngineInterface,
-  kit: Kit,
-  c: Current,
-  Input: ReturnType<EngineInterface["ui"]["resolve"]>["Input"],
-  maxRows: number,
-) {
-  const { Box, Text, Button } = kit;
+/** `text` with line `line` replaced: a one-line field's part of a longer text. */
+function withLine(text: string, line: number, part: string) {
+  const lines = text.split("\n");
+  while (lines.length <= line) lines.push("");
+  lines[line] = part;
+  return lines.join("\n");
+}
+
+/**
+ * The field a graphical surface has open in the transcript: the field's options (what is typed is
+ * kept as it goes), and Save, Add line where the host's field is one line, and Cancel.
+ */
+function writingOf($: EngineInterface, c: Current): Writing | null {
   const { view, editing, transcript: id, writer } = c;
-  if (!id || !writer || !editing) return null;
+  if (!id || !writer || !editing || writer.surface === "terminal") return null;
   const note = editing === NOTE;
-  const label = note ? "Write note" : "Write answer";
-  const title = view.item ? `${label}  /  ${view.item.label}` : `${label}  /  Round`;
-  const answer = view.review[view.step];
   const saved = savedField(c);
   const value = () => (typed?.field === editing ? typed.text : saved);
-  if (writer.surface === "terminal") {
-    const detail = view.item?.title ?? "Review answers";
-    const singleLine = (text: string, width: number) =>
-      clamp(text, Math.max(1, width), { max: 1 }).join("");
-    const caption = view.item ? `${view.item.label}  ${detail}` : detail;
-    return (
-      // The terminal Input wraps to the band's width, not its parent's inner width.
-      <Box key="writing" flexDirection="column">
-        <Text weight="semibold" {...roleProps("accent")}>
-          {singleLine(caption, kit.columns - 6)}
-        </Text>
-        {answer?.isAnswered && note ? (
-          <Text {...roleProps("note")}>{singleLine(answer.shown, kit.columns - 6)}</Text>
-        ) : null}
-        <Input
-          key={keyOf(editing)}
-          label={note ? "Note" : "Answer"}
-          rows={Math.min(2, Math.max(1, maxRows - 4))}
-          autoFocus
-          value={value()}
-          placeholder={note ? "Add a condition or follow-up" : "Write your own answer"}
-          submitLabel="save"
-          onInput={(text) => {
-            typed = { field: editing, text };
-          }}
-          onSubmit={(text) => finishWriting($, id, text)}
-        />
-        <Box columnGap={2}>
-          <Button
-            plain
-            dimColor
-            key="keep"
-            label="Save"
-            onPress={() => finishWriting($, id, value())}
-          />
-          <Button plain dimColor key="cancel" label="Cancel" onPress={() => finishWriting($, id)} />
-          {c.pending ? <Text dimColor>{`Click field or ${CHORD}`}</Text> : null}
-        </Box>
-      </Box>
+  const isCode = writer.surface === "vscode";
+  /** What the field now holds, once `line` of it changed: the text whole. */
+  const joined = (text: string, line?: number) =>
+    line === undefined ? text : withLine(value(), line, text);
+  const lines = isCode ? (writer.lines ?? saved.split("\n").length) : undefined;
+  const addLine = () =>
+    edit($, (was) =>
+      was.transcript === id &&
+      was.view.step === view.step &&
+      was.editing === editing &&
+      was.writer?.surface === "vscode"
+        ? {
+            ...was,
+            writer: { ...was.writer, lines: (was.writer.lines ?? saved.split("\n").length) + 1 },
+          }
+        : was,
     );
-  }
-  return (
-    <Box
-      key="writing"
-      flexDirection="column"
-      backgroundColor={tokens.gui.fill}
-      paddingX={tokens.gui.across.inset}
-      paddingY={tokens.gui.space.sm}
-      rowGap={tokens.gui.space.sm}
-      borderStyle="round"
-      borderColor="#00000000"
-    >
-      {!view.item ? <Text weight="semibold">{title}</Text> : null}
-      {writer.surface === "vscode" ? (
-        <Box flexDirection="column" rowGap={tokens.gui.space.sm}>
-          <Text weight="semibold">{note ? "Note" : "Your answer"}</Text>
-          {Array.from({ length: writer.lines ?? saved.split("\n").length }, (_, i) => {
-            const setLine = (line: string) => {
-              const lines = value().split("\n");
-              while (lines.length <= i) lines.push("");
-              lines[i] = line;
-              typed = { field: editing, text: lines.join("\n") };
-              return typed.text;
-            };
-            return (
-              <Input
-                key={`${view.step}-${keyOf(editing)}-${i}`}
-                placeholder={i === 0 ? (note ? "Type a note" : "Type an answer") : `Line ${i + 1}`}
-                value={value().split("\n")[i] ?? ""}
-                onInput={setLine}
-                onSubmit={(line) => finishWriting($, id, setLine(line))}
-              />
-            );
-          })}
-        </Box>
-      ) : (
-        <Input
-          key={keyOf(editing)}
-          label={note ? "Note" : "Answer"}
-          rows={Math.min(3, Math.max(1, maxRows - 3))}
-          autoFocus
-          value={value()}
-          placeholder={note ? "Add a condition or follow-up" : "Type an answer"}
-          onInput={(text) => {
-            typed = { field: editing, text };
-          }}
-          onSubmit={(text) => finishWriting($, id, text)}
-        />
-      )}
-      {actionBar(kit, [
-        {
-          key: "keep",
-          label: "Save",
-          isPrimary: true,
-          onPress: () => finishWriting($, id, value()),
-        },
-        ...(writer.surface === "vscode"
-          ? [
-              {
-                key: "add-line",
-                label: "Add line",
-                onPress: () =>
-                  edit($, (was) =>
-                    was.transcript === id &&
-                    was.view.step === view.step &&
-                    was.editing === editing &&
-                    was.writer?.surface === "vscode"
-                      ? {
-                          ...was,
-                          writer: {
-                            ...was.writer,
-                            lines: (was.writer.lines ?? saved.split("\n").length) + 1,
-                          },
-                        }
-                      : was,
-                  ),
-              },
-            ]
-          : []),
-        { key: "cancel", label: "Cancel", onPress: () => finishWriting($, id) },
-      ])}
-    </Box>
-  );
+  return {
+    question: view.step,
+    field: editing,
+    value: value(),
+    hit: hitOf(editing),
+    options: {
+      onInput: (_hit, text, line) => {
+        typed = { field: editing, text: joined(text, line) };
+      },
+      onSubmit: (_hit, text, line) => finishWriting($, id, joined(text, line)),
+      invitation: note
+        ? isCode
+          ? "Type a note"
+          : "Add a condition or follow-up"
+        : "Type an answer",
+      autoFocus: !isCode,
+      lines,
+      rows: isCode ? undefined : 3,
+    },
+    buttons: [
+      { hotkey: "", label: "Save", hit: "keep", isLit: true },
+      ...(isCode ? [{ hotkey: "", label: "Add line", hit: "add-line" }] : []),
+      { hotkey: "", label: "Cancel", hit: "cancel" },
+    ],
+    act: {
+      keep: () => finishWriting($, id, value()),
+      "add-line": addLine,
+      cancel: () => finishWriting($, id),
+    },
+  };
+}
+
+/**
+ * The terminal's writer, above the prompt: the field is the engine's, so it is drawn by the
+ * band and not the transcript.
+ */
+function writerOf(
+  $: EngineInterface,
+  els: ReturnType<EngineInterface["ui"]["resolve"]>,
+  columns: number,
+  c: Current,
+  maxRows: number,
+) {
+  const { view, editing, transcript: id, writer } = c;
+  if (!id || !writer || !editing) return null;
+  const { Input } = els;
+  const note = editing === NOTE;
+  const saved = savedField(c);
+  const value = () => (typed?.field === editing ? typed.text : saved);
+  const detail = view.item?.title ?? "Review answers";
+  const answer = view.review[view.step];
+  return writerBand(els, columns, {
+    caption: view.item ? `${view.item.label}  ${detail}` : detail,
+    answer: answer?.isAnswered && note ? answer.shown : undefined,
+    input: (
+      <Input
+        key={keyOf(editing)}
+        label={note ? "Note" : "Answer"}
+        rows={Math.min(2, Math.max(1, maxRows - 4))}
+        autoFocus
+        value={value()}
+        placeholder={note ? "Add a condition or follow-up" : "Write your own answer"}
+        submitLabel="save"
+        onInput={(text) => {
+          typed = { field: editing, text };
+        }}
+        onSubmit={(text) => finishWriting($, id, text)}
+      />
+    ),
+    rows: Math.min(2, Math.max(1, maxRows - 4)),
+    isWaiting: Boolean(c.pending),
+    chord: CHORD,
+    save: () => finishWriting($, id, value()),
+    cancel: () => finishWriting($, id),
+  });
 }
 
 function roundBody(
-  kit: Kit,
+  els: Els,
+  columns: number,
   held: Held,
   current: Current | null,
   index: number,
   actions?: RoundActions,
   sent = false,
-  epilogue: JSX.Element | null = null,
+  epilogue = "",
 ) {
   if (index !== held.form.items.length)
-    return questionCard(kit, held, index, current, actions, null, sent);
+    return questionCard(els, columns, held, index, current, actions);
   const closing = closingRow(
-    kit,
+    els,
+    columns,
     viewOf(held.form, held.draft),
     current,
     current?.writer ? undefined : actions,
     sent,
   );
   // What the message said after its questions comes before the row that closes them.
-  return epilogue ? (
-    <kit.Box flexDirection="column" rowGap={1}>
-      {epilogue}
-      {closing}
-    </kit.Box>
-  ) : (
-    closing
+  return epilogue ? stack(els, preamble(els, columns, epilogue), spacer(els), closing) : closing;
+}
+
+/** The band's or pane's room in cells, as the event measured it. */
+const columnsOf = (e: { viewport?: { columns: number }; props?: object }) =>
+  Math.max(
+    1,
+    Math.floor(
+      (e.props as { bodyColumns?: number } | undefined)?.bodyColumns ?? e.viewport?.columns ?? 80,
+    ),
+  );
+
+/** What each control of the graphical form does, by its `hit`. */
+async function pressForm($: EngineInterface, hit: string) {
+  const c = await read($, current);
+  if (!c) return;
+  const { view } = c;
+  const go = (to: (shown: number) => Action) => leave($, to);
+  const index = (prefix: string) => Number(hit.slice(prefix.length));
+  if (/^q\d+$/.test(hit)) return go(() => ({ do: "go", step: index("q") }));
+  if (/^item\d+$/.test(hit)) return go(() => ({ do: "go", step: index("item") }));
+  const entry = /^e\d+$/.test(hit) ? view.item?.entries[index("e")] : undefined;
+  if (entry) return choose($, entry, index("e"));
+  switch (hit) {
+    case "answer":
+      return openForm($);
+    case "quit":
+      return close($);
+    case "review":
+      return go(() => ({ do: "review" }));
+    case "next":
+      return go((shown) => ({ do: "go", step: shown + 1 }));
+    case "more":
+      return edit($, (was) => ({ ...was, isBodyOpen: !was.isBodyOpen }));
+    case "accept":
+      return accept($);
+    case "skip":
+      return move($, { do: "skip" });
+    case "note":
+      return askAbout($, NOTE);
+    case "fill":
+    case "send": {
+      const held = typed;
+      const kept = held ? await step($, { do: "note", text: held.text }) : view;
+      if (!kept?.reply) return kept ? $.ui.toast("Nothing answered yet.") : undefined;
+      return hit === "fill" ? fill($, kept.reply) : send($, kept.reply);
+    }
+  }
+}
+
+/**
+ * A graphical surface's form: the way out, the steps as tabs, then the question with its answers
+ * and note, or the review. A field is always drawn where it belongs, so a click lands in it: a
+ * press that reveals one would leave the focus on the press.
+ */
+function form($: EngineInterface, c: Current, g: Gui): JSX.Element {
+  const { view, editing } = c;
+  const { item } = view;
+  /** What a field of the form does with what is typed, and with Enter. */
+  const typing = (
+    name: typeof WRITE | typeof NOTE,
+    submit: (text: string) => unknown,
+  ): CardGuiOptions => ({
+    onInput: (_hit, text) => {
+      typed = { field: name, text };
+    },
+    onSubmit: (_hit, text) => submit(text),
+  });
+  const head = sections(
+    g,
+    frameTop(g, { title: view.title }, { actions: [{ hotkey: "", label: "close", hit: "quit" }] }),
+    steps(g, [
+      ...view.review.map((row, i) => ({
+        short: row.label,
+        done: row.isAnswered,
+        current: !view.isReview && i === view.step,
+        hit: `q${i}`,
+      })),
+      { short: "Review", current: view.isReview, hit: "review" },
+    ]),
+  );
+  /** An action of the row at the foot. */
+  const act = (hit: string, label: string, isLit = false): Button => ({
+    hotkey: "",
+    label,
+    hit,
+    isLit,
+  });
+
+  if (!item)
+    // Each question with its answer and note, a press to go back to it.
+    return sections(
+      g,
+      head,
+      ...view.review.map((row, i) =>
+        summaryGui(g, {
+          label: row.label,
+          title: row.title,
+          values: row.isAnswered ? [{ text: row.shown, literal: true }] : [],
+          note: row.note,
+          hit: `item${i}`,
+        }),
+      ),
+      noteGui(
+        g,
+        { value: view.note, hit: hitOf(NOTE) },
+        {
+          ...typing(NOTE, (text) => keepNote($, text)),
+          invitation: "Add a note on the whole round",
+        },
+      ),
+      buttonRow(g, [act("send", "send", Boolean(view.reply)), act("fill", "fill the prompt")]),
+    );
+
+  const several = item.isSeveral;
+  const isChosen = item.entries.some((row) => row.isChosen);
+  const isNoteShown = isChosen || editing === NOTE || !!item.note;
+  const choices = item.entries.map((row, k) => {
+    if (row.kind === "write")
+      // The field itself is the row: a click in it is what opens it.
+      return choiceGui(
+        g,
+        {
+          key: "",
+          text: item.written || row.text,
+          literal: true,
+          chosen: row.isChosen,
+          hit: hitOf(WRITE),
+        },
+        {
+          ...typing(WRITE, (text) => move($, { do: "write", text })),
+          invitation: row.text,
+        },
+      );
+    const option = {
+      tag: entryLetter(row, k),
+      label: row.kind === "accept" ? row.text : row.text.replace(/^[A-H0-9]{1,2}[.)]\s*/, ""),
+    };
+    return choiceGui(g, {
+      key: option.tag,
+      text: option.label,
+      aside: row.isRecommended ? "Recommended" : undefined,
+      detail: row.detail || undefined,
+      chosen: row.isChosen,
+      multiple: several,
+      hit: `e${k}`,
+    });
+  });
+  const body = [item.body, item.recommended ? `**Recommended:** ${item.recommended}` : ""]
+    .filter(Boolean)
+    .join("\n\n");
+  return sections(
+    g,
+    head,
+    headingGui(g, { title: item.title }),
+    body ? proseGui(g, body, { excerpt: { hit: "more", isOpen: c.isBodyOpen } }) : null,
+    sections(g, ...choices),
+    isNoteShown
+      ? noteGui(
+          g,
+          { value: item.note, hit: hitOf(NOTE) },
+          { ...typing(NOTE, (text) => keepNote($, text)), invitation: "Add a note" },
+        )
+      : null,
+    buttonRow(g, [
+      act("skip", "skip"),
+      ...(isChosen || isNoteShown ? [] : [act("note", "add note")]),
+      // One press takes a recommendation of several options; one is a press on its row.
+      ...(item.canAccept && item.accepts.includes(",")
+        ? [act("accept", `Take ${item.accepts}`)]
+        : []),
+      // The way on, with this one answered and every other too, is the review.
+      ...(isChosen || several
+        ? [act("next", view.answered === view.count ? "Review" : "Next", isChosen)]
+        : []),
+    ]),
   );
 }
 
@@ -1052,27 +1191,41 @@ export const register: Register = (on) => {
     const held = active?.held ?? round.frozen;
     if (!held) return next(e);
     const els = $.ui.resolve(e);
-    const kit = kitOf(els, e);
-    const { Box, Markdown } = els;
-    const epilogue = round.epilogue ? <Markdown text={round.epilogue} /> : null;
     const actions = active ? roundActions($, id, surface) : undefined;
-    const split = surface === "terminal" && round.anchors.length > 1;
-    const cards = split ? [] : held.form.items.map((_, i) => i).concat(held.form.items.length);
-    const inline =
-      surface !== "terminal" && active?.writer?.surface === surface
-        ? writingMode($, kit, active, $.ui.resolve(e).Input, 8)
-        : null;
-    return (
-      <Box flexDirection="column" rowGap={kit.isNative ? tokens.gui.space.sm : 1}>
-        {round.preamble ? <Markdown text={round.preamble} /> : null}
-        {kit.isNative
-          ? nativeRound(kit, held, active, actions, inline, !active && round.sent)
-          : cards.map((index) =>
-              roundBody(kit, held, active, index, actions, !active && round.sent, epilogue),
-            )}
-        {kit.isNative ? epilogue : null}
-      </Box>
-    );
+    return forSurface(e, {
+      tui: () => {
+        const columns = columnsOf(e);
+        const split = round.anchors.length > 1;
+        const cards = split ? [] : held.form.items.map((_, i) => i).concat(held.form.items.length);
+        return stack(
+          els,
+          round.preamble ? preamble(els, columns, round.preamble) : null,
+          ...cards.flatMap((index) => [
+            round.preamble || index ? spacer(els) : null,
+            roundBody(
+              els,
+              columns,
+              held,
+              active,
+              index,
+              actions,
+              !active && round.sent,
+              round.epilogue,
+            ),
+          ]),
+        );
+      },
+      gui: () => {
+        const writing = active?.writer?.surface === surface ? writingOf($, active) : null;
+        const g = guiOf(els, e, actions && roundPress(actions, writing, held.form.items.length));
+        return column(
+          g,
+          { gap: "sm", isMeasured: true },
+          round.preamble ? proseGui(g, round.preamble) : null,
+          nativeRound(g, held, active, actions, writing, !active && round.sent, round.epilogue),
+        );
+      },
+    });
   });
 
   on("ui.render", { component: "Placed" }, async ($, e, next) => {
@@ -1087,11 +1240,19 @@ export const register: Register = (on) => {
     const active = c?.transcript === id ? c : null;
     const held = active?.held ?? round.frozen;
     if (!held) return next(e);
-    const els = $.ui.resolve(e);
-    const kit = kitOf(els, e);
     const actions = active ? roundActions($, id, "terminal") : undefined;
-    const epilogue = round.epilogue ? <els.Markdown text={round.epilogue} /> : null;
-    return roundBody(kit, held, active, index, actions, !active && round.sent, epilogue) ?? next(e);
+    return (
+      roundBody(
+        $.ui.resolve(e),
+        columnsOf(e),
+        held,
+        active,
+        index,
+        actions,
+        !active && round.sent,
+        round.epilogue,
+      ) ?? next(e)
+    );
   });
 
   // Drawn in the band, not a pane: the surface docks every pane beside the transcript once
@@ -1103,272 +1264,52 @@ export const register: Register = (on) => {
     if (!c) return next(e);
     band = e.requestId;
     const els = $.ui.resolve(e);
-    const { Box } = els;
-    const kit = kitOf(els, e);
     if (e.surface === "terminal") {
       if (!c.transcript) return next(e);
-      {
-        if (c.writer?.surface === "terminal")
-          return writingMode($, kit, c, $.ui.resolve(e).Input, e.props.maxRows) ?? next(e);
-        const id = c.transcript;
-        if (c.pending)
-          return (
-            writingMode(
-              $,
-              kit,
-              {
-                ...c,
-                writer: { from: c.pending.from, surface: "terminal" },
-                editing: c.pending.field,
-              },
-              els.Input,
-              e.props.maxRows,
-            ) ?? next(e)
-          );
-        return controlBar(
-          kit,
-          c,
-          () =>
-            c.view.isReview && c.hasKeys
-              ? pressRoundKey($, id, "enter")
-              : moveRound($, id, "terminal", (view) => view.step),
-          (key) => pressRoundKey($, id, key),
-        );
-      }
-    }
-    if (c.transcript && !c.isOpen) return next(e);
-    const { view, editing } = c;
-    const back = () => leave($, (shown) => ({ do: "go", step: shown - 1 }));
-    const forward = () => leave($, (shown) => ({ do: "go", step: shown + 1 }));
-    const press: Record<string, () => unknown> = {
-      back,
-      next: forward,
-      accept: () => accept($),
-      skip: () => move($, { do: "skip" }),
-      note: () => askAbout($, NOTE),
-      fill: async () => {
-        const held = typed;
-        const kept = held ? await step($, { do: "note", text: held.text }) : view;
-        if (kept?.reply) await fill($, kept.reply);
-        else if (kept) $.ui.toast("Nothing answered yet.");
-      },
-      quit: () => close($),
-      send: async () => {
-        const held = typed;
-        const kept = held ? await step($, { do: "note", text: held.text }) : view;
-        if (kept?.reply) await send($, kept.reply);
-        else if (kept) $.ui.toast("Nothing answered yet.");
-      },
-    };
-
-    // A graphical surface's form, the kit's.
-    {
-      const { inset } = tokens.gui.across;
-      /** A block not already set in by the kit: its left edge lines up with the rest. */
-      const block = (key: string, node: JSX.Element | null) =>
-        node ? (
-          <Box key={key} flexDirection="column" paddingX={inset}>
-            {node}
-          </Box>
-        ) : null;
-      /**
-       * A field, always drawn where it belongs, so a click lands in it: a press that reveals one
-       * leaves the focus on the press. It says no word for its Enter, so the surface draws no
-       * button of its own beside it.
-       */
-      const field = (
-        key: typeof WRITE | typeof NOTE,
-        placeholder: string,
-        value: string,
-        onSubmit: (text: string) => unknown,
-      ) =>
-        "Input" in els ? (
-          <els.Input
-            key={keyOf(key)}
-            placeholder={placeholder}
-            value={value}
-            onInput={(text) => {
-              typed = { field: key, text };
-            }}
-            onSubmit={(text) => onSubmit(text)}
-          />
-        ) : null;
-
-      if (!c.isOpen)
-        return statusBand(kit, {
-          key: "answer",
-          text: view.title,
-          hint: view.kind === "picks" ? "pick" : "answer",
-          gui: {
-            text: view.answered
-              ? `${view.title}, ${view.answered} of ${view.count} answered`
-              : view.title,
-            icon: "question",
-            tone: "neutral",
-          },
-          onPress: () => openForm($),
-        });
-
-      // One tab per question, marked once answered, and the review: the current one filled.
-      // The way out keeps the far edge.
-      const toolbar = paneTitle(kit, "", undefined, {
-        gui: {
-          tabs: [
-            ...view.review.map((row, i): ActionSpec => ({
-              key: `q${i}`,
-              label: row.isAnswered ? `${tokens.glyph.done} ${row.label}` : row.label,
-              isPrimary: !view.isReview && i === view.step,
-              onPress: () => leave($, () => ({ do: "go", step: i })),
-            })),
+      const columns = columnsOf(e);
+      if (c.writer?.surface === "terminal")
+        return writerOf($, els, columns, c, e.props.maxRows) ?? next(e);
+      const id = c.transcript;
+      if (c.pending)
+        return (
+          writerOf(
+            $,
+            els,
+            columns,
             {
-              key: "review",
-              label: "review",
-              isPrimary: view.isReview,
-              onPress: () => leave($, () => ({ do: "review" })),
+              ...c,
+              writer: { from: c.pending.from, surface: "terminal" },
+              editing: c.pending.field,
             },
-          ],
-          actions: [{ key: "quit", label: "close", onPress: () => close($) }],
-        },
-      });
-      /** An action of the row at the foot: its key is the press's name. */
-      const act = (key: string, label: string, extra: Partial<ActionSpec> = {}): ActionSpec => ({
-        key,
-        label,
-        onPress: () => press[key]?.(),
-        ...extra,
-      });
-
-      if (!view.item) {
-        // Each question on one line: its answer, the question beside it, a press to go back to it.
-        const rows = view.review.map((row, i): ListItem => ({
-          key: `item${i}`,
-          title: row.isAnswered ? row.shown : "Not answered",
-          detail: row.title,
-          icon: row.isAnswered ? "success" : "pending",
-          iconTone: row.isAnswered ? "success" : "neutral",
-          action: row.isAnswered ? "Change" : "Answer",
-          meta: row.note ? [{ text: `Note: ${row.note}`, width: 0 }] : undefined,
-          onPress: () => leave($, () => ({ do: "go", step: i })),
-        }));
-        return stack(
-          kit,
-          [
-            toolbar,
-            list(kit, [{ title: "", rows }]),
-            block(
-              "round-note",
-              field(NOTE, "Add a note on the whole round", view.note, (t) => keepNote($, t)),
-            ),
-            actionBar(kit, [
-              act("send", "send", {
-                hotkey: "s",
-                isPrimary: Boolean(view.reply),
-              }),
-              act("fill", "fill the prompt"),
-            ]),
-          ],
-          { gui: { gap: "sm" } },
+            e.props.maxRows,
+          ) ?? next(e)
         );
-      }
-
-      const { item } = view;
-      const several = item.isSeveral;
-      const isChosen = item.entries.some((row) => row.isChosen);
-      // With this one answered and every other too, the way on is the review.
-      const onward = {
-        key: "next",
-        label: view.answered === view.count ? "Review" : "Next",
-        onPress: () => leave($, () => ({ do: "next" })),
-      };
-      const note = field(NOTE, "Add a note", item.note, (t) => keepNote($, t));
-      // A single answer opens in place with its note under it; several, or none yet, keep the
-      // note under the answers once there is one or it was asked for.
-      const isNoteLoose = (several && isChosen) || (!isChosen && (editing === NOTE || !!item.note));
-      const options = item.entries.map((row, k): ChoiceOption => {
-        if (row.kind === "write")
-          return {
-            key: `e${k}`,
-            label: row.text,
-            icon: "write",
-            field:
-              field(WRITE, row.text, item.written, (t) => move($, { do: "write", text: t })) ??
-              undefined,
-            isOn: row.isChosen,
-            body: note,
-            onPress: () => choose($, row, k),
-          };
-        const option =
-          row.kind === "accept"
-            ? recommendationChoice(row.text)
-            : {
-                tag: row.key || undefined,
-                label: row.key ? row.text.replace(/^[A-H0-9]{1,2}[.)]\s*/, "") : row.text,
-              };
-        return {
-          key: `e${k}`,
-          ...option,
-          detail:
-            [row.isRecommended ? "Recommended" : "", row.detail.replace(/\s*\n\s*/g, " ")]
-              .filter(Boolean)
-              .join("  ·  ") || undefined,
-          isOn: row.isChosen,
-          body: note,
-          onPress: () => choose($, row, k),
-        };
-      });
-      const body = [item.body, item.recommended ? `**Recommended:** ${item.recommended}` : ""]
-        .filter(Boolean)
-        .join("\n\n");
-      return stack(
-        kit,
-        [
-          toolbar,
-          <Box key="question" flexDirection="column">
-            {block("title", prose(kit, `**${item.title.replace(/\*\*/g, "")}**`))}
-            {excerpt(kit, {
-              key: "body",
-              text: body,
-              isOpen: c.isBodyOpen,
-              toggleKey: "more",
-              onToggle: () => edit($, (was) => ({ ...was, isBodyOpen: !was.isBodyOpen })),
-            })}
-          </Box>,
-          choice(kit, options, {
-            key: "options",
-            isMulti: several,
-            gui: { layout: "rows", onward },
-          }),
-          isNoteLoose && note
-            ? fieldRow(kit, {
-                key: "note-row",
-                icon: "note",
-                alt: "Note",
-                field: note,
-              })
-            : null,
-          actionBar(kit, [
-            act("skip", "skip", { hotkey: "s" }),
-            ...(isChosen || isNoteLoose ? [] : [act("note", "add note", { hotkey: "n" })]),
-            // One press takes a recommendation of several options; one is a press on its row.
-            ...(item.canAccept && item.accepts.includes(",")
-              ? [act("accept", `take ${item.accepts}`, { hotkey: "y" })]
-              : []),
-            // A single answer's way on is on its own row; several have theirs here.
-            ...(several
-              ? [
-                  {
-                    ...onward,
-                    hotkey: "l",
-                    isPrimary: isChosen,
-                    onPress: onward.onPress,
-                  },
-                ]
-              : []),
-          ]),
-        ],
-        { gui: { gap: "sm" } },
+      return controlBar(
+        els,
+        c,
+        () =>
+          c.view.isReview && c.hasKeys
+            ? pressRoundKey($, id, "enter")
+            : moveRound($, id, "terminal", (view) => view.step),
+        (key) => pressRoundKey($, id, key),
       );
     }
+    if (c.transcript && !c.isOpen) return next(e);
+    const g = guiOf(els, e, (hit) => pressForm($, hit));
+    if (c.isOpen) return form($, c, g);
+    const { view } = c;
+    // The form's one row: what there is to answer, and the button that opens it.
+    return statusBand(
+      g,
+      { text: view.title, hint: view.kind === "picks" ? "pick" : "answer", hit: "answer" },
+      {
+        text: view.answered
+          ? `${view.title}, ${view.answered} of ${view.count} answered`
+          : view.title,
+        icon: "question",
+        tone: "neutral",
+      },
+    );
   });
 
   // The open form has the band to itself: the other plugins' rows wait until it folds.
@@ -1405,13 +1346,13 @@ export const register: Register = (on) => {
         );
       return moved;
     }
-    if (c?.transcript && !c.writer && e.element?.startsWith("round-key-"))
+    if (c?.transcript && !c.writer && e.element?.startsWith(keyAddress("")))
       return mark(await next({ ...e, element: ROUND_FOCUS }));
     if (!c?.isOpen || !c.view.item || !e.element) return mark(await next(e));
     // The press that picked an answer puts the ring on it just after its note took the ring.
     if (
       c.editing === NOTE &&
-      /^e\d+$/.test(e.element) &&
+      /^key:e\d+$/.test(e.element) &&
       (await $.clock.now()) - askedAt < CLICK_MS
     )
       return mark(await next({ ...e, element: keyOf(NOTE) }));

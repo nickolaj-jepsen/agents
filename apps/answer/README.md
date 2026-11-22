@@ -50,4 +50,4 @@ To add the optional Claude Code binding, merge this entry into `~/.claude/keybin
 
 ## VS Code and Desktop
 
-In VS Code, use **Add line** to add a line to a note or write-in, then **Save** or **Cancel**. The footer offers **Fill prompt** and **Send reply**. In Desktop, click **Review answers** and pick a question number to go back to its card.
+Each answer is a button of its letter, and a write-in or note opens in place. `/answer` opens the round as a form above the prompt, with a tab for each question and **Review**, and **Close** to fold it. In VS Code, use **Add line** to add a line to a note or write-in, then **Save** or **Cancel**. The footer offers **Fill prompt** and **Send reply**. In Desktop, click **Review answers** and pick a question number to go back to its card.
