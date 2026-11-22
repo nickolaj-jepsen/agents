@@ -2,9 +2,11 @@
 
 One design system for the plugins on both clients. A terminal component is drawn once, as styled lines, and pi and Claude Code's terminal each only paint those lines, so the two cannot drift apart. Claude Desktop and VS Code get their own drawing with native controls.
 
-The [component catalogue](catalog/COMPONENTS.md) lists every component, where it is drawn and which are still on the legacy kits. The [rendered catalogue](https://nickolaj-jepsen.github.io/agents/dev/) shows them in both terminals. The [layout reference](../skills/agent-plugin-dev/references/style.md) holds the rules every component follows.
+The [component catalogue](catalog/COMPONENTS.md) lists every component, where it is drawn and which are still on the legacy kits. The [rendered catalogue](https://nickolaj-jepsen.github.io/agents/dev/) shows them in both terminals. The [layout reference](../../skills/agent-plugin-dev/references/style.md) holds the rules every component follows.
 
 ## How it fits together
+
+`lib/kits/` holds one package per component (`buttons`, `card`, `detail`, `fields`, `frame`, `list`, `prose`, `sheet`; each has a short README with what it draws), `core` (the line model, tokens and painters the components share), `legacy` and `catalog`.
 
 | Part                                                                          | What it holds                                                                                                                     |
 | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -18,7 +20,7 @@ The [component catalogue](catalog/COMPONENTS.md) lists every component, where it
 | `<component>/e2e/`                                                            | The component's stories played in pi and Claude Code, and their snapshots.                                                        |
 | [`legacy/`](legacy) (`@agents/kit-legacy`)                                    | The two kits from before, for what has not moved yet. Don't add to them.                                                          |
 
-Each component is a workspace package, `lib/kits/<component>`, named `@agents/kit-<component>`; its files are imported as `@agents/kit-card/terminal.ts`. A package lists the kit packages it imports as `workspace:*` dependencies.
+Each component is a workspace package, `lib/kits/<component>`, named `@agents/kit-<component>`; its files are imported as `@agents/kit-card/terminal.ts`. A package lists the kit packages it imports as `workspace:*` dependencies, and an app lists the components it draws with.
 
 A component's functions take props and a width and return `Line[]`. They never see a theme or an element, so they run the same in a test, in pi and in a Claude Code mod.
 
@@ -59,7 +61,7 @@ pnpm turbo run e2e:update --filter=@agents/kit-status-line                     #
 pnpm turbo run test --filter=@agents/kit-catalog                               # the parity check reads those snapshots
 ```
 
-`drive live` runs in your terminal: the [replay guide](../tools/drive/README.md#live-mode) says how to use it.
+`kit-new` also adds the component's stories to `catalog/src/registry.ts` and the package to the catalogue's and the site's dependencies. `drive live` runs in your terminal: [the driver's guide](../tools/drive/README.md#live-mode) says how to use it.
 
 1. Put the types in `src/contract.ts` and draw in `src/terminal.ts`. Use roles from `lines.ts` and glyphs from `tokens.ts`, never a colour or a literal glyph. Give each control a `hit`, on its row or on its spans.
 2. Add a story per state in the component's `src/stories.ts`. A story is one call that returns lines for a width.
@@ -83,11 +85,14 @@ To change how something looks everywhere, edit its `src/terminal.ts` or `core/sr
 
 `legacy/src/pi/` and `legacy/src/claude/ui.tsx` hold what has not moved. A mod still on the Claude one imports `@agents/kit-legacy/claude/ui.tsx`. The lint keeps a list of the plugin files that still draw around the kit (`.oxlintrc.json`); the list only shrinks, and a file leaves it when it imports nothing from `legacy/` and styles nothing by hand.
 
-Their stories and manifests are under [`catalog/src/`](catalog/src), and the catalogue is built from both:
+## Snapshots and the catalogue
+
+The catalogue is built from the components' stories and manifests, and from the legacy kits' under [`catalog/src/`](catalog/src).
 
 ```bash
-pnpm drive test kit --png                                      # compare snapshots and write pictures
+pnpm drive test kit --png                                      # compare every kit package's snapshots and write pictures
 pnpm turbo run media                                           # replay stories and record the crops the site shows
+node lib/kits/catalog/src/build.ts --check                     # validate the manifests and the generated files without writing
 ```
 
-Commit the snapshots and the regenerated `catalog/COMPONENTS.md` and kit index in `AGENTS.md`, which `pnpm turbo run build` writes. The crops are generated, not committed, and the site reads the catalogue itself (`apps/site/src/loaders/kit.ts`). `node lib/kits/catalog/src/build.ts --check` validates the manifests and the generated files without writing.
+Commit the snapshots and the regenerated `catalog/COMPONENTS.md` and kit index in `AGENTS.md`, which `pnpm turbo run catalog:docs` (and `build`) writes. The crops are generated, not committed, and the site reads the catalogue itself (`apps/site/src/loaders/kit.ts`).

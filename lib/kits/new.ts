@@ -82,6 +82,23 @@ export default defineConfig({
   test: { include: ["src/**/*.spec.ts"], testTimeout: 20_000 },
 });
 `,
+  "README.md": `# @agents/kit-${name}
+
+What the ${name} draws, in one line.
+
+\`\`\`ts
+import { ${camel} } from "@agents/kit-${name}/terminal.ts";
+\`\`\`
+
+\`src/terminal.ts\` draws the component as styled lines for a width, \`src/contract.ts\` has its props and results, and \`src/stories.ts\` one sample per state. \`e2e/\` plays the stories in pi and Claude Code and holds their snapshots.
+
+\`\`\`bash
+pnpm drive ls kit-${name}                                    # the stories
+pnpm drive live kit-${name} <story> --harness pi --watch     # one in a real session
+\`\`\`
+
+What it can do on each surface is in the [catalogue](../catalog/COMPONENTS.md); how to paint and use it, in [the kit guide](../README.md).
+`,
   "src/contract.ts": `/** The ${name}'s contract. No host imports. */
 
 export type ${pascal}Options = {

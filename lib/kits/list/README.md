@@ -1,0 +1,16 @@
+# @agents/kit-list
+
+Rows with a mark and a line or two each, under group rows, behind rails or bare; taller than its room, a window.
+
+```ts
+import { list } from "@agents/kit-list/terminal.ts";
+```
+
+`src/terminal.ts` draws the component as styled lines for a width, `src/contract.ts` has its props and results, and `src/stories.ts` one sample per state. `e2e/` plays the stories in pi and Claude Code and holds their snapshots.
+
+```bash
+pnpm drive ls kit-list                                    # the stories
+pnpm drive live kit-list <story> --harness pi --watch     # one in a real session
+```
+
+What it can do on each surface is in the [catalogue](../catalog/COMPONENTS.md); how to paint and use it, in [the kit guide](../README.md).

@@ -1,11 +1,9 @@
 /**
  * The Claude Code mod UI kit: the house style (skills/agent-plugin-dev/references/style.md) as
- * functions that return a mod's element trees. Its tokens are the pi kit's (`kit/legacy/pi/tokens.ts`),
+ * functions that return a mod's element trees. Its tokens are the pi kit's (`legacy/src/pi/tokens.ts`),
  * whose names it follows where the component exists in both.
  *
- * This file is the source of truth. The engine cannot import outside a plugin's folder, so
- * every mod that uses it carries a verbatim copy at `claude/ui.tsx`: edit this one and run
- * `turbo run kit-sync`; `kit/legacy/claude/ui.spec.ts` fails while a copy differs.
+ * A mod imports it as `@agents/kit-legacy/claude/ui.tsx`, and the build bundles it in.
  */
 import type { ElementTable, ImageSource, RenderNode } from "claude-code";
 
