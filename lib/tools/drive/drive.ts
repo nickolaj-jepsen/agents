@@ -473,9 +473,9 @@ program
 program
   .command("types")
   .description(
-    "start a hermetic Claude with the app's build, wait for dist/.claude-plugin/types/ to appear, stop",
+    "start a hermetic Claude with the build of an app (or of kit-catalog), wait for dist/.claude-plugin/types/ to appear, stop",
   )
-  .argument("<app>")
+  .argument("<package>")
   .action(
     verb(async (app: string) => {
       console.log(await loadTypes(app));

@@ -49,5 +49,11 @@ export const e2ePackage = (name: string): E2EPackage | undefined =>
 export const e2ePackageAt = (cwd: string): E2EPackage | undefined =>
   e2ePackages().find((p) => p.dir === cwd);
 
-/** Where an app's mod and pi extension are built to: `dist/`, which `pnpm turbo run build` writes. */
-export const distOf = (name: string): string => join(repoRoot, "apps", name, "dist");
+/**
+ * Where a package's mod and pi extension are built to: `dist/`, which `pnpm turbo run build` writes.
+ * An app's, or the catalogue's (`kit-catalog`, the one kit package that is a mod).
+ */
+export const distOf = (name: string): string =>
+  name.startsWith("kit-")
+    ? join(repoRoot, "lib", "kits", name.slice("kit-".length), "dist")
+    : join(repoRoot, "apps", name, "dist");

@@ -1,5 +1,5 @@
 /**
- * `drive types <app>`: the engine lays the Claude Code API types a mod is written against into the
+ * `drive types <package>`: the engine lays the Claude Code API types a mod is written against into the
  * mod's `dist/.claude-plugin/types/` when it loads it. This starts a hermetic Claude with the app's
  * build, waits until they are there and stops.
  */
@@ -11,8 +11,7 @@ import { distOf, e2ePackage } from "./packages.ts";
 import { Session } from "./session.ts";
 
 export async function loadTypes(app: string, timeoutSeconds = 90): Promise<string> {
-  if (app.startsWith("kit-") || !e2ePackage(app))
-    throw new Error(`types takes an app: ${app} is not one with a Claude mod`);
+  if (!e2ePackage(app)) throw new Error(`no package ${app}; \`ls\` lists them`);
   checkoutMods([app]);
   const types = join(distOf(app), ".claude-plugin", "types");
   // Gone first, so what is there afterwards is what this engine wrote.

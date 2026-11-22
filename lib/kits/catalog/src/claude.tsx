@@ -145,7 +145,8 @@ export const register: Register = (on) => {
   // What the person types in the prompt went to the prompt, and a letter the site does not
   // bind takes the keyboard there with it.
   on("prompt.edit", async ($, e, next) => {
-    if (e.origin.kind !== "plugin") await hold($, false);
+    // A `prompt.edit` is always the person's (its origin is the composer), unlike a change.
+    await hold($, false);
     return next(e);
   });
   on("prompt.change", async ($, e, next) => {
