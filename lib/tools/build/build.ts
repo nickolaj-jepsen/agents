@@ -7,7 +7,7 @@
  *   dist/register.js                  `src/claude.tsx`, with the kit and `src/lib` bundled in
  *   dist/claude.test.ts               `src/claude.test.tsx`, which `claude plugin test` runs
  *   dist/types.d.ts                   the mod's state contract (`src/claude/types.d.ts`)
- *   dist/pi/index.js, dist/package.json   `src/pi.ts`, and the manifest pi reads it from
+ *   dist/pi/index.ts, dist/package.json   `src/pi.ts`, and the manifest pi reads it from
  *   dist/README.md
  *
  * Everything the mod engine reads is bundled, because a mod cannot import outside its folder. Two
@@ -75,7 +75,7 @@ function writeMetadata() {
         description: pkg.description,
         keywords: pkg.keywords,
         type: "module",
-        pi: { extensions: ["./pi/index.js"] },
+        pi: { extensions: ["./pi/index.ts"] },
         ...(pkg.agentTools ? { agentTools: pkg.agentTools } : {}),
         ...(pkg.peerDependencies ? { peerDependencies: pkg.peerDependencies } : {}),
       }),
@@ -108,9 +108,13 @@ const common = {
   dts: false,
   clean: false,
   tsconfig: false,
-  // Both shapes of `[name].ts`: the test bundle must keep its `.ts` (`claude plugin test` skips `*.test.js`).
+  // `.ts` for two files that are bundled JavaScript all the same: the test bundle (`claude plugin test`
+  // skips `*.test.js`), and pi's extension. pi loads a `.js` extension natively, so a package it
+  // supplies (pi-tui) is another copy than its own and an `instanceof` of ours fails; a `.ts` one goes
+  // through its loader, whose aliases give it the host's copy.
   outputOptions: {
-    entryFileNames: (c: { name: string }) => (c.name.endsWith(".test") ? "[name].ts" : "[name].js"),
+    entryFileNames: (c: { name: string }) =>
+      c.name.endsWith(".test") || c.name === "pi/index" ? "[name].ts" : "[name].js",
   },
   hooks: { "build:done": writeMetadata },
   watch,

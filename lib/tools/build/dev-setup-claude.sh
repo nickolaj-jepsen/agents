@@ -10,8 +10,10 @@ for app in apps/*/; do
 done
 node lib/tools/build/build.ts lib/kits/catalog >/dev/null
 
-mods=(apps/*/dist/.claude-plugin lib/kits/catalog/dist/.claude-plugin)
-mods=($(for m in "${mods[@]}"; do [ -f "$m/plugin.json" ] && echo "$m"; done))
+mods=()
+for m in apps/*/dist/.claude-plugin lib/kits/catalog/dist/.claude-plugin; do
+    [ -f "$m/plugin.json" ] && mods+=("$m")
+done
 args=()
 for m in "${mods[@]}"; do
     rm -rf "$m/types"

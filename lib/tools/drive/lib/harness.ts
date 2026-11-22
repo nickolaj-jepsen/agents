@@ -97,7 +97,7 @@ export function checkoutExtensions(only?: string[]): string[] {
   const root = join(checkoutRoot, "apps");
   const names = only ?? readdirSync(root).sort();
   const dirs = names.map((name) => distOf(name));
-  const built = (dir: string) => existsSync(join(dir, "pi", "index.js"));
+  const built = (dir: string) => existsSync(join(dir, "pi", "index.ts"));
   const missing = dirs.filter((dir) => only && !built(dir));
   if (missing.length)
     throw new Error(`not built: ${missing.join(", ")}; run \`pnpm turbo run build\``);
