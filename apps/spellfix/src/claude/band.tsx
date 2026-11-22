@@ -1,16 +1,17 @@
-import type { RenderElement } from "claude-code";
-
 import type { Picker, Report } from "./types.d.ts";
-import {
-  actionBar,
-  choice,
-  notice,
-  roleProps,
-  stack,
-  statusBand,
-  tokens,
-} from "@agents/kit-legacy/claude/ui.tsx";
-import type { Action, ChoiceOption, Kit } from "@agents/kit-legacy/claude/ui.tsx";
+import type { StatusBand } from "@agents/kit-band/contract.ts";
+import { statusBand as statusBandGui } from "@agents/kit-band/gui.tsx";
+import { statusBand as statusBandLines } from "@agents/kit-band/terminal.ts";
+import type { Button } from "@agents/kit-buttons/contract.ts";
+import { buttonRow as buttonRowGui } from "@agents/kit-buttons/gui.tsx";
+import { buttonRow as buttonRowLines } from "@agents/kit-buttons/terminal.ts";
+import { sections } from "@agents/kit-card/gui.tsx";
+import { span, type Line, type Span } from "@agents/kit-core/lines.ts";
+import type { NoticeStatus } from "@agents/kit-notice/contract.ts";
+import { notice as noticeGui } from "@agents/kit-notice/gui.tsx";
+import { notice as noticeLines } from "@agents/kit-notice/terminal.ts";
+import type { Gui } from "@agents/kit-core/paint/gui.tsx";
+import { paintLines, ring, stack } from "@agents/kit-core/paint/claude.tsx";
 
 /** What the band draws from: the mod's atoms and whether a personal dictionary is set. */
 export type BandView = {
@@ -20,6 +21,8 @@ export type BandView = {
   isBusy: boolean;
   count: number;
   hasPersonal: boolean;
+  /** The control the keyboard is on, once the band has it (`ui.focus`); none until then. */
+  focus: string | null;
 };
 
 /** What a press does: `toggle` opens or closes the picker; the others answer one of its keys. */
@@ -29,230 +32,230 @@ export type BandActions = {
   answer: (key: string) => unknown;
 };
 
+/** The elements of a terminal event, which the kit paints its lines with. */
+type Els = Parameters<typeof paintLines>[0];
+
 const arrows = (change: string) => change.replace("→", " → ");
 
-/** The keys of the action row that may carry a hotkey, for `expectNative`. */
-export const ACTION_KEYS = ["skip", "all", "add", "undo", "dismiss"] as const;
+/** The control that opens the picker, or closes it. */
+const TOGGLE = "spellfix";
 
 /**
- * The band on the desktop app and VS Code: the count line (its button opens, then closes, the
- * picker) with the picker or the report under it. The terminal's drawing is `terminalBand`.
+ * The controls the keyboard steps through, in the order Tab takes them: the picks, the actions,
+ * and the count line last.
  */
-export function guiBand(k: Kit, v: BandView, a: BandActions): JSX.Element {
-  const { Box, Text } = k;
-  const { picker: p, report: done, added: words, isBusy, count: n } = v;
-  const inset = tokens.gui.across.inset;
-  const head = (text: string, hint: string, status: "warning") =>
-    statusBand(k, { key: "spellfix", text, hint, status, onPress: a.toggle });
+export function focusOrder(v: BandView): string[] {
+  const { picker: p } = v;
+  const toggle = p || (!v.isBusy && v.count > 0) ? [TOGGLE] : [];
+  if (p) {
+    const ai = p.isAiDone && !p.ai ? [] : ["ai"];
+    return [
+      ...ai,
+      ...suggestionButtons(p).map((b) => b.hit as string),
+      ...pickerActions(v, p).map((b) => b.hit as string),
+      ...toggle,
+    ];
+  }
+  return [...(isMarked(v) ? reportActions.map((b) => b.hit as string) : []), ...toggle];
+}
+
+/** The control that has the keyboard's focus: the one it moved to, else the first. */
+export const focusOf = (v: BandView): string | undefined => {
+  const order = focusOrder(v);
+  return v.focus !== null && order.includes(v.focus) ? v.focus : order[0];
+};
+
+/**
+ * What a control of the band does, by its `hit`: the keys the picker answers, or those of the
+ * report and the auto-added notice, which share `8` for undo.
+ */
+export function bandPress(v: BandView, a: BandActions): (hit: string) => unknown {
+  return (hit) => {
+    if (hit === TOGGLE) return a.toggle();
+    if (hit === "ai") return a.pick("1");
+    if (hit === "skip") return a.pick("s");
+    if (hit === "all") return a.pick("a");
+    if (hit === "add") return a.pick("d");
+    if (hit === "undo") return v.picker ? a.pick("8") : a.answer("8");
+    if (hit === "dismiss") return a.answer("9");
+    const suggestion = /^s(\d+)$/.exec(hit);
+    if (suggestion) return a.pick(String(Number(suggestion[1]) + 2));
+    return undefined;
+  };
+}
+
+// ---- what the band says and offers, the same on every surface
+
+/** The count line's words; a picker opened on a typo only Haiku found has no count. */
+const countText = (n: number) => (n > 0 ? `${n} misspelled` : "A typo only Haiku found");
+
+const note = (text: string, status: NoticeStatus, isCut = false) => ({ text, status, isCut });
+type Note = ReturnType<typeof note>;
+
+/** Haiku's pick: its answer is a word to insert, until then it says what it waits for. */
+const aiButton = (p: Picker, label: string): Button => ({
+  hotkey: "1",
+  label,
+  hit: "ai",
+  isLiteral: p.isAiDone,
+});
+
+const suggestionButtons = (p: Picker): Button[] =>
+  p.suggestions.map((s, i) => ({ hotkey: String(i + 2), label: s, hit: `s${i}`, isLiteral: true }));
+
+const pickerActions = (v: BandView, p: Picker): Button[] => [
+  { hotkey: "s", label: "skip", hit: "skip" },
+  { hotkey: "a", label: p.wantsAll ? "waiting" : "fix all", hit: "all" },
+  ...(v.hasPersonal && !p.isExtra ? [{ hotkey: "d", label: "add word", hit: "add" }] : []),
+  ...(v.added.length > 0 ? [{ hotkey: "8", label: "undo add", hit: "undo" }] : []),
+];
+
+const reportActions: Button[] = [
+  { hotkey: "8", label: "undo", hit: "undo" },
+  { hotkey: "9", label: "dismiss", hit: "dismiss" },
+];
+
+const addedNote = (words: readonly string[]) => `Added ${words.join(", ")} to the dictionary`;
+
+/** What the picker says under its buttons: what fix all would change, and the words added. */
+const pickerNotes = (v: BandView, p: Picker): Note[] => [
+  ...(p.summary.length > 0
+    ? [note(`Fix all changes ${p.summary.map(arrows).join(", ")}`, "dim", true)]
+    : []),
+  ...(v.added.length > 0 ? [note(addedNote(v.added), "dim")] : []),
+];
+
+/** What the band says once the picker is closed: the report of fix all and the words added. */
+const reportNotes = (v: BandView): Note[] => [
+  ...(v.report ? [note(`Fixed ${v.report.changes.map(arrows).join(", ")}`, "text")] : []),
+  ...(v.added.length > 0 ? [note(addedNote(v.added), "text")] : []),
+];
+
+const isMarked = (v: BandView) => v.report !== null || v.added.length > 0;
+
+/** The typo in its context, standing out in the role of what it is. */
+const context = (p: Picker, lead: string, trail: string, isUnderlined: boolean): Span[] => [
+  span(lead, { role: "dim" }),
+  span(p.word, {
+    role: p.isExtra ? "warning" : "error",
+    bold: true,
+    underline: isUnderlined || undefined,
+  }),
+  span(trail, { role: "dim" }),
+];
+
+// ---- the terminal
+
+/**
+ * The band in the terminal: the kit's lines painted as one block, every control a plain Button.
+ * The keys sit on buttons that draw nothing, with the engine's focus ring parked beside them, so
+ * the band draws the keyboard's focus itself (`ui.focus` moves it). Null when there is nothing to
+ * say.
+ * @param width The band's room in cells.
+ */
+export function terminalBand(
+  els: Els,
+  v: BandView,
+  a: BandActions,
+  width: number,
+): JSX.Element | null {
+  const press = bandPress(v, a);
+  const focus = v.focus === null ? undefined : focusOf(v);
+  const { picker: p, count: n } = v;
+  const status = (hint: string): StatusBand => ({
+    text: countText(n),
+    hint: `${hint} ctrl+q`,
+    hit: TOGGLE,
+    status: "warning",
+    hovered: focus === TOGGLE,
+  });
+  const marked = (buttons: readonly Button[]): Button[] =>
+    buttons.map((b) => ({ ...b, hovered: b.hit === focus }));
+  const notes = (list: readonly Note[]): Line[] =>
+    list.flatMap((x) => noticeLines(x.text, width, x.status));
+  /** `buttons` are every key the band binds, drawn or not. */
+  const painted = (lines: Line[], buttons: readonly Button[]) =>
+    stack(
+      els,
+      // First, so the ring keeps its place whatever rows the band draws.
+      ring(
+        els,
+        () => (focus ? press(focus) : undefined),
+        buttons.map((b) => ({ key: b.hotkey, press: () => press(b.hit as string) })),
+      ),
+      paintLines(els, lines, { press, width }),
+    );
 
   if (p) {
-    const ai: ChoiceOption[] = [];
-    if (p.ai || !p.isAiDone) {
-      ai.push({
-        key: "ai",
-        label: p.isAiDone ? (p.ai ?? "") : p.wantsAi ? "Waiting" : "Checking",
-        isLiteral: p.isAiDone,
-        onPress: () => a.pick("1"),
-      });
-    }
-    const summary = p.summary.map(arrows).join(", ");
-    const actions: Action[] = [
-      { key: "skip", label: "skip", hotkey: "s", onPress: () => a.pick("s") },
-      {
-        key: "all",
-        label: p.wantsAll ? "Waiting" : "fix all",
-        hotkey: "a",
-        onPress: () => a.pick("a"),
-      },
-      ...(v.hasPersonal && !p.isExtra
-        ? [{ key: "add", label: "add word", hotkey: "d", onPress: () => a.pick("d") }]
-        : []),
-      ...(words.length > 0
-        ? [{ key: "undo", label: "undo add", hotkey: "8", onPress: () => a.pick("8") }]
-        : []),
-    ];
-    return stack(
-      k,
+    const waiting = p.wantsAi ? "waiting" : "checking";
+    const ai = aiButton(p, `${p.isAiDone ? (p.ai ?? "") : waiting} (Haiku)`);
+    const buttons = [ai, ...suggestionButtons(p), ...pickerActions(v, p)];
+    // Haiku found nothing: its key stays, swallowed, and the row says so.
+    const isMute = p.isAiDone && !p.ai;
+    const lead = isMute ? [span("Haiku has no suggestion", { role: "dim" })] : [];
+    return painted(
       [
-        head(n > 0 ? `${n} misspelled` : "A typo only Haiku found", "close", "warning"),
-        <Box key="context" paddingX={inset}>
-          <Text>
-            <Text dimColor>{p.lead}</Text>
-            <Text weight="bold" {...roleProps(p.isExtra ? "warning" : "error")}>
-              {p.word}
-            </Text>
-            <Text dimColor>{p.trail}</Text>
-          </Text>
-        </Box>,
-        <Box
-          key="haiku"
-          flexDirection="row"
-          alignItems="center"
-          columnGap={tokens.gui.across.md}
-          paddingX={inset}
-        >
-          {ai.length > 0 ? choice(k, ai, { key: "ai:choice" }) : null}
-          <Text dimColor>{ai.length > 0 ? "Haiku" : "Haiku has no suggestion"}</Text>
-        </Box>,
-        p.suggestions.length > 0 ? (
-          <Box key="suggestions" paddingX={inset}>
-            {choice(
-              k,
-              p.suggestions.map((s, i) => ({
-                key: `s${i}`,
-                label: s,
-                isLiteral: true,
-                onPress: () => a.pick(String(i + 2)),
-              })),
-              { key: "suggestions:choice", gui: { layout: "row" } },
-            )}
-          </Box>
-        ) : null,
-        summary ? (
-          <Box key="summary" paddingX={inset}>
-            <Text wrap="truncate-end" dimColor>
-              {`Fix all changes ${summary}`}
-            </Text>
-          </Box>
-        ) : null,
-        words.length > 0 ? notice(k, `Added ${words.join(", ")} to the dictionary`, "dim") : null,
-        actionBar(k, actions),
+        ...statusBandLines(status("close"), width),
+        ...noticeLines(context(p, `…${p.before}`, `${p.after}…`, true), width, "text"),
+        ...buttonRowLines(marked(isMute ? buttons.slice(1) : buttons), width, { wrap: true, lead }),
+        ...notes(pickerNotes(v, p)),
       ],
-      { gui: { gap: "sm" } },
+      buttons,
     );
   }
 
-  const notes = [
-    ...(done ? [`Fixed ${done.changes.map(arrows).join(", ")}`] : []),
-    ...(words.length > 0 ? [`Added ${words.join(", ")} to the dictionary`] : []),
-  ];
-  return stack(
-    k,
+  const isMarkedNow = isMarked(v);
+  const head = v.isBusy
+    ? noticeLines("Checking spelling", width, "dim")
+    : n > 0
+      ? statusBandLines(status("review"), width)
+      : [];
+  if (head.length === 0 && !isMarkedNow) return null;
+  return painted(
     [
-      isBusy
-        ? notice(k, "Checking spelling", "dim")
-        : n > 0
-          ? head(`${n} misspelled`, "review", "warning")
-          : null,
-      ...notes.map((text) => notice(k, text, "text")),
-      notes.length > 0
-        ? actionBar(k, [
-            { key: "undo", label: "undo", hotkey: "8", onPress: () => a.answer("8") },
-            { key: "dismiss", label: "dismiss", hotkey: "9", onPress: () => a.answer("9") },
-          ])
-        : null,
+      ...head,
+      ...notes(reportNotes(v)),
+      ...(isMarkedNow ? buttonRowLines(marked(reportActions), width, { wrap: true }) : []),
     ],
-    { gui: { gap: "sm" } },
+    isMarkedNow ? reportActions : [],
   );
 }
 
+// ---- the desktop app and VS Code
+
 /**
- * The band in the terminal: plain Buttons with their keys in the labels. The kit's statusBand,
- * choice and actionBar draw other cells, so this stays the mod's own.
- * @param toggle The Button that opens and closes the picker; the caller keeps it mounted.
+ * The band on the desktop app and VS Code: the count line (its button opens, then closes, the
+ * picker) with the picker or the report under it.
  */
-export function terminalBand(
-  k: Kit,
-  v: BandView,
-  a: BandActions,
-  toggle: RenderElement,
-  hidden: RenderElement,
-  isQuiet: boolean,
-): RenderElement {
-  const { Box, Button, Text } = k;
-  const { picker: p, report: done, added: words, isBusy, count: n } = v;
-  if (isQuiet) return hidden;
+export function guiBand(g: Gui, v: BandView): JSX.Element {
+  const { picker: p, count: n } = v;
+  const head = (hint: string) =>
+    statusBandGui(g, { text: countText(n), hint, hit: TOGGLE, status: "warning" });
+  const notes = (list: readonly Note[]) =>
+    list.map((x) => noticeGui(g, x.text, x.status, { isCut: x.isCut }));
 
   if (p) {
-    const slot = p.isAiDone ? (p.ai ?? "no idea") : p.wantsAi ? "waiting…" : "…";
-    // Ideally these would be marked inline in the prompt itself; mods can't decorate the
-    // composer's text yet, so the band lists them instead.
-    const summary = [...p.summary, ...(words.length ? [`added: ${words.join(", ")}`] : [])];
-    return (
-      <Box flexDirection="column">
-        <Text wrap="truncate-end">
-          <Text dimColor>…{p.before}</Text>
-          <Text weight="bold" underline color={p.isExtra ? "yellow" : "red"}>
-            {p.word}
-          </Text>
-          <Text dimColor>{p.after}…</Text>
-        </Text>
-        <Box flexWrap="wrap" columnGap={2}>
-          <Button key="ai" hotkey="1" plain onPress={() => a.pick("1")}>
-            {slot}
-            <Text dimColor> (Haiku)</Text>
-          </Button>
-          {p.suggestions.map((s, i) => (
-            <Button
-              key={`s${i}`}
-              hotkey={String(i + 2)}
-              plain
-              onPress={() => a.pick(String(i + 2))}
-            >
-              {s}
-            </Button>
-          ))}
-          <Button key="skip" hotkey="s" plain label="skip" onPress={() => a.pick("s")} />
-          {v.hasPersonal && !p.isExtra ? (
-            <Button
-              key="add"
-              hotkey="d"
-              plain
-              label="add to dictionary"
-              onPress={() => a.pick("d")}
-            />
-          ) : null}
-          <Button
-            key="all"
-            hotkey="a"
-            plain
-            label={p.wantsAll ? "waiting…" : "fix all"}
-            onPress={() => a.pick("a")}
-          />
-          {toggle}
-        </Box>
-        {summary.length > 0 && (
-          <Box columnGap={2}>
-            <Text wrap="truncate-end" dimColor>
-              {summary.join(" · ")}
-            </Text>
-            {words.length > 0 && (
-              <Button key="undo" hotkey="8" plain label="undo add" onPress={() => a.pick("8")} />
-            )}
-          </Box>
-        )}
-      </Box>
+    const ai: Button[] = [];
+    if (p.ai || !p.isAiDone) {
+      ai.push(aiButton(p, p.isAiDone ? (p.ai ?? "") : p.wantsAi ? "waiting" : "checking"));
+    }
+    const lead = [span(ai.length > 0 ? "Haiku" : "Haiku has no suggestion", { role: "dim" })];
+    return sections(
+      g,
+      head("close"),
+      noticeGui(g, context(p, p.lead, p.trail, false), "text"),
+      buttonRowGui(g, ai, { lead }),
+      buttonRowGui(g, suggestionButtons(p)),
+      ...notes(pickerNotes(v, p)),
+      buttonRowGui(g, pickerActions(v, p)),
     );
   }
 
-  const notes: [string, string][] = [
-    ...(done ? [["fixed: ", done.changes.join(", ")] as [string, string]] : []),
-    ...(words.length ? [["added: ", words.join(", ")] as [string, string]] : []),
-  ];
-  return (
-    <Box columnGap={2}>
-      {notes.length > 0 && (
-        <>
-          <Text wrap="truncate-end">
-            {notes.flatMap(([label, list], i) => [
-              <Text key={`n${i}`} dimColor>
-                {i ? ` · ${label}` : label}
-              </Text>,
-              list,
-            ])}
-          </Text>
-          <Button key="undo" hotkey="8" plain label="undo" onPress={() => a.answer("8")} />
-          <Button
-            key="dismiss"
-            hotkey="9"
-            plain
-            label="dismiss"
-            role="dismiss"
-            onPress={() => a.answer("9")}
-          />
-        </>
-      )}
-      {isBusy || n > 0 ? toggle : hidden}
-    </Box>
+  const marked = isMarked(v);
+  return sections(
+    g,
+    v.isBusy ? noticeGui(g, "Checking spelling", "dim") : n > 0 ? head("review") : null,
+    ...notes(reportNotes(v)),
+    marked ? buttonRowGui(g, reportActions) : null,
   );
 }

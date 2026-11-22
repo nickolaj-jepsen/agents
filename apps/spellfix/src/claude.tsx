@@ -1,17 +1,11 @@
 import { atom, read, update } from "claude-code";
-import type {
-  EngineInterface,
-  PluginOptions,
-  PromptBox,
-  Register,
-  RenderElement,
-  Timer,
-} from "claude-code";
+import type { EngineInterface, PluginOptions, PromptBox, Register, Timer } from "claude-code";
 
-import { guiBand, terminalBand } from "./claude/band";
-import type { BandActions, BandView } from "./claude/band";
+import { bandPress, focusOrder, guiBand, terminalBand } from "./claude/band.tsx";
+import type { BandActions, BandView } from "./claude/band.tsx";
+import { actionKey, RING, ringMove, stack } from "@agents/kit-core/paint/claude.tsx";
+import { forSurface, guiOf } from "@agents/kit-core/paint/host.tsx";
 import type { Picker, Report } from "./claude/types.d.ts";
-import { forSurface, kitOf } from "@agents/kit-legacy/claude/ui.tsx";
 import {
   addInput,
   autoAdds,
@@ -48,6 +42,8 @@ const picker = atom({ plugin: "spellfix", key: "picker" } as const, null);
 const report = atom({ plugin: "spellfix", key: "report" } as const, null);
 // Words the batch added to the personal dictionary on its own, until `8`, `9` or the next edit.
 const added = atom({ plugin: "spellfix", key: "added" } as const, []);
+// The control the keyboard is on while the band has it, until the person types in the prompt.
+const focus = atom({ plugin: "spellfix", key: "focus" } as const, null as string | null);
 // True while ctrl+q waits on the batch to find anything hunspell didn't.
 const isBusy = atom({ plugin: "spellfix", key: "isBusy" } as const, false);
 
@@ -532,6 +528,19 @@ async function dismiss($: EngineInterface) {
   if ((await read($, added)).length) await update($, added, () => []);
 }
 
+/** What the band draws from, read from the atoms. */
+async function bandView($: EngineInterface): Promise<BandView> {
+  return {
+    picker: await read($, picker),
+    report: await read($, report),
+    added: await read($, added),
+    isBusy: await read($, isBusy),
+    count: await read($, count),
+    hasPersonal: Boolean(config.personal),
+    focus: await read($, focus),
+  };
+}
+
 export const register: Register = (on, options) => {
   config = readConfig(options);
   isEventDriven = false;
@@ -540,6 +549,7 @@ export const register: Register = (on, options) => {
 
   on("prompt.edit", async ($, e, next) => {
     isEventDriven = true;
+    if (await read($, focus)) await update($, focus, () => null);
     const key = e.key && !e.key.ctrl && !e.key.meta ? e.key.key : undefined;
     const box = { text: e.text, cursor: e.cursor };
 
@@ -566,6 +576,7 @@ export const register: Register = (on, options) => {
 
   on("prompt.change", async ($, e, next) => {
     isEventDriven = true;
+    if (e.origin.kind !== "plugin" && (await read($, focus))) await update($, focus, () => null);
     if (e.origin.kind === "clear") {
       ignored.clear();
       unadded.clear();
@@ -577,6 +588,26 @@ export const register: Register = (on, options) => {
     }
     scheduleCheck($, e);
     return next(e);
+  });
+
+  // The band draws its own focus, so the engine's ring (which inverts what it rests on) is kept
+  // on a button that draws nothing. Tab or an arrow tries to move it to the stop before or after
+  // that one, or a click to a control: each becomes the band's focus instead, in the order of
+  // `focusOrder`, and the ring goes back. The ring arriving says the band has the keyboard.
+  on("ui.focus", async ($, e, next) => {
+    const order = focusOrder(await bandView($));
+    const move = ringMove(e.element, (hit) => order.includes(hit));
+    const held = await read($, focus);
+    let target: string | undefined;
+    if (move && "hit" in move) target = move.hit;
+    else if (move?.by) {
+      const at = order.indexOf(held ?? "");
+      const from = at < 0 ? (move.by > 0 ? -1 : 0) : at;
+      target = order[(from + move.by + order.length) % order.length];
+    } else if (!move && e.element === RING.park)
+      target = held && order.includes(held) ? held : order[0];
+    if (target !== undefined && target !== held) await update($, focus, () => target ?? null);
+    return next(move ? { ...e, element: RING.park } : e);
   });
 
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
@@ -593,51 +624,25 @@ export const register: Register = (on, options) => {
     const isQuiet = !p && !done && !busy && n === 0 && words.length === 0;
     if (isQuiet && !draft) return below;
 
-    const kit = kitOf($.ui.resolve(e), e);
-    const { Box, Button, Text } = kit;
-    const stacked = (tree: RenderElement) => (
-      <Box flexDirection="column">
-        {below}
-        {tree}
-      </Box>
-    );
-    const view: BandView = {
-      picker: p,
-      report: done,
-      added: words,
-      isBusy: busy,
-      count: n,
-      hasPersonal: Boolean(config.personal),
-    };
+    const els = $.ui.resolve(e);
+    const view = await bandView($);
     const actions: BandActions = {
       toggle: () => togglePicker($),
       pick: (key) => pickFromBand($, key),
       answer: (key) => answerFromBand($, key),
     };
-    // The terminal's band is the mod's own (its keys sit in the labels), the graphical one is the
-    // kit's: the kit's one door for a drawing by surface.
-    return stacked(
-      forSurface(kit, {
-        tui: () => {
-          // Kept mounted whenever there's a draft: the key bound to ACTION reaches only a mounted
-          // Button.
-          const toggle = (
-            <Button key="spellfix" plain action={ACTION} onPress={() => togglePicker($)}>
-              {p ? "close" : busy ? "Checking spelling…" : n ? `${n} misspelled` : "check spelling"}
-              <Text dimColor> ctrl+q</Text>
-            </Button>
-          );
-          // With nothing flagged it stays mounted for ctrl+q (Haiku may still find a typo), drawn
-          // in no cells.
-          const hidden = (
-            <Box key="hidden" width={0} height={0} overflow="hidden">
-              {toggle}
-            </Box>
-          );
-          return terminalBand(kit, view, actions, toggle, hidden, isQuiet);
-        },
-        gui: () => guiBand(kit, view, actions),
-      }),
-    );
+    return forSurface(e, {
+      tui: () =>
+        stack(
+          els,
+          below,
+          // Kept mounted whenever there's a draft, though nothing is drawn: the key bound to
+          // ACTION reaches only a mounted Button.
+          actionKey(els, ACTION, actions.toggle),
+          isQuiet ? null : terminalBand(els, view, actions, e.props.bodyColumns),
+        ),
+      gui: () =>
+        isQuiet ? below : stack(els, below, guiBand(guiOf(els, e, bandPress(view, actions)), view)),
+    });
   });
 };
