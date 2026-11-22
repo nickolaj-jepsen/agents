@@ -1,6 +1,7 @@
 /**
- * `turbo run kit-new -- <name>`: scaffolds a kit component, the package `lib/kits/<name>/` (`@agents/kit-<name>`), and
- * registers its stories in `lib/kits/catalog/src/registry.ts` and the catalogue's dependencies. Refuses a name that
+ * `turbo run kit-new -- <name>`: scaffolds a kit component, the package `lib/kits/<name>/` (`@agents/kit-<name>`: the
+ * terminal drawing, the graphical one and the stories of both), and registers its stories in
+ * `lib/kits/catalog/src/registry.ts` and `stories.gui.tsx` and the catalogue's dependencies. Refuses a name that
  * is not kebab-case or already exists.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -44,6 +45,7 @@ const files: Record<string, string> = {
   "tsconfig.json": json({
     extends: "../../../tsconfig.base.node.json",
     include: ["src", "e2e"],
+    exclude: ["src/**/*.tsx"],
   }),
   "turbo.json": json({
     extends: ["//"],
@@ -90,7 +92,7 @@ What the ${name} draws, in one line.
 import { ${camel} } from "@agents/kit-${name}/terminal.ts";
 \`\`\`
 
-\`src/terminal.ts\` draws the component as styled lines for a width, \`src/contract.ts\` has its props and results, and \`src/stories.ts\` one sample per state. \`e2e/\` plays the stories in pi and Claude Code and holds their snapshots.
+\`src/terminal.ts\` draws the component as styled lines for a width, \`src/gui.tsx\` in native controls for Claude Desktop and VS Code (the same names and props, less the width), \`src/contract.ts\` has its props and results, and \`src/stories.ts\` one sample per state, which \`src/stories.gui.tsx\` draws with \`gui.tsx\`. \`e2e/\` plays the stories in pi, Claude Code and VS Code and holds their snapshots.
 
 \`\`\`bash
 pnpm drive ls kit-${name}                                    # the stories
@@ -115,9 +117,28 @@ export function ${camel}({ text }: ${pascal}Options, width: number): Line[] {
   return block(inline(text), width);
 }
 `,
+  "src/gui.tsx": `/** The ${name} on the graphical surfaces: the same contract as \`terminal.ts\`, in native controls. */
+import { span } from "@agents/kit-core/lines.ts";
+import { spans, type Gui } from "@agents/kit-core/paint/gui.tsx";
+import type { ${pascal}Options } from "./contract.ts";
+
+/**
+ * The same name and props as \`terminal.ts\`'s, less the width: the host sizes and scrolls.
+ * A control's \`hit\` becomes a Button's \`onPress\` calling \`g.press(hit)\`.
+ */
+export function ${camel}(g: Gui, { text }: ${pascal}Options): JSX.Element {
+  return spans(g, [span(text)]);
+}
+`,
   "src/stories.ts": `/** The ${name}'s stories. No host imports. */
 import type { KitStory } from "@agents/kit-core/stories.ts";
+import type { ${pascal}Options } from "./contract.ts";
 import { ${camel} } from "./terminal.ts";
+
+/** The props of each story, shared with \`stories.gui.tsx\`. */
+export const ${camel}Props = {
+  default: { text: "A first line of text, long enough to wrap" },
+} satisfies Record<string, ${pascal}Options>;
 
 export const ${camel}Stories: KitStory[] = [
   {
@@ -125,9 +146,19 @@ export const ${camel}Stories: KitStory[] = [
     state: "default",
     about: "The ${name} as it first stands",
     settings: "${camel}({text})",
-    lines: (width) => ${camel}({ text: "A first line of text, long enough to wrap" }, width),
+    gui: true,
+    lines: (width) => ${camel}(${camel}Props.default, width),
   },
 ];
+`,
+  "src/stories.gui.tsx": `/** The ${name}'s graphical stories: the props of \`stories.ts\`, drawn by \`gui.tsx\`. */
+import type { GuiStories } from "@agents/kit-core/paint/gui.tsx";
+import { ${camel} } from "./gui.tsx";
+import { ${camel}Props } from "./stories.ts";
+
+export const ${camel}GuiStories: GuiStories = {
+  default: (g) => ${camel}(g, ${camel}Props.default),
+};
 `,
   "src/manifest.ts": `import { defineComponent, yes } from "@agents/kit-core/manifest.ts";
 
@@ -135,8 +166,8 @@ export default defineComponent({
   id: "${name}",
   name: "${title}",
   purpose: "What the ${name} is for, in one line.",
-  impl: { pi: "${camel}", claude: "${camel}" },
-  status: { pi: "system", claude: "system", gui: "legacy" },
+  impl: { pi: "${camel}", claude: "${camel}", gui: "${camel}" },
+  status: { pi: "system", claude: "system", gui: "system" },
   source: "${name}/src/terminal.ts",
   features: [
     {
@@ -145,6 +176,8 @@ export default defineComponent({
       story: "${name}/default",
       pi: yes(),
       claude: yes(),
+      // \`no\` says why the host cannot; \`partial\` says what it lacks.
+      gui: yes(),
     },
   ],
 });
@@ -199,6 +232,20 @@ writeFileSync(
     .replace(list, `$1  ...${camel}Stories,\n];`),
 );
 
+// ...and draws their graphical versions.
+const guiRegistry = join(kits, "catalog/src/stories.gui.tsx");
+const guiSource = readFileSync(guiRegistry, "utf8");
+const guiImports = [...guiSource.matchAll(/^import .*stories\.gui\.tsx";\n/gm)].pop();
+const guiMap = /^(const byComponent: Record<string, GuiStories> = \{\n[\s\S]*?)\};$/m;
+if (!guiMap.test(guiSource) || !guiImports)
+  fail("lib/kits/catalog/src/stories.gui.tsx has no `byComponent` map to add to");
+const guiAt = (guiImports?.index ?? 0) + (guiImports?.[0].length ?? 0);
+const guiNext =
+  guiSource.slice(0, guiAt) +
+  `import { ${camel}GuiStories } from "@agents/kit-${name}/stories.gui.tsx";\n` +
+  guiSource.slice(guiAt);
+writeFileSync(guiRegistry, guiNext.replace(guiMap, `$1  "${name}": ${camel}GuiStories,\n};`));
+
 // The catalogue imports the kit and the site reads it: each depends on the new package.
 for (const file of [
   join(kits, "catalog/package.json"),
@@ -214,10 +261,11 @@ for (const file of [
   writeFileSync(file, json(pkg));
 }
 
-console.log(`kit-new: created lib/kits/${name}/ and registered its stories in lib/kits/catalog
+console.log(`kit-new: created lib/kits/${name}/ and registered its stories in lib/kits/catalog (registry.ts and stories.gui.tsx)
 
 Next:
   1. pnpm install   (links the new package)
-  2. Draw it in lib/kits/${name}/src/terminal.ts; fill in the story, the manifest and the spec.
+  2. Draw it in lib/kits/${name}/src/terminal.ts and src/gui.tsx (the same names and props); fill in
+     the stories, the manifest (a \`gui\` answer per feature) and the spec.
   3. pnpm turbo run e2e:update --filter=@agents/kit-${name}
   4. pnpm turbo run test --filter=@agents/kit-catalog   (the parity check fails with "no snapshot" until step 3)`);

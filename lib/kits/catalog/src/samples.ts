@@ -1,6 +1,5 @@
 /**
- * The catalogue's sample data, one set for both harnesses, so a difference between two renders
- * is the harness's. Data only, no imports: the pi stories and the Claude catalogue mod both bundle it.
+ * The sample data of the pi catalogue's stories. Data only, no imports.
  */
 
 export const SENTENCE =

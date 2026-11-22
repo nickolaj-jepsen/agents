@@ -8,7 +8,8 @@
 import type { ElementTable } from "claude-code";
 import { cellWidth, type Line, type Role, type Span } from "../lines.ts";
 
-type Els = Pick<ElementTable<"terminal">, "Box" | "Text" | "Button" | "Markdown">;
+type Els = Pick<ElementTable<"terminal">, "Box" | "Text" | "Button" | "Markdown"> &
+  Partial<Pick<ElementTable<"terminal">, "Image" | "Link">>;
 
 const COLOR: Record<Role, string | undefined> = {
   text: undefined,
@@ -40,6 +41,10 @@ export type PaintOptions = {
   width?: number;
   /** The host's text field, for the row an `input` slot keeps: an `Input` element. */
   input?: JSX.Element;
+  /** Cells the whole drawing is set in by, from the left. */
+  indent?: number;
+  /** The `hit` of the control that takes the engine's focus ring when it mounts. */
+  autoFocus?: string;
 };
 
 /** Consecutive lines of one row-wide control, or one line of none. */
@@ -67,9 +72,9 @@ const runsOf = (spans: readonly Span[]) => {
 export function paintLines(
   k: Els,
   lines: readonly Line[],
-  { press, width = 0, input }: PaintOptions = {},
+  { press, width = 0, input, indent: setIn, autoFocus }: PaintOptions = {},
 ): JSX.Element {
-  const { Box, Text, Button, Markdown } = k;
+  const { Box, Text, Button, Markdown, Image, Link } = k;
   // The engine refuses a `hover` outside a keyed Box, which only a control has round it.
   const run = (s: Span, key: string, isControl: boolean) => (
     <Text
@@ -104,7 +109,13 @@ export function paintLines(
     const key = address(hit);
     return (
       <Box key={`hover-${key}`}>
-        <Button key={key} plain label={label} onPress={() => press?.(hit)}>
+        <Button
+          key={key}
+          plain
+          autoFocus={key === autoFocus ? true : undefined}
+          label={label}
+          onPress={() => press?.(hit)}
+        >
           {body}
         </Button>
       </Box>
@@ -129,7 +140,7 @@ export function paintLines(
     </Text>
   );
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" paddingLeft={setIn || undefined}>
       {groups(lines).map((g, at) => {
         const [first] = g.lines;
         if (first?.slot?.kind === "input") {
@@ -147,7 +158,31 @@ export function paintLines(
             </Box>
           );
         }
-        if (first?.slot)
+        if (first?.slot?.kind === "image") {
+          const { source, columns, rows, alt } = first.slot;
+          // Where the host draws no images the alt text stands in, as the line's spans say.
+          return Image ? (
+            <Image key={`image${at}`} source={source} columns={columns} rows={rows} alt={alt} />
+          ) : (
+            block(g.lines, at)
+          );
+        }
+        if (first?.slot?.kind === "link") {
+          const { href } = first.slot;
+          return (
+            <Text key={`link${at}`} dimColor wrap="wrap">
+              {g.lines.flatMap((l, r) => [
+                ...(r ? ["\n"] : []),
+                Link ? (
+                  <Link key={`${r}`} href={href} label={wordsOf(l.spans)} />
+                ) : (
+                  wordsOf(l.spans)
+                ),
+              ])}
+            </Text>
+          );
+        }
+        if (first?.slot?.kind === "markdown")
           return (
             <Box
               key={`slot${at}`}
@@ -186,6 +221,33 @@ export function paintLines(
           </Box>
         );
       })}
+    </Box>
+  );
+}
+
+/**
+ * A block behind the engine's quote border: the rail a card has in a transcript. The kit's rows
+ * are drawn inside it, so a pane that draws no rail (a terminal's band) never calls this.
+ * @param o `width` is the block's outer width in cells; `rail` the border's weight: `answered`
+ * in the success colour, `quiet` dim, `bright` the engine's own.
+ */
+export function quoted(
+  k: Els,
+  body: JSX.Element | readonly JSX.Element[],
+  o: { key?: string; width?: number; rail: "answered" | "quiet" | "bright" },
+): JSX.Element {
+  const { Box } = k;
+  return (
+    <Box
+      key={o.key}
+      width={o.width}
+      flexDirection="column"
+      borderStyle="quote"
+      borderColor={o.rail === "answered" ? "success" : undefined}
+      borderDimColor={o.rail === "quiet" || undefined}
+      paddingX={1}
+    >
+      {body}
     </Box>
   );
 }
@@ -240,6 +302,21 @@ export function hotkeys(
       {keys.map(({ key, press }) => (
         <Button key={keyAddress(key)} plain hotkey={key} label={key} onPress={press} />
       ))}
+    </Box>
+  );
+}
+
+/**
+ * A button that draws nothing and carries a keybinding's action, so the key a person bound to
+ * `action` in `keybindings.json` presses `press`. The engine presses only a mounted Button, so
+ * draw it whenever the key should work, wherever the site draws nothing else.
+ * @param action The action the key is bound to.
+ */
+export function actionKey(k: Els, action: string, press: () => unknown): JSX.Element {
+  const { Box, Button } = k;
+  return (
+    <Box width={0} height={0} overflow="hidden">
+      <Button key="kit-action" plain action={action} label="action" onPress={press} />
     </Box>
   );
 }

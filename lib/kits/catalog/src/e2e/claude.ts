@@ -6,7 +6,7 @@
  */
 import { fileURLToPath } from "node:url";
 import { stageWidth, storyId, stories, type Story } from "../claude/stories.ts";
-import { gridLines, region, rowText } from "@agents/drive/lib/screen.ts";
+import { region, rowText } from "@agents/drive/lib/screen.ts";
 import type { Rect, Region } from "@agents/drive/lib/screen.ts";
 import { catalogueSizes } from "@agents/drive/lib/kit-sizes.ts";
 import { scenarios, slashCommand, type Scenario } from "@agents/drive/lib/scenario.ts";
@@ -39,21 +39,6 @@ const paneBody =
     return trimmed(grid, { ...inner, w: stageWidth(s, inner.w) });
   };
 
-/**
- * The band: from its divider (`── title ──`) down to the row before the prompt's rule, less
- * the engine's hints.
- */
-const band: Region = (grid) => {
-  const lines = gridLines(grid);
-  const top = lines.findIndex((l) => /^──\s+\S/.test(l));
-  if (top < 0) return undefined;
-  let bottom = lines.findIndex((l, i) => i > top && /^─+$/.test(l)) - 1;
-  if (bottom < top) bottom = lines.length - 1;
-  while (bottom > top && /^$|tmux|ctrl\+g to edit|\/effort|focus-events/.test(lines[bottom] ?? ""))
-    bottom--;
-  return { x: 0, y: top, w: grid[0]?.length ?? 0, h: bottom - top + 1 };
-};
-
 /** The scenarios of `plugin` (`kit-<name>`): the stories whose component `owns` says is its. */
 export const claudeScenarios = (plugin: string, owns: (component: string) => boolean) =>
   scenarios({
@@ -68,7 +53,7 @@ export const claudeScenarios = (plugin: string, owns: (component: string) => boo
           storyId(s),
           {
             about: s.about,
-            region: s.surface === "band" ? band : paneBody(s),
+            region: paneBody(s),
             // Hermetic, with no mod but the catalogue's and no model call, so it draws signed out (the
             // Pages workflow) as it does here; the model is pinned, or a default's status rows leak in.
             start: {

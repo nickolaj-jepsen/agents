@@ -1,33 +1,36 @@
-import { defineComponent, yes, partial } from "@agents/kit-core/manifest.ts";
+import { defineComponent, no, yes } from "@agents/kit-core/manifest.ts";
+
+const gone = no("Claude Code draws this with the kit's item-detail now.");
 
 export default defineComponent({
   id: "detail",
   name: "Detail blocks",
   purpose: "What a detail pane or panel body is made of: a section header, prose and notes.",
-  impl: { pi: ["section", "prose", "note"], claude: ["section", "note"] },
+  impl: {
+    pi: ["section", "prose", "note"],
+    claude: { none: "Claude Code draws this with the kit's item-detail now." },
+  },
   features: [
     {
       id: "section-rule",
       label: "Bold header with a dim rule to the edge",
-      story: "detail/section",
+      story: { pi: "detail/section" },
       pi: yes(),
-      claude: yes(
-        "there is no divider element; the rule is drawn text sized from the room it is given",
-      ),
+      claude: gone,
     },
     {
       id: "prose-measure",
       label: "Prose wrapped at the measure in a wider pane",
-      story: "detail/prose-measure",
+      story: { pi: "detail/prose-measure" },
       pi: yes("80 columns"),
-      claude: partial("no prose component: `clamp` at `tokens.prose`, as the story does"),
+      claude: gone,
     },
     {
       id: "note-gutter",
       label: "Note attached to one thing, with a │ / ╰▸ gutter",
-      story: "detail/notes",
+      story: { pi: "detail/notes" },
       pi: yes(),
-      claude: yes("a one-liner is `╰▸` alone; the words' colour role and italic are options"),
+      claude: gone,
     },
   ],
 });

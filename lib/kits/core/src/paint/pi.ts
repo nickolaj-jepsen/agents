@@ -166,7 +166,8 @@ export function paintLines(
       for (let row = 1; row < rows; row++) push(under, undefined, []);
       continue;
     }
-    if (l.slot) {
+    // An image or a link has no pi component: its spans (the alt text, the path) are the drawing.
+    if (l.slot?.kind === "markdown") {
       for (const row of slotRows(theme, l.slot)) push(row, l.hit, []);
       continue;
     }

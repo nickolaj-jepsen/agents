@@ -10,7 +10,7 @@ interface Props {
 const { c, h } = Astro.props;
 const api = c.api[h];
 const impl = c.impl[h];
-const kitFile = h === 'pi' ? 'lib/kits/legacy/src/pi/ui.ts' : 'lib/kits/legacy/src/claude/ui.tsx';
+const kitFile = c.source ? `lib/kits/${c.source}` : 'lib/kits/legacy/src/pi/ui.ts';
 type Row = { name: string; type: string; optional: boolean; default?: string; doc: string };
 const sig = (code: string) => renderMarkdown('```ts\n' + code + '\n```', kitFile);
 const doc = (md: string) => (md ? renderInline(md, kitFile) : Promise.resolve(''));

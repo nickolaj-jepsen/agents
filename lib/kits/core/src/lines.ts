@@ -33,11 +33,17 @@ export type Style = {
 /** A run of one style. `hit` names the control it belongs to, where a row holds several. */
 export type Span = Style & { text: string; hit?: string };
 
+/** Where an image's bytes are: inline PNG, or a local PNG file for the terminal to read. */
+export type ImageSource = { png: string } | { file: string; format: "png"; generation?: number };
+
 /**
  * What a host draws itself, standing in the drawing as one line.
  * - `markdown`: block Markdown, which each client has a renderer for. It takes as many rows as
  *   that renderer gives it.
  * - `input`: the host's own text field, between the cells drawn before and after it.
+ * - `image`: a picture, where the host draws one. The line's spans hold what stands in for it
+ *   (its alt text), which a terminal with no images shows.
+ * - `link`: the line's spans are the words of a link to `href`, where the host has links.
  */
 export type Slot =
   | {
@@ -63,7 +69,16 @@ export type Slot =
       rows?: number;
       /** What stands after the field on each of its rows, such as a frame's edge. */
       tail?: Span[];
-    };
+    }
+  | {
+      kind: "image";
+      source: ImageSource;
+      /** Cells it takes: at most 255 each. */
+      columns: number;
+      rows: number;
+      alt: string;
+    }
+  | { kind: "link"; href: string };
 
 /** One row of cells. `hit` names the control the whole row belongs to: a click on it presses it. */
 export type Line = { spans: Span[]; hit?: string; slot?: Slot };

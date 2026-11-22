@@ -1,5 +1,4 @@
-// The mod's state contract: the story being drawn, what a live story has been set to, and whether
-// the kit's keys hold the keyboard.
+// The mod's state contract: the story being drawn, and what a live story holds.
 
 /** `<component>/<state>`. */
 export type StoryId = string;
@@ -9,9 +8,9 @@ declare module "claude-code" {
     "kit-catalog": {
       /** `<component>/<state>` of the story on the stage, null for none. */
       story: Shaped<StoryId | null>;
-      /** What a story that reacts has been set to, by story id; null for none. */
+      /** What a story that reacts has been set to, by story id; null when none has. */
       live: Shaped<{ id: StoryId; state: unknown } | null>;
-      /** Whether the kit's keys hold the keyboard (the parked focus ring is on a story). */
+      /** Whether the site with a live choice story's keys holds the keyboard. */
       keys: Shaped<boolean>;
     };
   }

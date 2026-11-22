@@ -50,6 +50,8 @@ export type StoryModel = {
   state: string;
   /** Per harness; undefined when that harness has no story with this id. */
   by: Partial<Record<Harness, HarnessStory>>;
+  /** Whether the graphical clients draw it too (`gui: true` on the kit's story). */
+  isGui: boolean;
   /** Why a harness has no story, shown in its place. */
   missing: Partial<Record<Harness, string>>;
 };
@@ -58,7 +60,9 @@ export type FeatureModel = {
   id: string;
   label: string;
   support: Record<Harness, Support>;
-  story: Partial<Record<Harness, string>>;
+  /** The graphical clients' answer; absent while `gui` is `legacy` and the feature has none. */
+  gui?: Support;
+  story: Partial<Record<Surface, string>>;
 };
 
 export type ComponentModel = {
@@ -66,12 +70,16 @@ export type ComponentModel = {
   name: string;
   purpose: string;
   impl: Record<Harness, ImplState>;
+  /** The exports of `gui.tsx`, or why the graphical clients cannot have it; absent without `impl.gui`. */
+  guiImpl?: ImplState;
   /** Per surface the component is implemented on: `legacy` unless the manifest says `system`. */
   status: Partial<Record<Surface, SurfaceStatus>>;
   /** The file under `lib/kits/` that draws it on a `system` terminal, when the manifest names one. */
   source?: string;
   features: FeatureModel[];
   api: Record<Harness, { exports: ExportApi[]; types: TypeApi[] } | null>;
+  /** `gui.tsx`'s exports, as `api` has the terminals'. */
+  guiApi?: { exports: ExportApi[]; types: TypeApi[] } | null;
   stories: StoryModel[];
 };
 
@@ -84,9 +92,10 @@ export type Model = {
   notMirrored: string[];
 };
 
-const kitFiles: Record<Harness, string> = {
+/** The legacy kits: pi's is all that is left; Claude Code draws every component with the kit. */
+const kitFiles: Record<Harness, string | undefined> = {
   pi: join(kitRoot, "legacy/src/pi/ui.ts"),
-  claude: join(kitRoot, "legacy/src/claude/ui.tsx"),
+  claude: undefined,
 };
 
 async function storiesOf(harness: Harness): Promise<Map<string, Meta> | undefined> {
@@ -101,7 +110,7 @@ async function storiesOf(harness: Harness): Promise<Map<string, Meta> | undefine
 const load = async (file: string) =>
   ((await import(/* @vite-ignore */ pathToFileURL(file).href)) as { default: Component }).default;
 
-/** A kit component's own `manifest.ts` first, then the legacy kits' `components/*.ts`. */
+/** A kit component's own `manifest.ts` first, then the legacy `components/*.ts`. */
 async function manifests(): Promise<{ c: Component; where: string }[]> {
   const folders = readdirSync(kitRoot, { withFileTypes: true })
     .filter(
@@ -133,6 +142,10 @@ async function manifests(): Promise<{ c: Component; where: string }[]> {
 const systemStories = new Map<string, Meta>(
   kitStories.map((s) => [`${s.component}/${s.state}`, s]),
 );
+/** The ones that also have a graphical drawing. */
+const guiStoryIds = new Set(
+  kitStories.filter((s) => s.gui).map((s) => `${s.component}/${s.state}`),
+);
 
 export async function loadModel(): Promise<Model> {
   const problems: string[] = [];
@@ -140,11 +153,14 @@ export async function loadModel(): Promise<Model> {
   const kits = Object.fromEntries(
     harnesses.map((h) => [
       h,
-      { file: relative(kitRoot, kitFiles[h]), present: existsSync(kitFiles[h]) },
+      {
+        file: kitFiles[h] ? relative(kitRoot, kitFiles[h]) : "",
+        present: kitFiles[h] !== undefined && existsSync(kitFiles[h]),
+      },
     ]),
   ) as Model["kits"];
   const apis = Object.fromEntries(
-    harnesses.map((h) => [h, kits[h].present ? extractKit(kitFiles[h]) : undefined]),
+    harnesses.map((h) => [h, kitFiles[h] && kits[h].present ? extractKit(kitFiles[h]) : undefined]),
   );
   const stories = Object.fromEntries(
     await Promise.all(harnesses.map(async (h) => [h, await storiesOf(h)] as const)),
@@ -159,9 +175,13 @@ export async function loadModel(): Promise<Model> {
     const isSystem = (h: Harness) => c.status?.[h] === "system";
     const status: ComponentModel["status"] = {};
     for (const h of harnesses) if (!isNone(c.impl[h])) status[h] = c.status?.[h] ?? "legacy";
-    if (!isNone(c.impl.claude)) status.gui = c.status?.gui ?? "legacy";
-    if (c.status?.gui === "system")
-      problems.push(`${where}: gui cannot be \`system\` yet: the kit draws terminals only`);
+    const guiDecl = c.impl.gui;
+    const hasGui = guiDecl !== undefined && !isNone(guiDecl);
+    if (!isNone(c.impl.claude) && !(guiDecl !== undefined && isNone(guiDecl)))
+      status.gui = c.status?.gui ?? "legacy";
+    const isGuiSystem = status.gui === "system";
+    if (c.status?.gui === "system" && !hasGui)
+      problems.push(`${where}: gui is \`system\` but the component has no \`impl.gui\``);
     let sourceApi: KitApi | undefined;
     if (harnesses.some(isSystem)) {
       if (!c.source)
@@ -169,6 +189,15 @@ export async function loadModel(): Promise<Model> {
       else if (!existsSync(join(kitRoot, c.source)))
         problems.push(`${where}: source \`${c.source}\` does not exist under lib/kits/`);
       else sourceApi = extractKit(join(kitRoot, c.source));
+    }
+    const guiSource = c.source?.replace(/terminal\.ts$/, "gui.tsx");
+    let guiSourceApi: KitApi | undefined;
+    if (hasGui) {
+      if (!guiSource || guiSource === c.source)
+        problems.push(`${where}: \`impl.gui\` needs \`source\` to be \`<name>/terminal.ts\``);
+      else if (!existsSync(join(kitRoot, guiSource)))
+        problems.push(`${where}: \`impl.gui\` but ${guiSource} does not exist under lib/kits/`);
+      else guiSourceApi = extractKit(join(kitRoot, guiSource));
     }
     const kitOf = (h: Harness) => (isSystem(h) ? sourceApi : apis[h]);
     const fileOf = (h: Harness) => (isSystem(h) ? (c.source ?? "") : kits[h].file);
@@ -197,6 +226,28 @@ export async function loadModel(): Promise<Model> {
       impl[h] = { state: have.length === names.length ? "exists" : "planned", exports: names };
       const picked = kit.exports.filter((e) => have.includes(e.name));
       api[h] = { exports: picked, types: referencedTypes(kit, picked) };
+    }
+    let guiImpl: ImplState | undefined;
+    let guiApi: ComponentModel["guiApi"];
+    if (guiDecl !== undefined) {
+      if (isNone(guiDecl)) {
+        guiImpl = { state: "none", exports: [], reason: (guiDecl as { none: string }).none };
+        guiApi = null;
+      } else {
+        const names = exportsOf(guiDecl);
+        const have = names.filter((n) => guiSourceApi?.exports.some((e) => e.name === n));
+        for (const n of names)
+          if (guiSourceApi && !have.includes(n))
+            problems.push(`${where}: gui impl names \`${n}\` but ${guiSource} does not export it`);
+        guiImpl = {
+          state: guiSourceApi && have.length === names.length ? "exists" : "planned",
+          exports: names,
+        };
+        const picked = guiSourceApi?.exports.filter((e) => have.includes(e.name)) ?? [];
+        guiApi = guiSourceApi
+          ? { exports: picked, types: referencedTypes(guiSourceApi, picked) }
+          : null;
+      }
     }
     if (
       harnesses.every((h) => impl[h].state !== "exists") &&
@@ -236,7 +287,39 @@ export async function loadModel(): Promise<Model> {
             `${where}: feature \`${f.id}\` is ${s.status} on ${h} and needs a note saying why`,
           );
       }
-      return { id: f.id, label: f.label, support: { pi: f.pi, claude: f.claude }, story };
+      if (f.gui) {
+        const sid = storyOf(f, "gui");
+        if (sid !== undefined) story.gui = sid;
+        const g = f.gui;
+        if (g.status === "yes" || g.status === "partial") {
+          if (!hasGui)
+            problems.push(
+              `${where}: feature \`${f.id}\` is ${g.status} on gui, which has no \`impl.gui\``,
+            );
+          if (sid === undefined)
+            problems.push(`${where}: feature \`${f.id}\` is ${g.status} on gui but names no story`);
+          else if (!guiStoryIds.has(sid))
+            problems.push(
+              `${where}: feature \`${f.id}\` is ${g.status} on gui but story \`${sid}\` has no graphical drawing (\`gui: true\`)`,
+            );
+        }
+        if (g.status === "planned" && isGuiSystem)
+          problems.push(
+            `${where}: feature \`${f.id}\` is planned on gui, which is \`system\`: say yes, partial or no`,
+          );
+        if ((g.status === "partial" || g.status === "no") && !g.note)
+          problems.push(
+            `${where}: feature \`${f.id}\` is ${g.status} on gui and needs a note saying why`,
+          );
+      } else if (isGuiSystem)
+        problems.push(`${where}: feature \`${f.id}\` has no gui answer, and gui is \`system\``);
+      return {
+        id: f.id,
+        label: f.label,
+        support: { pi: f.pi, claude: f.claude },
+        gui: f.gui,
+        story,
+      };
     });
 
     const a = impl.pi.state;
@@ -267,7 +350,7 @@ export async function loadModel(): Promise<Model> {
               ? `the ${h} kit is not built yet`
               : `the ${h} kit has no story with this id`;
       }
-      return { id, state: id.slice(c.id.length + 1), by, missing };
+      return { id, state: id.slice(c.id.length + 1), by, isGui: guiStoryIds.has(id), missing };
     });
 
     return {
@@ -275,10 +358,12 @@ export async function loadModel(): Promise<Model> {
       name: c.name,
       purpose: c.purpose,
       impl,
+      guiImpl,
       status,
       source: c.source,
       features,
       api,
+      guiApi,
       stories: storyModels,
     };
   });
@@ -300,21 +385,24 @@ export function markdown(model: Model): string {
     "",
     "# Kit components",
     "",
-    "Which component each harness has, and which features each supports. A surface (pi, Claude Code's terminal, the graphical clients) is `system` when it draws the component with the kit's one drawing and `legacy` when it still uses the old per-harness kit; no feature is `planned` on a `system` surface. Support: `yes`, `partial`, `no` (the engine cannot) and `planned` (can, not built yet). The props and renders of each component are on the site's catalogue (`apps/site/`, `/dev/components/`), read from the kit's own doc comments.",
+    "Which component each harness has, and which features each supports. A surface (pi, Claude Code's terminal, the graphical clients: Claude Desktop and VS Code) is `system` when it draws the component with the kit's one drawing and `legacy` when it still uses the old per-harness kit; no feature is `planned` on a `system` surface. Support: `yes`, `partial`, `no` (the engine cannot) and `planned` (can, not built yet). The props and renders of each component are on the site's catalogue (`apps/site/`, `/dev/components/`), read from the kit's own doc comments.",
     "",
   ];
   for (const c of model.components) {
     out.push(`## ${c.name}`, "", c.purpose, "");
     for (const h of harnesses) out.push(`- ${h}: ${describe(c.impl[h])}`);
+    if (c.guiImpl) out.push(`- gui: ${describe(c.guiImpl)}`);
     out.push(
       `- status: ${surfaces.flatMap((x) => (c.status[x] ? [`${x} ${c.status[x]}`] : [])).join("; ")}`,
     );
-    out.push("", "| Feature | pi | Claude Code (terminal) |", "| --- | --- | --- |");
+    out.push(
+      "",
+      "| Feature | pi | Claude Code (terminal) | Desktop and VS Code |",
+      "| --- | --- | --- | --- |",
+    );
     for (const f of c.features) {
-      const support = harnesses.map((h) => {
-        const { status, note } = f.support[h];
-        return `**${status}**${note ? ` — ${note}` : ""}`;
-      });
+      const cell = ({ status, note }: Support) => `**${status}**${note ? ` — ${note}` : ""}`;
+      const support = [...harnesses.map((h) => cell(f.support[h])), f.gui ? cell(f.gui) : "legacy"];
       out.push(`| ${[f.label, ...support].map(tableCell).join(" | ")} |`);
     }
     out.push("");

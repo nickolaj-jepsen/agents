@@ -18,6 +18,11 @@ export type KitStory = {
   width?: "reading" | "dialog";
   /** The component at `width` cells, as it first stands. */
   lines(width: number): Line[];
+  /**
+   * It also has a graphical drawing, from the same props: `<component>/src/stories.gui.tsx`, merged
+   * in the catalogue's `stories.gui.tsx`. A flag, not the drawing, because this file is read by plain Node.
+   */
+  gui?: true;
   /** Keys and clicks change it: each catalogue wires it by hand, from the same first state. */
   isLive?: boolean;
 };

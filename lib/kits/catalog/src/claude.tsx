@@ -1,7 +1,7 @@
 /**
  * The Claude kit's catalogue, a dev-only mod: `/kit <component> [state]` draws one kit component
- * alone with sample data, in a Pane whose body is exactly the component (or in the band, for
- * what only a band has); `/kit` alone lists them and clears the stage. Not a plugin, so
+ * alone with sample data, in a Pane whose body is exactly the component; `/kit` alone lists them
+ * and clears the stage. Not a plugin, so
  * home-manager never loads it; a scenario loads it with `--plugin-dir`.
  */
 import { atom, read, update } from "claude-code";
@@ -10,8 +10,13 @@ import { stageWidth, storyId, stories, type Story } from "./claude/stories";
 import { choiceOf, choiceReduce, type ChoiceListState } from "@agents/kit-card/contract.ts";
 import { liveChoices, liveStart } from "@agents/kit-card/stories.ts";
 import { keysHint, RING, ringMove } from "@agents/kit-core/paint/claude.tsx";
+import { guiOf, isGui, paneOptions } from "@agents/kit-core/paint/host.tsx";
+import { guiStoryOf } from "./stories.gui.tsx";
 import { choiceRing, choiceRows, renders, type ChoiceSend } from "./claude/render";
-import { kitOf, onlyOwnRows, paneOptions, withColumns } from "@agents/kit-legacy/claude/ui.tsx";
+
+/** The room in cells a row of the transcript is set in. */
+const columnsOf = (e: { viewport?: { columns: number } }) =>
+  Math.max(1, Math.floor(e.viewport?.columns ?? 80));
 
 const PANE = "kit";
 const PLUGIN = "kit-catalog";
@@ -105,10 +110,6 @@ export const register: Register = (on) => {
     }
     await update($, story, () => storyId(one));
     await update($, live, () => null);
-    if (one.surface === "band") {
-      await $.ui.close({ id: PANE }).catch(() => undefined);
-      return { text: `Drew ${storyId(one)} in the band.` };
-    }
     await $.ui.open(
       paneOptions({ id: PANE, title: storyId(one), focus: true, closeOnEscape: true }),
     );
@@ -165,19 +166,19 @@ export const register: Register = (on) => {
     const els = $.ui.resolve(e);
     const { Box, Text } = els;
     const s = find(await read($, story));
-    if (!s || s.surface !== "pane") return <Text dimColor>/kit &lt;component&gt; [state]</Text>;
-    const width = stageWidth(s, e.props.bodyColumns);
+    if (!s) return <Text dimColor>/kit &lt;component&gt; [state]</Text>;
     const id = storyId(s);
+    // A graphical surface draws the story's `gui.tsx` drawing: native controls, no width in cells.
+    if (isGui(e)) {
+      const draw = guiStoryOf(id);
+      if (draw) return draw(guiOf(els, e));
+    }
+    const width = stageWidth(s, e.props.bodyColumns);
     const held = await read($, live);
-    const body = renders[id]?.(
-      withColumns(kitOf(els, e), width),
-      width,
-      { columns: e.props.bodyColumns, rows: e.props.scroll.bodyRows },
-      {
-        state: held?.id === id ? held.state : null,
-        set: (state) => update($, live, () => ({ id, state })),
-      },
-    );
+    const body = renders[id]?.(els, width, {
+      state: held?.id === id ? held.state : null,
+      set: (state) => update($, live, () => ({ id, state })),
+    });
     // A pane without the keyboard says how to give it; Escape closes this one, so it names no way back.
     const hint = isLiveChoice(id) ? keysHint(els, await read($, keys)) : null;
     return (
@@ -191,39 +192,19 @@ export const register: Register = (on) => {
   on("ui.render", { component: "Placed" }, async ($, e, next) => {
     const choice = e.props.plugin === PLUGIN ? await placedChoice($) : undefined;
     if (!choice) return next(e);
-    const k = kitOf($.ui.resolve(e), e);
-    return choiceRows(k, choice.state, Math.min(k.columns - 2, 96), choice.send);
+    return choiceRows($.ui.resolve(e), choice.state, Math.min(columnsOf(e) - 2, 96), choice.send);
   });
 
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
     const choice = e.props.hasSurvey ? undefined : await placedChoice($);
-    if (choice) {
-      const k = kitOf($.ui.resolve(e), e);
-      const { Box } = k;
-      return (
-        <Box flexDirection="column">
-          {keysHint(k, await read($, keys), true)}
-          {choiceRing(k, choice.send)}
-        </Box>
-      );
-    }
-    const s = find(await read($, story));
-    if (e.props.hasSurvey || !s || s.surface !== "band") return next(e);
+    if (!choice) return next(e);
     const els = $.ui.resolve(e);
-    const make = renders[storyId(s)];
-    if (!make) return next(e);
+    const { Box } = els;
     return (
-      make(kitOf(els, e), e.props.bodyColumns, {
-        columns: e.props.bodyColumns,
-        rows: e.props.maxRows,
-      }) ?? next(e)
+      <Box flexDirection="column">
+        {keysHint(els, await read($, keys), true)}
+        {choiceRing(els, choice.send)}
+      </Box>
     );
-  });
-
-  // The stage is the band's alone.
-  on("ui.render", { component: "AbovePromptList", plugin: "*" }, async ($, e, next) => {
-    const s = find(await read($, story));
-    if (e.props.hasSurvey || s?.surface !== "band") return next(e);
-    return next(onlyOwnRows(e, PLUGIN));
   });
 };
