@@ -7,6 +7,7 @@ import { rmSync } from "node:fs";
 import { resolveDesktop, type DesktopSet } from "./desktop-scenario.ts";
 import { launchDesktop, requireDesktop } from "./desktop.ts";
 import { loadAny, type Entry, type Kind } from "./find.ts";
+import { withSessionLock } from "./lock.ts";
 import { live } from "./live.ts";
 import { options } from "./options.ts";
 import { loadSet, reach, resolveScenario } from "./scenario.ts";
@@ -41,8 +42,8 @@ export type Flags = WatchFlags & {
 const daemonBase = (name: string) => `d-${checkoutId}-${name}`;
 
 /** A failed start's folder: kept and named with `--keep`, else removed. */
-function keepOrRemove(runDir: string) {
-  if (options.keep) console.error(`kept the run folder: ${runDir}`);
+function keepOrRemove(runDir: string, keep = options.keep) {
+  if (keep) console.error(`kept the run folder: ${runDir}`);
   else rmSync(runDir, { recursive: true, force: true });
 }
 
@@ -50,13 +51,17 @@ const terminal = (k: Kind): k is "claude" | "pi" => k === "claude" || k === "pi"
 
 // ---- goto
 
-export async function gotoSession(
-  name: string,
-  entry: Entry,
-  scenario: string,
-  flags: Flags,
-): Promise<void> {
-  if (readSession(name)) await stopSession(name);
+/**
+ * Plays `scenario` beside nothing and parks it: a session of the same name it replaces is stopped
+ * first, so `goto` is destructive and the name never holds two sessions at once.
+ */
+export function gotoSession(name: string, entry: Entry, scenario: string, flags: Flags) {
+  return withSessionLock(name, () => goto(name, entry, scenario, flags));
+}
+
+async function goto(name: string, entry: Entry, scenario: string, flags: Flags) {
+  // Destructive: what the name held is ended before this one starts, under the same lock.
+  if (readSession(name)) await stop(name);
   const { harness } = entry;
   const base = {
     harness,
@@ -100,7 +105,7 @@ export async function gotoSession(
       session.close();
     } catch (err) {
       // `--keep` leaves a window that failed to start, for a look at its logs.
-      if (!options.keep) await stopSession(name);
+      if (!options.keep) await stop(name);
       else console.error(`kept the run folder: ${runDir}`);
       throw err;
     }
@@ -117,7 +122,7 @@ export async function gotoSession(
     writeSession(name, { ...base, runDir, pid });
     console.log(`opened ${entry.package}/desktop/${scenario} in Claude Desktop; session ${name}`);
   } catch (err) {
-    await stopSession(name);
+    await stop(name);
     throw err;
   }
 }
@@ -147,12 +152,29 @@ export async function attach(name: string): Promise<{ rec: SessionRecord; target
 // ---- reload
 
 /**
- * Rebuilds, then plays the scenario again. A terminal gets a fresh session parked beside the
- * current one, at the size that one has now, and only then replaces it: a start that fails leaves
- * the last good session parked. VS Code opens a new Claude tab in the same window, and may take
- * another scenario of the package. The scenario file is read as it is now.
+ * Rebuilds, then plays the scenario again, and replaces the parked terminal only once the
+ * candidate is ready. A start, a resize or the publication that fails ends the candidate and
+ * leaves the session from before the reload parked, so it is still the one `attach` reaches.
+ * VS Code opens a new Claude tab in the same window, and may take another scenario of the package.
+ * The scenario file is read as it is now.
  */
-export async function reloadSession(name: string, other?: string): Promise<void> {
+export function reloadSession(name: string, other?: string, deps: ReloadDeps = {}): Promise<void> {
+  return withSessionLock(name, () => reload(name, other, deps));
+}
+
+/** Where a reload's candidate comes from, and which session it replaces: scripted where behaviour is tested. */
+export type ReloadDeps = {
+  /** A new run folder for the candidate. */
+  runDir?: (name: string) => string;
+  /** Starts and plays the scenario in the candidate's folder. */
+  start?: (name: string, runDir: string) => Promise<Session>;
+  /** The session the record names now, before anything replaces it. */
+  attachOld?: (name: string, rec: SessionRecord) => Session;
+  /** Carries an edit into the builds the agent loads. */
+  rebuild?: (r: Parameters<typeof rebuild>[0]) => Promise<string[]>;
+};
+
+async function reload(name: string, other: string | undefined, deps: ReloadDeps) {
   const rec = readSession(name);
   if (!rec) throw new Error(`no session ${name}: run \`goto <package> <scenario>\` first`);
   if (rec.harness === "desktop")
@@ -163,27 +185,32 @@ export async function reloadSession(name: string, other?: string): Promise<void>
     if (other && other !== rec.scenario)
       throw new Error("a terminal session reloads its own scenario: `goto` another one");
     const r = resolveScenario(await loadSet(rec.file), scenario);
-    for (const line of await rebuild(r)) console.log(line);
+    for (const line of await (deps.rebuild ?? rebuild)(r)) console.log(line);
     if (rec.size) r.size = rec.size;
-    const old = Session.attach(rec.daemon!, rec.harness, rec.runDir);
+    const old = deps.attachOld?.(name, rec) ?? Session.attach(rec.daemon!, rec.harness, rec.runDir);
     const before = await old.size().catch(() => undefined);
-    const runDir = newRunDir(name);
+    const runDir = (deps.runDir ?? newRunDir)(name);
     // Two names in turn: the daemon leaves a file or two behind for every name it has served.
     const base = daemonBase(name);
     const next = rec.daemon === base ? `${base}-next` : base;
-    let session: Session;
-    try {
-      session = await reach(r, "daemon", next, runDir);
-    } catch (err) {
-      keepOrRemove(runDir);
+    const start = deps.start ?? ((_n: string, dir: string) => reach(r, "daemon", next, dir));
+    const session = await publishTerminal({
+      name,
+      runDir,
+      start: () => start(name, runDir),
+      // The candidate takes the size the screen had before it stands in for it: a reload keeps it.
+      prepare: async (s) => {
+        if (before && (before.cols !== r.size[0] || before.rows !== r.size[1]))
+          await s.resize(before.cols, before.rows);
+      },
+      publish: () => writeSession(name, { ...rec, runDir, daemon: next }),
+    }).catch((err: unknown) => {
       throw new Error(
         `${err instanceof Error ? err.message : String(err)}\nreload failed; the session from before it is still parked`,
         { cause: err },
       );
-    }
-    if (before && (before.cols !== r.size[0] || before.rows !== r.size[1]))
-      await session.resize(before.cols, before.rows);
-    writeSession(name, { ...rec, runDir, daemon: next });
+    });
+    // Only now is the candidate the parked one: the session it replaced is let go.
     await old.close();
     rmSync(rec.runDir, { recursive: true, force: true });
     const sz = await session.size();
@@ -209,10 +236,49 @@ export async function replayVscode(file: string, scenario: string, runDir: strin
   return reloadVscode(r, runDir);
 }
 
+/**
+ * A candidate session and the record that will name it, published together: start it, make it
+ * ready (`prepare`), write the record. A failure in any of them ends the candidate and removes its
+ * run folder (unless `--keep`) and leaves the record that was there, so the session from before
+ * the command is still the one a reader attaches to.
+ */
+export async function publishTerminal(o: {
+  name: string;
+  runDir: string;
+  start: () => Promise<Session>;
+  prepare?: (session: Session) => Promise<void>;
+  publish: () => void;
+  /** Keep the failed candidate's folder, as `--keep` does. */
+  keep?: boolean;
+}): Promise<Session> {
+  let session: Session;
+  try {
+    session = await o.start();
+  } catch (err) {
+    keepOrRemove(o.runDir, o.keep);
+    throw err;
+  }
+  try {
+    await o.prepare?.(session);
+    o.publish();
+  } catch (err) {
+    // Nothing but the record from before it may name a session: this candidate never got published.
+    await session.close().catch(() => undefined);
+    stopStub(o.runDir);
+    keepOrRemove(o.runDir, o.keep);
+    throw err;
+  }
+  return session;
+}
+
 // ---- stop
 
 /** Ends session `name` and removes its run folder. Returns what it was, if anything was there. */
-export async function stopSession(name: string): Promise<SessionRecord | undefined> {
+export function stopSession(name: string): Promise<SessionRecord | undefined> {
+  return withSessionLock(name, () => stop(name));
+}
+
+async function stop(name: string): Promise<SessionRecord | undefined> {
   const rec = readSession(name);
   if (!rec) return undefined;
   if (terminal(rec.harness)) {

@@ -11,6 +11,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -59,14 +60,30 @@ export function sessionName(name: string | undefined): string {
 
 const fileOf = (name: string) => join(sessionsDir, `${name}.json`);
 
+/** Where session `name`'s record is; the lock that serializes a name is derived from it too. */
+export const sessionFile = (name: string) => fileOf(name);
+
 export function readSession(name: string): SessionRecord | undefined {
   const file = fileOf(name);
   return existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as SessionRecord) : undefined;
 }
 
-export function writeSession(name: string, record: SessionRecord) {
+/**
+ * Publishes `record` for `name`: readers see the one before it or this one, never a half-written
+ * record, and a write that fails leaves the one before it where it was. `write` is for a spec that
+ * has to see the failure.
+ */
+export function writeSession(
+  name: string,
+  record: SessionRecord,
+  write: (file: string, text: string) => void = (file, text) => {
+    const scratch = `${file}.${process.pid}.tmp`;
+    writeFileSync(scratch, text);
+    renameSync(scratch, file);
+  },
+) {
   mkdirSync(sessionsDir, { recursive: true });
-  writeFileSync(fileOf(name), JSON.stringify(record, null, 2));
+  write(fileOf(name), JSON.stringify(record, null, 2));
 }
 
 export const removeSession = (name: string) => rmSync(fileOf(name), { force: true });
