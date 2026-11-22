@@ -1,11 +1,24 @@
 /**
- * Reads a kit's exports with the TypeScript compiler API: nothing is retyped by hand, the doc
- * comments in the kit are the reference.
+ * Reads a kit's exports with TypeScript's API: nothing is retyped by hand, the doc comments in the
+ * kit are the reference.
  *
  * A type is shown as written in the source, so one from a package that is not installed still
  * reads right.
+ *
+ * The API is `typescript/sync`, which drives a `tsgo` process, so it needs TypeScript 7.1 or later:
+ * 7.0 has no JavaScript API. The calls are synchronous. Each `extractKit` starts a process of its
+ * own and closes it before returning.
  */
-import ts from "typescript";
+import * as ts from "typescript/ast";
+import {
+  API,
+  type Checker,
+  JsxEmit,
+  ModuleKind,
+  ModuleResolutionKind,
+  type Symbol as TsSymbol,
+  SymbolFlags,
+} from "typescript/sync";
 
 export type Row = { name: string; type: string; optional: boolean; default?: string; doc: string };
 
@@ -37,42 +50,64 @@ export type KitApi = {
 
 const flat = (s: string) => s.replace(/\s+/g, " ").trim();
 
-const options: ts.CompilerOptions = {
+const options = {
   noEmit: true,
   target: ts.ScriptTarget.ES2022,
-  module: ts.ModuleKind.NodeNext,
-  moduleResolution: ts.ModuleResolutionKind.NodeNext,
+  module: ModuleKind.NodeNext,
+  moduleResolution: ModuleResolutionKind.NodeNext,
   allowImportingTsExtensions: true,
   skipLibCheck: true,
-  jsx: ts.JsxEmit.ReactJSX,
+  jsx: JsxEmit.ReactJSX,
   types: [],
 };
 
+/** The `@param` tag of a parameter: by name, or by position for a destructured one. */
+const paramTagOf = (p: ts.ParameterDeclaration): ts.JSDocParameterTag | undefined => {
+  const tags = ts.getJSDocTags(p.parent).filter(ts.isJSDocParameterTag);
+  if (ts.isIdentifier(p.name)) {
+    const name = p.name.text;
+    return tags.find((t) => ts.isIdentifier(t.name) && t.name.text === name);
+  }
+  return tags[(p.parent as ts.FunctionLikeBase).parameters.indexOf(p)];
+};
+
+/** `name?: T`. The new AST keeps `?` and `!` in one `postfixToken`. */
+const isOptional = (m: ts.NamedMemberBase) => m.postfixToken?.kind === ts.SyntaxKind.QuestionToken;
+
 export function extractKit(file: string): KitApi {
-  const program = ts.createProgram([file], options);
-  const checker = program.getTypeChecker();
+  const api = new API();
+  try {
+    return extractWith(api, file);
+  } finally {
+    api.close();
+  }
+}
+
+function extractWith(api: API, file: string): KitApi {
+  const program = api.createProgram([file], options);
+  const checker = program.getProject().checker;
   const source = program.getSourceFile(file);
   if (!source) throw new Error(`catalog: cannot read ${file}`);
-  const moduleSymbol = checker.getSymbolAtLocation(source);
+  const moduleSymbol = checker.getSymbolOfSourceFile(file);
   if (!moduleSymbol) return { file, exports: [], types: [] };
 
-  const docOf = (symbol: ts.Symbol | undefined) =>
-    symbol ? flat(ts.displayPartsToString(symbol.getDocumentationComment(checker))) : "";
+  const docOf = (symbol: TsSymbol | undefined) =>
+    symbol ? flat(symbol.getDocumentationComment(checker)) : "";
   const tagText = (node: ts.Node, ...names: string[]) => {
     const tag = ts.getJSDocTags(node).find((t) => names.includes(t.tagName.text));
     return tag ? flat(ts.getTextOfJSDocComment(tag.comment) ?? "") || undefined : undefined;
   };
 
-  const typeText = (decl: ts.Node, symbol?: ts.Symbol) => {
+  const typeText = (decl: ts.Node, symbol?: TsSymbol) => {
     const annotated = (decl as { type?: ts.TypeNode }).type;
     if (annotated) return flat(annotated.getText());
     return symbol ? checker.typeToString(checker.getTypeOfSymbolAtLocation(symbol, decl)) : "";
   };
 
-  const paramRows = (fn: ts.SignatureDeclarationBase): Row[] =>
+  const paramRows = (fn: ts.FunctionLikeBase): Row[] =>
     fn.parameters.map((p) => {
       const name = ts.isIdentifier(p.name) ? p.name.text : "props";
-      const tag = ts.getJSDocParameterTags(p)[0];
+      const tag = paramTagOf(p);
       return {
         name,
         type: p.type ? flat(p.type.getText()) : "",
@@ -82,7 +117,7 @@ export function extractKit(file: string): KitApi {
       };
     });
 
-  const head = (fn: ts.SignatureDeclaration, name: string) => {
+  const head = (fn: ts.FunctionLikeBase, name: string) => {
     const params = fn.parameters.map((p) => flat(p.getText())).join(", ");
     const generics = fn.typeParameters
       ? `<${fn.typeParameters.map((t) => t.getText()).join(", ")}>`
@@ -98,28 +133,30 @@ export function extractKit(file: string): KitApi {
   const memberRows = (cls: ts.ClassDeclaration): Row[] => {
     const rows: Row[] = [];
     for (const m of cls.members) {
+      if (
+        !(
+          ts.isMethodDeclaration(m) ||
+          ts.isGetAccessorDeclaration(m) ||
+          ts.isPropertyDeclaration(m)
+        )
+      )
+        continue;
       const isPrivate =
-        ts.canHaveModifiers(m) &&
-        ts
-          .getModifiers(m)
-          ?.some(
-            (k) =>
-              k.kind === ts.SyntaxKind.PrivateKeyword || k.kind === ts.SyntaxKind.ProtectedKeyword,
-          );
-      if (isPrivate || !m.name || ts.isPrivateIdentifier(m.name)) continue;
+        (m.modifierFlags & (ts.ModifierFlags.Private | ts.ModifierFlags.Protected)) !== 0;
+      if (isPrivate || ts.isPrivateIdentifier(m.name)) continue;
       const symbol = checker.getSymbolAtLocation(m.name);
       const name = m.name.getText();
       const doc = docOf(symbol);
       if (ts.isMethodDeclaration(m)) {
         const params = m.parameters.map((p) => flat(p.getText())).join(", ");
         rows.push({ name: `${name}()`, type: `(${params})`, optional: false, doc });
-      } else if (ts.isGetAccessor(m)) {
+      } else if (ts.isGetAccessorDeclaration(m)) {
         rows.push({ name, type: typeText(m, symbol) || "", optional: false, doc });
-      } else if (ts.isPropertyDeclaration(m)) {
+      } else {
         rows.push({
           name,
           type: typeText(m, symbol),
-          optional: !!m.questionToken,
+          optional: isOptional(m),
           default: m.initializer ? flat(m.initializer.getText()) : undefined,
           doc,
         });
@@ -129,18 +166,22 @@ export function extractKit(file: string): KitApi {
   };
 
   // A key union (`keyof typeof tokens.role`) is a string, whose properties are String's own.
-  const propRows = (declared: ts.Type): Row[] =>
+  const propRows = (declared: ReturnType<Checker["getDeclaredTypeOfSymbol"]>): Row[] =>
     declared.getProperties().flatMap((p) => {
-      const decl = p.declarations?.[0];
-      if (!decl || !(ts.isPropertySignature(decl) || ts.isMethodSignature(decl))) return [];
+      const decl = p.declarations[0]?.resolve();
+      if (
+        !decl ||
+        !(ts.isPropertySignatureDeclaration(decl) || ts.isMethodSignatureDeclaration(decl))
+      )
+        return [];
       if (program.isSourceFileDefaultLibrary(decl.getSourceFile())) return [];
       return [
         {
           name: p.name,
-          type: ts.isMethodSignature(decl)
+          type: ts.isMethodSignatureDeclaration(decl)
             ? `(${decl.parameters.map((q) => flat(q.getText())).join(", ")})${decl.type ? `: ${flat(decl.type.getText())}` : ""}`
             : typeText(decl, p),
-          optional: !!decl.questionToken,
+          optional: isOptional(decl),
           default: tagText(decl, "default", "defaultValue"),
           doc: docOf(p),
         },
@@ -149,10 +190,14 @@ export function extractKit(file: string): KitApi {
 
   const exports: ExportApi[] = [];
   const types: TypeApi[] = [];
-  for (const exported of checker.getExportsOfModule(moduleSymbol)) {
+  // Functions first, then the rest in source order, as the docs and the site have always listed
+  // them. `tsgo` lists a module in source order alone.
+  const isFunction = (e: TsSymbol) => e.declarations[0]?.kind === ts.SyntaxKind.FunctionDeclaration;
+  const all = checker.getExportsOfModule(moduleSymbol);
+  for (const exported of [...all.filter(isFunction), ...all.filter((e) => !isFunction(e))]) {
     const symbol =
-      exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported;
-    const decl = symbol.declarations?.[0];
+      exported.flags & SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported;
+    const decl = symbol.declarations[0]?.resolve();
     if (!decl) continue;
     const name = exported.name;
     const doc = docOf(symbol);
@@ -175,7 +220,7 @@ export function extractKit(file: string): KitApi {
       const stmt = decl.parent.parent;
       const paramDoc = (rows: Row[]) =>
         rows.map((r, i) => {
-          const tag = ts.getJSDocParameterTags(fn!.parameters[i]!)[0];
+          const tag = paramTagOf(fn!.parameters[i]!);
           if (tag || r.doc) return r;
           const own = ts
             .getJSDocTags(stmt)
