@@ -3,13 +3,16 @@ import type { Button } from "@agents/kit-buttons/contract.ts";
 
 /**
  * What a row is set to: left alone (`○`), chosen (`●`, in the accent) or set aside (`–`, the
- * whole row dim).
+ * whole row dim). `none` draws no mark, for a menu of actions that is not set to anything: where
+ * every row says it, the list keeps no cell for the mark.
  */
-export type ListMark = "open" | "chosen" | "dropped";
+export type ListMark = "open" | "chosen" | "dropped" | "none";
 
 export type ListRow = {
-  /** Inline Markdown, cut to one row, or wrapped to the list's `lines`. */
+  /** Inline Markdown, cut to one row, or wrapped to the list's `lines`; unless `literal`. */
   text: string;
+  /** The text is a name or a path, not Markdown: its `_` and `*` are letters. */
+  literal?: boolean;
   /** @default "open" */
   mark?: ListMark;
   /** Dim words in the list's aside column at the right, such as a count. */
@@ -18,14 +21,35 @@ export type ListRow = {
   focused?: boolean;
   /** The row under the mouse: bold as the keyboard's is, without the pointer. */
   hovered?: boolean;
+  /**
+   * A key drawn before the row's mark, dim and in the accent in the group the keyboard is in, as
+   * a card's letters are; the widest in the list sets its column. The caller owns the binding.
+   * Terminal only: a graphical surface draws no key.
+   */
+  key?: string;
+  /**
+   * The row cannot be used now: its words and aside are dim and it is no control, with no `hit`
+   * nor `markHit`. Its text says why, or its aside.
+   */
+  disabled?: boolean;
   /** The control the row's text is. */
   hit?: string;
-  /** The control its pointer column and mark are, apart from its text: a click there steps the mark. */
+  /**
+   * The word on the quiet Button a graphical surface draws for `hit`, where rows of one list do
+   * different things (`Open`, `Copy`): a Button never wraps, so the text sits beside it and the
+   * Button names what pressing does. Else the list's own (`action` of its gui options).
+   * Terminal: not drawn; the row is the control.
+   */
+  action?: string;
+  /** The control its pointer column and mark are, apart from its text: a click there steps the mark: open, chosen, dropped, and round to open. */
   markHit?: string;
 };
 
 export type ListGroup = {
-  /** A path or a name. A long one is cut from the left, since a path is read from its end. */
+  /**
+   * A path or a name. A long one is cut from the left, since a path is read from its end. A
+   * group with none draws no group row: its rows are the whole list, such as a menu's.
+   */
   label: string;
   /** The keyboard is in this group: its rail is bright and its label in the accent. */
   active?: boolean;

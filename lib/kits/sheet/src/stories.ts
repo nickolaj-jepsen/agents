@@ -44,6 +44,7 @@ export const sheetStories: KitStory[] = [
   {
     component: "sheet",
     state: "title",
+    gui: true,
     about: "A panel laid over the screen: the title and Close in its top edge, buttons at its foot",
     settings: "sheet({title, close: {}, body, footer})",
     extreme: true,
@@ -60,6 +61,7 @@ export const sheetStories: KitStory[] = [
   {
     component: "sheet",
     state: "confirm",
+    gui: true,
     about: "Close asks before the draft goes, in the place it stood; a notice above the buttons",
     settings: "sheet({close: {confirming: true, question}, notice})",
     width: "dialog",
@@ -92,6 +94,7 @@ export const sheetStories: KitStory[] = [
   {
     component: "sheet",
     state: "head",
+    gui: true,
     about: "The top edge alone, for a host that frames the panel itself",
     settings: "sheetHead({title, close: {confirming: true, question}})",
     width: "dialog",

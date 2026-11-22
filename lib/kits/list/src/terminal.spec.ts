@@ -2,7 +2,15 @@ import { describe, expect, test } from "vitest";
 import { textOf, widthOf } from "@agents/kit-core/lines.ts";
 import type { List, ListGroup } from "./contract.ts";
 import { listStories } from "./stories.ts";
-import { cutLeft, list, listFollow, listRows, listShowsWhole, listTopMax } from "./terminal.ts";
+import {
+  cutLeft,
+  list,
+  listFollow,
+  listRows,
+  listShowsWhole,
+  listTextRoom,
+  listTopMax,
+} from "./terminal.ts";
 
 describe("every list story", () => {
   test.each(listStories.map((s) => ({ id: `${s.component}/${s.state}`, story: s })))(
@@ -26,6 +34,79 @@ const groups = (focus: number, count = 5, per = 3): ListGroup[] =>
       markHit: `mark:${g * per + r}`,
     })),
   }));
+
+describe("keys and disabled rows", () => {
+  const menu: List = {
+    rail: false,
+    aside: 12,
+    groups: [
+      {
+        label: "Actions",
+        active: true,
+        rows: [
+          { text: "Commit", key: "1", mark: "none", hit: "a" },
+          { text: "Land", key: "2", mark: "none", aside: "no worktree", disabled: true, hit: "b" },
+          { text: "No key", mark: "none", hit: "c" },
+        ],
+      },
+    ],
+  };
+
+  test("a group with no label draws no group row", () => {
+    const bare: List = { ...menu, groups: [{ ...menu.groups[0]!, label: "" }] };
+    const rows = list(bare, 40).map((l) => textOf(l).trimEnd());
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toBe("  1 Commit");
+    expect(listRows(bare, 40)).toBe(3);
+  });
+
+  test("a literal row keeps its underscores and stars", () => {
+    const row = { text: "notes/_old_/a*b*.md", mark: "none" as const };
+    const read = (literal: boolean) =>
+      textOf(list({ groups: [{ label: "", rows: [{ ...row, literal }] }], rail: false }, 40)[0]!);
+    expect(read(true).trim()).toBe("notes/_old_/a*b*.md");
+    expect(read(false).trim()).not.toBe("notes/_old_/a*b*.md");
+  });
+
+  test("draws a key before the text, the column the widest key's, with no mark cell when every row has none", () => {
+    const rows = list(menu, 40).map((l) => textOf(l).trimEnd());
+    expect(rows[0]).toBe("Actions");
+    expect(rows[1]).toBe("  1 Commit");
+    expect(rows[2]).toMatch(/^ {2}2 Land +no worktree$/);
+    expect(rows[3]).toBe("    No key");
+  });
+
+  test("a disabled row is dim and no control, its key dim too", () => {
+    const rows = list(menu, 40);
+    expect(rows[1]!.hit).toBe("a");
+    expect(rows[2]!.hit).toBeUndefined();
+    expect(rows[2]!.spans.some((s) => s.hit)).toBe(false);
+    expect(rows[2]!.spans.filter((s) => s.text.trim()).every((s) => s.role === "dim")).toBe(true);
+    expect(rows[1]!.spans.find((s) => s.text === "1")!.role).toBe("accent");
+  });
+
+  test("the key and its space are cells the text does not have", () => {
+    const keyed = listTextRoom(40, menu);
+    expect(listTextRoom(40, { aside: 12, rail: false })).toBe(keyed);
+    expect(
+      listTextRoom(40, {
+        aside: 12,
+        rail: false,
+        groups: [{ label: "g", rows: [{ text: "a", key: "1" }] }],
+      }),
+    ).toBe(keyed - 2);
+    expect(listShowsWhole("x".repeat(keyed), 40, menu)).toBe(true);
+    expect(listShowsWhole("x".repeat(keyed + 1), 40, menu)).toBe(false);
+  });
+
+  test("a list with some marks keeps the mark column beside a none row", () => {
+    const l: List = {
+      rail: false,
+      groups: [{ label: "g", rows: [{ text: "a", mark: "none" }, { text: "b" }] }],
+    };
+    expect(list(l, 20).map(textOf)).toEqual(["g", "    a", "  ○ b"]);
+  });
+});
 
 describe("a list", () => {
   test("lines a group's label up with its rows' pointer, behind the card's rail", () => {

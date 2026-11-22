@@ -4,7 +4,9 @@ import type { KitStory } from "@agents/kit-core/stories.ts";
 import type { Button } from "./contract.ts";
 import { buttonRow } from "./terminal.ts";
 
-const KEYS: Button[] = [
+export const LEAD = [span("2 of 3", { role: "dim" })];
+
+export const KEYS: Button[] = [
   { hotkey: "enter", label: "Send", hit: "send", isLit: true },
   { hotkey: "n", label: "Note", hit: "note" },
   { hotkey: "space", label: "toggle" },
@@ -18,6 +20,7 @@ export const buttonStories: KitStory[] = [
     state: "row",
     about: "Actions label first, the suggested one in the accent; a keyboard-only hint is dim",
     settings: "buttonRow(keys)",
+    gui: true,
     lines: (width) => buttonRow(KEYS, width),
   },
   {
@@ -32,10 +35,7 @@ export const buttonStories: KitStory[] = [
     state: "wrap",
     about: "Wrapped, nothing drops; words before the first entry are not a control",
     settings: "buttonRow(keys, 30, {wrap: true, lead})",
-    lines: (width) =>
-      buttonRow(KEYS, Math.min(width, 30), {
-        wrap: true,
-        lead: [span("2 of 3", { role: "dim" })],
-      }),
+    gui: true,
+    lines: (width) => buttonRow(KEYS, Math.min(width, 30), { wrap: true, lead: LEAD }),
   },
 ];

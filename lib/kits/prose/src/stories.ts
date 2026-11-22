@@ -1,6 +1,7 @@
 /** Prose's stories. No host imports. */
 import type { KitStory } from "@agents/kit-core/stories.ts";
 import { scrolled } from "@agents/kit-core/lines.ts";
+import type { ProseOptions } from "./contract.ts";
 import { prose } from "./terminal.ts";
 
 // Short enough for the catalogue's stage in a Claude Code pane, which is a third of the rows.
@@ -26,6 +27,29 @@ const ISSUE = [
   "**Where:** `src/sync.sh`",
 ].join("\n");
 
+/** The props of the stories that have a graphical drawing too (`stories.gui.tsx`). */
+export const proseProps = {
+  blocks: { text: ISSUE, options: {} },
+  quiet: {
+    text: "Filed from `acme/sync-worker` on **fix/retry-after**.",
+    options: { isDim: true },
+  },
+} satisfies Record<string, { text: string; options: ProseOptions }>;
+
+/** A passage that gives way to what follows it, once folded and once opened. */
+const PASSAGE = [
+  "Which database should the journal use?",
+  "",
+  "Postgres runs beside the app; SQLite is one file and needs nothing running.",
+  "",
+  "**Recommended:** Postgres, for the second writer.",
+].join("\n");
+
+export const proseExcerptProps = {
+  folded: { text: PASSAGE, options: { excerpt: { hit: "more", isOpen: false } } },
+  opened: { text: PASSAGE, options: { excerpt: { hit: "more", isOpen: true } } },
+} satisfies Record<string, { text: string; options: ProseOptions }>;
+
 export const proseStories: KitStory[] = [
   {
     component: "prose",
@@ -34,7 +58,8 @@ export const proseStories: KitStory[] = [
     settings: "prose(text, width)",
     extreme: true,
     width: "dialog",
-    lines: (width) => prose(ISSUE, width),
+    gui: true,
+    lines: (width) => prose(proseProps.blocks.text, width, proseProps.blocks.options),
   },
   {
     component: "prose",
@@ -51,7 +76,16 @@ export const proseStories: KitStory[] = [
     about: "Every word quiet: a text beside the main one",
     settings: "prose(text, width, {isDim: true})",
     width: "dialog",
-    lines: (width) =>
-      prose("Filed from `acme/sync-worker` on **fix/retry-after**.", width, { isDim: true }),
+    gui: true,
+    lines: (width) => prose(proseProps.quiet.text, width, proseProps.quiet.options),
+  },
+  {
+    component: "prose",
+    state: "excerpt",
+    about: "A passage that gives way to what follows it: drawn whole in a terminal",
+    settings: "prose(text, width, {excerpt: {hit, isOpen}})",
+    width: "dialog",
+    gui: true,
+    lines: (width) => prose(proseExcerptProps.folded.text, width, proseExcerptProps.folded.options),
   },
 ];

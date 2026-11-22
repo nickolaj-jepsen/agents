@@ -3,7 +3,7 @@ import type { KitStory } from "@agents/kit-core/stories.ts";
 import { fieldHit, type Field } from "./contract.ts";
 import { fields } from "./terminal.ts";
 
-const ISSUE: Field[] = [
+export const ISSUE: Field[] = [
   { key: "T", label: "Team", value: "Platform", hit: fieldHit("team") },
   { key: "S", label: "Status", value: "Todo", hit: fieldHit("status") },
   { key: "P", label: "Priority", value: "Medium", hit: fieldHit("priority") },
@@ -20,6 +20,7 @@ export const fieldsStories: KitStory[] = [
   {
     component: "fields",
     state: "rows",
+    gui: true,
     about: "A row per field: its key, its label and what it holds, the labels in one column",
     settings: "fields(all, width, {active: true})",
     extreme: true,
@@ -29,6 +30,7 @@ export const fieldsStories: KitStory[] = [
   {
     component: "fields",
     state: "inline",
+    gui: true,
     about: "The values side by side after their keys, where rows are short",
     settings: "fields(all, width, {active: true, inline: true})",
     width: "dialog",
@@ -37,6 +39,7 @@ export const fieldsStories: KitStory[] = [
   {
     component: "fields",
     state: "read",
+    gui: true,
     about: "Read only, away from the keyboard: no keys, nothing to press",
     settings: "fields(all, width)",
     width: "dialog",

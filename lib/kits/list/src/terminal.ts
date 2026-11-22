@@ -8,6 +8,7 @@ import {
   hitSpans,
   inline,
   line,
+  literal,
   moreText,
   span,
   spansWidth,
@@ -27,8 +28,29 @@ const GAP = " ".repeat(tokens.gutter);
 /** Cells the rail and its gap take: where a group's label and a row's pointer start. */
 export const LIST_INSET = cellWidth(tokens.glyph.rail) + tokens.gutter;
 
-/** Cells before a row's text: the pointer column, the mark and a space. */
-const LEAD = cellWidth(tokens.glyph.pointer) + 1 + cellWidth(tokens.glyph.single.off) + 1;
+/** Cells of the pointer column and the space after it. */
+const POINTER = cellWidth(tokens.glyph.pointer) + 1;
+
+/** Cells of a mark and the space after it. */
+const MARK = cellWidth(tokens.glyph.single.off) + 1;
+
+const allRows = (l: Partial<Pick<List, "groups">>): ListRow[] =>
+  (l.groups ?? []).flatMap((g) => g.rows);
+
+/** Cells the list's keys take, with the space after: the widest key, or none where no row has one. */
+const keyCells = (l: Room): number => {
+  const widest = Math.max(0, ...allRows(l).map((r) => cellWidth(r.key ?? "")));
+  return widest ? widest + 1 : 0;
+};
+
+/** Cells the mark takes: none where every row says `none`, so a menu of keys starts at its keys. */
+const markCells = (l: Room): number => {
+  const rows = allRows(l);
+  return rows.length && rows.every((r) => r.mark === "none") ? 0 : MARK;
+};
+
+/** Cells before a row's text: the pointer column, the key, the mark and their spaces. */
+const leadCells = (l: Room): number => POINTER + keyCells(l) + markCells(l);
 
 /** Cells a group's label keeps beside its controls. */
 const MIN_LABEL = 10;
@@ -36,8 +58,11 @@ const MIN_LABEL = 10;
 /** Between a flat row's group label and its text. */
 const SEPARATOR = " › ";
 
-/** What of a list sets its rows' room: its aside column, its lines, whether it has rails. */
-type Room = Pick<List, "aside" | "lines" | "rail">;
+/**
+ * What of a list sets its rows' room: its aside column, its lines, whether it has rails, and
+ * its rows, whose keys and marks take cells before the text.
+ */
+type Room = Pick<List, "aside" | "lines" | "rail"> & Partial<Pick<List, "groups">>;
 
 /** Cells before a group's label and a row's pointer: the rail and its gap, or none without rails. */
 const insetOf = (l: Room) => (l.rail === false ? 0 : LIST_INSET);
@@ -45,7 +70,7 @@ const insetOf = (l: Room) => (l.rail === false ? 0 : LIST_INSET);
 /** Cells a row's text has at `width`, beside the list's aside column. */
 export function listTextRoom(width: number, l: Room = {}): number {
   const aside = l.aside ?? 0;
-  return Math.max(1, width - insetOf(l) - LEAD - (aside > 0 ? aside + tokens.gutter : 0));
+  return Math.max(1, width - insetOf(l) - leadCells(l) - (aside > 0 ? aside + tokens.gutter : 0));
 }
 
 /**
@@ -129,9 +154,11 @@ const textRows = (l: List) => (l.flat ? 1 : Math.max(1, l.lines ?? 1));
  */
 function itemRows(r: ListRow, g: ListGroup, l: List, width: number, rows = textRows(l)): Line[] {
   const mark = r.mark ?? "open";
-  const isLit = r.focused || r.hovered;
+  const isLit = (r.focused || r.hovered) && !r.disabled;
+  const hit = r.disabled ? undefined : r.hit;
+  const markHit = r.disabled ? undefined : r.markHit;
   const words: Style =
-    mark === "dropped"
+    r.disabled || mark === "dropped"
       ? { role: "dim", bold: isLit || undefined }
       : controlStyle({ primary: mark === "chosen", highlighted: isLit });
   const glyph =
@@ -140,6 +167,15 @@ function itemRows(r: ListRow, g: ListGroup, l: List, width: number, rows = textR
       : mark === "dropped"
         ? span(tokens.glyph.dropped, { role: "dim" })
         : span(tokens.glyph.single.off, { role: "dim" });
+  // Cells a key takes, with its space: a row without one keeps them blank, so the text lines up.
+  const keys = keyCells(l);
+  const key = keys
+    ? [
+        span((r.key ?? "").padEnd(keys - 1), { role: g.active && !r.disabled ? "accent" : "dim" }),
+        span(" "),
+      ]
+    : [];
+  const hasMark = markCells(l) > 0;
   const pointer = r.focused
     ? [span(tokens.glyph.pointer, { role: "text", bold: true }), span(" ")]
     : [span(" ".repeat(cellWidth(tokens.glyph.pointer) + 1))];
@@ -147,7 +183,7 @@ function itemRows(r: ListRow, g: ListGroup, l: List, width: number, rows = textR
   const aside = l.aside ?? 0;
   const textRoom = listTextRoom(width, l);
   // Code keeps the row's style: a row's colour is what it is set to, across its whole label.
-  let spans = inline(r.text, words).map((sp) =>
+  let spans = (r.literal ? literal(r.text, words) : inline(r.text, words)).map((sp) =>
     sp.role === "code" ? { ...words, text: sp.text } : sp,
   );
   if (l.flat) {
@@ -158,7 +194,11 @@ function itemRows(r: ListRow, g: ListGroup, l: List, width: number, rows = textR
     rows > 1
       ? block(spans, textRoom, { max: rows }).map((row) => row.spans)
       : [truncateSpans(spans, textRoom)];
-  const lead = [...pointer, glyph, span(" ")];
+  const lead = [
+    ...pointer,
+    ...key,
+    ...(hasMark ? (mark === "none" ? [span(" ".repeat(MARK))] : [glyph, span(" ")]) : []),
+  ];
   const right =
     aside > 0
       ? [
@@ -172,14 +212,14 @@ function itemRows(r: ListRow, g: ListGroup, l: List, width: number, rows = textR
     // The mark and the aside are the first line's; a later line is the row's text alone.
     if (i > 0) {
       const hang = span(" ".repeat(spansWidth(lead)));
-      return behind(l, state, line([hang, ...(r.hit ? hitSpans(text, r.hit) : text)]));
+      return behind(l, state, line([hang, ...(hit ? hitSpans(text, hit) : text)]));
     }
     const body = spread(text, right, room - spansWidth(lead));
-    if (r.markHit === undefined) return behind(l, state, line([...lead, ...body], r.hit));
+    if (markHit === undefined) return behind(l, state, line([...lead, ...body], hit));
     return behind(
       l,
       state,
-      line([...hitSpans(lead, r.markHit), ...(r.hit ? hitSpans(body, r.hit) : body)]),
+      line([...hitSpans(lead, markHit), ...(hit ? hitSpans(body, hit) : body)]),
     );
   });
 }
@@ -194,7 +234,7 @@ type Entry = { group: number; row?: number; part?: number; isGap?: boolean };
 const entriesOf = (l: List, width: number): Entry[] =>
   l.groups.flatMap((g, group) => [
     ...(l.space && !l.flat && group > 0 ? [{ group, isGap: true }] : []),
-    ...(l.flat ? [] : [{ group }]),
+    ...(l.flat || !g.label ? [] : [{ group }]),
     ...g.rows.flatMap((r, row) =>
       textRows(l) > 1
         ? itemRows(r, g, l, width).map((_, part) => ({ group, row, part }))

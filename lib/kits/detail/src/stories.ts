@@ -3,7 +3,7 @@ import type { KitStory } from "@agents/kit-core/stories.ts";
 import type { Detail } from "./contract.ts";
 import { detail } from "./terminal.ts";
 
-const ITEM: Detail = {
+export const ITEM: Detail = {
   meta: "wrong · seen 3× · 2 days ago",
   title:
     "pi's permission gate cannot resolve shell variables, so `cat $S/id_ed25519` reads what `cat ~/.ssh/id_ed25519` denies.",
@@ -27,10 +27,24 @@ const ITEM: Detail = {
   ],
 };
 
+/** The item with a section under a rule and a control. */
+export const RULED: Detail = {
+  ...ITEM,
+  hit: "open",
+  sections: [
+    {
+      rule: ["Evidence 1 of 2", "2 days ago"],
+      action: { label: "Next", hotkey: "n", hit: "next" },
+    },
+    ...(ITEM.sections ?? []),
+  ],
+};
+
 export const detailStories: KitStory[] = [
   {
     component: "item-detail",
     state: "whole",
+    gui: true,
     about: "A dim meta line, a bold title, then sections under dim headings: prose and keyed rows",
     settings: "detail({meta, title, sections})",
     extreme: true,
@@ -46,6 +60,7 @@ export const detailStories: KitStory[] = [
   {
     component: "item-detail",
     state: "rule",
+    gui: true,
     about: "A section under a rule with a control at its end, scrolled: `↑ more` and `↓ more` both",
     settings:
       'detail({sections: [{rule, action: {label: "Next", hotkey: "n"}}, ...], height: 9, offset: 3})',

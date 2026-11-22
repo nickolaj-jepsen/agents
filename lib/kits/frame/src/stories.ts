@@ -1,9 +1,10 @@
 /** The captioned frame's stories. No host imports. */
 import { buttonRow } from "@agents/kit-buttons/terminal.ts";
 import { heading, steps } from "@agents/kit-card/terminal.ts";
+import { span } from "@agents/kit-core/lines.ts";
 import type { KitStory } from "@agents/kit-core/stories.ts";
 import { captionFrameLayout } from "./contract.ts";
-import { captionFrame } from "./terminal.ts";
+import { captionFrame, captionRule } from "./terminal.ts";
 
 const body = (width: number) =>
   heading(
@@ -20,6 +21,12 @@ const footer = (width: number) =>
     width - 2 * captionFrameLayout.x,
   )[0];
 
+/** A section's heading, as `stories.gui.tsx` draws it too. */
+export const SECTION = {
+  caption: [span("Evidence", { bold: true }), span("  3 sources", { role: "dim" })],
+  end: [span("Add", { role: "accent", hit: "evidence:add" })],
+};
+
 export const frameStories: KitStory[] = [
   {
     component: "caption-frame",
@@ -27,6 +34,7 @@ export const frameStories: KitStory[] = [
     about: "A form between two rules: its title in the top one, Close at the right",
     settings: "captionFrame({title, close: {}, body, footer})",
     extreme: true,
+    gui: true,
     lines: (width) =>
       captionFrame({
         width,
@@ -41,6 +49,7 @@ export const frameStories: KitStory[] = [
     state: "steps",
     about: "Steps in place of the title, drawn in the room the rule has",
     settings: "captionFrame({caption: (width) => steps(...)})",
+    gui: true,
     lines: (width) =>
       captionFrame({
         width,
@@ -64,6 +73,7 @@ export const frameStories: KitStory[] = [
     state: "confirm",
     about: "Close asks before it throws the answers away, in the place it stood",
     settings: "captionFrame({close: {confirming: true}})",
+    gui: true,
     lines: (width) =>
       captionFrame({
         width,
@@ -72,5 +82,13 @@ export const frameStories: KitStory[] = [
         body: body(width),
         footer: footer(width),
       }),
+  },
+  {
+    component: "caption-frame",
+    state: "section",
+    about: "A section's heading: its words at the start and a control at the end",
+    settings: "captionRule({caption, end})",
+    gui: true,
+    lines: (width) => [captionRule({ width, caption: SECTION.caption, end: SECTION.end })],
   },
 ];

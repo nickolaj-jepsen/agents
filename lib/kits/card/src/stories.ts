@@ -14,9 +14,10 @@ import {
   summary,
 } from "./terminal.ts";
 
-const QUESTION = "How much of each session should be kept, once the run that made it is over?";
+export const QUESTION =
+  "How much of each session should be kept, once the run that made it is over?";
 
-const ITEMS: ChoiceListItem[] = [
+export const ITEMS: ChoiceListItem[] = [
   { key: "A", text: "The whole transcript" },
   {
     key: "B",
@@ -38,12 +39,19 @@ export const liveChoices: ChoiceList = {
 /** A live choice story's first state. */
 export const liveStart = (): ChoiceListState => ({ chosen: liveChoices.chosen, focus: 0 });
 
+/** What a form's write-in and note hold once written, for the story of fields in place. */
+export const WRITTEN = {
+  answer: "Use the existing schema.",
+  note: "Rotate the credentials first.",
+};
+
 const card = "card";
 
 export const cardStories: KitStory[] = [
   {
     component: card,
     state: "choices",
+    gui: true,
     about: "One of many: the chosen answer in the accent with a filled mark",
     settings: "choiceList({chosen: [1]})",
     extreme: true,
@@ -52,6 +60,7 @@ export const cardStories: KitStory[] = [
   {
     component: card,
     state: "checkboxes",
+    gui: true,
     about: "Several of many, the keyboard on an answer that is not chosen",
     settings: "choiceList({multiple: true, chosen: [0, 2], focus: 1})",
     lines: (width) => choiceList({ items: ITEMS, multiple: true, chosen: [0, 2], focus: 1 }, width),
@@ -59,6 +68,7 @@ export const cardStories: KitStory[] = [
   {
     component: card,
     state: "live",
+    gui: true,
     about: "Keys and clicks pick; the keyboard's row has a neutral pointer and a bold label",
     settings: "choiceList({chosen: [0], focus: 0}), picked by letter, click or the focused row",
     isLive: true,
@@ -67,6 +77,7 @@ export const cardStories: KitStory[] = [
   {
     component: card,
     state: "form",
+    gui: true,
     about: "A question in a form: its label, then the answers and the note under them",
     settings: "sections(heading, [choiceList({focus: 0}), note])",
     lines: (width) =>
@@ -74,6 +85,23 @@ export const cardStories: KitStory[] = [
         ...choiceList({ items: ITEMS, active: true, chosen: [], focus: 0 }, width),
         ...note({ active: true, value: "" }, width),
       ]),
+  },
+  {
+    component: card,
+    state: "fields",
+    gui: true,
+    about:
+      "A write-in and a note written in place: one field each, or one per line where the host's field is one line",
+    settings: "sections(choice({literal, chosen}), note({value}))",
+    lines: (width) =>
+      sections(
+        [],
+        choice(
+          { key: "D", text: WRITTEN.answer, literal: true, chosen: true, active: true },
+          width,
+        ),
+        note({ active: true, value: WRITTEN.note }, width),
+      ),
   },
   {
     component: card,
@@ -117,6 +145,7 @@ export const cardStories: KitStory[] = [
   {
     component: card,
     state: "closing",
+    gui: true,
     about:
       "The row after a round's last card: the count and Fill prompt, the round's note, and a sent round",
     settings: "rail(closing({answered, total, focused, canFill, hits}), note), closing({sent})",
@@ -140,6 +169,7 @@ export const cardStories: KitStory[] = [
   {
     component: card,
     state: "review",
+    gui: true,
     about: "The steps of several questions on one row, then each one's answers and note",
     settings: "steps([...]), summary({label, title, values, note})",
     extreme: true,

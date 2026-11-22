@@ -5,6 +5,11 @@ export type Button = {
   /** Key or key range, without brackets. The caller owns the binding. Empty where only a press reaches it. */
   hotkey: string;
   label: string;
+  /**
+   * The label is a word to insert, not words of the interface: a graphical surface keeps its case
+   * rather than capitalising it. A terminal never does.
+   */
+  isLiteral?: boolean;
   /** The control it is. Without one it is a dim, keyboard-only hint: its key, then what it does. */
   hit?: string;
   /** The suggested action. */

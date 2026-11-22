@@ -12,12 +12,12 @@ const row = (text: string, mark: ListMark = "open", aside = "", focused = false)
   markHit: `mark:${text.slice(0, 12)}`,
 });
 
-const actions = [
+export const actions = [
   { label: "Apply all", hotkey: "", hit: "all:apply" },
   { label: "Dismiss all", hotkey: "", hit: "all:dismiss" },
 ];
 
-const GROUPS: ListGroup[] = [
+export const GROUPS: ListGroup[] = [
   {
     label: "docs/agent-hub.md",
     done: true,
@@ -47,8 +47,43 @@ const GROUPS: ListGroup[] = [
   },
 ];
 
+/** A menu of actions with digit keys, some not available now and saying why. */
+export const MENU: ListGroup[] = [
+  {
+    label: "Actions",
+    active: true,
+    rows: [
+      {
+        text: "Commit the staged changes",
+        key: "1",
+        mark: "none",
+        focused: true,
+        hit: "menu:1",
+        action: "Commit",
+      },
+      {
+        text: "Push `main` to origin",
+        key: "2",
+        mark: "none",
+        aside: "2 ahead",
+        hit: "menu:2",
+        action: "Push",
+      },
+      { text: "Open a worktree", key: "3", mark: "none", hit: "menu:3" },
+      {
+        text: "Land a worktree",
+        key: "4",
+        mark: "none",
+        aside: "no worktree",
+        disabled: true,
+        hit: "menu:4",
+      },
+    ],
+  },
+];
+
 /** Many groups of many rows, the keyboard on row `focus`. */
-const many = (focus: number): ListGroup[] =>
+export const many = (focus: number): ListGroup[] =>
   Array.from({ length: 8 }, (_, g) => ({
     label: `docs/page-${g + 1}.md`,
     active: Math.floor(focus / 4) === g,
@@ -75,6 +110,7 @@ export const listStories: KitStory[] = [
   {
     component: "grouped-list",
     state: "groups",
+    gui: true,
     about:
       "Rows under group rows behind rails: a decided group's rail green, the keyboard's bright with its label in the accent and its controls",
     settings: "list({groups, aside: 3})",
@@ -84,6 +120,7 @@ export const listStories: KitStory[] = [
   {
     component: "grouped-list",
     state: "window",
+    gui: true,
     about:
       "Taller than its room: a window that moved only as far as the keyboard needed, its last row saying how many rows are above and below",
     settings: "list({groups, height: 9, top})",
@@ -99,6 +136,7 @@ export const listStories: KitStory[] = [
   {
     component: "grouped-list",
     state: "spaced",
+    gui: true,
     about: "A blank row between groups, without a rail",
     settings: "list({groups, space: true})",
     lines: (width) => list({ groups: GROUPS, aside: 3, space: true }, width),
@@ -106,6 +144,7 @@ export const listStories: KitStory[] = [
   {
     component: "grouped-list",
     state: "bare",
+    gui: true,
     about:
       "No rails, for a list that is not a form to complete: a group's label starts the row, groups a blank row apart, in a window",
     settings: "list({groups, rail: false, space: true, lines: 2, height: 9})",
@@ -115,10 +154,21 @@ export const listStories: KitStory[] = [
   {
     component: "grouped-list",
     state: "wrapped",
+    gui: true,
     about:
       "Rows of two lines at most: a long text wraps under its first line, which keeps the mark and the aside; the window counts lines",
     settings: "list({groups, lines: 2, height: 9})",
     lines: (width) => list({ groups: GROUPS, aside: 3, lines: 2, height: 9 }, width),
+  },
+  {
+    component: "grouped-list",
+    state: "menu",
+    gui: true,
+    about:
+      "A menu of actions: a key before each, no mark, and a row that is not available dim, with its reason, and no control",
+    settings:
+      "list({groups: [{rows: [{key: '1', mark: 'none', disabled?}]}], rail: false, aside: 10})",
+    lines: (width) => list({ groups: MENU, rail: false, aside: 10 }, width),
   },
   {
     component: "grouped-list",
