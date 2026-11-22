@@ -74,8 +74,10 @@ export async function liveVscode(r: VscodeResolved, o: WatchFlags = {}) {
   } catch (error) {
     if (!controller.signal.aborted) throw error;
   } finally {
+    // A replay already running is cancelled here (its child takes the signal), and the watcher is
+    // then awaited: no save starts work between the window closing and the window going away.
     controller.abort();
-    watcher?.close();
+    await watcher?.close();
     try {
       await stopVscode(runDir);
     } finally {

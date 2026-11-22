@@ -66,7 +66,7 @@ export async function live(r: Resolved, o: WatchFlags = {}) {
   const interrupt = () => controller.abort();
   for (const signal of signals) process.on(signal, interrupt);
   let session: Session | undefined;
-  let stopWatching = () => {};
+  let stopWatching = async () => {};
   let starting: Promise<Session> | undefined;
 
   try {
@@ -157,7 +157,9 @@ export async function live(r: Resolved, o: WatchFlags = {}) {
       else if (outcome) session = outcome;
     }
   } finally {
-    stopWatching();
+    // No save starts work after this point, and the batch already in flight settles before the
+    // sessions it can replace are closed: a replay cannot take the screen after the person left.
+    await stopWatching();
     try {
       const late = await starting?.catch(() => undefined);
       if (late) {

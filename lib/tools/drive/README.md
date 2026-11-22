@@ -37,6 +37,8 @@ The view fits your window once the scripted steps finish. To change the size **d
 - `--watch` rebuilds on edits to the app or its kits and replays the scenario. Terminal `live` keeps the old screen until the new one is ready; VS Code replaces the Claude tab in the same window. Edits to the scenario also trigger replay. Tests, snapshots and build outputs are ignored.
 - `--watch --in-place` reloads plugin edits in the running session, without replaying. Scenario edits still replay because the running agent does not read the fixture or scripted steps.
 
+Leaving a watched session (`Ctrl+]` in a terminal, closing the VS Code window) waits for the replay or rebuild already running and drops the saves queued behind it, so a late replay cannot take the screen after you leave. The two harnesses keep their own mechanics: terminal `live` starts the next session before taking the screen and closes the old one after; VS Code replays into the same window, cancelling a child replay it interrupted.
+
 In Claude and VS Code, Claude's mod watcher reloads the built files. It waits for the folder to go quiet (terminal Claude can take up to a minute after frequent edits); `/reload-plugins` applies changes at once. In pi, a dev-only extension asks pi to reload once the agent is idle, without typing into the prompt. Pi keeps the conversation but recreates its extension runtime: open extension overlays and unsaved plugin state may not survive. VS Code `live` opens a window you can interact with directly; `goto` uses a headless window.
 
 ## Drive a parked session

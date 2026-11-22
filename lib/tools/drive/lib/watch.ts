@@ -5,6 +5,9 @@
  *
  * Replaying gets back to the scenario's exact screen. In place, Claude watches the built mod,
  * while pi's dev extension asks pi to reload when idle, without typing into the prompt.
+ *
+ * A watch owns the work its saves start: closing it stops new batches, drops the ones queued and
+ * waits for the batch being handled, so a person who leaves cannot be taken over by a late replay.
  */
 import { execFile } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -146,7 +149,12 @@ export async function rebuild(r: Buildable): Promise<string[]> {
   return lines;
 }
 
-export type Watch = { close(): void };
+/**
+ * A watch over `dirs`: `ready` once a save is noticed at all, and `close` once it has stopped
+ * taking saves and the batch it was handling has settled. Await `close` before returning to the
+ * person, so no replay or rebuild is left running on resources it no longer owns.
+ */
+export type Watch = { ready: Promise<void>; close(): Promise<void> };
 
 export type WatchFlags = {
   /** Rebuild on saves to the code or scenario. */
@@ -159,7 +167,7 @@ export type WatchFlags = {
  * Watches `dirs` (chokidar) and calls `handler` with the repo-relative sources saved, `quiet` ms
  * after the last save of a batch. One handler runs at a time; saves made meanwhile make the next batch.
  */
-function watchSources(
+export function watchSources(
   dirs: string[],
   handler: (files: string[]) => Promise<void>,
   o: { quiet?: number; onError?: (err: unknown) => void } = {},
@@ -167,20 +175,21 @@ function watchSources(
   const quiet = o.quiet ?? 300;
   const pending = new Set<string>();
   let timer: NodeJS.Timeout | undefined;
-  let running = false;
+  /** The batch being handled, which a close waits for. */
+  let handling: Promise<void> | undefined;
   let closed = false;
 
   const flush = () => {
     timer = undefined;
-    if (running || closed || pending.size === 0) return;
+    if (handling || closed || pending.size === 0) return;
     const files = [...pending].sort();
     pending.clear();
-    running = true;
-    handler(files)
+    handling = handler(files)
       .catch((err: unknown) => o.onError?.(err))
       .finally(() => {
-        running = false;
-        if (pending.size > 0 && !timer) timer = setTimeout(flush, quiet);
+        handling = undefined;
+        // A batch queued while this one ran; a closed watch drops it instead.
+        if (pending.size > 0 && !closed && !timer) timer = setTimeout(flush, quiet);
       });
   };
 
@@ -193,6 +202,7 @@ function watchSources(
         ? !isSource(rel(path))
         : /(^|\/)(node_modules|dist|__snapshots__)$/.test(rel(path)),
   });
+  const ready = new Promise<void>((resolve) => watcher.once("ready", () => resolve()));
   const saved = (path: string) => {
     if (closed || !isSource(rel(path))) return;
     pending.add(rel(path));
@@ -201,10 +211,14 @@ function watchSources(
   };
   watcher.on("add", saved).on("change", saved).on("unlink", saved);
   return {
-    close() {
+    ready,
+    async close() {
+      // No save after this point starts work, and none queued behind the batch in flight does either.
       closed = true;
       clearTimeout(timer);
-      void watcher.close();
+      pending.clear();
+      await watcher.close().catch(() => undefined);
+      await handling;
     },
   };
 }
