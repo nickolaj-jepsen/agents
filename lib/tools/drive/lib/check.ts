@@ -120,9 +120,6 @@ export async function gateCapture(session: Session, r: Resolved): Promise<Captur
 
 export const updating = () => !!options.update;
 
-/** Whether the screen is not what the snapshot holds (an update accepts anything). */
-export const differs = (c: Capture) => !updating() && c.expected !== c.actual;
-
 /** Stores or settles one capture. Returns what is wrong with it, undefined when it passes. */
 export function settleCapture(c: Capture): string | undefined {
   if (updating()) {

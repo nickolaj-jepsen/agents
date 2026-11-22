@@ -6,8 +6,8 @@ A **package** is an app (`docfix`) or a kit component (`kit-card`); `kit` is eve
 
 | Harness   | What it is                                                 | Scenario file          | Verbs                                                                                        |
 | --------- | ---------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------- |
-| `claude`  | Claude Code in a terminal                                  | `claude.scenarios.ts`  | all but `eval`; the screen through `terminal`                                                |
-| `pi`      | pi in a terminal                                           | `pi.scenarios.ts`      | all but `eval`; the screen through `terminal`                                                |
+| `claude`  | Claude Code in a terminal                                  | `claude.scenarios.ts`  | `terminal`, `snap`, `sweep` for a parked screen                                              |
+| `pi`      | pi in a terminal                                           | `pi.scenarios.ts`      | `terminal`, `snap`, `sweep` for a parked screen                                              |
 | `vscode`  | Claude Code in a VS Code window on its own display (Linux) | `vscode.scenarios.ts`  | all but `snap` and `test`; the screen through `cap`, `keys`, `click`, `wait`, `shot`, `eval` |
 | `desktop` | Claude Desktop (Linux), launched on a seeded session       | `desktop.scenarios.ts` | `live` and `goto` only                                                                       |
 
