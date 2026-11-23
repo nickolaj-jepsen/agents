@@ -10,6 +10,12 @@
     "test:claude": {
       "command": ["sh", "../../lib/tools/build/claude-plugin-test.sh"]
     },
+    "e2e": {
+      "command": ["node", "../../lib/tools/drive/drive.ts", "test", "spellfix"]
+    },
+    "e2e:update": {
+      "command": ["node", "../../lib/tools/drive/drive.ts", "test", "spellfix", "--update"]
+    },
     "types": {
       "command": ["node", "../../lib/tools/drive/drive.ts", "types", "spellfix"]
     },

@@ -8,10 +8,15 @@ import type {
   ExtensionAPI,
   ExtensionContext,
   ExtensionUIContext,
-  Theme,
 } from "@earendil-works/pi-coding-agent";
-import { Key, matchesKey, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
-import type { Component, TUI } from "@earendil-works/pi-tui";
+import { Key, matchesKey } from "@earendil-works/pi-tui";
+import type { Component, TUI, TuiMouseEvent, TuiMouseEventResult } from "@earendil-works/pi-tui";
+
+import { buttonRows } from "@agents/kit-buttons/terminal.ts";
+import { closeOf } from "@agents/kit-frame/contract.ts";
+import { cellAt, paintLines, type Painted } from "@agents/kit-core/paint/pi.ts";
+import { sheetRoom } from "@agents/kit-sheet/contract.ts";
+import { sheet } from "@agents/kit-sheet/terminal.ts";
 
 import {
   addInput,
@@ -27,11 +32,26 @@ import {
   recase,
   replyBudget,
   shift,
-  wordDiff,
   withExtras,
   withoutWords,
 } from "./lib/spellfix.ts";
 import type { Extra, Found, Miss, Splice, Verdict } from "./lib/spellfix.ts";
+import {
+  markOfHit,
+  reviewBody,
+  reviewButtons,
+  reviewCaption,
+  reviewHeight,
+  reviewMaxHeight,
+  reviewNotice,
+  reviewWidth,
+  reviewWindow,
+  REVIEW_HIT,
+  rowOfHit,
+  toFindings,
+  type Finding,
+  type ReviewView,
+} from "./lib/review.ts";
 import { type Bridge, type Draft, followEditor } from "./pi/editor.ts";
 import { sideCall } from "./pi/side-call.ts";
 
@@ -40,32 +60,14 @@ const DICTIONARIES = process.env.PI_SPELLFIX_DICTS || "en_US";
 const PERSONAL = process.env.PI_SPELLFIX_PERSONAL || "";
 // Not DeepSeek Flash: its endpoint spends seconds on reasoning for this prompt, and
 // the review waits on the call. Haiku answers every word in about a second.
-const MODEL = "anthropic/claude-haiku-5-5";
+const MODEL = process.env.PI_SPELLFIX_MODEL || "anthropic/claude-haiku-5-5";
 
 const CHECK_DELAY_MS = 300;
-/** Lines one finding takes in the review: its kind, then the draft with the fix in place. */
-const FINDING_LINES = 2;
-/** Frame lines around the findings: two borders, the header's blank line, the hints. */
-const CHROME_LINES = 6;
-const MAX_FINDINGS = 9;
-const CONTEXT = 28;
 
 const WORD_IN_TEXT = /[\p{L}]+(?:['’][\p{L}]+)*/gu;
 // SGR and APC, the only escapes the editor draws with. Text between them is
 // safe to style without corrupting a sequence.
 const ESCAPE = /\x1b\[[0-9;:?]*[ -/]*[@-~]|\x1b_[^\x07]*\x07/g;
-
-/** One decision in the review: the same replacement at one or more places in the draft. */
-type Finding = {
-  /** The draft text this replaces. */
-  word: string;
-  /** What it becomes; null while the model is still thinking or cannot tell. */
-  fix: string | null;
-  kind: "typo" | "casing" | "real word" | "unsure";
-  /** Every occurrence this answer applies to, in draft order. */
-  offsets: Miss[];
-  checked: boolean;
-};
 
 /** Words skipped in the review, forgotten once the draft is submitted or cleared. */
 const ignored = new Set<string>();
@@ -258,44 +260,6 @@ async function askModel(
   return undefined;
 }
 
-/** `findings` from hunspell's misses and the model's extras, at their first occurrence in the draft. */
-function toFindings(
-  misses: readonly Miss[],
-  extras: readonly Extra[],
-  verdicts: ReadonlyMap<string, Verdict>,
-): Finding[] {
-  const byWord = new Map<string, Miss[]>();
-  for (const m of misses) {
-    const seen = byWord.get(m.word);
-    if (seen) seen.push(m);
-    else byWord.set(m.word, [m]);
-  }
-  const findings: Finding[] = [];
-  for (const [word, offsets] of byWord) {
-    const verdict = verdicts.get(word);
-    const fix = verdict?.kind === "fix" ? verdict.word : null;
-    // A fix that only changes case reads as a casing slip, not a typo.
-    const kind = fix && fix.toLowerCase() === word.toLowerCase() ? "casing" : "typo";
-    findings.push({
-      word,
-      fix,
-      kind: verdict?.kind === "unsure" ? "unsure" : kind,
-      offsets,
-      checked: true,
-    });
-  }
-  for (const extra of extras) {
-    findings.push({
-      word: extra.word,
-      fix: extra.fix,
-      kind: "real word",
-      offsets: [{ word: extra.word, start: extra.start, end: extra.end }],
-      checked: true,
-    });
-  }
-  return findings.sort((a, b) => a.offsets[0]!.start - b.offsets[0]!.start);
-}
-
 function setUnderlined(misses: readonly (Miss | Extra)[]) {
   const words = new Set(misses.map((m) => m.word));
   if (words.size === 0 && underlined.size === 0) return;
@@ -389,51 +353,6 @@ function onEdit(draft: Draft) {
 /* ------------------------------------------------------------------ review */
 
 /**
- * A rounded box whose every line is filled to `width`. Padding is what keeps
- * the editor underneath from showing through the overlay's short lines.
- */
-function box(theme: Theme, width: number, title: string, body: string[]): string[] {
-  const inner = Math.max(1, width - 2);
-  const fill = (line: string) => truncateToWidth(line, inner, "…", true);
-  const label = truncateToWidth(` ${title} `, inner);
-  const rest = Math.max(0, inner - visibleWidth(label));
-  const left = Math.floor(rest / 2);
-  return [
-    theme.fg("border", `╭${"─".repeat(left)}`) +
-      theme.fg("accent", label) +
-      theme.fg("border", `${"─".repeat(rest - left)}╮`),
-    ...body.map((line) => theme.fg("border", "│") + fill(` ${line}`) + theme.fg("border", "│")),
-    theme.fg("border", `╰${"─".repeat(inner)}╯`),
-  ];
-}
-
-/** Splits `items` into rows joined by `sep` that fit `width` instead of truncating them. */
-function rows(items: readonly string[], width: number, sep: string): string[] {
-  const out: string[] = [];
-  let row = "";
-  for (const item of items) {
-    const next = row ? `${row}${sep}${item}` : item;
-    if (row && visibleWidth(next) > width) {
-      out.push(row);
-      row = item;
-    } else {
-      row = next;
-    }
-  }
-  if (row) out.push(row);
-  return out;
-}
-
-/**
- * How many findings fit the overlay: pi clips an overlay at the bottom, so the
- * frame and the hints are budgeted before the list and a long one scrolls.
- */
-function windowSize(rows: number): number {
-  const room = Math.floor(rows * 0.8) - CHROME_LINES - 1;
-  return Math.max(3, Math.min(MAX_FINDINGS, Math.floor(room / FINDING_LINES)));
-}
-
-/**
  * The review overlay. It owns the draft text while open: every applied fix
  * writes the whole editor text, since pi exposes no range replace. The editor
  * is not focused meanwhile, so no edit can land between reads.
@@ -449,6 +368,11 @@ class Review implements Component {
   private aiError: string | undefined;
   private added = new Set<string>();
   private flagged: Miss[] = [];
+  /** Findings the window shows, as the last drawing had room for. */
+  private height = 3;
+  /** What the last drawing painted, for the controls under the pointer. */
+  private drawn: Painted | undefined;
+  private hover: string | undefined;
   private readonly abort = new AbortController();
 
   constructor(
@@ -681,11 +605,51 @@ class Review implements Component {
     this.repaint();
   }
 
+  /** The focused finding's fix, as Enter and a press of Apply take it. */
+  private applyFocused() {
+    const finding = this.findings[this.index];
+    if (finding) this.applyOne(finding);
+  }
+
+  /** What the drawing reads: the review's state, in the shape the kit's rows take. */
+  private view(): ReviewView {
+    return {
+      text: this.text,
+      findings: this.findings,
+      index: this.index,
+      top: this.top,
+      height: this.height,
+      isChecking: this.checking,
+      isPendingAll: this.pendingAll,
+      aiError: this.aiError,
+      added: [...this.added],
+      hover: this.hover,
+    };
+  }
+
   invalidate(): void {}
 
   handleInput(data: string): void {
     if (matchesKey(data, Key.escape) || matchesKey(data, Key.ctrl("c"))) {
       this.close();
+      return;
+    }
+    if (matchesKey(data, Key.pageUp)) {
+      this.move(-this.height);
+      return;
+    }
+    if (matchesKey(data, Key.pageDown)) {
+      this.move(this.height);
+      return;
+    }
+    if (matchesKey(data, Key.home)) {
+      this.index = 0;
+      this.repaint();
+      return;
+    }
+    if (matchesKey(data, Key.end)) {
+      this.index = Math.max(0, this.findings.length - 1);
+      this.repaint();
       return;
     }
     if (matchesKey(data, Key.up) || matchesKey(data, "k") || matchesKey(data, "p")) {
@@ -701,8 +665,7 @@ class Review implements Component {
       return;
     }
     if (matchesKey(data, Key.enter) || matchesKey(data, Key.return)) {
-      const finding = this.findings[this.index];
-      if (finding) this.applyOne(finding);
+      this.applyFocused();
       return;
     }
     if (matchesKey(data, "a")) {
@@ -719,83 +682,91 @@ class Review implements Component {
     }
   }
 
-  /** The focused finding's line of the draft, with `word` struck and its fix in green. */
-  private diffLine(finding: Finding, width: number): string {
-    const theme = this.ui.theme;
-    const at = finding.offsets[0]!;
-    const lead = this.text.slice(Math.max(0, at.start - CONTEXT), at.start).replace(/\s+/g, " ");
-    const tail = this.text
-      .slice(at.end, Math.min(this.text.length, at.end + CONTEXT))
-      .replace(/\s+/g, " ");
-    const diff =
-      finding.fix === null
-        ? theme.style(finding.word, { fg: "warning", underline: true })
-        : wordDiff(finding.word, finding.fix)
-            .map((run) =>
-              run.kind === "removed"
-                ? theme.style(run.text, { fg: "error", strikethrough: true })
-                : run.kind === "added"
-                  ? theme.style(run.text, { fg: "success" })
-                  : run.text,
-            )
-            .join(" ");
-    const line =
-      theme.fg("dim", `${at.start > CONTEXT ? "…" : ""}${lead}`) +
-      diff +
-      theme.fg("dim", `${tail}${at.end + CONTEXT < this.text.length ? "…" : ""}`);
-    return truncateToWidth(line, width - 4, "…");
+  /**
+   * A press of a row, its mark, a button or the frame's Close: the mouse does what the key
+   * beside the same control does. Hover bolds the row's label; the pointer stays where it is.
+   */
+  handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {
+    if (event.type === "wheel") {
+      this.move(Math.sign(event.wheelDelta ?? 0));
+      return { handled: true };
+    }
+    const drawn = this.drawn;
+    const hit = drawn
+      ? (cellAt(drawn.cells[event.y], event.x)?.hit ?? drawn.hits[event.y])
+      : undefined;
+    if (event.type === "move") {
+      if (hit === this.hover) return undefined;
+      this.hover = hit;
+      this.repaint();
+      return { handled: true, render: true };
+    }
+    if (event.type !== "click" || event.button !== "left") return undefined;
+    if (hit === undefined) return { handled: true, focus: true };
+    this.press(hit);
+    return { handled: true, focus: true };
+  }
+
+  private press(hit: string) {
+    if (closeOf(hit) === "close") {
+      this.close();
+      return;
+    }
+    if (hit === REVIEW_HIT.apply) {
+      this.applyFocused();
+      return;
+    }
+    if (hit === REVIEW_HIT.applyAll) {
+      this.applyChecked();
+      return;
+    }
+    if (hit === REVIEW_HIT.toggle) {
+      this.toggle();
+      return;
+    }
+    if (hit === REVIEW_HIT.keep) {
+      void this.keep();
+      return;
+    }
+    if (hit === REVIEW_HIT.undo) {
+      void this.undoAdd();
+      return;
+    }
+    const mark = markOfHit(hit);
+    if (mark !== undefined) {
+      this.index = mark;
+      this.toggle();
+      return;
+    }
+    const row = rowOfHit(hit);
+    if (row !== undefined) {
+      this.index = row;
+      this.repaint();
+    }
   }
 
   render(width: number): string[] {
-    const theme = this.ui.theme;
-    const checked = this.findings.filter((f) => f.checked && f.fix !== null).length;
-    const title = this.findings.length
-      ? `spellfix · ${checked} to apply · ${this.findings.length} found`
-      : "spellfix";
-    const body: string[] = [""];
-
-    if (this.findings.length === 0) {
-      body.push(
-        theme.fg("muted", this.checking ? "Checking for misspellings…" : "No misspellings left."),
-      );
-      body.push("");
-      body.push(theme.fg("dim", "esc close"));
-      return box(theme, width, title, body);
-    }
-
-    const window = windowSize(this.tui.terminal.rows);
-    if (this.index - this.top >= window) this.top = this.index - window + 1;
-    if (this.index < this.top) this.top = this.index;
-
-    this.findings.slice(this.top, this.top + window).forEach((finding, offset) => {
-      const focused = this.top + offset === this.index;
-      const mark = focused ? theme.fg("accent", "❯") : " ";
-      const check = finding.checked ? theme.fg("success", "☑") : theme.fg("dim", "☐");
-      const count = finding.offsets.length > 1 ? ` ×${finding.offsets.length}` : "";
-      body.push(`${mark} ${check} ${theme.fg("dim", `[${finding.kind}]`)}${count}`);
-      const keeps = finding.fix === null ? theme.fg("dim", " · d keeps it") : "";
-      body.push(`  ${this.diffLine(finding, width)}${keeps}`);
+    const room = sheetRoom(width);
+    const base = this.view();
+    const footer = buttonRows({ rows: reviewButtons(base, this.hover), wrap: true }, room);
+    const noticeLine = reviewNotice(base, room);
+    this.height = reviewHeight(this.tui.terminal.rows, {
+      footer: footer.length,
+      notice: noticeLine !== undefined,
     });
-
-    const below = this.findings.length - (this.top + window);
-    if (below > 0) body.push(theme.fg("dim", `  ${below} more below`));
-    body.push(theme.fg("dim", `${this.index + 1}/${this.findings.length}`));
-
-    const hints: string[] = [];
-    if (checked) hints.push("a apply all");
-    hints.push("enter apply");
-    hints.push("space toggle");
-    if (this.findings[this.index]?.kind !== "real word") hints.push("d keep word");
-    if (this.added.size) hints.push("u undo add");
-    hints.push("esc close");
-    const notes: string[] = [];
-    if (this.checking) notes.push("asking the model…");
-    if (this.pendingAll) notes.push("waiting for the model…");
-    if (this.aiError) notes.push(`model: ${this.aiError}`);
-    if (this.added.size) notes.push(`added: ${[...this.added].join(", ")}`);
-    for (const row of rows([...notes, ...hints], width - 4, " · ")) body.push(theme.fg("dim", row));
-
-    return box(theme, width, title, body);
+    this.top = reviewWindow(this.index, this.findings.length, this.height, this.top).top;
+    const view = this.view();
+    const lines = sheet({
+      width,
+      title: "spellfix",
+      caption: reviewCaption(view),
+      close: { hover: closeOf(this.hover) },
+      body: reviewBody(view, room),
+      ...(noticeLine ? { notice: noticeLine } : {}),
+      footer,
+    });
+    this.drawn = paintLines(this.ui.theme, lines, width, { fill: true });
+    return this.drawn.lines;
   }
 }
 
@@ -843,16 +814,28 @@ async function openReview(ctx: ExtensionContext) {
   const cursor = focused ? cursorOffset(focused) : text.length;
   suspended = true;
   if (timer) clearTimeout(timer);
+  let surface: TUI | undefined;
   try {
     await ctx.ui.custom<void>(
       (tui, _theme, _kb, done) => {
+        surface = tui;
         const review = new Review(tui, gen, ctx, ctx.ui, text, cursor, done);
         void review.start();
         return review;
       },
       {
         overlay: true,
-        overlayOptions: { anchor: "bottom-center", width: "85%", maxHeight: "80%", margin: 1 },
+        // Read at every render: the sheet follows a resize, and stands with a cell of margin.
+        overlayOptions: () => ({
+          anchor: "bottom-center",
+          margin: 1,
+          get width() {
+            return reviewWidth(surface!.terminal.columns);
+          },
+          get maxHeight() {
+            return reviewMaxHeight(surface!.terminal.rows);
+          },
+        }),
       },
     );
   } finally {
