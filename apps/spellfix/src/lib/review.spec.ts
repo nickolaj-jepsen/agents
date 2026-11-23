@@ -3,6 +3,7 @@ import { expect, test } from "vitest";
 import { textOf, type Line } from "@agents/kit-core/lines.ts";
 import { tokens } from "@agents/kit-core/tokens.ts";
 import {
+  ABOVE,
   FINDING_LINES,
   MAX_FINDINGS,
   REVIEW_HIT,
@@ -14,6 +15,7 @@ import {
   reviewHeight,
   reviewWindow,
   reviewWidth,
+  rowsAbovePrompt,
   rowHit,
   rowOfHit,
   toFindings,
@@ -99,12 +101,36 @@ test("a window keeps the focused finding whole, only moving as far as it must", 
 });
 
 test("the height leaves room for the sheet, its footer, its notice and the window's rows", () => {
-  expect(reviewHeight(24, { footer: 2, notice: false })).toBe(6);
-  expect(reviewHeight(24, { footer: 2, notice: true })).toBe(5);
-  expect(reviewHeight(45, { footer: 1, notice: true })).toBe(MAX_FINDINGS);
+  // The room is what the sheet may take, so a sheet standing on the prompt has one row fewer
+  // (no bottom edge): 24 rows less chrome(2), footer(2) and the two window rows leaves 18.
+  expect(reviewHeight(24, { footer: 2, notice: false, foot: "none" })).toBe(9);
+  expect(reviewHeight(24, { footer: 2, notice: true, foot: "none" })).toBe(8);
+  // A closed sheet on the bottom edge has its own aside.
+  expect(reviewHeight(24, { footer: 2, notice: false, foot: "edge" })).toBe(8);
+  expect(reviewHeight(45, { footer: 1, notice: true, foot: "none" })).toBe(MAX_FINDINGS);
   // A short terminal still shows a whole finding rather than clipping the sheet to nothing.
-  expect(reviewHeight(8, { footer: 3, notice: true })).toBe(3);
+  expect(reviewHeight(8, { footer: 3, notice: true, foot: "none" })).toBe(3);
   expect(FINDING_LINES).toBe(2);
+});
+
+test("the room above the prompt keeps a row over the sheet and never starves it", () => {
+  expect(ABOVE).toBe(1);
+  expect(rowsAbovePrompt(24, 8)).toBe(15);
+  // A prompt taller than the terminal still leaves a whole finding's room; the sheet clips no
+  // differently from before in that case.
+  expect(rowsAbovePrompt(4, 10)).toBe(8);
+  // Standing with no bottom edge saves a row over the closed sheet.
+  const standing = reviewHeight(rowsAbovePrompt(24, 8), {
+    footer: 1,
+    notice: false,
+    foot: "none",
+  });
+  const closed = reviewHeight(rowsAbovePrompt(24, 8), {
+    footer: 1,
+    notice: false,
+    foot: "edge",
+  });
+  expect(standing).toBe(closed + 1);
 });
 
 test("the width is a dialog's cap with a cell of margin on either side", () => {

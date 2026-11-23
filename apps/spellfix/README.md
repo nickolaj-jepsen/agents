@@ -32,7 +32,8 @@ claude plugin configure spellfix@nickolaj-jepsen    # inspect defaults and chang
 Spellfix runs in the session you started, not in subagents.
 
 - `ctrl+q`, `/spellfix` or `/spellcheck` opens the draft as a review: one row per
-  decision, each the word as written and its replacement in green.
+  decision, each the word as written and its replacement in green. The sheet stands
+  on the rule over your prompt, so the draft it is reviewing stays in sight.
 - `space` toggles a row, `a` writes the checked ones into the draft and closes,
   `enter` applies just the focused one, `esc` changes nothing. `↑`/`↓` (or `j`/`k`)
   move, `PageUp`/`PageDown` move a window, and `Home`/`End` jump to the ends; the

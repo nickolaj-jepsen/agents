@@ -1,6 +1,22 @@
 import type { Turn } from "@agents/drive/lib/harness.ts";
-import { region } from "@agents/drive/lib/screen.ts";
+import { gridLines, type Region } from "@agents/drive/lib/screen.ts";
 import { scenarios, type Step } from "@agents/drive/lib/scenario.ts";
+
+/**
+ * The sheet and the prompt it stands on: from its title rule down through the draft's own rule,
+ * so a snapshot proves the draft it reviews is in sight rather than covered. The sheet has no
+ * bottom edge, so the rule over the prompt is where it ends and the draft begins.
+ */
+const onPrompt: Region = (grid) => {
+  const lines = gridLines(grid);
+  const top = lines.findIndex((l) => /^\s*╭─ spellfix/.test(l));
+  if (top < 0) return undefined;
+  const rules = lines.map((l, y) => (/^─{10,}$/.test(l) ? y : -1)).filter((y) => y > top);
+  // The rule over the prompt, then the one under the draft.
+  const bottom = rules[1] ?? rules[0];
+  if (bottom === undefined) return undefined;
+  return { x: 0, y: top, w: grid[0]?.length ?? 0, h: bottom - top + 1 };
+};
 
 /** A draft with one typo: hunspell flags it, and the fixture model answers it. */
 const ONE = "Please fix teh handler before it breaks";
@@ -55,7 +71,9 @@ export default scenarios({
   plugin: "spellfix",
   harness: "pi",
   start: { ...start, turns: [answer(fix("teh", "the"))] },
-  region: region.box(/spellfix/),
+  // The sheet stands on the rule over the prompt, so a snapshot shows the draft below it, whole:
+  // that is what its `foot: "none"` is for.
+  region: onPrompt,
   scenarios: {
     review: {
       about: "the review with one typo: the word as written, its fix in green, and the keys",
@@ -93,8 +111,14 @@ export default scenarios({
     close: {
       about: "a click on Close in the top rule closes the review and leaves the draft as it was",
       from: "review",
-      // The review is gone: the prompt holds the draft, above its rule.
-      region: region.rows(ONE, /^─+$/),
+      // The review is gone: the prompt holds the draft, above its rule. Found by hand: the file's
+      // region needs the sheet, which this state no longer has.
+      region: (grid) => {
+        const lines = gridLines(grid);
+        const at = lines.findIndex((l) => l === ONE);
+        const rule = lines.findIndex((l, y) => y > at && /^─{10,}$/.test(l));
+        return at < 0 || rule < 0 ? undefined : { x: 0, y: at, w: grid[0]?.length ?? 0, h: 2 };
+      },
       steps: [{ click: "Close ×" }, { wait: /spellfix ·/, gone: true }, { wait: ONE }],
     },
   },

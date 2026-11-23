@@ -1,19 +1,23 @@
-# spellfix/pi/review 70x24 @1,16 (68x7)
-╭─ spellfix · 1 to apply · 1 found ────────────────────── Close × ─╮
-│                                                                  │
-│ ❯ ■ [typo]                                                       │
-│   Please fix teh the handler before it breaks                    │
-│   1/1                                                            │
-│ Apply ↵  Apply all [a]  Toggle [space]  Keep word [d]  esc close │
-╰──────────────────────────────────────────────────────────────────╯
+# spellfix/pi/review 70x24 @0,13 (70x9)
+ ╭─ spellfix · 1 to apply · 1 found ────────────────────── Close × ─╮
+ │                                                                  │
+ │ ❯ ■ [typo]                                                       │
+ │   Please fix teh the handler before it breaks                    │
+ │   1/1                                                            │
+ │ Apply ↵  Apply all [a]  Toggle [space]  Keep word [d]  esc close │
+──────────────────────────────────────────────────────────────────────
+Please fix teh handler before it breaks
+──────────────────────────────────────────────────────────────────────
 --- styles
-1x2 . 2x8 3x23 . 1x22 . 4x7 . 1x2
-1 .x66 1
-1 . 5 . 2 . 5x6 .x55 1
-1 .x3 3x11 6x3 . 7x3 3x25 .x20 1
-1 .x3 3x3 .x60 1
-1 . 2x5 . 3 .x2 4x9 . 3x3 .x2 4x6 . 3x7 .x2 4x9 . 3x3 .x2 3x9 . 1
-1x68
+. 1x2 . 2x8 3x23 . 1x22 . 4x7 . 1x2
+. 1 .x66 1
+. 1 . 5 . 2 . 5x6 .x55 1
+. 1 .x3 3x11 6x3 . 7x3 3x25 .x20 1
+. 1 .x3 3x3 .x60 1
+. 1 . 2x5 . 3 .x2 4x9 . 3x3 .x2 4x6 . 3x7 .x2 4x9 . 3x3 .x2 3x9 . 1
+8x70
+.x39 9
+8x70
 --- legend
 1 fg=#768186
 2 fg=#a798d7 bold
@@ -22,3 +26,5 @@
 5 fg=#dee0e1 bold
 6 fg=#ea7f81
 7 fg=#68b78d
+8 fg=#6c767b
+9 inverse

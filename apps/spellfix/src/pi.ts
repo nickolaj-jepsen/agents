@@ -42,10 +42,9 @@ import {
   reviewButtons,
   reviewCaption,
   reviewHeight,
-  reviewMaxHeight,
   reviewNotice,
-  reviewWidth,
   reviewWindow,
+  rowsAbovePrompt,
   REVIEW_HIT,
   rowOfHit,
   toFindings,
@@ -53,6 +52,7 @@ import {
   type ReviewView,
 } from "./lib/review.ts";
 import { type Bridge, type Draft, followEditor } from "./pi/editor.ts";
+import { PromptMark, rowsFromPrompt, sheetOptions } from "./pi/prompt.ts";
 import { sideCall } from "./pi/side-call.ts";
 
 const HUNSPELL = process.env.PI_SPELLFIX_HUNSPELL || "hunspell";
@@ -63,6 +63,8 @@ const PERSONAL = process.env.PI_SPELLFIX_PERSONAL || "";
 const MODEL = process.env.PI_SPELLFIX_MODEL || "anthropic/claude-haiku-5-5";
 
 const CHECK_DELAY_MS = 300;
+/** The widget's key: the empty mark above the prompt the review stands on. While closed, none. */
+const WIDGET = "spellfix-review";
 
 const WORD_IN_TEXT = /[\p{L}]+(?:['’][\p{L}]+)*/gu;
 // SGR and APC, the only escapes the editor draws with. Text between them is
@@ -382,6 +384,8 @@ class Review implements Component {
     private readonly ui: ExtensionUIContext,
     text: string,
     private readonly cursor: number,
+    /** Rows from the prompt's rule to the bottom: the sheet stands on them. */
+    private readonly below: () => number,
     private readonly done: () => void,
   ) {
     this.text = text;
@@ -749,9 +753,14 @@ class Review implements Component {
     const base = this.view();
     const footer = buttonRows({ rows: reviewButtons(base, this.hover), wrap: true }, room);
     const noticeLine = reviewNotice(base, room);
-    this.height = reviewHeight(this.tui.terminal.rows, {
+    // Standing on the prompt's rule leaves the draft in sight; a pi that cannot be measured keeps
+    // the closed sheet at the bottom edge, as before.
+    const below = this.below();
+    const foot = below > 0 ? "none" : "edge";
+    this.height = reviewHeight(rowsAbovePrompt(this.tui.terminal.rows, below), {
       footer: footer.length,
       notice: noticeLine !== undefined,
+      foot,
     });
     this.top = reviewWindow(this.index, this.findings.length, this.height, this.top).top;
     const view = this.view();
@@ -763,6 +772,7 @@ class Review implements Component {
       body: reviewBody(view, room),
       ...(noticeLine ? { notice: noticeLine } : {}),
       footer,
+      foot,
     });
     this.drawn = paintLines(this.ui.theme, lines, width, { fill: true });
     return this.drawn.lines;
@@ -813,31 +823,37 @@ async function openReview(ctx: ExtensionContext) {
   const cursor = focused ? cursorOffset(focused) : text.length;
   suspended = true;
   if (timer) clearTimeout(timer);
+  // The mark above the prompt: the sheet finds the rule it stands on by it. Mounted only while
+  // open, and drawing no row, so a session without the review is unchanged.
+  let mark: PromptMark | undefined;
+  ctx.ui.setWidget(WIDGET, () => {
+    mark = new PromptMark();
+    return mark;
+  });
   let surface: TUI | undefined;
+  // The prompt and what is under it are measured once for a render, which asks several times.
+  let measured: number | undefined;
+  const below = () => {
+    if (measured === undefined) {
+      measured = (surface && mark && rowsFromPrompt(surface, mark)) || 0;
+      queueMicrotask(() => {
+        measured = undefined;
+      });
+    }
+    return measured;
+  };
   try {
     await ctx.ui.custom<void>(
       (tui, _theme, _kb, done) => {
         surface = tui;
-        const review = new Review(tui, gen, ctx, ctx.ui, text, cursor, done);
+        const review = new Review(tui, gen, ctx, ctx.ui, text, cursor, below, done);
         void review.start();
         return review;
       },
-      {
-        overlay: true,
-        // Read at every render: the sheet follows a resize, and stands with a cell of margin.
-        overlayOptions: () => ({
-          anchor: "bottom-center",
-          margin: 1,
-          get width() {
-            return reviewWidth(surface!.terminal.columns);
-          },
-          get maxHeight() {
-            return reviewMaxHeight(surface!.terminal.rows);
-          },
-        }),
-      },
+      { overlay: true, overlayOptions: () => sheetOptions(surface!, below) },
     );
   } finally {
+    ctx.ui.setWidget(WIDGET, undefined);
     suspended = false;
     if (gen === sessionGen) scheduleCheck(gen, ctx);
   }

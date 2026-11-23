@@ -101,21 +101,29 @@ export function reviewWindow(
   return { top, above: top, below: Math.max(0, count - top - rows), rows };
 }
 
-/** The rows the overlay may take: four fifths of the terminal, as its overlay asks. */
-export const reviewMaxHeight = (rows: number) => Math.max(8, Math.floor(rows * 0.8));
+/**
+ * Rows of the terminal the sheet leaves above it, so what it stands under stays in sight, and the
+ * rows it may take: the terminal less that one and the prompt and footer under it.
+ */
+export const ABOVE = 1;
+export const rowsAbovePrompt = (rows: number, below: number) => Math.max(8, rows - ABOVE - below);
 
 /**
- * Findings the window shows: the overlay's rows less the sheet's own, its footer, its notice when
- * there is one, and the window's marker and progress rows.
+ * Findings the window shows: the room the sheet may take less the sheet's own rows (one fewer with
+ * no bottom edge), its footer, its notice when there is one, and the window's marker and progress.
  */
 export function reviewHeight(
   rows: number,
-  { footer, notice: hasNotice }: { footer: number; notice: boolean },
+  {
+    footer,
+    notice: hasNotice,
+    foot = "edge",
+  }: { footer: number; notice: boolean; foot?: "edge" | "none" },
 ): number {
-  const taken = sheetChrome("edge") + Math.max(1, footer) + (hasNotice ? 1 : 0) + 2;
+  const taken = sheetChrome(foot) + Math.max(1, footer) + (hasNotice ? 1 : 0) + 2;
   return Math.max(
     3,
-    Math.min(MAX_FINDINGS, Math.floor((reviewMaxHeight(rows) - taken) / FINDING_LINES)),
+    Math.min(MAX_FINDINGS, Math.floor((Math.max(1, rows) - taken) / FINDING_LINES)),
   );
 }
 
