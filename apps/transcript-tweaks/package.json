@@ -9,12 +9,14 @@
   "devDependencies": {
     "@agents/build": "workspace:*",
     "@agents/drive": "workspace:*",
+    "@agents/kit-core": "workspace:*",
     "@earendil-works/pi-ai": "catalog:",
     "@earendil-works/pi-coding-agent": "catalog:",
     "@earendil-works/pi-tui": "catalog:",
     "@types/node": "catalog:",
     "tsdown": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",

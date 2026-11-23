@@ -1,0 +1,48 @@
+# transcript-tweaks/pi/folded 112x32 @0,8 (112x19)
+ ▌ The retry is backoff() plus the loop in upload().
+
+
+ read src/sync.ts
+ ✓ •••• · 15 lines
+
+
+ ▌ Running the tests to confirm they pass as they are.
+
+
+ $ sh test.sh
+ ✓ •••• · 7 lines · 4 passed, 0 failed
+
+
+ ▌ Retries double the delay from one second, cap it at a minute, and give up after five tries.
+
+
+
+
+--- styles
+.x16 1x9 .x18 1x8
+-
+2x112
+2 3x4 2 4x11 2x95
+2 5 6x16 2x94
+2x112
+-
+-
+-
+2x112
+2 3x12 2x99
+2 5 6x18 7x18 2x74
+2x112
+-
+-
+-
+-
+-
+-
+--- legend
+1 fg=#a798d7
+2 bg=#254131
+3 fg=#dee0e1 bg=#254131 bold
+4 fg=#a798d7 bg=#254131
+5 fg=#68b78d bg=#254131
+6 fg=#7e888e bg=#254131
+7 fg=#dee0e1 bg=#254131

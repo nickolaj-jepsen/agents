@@ -1,0 +1,71 @@
+# transcript-tweaks/pi/failed 160x45 @0,8 (160x32)
+ ▌ Reading the missing file.
+
+
+ read missing.ts
+
+ ENOENT: no such file or directory, access '<tmp>
+
+
+ ▌ It is not there.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--- styles
+-
+-
+1x160
+1 2x4 1 3x10 1x144
+1x160
+1 4x48 .x26 1x85
+1x160
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+--- legend
+1 bg=#5b282a
+2 fg=#dee0e1 bg=#5b282a bold
+3 fg=#a798d7 bg=#5b282a
+4 fg=#9da5a9 bg=#5b282a

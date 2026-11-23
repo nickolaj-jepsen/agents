@@ -1,0 +1,103 @@
+# transcript-tweaks/pi/expanded 240x60 @0,8 (240x47)
+ ▌ The retry is backoff() plus the loop in upload().
+
+
+ read src/sync.ts
+ const MAX_TRIES = 5;
+
+ /** Delay before try `n`, doubled each time and capped at a minute. */
+ export function backoff(n: number): number {
+   return Math.min(1000 * 2 ** n, 60_000);
+ }
+
+ export async function upload(send: () => Promise<Response>): Promise<Response> {
+   for (let n = 0; n < MAX_TRIES; n++) {
+     const res = await send();
+     if (res.status !== 429) return res;
+     await new Promise((done) => setTimeout(done, backoff(n)));
+   }
+   throw new Error("upload failed after 5 tries");
+ }
+
+
+
+ ▌ Running the tests to confirm they pass as they are.
+
+
+ $ sh test.sh
+ sync.test.ts
+   ok  backoff doubles the delay
+   ok  backoff stops at a minute
+   ok  upload returns the first non-429 response
+   ok  upload gives up after five tries
+
+ 4 passed, 0 failed
+
+
+
+ ▌ Retries double the delay from one second, cap it at a minute, and give up after five tries.
+
+ Tool output: expanded
+
+
+
+
+
+
+
+
+--- styles
+.x16 1x9 .x18 1x8
+-
+2x240
+2 3x4 2 4x11 2x223
+2 5x20 2x219
+2x240
+2 5x70 2x169
+2 5x44 2x195
+2 5x41 2x198
+2 5 2x238
+2x240
+2 5x80 2x159
+2 5x39 2x200
+2 5x29 2x210
+2 5x39 2x200
+2 5x62 2x177
+2 5x3 2x236
+2 5x49 2x190
+2 5 2x238
+2x240
+2x240
+-
+-
+-
+2x240
+2 3x12 2x227
+2 5x12 2x227
+2 5x31 2x208
+2 5x31 2x208
+2 5x47 2x192
+2 5x38 2x201
+2x240
+2 5x18 2x221
+2x240
+2x240
+-
+-
+-
+. 6x21
+-
+-
+-
+-
+-
+-
+-
+-
+--- legend
+1 fg=#a798d7
+2 bg=#254131
+3 fg=#dee0e1 bg=#254131 bold
+4 fg=#a798d7 bg=#254131
+5 fg=#9da5a9 bg=#254131
+6 fg=#7e888e

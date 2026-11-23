@@ -1,0 +1,51 @@
+# transcript-tweaks/pi/payload 112x32 @0,7 (112x20)
+ ▌ Capping the retry.
+
+
+ edit src/sync.ts
+
+   1 const MAX_TRIES = 5;
+   2
+   3 /** Delay before try `n`, doubled each time and capped at a minute. */
+   4 export function backoff(n: number): number {
+ - 5   return Math.min(1000 * 2 ** n, 60_000);
+ + 5   return Math.min(1000 * 2 ** n, 30_000);
+   6 }
+   7
+   8 export async function upload(send: () => Promise<Response>): Promise<Response> {
+   9   for (let n = 0; n < MAX_TRIES; n++) {
+     ...
+
+
+ ▌ Capped at thirty seconds.
+
+--- styles
+-
+-
+1x112
+1 2x4 1 3x11 1x95
+1x112
+1 4x24 1x87
+1 4x4 1x107
+1 4x74 1x37
+1 4x48 1x63
+1 5x37 6x6 5x2 1x66
+1 7x37 8x6 7x2 1x66
+1 4x5 1x106
+1 4x4 1x107
+1 4x84 1x27
+1 4x43 1x68
+1 4x7 1x104
+1x112
+-
+-
+-
+--- legend
+1 bg=#254131
+2 fg=#dee0e1 bg=#254131 bold
+3 fg=#a798d7 bg=#254131
+4 fg=#9da5a9 bg=#254131
+5 fg=#ea7f81 bg=#254131
+6 fg=#ea7f81 bg=#254131 inverse
+7 fg=#68b78d bg=#254131
+8 fg=#68b78d bg=#254131 inverse
