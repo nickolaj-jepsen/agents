@@ -292,12 +292,18 @@ importers:
       '@agents/drive':
         specifier: workspace:*
         version: link:../../lib/tools/drive
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../../lib/kits/core
       '@earendil-works/pi-ai':
         specifier: 'catalog:'
         version: 1.6.0(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(google-auth-library@10.9.1)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
       '@earendil-works/pi-coding-agent':
         specifier: 'catalog:'
         version: 1.6.0(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(google-auth-library@10.9.1)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-tui':
+        specifier: 'catalog:'
+        version: 1.6.0
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
