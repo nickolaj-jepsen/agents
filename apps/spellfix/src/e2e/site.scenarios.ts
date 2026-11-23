@@ -31,7 +31,7 @@ const EXCHANGE: Step[] = [
   { wait: "gives up after five tries", timeout: 20_000 },
 ];
 /** The picker's keys, drawn once the batch has landed. */
-const PICKER = { wait: /a: fix all/ } as const;
+const PICKER = { wait: /fix all \[a\]/ } as const;
 
 export default site({
   plugin: "spellfix",
