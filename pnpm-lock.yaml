@@ -244,9 +244,6 @@ importers:
       '@agents/kit-frame':
         specifier: workspace:*
         version: link:../../lib/kits/frame
-      '@agents/kit-legacy':
-        specifier: workspace:*
-        version: link:../../lib/kits/legacy
       '@agents/kit-notice':
         specifier: workspace:*
         version: link:../../lib/kits/notice
@@ -677,9 +674,15 @@ importers:
       '@agents/kit-core':
         specifier: workspace:*
         version: link:../../lib/kits/core
+      '@agents/kit-frame':
+        specifier: workspace:*
+        version: link:../../lib/kits/frame
       '@agents/kit-notice':
         specifier: workspace:*
         version: link:../../lib/kits/notice
+      '@agents/kit-sheet':
+        specifier: workspace:*
+        version: link:../../lib/kits/sheet
       '@anthropic-ai/claude-code':
         specifier: 'catalog:'
         version: 2.1.330
@@ -713,6 +716,9 @@ importers:
       '@agents/drive':
         specifier: workspace:*
         version: link:../../lib/tools/drive
+      '@agents/kit-core':
+        specifier: workspace:*
+        version: link:../../lib/kits/core
       '@earendil-works/pi-ai':
         specifier: 'catalog:'
         version: 1.6.0(@aws-sdk/credential-provider-node@3.972.97)(@smithy/signature-v4@5.7.5)(google-auth-library@10.9.1)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
@@ -731,6 +737,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.1(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
   apps/worktree:
     devDependencies:
