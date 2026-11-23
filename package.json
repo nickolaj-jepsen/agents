@@ -8,7 +8,9 @@
     "drive": "node lib/tools/drive/drive.ts",
     "gate": "turbo run check --concurrency=2",
     "gate:nix": "turbo run check:nix --concurrency=1",
-    "gate:all": "pnpm gate && pnpm gate:nix"
+    "gate:pages": "turbo run check:pages --concurrency=2",
+    "gate:all": "pnpm gate && pnpm gate:nix && pnpm gate:pages",
+    "hooks": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
     "turbo": "2.11.13"

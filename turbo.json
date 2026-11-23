@@ -316,9 +316,9 @@
       "command": [
         "sh",
         "-c",
-        "git ls-files -z \"*.sh\" | xargs -0 ./lib/tools/lint/node_modules/.bin/shellcheck -S warning"
+        "git ls-files -z \"*.sh\" \".githooks/*\" | xargs -0 ./lib/tools/lint/node_modules/.bin/shellcheck -S warning"
       ],
-      "inputs": ["**/*.sh", "lib/tools/lint/package.json"]
+      "inputs": ["**/*.sh", ".githooks/*", "lib/tools/lint/package.json"]
     },
     // Not part of `check`: the one task that needs nix. `nix flake check` builds every plugin
     // (`packages.plugins`, and each Claude half through `lib.mkClaudePlugin`), so it keys on the nix
@@ -360,6 +360,15 @@
         "XDG_CONFIG_HOME",
         "XDG_DATA_HOME"
       ]
+    },
+    // The other half of CI, which runs only on a push to main (`.github/workflows/pages.yml`), so
+    // nothing checks it on the way in: every recording (each package's `media` and `media:vscode`)
+    // and the site built from them. The site's `build` depends on all of them, so this is
+    // `pages.yml` short of deploying; `pnpm gate` does not need it, but a change to a scenario, a
+    // plugin's UI or the site should not be pushed without it (`pnpm gate:pages`).
+    "//#check:pages": {
+      "command": null,
+      "dependsOn": ["@agents/site#build"]
     }
   }
 }

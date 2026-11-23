@@ -1,0 +1,11 @@
+#!/bin/sh
+# What a commit can afford: the format check, lint, shellcheck, ruff and pytest, through the same
+# turbo tasks CI runs. The rest of `pnpm gate` (types, unit tests, the screen tests) takes minutes
+# and is a thing to run before a push, not before a commit; `pnpm gate:pages` is the other half of
+# CI, the recordings and the site, which nothing checks until a push to main.
+#
+# Installed by `pnpm hooks` (`git config core.hooksPath .githooks`); `git commit --no-verify`
+# skips it.
+set -eu
+cd "$(git rev-parse --show-toplevel)"
+exec pnpm turbo run check --filter=// --output-logs=new-only
