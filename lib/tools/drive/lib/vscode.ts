@@ -10,7 +10,6 @@ import {
   mkdtempSync,
   openSync,
   readFileSync,
-  readdirSync,
   realpathSync,
   writeFileSync,
 } from "node:fs";
@@ -37,6 +36,7 @@ import {
 import { runEnv } from "./setup.ts";
 import type { Pattern } from "./screen.ts";
 import type { Target } from "./session.ts";
+import { endRun } from "./procs.ts";
 import { startStub, stopStub } from "./stub.ts";
 
 export type VscodeStart = {
@@ -63,9 +63,20 @@ export type VscodeState = {
   size?: [number, number];
   /** The start options a window's environment fixed at launch; a reload must match them. */
   fixed?: string;
+  /** The process the window ends with, as `VscodeLaunch.owner`; a restarted stub keeps watching it. */
+  owner?: number;
 };
 
-export type VscodeLaunch = { visible?: boolean; watchPlugins?: boolean; signal?: AbortSignal };
+export type VscodeLaunch = {
+  visible?: boolean;
+  watchPlugins?: boolean;
+  signal?: AbortSignal;
+  /**
+   * The process the window ends with, even if it is killed: VS Code runs detached, so a test run
+   * that dies before its cleanup would leave it running. A parked session has none.
+   */
+  owner?: number;
+};
 
 /** The part of a start that is in the window's environment, which only a new window changes. */
 export const fixedOf = (start: VscodeStart) =>
@@ -111,7 +122,8 @@ function machine() {
 }
 
 /** What of this process's environment VS Code and the claude it spawns must not inherit. */
-const inherited = (name: string) => /^(CLAUDE|ANTHROPIC|VSCODE_|ELECTRON_)/.test(name);
+const inherited = (name: string) =>
+  /^(CLAUDE|ANTHROPIC|VSCODE_|ELECTRON_)/.test(name) || name === "AGENTS_DRIVE_OWNER";
 
 /**
  * The config folder and the project's `.mcp.json` the extension's `claude` reads when it starts:
@@ -186,7 +198,7 @@ async function startWorkbench(
   runDir: string,
   cwd: string,
   start: VscodeStart,
-  { visible = false, watchPlugins = false, signal }: VscodeLaunch,
+  { visible = false, watchPlugins = false, signal, owner }: VscodeLaunch,
   log: string,
 ): Promise<VscodeState> {
   if (visible && !process.env.WAYLAND_DISPLAY && !process.env.DISPLAY)
@@ -194,7 +206,11 @@ async function startWorkbench(
   signal?.throwIfAborted();
   const folder = realpathSync(cwd);
   mark("launch: start");
-  const stubPort = await startStub(runDir, start.turns ?? []);
+  const stubPort = await startStub(
+    runDir,
+    start.turns ?? [],
+    owner ? { pid: owner, endsRun: true } : undefined,
+  );
   const port = await freePort();
   const config = writeSessionConfig(runDir, folder, start);
   const env: Record<string, string> = {};
@@ -306,7 +322,7 @@ async function startWorkbench(
     spawnError = error;
   });
   child.unref();
-  const state: VscodeState = { port, stubPort, cwd: folder, fixed: fixedOf(start) };
+  const state: VscodeState = { port, stubPort, cwd: folder, fixed: fixedOf(start), owner };
   writeFileSync(join(runDir, STATE), JSON.stringify(state));
   mark(visible ? "launch: desktop window spawned" : "launch: cage spawned");
   const until = Date.now() + 120_000;
@@ -330,24 +346,6 @@ async function startWorkbench(
     if (Date.now() > until) throw new Error("VS Code did not come up in 120s");
     await sleep(500);
   }
-}
-
-/** Every process of the run: its command line or environment names the run folder. */
-function ofRun(runDir: string): number[] {
-  const pids: number[] = [];
-  for (const name of readdirSync("/proc")) {
-    if (!/^\d+$/.test(name)) continue;
-    const pid = Number(name);
-    if (pid === process.pid || pid === process.ppid) continue;
-    try {
-      const cmd = readFileSync(`/proc/${pid}/cmdline`, "utf8");
-      const env = readFileSync(`/proc/${pid}/environ`, "utf8");
-      if (cmd.includes(runDir) || env.includes(`=${runDir}/`)) pids.push(pid);
-    } catch {
-      /* gone, or not ours */
-    }
-  }
-  return pids;
 }
 
 /**
@@ -386,7 +384,12 @@ export async function restartSession(runDir: string, start: VscodeStart) {
   // The old stub lets go of the port a moment after the signal.
   for (let i = 0; ; i++) {
     try {
-      await startStub(runDir, start.turns ?? [], undefined, state.stubPort);
+      await startStub(
+        runDir,
+        start.turns ?? [],
+        state.owner ? { pid: state.owner, endsRun: true } : undefined,
+        state.stubPort,
+      );
       break;
     } catch (err) {
       if (i >= 20) throw err;
@@ -399,17 +402,7 @@ export async function restartSession(runDir: string, start: VscodeStart) {
 /** Ends VS Code, cage, the claude the extension started and the stub of one run, and nothing else. */
 export async function stopVscode(runDir: string) {
   stopStub(runDir);
-  for (const signal of ["SIGTERM", "SIGKILL"] as const) {
-    const pids = ofRun(runDir);
-    if (pids.length === 0) return;
-    for (const pid of pids)
-      try {
-        process.kill(pid, signal);
-      } catch {
-        /* already gone */
-      }
-    await sleep(signal === "SIGTERM" ? 2000 : 500);
-  }
+  await endRun(runDir);
 }
 
 type Target_ = { id: string; type: string; url: string; webSocketDebuggerUrl: string };

@@ -52,7 +52,8 @@ function drive(root: string, args: string[]): Promise<Run> {
   return new Promise((done) => {
     const child = spawn(process.execPath, [DRIVE, ...args], {
       cwd: root,
-      env: { ...process.env, AGENTS_DRIVE_ROOT: root },
+      // Its sessions end with this process even if it is killed before it stops them.
+      env: { ...process.env, AGENTS_DRIVE_ROOT: root, AGENTS_DRIVE_OWNER: String(process.pid) },
       stdio: ["ignore", "pipe", "pipe"],
     });
     let out = "";

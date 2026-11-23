@@ -210,6 +210,7 @@ async function play1(
     backend: "daemon",
     name: `site-${process.pid}-${++recordingSession}`,
     runDir,
+    owned: true,
     project: scenario?.project ?? "app",
     path: ffmpeg,
   }).catch((error: unknown) => {
@@ -457,7 +458,7 @@ async function recordVscode(p: E2EPackage, named: boolean, asked: boolean) {
         await close();
         // Under /tmp, as the terminal's: the folder is named nowhere a person's home shows.
         window = { runDir: mkdtempSync("/tmp/s-"), fixed: fixedOf(r.start) };
-        return (await reachVscode(r, window.runDir)).session;
+        return (await reachVscode(r, window.runDir, { owner: process.pid })).session;
       };
       const png = join(stage, `vscode-${name}.png`);
       const reloaded = window?.fixed === fixedOf(r.start);

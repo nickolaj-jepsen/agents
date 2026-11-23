@@ -95,7 +95,9 @@ async function goto(name: string, entry: Entry, scenario: string, flags: Flags) 
     // Written first, so a failed start still leaves something for `stop` to clean.
     writeSession(name, { ...base, runDir });
     try {
-      const { session, state } = await reachVscode(r, runDir);
+      // A tool that parks sessions for itself (compare) names its process: the window ends with it.
+      const owner = Number(process.env.AGENTS_DRIVE_OWNER) || undefined;
+      const { session, state } = await reachVscode(r, runDir, { owner });
       writeSession(name, { ...base, runDir, port: state.port });
       console.log(
         `on ${entry.package}/vscode/${scenario}; session ${name}; folder ${session.state.cwd}`,

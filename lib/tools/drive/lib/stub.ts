@@ -10,7 +10,8 @@
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import { appendFileSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { alive, endRun, startOf } from "./procs.ts";
 import type { ServerResponse } from "node:http";
 import type { Turn } from "./harness.ts";
 
@@ -195,21 +196,26 @@ function serve(all: Turn[]) {
 }
 
 if (process.argv[1]?.endsWith("stub.ts")) {
-  const file = process.argv[2];
-  if (!file) throw new Error("usage: node stub.ts <turns.json> [pid to outlive] [port]");
+  const [file, ownerArg, startArg, endsRun, portArg] = process.argv.slice(2);
+  if (!file)
+    throw new Error("usage: node stub.ts <turns.json> [pid to outlive] [its start] [run|-] [port]");
   // A test run that is killed can't stop its stubs, so each one watches the run and goes with it.
-  const owner = Number(process.argv[3]);
-  if (owner)
-    setInterval(() => {
-      try {
-        process.kill(owner, 0);
-      } catch {
-        process.exit(0);
-      }
-    }, 2000).unref();
+  // With `run` it takes the run's other processes too: a detached VS Code would outlive it.
+  const owner = Number(ownerArg);
+  const start = startArg && startArg !== "-" ? startArg : undefined;
+  if (owner) {
+    const watch = setInterval(() => {
+      if (alive(owner, start)) return;
+      clearInterval(watch);
+      void (endsRun === "run" ? endRun(dirname(file)) : Promise.resolve()).finally(() =>
+        process.exit(0),
+      );
+    }, 2000);
+    watch.unref();
+  }
   const server = serve(JSON.parse(readFileSync(file, "utf8")) as Turn[]);
   // A port of its own when asked: a VS Code window keeps the one its environment was given.
-  server.listen(Number(process.argv[4]) || 0, "127.0.0.1", () => {
+  server.listen(Number(portArg) || 0, "127.0.0.1", () => {
     const address = server.address();
     console.log(typeof address === "object" && address ? address.port : 0);
   });
@@ -217,20 +223,35 @@ if (process.argv[1]?.endsWith("stub.ts")) {
 
 const PID = "stub.pid";
 
+/** Whom a stub outlives: a test run hands it its own process, a parked session none. */
+export type StubOwner = {
+  /** The process the stub ends with. */
+  pid: number;
+  /** End every other process of the run folder too, as a killed test run cannot. */
+  endsRun?: boolean;
+};
+
 /**
- * Starts the stub for a run folder and returns its port. `stopStub` ends it. With `owner`, a
- * process id, it also ends when that process does; without, it outlives this one, as a parked
- * `goto` session needs. With `at`, it listens on that port instead of a free one.
+ * Starts the stub for a run folder and returns its port. `stopStub` ends it. With `owner`, it also
+ * ends when that process does; without, it outlives this one, as a parked `goto` session needs.
+ * With `at`, it listens on that port instead of a free one.
  */
 export async function startStub(
   runDir: string,
   turns: Turn[],
-  owner?: number,
+  owner?: StubOwner,
   at?: number,
 ): Promise<number> {
   const file = join(runDir, "stub-turns.json");
   writeFileSync(file, JSON.stringify(turns));
-  const args = [import.meta.filename, file, String(owner ?? 0), String(at ?? 0)];
+  const args = [
+    import.meta.filename,
+    file,
+    String(owner?.pid ?? 0),
+    (owner && startOf(owner.pid)) ?? "-",
+    owner?.endsRun ? "run" : "-",
+    String(at ?? 0),
+  ];
   const child = spawn(process.execPath, args, {
     detached: true,
     stdio: ["ignore", "pipe", "ignore"],

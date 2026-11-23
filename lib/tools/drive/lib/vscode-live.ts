@@ -23,6 +23,7 @@ export async function liveVscode(r: VscodeResolved, o: WatchFlags = {}) {
       visible: true,
       watchPlugins: o.watch && o.inPlace,
       signal: controller.signal,
+      owner: process.pid,
     });
     try {
       await session.useWindowSize();

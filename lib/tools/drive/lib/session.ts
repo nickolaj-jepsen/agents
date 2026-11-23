@@ -107,6 +107,8 @@ export type OpenOptions = {
   name: string;
   /** Reuse a run dir instead of making one (the CLI's, which outlives the invocation). */
   runDir?: string;
+  /** The given `runDir` is still this process's: its stub and agent end with it, even killed. */
+  owned?: boolean;
   /** The name of the folder the agent runs in, which shows in its header: default `cwd`. */
   project?: string;
   /**
@@ -151,10 +153,11 @@ export class Session {
     let start = o.start ?? {};
     if (o.harness === "claude" && start.turns) {
       // Claude's model is the stub: this session only, and only for the replayed turns.
+      // A run of this process's ends with it: a killed test can't stop a daemon's agent itself.
       const port = await startStub(
         runDir,
         start.turns,
-        o.backend === "lib" ? process.pid : undefined,
+        o.backend === "lib" || ownsRun || o.owned ? { pid: process.pid, endsRun: true } : undefined,
       );
       start = {
         ...start,

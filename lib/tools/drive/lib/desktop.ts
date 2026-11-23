@@ -106,7 +106,7 @@ async function seedUrl(r: DesktopResolved, runDir: string, cwd: string, config: 
     );
   const id = randomUUID();
   const title = `${r.plugin}: ${r.name}`;
-  const port = await startStub(runDir, turns, process.pid);
+  const port = await startStub(runDir, turns, { pid: process.pid });
   try {
     execFileSync(
       agentBin("claude"),
