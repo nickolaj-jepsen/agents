@@ -1,6 +1,6 @@
 export type MenuKind = "git" | "folder" | "notes";
 
-export type FolderApp = "code" | "zed" | "smerge" | "files" | "terminal";
+export type FolderApp = "code" | "zed" | "smerge" | "files" | "ghostty";
 
 export type EditorApp = Extract<FolderApp, "code" | "zed">;
 
@@ -8,7 +8,7 @@ export type EditorApp = Extract<FolderApp, "code" | "zed">;
 export type Action =
   | { kind: "url"; url: string }
   | { kind: "copy"; text: string; what: string }
-  | { kind: "launch"; argv: string[]; cwd?: string }
+  | { kind: "launch"; argv: string[] }
   /** Switches the pane to another menu. */
   | { kind: "menu"; menu: MenuKind };
 

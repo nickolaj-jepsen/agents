@@ -48,41 +48,6 @@ const tokens = {
 		/** The mark of a row set aside: it stays in the list, left out of what is carried out. */
 		dropped: "–"
 	},
-	/**
-	* The type roles of a graphical surface: what a line of text is, never a size. A drawing picks
-	* a role (`typed`, `typeProps`) and the host's scale supplies the size, so the hierarchy
-	* is one edit here. The terminal has one size: `terminalStyle` keeps its look, bold for a
-	* semibold or bold weight and dim for a role that is dim, as the drawings always had it.
-	* - `title`: a screen's own name, where the host draws none.
-	* - `heading`: one record's title, or a group's.
-	* - `section`: a small semibold heading over a part of a record (`Evidence`).
-	* - `body`: the words of a screen.
-	* - `caption`: meta: a count, an age, a hint.
-	* Digits that line up or change (a count, a time) ask for `tabular` where they are drawn.
-	*/
-	type: {
-		title: {
-			size: "title",
-			weight: "semibold"
-		},
-		heading: {
-			size: "heading",
-			weight: "semibold"
-		},
-		section: {
-			size: "footnote",
-			weight: "semibold"
-		},
-		body: {
-			size: "body",
-			weight: "regular"
-		},
-		caption: {
-			size: "caption",
-			weight: "regular",
-			role: "dim"
-		}
-	},
 	/** The graphical surfaces' numbers: none of them is a cell. */
 	gui: {
 		/** A long list shows this many rows, then an `N more` row. */
@@ -97,7 +62,7 @@ const tokens = {
 		* the neutral is one mid-grey that reads on light and dark; colour marks a state only.
 		*/
 		tone: {
-			neutral: "#7f838c",
+			neutral: "#8b8f98",
 			/** The accent: what is chosen. */
 			accent: "#d97757",
 			error: "#e5534b",
@@ -145,24 +110,6 @@ const tokens = {
 		fill: "userMessageBackground",
 		/** Behind a code span in a Text, which has no code face: the theme's code background. */
 		chip: "bashMessageBackgroundColor",
-		/**
-		* One row of a list or a form: its line with `pad` lines of space above and below, whether or
-		* not it holds a Button, so a column of them keeps one beat. A Box may carry no height
-		* (`expectNative` says so), so the beat is padding. `gap` is the space between two rows
-		* (`rows` and `rowOf` in `paint/gui.tsx`).
-		*/
-		row: {
-			pad: .25,
-			gap: .15
-		},
-		/**
-		* A panel, what opens in place: the fill, set in by `x` cells and `y` lines of its own, so
-		* the words stay a step inside the fill and a control beside them stays on it.
-		*/
-		panel: {
-			x: 1,
-			y: .5
-		},
 		/** A thin rule's colour: one grey at low alpha, which reads on a light theme and a dark one. */
 		rule: "#8b8f9866",
 		/**
@@ -173,171 +120,6 @@ const tokens = {
 	}
 };
 
-// ../../lib/kits/core/src/icons.ts
-const g = tokens.glyph;
-/**
-* Every meaning the kit draws. Seeded from what `main`'s designs marked: a tracker's status and
-* priority, a doc suggestion's kind and what it is set to, and the states a notice has.
-*/
-const meanings = {
-	"state:success": {
-		shape: "success",
-		tone: "success",
-		glyph: g.done,
-		role: "success",
-		alt: "Done"
-	},
-	"state:error": {
-		shape: "error",
-		tone: "error",
-		glyph: g.times,
-		role: "error",
-		alt: "Failed"
-	},
-	"state:warning": {
-		shape: "warning",
-		tone: "warning",
-		glyph: g.status.warning,
-		role: "warning",
-		alt: "Needs a look"
-	},
-	"state:pending": {
-		shape: "pending",
-		tone: "neutral",
-		glyph: g.single.off,
-		role: "dim",
-		alt: "Pending"
-	},
-	"state:question": {
-		shape: "question",
-		tone: "neutral",
-		glyph: "?",
-		role: "dim",
-		alt: "Waiting for an answer"
-	},
-	"kind:wrong": {
-		shape: "wrong",
-		tone: "error",
-		glyph: "!",
-		role: "error",
-		alt: "Wrong"
-	},
-	"kind:stale": {
-		shape: "stale",
-		tone: "warning",
-		glyph: "↻",
-		role: "warning",
-		alt: "Stale"
-	},
-	"kind:missing": {
-		shape: "missing",
-		tone: "neutral",
-		glyph: "+",
-		role: "text",
-		alt: "Missing"
-	},
-	"decision:open": {
-		shape: "open",
-		tone: "neutral",
-		glyph: g.single.off,
-		role: "text",
-		alt: "Not decided"
-	},
-	"decision:apply": {
-		shape: "success",
-		tone: "success",
-		glyph: g.single.on,
-		role: "accent",
-		alt: "Set to apply"
-	},
-	"decision:dismiss": {
-		shape: "dropped",
-		tone: "neutral",
-		glyph: g.dropped,
-		role: "dim",
-		alt: "Set to dismiss"
-	},
-	"choice:open": {
-		shape: "open",
-		tone: "neutral",
-		glyph: g.single.off,
-		role: "text",
-		alt: "Not chosen"
-	},
-	"choice:chosen": {
-		shape: "chosen",
-		tone: "accent",
-		glyph: g.single.on,
-		role: "accent",
-		alt: "Chosen"
-	},
-	"priority:none": {
-		shape: "priorityNone",
-		tone: "neutral",
-		glyph: "-",
-		role: "dim",
-		alt: "No priority"
-	},
-	"priority:low": {
-		shape: "priorityLow",
-		tone: "neutral",
-		glyph: "!",
-		role: "dim",
-		alt: "Low priority"
-	},
-	"priority:medium": {
-		shape: "priorityMedium",
-		tone: "neutral",
-		glyph: "!!",
-		role: "dim",
-		alt: "Medium priority"
-	},
-	"priority:high": {
-		shape: "priorityHigh",
-		tone: "neutral",
-		glyph: "!!!",
-		role: "text",
-		alt: "High priority"
-	},
-	"priority:urgent": {
-		shape: "priorityUrgent",
-		tone: "warning",
-		glyph: g.status.warning,
-		role: "warning",
-		alt: "Urgent"
-	},
-	"field:status": {
-		shape: "status",
-		tone: "neutral",
-		glyph: g.single.off,
-		role: "dim",
-		alt: "Status"
-	},
-	"field:project": {
-		shape: "project",
-		tone: "neutral",
-		glyph: g.multi.off,
-		role: "dim",
-		alt: "Project"
-	},
-	"field:label": {
-		shape: "label",
-		tone: "neutral",
-		glyph: g.single.on,
-		role: "dim",
-		alt: "Label"
-	},
-	"field:draft": {
-		shape: "draft",
-		tone: "neutral",
-		glyph: "✎",
-		role: "dim",
-		alt: "Draft"
-	}
-};
-/** What a name draws as. */
-const meaningOf = (name) => meanings[name];
-
 // ../../lib/kits/core/src/lines.ts
 const span = (text, style = {}) => ({
 	text,
@@ -347,8 +129,6 @@ const line = (spans, hit) => hit === void 0 ? { spans } : {
 	spans,
 	hit
 };
-/** A line's characters, without its styles. */
-const textOf = (l) => l.spans.map((s) => s.text).join("");
 /** Cells a code point takes: 0 for marks and joiners, 2 for East Asian wide and emoji. */
 const cellsOf = (c) => {
 	if (c < 32 || c >= 127 && c < 160) return 0;
@@ -532,10 +312,32 @@ function truncateSpans(spans, width) {
 	});
 	return out;
 }
-/** Cells a panel's rail and its gap take: a row of a panel starts this far in. */
-const PANEL_INSET = cellWidth(tokens.glyph.rail) + tokens.gutter;
-/** Markdown's own characters in words that are only words. */
-const escapeMarkdown = (text) => text.replace(/([\\`*_{}[\]<>()#+!|~-])/g, "\\$1");
+
+// ../../lib/kits/notice/src/terminal.ts
+/** The notice and the empty state as styled lines: the one drawing both terminals paint. */
+/**
+* One line telling the person what just happened, in the role of its status, cut to the room
+* with `…`.
+* @param text Words, or spans where part of the line stands out (a word in its context); a span
+* with no role takes the status's.
+* @param status Success, warning and error only for an actual state. @default "warning"
+*/
+function notice(text, width, status = "warning", { isWrapped = false } = {}) {
+	if (typeof text !== "string") {
+		const styled = text.map((s) => ({
+			...s,
+			role: s.role ?? status
+		}));
+		return isWrapped ? wrapSpans(styled, width).map((row) => line(row)) : [line(truncateSpans(styled, width))];
+	}
+	return (isWrapped ? clamp(text, width) : clamp(text, width, {
+		min: 1,
+		max: 1
+	})).map((row) => line([{
+		text: row,
+		role: status
+	}]));
+}
 
 // ../../lib/kits/core/src/surfaces.ts
 const fact = (value, note, source) => ({
@@ -548,8 +350,8 @@ const unverified = (hint) => ({
 	hint
 });
 const README = "lib/kits/README.md, What still differs between the clients";
-const CLAUDE_MD = "49167447:skills/agent-plugin-dev/references/claude.md, Graphical surfaces (extension 2.1.327)";
-const TYPES = "claude-code types, Elements (apps/*/.claude-types/claude-code/index.d.ts, `pnpm drive types <app>`)";
+const CLAUDE_MD = "skills/agent-plugin-dev/references/claude.md, VS Code quirks (extension 2.1.327)";
+const TYPES = "claude-code types, Elements (apps/*/dist/.claude-plugin/types/claude-code/index.d.ts, `pnpm drive types <app>`)";
 /**
 * The table. Surfaces are the rows, capabilities the columns; each column's value type is
 * `CapValues`, which the `satisfies` clause checks, and the literals stay for the types below.
@@ -570,9 +372,7 @@ const surfaces = {
 		textSize: fact(false, "the terminal has one size", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		transcriptKeyScroll: unverified(),
-		images: fact(false, "pi-tui has no image component", "pi-tui exports (no Image)"),
-		cells: fact(true, "the kit lays out every line in cells: a row is cut to its room, and there is no toolbar line or element for a host to draw", README)
+		images: fact(false, "pi-tui has no image component", "pi-tui exports (no Image)")
 	},
 	"claude-terminal": {
 		drawing: "terminal",
@@ -589,9 +389,7 @@ const surfaces = {
 		textSize: fact(false, "the terminal has one size and ignores `size`", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		transcriptKeyScroll: unverified(),
-		images: fact(true, "the terminal's table has an `Image`", TYPES + ", Elements.terminal"),
-		cells: fact(true, "the kit lays out every line in cells: a row is cut to its room, and there is no toolbar line or element for a host to draw", README)
+		images: fact(true, "the terminal's table has an `Image`", TYPES + ", Elements.terminal")
 	},
 	vscode: {
 		drawing: "gui",
@@ -605,12 +403,10 @@ const surfaces = {
 		select: fact(true, "the extension's table has a `Select`", TYPES + ", Elements.vscode"),
 		progress: fact(true, "the extension's table has a `Progress`", TYPES + ", Elements.vscode"),
 		svg: fact(true, "drawn as an image, so it cannot take theme colours: check a light theme", TYPES + ", SvgProps (the editor draws an image)"),
-		textSize: fact(false, "the webview draws a Text's colour, dimColor, bold, italic and underline, and no `size`: every Text is the body's size. A Markdown heading has real sizes", "extension 2.1.330 webview/index.js, the Text style function (read; probed live: every role drew 13px)"),
+		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: fact(false, "a Button's label never wraps; a long one overflows a narrow pane", CLAUDE_MD),
-		transcriptKeyScroll: fact(false, "scrolling to a key inside a mod's AssistantMessage is denied or does nothing", CLAUDE_MD),
-		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.vscode (`Image` is the terminal's alone)"),
-		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
+		images: unverified("the table has no `Image`")
 	},
 	desktop: {
 		drawing: "gui",
@@ -620,16 +416,14 @@ const surfaces = {
 		window: unverified(),
 		framesPane: unverified(),
 		inputRows: unverified(),
-		input: fact(true, "the extension's table has an `Input`, as VS Code's does; never driven", TYPES + ", Elements.desktop"),
-		select: fact(true, "the extension's table has a `Select`, as VS Code's does; never driven", TYPES + ", Elements.desktop"),
+		input: unverified("the table has an `Input`"),
+		select: unverified("the table has a `Select`"),
 		progress: unverified("the table has a `Progress`"),
 		svg: fact(true, "drawn as an image, or in a sandboxed frame when `isInteractive`", TYPES + ", SvgProps; never driven"),
 		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		transcriptKeyScroll: fact(true, "the engine supports targeting element keys; Answer already relies on it for Desktop review, not verified live", TYPES + ", ui.scroll; apps/answer/src/claude.tsx, roundActions"),
-		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.desktop (`Image` is the terminal's alone)"),
-		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
+		images: unverified("the table has no `Image`")
 	},
 	mobile: {
 		drawing: "gui",
@@ -646,9 +440,7 @@ const surfaces = {
 		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		transcriptKeyScroll: unverified(),
-		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.mobile (`Image` is the terminal's alone)"),
-		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
+		images: unverified("the table has no `Image`")
 	}
 };
 /** What the table says of one capability on one surface: `undefined` when unverified. */
@@ -656,24 +448,6 @@ const factOf = (surface, cap) => {
 	const f = surfaces[surface][cap];
 	return "unverified" in f ? void 0 : f;
 };
-/** `undefined` when `surface` has the need, otherwise why not. */
-function lackOf(surface, need) {
-	const [cap, values] = need.split(":", 2);
-	const f = factOf(surface, cap);
-	if (!f) {
-		const hint = surfaces[surface][cap].hint;
-		return {
-			cap,
-			note: `${cap} has not been checked on ${surface}${hint ? ` (${hint})` : ""}`
-		};
-	}
-	return (values === void 0 ? !(f.value === false || f.value === 0 || f.value === "") : values.split("|").includes(String(f.value))) ? void 0 : {
-		cap,
-		note: f.note
-	};
-}
-/** Whether `surface` has the need. */
-const holds = (surface, need) => lackOf(surface, need) === void 0;
 /** Every fact a surface has, by name, for `ctx.caps`. */
 function capsOf(surface) {
 	const out = {};
@@ -693,38 +467,6 @@ const ctxOf = (surface, events = {}) => ({
 	input: events.input ?? nothing,
 	submit: events.submit ?? nothing
 });
-/**
-* Whether the context's surface has the capability, narrowing it to the surfaces that do.
-* A drawing asks this, never which surface it is.
-*/
-function can(ctx, need) {
-	return holds(ctx.surface, need);
-}
-
-// ../../lib/kits/notice/src/terminal.ts
-/** The notice and the empty state as styled lines: the one drawing both terminals paint. */
-/**
-* One line telling the person what just happened, in the role of its status, cut to the room
-* with `…`. A terminal has no icon: the words take the status's colour, and a span with no role
-* takes it too.
-*/
-function notice({ text, width, status = "warning", isWrapped = false }) {
-	const role = status === "pending" ? "dim" : status;
-	if (typeof text !== "string") {
-		const styled = text.map((s) => ({
-			...s,
-			role: s.role ?? role
-		}));
-		return isWrapped ? wrapSpans(styled, width).map((row) => line(row)) : [line(truncateSpans(styled, width))];
-	}
-	return (isWrapped ? clamp(text, width) : clamp(text, width, {
-		min: 1,
-		max: 1
-	})).map((row) => line([{
-		text: row,
-		role
-	}]));
-}
 
 // ../../lib/kits/core/src/paint/claude.tsx
 const COLOR = {
@@ -960,4 +702,4 @@ function ringMove(element, isControl) {
 	return isControl(hit) ? { hit } : void 0;
 }
 
-export { textOf as _, ringMove as a, tokens as b, can as c, surfaces as d, cellWidth as f, spansWidth as g, span as h, ring as i, ctxOf as l, line as m, actionKey as n, stack as o, escapeMarkdown as p, paintLines as r, notice as s, RING as t, holds as u, truncateSpans as v, meaningOf as y };
+export { ringMove as a, notice as c, span as d, spansWidth as f, ring as i, cellWidth as l, tokens as m, actionKey as n, stack as o, truncateSpans as p, paintLines as r, ctxOf as s, RING as t, line as u };

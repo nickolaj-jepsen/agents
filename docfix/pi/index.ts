@@ -543,41 +543,6 @@ const tokens = {
 		/** The mark of a row set aside: it stays in the list, left out of what is carried out. */
 		dropped: "–"
 	},
-	/**
-	* The type roles of a graphical surface: what a line of text is, never a size. A drawing picks
-	* a role (`typed`, `typeProps`) and the host's scale supplies the size, so the hierarchy
-	* is one edit here. The terminal has one size: `terminalStyle` keeps its look, bold for a
-	* semibold or bold weight and dim for a role that is dim, as the drawings always had it.
-	* - `title`: a screen's own name, where the host draws none.
-	* - `heading`: one record's title, or a group's.
-	* - `section`: a small semibold heading over a part of a record (`Evidence`).
-	* - `body`: the words of a screen.
-	* - `caption`: meta: a count, an age, a hint.
-	* Digits that line up or change (a count, a time) ask for `tabular` where they are drawn.
-	*/
-	type: {
-		title: {
-			size: "title",
-			weight: "semibold"
-		},
-		heading: {
-			size: "heading",
-			weight: "semibold"
-		},
-		section: {
-			size: "footnote",
-			weight: "semibold"
-		},
-		body: {
-			size: "body",
-			weight: "regular"
-		},
-		caption: {
-			size: "caption",
-			weight: "regular",
-			role: "dim"
-		}
-	},
 	/** The graphical surfaces' numbers: none of them is a cell. */
 	gui: {
 		/** A long list shows this many rows, then an `N more` row. */
@@ -592,7 +557,7 @@ const tokens = {
 		* the neutral is one mid-grey that reads on light and dark; colour marks a state only.
 		*/
 		tone: {
-			neutral: "#7f838c",
+			neutral: "#8b8f98",
 			/** The accent: what is chosen. */
 			accent: "#d97757",
 			error: "#e5534b",
@@ -640,24 +605,6 @@ const tokens = {
 		fill: "userMessageBackground",
 		/** Behind a code span in a Text, which has no code face: the theme's code background. */
 		chip: "bashMessageBackgroundColor",
-		/**
-		* One row of a list or a form: its line with `pad` lines of space above and below, whether or
-		* not it holds a Button, so a column of them keeps one beat. A Box may carry no height
-		* (`expectNative` says so), so the beat is padding. `gap` is the space between two rows
-		* (`rows` and `rowOf` in `paint/gui.tsx`).
-		*/
-		row: {
-			pad: .25,
-			gap: .15
-		},
-		/**
-		* A panel, what opens in place: the fill, set in by `x` cells and `y` lines of its own, so
-		* the words stay a step inside the fill and a control beside them stays on it.
-		*/
-		panel: {
-			x: 1,
-			y: .5
-		},
 		/** A thin rule's colour: one grey at low alpha, which reads on a light theme and a dark one. */
 		rule: "#8b8f9866",
 		/**
@@ -668,170 +615,12 @@ const tokens = {
 	}
 };
 
-// ../../lib/kits/core/src/icons.ts
-const g = tokens.glyph;
-/**
-* Every meaning the kit draws. Seeded from what `main`'s designs marked: a tracker's status and
-* priority, a doc suggestion's kind and what it is set to, and the states a notice has.
-*/
-const meanings = {
-	"state:success": {
-		shape: "success",
-		tone: "success",
-		glyph: g.done,
-		role: "success",
-		alt: "Done"
-	},
-	"state:error": {
-		shape: "error",
-		tone: "error",
-		glyph: g.times,
-		role: "error",
-		alt: "Failed"
-	},
-	"state:warning": {
-		shape: "warning",
-		tone: "warning",
-		glyph: g.status.warning,
-		role: "warning",
-		alt: "Needs a look"
-	},
-	"state:pending": {
-		shape: "pending",
-		tone: "neutral",
-		glyph: g.single.off,
-		role: "dim",
-		alt: "Pending"
-	},
-	"state:question": {
-		shape: "question",
-		tone: "neutral",
-		glyph: "?",
-		role: "dim",
-		alt: "Waiting for an answer"
-	},
-	"kind:wrong": {
-		shape: "wrong",
-		tone: "error",
-		glyph: "!",
-		role: "error",
-		alt: "Wrong"
-	},
-	"kind:stale": {
-		shape: "stale",
-		tone: "warning",
-		glyph: "↻",
-		role: "warning",
-		alt: "Stale"
-	},
-	"kind:missing": {
-		shape: "missing",
-		tone: "neutral",
-		glyph: "+",
-		role: "text",
-		alt: "Missing"
-	},
-	"decision:open": {
-		shape: "open",
-		tone: "neutral",
-		glyph: g.single.off,
-		role: "text",
-		alt: "Not decided"
-	},
-	"decision:apply": {
-		shape: "success",
-		tone: "success",
-		glyph: g.single.on,
-		role: "accent",
-		alt: "Set to apply"
-	},
-	"decision:dismiss": {
-		shape: "dropped",
-		tone: "neutral",
-		glyph: g.dropped,
-		role: "dim",
-		alt: "Set to dismiss"
-	},
-	"choice:open": {
-		shape: "open",
-		tone: "neutral",
-		glyph: g.single.off,
-		role: "text",
-		alt: "Not chosen"
-	},
-	"choice:chosen": {
-		shape: "chosen",
-		tone: "accent",
-		glyph: g.single.on,
-		role: "accent",
-		alt: "Chosen"
-	},
-	"priority:none": {
-		shape: "priorityNone",
-		tone: "neutral",
-		glyph: "-",
-		role: "dim",
-		alt: "No priority"
-	},
-	"priority:low": {
-		shape: "priorityLow",
-		tone: "neutral",
-		glyph: "!",
-		role: "dim",
-		alt: "Low priority"
-	},
-	"priority:medium": {
-		shape: "priorityMedium",
-		tone: "neutral",
-		glyph: "!!",
-		role: "dim",
-		alt: "Medium priority"
-	},
-	"priority:high": {
-		shape: "priorityHigh",
-		tone: "neutral",
-		glyph: "!!!",
-		role: "text",
-		alt: "High priority"
-	},
-	"priority:urgent": {
-		shape: "priorityUrgent",
-		tone: "warning",
-		glyph: g.status.warning,
-		role: "warning",
-		alt: "Urgent"
-	},
-	"field:status": {
-		shape: "status",
-		tone: "neutral",
-		glyph: g.single.off,
-		role: "dim",
-		alt: "Status"
-	},
-	"field:project": {
-		shape: "project",
-		tone: "neutral",
-		glyph: g.multi.off,
-		role: "dim",
-		alt: "Project"
-	},
-	"field:label": {
-		shape: "label",
-		tone: "neutral",
-		glyph: g.single.on,
-		role: "dim",
-		alt: "Label"
-	},
-	"field:draft": {
-		shape: "draft",
-		tone: "neutral",
-		glyph: "✎",
-		role: "dim",
-		alt: "Draft"
-	}
-};
-
 // ../../lib/kits/core/src/lines.ts
+/**
+* Styled lines: what a terminal component draws before a client paints it. pi and Claude Code's
+* terminal are both cell grids, so a component is drawn once, here, and each client only paints
+* the result (`paint/pi.ts`, `paint/claude.tsx`). No host imports.
+*/
 const span = (text, style = {}) => ({
 	text,
 	...style
@@ -1105,8 +894,6 @@ function scrolled(lines, scroll) {
 		max
 	};
 }
-/** Cells a panel's rail and its gap take: a row of a panel starts this far in. */
-const PANEL_INSET = cellWidth(tokens.glyph.rail) + tokens.gutter;
 
 // ../../lib/kits/core/src/surfaces.ts
 const fact = (value, note, source) => ({
@@ -1119,8 +906,8 @@ const unverified = (hint) => ({
 	hint
 });
 const README = "lib/kits/README.md, What still differs between the clients";
-const CLAUDE_MD = "49167447:skills/agent-plugin-dev/references/claude.md, Graphical surfaces (extension 2.1.327)";
-const TYPES = "claude-code types, Elements (apps/*/.claude-types/claude-code/index.d.ts, `pnpm drive types <app>`)";
+const CLAUDE_MD = "skills/agent-plugin-dev/references/claude.md, VS Code quirks (extension 2.1.327)";
+const TYPES = "claude-code types, Elements (apps/*/dist/.claude-plugin/types/claude-code/index.d.ts, `pnpm drive types <app>`)";
 /**
 * The table. Surfaces are the rows, capabilities the columns; each column's value type is
 * `CapValues`, which the `satisfies` clause checks, and the literals stay for the types below.
@@ -1141,9 +928,7 @@ const surfaces = {
 		textSize: fact(false, "the terminal has one size", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		transcriptKeyScroll: unverified(),
-		images: fact(false, "pi-tui has no image component", "pi-tui exports (no Image)"),
-		cells: fact(true, "the kit lays out every line in cells: a row is cut to its room, and there is no toolbar line or element for a host to draw", README)
+		images: fact(false, "pi-tui has no image component", "pi-tui exports (no Image)")
 	},
 	"claude-terminal": {
 		drawing: "terminal",
@@ -1160,9 +945,7 @@ const surfaces = {
 		textSize: fact(false, "the terminal has one size and ignores `size`", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		transcriptKeyScroll: unverified(),
-		images: fact(true, "the terminal's table has an `Image`", TYPES + ", Elements.terminal"),
-		cells: fact(true, "the kit lays out every line in cells: a row is cut to its room, and there is no toolbar line or element for a host to draw", README)
+		images: fact(true, "the terminal's table has an `Image`", TYPES + ", Elements.terminal")
 	},
 	vscode: {
 		drawing: "gui",
@@ -1176,12 +959,10 @@ const surfaces = {
 		select: fact(true, "the extension's table has a `Select`", TYPES + ", Elements.vscode"),
 		progress: fact(true, "the extension's table has a `Progress`", TYPES + ", Elements.vscode"),
 		svg: fact(true, "drawn as an image, so it cannot take theme colours: check a light theme", TYPES + ", SvgProps (the editor draws an image)"),
-		textSize: fact(false, "the webview draws a Text's colour, dimColor, bold, italic and underline, and no `size`: every Text is the body's size. A Markdown heading has real sizes", "extension 2.1.330 webview/index.js, the Text style function (read; probed live: every role drew 13px)"),
+		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: fact(false, "a Button's label never wraps; a long one overflows a narrow pane", CLAUDE_MD),
-		transcriptKeyScroll: fact(false, "scrolling to a key inside a mod's AssistantMessage is denied or does nothing", CLAUDE_MD),
-		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.vscode (`Image` is the terminal's alone)"),
-		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
+		images: unverified("the table has no `Image`")
 	},
 	desktop: {
 		drawing: "gui",
@@ -1191,16 +972,14 @@ const surfaces = {
 		window: unverified(),
 		framesPane: unverified(),
 		inputRows: unverified(),
-		input: fact(true, "the extension's table has an `Input`, as VS Code's does; never driven", TYPES + ", Elements.desktop"),
-		select: fact(true, "the extension's table has a `Select`, as VS Code's does; never driven", TYPES + ", Elements.desktop"),
+		input: unverified("the table has an `Input`"),
+		select: unverified("the table has a `Select`"),
 		progress: unverified("the table has a `Progress`"),
 		svg: fact(true, "drawn as an image, or in a sandboxed frame when `isInteractive`", TYPES + ", SvgProps; never driven"),
 		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		transcriptKeyScroll: fact(true, "the engine supports targeting element keys; Answer already relies on it for Desktop review, not verified live", TYPES + ", ui.scroll; apps/answer/src/claude.tsx, roundActions"),
-		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.desktop (`Image` is the terminal's alone)"),
-		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
+		images: unverified("the table has no `Image`")
 	},
 	mobile: {
 		drawing: "gui",
@@ -1217,9 +996,7 @@ const surfaces = {
 		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		transcriptKeyScroll: unverified(),
-		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.mobile (`Image` is the terminal's alone)"),
-		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
+		images: unverified("the table has no `Image`")
 	}
 };
 
@@ -1366,25 +1143,6 @@ const paintText = (theme, text, style = {}) => paintSpan(theme, {
 	text
 });
 
-// ../../lib/kits/core/src/manifest.ts
-/** A contract's model fields, checked against the model type: a field left out is an error. */
-const modelFields = () => (keys) => keys;
-
-// ../../lib/kits/card/src/contract.ts
-/**
-* The question card's contract: its model, what each drawing is given, and the intents a list of
-* choices sends back. No host imports.
-*/
-const cardFields = modelFields()([
-	"heading",
-	"choices",
-	"note",
-	"steps",
-	"summaries",
-	"closing",
-	"width"
-]);
-
 // ../../lib/kits/card/src/terminal.ts
 /** The question card's parts as styled lines: the one drawing both terminals paint. */
 const GAP$3 = " ".repeat(tokens.gutter);
@@ -1423,47 +1181,17 @@ function rail(state, row) {
 	};
 }
 
-// ../../lib/kits/buttons/src/model.ts
-/**
-* The button row's view model: what is lit, what goes quiet and what is drawn on a surface.
-* Pure and plain: the drawings read it, and so does the snapshot that holds it across surfaces.
-* No host imports.
-*/
+// ../../lib/kits/buttons/src/terminal.ts
+/** The button row as styled lines: the one drawing both terminals paint. */
 /** How a button's key is printed after its label: `↵` for Enter, else in brackets; nothing for none. */
 const shortcutOf = (b) => b.hit === void 0 || !b.hotkey ? b.hotkey : b.hotkey === "enter" ? tokens.glyph.enter : `[${b.hotkey}]`;
 /**
-* The buttons as a screen shows them. One button of a screen is lit, the first that asks, so a
-* screen never has two suggested actions; while Close asks, none is lit and every control is
-* quiet, whatever the caller said.
-*/
-function settle(rows, confirming = false) {
-	let isLitOne = false;
-	return rows.map((row) => row.map((b) => {
-		if (confirming) return {
-			...b,
-			isLit: false,
-			isQuiet: b.hit === void 0 ? void 0 : true
-		};
-		if (!b.isLit) return b;
-		if (isLitOne) return {
-			...b,
-			isLit: false
-		};
-		isLitOne = true;
-		return b;
-	}));
-}
-
-// ../../lib/kits/buttons/src/terminal.ts
-/** The button row as styled lines: the one drawing both terminals paint. */
-/**
 * Actions left to right, label first with the key dim after it, the suggested one in the
 * accent; and dim keyboard-only hints, key first. One row drops what is neither suggested nor
-* essential, last first, until it fits; with `wrap` nothing drops. One button is lit: the
-* first that asks (`settle`).
+* essential, last first, until it fits; with `wrap` nothing drops.
 */
 function buttonRow(keys, width, { wrap = false, lead = [], hover } = {}) {
-	const chips = (settle([keys])[0] ?? []).map((key) => {
+	const chips = keys.map((key) => {
 		const shortcut = shortcutOf(key);
 		return {
 			...key,
@@ -1585,19 +1313,6 @@ const captionFrameLayout = {
 	/** Cells of the top rule the caption may not take. */
 	reserved: 5
 };
-const frameFields = modelFields()([
-	"title",
-	"caption",
-	"end",
-	"close",
-	"body",
-	"footer",
-	"notice",
-	"width",
-	"hostTitle",
-	"head",
-	"actions"
-]);
 
 // ../../lib/kits/frame/src/terminal.ts
 /** The captioned frame as styled lines: the one drawing both terminals paint. */
@@ -1772,7 +1487,7 @@ function table(rows, width, base) {
 * nested), headings, quotes, rules, fenced code and tables, with inline Markdown in each. One
 * blank row between blocks, none between the items of a list or the lines of a paragraph.
 */
-function prose({ text, width, isDim = false }) {
+function prose(text, width, { isDim = false } = {}) {
 	const base = isDim ? { role: "dim" } : {};
 	const quiet = { role: "dim" };
 	const out = [];
@@ -1903,10 +1618,7 @@ function section(s, d, width) {
 	const room = Math.max(1, width - 2 * x);
 	return [...s.rule !== void 0 ? [ruleRow(s.rule, s.action, width, x ? x - 1 : 0)] : [], ...[
 		...s.heading ? block([span(s.heading, { role: "dim" })], room) : [],
-		...s.text ? prose({
-			text: s.text,
-			width: room
-		}) : [],
+		...s.text ? prose(s.text, room) : [],
 		...s.items?.length ? itemRows$1(s.items, room) : []
 	].map((row) => setIn(row, x))];
 }

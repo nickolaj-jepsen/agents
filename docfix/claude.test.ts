@@ -1,5 +1,5 @@
 import { expect, test } from "claude-code/testing";
-import { t as tokens } from "./tokens-B6LwkIOZ.js";
+import { t as tokens } from "./tokens-CBtsVN7m.js";
 
 // ../../lib/kits/core/src/paint/checks.tsx
 /**
@@ -492,8 +492,11 @@ for (const surface of ["desktop", "vscode"]) {
 			type: "Text",
 			text: /A second gap/
 		})).toBeDefined();
-		const icons = (await ui.findAll({ type: "Svg" })).map((s) => String(s.props.alt));
-		expect(icons).toContain("Missing");
+		expect(await ui.find({
+			type: "Text",
+			text: /^missing$/
+		})).toBeDefined();
+		expect(await ui.find({ type: "Svg" })).toBeDefined();
 		const open = await ui.find({
 			type: "Button",
 			key: `row:${ID}`
@@ -667,7 +670,7 @@ for (const surface of ["desktop", "vscode"]) {
 			type: "Button",
 			text: /more$/
 		});
-		expect(more?.text).toBe("Show 8 more");
+		expect(more?.text).toBe("8 more");
 		await ui.press({ key: String(more?.key) });
 		expect(await rows()).toBe(20);
 		expect(await ui.find({

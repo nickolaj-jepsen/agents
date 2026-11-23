@@ -1,5 +1,5 @@
 import { expect, mock, test } from "claude-code/testing";
-import { b as tokens, r as paintLines, s as notice } from "./claude-B3pwfCuK.js";
+import { c as notice, m as tokens, r as paintLines } from "./claude-DzpLJgIW.js";
 
 // ../../lib/kits/core/src/paint/checks.tsx
 /**
@@ -141,11 +141,7 @@ function world(on, haiku = haikuSays()) {
 		usage
 	} }));
 	on("ui.toast", () => ({ value: void 0 }));
-	on("ui.render", ($, e) => paintLines($.ui.resolve(e), notice({
-		text: "engine",
-		width: 80,
-		status: "text"
-	})));
+	on("ui.render", ($, e) => paintLines($.ui.resolve(e), notice("engine", 80, "text")));
 	return w;
 }
 function edit($, e) {

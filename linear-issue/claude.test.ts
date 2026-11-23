@@ -1,5 +1,5 @@
 import { expect, mock, test } from "claude-code/testing";
-import { t as tokens } from "./tokens-B6LwkIOZ.js";
+import { t as tokens } from "./tokens-CBtsVN7m.js";
 
 // ../../lib/kits/core/src/paint/checks.tsx
 /**
@@ -326,14 +326,6 @@ async function expand(band, w) {
 }
 const saved = (w, tool) => w.calls.find((c) => c.tool === tool)?.args;
 /** Whether the terminal's drawing says `words` somewhere. */
-/** The title, a heading: a Text, or the host's Markdown heading where it draws no Text sizes (its `_` escaped). */
-const showsTitle = async (site, title) => await site.find({
-	type: "Text",
-	text: title
-}) !== void 0 || await site.find({
-	type: "Markdown",
-	text: new RegExp(title.replace(/[_ ]/g, (c) => `\\\\?${c}`))
-}) !== void 0;
 const shows = async (site, words) => await site.find({
 	type: "Text",
 	text: words
@@ -779,10 +771,8 @@ const CARD_KEYS = [
 	"Chat in main session",
 	"Dismiss"
 ];
-/** What a property of the pane is set to: its Select's value. */
-const valueOf = async (ui, id) => (await ui.find({ key: `select:${id}` }))?.props.value;
-/** The keys of the pane's keyed Buttons: a chip's Button is keyed by its option. */
-const keyed = async (ui) => (await buttonKeys(ui)).filter((k) => k !== "undefined");
+/** What a property of the pane reads, on the Button that opens it. */
+const valueOf = async (ui, id) => (await ui.find({ key: `value:field:${id}` }))?.props.label;
 /** The keys of the pane's Buttons, top to bottom. */
 const buttonKeys = async (ui) => (await ui.findAll({ type: "Button" })).map((b) => String(b.key));
 for (const surface of ["desktop", "vscode"]) {
@@ -812,19 +802,26 @@ for (const surface of ["desktop", "vscode"]) {
 			surface
 		});
 		await expectNative(pane);
-		expect(await showsTitle(pane, "Cap get_rate outage latency")).toBe(true);
-		expect(await valueOf(pane, "status")).toBe("MSC-todo");
-		expect(await valueOf(pane, "priority")).toBe("4");
-		expect(await pane.find({ key: "chip:MSC-bug" })).toBeDefined();
+		expect(await pane.find({
+			type: "Text",
+			text: "Cap get_rate outage latency"
+		})).toBeDefined();
+		expect(await valueOf(pane, "status")).toBe("Todo");
+		expect(await valueOf(pane, "priority")).toBe("Low");
+		expect(await valueOf(pane, "labels")).toBe("Bug");
 		expect(await pane.find({
 			type: "Markdown",
 			text: /blocks ~16.5 s/
 		})).toBeDefined();
-		expect(await pane.findAll({ type: "Input" })).toHaveLength(1);
-		expect(await pane.findAll({ type: "Select" })).toHaveLength(4);
-		expect(await keyed(pane)).toEqual([
-			"act:title",
-			"option:labels:MSC-bug",
+		expect(await pane.find({ type: "Input" })).toBeUndefined();
+		expect(await pane.find({ type: "Select" })).toBeUndefined();
+		expect(await buttonKeys(pane)).toEqual([
+			"field:title",
+			"value:field:team",
+			"value:field:status",
+			"value:field:priority",
+			"value:field:labels",
+			"set:field:project",
 			"act:create",
 			"act:create-open",
 			"act:discard"
@@ -832,23 +829,33 @@ for (const surface of ["desktop", "vscode"]) {
 		const create = await pane.find({ key: "act:create" });
 		expect(create?.props.variant).toBe("primary");
 		expect(create?.props.dimColor).toBeUndefined();
-		expect((await pane.find({ key: "act:title" }))?.props.label).toBe("Edit");
+		expect((await pane.find({ key: "field:title" }))?.props.label).toBe("Edit");
+		expect((await pane.find({
+			type: "Text",
+			text: "None"
+		}))?.props.italic).toBe(true);
+		await pane.press({ key: "value:field:priority" });
+		await expectNative(pane);
+		expect(await pane.find({ key: "priority" })).toBeDefined();
 		await pane.select({
-			key: "select:priority",
+			key: "priority",
 			value: "2"
 		});
+		expect(await pane.find({ type: "Select" })).toBeUndefined();
+		expect(await valueOf(pane, "priority")).toBe("High");
+		await pane.press({ key: "field:title" });
 		await expectNative(pane);
-		expect(await valueOf(pane, "priority")).toBe("2");
-		await pane.press({ key: "act:title" });
-		await expectNative(pane);
-		expect((await pane.find({ key: "input:field:title:0" }))?.props.value).toBe("Cap get_rate outage latency");
+		expect((await pane.find({ key: "title-0" }))?.props.value).toBe("Cap get_rate outage latency");
 		await pane.input({
-			key: "input:field:title:0",
+			key: "title-0",
 			text: "Cap outage latency",
 			kind: "change"
 		});
-		await pane.press({ key: "act:title" });
-		expect(await showsTitle(pane, "Cap outage latency")).toBe(true);
+		await pane.press({ key: "act:done" });
+		expect(await pane.find({
+			type: "Text",
+			text: "Cap outage latency"
+		})).toBeDefined();
 		await pane.press({ key: "act:create" });
 		await w.clock.settle();
 		expect(saved(w, "save_issue")).toMatchObject({
@@ -885,9 +892,9 @@ for (const surface of ["desktop", "vscode"]) {
 			...PANE,
 			surface
 		});
-		await pane.press({ key: "act:title" });
+		await pane.press({ key: "field:title" });
 		await pane.input({
-			key: "input:field:title:0",
+			key: "title-0",
 			text: "  ",
 			kind: "change"
 		});
@@ -895,8 +902,12 @@ for (const surface of ["desktop", "vscode"]) {
 		expect(create?.props.variant).toBeUndefined();
 		expect(create?.props.dimColor).toBe(true);
 		await expectNative(pane);
-		expect(await pane.find({ key: "act:title" })).toBeUndefined();
-		expect(await pane.find({ key: "input:field:title:0" })).toBeDefined();
+		await pane.press({ key: "act:done" });
+		expect(await pane.find({ key: "field:title" })).toBeUndefined();
+		expect(await pane.find({
+			type: "Button",
+			text: "Set"
+		})).toBeDefined();
 		await expectNative(pane);
 		await pane.unmount();
 	});
@@ -916,23 +927,19 @@ for (const surface of ["desktop", "vscode"]) {
 			...PANE,
 			surface
 		});
-		expect((await keyed(pane)).slice(0, 2)).toEqual(["duplicate", "act:title"]);
+		expect((await buttonKeys(pane)).slice(0, 2)).toEqual(["duplicate", "field:title"]);
 		expect((await pane.find({ key: "duplicate" }))?.props.label).toBe("Open");
-		const line = await pane.findAll({
+		const line = await pane.find({
 			type: "Text",
 			text: "SHP-1 may already cover this"
 		});
-		expect(line.some((t) => t.props.color === "#d4962a")).toBe(true);
-		expect(await pane.find({
-			type: "Text",
-			text: "Cache exchange rates"
-		})).toBeUndefined();
-		await expectNative(pane);
-		await pane.press({ key: "duplicate" });
+		expect(line?.props.color).toBe("#d4962a");
 		expect(await pane.find({
 			type: "Text",
 			text: "Cache exchange rates"
 		})).toBeDefined();
+		await expectNative(pane);
+		await pane.press({ key: "duplicate" });
 		expect((await pane.find({ key: "duplicate" }))?.props.label).toBe("Close");
 		expect(await pane.find({
 			type: "Markdown",
@@ -1000,13 +1007,16 @@ for (const surface of ["desktop", "vscode"]) {
 			text: /Line 59/
 		})).toBeDefined();
 		await expectNative(pane);
+		await pane.press({ key: "value:field:team" });
 		await pane.select({
-			key: "select:team",
+			key: "team",
 			value: "SHP"
 		});
 		await w.clock.settle();
-		expect(await valueOf(pane, "team")).toBe("SHP");
-		expect(await valueOf(pane, "status")).toBe("SHP-todo");
+		expect(await valueOf(pane, "team")).toBe("Webshop (SHP)");
+		await pane.press({ key: "value:field:status" });
+		expect((await pane.find({ key: "status" }))?.props.value).toBe("SHP-todo");
+		await pane.press({ key: "act:done" });
 		await pane.press({ key: "act:create-open" });
 		await w.clock.settle();
 		expect(saved(w, "save_issue")).toMatchObject({
@@ -1029,24 +1039,25 @@ for (const surface of ["desktop", "vscode"]) {
 			...PANE,
 			surface
 		});
-		await pane.press({ key: "option:labels:MSC-bug" });
-		expect(await pane.find({ key: "option:labels:MSC-bug" })).toBeDefined();
-		await pane.press({ key: "option:labels:MSC-bug" });
-		await pane.press({ key: "option:labels:MSC-bug" });
+		await pane.press({ key: "value:field:labels" });
+		await pane.press({ key: "label:MSC-bug" });
+		expect(await pane.find({ key: "label:MSC-bug" })).toBeDefined();
+		await pane.press({ key: "label:MSC-bug" });
+		await pane.press({ key: "label:MSC-bug" });
 		const search = async () => (await pane.find({ type: "Input" }))?.key;
 		await pane.input({
 			key: String(await search()),
 			text: "area1",
 			kind: "change"
 		});
-		expect(await pane.find({ key: "option:labels:MSC-area1" })).toBeDefined();
-		const offered = (await keyed(pane)).filter((k) => k.startsWith("option:labels:"));
-		expect(offered).toHaveLength(7);
+		expect(await pane.find({ key: "label-add:MSC-area1" })).toBeDefined();
+		const offered = (await buttonKeys(pane)).filter((k) => k.startsWith("label-add:"));
+		expect(offered).toHaveLength(6);
 		await expectNative(pane);
-		await pane.press({ key: "option:labels:MSC-area12" });
-		expect(await pane.find({ key: "option:labels:MSC-area1" })).toBeUndefined();
+		await pane.press({ key: "label-add:MSC-area12" });
+		expect(await pane.find({ key: "label-add:MSC-area1" })).toBeUndefined();
 		expect((await pane.find({ type: "Input" }))?.props.value).toBe("");
-		expect(await pane.find({ key: "chip:MSC-area12" })).toBeDefined();
+		expect(await pane.find({ key: "label:MSC-area12" })).toBeDefined();
 		await pane.input({
 			key: String(await search()),
 			text: "area3",
@@ -1064,9 +1075,11 @@ for (const surface of ["desktop", "vscode"]) {
 		});
 		expect(await pane.find({
 			type: "Text",
-			text: "No match"
+			text: "No label matches"
 		})).toBeDefined();
 		await expectNative(pane);
+		await pane.press({ key: "act:done" });
+		expect(await valueOf(pane, "labels")).toBe("Area/area3, Area/area12");
 		await pane.press({ key: "act:create" });
 		await w.clock.settle();
 		expect(saved(w, "save_issue")?.labels).toEqual(["MSC-area12", "MSC-area3"]);
@@ -1123,7 +1136,10 @@ test("mobile: the draft is shown as written, to create or discard", async ($, on
 		"act:create-open",
 		"act:discard"
 	]);
-	expect(await showsTitle(pane, "Cap get_rate outage latency")).toBe(true);
+	expect(await pane.find({
+		type: "Text",
+		text: "Cap get_rate outage latency"
+	})).toBeDefined();
 	expect(await pane.find({
 		type: "Markdown",
 		text: /blocks ~16.5 s/

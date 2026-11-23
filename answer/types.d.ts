@@ -111,8 +111,8 @@ export type TranscriptRound = {
 
 export type RoundEditor = {
   from: number;
-  surface: "terminal" | "desktop" | "vscode" | "mobile";
-  /** Number of fields in a single-line inline editor, if extended. */
+  surface: "terminal" | "desktop" | "vscode";
+  /** Number of single-line fields in the VS Code inline editor, if extended. */
   lines?: number;
 };
 
@@ -123,6 +123,8 @@ export type Current = {
   /** What `held` draws as. */
   view: View;
   editing: Editing;
+  /** The shown item's body opened whole on a graphical surface; it folds to a line otherwise. */
+  isBodyOpen: boolean;
   /**
    * Whether the band holds the keyboard on a terminal: true only after a `ui.focus` that moved
    * the ring into it. A click in the transcript gives the keys back to the prompt and the band

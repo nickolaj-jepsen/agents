@@ -1,5 +1,5 @@
 import { expect, mock, test } from "claude-code/testing";
-import { t as tokens } from "./tokens-BWSk26Ae.js";
+import { t as tokens } from "./tokens-B8NJo9el.js";
 
 // ../../lib/kits/core/src/paint/checks.tsx
 /**
@@ -531,7 +531,7 @@ test("a send sets an answered round aside, and /answer brings it back with its a
 	expect(w.toasts).toHaveLength(1);
 	expect(w.toasts[0]).toMatch(/^1 answer set aside/);
 	const back = await form($);
-	expect(await chosen(back)).toBe(1);
+	expect((await back.find({ key: "key:e1" }))?.props.variant).toBe("primary");
 	expect(await asking(back, /Should every focus default/)).toBeDefined();
 	await back.unmount();
 });
@@ -594,7 +594,7 @@ test("a command's send sets the round aside too, and the aside wins over the tra
 		toolUses: []
 	}];
 	const back = await form($);
-	expect(await chosen(back)).toBe(1);
+	expect((await back.find({ key: "key:e1" }))?.props.variant).toBe("primary");
 	await back.unmount();
 });
 test("a send the engine refuses keeps the round and its answers", async ($, on) => {
@@ -645,8 +645,6 @@ const typeIn = async (drawn, name, text, kind) => drawn.input({
 /** The offer's words, which a graphical surface sets beside its button rather than in it. */
 const offerSays = async (drawn) => (await drawn.findAll({ type: "Text" })).map((e) => e.text).find((t) => /^(Answer|Pick from) /.test(t));
 /** The tick beside an answered question's tab. */
-/** The marks that say an answer is chosen: an icon before its letter, not a filled Button. */
-const chosen = async (drawn) => (await drawn.findAll({ type: "Svg" })).filter((e) => e.props.alt === "Chosen").length;
 const ticked = async (drawn) => (await drawn.findAll({ type: "Svg" })).find((e) => e.props.alt === "Done");
 /** The question shown: its title, as the form's markdown heading draws it. */
 const asking = (drawn, title) => drawn.find({
@@ -863,8 +861,8 @@ for (const surface of ["desktop", "vscode"]) {
 			text: /^Recommended$/
 		})).toBeDefined();
 		expect(await drawn.find({
-			type: "Markdown",
-			text: /Recommended:\*\* A\. A per-kind table/
+			type: "Text",
+			text: /^Recommended: A\. A per-kind table/
 		})).toBeDefined();
 		expect(await field(drawn, "write")).toBeDefined();
 		expect(await drawn.find({
@@ -872,6 +870,7 @@ for (const surface of ["desktop", "vscode"]) {
 			key: "key:e3"
 		})).toBeUndefined();
 		for (const key of [
+			"q0",
 			"q1",
 			"q2",
 			"review"
@@ -879,7 +878,7 @@ for (const surface of ["desktop", "vscode"]) {
 			type: "Button",
 			key: `tab:${key}`
 		})).toBeDefined();
-		expect(await drawn.find({ key: "tab:q0" })).toBeUndefined();
+		expect((await drawn.find({ key: "tab:q0" }))?.props.variant).toBe("primary");
 		expect((await drawn.find({ key: "tab:q1" }))?.props.dimColor).toBe(true);
 		expect((await drawn.find({ key: "quit" }))?.props.label).toBe("Close");
 		expect(await drawn.find({ key: "next" })).toBeUndefined();
@@ -887,7 +886,8 @@ for (const surface of ["desktop", "vscode"]) {
 		expect(await field(drawn, "note")).toBeUndefined();
 		await expectNative(drawn);
 		await pick(w, drawn, "e1");
-		expect(await chosen(drawn)).toBe(1);
+		expect((await drawn.find({ key: "key:e1" }))?.props.variant).toBe("primary");
+		expect((await drawn.find({ key: "key:e0" }))?.props.variant).not.toBe("primary");
 		expect(await field(drawn, "note")).toBeDefined();
 		expect((await drawn.find({ key: "next" }))?.props.label).toBe("Next");
 		expect((await drawn.find({ key: "next" }))?.props.variant).toBe("primary");
@@ -924,15 +924,8 @@ for (const surface of ["desktop", "vscode"]) {
 			type: "Text",
 			text: /^B: Default by kind\.$/
 		})).toBeDefined();
-		expect(await drawn.find({
-			type: "Text",
-			text: "Q3"
-		})).toBeDefined();
-		expect(await drawn.find({
-			type: "Text",
-			text: "Q1"
-		})).toBeDefined();
-		expect(await drawn.find({ key: "go:item2" })).toBeUndefined();
+		expect((await drawn.find({ key: "go:item2" }))?.props.label).toBe("Q3");
+		expect((await drawn.find({ key: "go:item0" }))?.props.label).toBe("Q1");
 		expect((await drawn.find({ key: "send" }))?.props.variant).toBe("primary");
 		expect((await drawn.find({ key: "fill" }))?.props.variant).toBeUndefined();
 		await expectNative(drawn);
@@ -979,7 +972,8 @@ for (const surface of ["desktop", "vscode"]) {
 		expect(await asking(drawn, /What should happen to/)).toBeDefined();
 		await drawn.press({ key: "key:e0" });
 		await drawn.press({ key: "key:e1" });
-		expect(await chosen(drawn)).toBe(1);
+		expect((await drawn.find({ key: "key:e0" }))?.props.variant).not.toBe("primary");
+		expect((await drawn.find({ key: "key:e1" }))?.props.variant).toBe("primary");
 		expect((await drawn.find({ key: "next" }))?.props.variant).toBe("primary");
 		await expectNative(drawn);
 		await typeIn(drawn, "note", "use B", "change");
@@ -992,7 +986,7 @@ for (const surface of ["desktop", "vscode"]) {
 			type: "Text",
 			text: "Note: use B"
 		})).toBeDefined();
-		await drawn.press({ key: "tab:q0" });
+		await drawn.press({ key: "go:item0" });
 		expect(await asking(drawn, /Should every focus default/)).toBeDefined();
 		await drawn.press({ key: "tab:review" });
 		await drawn.press({ key: "send" });
@@ -1047,7 +1041,7 @@ for (const surface of ["desktop", "vscode"]) {
 		expect((await drawn.find({ key: "key:e1" }))?.props.label).toBe("B");
 		await expectNative(drawn);
 		await pick(w, drawn, "e0");
-		expect(await chosen(drawn)).toBe(1);
+		expect((await drawn.find({ key: "key:e0" }))?.props.variant).toBe("primary");
 		expect((await drawn.find({ key: "next" }))?.props.label).toBe("Review");
 		await expectNative(drawn);
 		await drawn.unmount();
@@ -1094,11 +1088,18 @@ for (const surface of ["desktop", "vscode"]) {
 			},
 			surface
 		});
+		expect((await long.find({
+			type: "Text",
+			text: /^Line 1 of what it hangs on\. Line 2/
+		}))?.props.wrap).toBe("truncate-end");
+		expect((await long.find({ key: "more" }))?.props.label).toBe("More");
+		await expectNative(long);
+		await long.press({ key: "more" });
 		expect(await long.find({
 			type: "Markdown",
 			text: /Line 12 of what it hangs on/
 		})).toBeDefined();
-		expect(await long.find({ key: "more" })).toBeUndefined();
+		expect((await long.find({ key: "more" }))?.props.label).toBe("Less");
 		expect((await long.find({ key: "key:e1" }))?.props.label).toBe("B");
 		expect(await long.find({
 			type: "Markdown",
@@ -1130,7 +1131,7 @@ for (const surface of ["desktop", "vscode"]) test(`${surface}: the transcript's 
 	});
 	await expectNative(cards);
 	await cards.press({ key: "key:question-0-choose-1" });
-	expect(await chosen(cards)).toBe(1);
+	expect((await cards.find({ key: "key:question-0-choose-1" }))?.props.variant).toBe("primary");
 	expect(await cards.find({ key: "question-0-clear" })).toBeDefined();
 	await expectNative(cards);
 	await cards.press({ key: "key:question-1-write" });
