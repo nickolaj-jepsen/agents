@@ -50,16 +50,16 @@
         "!turbo.json"
       ],
       // The engine writes `.claude-plugin/types` and `tsconfig.json` into `dist/` when it loads a
-      // mod; `types` owns them, a build keeps them and a cache restore does not touch them.
+      // mod. They aren't build outputs; `types` keeps its own snapshot elsewhere.
       "outputs": ["dist/**", "!dist/.claude-plugin/types/**", "!dist/tsconfig.json"]
     },
-    // The Claude Code API types the engine lays beside a mod it loads, which a Claude half is
-    // written against (`drive types`). Its key is its dependencies': the build, the harness and the
-    // `claude` version, all of which reach it as hashes.
+    // `drive types` snapshots the engine's API declarations outside `dist/`, where other Claude
+    // sessions can't rewrite them during a type check. The build, harness and pinned Claude
+    // version reach this task as hashes.
     "types": {
       "dependsOn": ["^topo", "build"],
       "inputs": ["package.json"],
-      "outputs": ["dist/.claude-plugin/types/**", "dist/tsconfig.json"]
+      "outputs": [".claude-types/**"]
     },
     // A package with a Claude half checks it too, against its `types` (its own `tsconfig.claude.json`).
     "check-types": {

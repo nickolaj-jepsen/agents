@@ -12,6 +12,7 @@ import { span, type Span } from "@agents/kit-core/lines.ts";
 import { list } from "@agents/kit-list/gui.tsx";
 import type { ListGroup } from "@agents/kit-list/contract.ts";
 import { emptyState, notice } from "@agents/kit-notice/gui.tsx";
+import type { MeaningName } from "@agents/kit-core/icons.ts";
 import { blocks, type Gui } from "@agents/kit-core/paint/gui.tsx";
 import { evidenceSections } from "./evidence.ts";
 import { byTarget, choiceSummary, seen, type Choice, type Suggestion } from "../lib/docfix";
@@ -61,20 +62,33 @@ const metaOf = (q: Suggestion, now: number) =>
   [seen(q) > 1 ? `seen ${seen(q)}×` : "", ageText(q.updated, now)].filter(Boolean).join(" · ");
 
 /** One opened suggestion: its meta line and evidence, then what to do with it. */
-function opened(g: Gui, q: Suggestion, now: number): JSX.Element {
+function opened(g: Gui, q: Suggestion, now: number, chosen?: Choice): JSX.Element {
   return blocks(
     g,
-    detail(g, { meta: metaOf(q, now), sections: evidenceSections(q.evidence) }),
-    buttonRow(
-      g,
-      CHOICES.map((choice) => ({
-        hotkey: "",
-        label: choice,
-        hit: choiceHit(choice, q.id),
-      })),
-    ),
+    detail(g, { meta: metaOf(q, now), sections: evidenceSections(q.evidence), isFlush: true }),
+    buttonRow(g, {
+      isFlush: true,
+      rows: [
+        CHOICES.map((choice) => ({
+          hotkey: "",
+          label: choice,
+          hit: choiceHit(choice, q.id),
+          isChosen: choice === chosen,
+        })),
+      ],
+    }),
   );
 }
+
+const KIND: Record<Suggestion["kind"], MeaningName> = {
+  wrong: "kind:wrong",
+  stale: "kind:stale",
+  missing: "kind:missing",
+};
+
+/** The meaning of a decision, once the row is set to one. */
+const decision = (choice: Choice | undefined): MeaningName | undefined =>
+  choice === "apply" ? "decision:apply" : choice === "dismiss" ? "decision:dismiss" : undefined;
 
 /** The queue grouped by doc. A row says what it is set to by its mark, and what it is by its kind. */
 export function queueList(g: Gui, v: QueueView): JSX.Element {
@@ -83,14 +97,18 @@ export function queueList(g: Gui, v: QueueView): JSX.Element {
     rows: rows.map((q) => ({
       text: q.claim,
       mark: v.set[q.id] === "apply" ? "chosen" : v.set[q.id] === "dismiss" ? "dropped" : "open",
-      aside: q.kind,
+      // What the row is set to, once it is; else what it is. A bare mark is for terminals.
+      icon: decision(v.set[q.id]) ?? KIND[q.kind],
+      aside: seen(q) > 1 ? `${seen(q)}×` : undefined,
       hit: rowHit(q.id),
     })),
   }));
   const open = Object.fromEntries(
-    v.queue.filter((q) => v.open.has(q.id)).map((q) => [rowHit(q.id), opened(g, q, v.now)]),
+    v.queue
+      .filter((q) => v.open.has(q.id))
+      .map((q) => [rowHit(q.id), opened(g, q, v.now, v.set[q.id])]),
   );
-  return list(g, { groups, lines: 1 }, { more: { isAll: v.isAll, hit: MORE }, opened: open });
+  return list(g, { groups, lines: 1, more: { isAll: v.isAll, hit: MORE }, opened: open });
 }
 
 /**
@@ -107,22 +125,19 @@ export function queuePane(g: Gui, v: QueueView): JSX.Element {
     : [];
   return blocks(
     g,
-    frameTop(
-      g,
-      { title: TITLE, caption },
-      {
-        hostTitle: TITLE,
-        actions: v.queue.length
-          ? [{ hotkey: "", label: "submit", hit: SUBMIT, isLit: Boolean(summary) }]
-          : undefined,
-      },
-    ),
-    v.said.text ? notice(g, v.said.text, v.said.status) : null,
+    frameTop(g, {
+      title: TITLE,
+      caption,
+      hostTitle: TITLE,
+      actions: v.queue.length
+        ? [{ hotkey: "", label: "submit", hit: SUBMIT, isLit: Boolean(summary) }]
+        : undefined,
+    }),
+    v.said.text ? notice(g, { text: v.said.text, status: v.said.status }) : null,
     v.queue.length
       ? queueList(g, v)
-      : emptyState(
-          g,
-          "Nothing to review: no open doc suggestions in this repo. An agent files one when a doc it reads no longer matches the code.",
-        ),
+      : emptyState(g, {
+          text: "Nothing to review: no open doc suggestions in this repo. An agent files one when a doc it reads no longer matches the code.",
+        }),
   );
 }

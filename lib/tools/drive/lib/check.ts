@@ -7,18 +7,21 @@
  */
 import { options } from "./options.ts";
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { snapshotPath, type Resolved } from "./scenario.ts";
 import type { Session, Size } from "./session.ts";
 
-export type Capture = {
+export type MediaCapture = {
   size: Size;
   /** The masked, cropped text. */
   actual: string;
+  png: string;
+};
+
+export type Capture = MediaCapture & {
   /** The stored snapshot, undefined when there is none yet. */
   expected: string | undefined;
   snap: string;
-  png: string;
 };
 
 export const actualOf = (path: string) => path.replace(/\.(snap|png)$/, ".actual.$1");
@@ -97,14 +100,17 @@ export async function capture(session: Session, r: Resolved): Promise<Capture[]>
  * The screen as it is now, for media: no stored snapshot is read or compared, and every size is
  * drawn whatever the run's own flags say. A picture that cannot be had still fails.
  */
-export async function captureMedia(session: Session, r: Resolved): Promise<Capture[]> {
-  const out: Capture[] = [];
+export async function captureMedia(
+  session: Session,
+  r: Resolved,
+  stage: string,
+): Promise<MediaCapture[]> {
+  const out: MediaCapture[] = [];
   for (const size of await sizes(session, r)) {
-    const snap = snapshotPath(r, size, "snap");
-    const png = snapshotPath(r, size, "png");
+    const png = join(stage, r.harness, `${r.name}@${size[0]}x${size[1]}.png`);
     const actual = await read(session, r, size);
-    await session.png(actualOf(png));
-    out.push({ size, actual, expected: undefined, snap, png });
+    await session.png(png);
+    out.push({ size, actual, png });
   }
   return out;
 }

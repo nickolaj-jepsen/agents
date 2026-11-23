@@ -47,11 +47,10 @@ jobs:
       # Python from `.python-version`, fetched once, before turbo starts several uv tasks at once.
       - run: uv python install
       - run: pnpm install --frozen-lockfile
-      # Two tasks at a time: the e2e packages each run their own pool of sessions.
       - name: Check
-        run: pnpm turbo run check --concurrency=2
-      # `check:nix` is the one check that needs nix. Ask turbo whether its result is cached, and
-      # install nix only when it is not: it keys on the nix files and `flake.lock` alone.
+        run: pnpm gate
+      # `check:nix` is the one check that needs Nix. Ask Turbo whether its result is cached
+      # before installing Nix.
       - name: Does the nix check need to run
         id: nix
         run: |
@@ -69,7 +68,7 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - if: steps.nix.outputs.run == 'true'
         name: Check the nix files
-        run: pnpm turbo run check:nix
+        run: pnpm gate:nix
         env:
           NIX_CONFIG: access-tokens = github.com=${{ github.token }}
       # A mismatch writes `.actual.snap` and `.actual.png` beside the snapshot; failed steps leave

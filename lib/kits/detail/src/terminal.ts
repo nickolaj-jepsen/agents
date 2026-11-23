@@ -15,7 +15,10 @@ import {
   type Span,
 } from "@agents/kit-core/lines.ts";
 import { prose } from "@agents/kit-prose/terminal.ts";
-import type { Detail, DetailItem, DetailSection } from "./contract.ts";
+import type { Detail, DetailItem, DetailProps, DetailSection } from "./contract.ts";
+
+/** What a terminal is given: the model without what only a graphical surface draws. */
+type Terminal = DetailProps<"pi" | "claude-terminal">;
 
 /** An action at a rule's end, drawn as a button row draws one. */
 const actionSpans = (a: Button): Span[] => buttonRow([a], Number.MAX_SAFE_INTEGER)[0]?.spans ?? [];
@@ -62,7 +65,7 @@ function section(s: DetailSection, d: Detail, width: number): Line[] {
     ...(s.rule !== undefined ? [ruleRow(s.rule, s.action, width, x ? x - 1 : 0)] : []),
     ...[
       ...(s.heading ? block([span(s.heading, { role: "dim" })], room) : []),
-      ...(s.text ? prose(s.text, room) : []),
+      ...(s.text ? prose({ text: s.text, width: room }) : []),
       ...(s.items?.length ? itemRows(s.items, room) : []),
     ].map((row) => setIn(row, x)),
   ];
@@ -104,7 +107,8 @@ function windowOf(d: Detail, all: readonly Line[]): Scrolled<Line> {
 }
 
 /** The furthest `offset` can scroll a detail at `width`: 0 when it fits its height. */
-export const detailRange = (d: Detail, width: number): number => windowOf(d, rowsOf(d, width)).max;
+export const detailRange = (d: Terminal, width: number): number =>
+  windowOf(d, rowsOf(d, width)).max;
 
 /**
  * One item read whole: a dim meta line, a bold title, then sections, each under a dim heading
@@ -112,7 +116,7 @@ export const detailRange = (d: Detail, width: number): number => windowOf(d, row
  * window from `offset`, and where it has three rows or more its edges count what is out of sight
  * (`↑ 3 more`, `↓ 12 more`), as every window in the kit does.
  */
-export function detail(d: Detail, width: number): Line[] {
+export function detail(d: Terminal, width: number): Line[] {
   const { rows } = windowOf(d, rowsOf(d, width));
   if (d.hit === undefined) return rows;
   return rows.map((row) => (row.spans.some((s) => s.hit) ? row : { ...row, hit: d.hit }));

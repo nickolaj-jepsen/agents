@@ -1,7 +1,39 @@
 /**
- * The question card's contract: what both clients pass to its parts, and the intents a list of
+ * The question card's contract: its model, what each drawing is given, and the intents a list of
  * choices sends back. No host imports.
  */
+import { modelFields } from "@agents/kit-core/manifest.ts";
+
+/**
+ * What a write-in's or a note's field is given on a graphical surface (where there is an
+ * `Input`): the words it invites, whether it takes the focus when it is drawn, and, for a host
+ * whose field is one line (VS Code), `lines`: one field per line of the text. Events go to the
+ * context (`g.input(hit, text)`, `g.submit(hit, text)`); the field of a line after the first is
+ * the hit `lineHit(hit, i)`.
+ */
+export type FieldProps = {
+  /**
+   * A write-in whose text is this one is empty, showing it as the placeholder; a note shows it
+   * as its own. @default "Write your own answer", and "Add a note" for a note
+   */
+  invitation?: string;
+  /** The first field takes the focus when it is drawn: a field the person just asked for. */
+  autoFocus?: boolean;
+  /** One field per line of its text, at least this many, the later ones placeheld `Line 2`. */
+  lines?: number;
+  /** Rows a field has where the host's wraps what is typed. @default 1 */
+  rows?: number;
+};
+
+/** The hit of the `line`th field of a write-in or a note that is one field per line. */
+export const lineHit = (hit: string, line: number) => (line ? `${hit}#${line}` : hit);
+
+/** A field's hit and its line, from what `g.input` or `g.submit` was given. */
+export function lineOf(hit: string): { hit: string; line: number } {
+  const at = hit.lastIndexOf("#");
+  const line = at < 0 ? NaN : Number(hit.slice(at + 1));
+  return Number.isInteger(line) ? { hit: hit.slice(0, at), line } : { hit, line: 0 };
+}
 
 /**
  * The state every part of one card shares. A card looks the same wherever it is drawn: in a
@@ -48,7 +80,7 @@ export type Choice = CardState & {
   literal?: boolean;
   /** The control its rows belong to. */
   hit?: string;
-};
+} & FieldProps;
 
 export type Note = CardState & {
   /** What the person wrote; empty shows the invitation to add one. */
@@ -58,7 +90,7 @@ export type Note = CardState & {
   /** Rows it may take. */
   max?: number;
   hit?: string;
-};
+} & FieldProps;
 
 export type Step = {
   /** Kept when names do not fit: the step's number, or `Review`. */
@@ -106,6 +138,35 @@ export type Closing = {
    */
   hits?: { count: string; fill: string };
 };
+
+/**
+ * The card's model: what a screen of questions says, and what its view model decides from.
+ * A card is a heading, its choices and a note; a round of several adds steps, a summary of each
+ * answer and a closing row.
+ */
+export type Card = {
+  heading?: Heading;
+  choices?: readonly Choice[];
+  note?: Note;
+  steps?: readonly Step[];
+  summaries?: readonly Summary[];
+  closing?: Closing;
+  /** The room in cells. */
+  width: number;
+};
+
+/** The capability each gated field needs. The rest of the model is for every surface. */
+export const cardNeeds = { width: "cells" } as const;
+
+export const cardFields = modelFields<Card>()([
+  "heading",
+  "choices",
+  "note",
+  "steps",
+  "summaries",
+  "closing",
+  "width",
+]);
 
 export type ChoiceListItem = {
   key: string;

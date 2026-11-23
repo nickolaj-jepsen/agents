@@ -1,0 +1,12 @@
+{
+  "pi, claude-terminal, vscode, desktop, mobile": {
+    "type": "caption",
+    "rows": "cut",
+    "text": [
+      {
+        "text": "The sync worker retried 3 times and gave up, so the orders it held are still in the queue for the next run.",
+        "role": "dim"
+      }
+    ]
+  }
+}

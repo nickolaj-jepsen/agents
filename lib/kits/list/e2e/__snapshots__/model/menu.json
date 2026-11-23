@@ -1,0 +1,102 @@
+{
+  "pi, claude-terminal": {
+    "groups": [
+      {
+        "label": "Actions",
+        "isActive": true,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Commit the staged changes",
+            "isLiteral": false,
+            "isDim": false,
+            "isOpened": false,
+            "hit": "menu:1"
+          },
+          {
+            "text": "Push `main` to origin",
+            "isLiteral": false,
+            "isDim": false,
+            "aside": "2 ahead",
+            "isOpened": false,
+            "hit": "menu:2"
+          },
+          {
+            "text": "Open a worktree",
+            "isLiteral": false,
+            "isDim": false,
+            "isOpened": false,
+            "hit": "menu:3"
+          },
+          {
+            "text": "Land a worktree",
+            "isLiteral": false,
+            "isDim": true,
+            "aside": "no worktree",
+            "isOpened": false,
+            "hit": "menu:4"
+          }
+        ]
+      }
+    ],
+    "asideCells": 0
+  },
+  "vscode, desktop, mobile": {
+    "groups": [
+      {
+        "label": "Actions",
+        "isActive": true,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Commit the staged changes",
+            "isLiteral": false,
+            "isDim": false,
+            "action": {
+              "hit": "menu:1",
+              "label": "Commit"
+            },
+            "isOpened": false,
+            "hit": "menu:1"
+          },
+          {
+            "text": "Push `main` to origin",
+            "isLiteral": false,
+            "isDim": false,
+            "aside": "2 ahead",
+            "asideIn": "column",
+            "action": {
+              "hit": "menu:2",
+              "label": "Push"
+            },
+            "isOpened": false,
+            "hit": "menu:2"
+          },
+          {
+            "text": "Open a worktree",
+            "isLiteral": false,
+            "isDim": false,
+            "action": {
+              "hit": "menu:3",
+              "label": "Open"
+            },
+            "isOpened": false,
+            "hit": "menu:3"
+          },
+          {
+            "text": "Land a worktree",
+            "isLiteral": false,
+            "isDim": true,
+            "aside": "no worktree",
+            "asideIn": "text",
+            "isOpened": false,
+            "hit": "menu:4"
+          }
+        ]
+      }
+    ],
+    "asideCells": 7
+  }
+}

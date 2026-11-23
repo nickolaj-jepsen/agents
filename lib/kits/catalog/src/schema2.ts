@@ -64,9 +64,9 @@ export function checkComponent2(
           `${where}: part \`${name}\` is in ${d} and also has a \`none\` reason for it`,
         );
   }
-  for (const d of drawings)
-    if (!Object.values(c.parts).some((p) => (p.drawings ?? drawings).includes(d)))
-      problems.push(`${where}: no part is drawn in ${d}`);
+  // A drawing with no part is allowed when each part says why (the check above): the host draws
+  // it itself, as the graphical clients draw an image. A component with no parts draws nothing.
+  if (Object.keys(c.parts).length === 0) problems.push(`${where}: the component has no parts`);
 
   // Fields: every one belongs to a feature, and a gated one to a feature that needs what it needs.
   const covered = new Set<string>();

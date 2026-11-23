@@ -10,27 +10,21 @@ import {
 } from "@agents/kit-core/lines.ts";
 import { controlStyle } from "@agents/kit-card/terminal.ts";
 import { tokens } from "@agents/kit-core/tokens.ts";
-import type { Button, ButtonRowOptions } from "./contract.ts";
-
-/** How a button's key is printed after its label: `↵` for Enter, else in brackets; nothing for none. */
-export const shortcutOf = (b: Pick<Button, "hotkey" | "hit">) =>
-  b.hit === undefined || !b.hotkey
-    ? b.hotkey
-    : b.hotkey === "enter"
-      ? tokens.glyph.enter
-      : `[${b.hotkey}]`;
+import type { Button, ButtonRowOptions, ButtonsProps } from "./contract.ts";
+import { settle, shortcutOf } from "./model.ts";
 
 /**
  * Actions left to right, label first with the key dim after it, the suggested one in the
  * accent; and dim keyboard-only hints, key first. One row drops what is neither suggested nor
- * essential, last first, until it fits; with `wrap` nothing drops.
+ * essential, last first, until it fits; with `wrap` nothing drops. One button is lit: the
+ * first that asks (`settle`).
  */
 export function buttonRow(
   keys: readonly Button[],
   width: number,
   { wrap = false, lead = [], hover }: ButtonRowOptions = {},
 ): Line[] {
-  const chips = keys.map((key) => {
+  const chips = (settle([keys])[0] ?? []).map((key) => {
     const shortcut = shortcutOf(key);
     return {
       ...key,
@@ -83,4 +77,26 @@ export function buttonRow(
   }
   rows.push(line(spans));
   return rows;
+}
+
+/**
+ * Every row of a footer, as `buttonRow` draws one: the view model decides what is lit (one) and
+ * what goes quiet while Close asks (`confirming`). A row that wraps goes on under itself; the
+ * next row starts below it.
+ * @param model `rows`, and `lead` before the first entry.
+ */
+export function buttonRows(
+  model: Pick<
+    ButtonsProps<"pi" | "claude-terminal">,
+    "rows" | "lead" | "confirming" | "wrap" | "hover"
+  >,
+  width: number,
+): Line[] {
+  return settle(model.rows, model.confirming).flatMap((row, i) =>
+    buttonRow(row, width, {
+      wrap: model.wrap,
+      lead: i === 0 ? [...(model.lead ?? [])] : [],
+      hover: model.hover,
+    }),
+  );
 }

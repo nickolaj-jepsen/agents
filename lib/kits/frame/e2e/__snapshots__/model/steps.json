@@ -1,0 +1,53 @@
+{
+  "pi, claude-terminal": {
+    "head": {
+      "caption": "Step 2 of 3 ── Retention",
+      "close": "control"
+    },
+    "footer": {
+      "lead": "",
+      "rows": [
+        [
+          {
+            "label": "Choose",
+            "hit": "choose",
+            "key": "↵",
+            "tone": "lit"
+          },
+          {
+            "label": "Note",
+            "hit": "note",
+            "key": "[n]",
+            "tone": "plain"
+          }
+        ]
+      ]
+    },
+    "notice": ""
+  },
+  "vscode, desktop, mobile": {
+    "head": {
+      "title": "Review",
+      "caption": "Step 2 of 3 ── Retention",
+      "close": "host"
+    },
+    "footer": {
+      "lead": "",
+      "rows": [
+        [
+          {
+            "label": "Choose",
+            "hit": "choose",
+            "tone": "lit"
+          },
+          {
+            "label": "Note",
+            "hit": "note",
+            "tone": "quiet"
+          }
+        ]
+      ]
+    },
+    "notice": ""
+  }
+}

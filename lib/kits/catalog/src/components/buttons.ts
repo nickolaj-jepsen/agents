@@ -1,8 +1,8 @@
-import { defineComponent, no, yes } from "@agents/kit-core/manifest.ts";
+import { defineLegacyComponent, no, yes } from "@agents/kit-core/manifest.ts";
 
 const gone = no("Claude Code draws this with the kit's button-row now.");
 
-export default defineComponent({
+export default defineLegacyComponent({
   id: "buttons",
   name: "Button row",
   purpose: "Clickable actions and keyboard-only labels, with the suggested action emphasised.",

@@ -1,0 +1,10 @@
+# kit/pi/button-row/rows 160x45 @2,2 (96x2)
+Create ↵  Create & open [o]
+Discard [d]
+--- styles
+1x6 . 2 .x2 3x13 . 2x3
+3x7 . 2x3
+--- legend
+1 fg=#a798d7 bold
+2 fg=#7e888e
+3 fg=#dee0e1

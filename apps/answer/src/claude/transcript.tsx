@@ -13,12 +13,13 @@ import {
 } from "@agents/kit-card/terminal.ts";
 import {
   choice as choiceGui,
+  choices as choicesGui,
   closing as closingGui,
   heading as headingGui,
   note as noteGui,
   summary as summaryGui,
-  type CardGuiOptions,
 } from "@agents/kit-card/gui.tsx";
+import { lineOf, type Choice, type FieldProps } from "@agents/kit-card/contract.ts";
 import {
   blank,
   cellWidth,
@@ -33,6 +34,7 @@ import { notice as noticeGui } from "@agents/kit-notice/gui.tsx";
 import { column, type Gui } from "@agents/kit-core/paint/gui.tsx";
 import { hotkeys, paintLines, quoted, stack } from "@agents/kit-core/paint/claude.tsx";
 import { prose as proseGui } from "@agents/kit-prose/gui.tsx";
+import { can } from "@agents/kit-core/surfaces.ts";
 import { widthCap } from "@agents/kit-core/tokens.ts";
 
 /** The elements a terminal event's painter takes. */
@@ -61,12 +63,55 @@ export type Writing = {
   value: string;
   /** The field's address; its Input is keyed from it. */
   hit: string;
-  options: CardGuiOptions;
+  /** What the field is given: its invitation, the focus, its lines and rows. */
+  props: FieldProps;
+  /** What is typed in it, with the line it was typed on where the host's field is one line. */
+  onInput(text: string, line?: number): unknown;
+  /** What Enter in it submits. */
+  onSubmit(text: string, line?: number): unknown;
   /** Save, Cancel and, where the host's field is one line, Add line. */
   buttons: Button[];
   /** What each of those buttons does, by its `hit`. */
   act: Record<string, () => unknown>;
 };
+
+/**
+ * The drawing context with the events of the fields the kit's card draws: `fields` by their `hit`.
+ * A field of one line per line (`lines`) reports the line it was typed on; the others the text whole.
+ */
+export function fieldEvents(
+  g: Gui,
+  fields: Record<
+    string,
+    {
+      lines?: number;
+      input(text: string, line?: number): unknown;
+      submit(text: string, line?: number): unknown;
+    }
+  >,
+): Gui {
+  const by = (hit: string) => {
+    const at = lineOf(hit);
+    const f = fields[at.hit];
+    return f ? { f, line: f.lines ? at.line : undefined } : undefined;
+  };
+  return {
+    ...g,
+    input: (hit, text) => {
+      const w = by(hit);
+      return w ? w.f.input(text, w.line) : g.input(hit, text);
+    },
+    submit: (hit, text) => {
+      const w = by(hit);
+      return w ? w.f.submit(text, w.line) : g.submit(hit, text);
+    },
+  };
+}
+
+/** A transcript's open field, as `fieldEvents` takes it. */
+const eventsOf = (w: Writing) => ({
+  [w.hit]: { lines: w.props.lines, input: w.onInput, submit: w.onSubmit },
+});
 
 const labelOf = (text: string) => text.replace(/^[A-H0-9]{1,2}[.)]\s*/, "");
 
@@ -446,14 +491,14 @@ function question(
   const prefix = `question-${index}`;
   const answered = show.review[index]?.isAnswered;
   const mine = writing?.question === index ? writing : undefined;
-  const choices = item.entries.flatMap((entry, i) => {
+  const choices: Choice[] = item.entries.flatMap((entry, i) => {
     if (entry.kind === "write") return [];
     const option = {
       tag: entryLetter(entry, i),
       label: entry.kind === "accept" ? entry.text : labelOf(entry.text),
     };
     return [
-      choiceGui(g, {
+      {
         // With no actions (a round already sent) the mark is an icon: nothing is pressed.
         key: actions ? option.tag : "",
         text: option.label,
@@ -461,24 +506,30 @@ function question(
         detail: entry.detail || undefined,
         chosen: entry.isChosen,
         multiple: item.isSeveral,
+        answered,
         hit: `${prefix}-choose-${i}`,
-      }),
+      },
     ];
   });
   const written = item.written
-    ? noticeGui(
-        g,
-        [span("Answer: ", { bold: true, role: sent ? "success" : undefined }), span(item.written)],
-        "text",
-      )
+    ? noticeGui(g, {
+        text: [
+          span("Answer: ", { bold: true, role: sent ? "success" : undefined }),
+          span(item.written),
+        ],
+        status: "text",
+      })
     : null;
   const write =
     mine?.field === "write"
-      ? choiceGui(
-          g,
-          { key: writeLetter(item), text: mine.value, literal: true, chosen: true, hit: mine.hit },
-          mine.options,
-        )
+      ? choiceGui(fieldEvents(g, eventsOf(mine)), {
+          key: writeLetter(item),
+          text: mine.value,
+          literal: true,
+          chosen: true,
+          hit: mine.hit,
+          ...mine.props,
+        })
       : actions
         ? choiceGui(g, {
             key: writeLetter(item),
@@ -489,9 +540,9 @@ function question(
         : null;
   const note =
     mine?.field === "note"
-      ? noteGui(g, { value: mine.value, hit: mine.hit }, mine.options)
+      ? noteGui(fieldEvents(g, eventsOf(mine)), { value: mine.value, hit: mine.hit, ...mine.props })
       : item.note
-        ? noticeGui(g, `Note: ${item.note}`, "dim")
+        ? noticeGui(g, { text: `Note: ${item.note}`, status: "dim" })
         : null;
   const controls: Button[] = actions
     ? [
@@ -520,23 +571,23 @@ function question(
       g,
       { gap: "xs" },
       headingGui(g, { label: item.label, title: item.title, answered }),
-      item.body ? proseGui(g, item.body) : null,
+      item.body ? proseGui(g, { text: item.body }) : null,
       item.recommended
-        ? proseGui(g, `**Recommended:** ${item.recommended}`, { isDim: true })
+        ? proseGui(g, { text: `**Recommended:** ${item.recommended}`, isDim: true })
         : null,
     ),
-    column(g, { gap: "sm" }, ...choices, write),
+    column(g, { gap: "sm" }, choices.length ? choicesGui(g, choices) : null, write),
     // Save, Cancel and Add line stand right under the field they belong to.
-    mine?.field === "write" ? buttonRow(g, mine.buttons) : written,
+    mine?.field === "write" ? buttonRow(g, { rows: [mine.buttons] }) : written,
     note,
-    mine?.field === "note" ? buttonRow(g, mine.buttons) : null,
-    buttonRow(g, controls),
+    mine?.field === "note" ? buttonRow(g, { rows: [mine.buttons] }) : null,
+    buttonRow(g, { rows: [controls] }),
   );
 }
 
 /**
- * The transcript's cards and the surface's reply controls. VS Code ends on the count and the reply
- * buttons; Desktop on a Review answers button that opens each answer, its note and the reply.
+ * The transcript's cards and reply controls. Where the host can jump to a card by key,
+ * offer a review with links back to its answers; otherwise end with the count and reply buttons.
  */
 export function nativeRound(
   g: Gui,
@@ -558,61 +609,70 @@ export function nativeRound(
       : [];
   const count = closingGui(g, { answered: view.answered, total: view.count, sent });
   const cards = held.form.items.map((_, index) => question(g, held, index, actions, writing, sent));
-  const foot =
-    g.surface === "vscode"
-      ? [
-          count,
-          view.note ? noticeGui(g, `Round note: ${view.note}`, "dim") : null,
-          buttonRow(g, reply),
-        ]
-      : [
-          count,
-          actions
-            ? buttonRow(g, [
-                { hotkey: "", label: open ? "Hide review" : "Review answers", hit: "review" },
-              ])
-            : null,
-          ...(open
-            ? [
-                column(
-                  g,
-                  { gap: "sm" },
-                  ...view.review.map((row, i) =>
-                    summaryGui(g, {
-                      label: row.label,
-                      title: row.title,
-                      values: row.isAnswered ? [{ text: row.shown, literal: true }] : [],
-                      note: row.note,
-                      hit: actions ? `review-answer-${i}` : undefined,
-                    }),
-                  ),
+  const foot = !can(g, "transcriptKeyScroll")
+    ? [
+        count,
+        view.note ? noticeGui(g, { text: `Round note: ${view.note}`, status: "dim" }) : null,
+        buttonRow(g, { rows: [reply] }),
+      ]
+    : [
+        count,
+        actions
+          ? buttonRow(g, {
+              rows: [
+                [{ hotkey: "", label: open ? "Hide review" : "Review answers", hit: "review" }],
+              ],
+            })
+          : null,
+        ...(open
+          ? [
+              column(
+                g,
+                { gap: "sm" },
+                ...view.review.map((row, i) =>
+                  summaryGui(g, {
+                    label: row.label,
+                    title: row.title,
+                    values: row.isAnswered ? [{ text: row.shown, literal: true }] : [],
+                    note: row.note,
+                    hit: actions ? `review-answer-${i}` : undefined,
+                  }),
                 ),
-                writing?.question === view.count
-                  ? noteGui(g, { value: writing.value, hit: writing.hit }, writing.options)
-                  : view.note
-                    ? noticeGui(g, `Round note: ${view.note}`, "dim")
-                    : null,
-                writing?.question === view.count
-                  ? buttonRow(g, writing.buttons)
-                  : actions
-                    ? buttonRow(g, [
-                        {
-                          hotkey: "",
-                          label: view.note ? "Edit round note" : "Add round note",
-                          hit: "round-note",
-                        },
-                        ...reply.toReversed(),
-                      ])
-                    : null,
-              ]
-            : []),
-        ];
+              ),
+              writing?.question === view.count
+                ? noteGui(fieldEvents(g, eventsOf(writing)), {
+                    value: writing.value,
+                    hit: writing.hit,
+                    ...writing.props,
+                  })
+                : view.note
+                  ? noticeGui(g, { text: `Round note: ${view.note}`, status: "dim" })
+                  : null,
+              writing?.question === view.count
+                ? buttonRow(g, { rows: [writing.buttons] })
+                : actions
+                  ? buttonRow(g, {
+                      rows: [
+                        [
+                          {
+                            hotkey: "",
+                            label: view.note ? "Edit round note" : "Add round note",
+                            hit: "round-note",
+                          },
+                          ...reply.toReversed(),
+                        ],
+                      ],
+                    })
+                  : null,
+            ]
+          : []),
+      ];
   return column(
     g,
     { gap: "md" },
     ...cards,
     // What the message said after its questions sits between the last card and the count.
-    epilogue ? proseGui(g, epilogue) : null,
+    epilogue ? proseGui(g, { text: epilogue }) : null,
     column(g, { key: "round-closing", gap: "sm" }, ...foot),
   );
 }

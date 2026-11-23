@@ -1,0 +1,56 @@
+{
+  "pi, claude-terminal": {
+    "head": {
+      "title": "Linear draft",
+      "caption": "",
+      "close": "control"
+    },
+    "footer": {
+      "lead": "",
+      "rows": [
+        [
+          {
+            "label": "Create",
+            "hit": "create",
+            "key": "↵",
+            "tone": "lit"
+          },
+          {
+            "label": "Discard",
+            "hit": "discard",
+            "key": "[d]",
+            "tone": "plain"
+          }
+        ]
+      ]
+    },
+    "notice": "",
+    "foot": "edge"
+  },
+  "vscode, desktop, mobile": {
+    "head": {
+      "title": "Linear draft",
+      "caption": "",
+      "close": "host"
+    },
+    "footer": {
+      "lead": "",
+      "rows": [
+        [
+          {
+            "label": "Create",
+            "hit": "create",
+            "tone": "lit"
+          },
+          {
+            "label": "Discard",
+            "hit": "discard",
+            "tone": "quiet"
+          }
+        ]
+      ]
+    },
+    "notice": "",
+    "foot": "host"
+  }
+}

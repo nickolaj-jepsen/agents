@@ -1,15 +1,21 @@
 /** The list's stories. No host imports. */
-import type { KitStory } from "@agents/kit-core/stories.ts";
-import type { ListGroup, ListMark } from "./contract.ts";
-import { list, listFollow } from "./terminal.ts";
+import type { Story } from "@agents/kit-core/stories.ts";
+import type { List, ListGroup, ListMark, ListRow } from "./contract.ts";
 
-const row = (text: string, mark: ListMark = "open", aside = "", focused = false) => ({
+const row = (
+  text: string,
+  mark: ListMark = "open",
+  aside = "",
+  focused = false,
+  icon?: ListRow["icon"],
+): ListRow => ({
   text,
   mark,
   aside,
   focused,
   hit: `row:${text.slice(0, 12)}`,
   markHit: `mark:${text.slice(0, 12)}`,
+  ...(icon ? { icon } : {}),
 });
 
 export const actions = [
@@ -22,8 +28,14 @@ export const GROUPS: ListGroup[] = [
     label: "docs/agent-hub.md",
     done: true,
     rows: [
-      row("Unittest suite needs a short `TMPDIR` and markdown-it-py on the path", "chosen", "2×"),
-      row("Socket tests fail with AF_UNIX path too long", "dropped"),
+      row(
+        "Unittest suite needs a short `TMPDIR` and markdown-it-py on the path",
+        "chosen",
+        "2×",
+        false,
+        "decision:apply",
+      ),
+      row("Socket tests fail with AF_UNIX path too long", "dropped", "", false, "decision:dismiss"),
     ],
   },
   {
@@ -36,14 +48,15 @@ export const GROUPS: ListGroup[] = [
         "open",
         "3×",
         true,
+        "kind:wrong",
       ),
-      row("The hub migration plan is finished"),
-      row("Agents never read the store README"),
+      row("The hub migration plan is finished", "open", "", false, "kind:stale"),
+      row("Agents never read the store README", "open", "", false, "kind:missing"),
     ],
   },
   {
     label: "skills/agent-plugin-dev/references/a-very-long-folder-name/style.md",
-    rows: [row("東京の節は古くなっています。全角文字の説明文", "open", "12×")],
+    rows: [row("東京の節は古くなっています。全角文字の説明文", "open", "12×", false, "kind:stale")],
   },
 ];
 
@@ -98,83 +111,126 @@ export const many = (focus: number): ListGroup[] =>
     ),
   }));
 
-/** A window that has followed the keyboard down to row `focus`, as a client keeps it. */
-const followed = (focus: number, height: number, width: number) => {
-  const l = { groups: many(focus), height, aside: 3 };
-  let top = 0;
-  for (let f = 0; f <= focus; f++) top = listFollow({ ...l, groups: many(f), top }, width);
-  return { ...l, top };
+/** What the terminal adds: the window follows the keyboard down to row `follow`, as a client keeps it. */
+export type TerminalExt = { extreme?: true; follow?: number };
+
+/** What the graphical drawing adds: what a row opened in place holds, described as data. */
+export type GuiExt = {
+  opened?: {
+    [hit: string]: {
+      meta: string;
+      sections: { heading: string; text: string }[];
+      /** The Buttons under it, the chosen one standing out. */
+      choices: { label: string; hit: string; isChosen?: boolean }[];
+    };
+  };
 };
 
-export const listStories: KitStory[] = [
+const model = (l: List): List => l;
+
+export const listStories: Story<List, TerminalExt, GuiExt>[] = [
   {
     component: "grouped-list",
     state: "groups",
-    gui: true,
     about:
       "Rows under group rows behind rails: a decided group's rail green, the keyboard's bright with its label in the accent and its controls",
     settings: "list({groups, aside: 3})",
-    extreme: true,
-    lines: (width) => list({ groups: GROUPS, aside: 3 }, width),
+    model: model({ groups: GROUPS, aside: 3 }),
+    ext: { terminal: { extreme: true } },
+  },
+  {
+    component: "grouped-list",
+    state: "opened",
+    about:
+      "A row opened in place sits in a panel with its detail and what to do with it; its Button says Close and the chosen decision stands out",
+    settings: "list({groups, opened: {[hit]: …}})",
+    model: model({ groups: GROUPS, opened: { [GROUPS[1]?.rows[0]?.hit ?? ""]: "detail" } }),
+    ext: {
+      gui: {
+        opened: {
+          [GROUPS[1]?.rows[0]?.hit ?? ""]: {
+            meta: "seen 3× · 2 days ago",
+            sections: [
+              {
+                heading: "Evidence",
+                text: "The path projection resolves only `HOME` and `PWD`.",
+              },
+            ],
+            choices: [
+              { label: "apply", hit: "apply" },
+              { label: "dismiss", hit: "dismiss", isChosen: true },
+              { label: "skip", hit: "skip" },
+            ],
+          },
+        },
+      },
+    },
+  },
+  {
+    component: "grouped-list",
+    state: "capped",
+    about: "A long group shows a few rows, then a Show N more control",
+    settings: "list({groups, lines: 1, maxItems: 3, more})",
+    model: model({
+      groups: many(13),
+      lines: 1,
+      maxItems: 3,
+      more: { isAll: false, hit: "more" },
+    }),
   },
   {
     component: "grouped-list",
     state: "window",
-    gui: true,
     about:
       "Taller than its room: a window that moved only as far as the keyboard needed, its last row saying how many rows are above and below",
     settings: "list({groups, height: 9, top})",
-    lines: (width) => list(followed(13, 9, width), width),
+    model: model({ groups: many(13), height: 9, aside: 3 }),
+    ext: { terminal: { follow: 13 } },
   },
   {
     component: "grouped-list",
     state: "sticky",
     about: "The keyboard's group row stands in for the window's first row when it is above it",
     settings: "list({groups, height: 6, top: 2})",
-    lines: (width) => list({ groups: many(4 + 3), height: 6, top: 7, aside: 3 }, width),
+    model: model({ groups: many(4 + 3), height: 6, top: 7, aside: 3 }),
   },
   {
     component: "grouped-list",
     state: "spaced",
-    gui: true,
     about: "A blank row between groups, without a rail",
     settings: "list({groups, space: true})",
-    lines: (width) => list({ groups: GROUPS, aside: 3, space: true }, width),
+    model: model({ groups: GROUPS, aside: 3, space: true }),
   },
   {
     component: "grouped-list",
     state: "bare",
-    gui: true,
     about:
       "No rails, for a list that is not a form to complete: a group's label starts the row, groups a blank row apart, in a window",
     settings: "list({groups, rail: false, space: true, lines: 2, height: 9})",
-    lines: (width) =>
-      list({ groups: GROUPS, aside: 3, rail: false, space: true, lines: 2, height: 9 }, width),
+    model: model({ groups: GROUPS, aside: 3, rail: false, space: true, lines: 2, height: 9 }),
   },
   {
     component: "grouped-list",
     state: "wrapped",
-    gui: true,
     about:
       "Rows of two lines at most: a long text wraps under its first line, which keeps the mark and the aside; the window counts lines",
     settings: "list({groups, lines: 2, height: 9})",
-    lines: (width) => list({ groups: GROUPS, aside: 3, lines: 2, height: 9 }, width),
+    model: model({ groups: GROUPS, aside: 3, lines: 2, height: 9 }),
   },
   {
     component: "grouped-list",
     state: "menu",
-    gui: true,
     about:
       "A menu of actions: a key before each, no mark, and a row that is not available dim, with its reason, and no control",
     settings:
       "list({groups: [{rows: [{key: '1', mark: 'none', disabled?}]}], rail: false, aside: 10})",
-    lines: (width) => list({ groups: MENU, rail: false, aside: 10 }, width),
+    model: model({ groups: MENU, rail: false, aside: 10 }),
   },
   {
     component: "grouped-list",
     state: "flat",
     about: "Little room: each row carries its group's label, dim, cut from the left",
     settings: "list({groups, height: 3, flat: true})",
-    lines: (width) => list({ groups: GROUPS, height: 3, flat: true, aside: 3 }, width),
+    model: model({ groups: GROUPS, height: 3, flat: true, aside: 3 }),
   },
 ];

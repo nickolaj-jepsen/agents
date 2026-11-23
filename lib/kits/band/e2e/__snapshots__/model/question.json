@@ -1,0 +1,18 @@
+{
+  "pi, claude-terminal": {
+    "text": "Which database?",
+    "buttons": [],
+    "layout": "line"
+  },
+  "vscode, desktop, mobile": {
+    "mark": "state:question",
+    "text": "Which database?, 1 of 3 answered",
+    "buttons": [
+      {
+        "label": "Answer",
+        "hit": "open"
+      }
+    ],
+    "layout": "line"
+  }
+}

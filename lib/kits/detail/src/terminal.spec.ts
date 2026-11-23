@@ -1,19 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { textOf, widthOf } from "@agents/kit-core/lines.ts";
+import { textOf } from "@agents/kit-core/lines.ts";
 import type { Detail } from "./contract.ts";
-import { detailStories } from "./stories.ts";
 import { detail, detailRange } from "./terminal.ts";
-
-describe("every detail story", () => {
-  test.each(detailStories.map((s) => ({ id: `${s.component}/${s.state}`, story: s })))(
-    "$id fits every width",
-    ({ story }) => {
-      for (let width = 24; width <= 130; width++)
-        for (const l of story.lines(width))
-          expect(widthOf(l), `${width}: ${textOf(l)}`).toBeLessThanOrEqual(width);
-    },
-  );
-});
 
 const ITEM: Detail = {
   meta: "wrong · seen 3×",

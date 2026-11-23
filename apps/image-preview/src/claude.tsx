@@ -15,7 +15,7 @@ import {
 } from "./lib/images";
 import { imageLinks } from "./lib/links";
 import { imageGallery } from "@agents/kit-image/terminal.ts";
-import type { ImageGalleryOptions, ImageItem } from "@agents/kit-image/contract.ts";
+import type { ImageGalleryTerminal, ImageItem } from "@agents/kit-image/contract.ts";
 import { blank } from "@agents/kit-core/lines.ts";
 import { notice } from "@agents/kit-notice/terminal.ts";
 import { paintLines, stack } from "@agents/kit-core/paint/claude.tsx";
@@ -28,8 +28,8 @@ const fullSize = (viewport?: { columns: number; rows: number }) => ({
 const gallery = (
   els: Parameters<typeof paintLines>[0],
   images: readonly ImageItem[],
-  options: ImageGalleryOptions,
-) => paintLines(els, imageGallery(images, options));
+  options: Pick<ImageGalleryTerminal, "columns" | "rows">,
+) => paintLines(els, imageGallery({ images, ...options }));
 
 const thumbnail = { columns: 24, rows: 6 };
 
@@ -194,8 +194,8 @@ export const register: Register = (on) => {
     const els = $.ui.resolve(e);
     const columns = Math.min(thumbnail.columns, fullSize(e.viewport).columns);
     const lines = [
-      ...imageGallery([{ ...first, path: undefined }], { ...thumbnail, columns }),
-      ...(count > 1 ? notice(`+${count - 1} more`, columns, "dim") : []),
+      ...imageGallery({ images: [{ ...first, path: undefined }], ...thumbnail, columns }),
+      ...(count > 1 ? notice({ text: `+${count - 1} more`, width: columns, status: "dim" }) : []),
     ];
     return stack(els, native, paintLines(els, lines, { indent: 2 }));
   });
@@ -219,7 +219,7 @@ export const register: Register = (on) => {
       ? stack(
           els,
           native,
-          paintLines(els, [blank(), ...imageGallery(images, fullSize(e.viewport))]),
+          paintLines(els, [blank(), ...imageGallery({ images, ...fullSize(e.viewport) })]),
         )
       : native;
   });

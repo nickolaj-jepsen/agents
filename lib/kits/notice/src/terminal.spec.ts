@@ -1,18 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { span, textOf, widthOf } from "@agents/kit-core/lines.ts";
-import { noticeLineStories } from "./stories.ts";
 import { notice } from "./terminal.ts";
-
-describe("every notice story", () => {
-  test.each(noticeLineStories.map((s) => ({ id: `${s.component}/${s.state}`, story: s })))(
-    "$id fits every width",
-    ({ story }) => {
-      for (let width = 24; width <= 130; width++)
-        for (const l of story.lines(width))
-          expect(widthOf(l), `${width}: ${textOf(l)}`).toBeLessThanOrEqual(width);
-    },
-  );
-});
 
 describe("a notice of spans", () => {
   const spans = [
@@ -22,7 +10,7 @@ describe("a notice of spans", () => {
   ];
 
   test("keeps each span's style and gives the others the status's role", () => {
-    const [row] = notice(spans, 80, "warning");
+    const [row] = notice({ text: spans, width: 80, status: "warning" });
     expect(row?.spans.map((s) => [s.text, s.role, s.bold])).toEqual([
       ["a dim lead ", "dim", undefined],
       ["word", "warning", true],
@@ -31,9 +19,9 @@ describe("a notice of spans", () => {
   });
 
   test("is cut to one row with an ellipsis, or wraps whole", () => {
-    expect(notice(spans, 12, "dim")).toHaveLength(1);
-    expect(textOf(notice(spans, 12, "dim")[0]!).endsWith("…")).toBe(true);
-    const wrapped = notice(spans, 12, "dim", { isWrapped: true });
+    expect(notice({ text: spans, width: 12, status: "dim" })).toHaveLength(1);
+    expect(textOf(notice({ text: spans, width: 12, status: "dim" })[0]!).endsWith("…")).toBe(true);
+    const wrapped = notice({ text: spans, width: 12, status: "dim", isWrapped: true });
     expect(wrapped.length).toBeGreaterThan(1);
     for (const l of wrapped) expect(widthOf(l)).toBeLessThanOrEqual(12);
   });

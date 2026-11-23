@@ -18,7 +18,7 @@ it("keeps the text gate fast and selects the daemon when pictures are requested"
   try {
     options.png = false;
     expect(realStage.backend).toBe("lib");
-    expect(mediaStage.backend).toBe("daemon");
+    expect(mediaStage(dir).backend).toBe("daemon");
     options.png = true;
     expect(realStage.backend).toBe("daemon");
   } finally {
@@ -313,10 +313,12 @@ it("runs the gate in process and a recorder on the daemon", async () => {
   // environment alone. The stage names its engine; the runner passes it through rather than
   // deciding for both.
   const engines: string[] = [];
+  const names: string[] = [];
   const stage = (backend?: "lib" | "daemon"): Stage => ({
     backend,
-    reach: async (r, engine) => {
+    reach: async (r, engine, name) => {
       engines.push(engine);
+      names.push(name);
       return {
         size: async () => r.size,
         resize: async () => undefined,
@@ -331,4 +333,29 @@ it("runs the gate in process and a recorder on the daemon", async () => {
   await runAll([set(scenarios)], () => true, stage());
   await runAll([set(scenarios)], () => true, stage("daemon"));
   expect(engines).toEqual(["lib", "daemon"]);
+  expect(new Set(names).size).toBe(2);
+  for (const name of names) expect(name).toMatch(new RegExp(`^e2e-${process.pid}-[0-9]+$`));
+});
+
+it("tries to photograph a head capture failure before closing and keeps the original error", async () => {
+  const events: string[] = [];
+  const failure = new Error("region missing");
+  const stage: Stage = {
+    reach: async () =>
+      ({
+        close: async () => {
+          events.push("close");
+        },
+      }) as unknown as Session,
+    capture: async () => {
+      throw failure;
+    },
+    failShot: async () => {
+      events.push("picture");
+      throw new Error("cannot draw picture");
+    },
+  };
+  const { outcomes } = await runAll([set({ head: { steps: [] } })], () => true, stage);
+  expect(events).toEqual(["picture", "close"]);
+  expect(outcomes.get("fake/pi/head")?.error).toBe(failure);
 });

@@ -1,8 +1,8 @@
-import { defineComponent, no, yes } from "@agents/kit-core/manifest.ts";
+import { defineLegacyComponent, no, yes } from "@agents/kit-core/manifest.ts";
 
 const gone = no("Claude Code draws this with the kit's status-band now.");
 
-export default defineComponent({
+export default defineLegacyComponent({
   id: "band",
   name: "Band shell",
   purpose:

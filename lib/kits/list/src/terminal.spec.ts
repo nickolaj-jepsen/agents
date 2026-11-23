@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { textOf, widthOf } from "@agents/kit-core/lines.ts";
+import { textOf } from "@agents/kit-core/lines.ts";
 import type { List, ListGroup } from "./contract.ts";
-import { listStories } from "./stories.ts";
 import {
   cutLeft,
   list,
@@ -11,17 +10,6 @@ import {
   listTextRoom,
   listTopMax,
 } from "./terminal.ts";
-
-describe("every list story", () => {
-  test.each(listStories.map((s) => ({ id: `${s.component}/${s.state}`, story: s })))(
-    "$id fits every width",
-    ({ story }) => {
-      for (let width = 24; width <= 130; width++)
-        for (const l of story.lines(width))
-          expect(widthOf(l), `${width}: ${textOf(l)}`).toBeLessThanOrEqual(width);
-    },
-  );
-});
 
 const groups = (focus: number, count = 5, per = 3): ListGroup[] =>
   Array.from({ length: count }, (_, g) => ({

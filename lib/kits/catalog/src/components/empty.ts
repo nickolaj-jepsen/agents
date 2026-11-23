@@ -1,8 +1,8 @@
-import { defineComponent, no, yes } from "@agents/kit-core/manifest.ts";
+import { defineLegacyComponent, no, yes } from "@agents/kit-core/manifest.ts";
 
 const gone = no("Claude Code draws this with the kit's grouped-list now.");
 
-export default defineComponent({
+export default defineLegacyComponent({
   id: "empty",
   name: "Empty state",
   purpose: "What a list says when there is nothing in it.",

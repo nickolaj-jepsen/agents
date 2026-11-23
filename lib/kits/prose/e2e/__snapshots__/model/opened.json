@@ -1,0 +1,10 @@
+{
+  "pi, claude-terminal": {
+    "shape": "whole",
+    "isDim": false
+  },
+  "vscode, desktop, mobile": {
+    "shape": "opened",
+    "isDim": false
+  }
+}

@@ -422,7 +422,7 @@ test("a send sets an answered round aside, and /answer brings it back with its a
   expect(w.toasts[0]).toMatch(/^1 answer set aside/);
   // The round comes back as it was left: its answer marked, its first question showing.
   const back = await form($);
-  expect((await back.find({ key: "key:e1" }))?.props.variant).toBe("primary");
+  expect(await chosen(back)).toBe(1);
   expect(await asking(back, /Should every focus default/)).toBeDefined();
   await back.unmount();
 });
@@ -469,7 +469,7 @@ test("a command's send sets the round aside too, and the aside wins over the tra
   // The transcript keeps the round behind the command, which `recover` reads as a fresh one.
   said = [...said, { role: "user", text: "<command-name>/help</command-name>", toolUses: [] }];
   const back = await form($);
-  expect((await back.find({ key: "key:e1" }))?.props.variant).toBe("primary");
+  expect(await chosen(back)).toBe(1);
   await back.unmount();
 });
 
@@ -538,6 +538,10 @@ const offerSays = async (drawn: Pick<Mounted, "findAll">) =>
     .find((t) => /^(Answer|Pick from) /.test(t));
 
 /** The tick beside an answered question's tab. */
+/** The marks that say an answer is chosen: an icon before its letter, not a filled Button. */
+const chosen = async (drawn: Pick<Mounted, "findAll">) =>
+  (await drawn.findAll({ type: "Svg" })).filter((e) => e.props.alt === "Chosen").length;
+
 const ticked = async (drawn: Pick<Mounted, "findAll">) =>
   (await drawn.findAll({ type: "Svg" })).find((e) => e.props.alt === "Done");
 
@@ -724,15 +728,16 @@ for (const surface of ["desktop", "vscode"] as const) {
     // The recommendation is marked on its row, and its reason is in the body's line.
     expect(await drawn.find({ type: "Text", text: /^Recommended$/ })).toBeDefined();
     expect(
-      await drawn.find({ type: "Text", text: /^Recommended: A\. A per-kind table/ }),
+      await drawn.find({ type: "Markdown", text: /Recommended:\*\* A\. A per-kind table/ }),
     ).toBeDefined();
     // The write-in is a field on its own row, ready for a click; no Button stands in for it.
     expect(await field(drawn, "write")).toBeDefined();
     expect(await drawn.find({ type: "Button", key: "key:e3" })).toBeUndefined();
     // One tab per question and the review, the current one filled; the way out at the far edge.
-    for (const key of ["q0", "q1", "q2", "review"])
+    for (const key of ["q1", "q2", "review"])
       expect(await drawn.find({ type: "Button", key: `tab:${key}` })).toBeDefined();
-    expect((await drawn.find({ key: "tab:q0" }))?.props.variant).toBe("primary");
+    // The current one is a label: where the person is, not a control.
+    expect(await drawn.find({ key: "tab:q0" })).toBeUndefined();
     expect((await drawn.find({ key: "tab:q1" }))?.props.dimColor).toBe(true);
     expect((await drawn.find({ key: "quit" }))?.props.label).toBe("Close");
     // Nothing is chosen: no way on is drawn yet, and nothing is filled but the tab.
@@ -742,8 +747,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     await expectNative(drawn);
 
     await pick(w, drawn, "e1");
-    expect((await drawn.find({ key: "key:e1" }))?.props.variant).toBe("primary");
-    expect((await drawn.find({ key: "key:e0" }))?.props.variant).not.toBe("primary");
+    expect(await chosen(drawn)).toBe(1);
     // The chosen row has its note's field under the answers, and Next, filled, after them.
     expect(await field(drawn, "note")).toBeDefined();
     expect((await drawn.find({ key: "next" }))?.props.label).toBe("Next");
@@ -778,8 +782,9 @@ for (const surface of ["desktop", "vscode"] as const) {
     // The review: each question with its answer under it, a Button of its label back to it; Send filled.
     expect(await drawn.find({ type: "Text", text: /^Not answered$/ })).toBeDefined();
     expect(await drawn.find({ type: "Text", text: /^B: Default by kind\.$/ })).toBeDefined();
-    expect((await drawn.find({ key: "go:item2" }))?.props.label).toBe("Q3");
-    expect((await drawn.find({ key: "go:item0" }))?.props.label).toBe("Q1");
+    expect(await drawn.find({ type: "Text", text: "Q3" })).toBeDefined();
+    expect(await drawn.find({ type: "Text", text: "Q1" })).toBeDefined();
+    expect(await drawn.find({ key: "go:item2" })).toBeUndefined();
     expect((await drawn.find({ key: "send" }))?.props.variant).toBe("primary");
     expect((await drawn.find({ key: "fill" }))?.props.variant).toBeUndefined();
     await expectNative(drawn);
@@ -824,8 +829,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     // Picking B replaces A.
     await drawn.press({ key: "key:e0" });
     await drawn.press({ key: "key:e1" });
-    expect((await drawn.find({ key: "key:e0" }))?.props.variant).not.toBe("primary");
-    expect((await drawn.find({ key: "key:e1" }))?.props.variant).toBe("primary");
+    expect(await chosen(drawn)).toBe(1);
     expect((await drawn.find({ key: "next" }))?.props.variant).toBe("primary");
     await expectNative(drawn);
     await typeIn(drawn, "note", "use B", "change");
@@ -833,7 +837,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     expect(await drawn.find({ type: "Text", text: /^B: / })).toBeDefined();
     expect(await drawn.find({ type: "Text", text: "Note: use B" })).toBeDefined();
     // A review row goes back to its question.
-    await drawn.press({ key: "go:item0" });
+    await drawn.press({ key: "tab:q0" });
     expect(await asking(drawn, /Should every focus default/)).toBeDefined();
     await drawn.press({ key: "tab:review" });
     await drawn.press({ key: "send" });
@@ -890,7 +894,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     expect((await drawn.find({ key: "key:e1" }))?.props.label).toBe("B");
     await expectNative(drawn);
     await pick(w, drawn, "e0");
-    expect((await drawn.find({ key: "key:e0" }))?.props.variant).toBe("primary");
+    expect(await chosen(drawn)).toBe(1);
     // The only question's way on is the review.
     expect((await drawn.find({ key: "next" }))?.props.label).toBe("Review");
     await expectNative(drawn);
@@ -930,7 +934,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     await expectNative(list);
     await list.unmount();
 
-    // A body is one line until More opens it whole; its options follow it either way.
+    // A long body is drawn whole; its options follow it.
     await ends($, `${LONG}\n  It is cheap to keep.`);
     await $.command.run(RUN);
     const long = await $.ui.mount({
@@ -938,16 +942,11 @@ for (const surface of ["desktop", "vscode"] as const) {
       props: { ...BAND.props, maxRows: 16 },
       surface,
     });
-    expect(
-      (await long.find({ type: "Text", text: /^Line 1 of what it hangs on\. Line 2/ }))?.props.wrap,
-    ).toBe("truncate-end");
-    expect((await long.find({ key: "more" }))?.props.label).toBe("More");
-    await expectNative(long);
-    await long.press({ key: "more" });
+    // The body is whole, never cut behind a More: the band scrolls.
     expect(
       await long.find({ type: "Markdown", text: /Line 12 of what it hangs on/ }),
     ).toBeDefined();
-    expect((await long.find({ key: "more" }))?.props.label).toBe("Less");
+    expect(await long.find({ key: "more" })).toBeUndefined();
     // An option's detail is under its words, not part of its Button.
     expect((await long.find({ key: "key:e1" }))?.props.label).toBe("B");
     expect(await long.find({ type: "Markdown", text: /^It is cheap to keep\.$/ })).toBeDefined();
@@ -974,9 +973,9 @@ for (const surface of ["desktop", "vscode"] as const) {
       props: { text: GRILLING, isFirstOfReply: true },
     });
     await expectNative(cards);
-    // An answer is a letter's Button; the chosen one is filled and takes a Clear answer.
+    // An answer is a letter's Button; the chosen one has its mark filled and takes a Clear answer.
     await cards.press({ key: "key:question-0-choose-1" });
-    expect((await cards.find({ key: "key:question-0-choose-1" }))?.props.variant).toBe("primary");
+    expect(await chosen(cards)).toBe(1);
     expect(await cards.find({ key: "question-0-clear" })).toBeDefined();
     await expectNative(cards);
 

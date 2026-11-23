@@ -1,6 +1,15 @@
 /** Prose's contract: a text of several blocks. Its window is `scrolled` in `lines.ts`. No host imports. */
+import { modelFields } from "@agents/kit-core/manifest.ts";
+import type { Props, Surface } from "@agents/kit-core/surfaces.ts";
 
-export type ProseOptions = {
+/**
+ * Prose's model: a text of several blocks.
+ */
+export type Prose = {
+  /** Prose or Markdown. */
+  text: string;
+  /** The room in cells. */
+  width: number;
   /** Every word quiet: a text beside the main one. */
   isDim?: boolean;
   /**
@@ -11,3 +20,14 @@ export type ProseOptions = {
    */
   excerpt?: { hit: string; isOpen: boolean };
 };
+
+/** The capability each gated field needs. The rest of the model is for every surface. */
+export const proseNeeds = { width: "cells", excerpt: "cells:false" } as const;
+
+export const proseFields = modelFields<Prose>()(["text", "width", "isDim", "excerpt"]);
+
+/** Prose as `On` surfaces are given it: a field a surface cannot draw is not in its type. */
+export type ProseProps<On extends Surface> = Props<Prose, typeof proseNeeds, On>;
+
+/** What `prose` is given on a terminal. */
+export type ProseTerminal = ProseProps<"pi" | "claude-terminal">;

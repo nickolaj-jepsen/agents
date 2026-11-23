@@ -19,25 +19,35 @@ metadata:
 
 1. **Resolve the directory.** If none is given, take the most recently modified `plans/<slug>/` holding a `SLICES.md` in the project's store, skipping `plans/history/`, and confirm it before starting. `agent-notes root --ensure` gives the store's path, and the checkout sees it as `.agents/store`.
 2. **Read `SLICES.md` in full.** Read `notes/` files only when a slice needs them.
-3. **Resume** if `PROGRESS.md` exists. Check it against git; where they disagree, git wins and you fix `PROGRESS.md`. Reuse a recorded check result only when the tree is unchanged. Continue from "Now".
+3. **Resume** if `PROGRESS.md` exists. Resolve the recorded worktree, branch and base in Git. Compare its tip, diff and working tree with the handoff before changing anything; keep uncommitted work. Reuse checks only for the verified tree. Recover unfinished work from Git, logs and the handoff, not from worker IDs, which can expire on reset. Continue from "Now".
 4. **First run.**
    - Running a plan is the user asking for a worktree. Create one, branch `<slug>`, off the base in Context, with the user's worktree tooling. Never build in the primary checkout.
-   - Prepare it as Context says, then run Context's checks once. Record their durations and anything that differs from the plan's baseline.
-   - Create `PROGRESS.md` from the template below, with the plan's Open questions under "For the owner".
+   - Run the worktree preflight below. Create `PROGRESS.md` from the template, with the worktree, branch, starting commit and the plan's Open questions under "For the owner".
+   - Apply Context's setup (submodules, dependencies, builds), then run its checks once. Record their durations and anything that differs from the plan's baseline.
+
+### Worktree preflight
+
+Before dispatch, run [preflight.sh](preflight.sh) from this skill's directory:
+
+```sh
+sh preflight.sh "$worktree" "$branch" "$base_commit" "$skill_file"
+```
+
+Pass the expected starting commit and zero or more absolute skill paths from the brief. The command checks the clean branch and commit, the readable skill files, and the project store link. If a skill moved, resolve its installed path or give the worker the applicable procedure. If the store check fails, stop writing notes and report the path; do not replace the link yourself. Retain the worktree tool's diagnostics.
 
 ## Loop
 
 Take the slices in order. For each one:
 
 1. **Brief a fresh worker** with the brief below, on the model its `hard` or `routine` mark calls for (see Models). Build it yourself only when the change is smaller than its brief would be.
-2. **Wait.** Start the worker in the background and end your turn; the harness wakes you when it finishes. Don't poll, sleep, arm watchers or post status. Every turn re-reads your whole context and nobody reads status mid-run: `PROGRESS.md` is the status.
+2. **Wait.** Record the dispatch, exact diff scope and next check in `PROGRESS.md` before ending your turn. The harness wakes you when the background worker finishes. Don't poll, sleep, arm watchers or post status: `PROGRESS.md` is the status.
 3. **Check it yourself** on the branch tip: the slice's check, then the repo's standard checks. Never take the worker's "it passes" as the result.
    - Run them in the background with output to a file, and grep the file for failures instead of reading it.
    - One full suite at a time on the machine. Overlapping suites fail on timeouts that look like bugs.
    - Read `git diff --stat` for the slice and look for deleted, skipped or weakened tests.
    - A failure that only shows under load is a defect until a cause is found.
 4. **Green:** record the slice in `PROGRESS.md`, add any interface it settled to the plan's Interfaces, and take the next slice.
-5. **Red, or the worker stopped short:**
+5. **Red, or the worker stopped short:** Record the last commit, dirty paths, failed command/log or missing verdict, and next repair before dispatching again.
    - Give one repair to a fresh worker, with the failing output and what is already on the branch. Continue the same worker only if its run was short, since a long worker re-reads its whole history on every turn.
    - If it is still red, escalate. Never send the same brief to the same model twice. In this order: ask the strong model one narrow question, with the failing output and the diff (which condition fails, and why); give the slice to the strong model; or split the slice at what is green, land that, and add the rest to the plan as a new slice.
    - Log the route you took. A blocked slice is not a stopped run.
@@ -77,12 +87,13 @@ Set the harness's turn cap where it has one (pi: `max_turns`): about 250 for a b
 - **Cheap** (Claude Code `sonnet`; pi the `general-purpose` and `reviewer` roles): routine slices, repairs to them, research, and the security review.
 - **Strong** (your own model; in pi a role that accepts a model override): hard slices, escalations, and the two reviews. If the harness can't give a worker the strong model, build that slice yourself.
 - The owner's word on models overrides this. Record it in `PROGRESS.md` so a resumed lead keeps to it.
-- Name the model on every spawn, because a subagent otherwise inherits yours. pi falls back to your model silently when a role's model is unavailable, so check the model each worker reports and record it.
+- Before dispatch, check whether the role locks its model and whether the intended model is available in the harness. For a locked role, choose a role with the required model or do the work yourself. Request the model explicitly where the role accepts overrides, then record what actually ran when the worker reports.
+- Treat a provider rate limit as a failed dispatch, not a review verdict. Reduce concurrency or use an available independent route rather than repeating the same throttled batch.
 
 ## Reviews
 
 - Two by default: slice 1, and the whole branch against its base at the end. Add a security review after any slice that touches a trust boundary in the plan's Risks.
-- A reviewer is a fresh, read-only subagent. It gets the diff range, the `SLICES.md` path and the slice IDs, and not the workers' reports.
+- A reviewer is a fresh, read-only subagent. Give it the exact diff range, the paths and acceptance criteria it owns, and the behaviour to verify, not the workers' reports. Record each verdict and actionable finding when it arrives. A capped or missing report is not approval.
 - Ask it for defects, checks that pass without proving the outcome, scope drift, uncovered Risks, and owner decisions with no reachable path yet. The security reviewer gets only the boundaries and the diff, and is asked for a path by which untrusted input crosses one.
 - One round each. Fix the confirmed findings in one pass, then verify those fixes with a focused check. Run a second full review only if the fixes changed the design.
 - Above about 3,000 changed lines, cheap readers can cover areas separately for the final review. One strong reviewer still reads the whole diff and owns what crosses areas.
@@ -117,11 +128,11 @@ Rewrite it; don't append. Keep it under about 150 lines. Detail lives in commits
 
 ## Now
 
-<Branch and tip commit, the slice in flight and who has it, the next step.>
+<Worktree, branch, base and candidate commits; uncommitted paths to preserve; in-flight work and its scope; the next action. A worker ID is optional.>
 
 ## Slices
 
-| ID | Status | Commit | Check result | Built by (model, turns) | Repairs and escalations |
+| ID | Status | Commit | Check command, exit and log | Built by (model, turns) | Findings and next action |
 
 ## Decisions
 
@@ -138,7 +149,7 @@ Rewrite it; don't append. Keep it under about 150 lines. Detail lives in commits
 <Written when the run ends: what the plan got wrong or left out; which slices needed a repair or an escalation, and why; what the run cost in turns per slice, wall-clock and models.>
 ```
 
-Update it once per slice and before stopping.
+Update it before handing off a turn and when a result changes the next action: dispatch, verified check, review finding, failure, integration, or stop. Record enough to restart without the session transcript.
 
 ## Finish
 

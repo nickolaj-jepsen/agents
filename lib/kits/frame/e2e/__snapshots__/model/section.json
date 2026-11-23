@@ -1,0 +1,25 @@
+{
+  "pi, claude-terminal": {
+    "head": {
+      "caption": "Evidence  3 sources",
+      "close": "control"
+    },
+    "footer": {
+      "lead": "",
+      "rows": []
+    },
+    "notice": ""
+  },
+  "vscode, desktop, mobile": {
+    "head": {
+      "title": "Evidence",
+      "caption": "Evidence  3 sources",
+      "close": "host"
+    },
+    "footer": {
+      "lead": "",
+      "rows": []
+    },
+    "notice": ""
+  }
+}

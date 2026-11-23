@@ -5,7 +5,8 @@
  * is `claude/render.tsx`, keyed by `<component>/<state>`.
  */
 
-import { kitStories } from "../registry.ts";
+import type { Surface } from "@agents/kit-core/surfaces.ts";
+import { catalogueStories } from "../registry.ts";
 
 export type Story = {
   /** `<component>/<state>`'s first half: `list` for `list/grouped`. */
@@ -16,21 +17,21 @@ export type Story = {
   settings?: string;
   /** Snapshot at four sizes, for the state with the most text. */
   extreme?: boolean;
-  /** It also has a graphical drawing, which Desktop and VS Code show. */
-  gui?: boolean;
+  /** Which surfaces draw this story. */
+  surfaces: readonly Surface[];
   /** The width class the stage caps the component at. */
   width: "reading" | "dialog";
 };
 
 export const storyId = (s: Pick<Story, "component" | "state">) => `${s.component}/${s.state}`;
 
-export const stories: Story[] = kitStories.map((s) => ({
+export const stories: Story[] = catalogueStories.map((s) => ({
   component: s.component,
   state: s.state,
   about: s.about,
   settings: s.settings ?? "",
   extreme: s.extreme,
-  gui: s.gui,
+  surfaces: s.surfaces,
   width: s.width ?? "reading",
 }));
 

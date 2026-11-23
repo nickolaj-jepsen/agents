@@ -4,6 +4,7 @@
  * the catalogue package lists them all (`registry.ts`). No host imports.
  */
 import type { Line } from "./lines.ts";
+import type { Surface } from "./surfaces.ts";
 
 export type KitStory = {
   /** `<component>/<state>`: the id in `/kit`, the scenario's name and the catalogue's heading. */
@@ -18,16 +19,17 @@ export type KitStory = {
   width?: "reading" | "dialog";
   /** The component at `width` cells, as it first stands. */
   lines(width: number): Line[];
-  /**
-   * It also has a graphical drawing, from the same props: `<component>/src/stories.gui.tsx`, merged
-   * in the catalogue's `stories.gui.tsx`. A flag, not the drawing, because this file is read by plain Node.
-   */
-  gui?: true;
+  /** The surfaces that draw this story, derived from its manifest in the catalogue. */
+  surfaces: readonly Surface[];
   /** Keys and clicks change it: each catalogue wires it by hand, from the same first state. */
   isLive?: boolean;
 };
 
 export const storyId = (s: Pick<KitStory, "component" | "state">) => `${s.component}/${s.state}`;
+
+/** Keep the shared terminal story set for the terminal parity check. */
+export const hasTerminalStory = (s: Pick<KitStory, "surfaces">) =>
+  s.surfaces.includes("pi") || s.surfaces.includes("claude-terminal");
 
 // ---- schema 2: a story is data
 
@@ -81,3 +83,15 @@ export function isPlain(value: unknown, seen = new Set<unknown>()): value is Pla
   if (!Array.isArray(value) && proto !== Object.prototype && proto !== null) return false;
   return Object.values(value).every((v) => v === undefined || isPlain(v, seen));
 }
+
+/**
+ * What every story's terminal extension may say about the stage it is drawn on, apart from what
+ * the component's own extension adds: how wide the stage is, and whether it is snapshotted at
+ * four sizes.
+ */
+export type StageExt = {
+  /** Snapshot at four sizes, for the state with the most text. */
+  extreme?: true;
+  /** The width class the stage caps the component at. @default "reading" */
+  stage?: "reading" | "dialog";
+};

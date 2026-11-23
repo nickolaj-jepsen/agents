@@ -5,6 +5,7 @@
  * build.
  */
 import { fileURLToPath } from "node:url";
+import { hasTerminalStory } from "@agents/kit-core/stories.ts";
 import { stageWidth, storyId, stories, type Story } from "../claude/stories.ts";
 import { region, rowText } from "@agents/drive/lib/screen.ts";
 import type { Rect, Region } from "@agents/drive/lib/screen.ts";
@@ -48,7 +49,7 @@ export const claudeScenarios = (plugin: string, owns: (component: string) => boo
     harness: "claude",
     scenarios: Object.fromEntries(
       stories
-        .filter((s) => owns(s.component))
+        .filter((s) => owns(s.component) && hasTerminalStory(s))
         .map((s): [string, Scenario] => [
           storyId(s),
           {

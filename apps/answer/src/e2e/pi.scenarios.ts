@@ -288,6 +288,9 @@ export default scenarios({
       },
       region: CARD,
       extreme: true,
+      // Pi's jump hint can leave invisible foreground color in the empty space beside the rail.
+      // Keep the rail and the hint itself in the comparison.
+      mask: [{ pattern: /(?<=^│) +(?= ↓ Jump to latest message)/, with: "" }],
       steps: [
         ...CARD_ASK,
         { click: "Answer [alt+a]" },

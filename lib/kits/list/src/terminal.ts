@@ -21,12 +21,15 @@ import {
 import { tokens } from "@agents/kit-core/tokens.ts";
 import type { Button } from "@agents/kit-buttons/contract.ts";
 import { buttonRow } from "@agents/kit-buttons/terminal.ts";
-import type { List, ListGroup, ListRow } from "./contract.ts";
+import type { List, ListGroup, ListProps, ListRow } from "./contract.ts";
+
+/** What a terminal is given: the model without what only a graphical surface draws. */
+type Terminal = ListProps<"pi" | "claude-terminal">;
 
 const GAP = " ".repeat(tokens.gutter);
 
 /** Cells the rail and its gap take: where a group's label and a row's pointer start. */
-export const LIST_INSET = cellWidth(tokens.glyph.rail) + tokens.gutter;
+const LIST_INSET = cellWidth(tokens.glyph.rail) + tokens.gutter;
 
 /** Cells of the pointer column and the space after it. */
 const POINTER = cellWidth(tokens.glyph.pointer) + 1;
@@ -274,7 +277,7 @@ function windowOf(l: List, entries: readonly Entry[]): Window | undefined {
  * lines on either side: it moves only as far as that needs, and not at all while the row is well
  * inside.
  */
-export function listFollow(l: List, width: number, context = 2): number {
+export function listFollow(l: Terminal, width: number, context = 2): number {
   const entries = entriesOf(l, width);
   const w = windowOf(l, entries);
   if (!w) return 0;
@@ -290,10 +293,10 @@ export function listFollow(l: List, width: number, context = 2): number {
 }
 
 /** Rows the list takes drawn whole at `width`: its lines, and with `space` those between groups. */
-export const listRows = (l: List, width: number): number => entriesOf(l, width).length;
+export const listRows = (l: Terminal, width: number): number => entriesOf(l, width).length;
 
 /** The furthest a window's `top` goes at `width`: 0 for a list drawn whole. */
-export function listTopMax(l: List, width: number): number {
+export function listTopMax(l: Terminal, width: number): number {
   return windowOf(l, entriesOf(l, width))?.max ?? 0;
 }
 
@@ -307,7 +310,7 @@ const rowsIn = (entries: readonly Entry[]) => entries.filter(isRow).length;
  * is never its last, a row its end cuts ends in `…` there, and its last row says how many rows
  * are above it and below.
  */
-export function list(l: List, width: number): Line[] {
+export function list(l: Terminal, width: number): Line[] {
   const entries = entriesOf(l, width);
   /** Line `e.part` of its row, the row drawn in `rows` lines where the window has no more. */
   const draw = (e: Entry, rows?: number): Line => {

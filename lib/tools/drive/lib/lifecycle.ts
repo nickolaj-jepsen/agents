@@ -35,11 +35,9 @@ export type Flags = WatchFlags & {
   draft?: boolean;
 };
 
-/**
- * The daemon's session name for a session of ours; a reload starts `-next` beside it. The daemons
- * are the user's, not the checkout's, so the name carries the checkout.
- */
-const daemonBase = (name: string) => `d-${checkoutId}-${name}`;
+/** Two daemon slots per checkout and session. Put the slot before the user-supplied name. */
+const daemonSlots = (name: string) =>
+  [`d0-${checkoutId}-${name}`, `d1-${checkoutId}-${name}`] as const;
 
 /** A failed start's folder: kept and named with `--keep`, else removed. */
 function keepOrRemove(runDir: string, keep = options.keep) {
@@ -75,7 +73,7 @@ async function goto(name: string, entry: Entry, scenario: string, flags: Flags) 
     const r = resolveScenario(await loadSet(entry.file), scenario);
     if (flags.size) r.size = flags.size;
     const runDir = newRunDir(name);
-    const daemon = daemonBase(name);
+    const [daemon] = daemonSlots(name);
     const session = await publishTerminal({
       name,
       runDir,
@@ -192,8 +190,8 @@ async function reload(name: string, other: string | undefined, deps: ReloadDeps)
     const before = await old.size().catch(() => undefined);
     const runDir = (deps.runDir ?? newRunDir)(name);
     // Two names in turn: the daemon leaves a file or two behind for every name it has served.
-    const base = daemonBase(name);
-    const next = rec.daemon === base ? `${base}-next` : base;
+    const [first, second] = daemonSlots(name);
+    const next = rec.daemon === first ? second : first;
     const start = deps.start ?? ((_n: string, dir: string) => reach(r, "daemon", next, dir));
     const session = await publishTerminal({
       name,
@@ -283,8 +281,10 @@ async function stop(name: string): Promise<SessionRecord | undefined> {
   const rec = readSession(name);
   if (!rec) return undefined;
   if (terminal(rec.harness)) {
-    const base = daemonBase(name);
-    for (const daemon of new Set([base, `${base}-next`, rec.daemon ?? base])) {
+    const daemons = new Set<string>(daemonSlots(name));
+    // An older record can still be stopped, but don't guess its old `-next` slot.
+    if (rec.daemon) daemons.add(rec.daemon);
+    for (const daemon of daemons) {
       await tuiTest(["--session", daemon, "close"]).catch(() => undefined);
       await tuiTest(["daemon", "stop", "--session", daemon]).catch(() => undefined);
     }

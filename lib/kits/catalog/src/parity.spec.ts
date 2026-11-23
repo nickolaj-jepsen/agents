@@ -9,7 +9,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { cellWidth, textOf, type Line } from "@agents/kit-core/lines.ts";
-import { storyId } from "@agents/kit-core/stories.ts";
+import { hasTerminalStory, storyId } from "@agents/kit-core/stories.ts";
 import { kitStories } from "./registry.ts";
 
 const kits = join(import.meta.dirname, "../..");
@@ -62,35 +62,38 @@ const cellStyles = (l: Line) =>
     ),
   );
 
-describe.each(kitStories.map((s) => ({ id: storyId(s), story: s })))("$id", ({ story }) => {
-  test.each(clients)("%s holds the shared drawing at every size", (client) => {
-    const snaps = read(client, story.component, story.state);
-    expect(
-      snaps.length,
-      "no snapshot: run `pnpm turbo run e2e:update --filter=@agents/kit-<component>`",
-    ).toBeGreaterThan(0);
-    for (const snap of snaps) {
-      const lines = story.lines(snap.width);
-      expect(snap.text, `${client} ${snap.size}`).toEqual(lines.map((l) => textOf(l).trimEnd()));
-      // Whatever the client's colours are, it paints one style in one way.
-      const painted = new Map<string, string>();
-      lines.forEach((l, row) =>
-        cellStyles(l).forEach((style, cell) => {
-          if (!style) return;
-          const drawn = snap.styles[row]?.[cell] ?? ".";
-          expect(painted.get(style) ?? drawn, `${client} ${snap.size}: ${style}`).toBe(drawn);
-          painted.set(style, drawn);
-        }),
-      );
-    }
-  });
+describe.each(kitStories.filter(hasTerminalStory).map((s) => ({ id: storyId(s), story: s })))(
+  "$id",
+  ({ story }) => {
+    test.each(clients)("%s holds the shared drawing at every size", (client) => {
+      const snaps = read(client, story.component, story.state);
+      expect(
+        snaps.length,
+        "no snapshot: run `pnpm turbo run e2e:update --filter=@agents/kit-<component>`",
+      ).toBeGreaterThan(0);
+      for (const snap of snaps) {
+        const lines = story.lines(snap.width);
+        expect(snap.text, `${client} ${snap.size}`).toEqual(lines.map((l) => textOf(l).trimEnd()));
+        // Whatever the client's colours are, it paints one style in one way.
+        const painted = new Map<string, string>();
+        lines.forEach((l, row) =>
+          cellStyles(l).forEach((style, cell) => {
+            if (!style) return;
+            const drawn = snap.styles[row]?.[cell] ?? ".";
+            expect(painted.get(style) ?? drawn, `${client} ${snap.size}: ${style}`).toBe(drawn);
+            painted.set(style, drawn);
+          }),
+        );
+      }
+    });
 
-  test("pi and Claude Code draw the same cells at the same width", () => {
-    const [pi, claude] = clients.map((c) => read(c, story.component, story.state));
-    const pairs = (pi ?? []).flatMap((a) =>
-      (claude ?? []).filter((b) => b.width === a.width).map((b) => [a, b] as const),
-    );
-    expect(pairs.length, "no size where both clients have the same width").toBeGreaterThan(0);
-    for (const [a, b] of pairs) expect(a.text, `${a.size} and ${b.size}`).toEqual(b.text);
-  });
-});
+    test("pi and Claude Code draw the same cells at the same width", () => {
+      const [pi, claude] = clients.map((c) => read(c, story.component, story.state));
+      const pairs = (pi ?? []).flatMap((a) =>
+        (claude ?? []).filter((b) => b.width === a.width).map((b) => [a, b] as const),
+      );
+      expect(pairs.length, "no size where both clients have the same width").toBeGreaterThan(0);
+      for (const [a, b] of pairs) expect(a.text, `${a.size} and ${b.size}`).toEqual(b.text);
+    });
+  },
+);

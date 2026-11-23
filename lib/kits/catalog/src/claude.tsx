@@ -170,8 +170,9 @@ export const register: Register = (on) => {
     const id = storyId(s);
     // A graphical surface draws the story's `gui.tsx` drawing: native controls, no width in cells.
     if (isGui(e)) {
-      const draw = guiStoryOf(id);
-      if (draw) return draw(guiOf(els, e));
+      const g = guiOf(els, e);
+      const draw = guiStoryOf(id, g.surface);
+      if (draw) return draw(g);
     }
     const width = stageWidth(s, e.props.bodyColumns);
     const held = await read($, live);

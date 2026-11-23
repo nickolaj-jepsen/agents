@@ -1,0 +1,17 @@
+# kit/pi/fields/editors 70x60 @2,2 (66x6)
+T  Team      Platform
+S  Status    Todo
+P  Priority  Medium
+L  Labels    Bug, Area/reliability, 保存とアーカイブ, Needs a
+             decision before the next release
+   Title     Honor Retry-After
+--- styles
+1 .x2 1x4 .x6 2x8
+1 .x2 1x6 .x4 2x4
+1 .x2 1x8 .x2 2x6
+1 .x2 1x6 .x4 2x48
+.x13 2x32
+1 .x2 1x5 .x5 2x17
+--- legend
+1 fg=#7e888e
+2 fg=#dee0e1

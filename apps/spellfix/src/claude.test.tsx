@@ -108,7 +108,9 @@ function world(on: On, haiku: (prompt: string) => string | Promise<string> = hai
     value: { isAnswered: true, text: await haiku(e.prompt), usage },
   }));
   on("ui.toast", () => ({ value: undefined }));
-  on("ui.render", ($, e) => paintLines($.ui.resolve(e), notice("engine", 80, "text")));
+  on("ui.render", ($, e) =>
+    paintLines($.ui.resolve(e), notice({ text: "engine", width: 80, status: "text" })),
+  );
   return w;
 }
 

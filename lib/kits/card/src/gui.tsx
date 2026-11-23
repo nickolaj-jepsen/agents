@@ -1,194 +1,184 @@
 /**
- * The question card on the graphical surfaces: each answer a row led by a Button of its letter,
- * a write-in and the note the host's `Input`, the steps tabs. There is no rail (a card's state is
- * its buttons') and no pointer or hover of its own: the host draws those.
+ * The question card on the graphical surfaces. A question's answers stand as rows, each a
+ * row of a mark (an icon: open or chosen), the key's Button and its words; the letter is a Button
+ * because a Box has no press handler, and a Button's label never wraps. The note is a panel with
+ * a full-width field; the steps are tabs, the current one a label; each answer in review is a
+ * label in a label column. A card draws no pointer or hover of its own: the host draws those.
+ * Rows keep the kit's beat (`rowOf`, `rows`).
  */
-import { capital, icon, type Gui } from "@agents/kit-core/paint/gui.tsx";
+import { can } from "@agents/kit-core/surfaces.ts";
+import {
+  capital,
+  meaning,
+  panel,
+  rowOf,
+  rows,
+  typed,
+  type Gui,
+} from "@agents/kit-core/paint/gui.tsx";
 import { tokens } from "@agents/kit-core/tokens.ts";
 import {
   choiceHit,
+  lineHit,
   type Choice,
   type ChoiceList,
   type Closing,
+  type FieldProps,
   type Heading,
   type Note,
   type Step,
   type Summary,
 } from "./contract.ts";
 
-const { space, across, lead, maxLabel } = tokens.gui;
+const { space, across, lead } = tokens.gui;
 
-/** What the host's own fields need, which the contract has no types for. */
-export type CardGuiOptions = {
-  /**
-   * Runs with a field's `hit` and its text on every change: a write-in's (`choice:<i>`) or the
-   * note's. A field holds what was typed until it is drawn under another `key`, so a caller that
-   * resets one changes the story's key.
-   */
-  onInput?: (hit: string, text: string, line?: number) => unknown;
-  /**
-   * Runs with the text when Enter is pressed in a field. Without it Enter does nothing. With
-   * `lines`, the text is that line's alone and `line` is its place.
-   */
-  onSubmit?: (hit: string, text: string, line?: number) => unknown;
-  /**
-   * A write-in whose text is this one is empty, showing it as the placeholder; a note shows it
-   * as its own. @default "Write your own answer", and "Add a note" for a note
-   */
-  invitation?: string;
-  /**
-   * For a host whose field is one line (VS Code): a write-in or note is one field per line of its
-   * text, at least this many, the later ones placeheld `Line 2`, `Line 3`. Each reports its own
-   * line, so the caller joins them.
-   */
-  lines?: number;
-  /** The first field takes the focus when it is drawn: a field the person just asked for. */
-  autoFocus?: boolean;
-  /** Rows a field has where the host's wraps what is typed (Desktop); the note's `max` wins. @default 1 */
-  rows?: number;
-};
+/** The column that leads a row of answers: the mark's icon and the key's Button. */
+const LEAD = lead + 2.2;
 
 const INVITATION = "Write your own answer";
 
-/** Inline Markdown as a semibold run: a bold of its own would close the one around it. */
-const bold = (text: string) => `**${text.replaceAll("**", "")}**`;
-
-/** A Button that presses its `hit`, quiet unless `primary`. */
-function control(
-  g: Gui,
-  o: { key: string; label: string; hit?: string; primary?: boolean },
-): JSX.Element {
+/** A Button that presses its `hit`, quiet: the surface fills any other, and one button of a screen is lit. */
+function control(g: Gui, o: { key: string; label: string; hit?: string }): JSX.Element {
   const { Button } = g.els;
   return (
     <Button
       key={o.key}
-      variant={o.primary ? "primary" : undefined}
-      dimColor={!o.primary || undefined}
+      dimColor
       label={o.label}
-      onPress={() => (o.hit ? g.press?.(o.hit) : undefined)}
+      onPress={() => (o.hit ? g.press(o.hit) : undefined)}
     />
   );
 }
 
 /**
- * A field for the host's `Input`: one, or with `lines` one per line of its text.
- * @param o `key` is the address of the first field, which a caller moves the focus to.
+ * A field for the host's `Input`, the width of its room: one, or with `lines` (and a host whose
+ * field is one line) one per line of its text, the later ones at `lineHit(hit, i)`.
  */
 function field(
   g: Gui,
-  o: {
-    key: string;
-    value: string;
-    placeholder: string;
-    hit: string;
-    label?: string;
-    rows?: number;
-  },
-  options: CardGuiOptions,
+  o: { key: string; value: string; placeholder: string; hit: string; rows?: number },
+  fp: FieldProps,
 ): JSX.Element {
   const { Box, Input } = g.els;
-  if (!options.lines)
+  const first = fp.autoFocus || undefined;
+  if (!fp.lines || !can(g, "inputRows:1"))
     return (
       <Input
         key={o.key}
-        label={o.label}
         value={o.value}
         placeholder={o.placeholder}
-        autoFocus={options.autoFocus || undefined}
-        rows={o.rows ?? (options.rows && options.rows > 1 ? options.rows : undefined)}
-        onInput={(text) => options.onInput?.(o.hit, text)}
-        onSubmit={(text) => options.onSubmit?.(o.hit, text)}
+        autoFocus={first}
+        rows={o.rows ?? (fp.rows && fp.rows > 1 ? fp.rows : undefined)}
+        onInput={(text) => g.input(o.hit, text)}
+        onSubmit={(text) => g.submit(o.hit, text)}
       />
     );
   const parts = o.value.split("\n");
-  const count = Math.max(options.lines, parts.length);
+  const count = Math.max(fp.lines, parts.length);
   return (
     <Box flexDirection="column" rowGap={space.sm}>
       {Array.from({ length: count }, (_, i) => (
         <Input
           key={i ? `${o.key}:${i}` : o.key}
-          label={i ? undefined : o.label}
-          autoFocus={(!i && options.autoFocus) || undefined}
+          autoFocus={(!i && first) || undefined}
           value={parts[i] ?? ""}
           placeholder={i ? `Line ${i + 1}` : o.placeholder}
-          onInput={(text) => options.onInput?.(o.hit, text, i)}
-          onSubmit={(text) => options.onSubmit?.(o.hit, text, i)}
+          onInput={(text) => g.input(lineHit(o.hit, i), text)}
+          onSubmit={(text) => g.submit(lineHit(o.hit, i), text)}
         />
       ))}
     </Box>
   );
 }
 
-/** The question: its label dim, then its title in semibold. */
+/** The question: its label dim in the lead column, then its title as the heading. */
 export function heading(g: Gui, question: Heading): JSX.Element {
-  const { Box, Text, Markdown } = g.els;
+  const { Box, Markdown } = g.els;
   return (
-    <Box flexDirection="row" columnGap={across.sm} paddingX={across.inset}>
+    <Box flexDirection="row" columnGap={across.sm} paddingX={across.inset} alignItems="flex-start">
       {question.label ? (
-        <Box flexShrink={0}>
-          <Text dimColor>{question.label}</Text>
+        <Box flexShrink={0} minWidth={LEAD}>
+          {typed(g, "caption", question.label)}
         </Box>
       ) : null}
       <Box width={0} flexGrow={1} flexShrink={1}>
-        <Markdown text={bold(question.title)} />
+        {/* The title is inline Markdown, so the host's own heading sets it. */}
+        <Markdown text={`### ${question.title}`} />
       </Box>
       {question.answered ? (
-        <Box flexShrink={0}>{icon(g, "success", { tone: "success", alt: "Answered" })}</Box>
+        <Box flexShrink={0}>{meaning(g, "state:success", { alt: "Answered" })}</Box>
       ) : null}
     </Box>
   );
 }
 
 /**
- * One answer: its letter on a Button in the lead column (filled when chosen), its words beside
- * it, the dim aside after them on their line and the detail under them. A write-in is the host's `Input` in place of the
- * words. A letter is a word a Button holds; the words, which wrap, never go in one.
+ * One answer: the mark (an icon, filled where chosen), the letter on a quiet Button and its
+ * words beside them, the dim aside after them on their line and the detail under them. A
+ * write-in is the host's `Input` in place of the words. With no key the mark stands alone.
  */
-export function choice(g: Gui, c: Choice, options: CardGuiOptions = {}): JSX.Element {
+export function choice(g: Gui, c: Choice): JSX.Element {
   const { Box, Text, Markdown } = g.els;
-  const { invitation = INVITATION } = options;
-  const mark = c.key
-    ? control(g, {
-        key: `key:${c.hit ?? c.key}`,
-        label: capital(c.key),
-        hit: c.hit,
-        primary: c.chosen,
-      })
-    : icon(g, c.chosen ? "success" : "pending", { tone: c.chosen ? "success" : "neutral" });
-  const body = c.literal ? (
-    field(
-      g,
-      {
-        key: `write:${c.hit ?? c.key}`,
-        value: c.text === invitation ? "" : c.text,
-        placeholder: invitation,
-        hit: c.hit ?? "",
-      },
-      c.hit ? options : { lines: options.lines },
-    )
-  ) : c.aside ? (
-    // The aside stands on the label's line, after it, and wraps with it.
-    <Box flexDirection="row" flexWrap="wrap" columnGap={across.sm} alignItems="flex-start">
-      <Box flexShrink={1}>
-        <Markdown text={c.text} />
+  const invitation = c.invitation ?? INVITATION;
+  const mark = meaning(g, c.chosen ? "choice:chosen" : "choice:open", {
+    alt: c.chosen ? "Chosen" : "Not chosen",
+  });
+  const letter = c.key
+    ? control(g, { key: `key:${c.hit ?? c.key}`, label: capital(c.key), hit: c.hit })
+    : null;
+  const body =
+    c.literal && can(g, "input") ? (
+      field(
+        g,
+        {
+          key: `write:${c.hit ?? c.key}`,
+          value: c.text === invitation ? "" : c.text,
+          placeholder: invitation,
+          hit: c.hit ?? "",
+        },
+        c,
+      )
+    ) : c.literal ? (
+      <Text>{c.text}</Text>
+    ) : c.aside ? (
+      // The aside stands on the label's line, after it, and wraps with it.
+      <Box flexDirection="row" flexWrap="wrap" columnGap={across.sm} alignItems="flex-start">
+        <Box flexShrink={1}>
+          <Markdown text={c.text} />
+        </Box>
+        <Text dimColor>{c.aside}</Text>
       </Box>
-      <Text dimColor>{c.aside}</Text>
-    </Box>
-  ) : (
-    <Markdown text={c.text} />
-  );
+    ) : (
+      <Markdown text={c.text} />
+    );
+  // The mark and the key stand at the first line of the words, whatever the words take.
   return (
     <Box
       key={`choice:${c.hit ?? c.key}`}
       flexDirection="row"
-      columnGap={across.sm}
-      paddingX={across.inset}
       alignItems="flex-start"
+      columnGap={across.sm}
+      paddingY={tokens.gui.row.pad}
     >
-      <Box flexShrink={0} minWidth={lead}>
+      <Box
+        key="lead"
+        flexDirection="row"
+        alignItems="center"
+        columnGap={across.xs}
+        flexShrink={0}
+        minWidth={LEAD}
+      >
         {mark}
+        {letter}
       </Box>
-      <Box flexDirection="column" width={0} flexGrow={1} flexShrink={1} rowGap={space.xs}>
+      <Box
+        key="body"
+        flexDirection="column"
+        width={0}
+        flexGrow={1}
+        flexShrink={1}
+        rowGap={space.xs}
+      >
         {body}
         {c.aside && c.literal ? <Text dimColor>{c.aside}</Text> : null}
         {c.detail ? <Markdown text={c.detail} dimColor /> : null}
@@ -197,55 +187,67 @@ export function choice(g: Gui, c: Choice, options: CardGuiOptions = {}): JSX.Ele
   );
 }
 
-/** A list of answers, one row each; several of many toggle, one of many replaces. */
-export function choiceList(g: Gui, list: ChoiceList, options: CardGuiOptions = {}): JSX.Element {
+/**
+ * The answers of one question as rows that keep one beat. They are tied together by their
+ * marks and the one left edge, not by a rail or an outline: the host draws no left border, and a
+ * visible round border is not allowed (`expectNative`), nor a fill for rows that are always there.
+ */
+export function choices(g: Gui, all: readonly Choice[]): JSX.Element {
   const { Box } = g.els;
   return (
-    <Box flexDirection="column" rowGap={space.sm}>
-      {list.items.map((item, i) =>
-        choice(
-          g,
-          {
-            key: item.key,
-            text: item.text,
-            detail: item.detail,
-            chosen: list.chosen.includes(i),
-            multiple: list.multiple,
-            literal: item.writeIn,
-            hit: choiceHit(i),
-          },
-          options,
-        ),
-      )}
+    <Box key="choices" flexDirection="column" paddingX={across.inset}>
+      {rows(g, {}, ...all.map((c) => choice(g, c)))}
     </Box>
   );
 }
 
-/** The card's note: the host's `Input` labelled Note, under the answers. */
-export function note(g: Gui, n: Note, options: CardGuiOptions = {}): JSX.Element {
+/** A list of answers; several of many toggle, one of many replaces. */
+export function choiceList(g: Gui, list: ChoiceList): JSX.Element {
+  return choices(
+    g,
+    list.items.map((item, i) => ({
+      key: item.key,
+      text: item.text,
+      detail: item.detail,
+      chosen: list.chosen.includes(i),
+      multiple: list.multiple,
+      literal: item.writeIn,
+      hit: choiceHit(i),
+    })),
+  );
+}
+
+/**
+ * The card's note, in a panel: a caption and a field the panel's whole width, under the answers.
+ * On a surface with no field the note is its words.
+ */
+export function note(g: Gui, n: Note): JSX.Element {
   const { Box } = g.els;
   const hit = n.hit ?? "note";
-  return (
-    <Box paddingX={across.inset}>
-      {field(
+  const body = can(g, "input")
+    ? field(
         g,
         {
           key: `note:${hit}`,
-          label: "Note",
           value: n.value,
-          placeholder: options.invitation ?? "Add a note",
+          placeholder: n.invitation ?? "Add a note",
           rows: n.max && n.max > 1 ? n.max : undefined,
           hit,
         },
-        options,
-      )}
+        n,
+      )
+    : typed(g, "body", n.value);
+  return (
+    <Box key={`panel:${hit}`} flexDirection="column" paddingX={across.inset}>
+      {panel(g, {}, typed(g, "caption", "Note"), body)}
     </Box>
   );
 }
 
 /**
- * The steps of several questions as tabs: the current one filled, a done one marked with a tick,
- * the rest quiet. A name too long for a Button is left out for the step's short word.
+ * The steps of several questions as tabs: a done one marked with a tick, the others quiet
+ * Buttons, and the current one a label, which is where the person is and not a control. A name
+ * too long for a Button is left out for the step's short word.
  */
 export function steps(g: Gui, all: readonly Step[]): JSX.Element | undefined {
   const { Box } = g.els;
@@ -255,12 +257,13 @@ export function steps(g: Gui, all: readonly Step[]): JSX.Element | undefined {
       flexDirection="row"
       flexWrap="wrap"
       alignItems="center"
-      columnGap={across.xs}
+      columnGap={across.sm}
       rowGap={space.xs}
       paddingX={across.inset}
     >
       {all.map((step, i) => {
-        const named = step.name && step.name.length <= maxLabel;
+        const named = step.name && step.name.length <= tokens.gui.maxLabel;
+        const label = named ? `${step.short} ${step.name}` : step.short;
         return (
           <Box
             key={`step:${step.hit ?? i}`}
@@ -268,15 +271,10 @@ export function steps(g: Gui, all: readonly Step[]): JSX.Element | undefined {
             alignItems="center"
             columnGap={across.xs}
           >
-            {step.done && !step.current
-              ? icon(g, "success", { tone: "success", alt: "Done" })
-              : null}
-            {control(g, {
-              key: `tab:${step.hit ?? i}`,
-              label: named ? `${step.short} ${step.name}` : step.short,
-              hit: step.hit,
-              primary: step.current,
-            })}
+            {step.done && !step.current ? meaning(g, "state:success", { alt: "Done" }) : null}
+            {step.current
+              ? typed(g, "body", label)
+              : control(g, { key: `tab:${step.hit ?? i}`, label, hit: step.hit })}
           </Box>
         );
       })}
@@ -284,20 +282,20 @@ export function steps(g: Gui, all: readonly Step[]): JSX.Element | undefined {
   );
 }
 
-/** A question's answers for review: its label on a Button that goes back to it, the title in semibold, one line per answer, the note. */
+/**
+ * A question's answers for review: its label in the label column, then its title, one line per
+ * answer and the note. The label is words, not a Button; where the question can be gone back to
+ * from here (a `hit`) a quiet Change stands at the row's far edge.
+ */
 export function summary(g: Gui, s: Summary): JSX.Element {
   const { Box, Text, Markdown } = g.els;
   return (
     <Box flexDirection="row" columnGap={across.sm} paddingX={across.inset} alignItems="flex-start">
-      <Box flexShrink={0} minWidth={lead}>
-        {s.hit ? (
-          control(g, { key: `go:${s.hit}`, label: s.label, hit: s.hit })
-        ) : (
-          <Text dimColor>{s.label}</Text>
-        )}
+      <Box flexShrink={0} minWidth={LEAD}>
+        {typed(g, "caption", s.label)}
       </Box>
       <Box flexDirection="column" width={0} flexGrow={1} flexShrink={1} rowGap={space.xs}>
-        <Markdown text={bold(s.title)} />
+        <Markdown text={`**${s.title.replaceAll("**", "")}**`} />
         {s.values.length > 0 ? (
           s.values.map(({ text, literal }, i) =>
             literal ? (
@@ -311,42 +309,44 @@ export function summary(g: Gui, s: Summary): JSX.Element {
         )}
         {s.note ? <Text dimColor>{`Note: ${s.note}`}</Text> : null}
       </Box>
+      {s.hit ? (
+        <Box flexShrink={0}>{control(g, { key: `go:${s.hit}`, label: "Change", hit: s.hit })}</Box>
+      ) : null}
     </Box>
   );
 }
 
 /**
  * The row after a round's last card: the count, which goes to the first question, and Fill
- * prompt, filled once there is a reply. A sent round says so; one with no `hits` is the count only.
+ * prompt. A sent round says so; one with no `hits` is the count only.
  */
 export function closing(g: Gui, c: Closing): JSX.Element {
-  const { Box, Text } = g.els;
+  const { Box, Button } = g.els;
   const { hits } = c;
   const count = `${c.answered} of ${c.total} answered`;
-  return (
-    <Box
-      flexDirection="row"
-      flexWrap="wrap"
-      alignItems="center"
-      columnGap={across.md}
-      rowGap={space.xs}
-      paddingX={across.inset}
-    >
-      {hits && !c.sent ? (
-        control(g, { key: "count", label: count, hit: hits.count })
-      ) : (
-        <Text>{count}</Text>
-      )}
-      {c.sent ? (
-        <Box flexDirection="row" alignItems="center" columnGap={across.xs}>
-          {icon(g, "success", { tone: "success", alt: "Sent" })}
-          <Text color="success">Sent</Text>
-        </Box>
-      ) : null}
+  return rowOf(
+    g,
+    { key: "closing" },
+    <Box key="count" paddingX={across.inset}>
       {hits && !c.sent
-        ? control(g, { key: "fill", label: "Fill prompt", hit: hits.fill, primary: c.canFill })
-        : null}
-    </Box>
+        ? control(g, { key: "count", label: count, hit: hits.count })
+        : typed(g, "body", count, { tabular: true })}
+    </Box>,
+    c.sent ? (
+      <Box key="sent" flexDirection="row" alignItems="center" columnGap={across.xs}>
+        {meaning(g, "state:success", { alt: "Sent" })}
+        {typed(g, "body", "Sent")}
+      </Box>
+    ) : null,
+    hits && !c.sent ? (
+      <Button
+        key="fill"
+        variant={c.canFill ? "primary" : undefined}
+        dimColor={!c.canFill || undefined}
+        label="Fill prompt"
+        onPress={() => g.press(hits.fill)}
+      />
+    ) : null,
   );
 }
 

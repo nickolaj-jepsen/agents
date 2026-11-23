@@ -124,19 +124,22 @@ const caption = (m: Pick<Menu, "title"> & { detail?: string }): Span[] =>
  */
 export function drawMenu(m: Menu | null, look: Look, width: number, height: number): Drawn {
   const inner = Math.max(1, width - INSET);
-  if (!m) return { body: emptyState("No menu open.", inner), hint: [] };
+  if (!m) return { body: emptyState({ text: "No menu open.", width: inner }), hint: [] };
   const head = frameTop({
     width,
     title: m.title,
     caption: caption({ title: m.title, detail: detailOf(m) }),
     close: {},
   });
-  const hint = notice(HINT, inner, "dim");
-  if (m.error) return { head, body: emptyState(m.error, inner), hint: [] };
+  const hint = notice({ text: HINT, width: inner, status: "dim" });
+  if (m.error) return { head, body: emptyState({ text: m.error, width: inner }), hint: [] };
   if (m.rows === null)
     return {
       head,
-      body: emptyState(m.kind === "notes" ? "Looking for notes…" : "Asking git…", inner),
+      body: emptyState({
+        text: m.kind === "notes" ? "Looking for notes…" : "Asking git…",
+        width: inner,
+      }),
       hint: [],
     };
   const room = listRoom(m.rows, look.held, width, height);

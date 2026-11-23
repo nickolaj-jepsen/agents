@@ -8,7 +8,7 @@
  */
 import type { Option } from "commander";
 import { spawnSync } from "node:child_process";
-import { DEFAULT_SESSION, readSession, type SessionRecord } from "./sessions.ts";
+import { DEFAULT_SESSION, readSession, sessionName, type SessionRecord } from "./sessions.ts";
 import { tuiTestBin, tuiTestEnv } from "./term.ts";
 
 /** The CLI commands that would launch, replace or tear down the parked session, and what owns that. */
@@ -109,7 +109,7 @@ export function planTerminal(
 
   if (command === undefined || GUIDANCE.has(command)) return { args };
 
-  const rec = read(chosen);
+  const rec = read(sessionName(chosen));
   if (!rec)
     throw new Error(
       `no session ${chosen}: run \`goto <package> <scenario>${chosen === DEFAULT_SESSION ? "" : ` --session ${chosen}`}\` first`,

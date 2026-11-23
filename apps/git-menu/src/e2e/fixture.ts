@@ -81,14 +81,20 @@ const ghNone = '#!/bin/sh\necho "no pull requests found for branch" >&2\nexit 1\
 
 /** What a press may start: each writes its own name and arguments to `launched.log`. */
 const apps = Object.fromEntries(
-  ["code", "xdg-open", "nautilus", "ghostty", "agent-note-open"].map((n) => [n, log(n)]),
+  ["code", "xdg-open", "nautilus", "agent-note-open"].map((n) => [n, log(n)]),
 );
+
+apps["xdg-terminal-exec"] = `#!/bin/sh
+if [ "$1" = --print-id ]; then echo fixture.desktop; exit 0; fi
+printf 'xdg-terminal-exec %s %s\\n' "$PWD" "$1" >> "$(dirname "$0")/../launched.log"
+`;
 
 /** A machine with Code, a file manager and a terminal, and without Sublime Merge or Zed. */
 const machine = { bin: apps, hide: ["smerge", "zed", "zeditor"] };
 
 export const start = (gh: "pr" | "none") => ({
   turns: [{ text: "Hello from the stub." }],
+  env: { GIT_MENU_TERMINAL: "" },
   bin: { ...machine.bin, gh: gh === "pr" ? ghPr : ghNone },
   hide: machine.hide,
 });

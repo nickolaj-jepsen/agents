@@ -17,7 +17,6 @@
 import { execFile, execFileSync } from "node:child_process";
 import {
   existsSync,
-  mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
@@ -26,9 +25,8 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, relative } from "node:path";
+import { join, relative } from "node:path";
 import { promisify } from "node:util";
-import { actualOf } from "./check.ts";
 import { cropToRegion } from "./crop.ts";
 import { entries, packagesNamed } from "./find.ts";
 import { checkoutRoot } from "./harness.ts";
@@ -531,42 +529,35 @@ async function recordKit(p: E2EPackage, named: boolean) {
   const sets: ScenarioSet[] = [];
   for (const f of files) sets.push(await loadSet(f.file));
   const stage = mkdtempSync(join(tmpdir(), `site-${p.name}-`));
-  const { outcomes } = await runAll(sets, () => true, mediaStage).catch((error: unknown) => {
+  const { outcomes } = await runAll(sets, () => true, mediaStage(stage)).catch((error: unknown) => {
     throw retainFailure(stage, String(error));
   });
   const crops: Record<string, Crop> = {};
   const written: string[] = [];
   const failures: string[] = [];
-  const actuals: string[] = [];
   for (const [key, outcome] of outcomes) {
     if (outcome.error) {
       failures.push(`${key}: ${outcome.error.message.split("\n")[0]}`);
       continue;
     }
-    // `<package>/<harness>/<scenario>`, and a kit scenario is named `<component>/<story>`.
-    const [, harness, ...named] = key.split("/") as [string, string, ...string[]];
-    const story = named.join("/");
-    for (const c of outcome.captures) {
-      const shot = actualOf(c.png);
-      const [cols, rows] = c.size;
-      const name = `${harness}/${story}@${cols}x${rows}`;
-      const out = join(stage, `${name}.png`);
+    for (const {
+      png,
+      size: [cols, rows],
+      actual,
+    } of outcome.captures) {
+      const name = relative(stage, png).slice(0, -".png".length);
       let cut: NonNullable<ReturnType<typeof cropToRegion>>;
       try {
-        const png = readFileSync(shot);
-        mkdirSync(dirname(out), { recursive: true });
-        // Keep the uncropped capture in the stage if cropping it fails.
-        writeFileSync(out, png);
-        const crop = cropToRegion(png, c.actual.split("\n", 1)[0]!, cols, rows);
+        // Leave the uncropped capture as evidence if cropping it fails.
+        const crop = cropToRegion(readFileSync(png), actual.split("\n", 1)[0]!, cols, rows);
         if (!crop) throw new Error(`not a ${cols}x${rows} terminal window`);
         cut = crop;
-        writeFileSync(out, cut.png);
-        actuals.push(shot);
+        writeFileSync(png, cut.png);
       } catch (error) {
         failures.push(`${p.name}/${name}: ${String(error)}`);
         continue;
       }
-      written.push(out);
+      written.push(png);
       crops[name] = {
         png: `apps/site/media/kit/${kitFolder(p)}/${name}.png`,
         width: cut.width,
@@ -576,15 +567,12 @@ async function recordKit(p: E2EPackage, named: boolean) {
     }
   }
   if (failures.length > 0) {
-    // The screenshots the stories that did play left stay in their scenario folders as evidence,
-    // beside the stage that holds the crops made before the failure.
     console.error(`record: ${p.name}: kept the old pictures`);
     throw retainFailure(
       stage,
       `${failures.length} scenario(s) failed:\n- ${failures.join("\n- ")}`,
     );
   }
-  for (const shot of actuals) rmSync(shot, { force: true });
   optimise(written);
   for (const f of written)
     if (statSync(f).size > BUDGET.png)

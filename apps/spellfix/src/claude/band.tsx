@@ -1,5 +1,5 @@
 import type { Picker, Report } from "./types.d.ts";
-import type { StatusBand } from "@agents/kit-band/contract.ts";
+import type { StatusBandTerminal } from "@agents/kit-band/contract.ts";
 import { statusBand as statusBandGui } from "@agents/kit-band/gui.tsx";
 import { statusBand as statusBandLines } from "@agents/kit-band/terminal.ts";
 import type { Button } from "@agents/kit-buttons/contract.ts";
@@ -162,17 +162,18 @@ export function terminalBand(
   const press = bandPress(v, a);
   const focus = v.focus === null ? undefined : focusOf(v);
   const { picker: p, count: n } = v;
-  const status = (hint: string): StatusBand => ({
+  const status = (hint: string, width: number): StatusBandTerminal => ({
     text: countText(n),
     hint: `${hint} ctrl+q`,
     hit: TOGGLE,
     status: "warning",
+    width,
     hovered: focus === TOGGLE,
   });
   const marked = (buttons: readonly Button[]): Button[] =>
     buttons.map((b) => ({ ...b, hovered: b.hit === focus }));
   const notes = (list: readonly Note[]): Line[] =>
-    list.flatMap((x) => noticeLines(x.text, width, x.status));
+    list.flatMap((x) => noticeLines({ text: x.text, width, status: x.status }));
   /** `buttons` are every key the band binds, drawn or not. */
   const painted = (lines: Line[], buttons: readonly Button[]) =>
     stack(
@@ -195,8 +196,12 @@ export function terminalBand(
     const lead = isMute ? [span("Haiku has no suggestion", { role: "dim" })] : [];
     return painted(
       [
-        ...statusBandLines(status("close"), width),
-        ...noticeLines(context(p, `…${p.before}`, `${p.after}…`, true), width, "text"),
+        ...statusBandLines(status("close", width)),
+        ...noticeLines({
+          text: context(p, `…${p.before}`, `${p.after}…`, true),
+          width,
+          status: "text",
+        }),
         ...buttonRowLines(marked(isMute ? buttons.slice(1) : buttons), width, { wrap: true, lead }),
         ...notes(pickerNotes(v, p)),
       ],
@@ -206,9 +211,9 @@ export function terminalBand(
 
   const isMarkedNow = isMarked(v);
   const head = v.isBusy
-    ? noticeLines("Checking spelling", width, "dim")
+    ? noticeLines({ text: "Checking spelling", width, status: "dim" })
     : n > 0
-      ? statusBandLines(status("review"), width)
+      ? statusBandLines(status("review", width))
       : [];
   if (head.length === 0 && !isMarkedNow) return null;
   return painted(
@@ -232,7 +237,7 @@ export function guiBand(g: Gui, v: BandView): JSX.Element {
   const head = (hint: string) =>
     statusBandGui(g, { text: countText(n), hint, hit: TOGGLE, status: "warning" });
   const notes = (list: readonly Note[]) =>
-    list.map((x) => noticeGui(g, x.text, x.status, { isCut: x.isCut }));
+    list.map((x) => noticeGui(g, { text: x.text, status: x.status, isCut: x.isCut }));
 
   if (p) {
     const ai: Button[] = [];
@@ -243,19 +248,23 @@ export function guiBand(g: Gui, v: BandView): JSX.Element {
     return sections(
       g,
       head("close"),
-      noticeGui(g, context(p, p.lead, p.trail, false), "text"),
-      buttonRowGui(g, ai, { lead }),
-      buttonRowGui(g, suggestionButtons(p)),
+      noticeGui(g, { text: context(p, p.lead, p.trail, false), status: "text" }),
+      buttonRowGui(g, { rows: [ai], lead }),
+      buttonRowGui(g, { rows: [suggestionButtons(p)] }),
       ...notes(pickerNotes(v, p)),
-      buttonRowGui(g, pickerActions(v, p)),
+      buttonRowGui(g, { rows: [pickerActions(v, p)] }),
     );
   }
 
   const marked = isMarked(v);
   return sections(
     g,
-    v.isBusy ? noticeGui(g, "Checking spelling", "dim") : n > 0 ? head("review") : null,
+    v.isBusy
+      ? noticeGui(g, { text: "Checking spelling", status: "pending" })
+      : n > 0
+        ? head("review")
+        : null,
     ...notes(reportNotes(v)),
-    marked ? buttonRowGui(g, reportActions) : null,
+    marked ? buttonRowGui(g, { rows: [reportActions] }) : null,
   );
 }

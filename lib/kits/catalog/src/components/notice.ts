@@ -1,8 +1,8 @@
-import { defineComponent, no, yes } from "@agents/kit-core/manifest.ts";
+import { defineLegacyComponent, no, yes } from "@agents/kit-core/manifest.ts";
 
 const gone = no("Claude Code draws this with the kit's notice-line now.");
 
-export default defineComponent({
+export default defineLegacyComponent({
   id: "notice",
   name: "Notice",
   purpose: "One line telling the person what just happened.",

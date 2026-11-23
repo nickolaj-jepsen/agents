@@ -1,0 +1,6 @@
+# kit/pi/button-row/confirm 160x45 @2,2 (96x1)
+Create ↵  Discard [d]
+--- styles
+1x6 . 1 .x2 1x7 . 1x3
+--- legend
+1 fg=#7e888e

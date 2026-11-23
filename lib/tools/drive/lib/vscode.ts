@@ -4,13 +4,17 @@ import { execFileSync, spawn } from "node:child_process";
 import { createServer } from "node:net";
 import {
   closeSync,
+  copyFileSync,
+  existsSync,
   mkdirSync,
+  mkdtempSync,
   openSync,
   readFileSync,
   readdirSync,
   realpathSync,
   writeFileSync,
 } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import {
   chromium,
@@ -89,8 +93,6 @@ const freePort = () =>
     });
   });
 
-const quote = (s: string) => `'${s.replaceAll("'", `'\\''`)}'`;
-
 /**
  * Where VS Code, its extensions, the compositor and the fonts come from. The site's derivation
  * names its own (`E2E_VSCODE_CODE`, `E2E_VSCODE_EXTENSIONS`, `E2E_VSCODE_CAGE`,
@@ -159,7 +161,33 @@ export async function launchVscode(
   runDir: string,
   cwd: string,
   start: VscodeStart,
-  { visible = false, watchPlugins = false, signal }: VscodeLaunch = {},
+  launch: VscodeLaunch = {},
+): Promise<VscodeState> {
+  const log = join(runDir, "vscode.log");
+  try {
+    return await startWorkbench(runDir, cwd, start, launch, log);
+  } catch (error) {
+    await stopVscode(runDir);
+    if (launch.signal?.aborted || !existsSync(log)) throw error;
+    // The caller may remove the run folder. Preserve only the log outside it.
+    let evidence: string;
+    try {
+      evidence = join(mkdtempSync(join(tmpdir(), "drive-vscode-failure-")), "vscode.log");
+      copyFileSync(log, evidence);
+    } catch {
+      throw error;
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`${message}; startup log: ${evidence}`, { cause: error });
+  }
+}
+
+async function startWorkbench(
+  runDir: string,
+  cwd: string,
+  start: VscodeStart,
+  { visible = false, watchPlugins = false, signal }: VscodeLaunch,
+  log: string,
 ): Promise<VscodeState> {
   if (visible && !process.env.WAYLAND_DISPLAY && !process.env.DISPLAY)
     throw new Error("VS Code live mode needs a desktop display.");
@@ -197,6 +225,15 @@ export async function launchVscode(
     // The bundled Claude runs non-interactively, where the native mod watcher is off by default.
     ...(watchPlugins && modWatchEnv),
   });
+  if (!visible) {
+    // Each compositor gets its own Wayland socket namespace. Keep the path short for AF_UNIX.
+    const runtime = join(runDir, "wl");
+    mkdirSync(runtime, { mode: 0o700 });
+    env.XDG_RUNTIME_DIR = runtime;
+    env.GTK_USE_PORTAL = "0";
+    delete env.WAYLAND_DISPLAY;
+    delete env.WAYLAND_SOCKET;
+  }
   // The window's own furniture is out of the way: no Copilot chat beside the Claude tab, no
   // welcome page, no update or sign-in nags. The explorer is hidden once the tab is open.
   mkdirSync(join(runDir, "ud", "User"), { recursive: true });
@@ -234,8 +271,8 @@ export async function launchVscode(
   const args = [
     `--ozone-platform=${!visible || env.WAYLAND_DISPLAY ? "wayland" : "x11"}`,
     "--disable-gpu",
-    // Avoid unresponsive prerender targets and desktop portal interactions in the drive profile.
-    "--disable-features=Prerender2,SpeculationRulesPrerender2,DbusSecretPortal,GlobalShortcutsPortal",
+    // A prerender target may never answer. Headless windows also have no desktop portal UI.
+    `--disable-features=Prerender2,SpeculationRulesPrerender2${visible ? "" : ",DbusSecretPortal,GlobalShortcutsPortal"}`,
     "--password-store=basic",
     "--user-data-dir",
     join(runDir, "ud"),
@@ -250,17 +287,19 @@ export async function launchVscode(
     "--new-window",
     folder,
   ];
-  const code = [codeBin, ...args].map(quote).join(" ");
-  const log = join(runDir, "vscode.log");
   const log_ = openSync(log, "a");
-  const [program, programArgs] = visible
-    ? [codeBin, args]
-    : ["setsid", [...cage, "--", "sh", "-c", `${code}; sleep infinity`]];
-  const child = spawn(program, programArgs, {
-    env,
-    detached: true,
-    stdio: ["ignore", log_, log_],
-  });
+  const [cageBin, ...cageArgs] = cage;
+  // `detached` already starts a session. An extra `setsid` could fork and exit while cage runs.
+  const child = spawn(
+    visible ? codeBin : cageBin!,
+    // Keep the Code CLI attached to cage; a sleeping wrapper hides a Code startup exit.
+    visible ? args : [...cageArgs, "--", codeBin, "--wait", ...args],
+    {
+      env,
+      detached: true,
+      stdio: ["ignore", log_, log_],
+    },
+  );
   closeSync(log_);
   let spawnError: Error | undefined;
   child.once("error", (error) => {
@@ -274,8 +313,13 @@ export async function launchVscode(
   for (;;) {
     signal?.throwIfAborted();
     if (spawnError) throw spawnError;
+    // The headless launcher must stay alive. The visible CLI can hand off to the desktop app.
+    if (!visible && (child.exitCode !== null || child.signalCode !== null)) {
+      const status = child.signalCode ? `signal ${child.signalCode}` : `exit ${child.exitCode}`;
+      throw new Error(`VS Code headless launcher stopped before startup (${status})`);
+    }
     try {
-      const targets = await listTargets(port);
+      const targets = await listTargets(port, AbortSignal.timeout(1000));
       if (targets.some((t) => t.type === "page" && t.url.includes("workbench"))) {
         mark("launch: workbench target up");
         return state;
@@ -283,10 +327,7 @@ export async function launchVscode(
     } catch {
       /* not listening yet */
     }
-    if (Date.now() > until) {
-      await stopVscode(runDir);
-      throw new Error(`VS Code did not come up in 120s; see ${log}`);
-    }
+    if (Date.now() > until) throw new Error("VS Code did not come up in 120s");
     await sleep(500);
   }
 }
@@ -382,8 +423,8 @@ export async function waitForVscodeClose(port: number, signal: AbortSignal) {
 }
 
 /** The DevTools port's own list: it answers before any browser is attached and cannot hang. */
-async function listTargets(port: number): Promise<Target_[]> {
-  const res = await fetch(`http://127.0.0.1:${port}/json/list`);
+async function listTargets(port: number, signal?: AbortSignal): Promise<Target_[]> {
+  const res = await fetch(`http://127.0.0.1:${port}/json/list`, { signal });
   return (await res.json()) as Target_[];
 }
 

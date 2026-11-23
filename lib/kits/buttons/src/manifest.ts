@@ -1,67 +1,80 @@
-import { defineComponent, no, yes } from "@agents/kit-core/manifest.ts";
+import { defineComponent } from "@agents/kit-core/manifest.ts";
+import { buttonsFields, buttonsNeeds } from "./contract.ts";
 
 export default defineComponent({
+  schema: 2,
   id: "button-row",
   name: "Button row",
   purpose:
     "A row of actions with their keys, the suggested one in the accent, and keyboard-only hints.",
-  impl: { pi: "buttonRow", claude: "buttonRow", gui: "buttonRow" },
-  status: { pi: "system", claude: "system", gui: "system" },
-  source: "buttons/src/terminal.ts",
+  contract: { fields: buttonsFields, needs: buttonsNeeds },
+  parts: {
+    buttonRow: {},
+    buttonRows: {
+      drawings: ["terminal"],
+      none: { gui: "`buttonRow` draws every row of the footer" },
+    },
+  },
   features: [
     {
       id: "row",
       label: "Actions label first, the suggested one in the accent; a keyboard-only hint is dim",
+      fields: ["rows"],
       story: "button-row/row",
-      pi: yes("an action's label and key carry its `hit`; a hint carries none"),
-      claude: yes("an action's label and key carry its `hit`; a hint carries none"),
-      gui: yes(
-        "a Button per action with a `hit`, the suggested one filled and the rest quiet; a hint has no key to show and is not drawn",
-      ),
+    },
+    {
+      id: "lit",
+      label: "One button of a screen is lit, and none while Close asks, which quiets every control",
+      fields: ["confirming"],
+      story: "button-row/confirm",
+    },
+    {
+      id: "footer",
+      label: "A footer of several rows, each starting at the same edge",
+      fields: ["rows"],
+      story: "button-row/rows",
+    },
+    {
+      id: "chosen",
+      label:
+        "What the screen is set to among buttons that set it: a check before its label, never filled",
+      fields: ["rows"],
+      needs: ["cells:false"],
+      story: "button-row/chosen",
+    },
+    {
+      id: "flush",
+      label: "A row in a panel or another block that has its own inset: none of its own",
+      fields: ["isFlush"],
+      needs: ["cells:false"],
+      story: "button-row/chosen",
     },
     {
       id: "fit",
       label: "A row with no room drops what is neither suggested nor essential, last first",
+      needs: ["cells"],
       story: "button-row/fit",
-      pi: yes(),
-      claude: yes(),
-      gui: no("the host wraps the row, so no entry is ever dropped"),
     },
     {
       id: "wrap",
-      label: "A wrapped row drops nothing; words before the first entry are not a control",
+      label: "A wrapped row drops nothing",
+      fields: ["wrap"],
+      needs: ["cells"],
       story: "button-row/wrap",
-      pi: yes(),
-      claude: yes(),
-      gui: yes("the host wraps whole Buttons; `lead` is text before the first"),
     },
     {
-      id: "literal",
-      label: "A label that is a word to insert, whose case is kept",
-      story: "button-row/row",
-      pi: yes("labels are never changed"),
-      claude: yes("labels are never changed"),
-      gui: yes("with `isLiteral` the label keeps its case; otherwise it is capitalised"),
-    },
-    {
-      id: "bind",
-      label: "A key that does what the button does, while the row is shown",
-      story: "button-row/row",
-      pi: yes("the caller owns the binding; the key is drawn dim after the label"),
-      claude: yes("the caller owns the binding; the key is drawn dim after the label"),
-      gui: no(
-        "the VS Code webview does not act on a native Button's `hotkey` (checked live), so the button is pressed by a click or the focus ring",
-      ),
+      id: "lead",
+      label: "Words before the first entry, such as progress: not a control",
+      fields: ["lead"],
+      story: "button-row/wrap",
     },
     {
       id: "hover",
       label: "The pointer's control is shown",
+      fields: ["hover"],
+      needs: ["hover:kit|painter"],
       story: "button-row/row",
-      pi: yes("the label is bold in the text colour; `hover` gives the cell"),
-      claude: yes(
-        "the control sits on a soft fill: the engine inverts it, and the painter swaps its colours first",
-      ),
-      gui: no("the host draws a Button's hover state itself"),
+      limits: { pi: "the label is bold in the text colour; `hover` gives the cell" },
     },
   ],
-});
+} as const);

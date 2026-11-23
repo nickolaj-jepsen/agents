@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { visibleWidth } from "@earendil-works/pi-tui";
 import { textOf, widthOf } from "@agents/kit-core/lines.ts";
 import { paintLines } from "@agents/kit-core/paint/pi.ts";
-import { storyId } from "@agents/kit-core/stories.ts";
+import { hasTerminalStory, storyId } from "@agents/kit-core/stories.ts";
 import { kitStories } from "./registry.ts";
 
 const plain = {
@@ -13,7 +13,7 @@ const plain = {
 } as never;
 
 describe("every kit story", () => {
-  test.each(kitStories.map((s) => ({ id: storyId(s), story: s })))(
+  test.each(kitStories.filter(hasTerminalStory).map((s) => ({ id: storyId(s), story: s })))(
     "$id fits every width, by the kit's measure and by pi's",
     ({ story }) => {
       for (let width = 24; width <= 130; width++) {

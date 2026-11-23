@@ -1,0 +1,239 @@
+{
+  "pi, claude-terminal": {
+    "layout": "inline",
+    "rows": [
+      {
+        "label": "Team",
+        "key": "T",
+        "hit": "field:team",
+        "cell": {
+          "kind": "lettered",
+          "text": "Platform",
+          "empty": false
+        }
+      },
+      {
+        "label": "Status",
+        "key": "S",
+        "hit": "field:status",
+        "cell": {
+          "kind": "lettered",
+          "text": "Todo",
+          "empty": false
+        }
+      },
+      {
+        "label": "Priority",
+        "key": "P",
+        "hit": "field:priority",
+        "cell": {
+          "kind": "lettered",
+          "text": "Medium",
+          "empty": false
+        }
+      },
+      {
+        "label": "Labels",
+        "key": "L",
+        "hit": "field:labels",
+        "cell": {
+          "kind": "lettered",
+          "text": "Bug, Area/reliability, 保存とアーカイブ, Needs a decision before the next release",
+          "empty": false
+        }
+      },
+      {
+        "label": "Project",
+        "key": "J",
+        "hit": "field:project",
+        "cell": {
+          "kind": "lettered",
+          "text": "None",
+          "empty": true
+        }
+      }
+    ]
+  },
+  "vscode, desktop": {
+    "layout": "grid",
+    "rows": [
+      {
+        "label": "Team",
+        "hit": "field:team",
+        "cell": {
+          "kind": "select",
+          "value": "plt",
+          "options": [
+            {
+              "value": "plt",
+              "label": "Platform (PLT)"
+            },
+            {
+              "value": "web",
+              "label": "Webshop (WEB)"
+            }
+          ]
+        }
+      },
+      {
+        "label": "Status",
+        "hit": "field:status",
+        "cell": {
+          "kind": "select",
+          "value": "todo",
+          "icon": "field:status",
+          "options": [
+            {
+              "value": "todo",
+              "label": "Todo"
+            },
+            {
+              "value": "doing",
+              "label": "In progress"
+            },
+            {
+              "value": "done",
+              "label": "Done"
+            }
+          ]
+        }
+      },
+      {
+        "label": "Priority",
+        "hit": "field:priority",
+        "cell": {
+          "kind": "select",
+          "value": "3",
+          "icon": "priority:medium",
+          "options": [
+            {
+              "value": "0",
+              "label": "No priority",
+              "icon": "priority:none"
+            },
+            {
+              "value": "1",
+              "label": "Urgent",
+              "icon": "priority:urgent"
+            },
+            {
+              "value": "2",
+              "label": "High",
+              "icon": "priority:high"
+            },
+            {
+              "value": "3",
+              "label": "Medium",
+              "icon": "priority:medium"
+            },
+            {
+              "value": "4",
+              "label": "Low",
+              "icon": "priority:low"
+            }
+          ]
+        }
+      },
+      {
+        "label": "Labels",
+        "hit": "field:labels",
+        "cell": {
+          "kind": "chips",
+          "chips": [
+            {
+              "value": "bug",
+              "label": "Bug",
+              "on": true
+            },
+            {
+              "value": "area",
+              "label": "Area/reliability",
+              "on": true
+            },
+            {
+              "value": "jp",
+              "label": "保存とアーカイブ",
+              "on": true
+            },
+            {
+              "value": "decide",
+              "label": "Needs a decision before the next release",
+              "on": true
+            }
+          ],
+          "query": "",
+          "revision": 0,
+          "matches": []
+        }
+      },
+      {
+        "label": "Project",
+        "hit": "field:project",
+        "cell": {
+          "kind": "select",
+          "value": "",
+          "icon": "field:project",
+          "options": [
+            {
+              "value": "",
+              "label": "No project"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "mobile": {
+    "layout": "grid",
+    "rows": [
+      {
+        "label": "Team",
+        "hit": "field:team",
+        "cell": {
+          "kind": "text",
+          "text": "Platform",
+          "empty": false
+        }
+      },
+      {
+        "label": "Status",
+        "hit": "field:status",
+        "cell": {
+          "kind": "text",
+          "text": "Todo",
+          "empty": false,
+          "icon": "field:status"
+        }
+      },
+      {
+        "label": "Priority",
+        "hit": "field:priority",
+        "cell": {
+          "kind": "text",
+          "text": "Medium",
+          "empty": false,
+          "icon": "priority:medium"
+        }
+      },
+      {
+        "label": "Labels",
+        "hit": "field:labels",
+        "cell": {
+          "kind": "text",
+          "text": "Bug, Area/reliability, 保存とアーカイブ, Needs a decision before the next release",
+          "empty": false
+        }
+      },
+      {
+        "label": "Project",
+        "hit": "field:project",
+        "cell": {
+          "kind": "text",
+          "text": "None",
+          "empty": true,
+          "icon": "field:project"
+        }
+      }
+    ]
+  }
+}

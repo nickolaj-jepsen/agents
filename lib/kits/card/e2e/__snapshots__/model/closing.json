@@ -1,0 +1,11 @@
+{
+  "pi, claude-terminal": {
+    "note": "cells"
+  },
+  "vscode, desktop": {
+    "note": "panel"
+  },
+  "mobile": {
+    "note": "text"
+  }
+}

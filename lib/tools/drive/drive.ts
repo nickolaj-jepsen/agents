@@ -445,12 +445,13 @@ program
     "PNGs at the sizes a screen has to hold at (terminal: 70x24 to 240x60; VS Code: narrow and wide); prints the paths",
   )
   .addOption(scaleOption())
+  .option("--out <dir>", "write PNGs to this directory so they survive stop")
   .action(
-    verb(async (o: { scale: number }) => {
+    verb(async (o: { scale: number; out?: string }) => {
       setOptions({ scale: o.scale });
       const { target } = await attach(session());
       try {
-        for (const path of await target.sweep()) console.log(path);
+        for (const path of await target.sweep(o.out)) console.log(path);
       } finally {
         target.detach();
       }
@@ -561,7 +562,7 @@ program
 program
   .command("types")
   .description(
-    "start a hermetic Claude with the build of an app (or of kit-catalog), wait for dist/.claude-plugin/types/ to appear, stop",
+    "snapshot Claude API declarations from an isolated app build into .claude-types/ for type checks",
   )
   .argument("<package>")
   .action(

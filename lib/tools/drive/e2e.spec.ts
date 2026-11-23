@@ -10,7 +10,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { settleCapture } from "./lib/check.ts";
 import { options } from "./lib/options.ts";
 import { loadSet, resolveScenario, scenarioFiles, type ScenarioSet } from "./lib/scenario.ts";
-import { runAll, type Outcome } from "./lib/runner.ts";
+import { realStage, runAll, type Outcome } from "./lib/runner.ts";
 
 const sets: ScenarioSet[] = [];
 for (const { file } of scenarioFiles(options.package)) {
@@ -38,7 +38,7 @@ const wanted = (plugin: string, harness: string, name: string) => {
 
 let outcomes = new Map<string, Outcome>();
 beforeAll(async () => {
-  const done = await runAll(sets, wanted);
+  const done = await runAll(sets, wanted, realStage);
   outcomes = done.outcomes;
   console.error(
     `e2e: ${outcomes.size} scenarios in ${done.stats.sessions} sessions, ` +

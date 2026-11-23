@@ -1,0 +1,16 @@
+# kit/claude/fields/editors 70x60 @2,48 (66x6)
+T  Team      Platform
+S  Status    Todo
+P  Priority  Medium
+L  Labels    Bug, Area/reliability, 保存とアーカイブ, Needs a
+             decision before the next release
+   Title     Honor Retry-After
+--- styles
+1 .x2 1x4
+1 .x2 1x6
+1 .x2 1x8
+1 .x2 1x6
+-
+1 .x2 1x5
+--- legend
+1 fg=#999999

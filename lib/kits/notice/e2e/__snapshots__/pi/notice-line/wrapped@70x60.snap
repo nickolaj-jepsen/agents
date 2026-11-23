@@ -1,0 +1,8 @@
+# kit/pi/notice-line/wrapped 70x60 @2,2 (66x2)
+The sync worker retried 3 times and gave up, so the orders it held
+are still in the queue for the next run.
+--- styles
+1x66
+1x40
+--- legend
+1 fg=#7e888e

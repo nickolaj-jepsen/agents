@@ -1,6 +1,6 @@
-import { defineComponent, no, yes } from "@agents/kit-core/manifest.ts";
+import { defineLegacyComponent, no, yes } from "@agents/kit-core/manifest.ts";
 
-export default defineComponent({
+export default defineLegacyComponent({
   id: "split",
   name: "Split",
   purpose: "A list beside the selected row's detail, in one border, stacked on a narrow terminal.",

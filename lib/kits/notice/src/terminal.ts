@@ -1,41 +1,34 @@
 /** The notice and the empty state as styled lines: the one drawing both terminals paint. */
-import {
-  clamp,
-  line,
-  truncateSpans,
-  wrapSpans,
-  type Line,
-  type Span,
-} from "@agents/kit-core/lines.ts";
-import type { NoticeOptions, NoticeStatus } from "./contract.ts";
+import { clamp, line, truncateSpans, wrapSpans, type Line } from "@agents/kit-core/lines.ts";
+import type { EmptyStateProps, NoticeTerminal } from "./contract.ts";
 
 /**
  * One line telling the person what just happened, in the role of its status, cut to the room
- * with `…`.
- * @param text Words, or spans where part of the line stands out (a word in its context); a span
- * with no role takes the status's.
- * @param status Success, warning and error only for an actual state. @default "warning"
+ * with `…`. A terminal has no icon: the words take the status's colour, and a span with no role
+ * takes it too.
  */
-export function notice(
-  text: string | readonly Span[],
-  width: number,
-  status: NoticeStatus = "warning",
-  { isWrapped = false }: NoticeOptions = {},
-): Line[] {
+export function notice({
+  text,
+  width,
+  status = "warning",
+  isWrapped = false,
+}: NoticeTerminal): Line[] {
+  // A pending state is only quiet words in a terminal.
+  const role = status === "pending" ? "dim" : status;
   if (typeof text !== "string") {
-    const styled = text.map((s) => ({ ...s, role: s.role ?? status }));
+    const styled = text.map((s) => ({ ...s, role: s.role ?? role }));
     return isWrapped
       ? wrapSpans(styled, width).map((row) => line(row))
       : [line(truncateSpans(styled, width))];
   }
   const rows = isWrapped ? clamp(text, width) : clamp(text, width, { min: 1, max: 1 });
-  return rows.map((row) => line([{ text: row, role: status }]));
+  return rows.map((row) => line([{ text: row, role }]));
 }
 
 /**
  * What a list says when there is nothing in it: dim words standing in for its rows, wrapped.
- * @param text Say what is missing and, if it helps, what makes rows appear.
+ * Say what is missing and, if it helps, what makes rows appear.
  */
-export function emptyState(text: string, width: number): Line[] {
+export function emptyState({ text, width }: EmptyStateProps<"pi" | "claude-terminal">): Line[] {
   return clamp(text, width).map((row) => line([{ text: row, role: "dim" }]));
 }

@@ -1,0 +1,10 @@
+{
+  "pi, claude-terminal": {
+    "steps": "cells",
+    "summaries": "cells"
+  },
+  "vscode, desktop, mobile": {
+    "steps": "tabs",
+    "summaries": "labels"
+  }
+}

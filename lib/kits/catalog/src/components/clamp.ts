@@ -1,10 +1,10 @@
-import { defineComponent, no, planned, yes } from "@agents/kit-core/manifest.ts";
+import { defineLegacyComponent, no, planned, yes } from "@agents/kit-core/manifest.ts";
 
 const gone = no(
   "Claude Code wraps and clamps with the kit's `clamp` in kit/lines.ts, which every kit component uses.",
 );
 
-export default defineComponent({
+export default defineLegacyComponent({
   id: "clamp",
   name: "Clamp",
   purpose:

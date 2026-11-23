@@ -44,6 +44,7 @@ type Notes = {
 type World = {
   /** Every argv the mod ran that was not a read-only question. */
   launched: string[][];
+  launchCwds: (string | undefined)[];
   copied: string[];
   /** Every toast. */
   toasts: string[];
@@ -57,11 +58,24 @@ const ok = (stdout: string, exitCode = 0, stderr = "") => ({
   value: { exitCode, stdout, stderr, isStdoutTruncated: false, isStderrTruncated: false },
 });
 
-function world(on: On, { pr = PR as string | null, mac = false, notes = {} as Notes } = {}): World {
-  const w: World = { launched: [], copied: [], toasts: [], closed: [], ran: [] };
-  const installed = notes.installed ?? [OPENER];
+function world(
+  on: On,
+  {
+    pr = PR as string | null,
+    mac = false,
+    notes = {} as Notes,
+    cwd = "/repo",
+    terminal = "",
+    terminals = [] as string[],
+    xdgSelected = true,
+  } = {},
+): World {
+  const w: World = { launched: [], launchCwds: [], copied: [], toasts: [], closed: [], ran: [] };
+  const installed = [...(notes.installed ?? [OPENER]), ...terminals];
   const files = Object.entries(notes.files ?? {});
-  on("env.get", (_, e) => ({ value: ({ HOME, USER: "me" } as Record<string, string>)[e.name] }));
+  on("env.get", (_, e) => ({
+    value: ({ HOME, USER: "me", GIT_MENU_TERMINAL: terminal } as Record<string, string>)[e.name],
+  }));
   on("clock.now", () => ({ value: NOW }));
   on("ui.open", () => ({ value: { isPlaced: true } }));
   on("ui.close", (_, e) => {
@@ -77,7 +91,7 @@ function world(on: On, { pr = PR as string | null, mac = false, notes = {} as No
     w.copied.push(e.text);
     return { value: { isCopied: true } };
   });
-  on("session.cwd", () => ({ value: "/repo" }));
+  on("session.cwd", () => ({ value: cwd }));
   on("fs.exists", () => ({ value: false }));
   on("fs.stat", (_, e) => {
     if (e.path !== "/repo/.agents/store" || !notes.files) throw new Error(`ENOENT: ${e.path}`);
@@ -120,7 +134,7 @@ function world(on: On, { pr = PR as string | null, mac = false, notes = {} as No
       return ok("", 1);
     }
     // `command -v` over a command's candidates.
-    if (argv[0] === "sh" && argv.includes("agent-note-open")) {
+    if (argv[0] === "sh" && argv[2]?.includes("&& exit 0")) {
       const hit = argv.slice(4).find((c) => installed.includes(c));
       if (!hit) return ok("", 1);
       return ok(`${hit.includes("/") ? hit : `/run/current-system/sw/bin/${hit}`}\n`);
@@ -129,7 +143,9 @@ function world(on: On, { pr = PR as string | null, mac = false, notes = {} as No
     if (argv[0] === "sh" && argv.includes("xdg-open") && argv.includes("nautilus")) {
       return ok("code\nxdg-open\n");
     }
+    if (argv[1] === "--print-id") return xdgSelected ? ok("fixture.desktop\n") : ok("", 1);
     w.launched.push(argv.slice(4));
+    w.launchCwds.push(e.init?.cwd);
     return ok("");
   });
   return w;
@@ -210,6 +226,63 @@ test("/open hands the checkout to an installed app and not to a missing one", as
   await pane.press({ key: "code" });
   await pane.unmount();
   expect(w.launched).toEqual([["code", "/repo"]]);
+});
+
+const XDG = "/run/current-system/sw/bin/xdg-terminal-exec";
+const ALTERNATIVE = "/run/current-system/sw/bin/x-terminal-emulator";
+const WRAPPER = "/opt/My Terminal/launch";
+const CHECKOUT = "/repo with spaces/作業";
+
+for (const { label, options, argv } of [
+  {
+    label: "Linux desktop selection",
+    options: { terminals: ["xdg-terminal-exec", "x-terminal-emulator"] },
+    argv: [XDG, `--dir=${CHECKOUT}`],
+  },
+  {
+    label: "Linux alternative when XDG cannot select a terminal",
+    options: { terminals: ["xdg-terminal-exec", "x-terminal-emulator"], xdgSelected: false },
+    argv: [ALTERNATIVE],
+  },
+  {
+    label: "macOS Terminal.app",
+    options: { mac: true },
+    argv: ["open", "-a", "Terminal", CHECKOUT],
+  },
+  {
+    label: "explicit executable path with spaces",
+    options: { terminal: WRAPPER, terminals: [WRAPPER, "xdg-terminal-exec"] },
+    argv: [WRAPPER],
+  },
+  {
+    label: "desktop selection when the override is missing",
+    options: { terminal: "missing-launcher", terminals: ["xdg-terminal-exec"] },
+    argv: [XDG, `--dir=${CHECKOUT}`],
+  },
+]) {
+  test(`/open Terminal uses ${label} in the checkout`, async ($, on) => {
+    const w = world(on, { ...options, cwd: CHECKOUT });
+    await start($, on);
+    await $.command.run({ ...RUN, command: "open" });
+    const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
+    await pane.press({ key: "terminal" });
+    await pane.unmount();
+    expect(w.launched).toEqual([argv]);
+    expect(w.launchCwds).toEqual([CHECKOUT]);
+  });
+}
+
+test("/open Terminal is unavailable without a launcher", async ($, on) => {
+  const w = world(on);
+  await start($, on);
+  await $.command.run({ ...RUN, command: "open" });
+  expect(await paneText($)).toContain("no terminal launcher found");
+  const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
+  expect(await pane.find({ type: "Button", key: "terminal" })).toBeUndefined();
+  await pane.press({ key: "kit-key-5" });
+  await pane.unmount();
+  expect(w.toasts).toEqual(["Terminal: no terminal launcher found"]);
+  expect(w.launched).toEqual([]);
 });
 
 test("the terminal pane keeps its rows' keys, the keyboard on the pull request, and Close", async ($, on) => {
@@ -386,20 +459,22 @@ for (const surface of ["desktop", "vscode"] as const) {
     ]);
   });
 
-  test(`${surface}: /open draws the folder menu, and a press hands the checkout to an app`, async ($, on) => {
-    const w = world(on);
+  test(`${surface}: /open draws the folder menu, and a press opens the terminal`, async ($, on) => {
+    const w = world(on, { terminals: ["xdg-terminal-exec"] });
     await start($, on, surface);
     await $.command.run({ ...RUN, command: "open" });
     const pane = await mount($, "Open folder");
     await expectNative(pane);
     const keys = (await pane.findAll({ type: "Button" })).map((b) => b.key);
-    expect(keys).toEqual(expect.arrayContaining(["code", "copy", "notes"]));
+    expect(keys).toEqual(expect.arrayContaining(["code", "terminal", "copy", "notes"]));
     // An app that is not installed keeps its row and says so, with no button to press.
     expect(keys).not.toContain("smerge");
     expect(await said(pane)).toEqual(expect.arrayContaining(["Sublime Merge", "not installed"]));
-    await pane.press({ key: "code" });
+    expect(await said(pane)).toContain("Terminal");
+    await pane.press({ key: "terminal" });
     await pane.unmount();
-    expect(w.launched).toEqual([["code", "/repo"]]);
+    expect(w.launched).toEqual([[XDG, "--dir=/repo"]]);
+    expect(w.launchCwds).toEqual(["/repo"]);
   });
 
   test(`${surface}: no row carries a hotkey and no hint is drawn`, async ($, on) => {

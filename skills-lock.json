@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "skills": {
+    "agent-plugin-dev": {
+      "source": "nickolaj-jepsen/agents",
+      "commit": "c92676386378c1c52c2c8afe90c1ea8a92863443",
+      "sourceType": "github",
+      "skillPath": "skills/agent-plugin-dev/SKILL.md",
+      "computedHash": "5db092313a28303f999fcffcd293996458349cbc1dba2124643170c9f7afb4b5"
+    }
+  }
+}

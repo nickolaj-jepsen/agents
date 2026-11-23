@@ -1,0 +1,246 @@
+{
+  "pi, claude-terminal": {
+    "groups": [
+      {
+        "label": "docs/agent-hub.md",
+        "isActive": false,
+        "isDone": true,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Unittest suite needs a short `TMPDIR` and markdown-it-py on the path",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "chosen"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Unittest sui"
+          },
+          {
+            "text": "Socket tests fail with AF_UNIX path too long",
+            "isLiteral": false,
+            "isDim": true,
+            "lead": {
+              "mark": "dropped"
+            },
+            "isOpened": false,
+            "hit": "row:Socket tests"
+          }
+        ]
+      },
+      {
+        "label": "docs/agents.md",
+        "isActive": true,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "pi's permission gate cannot resolve shell variables, so a path in one is read",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "3×",
+            "isOpened": false,
+            "hit": "row:pi's permiss"
+          },
+          {
+            "text": "The hub migration plan is finished",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:The hub migr"
+          },
+          {
+            "text": "Agents never read the store README",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Agents never"
+          }
+        ]
+      },
+      {
+        "label": "skills/agent-plugin-dev/references/a-very-long-folder-name/style.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "東京の節は古くなっています。全角文字の説明文",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "12×",
+            "isOpened": false,
+            "hit": "row:東京の節は古くなっていま"
+          }
+        ]
+      }
+    ],
+    "asideCells": 0
+  },
+  "vscode, desktop, mobile": {
+    "groups": [
+      {
+        "label": "docs/agent-hub.md",
+        "isActive": false,
+        "isDone": true,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Unittest suite needs a short `TMPDIR` and markdown-it-py on the path",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "meaning": "decision:apply"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Unittest sui",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Unittest sui",
+              "label": "Set aside"
+            },
+            "isOpened": false,
+            "hit": "row:Unittest sui"
+          },
+          {
+            "text": "Socket tests fail with AF_UNIX path too long",
+            "isLiteral": false,
+            "isDim": true,
+            "lead": {
+              "meaning": "decision:dismiss"
+            },
+            "action": {
+              "hit": "row:Socket tests",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Socket tests",
+              "label": "Restore"
+            },
+            "isOpened": false,
+            "hit": "row:Socket tests"
+          }
+        ]
+      },
+      {
+        "label": "docs/agents.md",
+        "isActive": true,
+        "isDone": false,
+        "actions": [
+          {
+            "hit": "all:apply",
+            "label": "Apply all"
+          },
+          {
+            "hit": "all:dismiss",
+            "label": "Dismiss all"
+          }
+        ],
+        "rows": [
+          {
+            "text": "pi's permission gate cannot resolve shell variables, so a path in one is read",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "meaning": "kind:wrong"
+            },
+            "aside": "3×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:pi's permiss",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:pi's permiss",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:pi's permiss"
+          },
+          {
+            "text": "The hub migration plan is finished",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "meaning": "kind:stale"
+            },
+            "action": {
+              "hit": "row:The hub migr",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:The hub migr",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:The hub migr"
+          },
+          {
+            "text": "Agents never read the store README",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "meaning": "kind:missing"
+            },
+            "action": {
+              "hit": "row:Agents never",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Agents never",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Agents never"
+          }
+        ]
+      },
+      {
+        "label": "skills/agent-plugin-dev/references/a-very-long-folder-name/style.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "東京の節は古くなっています。全角文字の説明文",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "meaning": "kind:stale"
+            },
+            "aside": "12×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:東京の節は古くなっていま",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:東京の節は古くなっていま",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:東京の節は古くなっていま"
+          }
+        ]
+      }
+    ],
+    "asideCells": 3
+  }
+}

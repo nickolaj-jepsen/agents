@@ -1,8 +1,8 @@
-import { defineComponent, no, yes } from "@agents/kit-core/manifest.ts";
+import { defineLegacyComponent, no, yes } from "@agents/kit-core/manifest.ts";
 
 const gone = no("Claude Code draws this with the kit's item-detail now.");
 
-export default defineComponent({
+export default defineLegacyComponent({
   id: "detail",
   name: "Detail blocks",
   purpose: "What a detail pane or panel body is made of: a section header, prose and notes.",

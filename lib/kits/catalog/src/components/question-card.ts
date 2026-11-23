@@ -1,8 +1,8 @@
-import { defineComponent, no, yes } from "@agents/kit-core/manifest.ts";
+import { defineLegacyComponent, no, yes } from "@agents/kit-core/manifest.ts";
 
 const gone = no("Claude Code draws this with the kit's card now.");
 
-export default defineComponent({
+export default defineLegacyComponent({
   id: "question-card",
   name: "Question card",
   purpose: "A question and its choices on a left rail, with wrapped Markdown and selection marks.",

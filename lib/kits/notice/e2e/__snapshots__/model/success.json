@@ -1,0 +1,23 @@
+{
+  "pi, claude-terminal": {
+    "type": "body",
+    "rows": "cut",
+    "text": [
+      {
+        "text": "Filed LIN-482",
+        "role": "success"
+      }
+    ]
+  },
+  "vscode, desktop, mobile": {
+    "mark": "state:success",
+    "type": "body",
+    "rows": "wrap",
+    "text": [
+      {
+        "text": "Filed LIN-482",
+        "role": "success"
+      }
+    ]
+  }
+}

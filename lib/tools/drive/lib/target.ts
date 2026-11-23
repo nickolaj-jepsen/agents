@@ -4,7 +4,7 @@
  * Claude Desktop not at all (it is only launched). A verb a harness can't do fails with a message
  * that says so.
  */
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import type { Kind } from "./find.ts";
 import { options } from "./options.ts";
 import type { Resolved } from "./scenario.ts";
@@ -29,7 +29,7 @@ export interface Target {
   /** A PNG of the screen; the path it was written to. */
   shot(file: string | undefined, o: { window?: boolean }): Promise<string>;
   /** PNGs at the sizes a screen has to hold at; their paths. */
-  sweep(): Promise<string[]>;
+  sweep(out?: string): Promise<string[]>;
   /** The scenario's snapshot of the screen as it is now. */
   snap(r: Resolved): Promise<string>;
   /** An expression in the Claude webview's document. */
@@ -79,7 +79,7 @@ abstract class Base implements Target {
   shot(_file: string | undefined, _o: { window?: boolean }): Promise<string> {
     return this.no("shot");
   }
-  sweep(): Promise<string[]> {
+  sweep(_out?: string): Promise<string[]> {
     return this.no("sweep");
   }
   snap(_r: Resolved): Promise<string> {
@@ -149,9 +149,9 @@ export class TerminalTarget extends Base {
   shot(): Promise<string> {
     return this.native("shot");
   }
-  async sweep() {
+  async sweep(outDir?: string) {
     const before = await this.session.size();
-    const dir = join(this.session.runDir, "sweep");
+    const dir = outDir === undefined ? join(this.session.runDir, "sweep") : resolve(outDir);
     const out: string[] = [];
     try {
       for (const [cols, rows] of EXTREME_SIZES) {
@@ -218,17 +218,20 @@ export class VscodeTarget extends Base {
       panel: !o.window,
     });
   }
-  async sweep() {
+  async sweep(outDir?: string) {
     await this.session.setScale(options.scale ?? 1);
     const before = this.session.state.size;
-    const dir = join(this.session.runDir, "sweep");
+    const dir = outDir === undefined ? join(this.session.runDir, "sweep") : resolve(outDir);
     const out: string[] = [];
-    for (const [w, h] of VSCODE_SWEEP) {
-      await this.session.resize(w, h);
-      out.push(await this.session.shot(join(dir, `${w}x${h}.png`), { panel: true }));
+    try {
+      for (const [w, h] of VSCODE_SWEEP) {
+        await this.session.resize(w, h);
+        out.push(await this.session.shot(join(dir, `${w}x${h}.png`), { panel: true }));
+      }
+    } finally {
+      if (before) await this.session.resize(...before);
+      else await this.session.useWindowSize();
     }
-    const [w, h] = before ?? VSCODE_SWEEP[VSCODE_SWEEP.length - 1]!;
-    await this.session.resize(w, h);
     return out;
   }
   async eval(js: string) {

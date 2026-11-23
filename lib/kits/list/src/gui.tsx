@@ -1,252 +1,216 @@
-/** The list on the graphical surfaces: groups under a heading, rows as full-width Buttons. */
+/**
+ * The list on the graphical surfaces: groups under a `section` heading, rows of one height a
+ * step apart, each led by an icon that says what it is.
+ */
 import { inline, literal } from "@agents/kit-core/lines.ts";
-import { capital, icon, spans, type Gui } from "@agents/kit-core/paint/gui.tsx";
+import {
+  icon,
+  meaning,
+  panel,
+  roleProps,
+  rowOf,
+  rows as column,
+  spans,
+  typeProps,
+  type Gui,
+  type GuiSurface,
+} from "@agents/kit-core/paint/gui.tsx";
+import { can } from "@agents/kit-core/surfaces.ts";
 import { tokens } from "@agents/kit-core/tokens.ts";
-import type { List, ListGroup, ListMark, ListRow } from "./contract.ts";
+import type { ListProps } from "./contract.ts";
+import { view, type GroupView, type RowView } from "./model.ts";
 
-/** What only a graphical surface is told about a list: how much of a long group to show. */
-export type ListGuiOptions = {
-  /**
-   * A group shows `maxItems` rows, then an `N more` Button that presses `hit`. Without it every
-   * row is shown: the pane scrolls.
-   */
-  more?: {
-    /** The rest is shown: no `N more` row. */
-    isAll: boolean;
-    hit: string;
-  };
-  /** Rows a group shows before `N more`. @default `tokens.gui.maxItems` */
-  maxItems?: number;
-  /**
-   * The word on the quiet Button a row's `hit` (or a group's) is: a Button never wraps, so the
-   * text is wrapped beside it and the Button names what pressing does. A row's own `action`
-   * replaces it. @default "Open"
-   */
-  action?: string;
-  /**
-   * Rows opened in place, by the row's `hit`: each element is drawn under its row, and that row's
-   * Button says `closeAction`, since pressing it folds the row again. The caller owns what is
-   * open, shown in a well (the fill and the inset) with its row's text whole; a long group keeps an opened row in view whatever `maxItems` says.
-   */
-  opened?: Record<string, JSX.Element>;
-  /** The word on the Button of an opened row. @default "Close" */
-  closeAction?: string;
-};
+type Props = ListProps<GuiSurface, JSX.Element>;
+
+const { across } = tokens.gui;
 
 /** What each mark is called for a reader who cannot see its icon. */
-const MARK_TEXT: Record<Exclude<ListMark, "none">, string> = {
-  open: "Left alone",
-  chosen: "Chosen",
-  dropped: "Set aside",
-};
+const MARK_TEXT = { open: "Left alone", chosen: "Chosen", dropped: "Set aside" } as const;
 
-/** What a press on a `markHit` Button does: it steps the mark on, in the order of `ListMark`. */
-const STEP_TEXT: Record<Exclude<ListMark, "none">, string> = {
-  open: "Choose",
-  chosen: "Set aside",
-  dropped: "Restore",
-};
-
-/** A row's mark: an icon. */
-function markOf(g: Gui, mark: Exclude<ListMark, "none">): JSX.Element {
+/** A row's lead: its meaning, or the bare mark where it was given none. */
+function leadOf(g: Gui, r: RowView): JSX.Element | null {
+  if (!r.lead) return null;
   const { Box } = g.els;
   return (
-    <Box key="mark" flexShrink={0} height={1} alignItems="center">
-      {icon(g, mark, { tone: mark === "chosen" ? "accent" : "neutral", alt: MARK_TEXT[mark] })}
+    <Box key="lead" flexShrink={0}>
+      {"meaning" in r.lead
+        ? meaning(g, r.lead.meaning)
+        : icon(g, r.lead.mark, {
+            tone: r.lead.mark === "chosen" ? "accent" : "neutral",
+            alt: MARK_TEXT[r.lead.mark],
+          })}
     </Box>
   );
 }
 
-/** The control a `markHit` is: a quiet Button naming what a press changes the row to (never filled: many rows may be chosen). */
-function markButton(g: Gui, r: ListRow, mark: Exclude<ListMark, "none">): JSX.Element | null {
+/** A quiet Button at a row's or heading's edge. */
+function control(g: Gui, c: { hit: string; label: string }, key = c.hit): JSX.Element {
   const { Box, Button } = g.els;
-  const hit = r.markHit;
-  if (hit === undefined || r.disabled) return null;
   return (
-    <Box key="markHit" flexShrink={0}>
-      <Button key={hit} dimColor label={STEP_TEXT[mark]} onPress={() => g.press?.(hit)} />
-    </Box>
-  );
-}
-
-/** One row: its mark, its text wrapped, its aside and Buttons dim at the far edge. */
-function rowOf(
-  g: Gui,
-  r: ListRow,
-  key: string,
-  hasMarks: boolean,
-  action: string,
-  isCut: boolean,
-): JSX.Element {
-  const { Box, Button, Text } = g.els;
-  const mark = r.mark ?? "open";
-  const isDim = r.disabled || mark === "dropped";
-  const words = spans(g, r.literal ? literal(r.text) : inline(r.text));
-  const hit = r.hit;
-  const open =
-    hit !== undefined && !r.disabled ? (
-      <Box key="open" flexShrink={0}>
-        <Button key={hit} dimColor label={r.action ?? action} onPress={() => g.press?.(hit)} />
-      </Box>
-    ) : null;
-  // Two Buttons crowd the text on a narrow pane: they sit under it.
-  const stepper = mark === "none" ? null : markButton(g, r, mark);
-  const twoButtons = open !== null && stepper !== null;
-  return (
-    <Box
-      key={key}
-      flexDirection="row"
-      flexWrap="nowrap"
-      alignItems="flex-start"
-      columnGap={tokens.gui.across.sm}
-      paddingX={tokens.gui.across.inset}
-    >
-      {hasMarks && mark !== "none" ? markOf(g, mark) : null}
-      <Box flexDirection="column" flexGrow={1} flexShrink={1} rowGap={tokens.gui.space.xs}>
-        <Box
-          flexDirection="row"
-          flexWrap="nowrap"
-          alignItems="flex-start"
-          columnGap={tokens.gui.across.md}
-        >
-          <Box width={0} flexGrow={1} flexShrink={1} overflow="hidden">
-            <Text dimColor={isDim || undefined} wrap={isCut ? "truncate-end" : undefined}>
-              {words}
-            </Text>
-          </Box>
-          {r.aside ? (
-            <Box flexShrink={0}>
-              <Text dimColor>{r.aside}</Text>
-            </Box>
-          ) : null}
-          {twoButtons ? null : (open ?? stepper)}
-        </Box>
-        {twoButtons ? (
-          <Box flexDirection="row" flexWrap="wrap" columnGap={tokens.gui.across.xs}>
-            {open}
-            {stepper}
-          </Box>
-        ) : null}
-      </Box>
-    </Box>
-  );
-}
-
-/** A group's heading: its label semibold, its controls quiet Buttons at the far edge. */
-function headingOf(g: Gui, group: ListGroup, key: string, action: string): JSX.Element {
-  const { Box, Button, Text } = g.els;
-  const label = (
-    <Text weight="semibold" color={group.active ? "claude" : undefined}>
-      {group.label}
-    </Text>
-  );
-  const hit = group.hit;
-  const actions = (group.actions ?? []).filter((a) => a.hit);
-  return (
-    <Box
-      key={key}
-      flexDirection="row"
-      flexWrap="nowrap"
-      alignItems="center"
-      columnGap={tokens.gui.across.md}
-      paddingX={tokens.gui.across.inset}
-    >
-      <Box
-        flexDirection="row"
-        flexGrow={1}
-        flexShrink={1}
-        alignItems="center"
-        columnGap={tokens.gui.across.sm}
-      >
-        <Box flexShrink={1}>{label}</Box>
-        {group.done ? (
-          <Box flexShrink={0}>{icon(g, "success", { tone: "success", alt: "Decided" })}</Box>
-        ) : null}
-      </Box>
-      {hit !== undefined ? (
-        <Box key="open" flexShrink={0}>
-          <Button key={hit} dimColor label={action} onPress={() => g.press?.(hit)} />
-        </Box>
-      ) : null}
-      {actions.map((a) => (
-        <Box key={`a:${a.hit}`} flexShrink={0}>
-          <Button key={a.hit} dimColor label={capital(a.label)} onPress={() => g.press?.(a.hit!)} />
-        </Box>
-      ))}
+    <Box key={`c:${c.hit}`} flexShrink={0}>
+      <Button key={key} dimColor label={c.label} onPress={() => g.press(c.hit)} />
     </Box>
   );
 }
 
 /**
- * Groups of rows under a heading, a step apart. The host scrolls the pane, so there is no window
- * (`height`, `top`), no rails, no flat rows and no key; a row's text wraps whole, or with `lines: 1`
- * is one line the surface cuts at its edge. A group of more
- * than `maxItems` rows shows that many, then an `N more` Button (`more`).
+ * One row: its lead beside the first line, the text (wrapped whole, or one line the surface cuts),
+ * a count or time in the list's shared right-aligned column before the Button, which is at the far
+ * edge. A word aside follows the text. Two Buttons would crowd the text of a narrow pane, so they
+ * sit under it. A row opened in place gives its claim the panel's width: its lead, aside and
+ * Button are a line of their own over it.
+ * @param asideCells The width of the shared aside column, 0 where the list has none.
  */
-export function list(g: Gui, l: List, options: ListGuiOptions = {}): JSX.Element {
-  const { Box, Button } = g.els;
-  const { space, across } = tokens.gui;
-  const action = options.action ?? "Open";
-  const max = options.maxItems ?? tokens.gui.maxItems;
-  const opened = options.opened ?? {};
-  const closeAction = options.closeAction ?? "Close";
-  // One line a row, the surface cutting at the edge; an opened row is shown whole. More lines wrap whole.
-  const isCut = l.lines === 1;
-  const hasMarks = l.groups.some((group) => group.rows.some((r) => r.mark !== "none"));
+function item(g: Gui, r: RowView, key: string, isCut: boolean, asideCells: number): JSX.Element {
+  const { Box, Text } = g.els;
+  const words = (
+    <Text dimColor={r.isDim || undefined} wrap={isCut ? "truncate-end" : undefined}>
+      {spans(g, r.isLiteral ? literal(r.text) : inline(r.text))}
+    </Text>
+  );
+  const isStacked = r.action !== undefined && r.step !== undefined;
+  const single = isStacked ? null : (r.action ?? r.step);
+  const under = isStacked ? (
+    <Box key="under" flexDirection="row" flexWrap="wrap" columnGap={across.xs}>
+      {control(g, r.action!)}
+      {control(g, r.step!)}
+    </Box>
+  ) : null;
+  // The shared column keeps every row's text the same width; a row without a count leaves it blank.
+  const column =
+    asideCells > 0 ? (
+      <Box key="count" flexShrink={0} minWidth={asideCells} justifyContent="flex-end">
+        {r.asideIn === "column" ? (
+          <Text {...typeProps("caption", { tabular: true })}>{r.aside}</Text>
+        ) : null}
+      </Box>
+    ) : null;
+  if (r.isOpened)
+    return (
+      <Box key={key} flexDirection="column" rowGap={tokens.gui.space.xs}>
+        {rowOf(
+          g,
+          { key: `${key}:head`, justify: "space-between" },
+          <Box key="who" flexDirection="row" alignItems="center" columnGap={across.sm}>
+            {leadOf(g, r)}
+            {r.aside ? <Text {...typeProps("caption", { tabular: true })}>{r.aside}</Text> : null}
+          </Box>,
+          single ? control(g, single) : null,
+        )}
+        <Box key="claim">{words}</Box>
+        {under}
+      </Box>
+    );
+  const follows =
+    r.asideIn === "text" ? (
+      <Box key="aside" flexShrink={0}>
+        <Text {...typeProps("caption")}>{r.aside}</Text>
+      </Box>
+    ) : null;
+  return rowOf(
+    g,
+    { key, align: "start" },
+    leadOf(g, r),
+    <Box key="body" flexDirection="column" flexGrow={1} flexShrink={1} rowGap={tokens.gui.space.xs}>
+      <Box
+        key="line"
+        flexDirection="row"
+        flexWrap="nowrap"
+        alignItems="flex-start"
+        columnGap={across.sm}
+      >
+        <Box key="text" flexShrink={1} flexGrow={follows ? 0 : 1}>
+          {words}
+        </Box>
+        {follows}
+      </Box>
+      {under}
+    </Box>,
+    column,
+    single ? control(g, single) : null,
+  );
+}
+
+/** A group's heading: its label in the `section` role, its controls at the far edge. */
+function heading(g: Gui, group: GroupView, key: string): JSX.Element {
+  const { Box, Text } = g.els;
+  const section = typeProps("section", { isSized: can(g, "textSize") });
+  const label = (
+    <Box key="label" flexDirection="row" alignItems="center" columnGap={across.sm} flexShrink={1}>
+      <Text
+        {...section}
+        // A host with no sizes would draw `section` dim, under the rows it heads: a group's label
+        // keeps the role's weight and the text colour, or the accent for the keyboard's group.
+        {...(group.isActive ? roleProps("accent") : {})}
+        dimColor={undefined}
+      >
+        {group.label}
+      </Text>
+      {group.isDone ? meaning(g, "state:success", { alt: "Decided" }) : null}
+    </Box>
+  );
+  // A plain section label is not a control row. Keep it close to the items it names.
+  if (!group.action && !group.actions.length) return label;
+  return rowOf(
+    g,
+    { key, justify: "space-between" },
+    label,
+    <Box key="actions" flexDirection="row" flexWrap="wrap" columnGap={across.xs} flexShrink={0}>
+      {group.action ? control(g, group.action) : null}
+      {group.actions.map((a) => control(g, a))}
+    </Box>,
+  );
+}
+
+/**
+ * Groups of rows under a heading, a step apart. The host scrolls the pane, so there is no window,
+ * no rails, no flat rows and no key. A row's text wraps whole, or with `lines: 1` is one line the
+ * surface cuts at its edge, except an opened row's, which is shown whole in a panel with what
+ * belongs to it. A group of more than `maxItems` rows shows that many, then `Show N more`.
+ */
+export function list(g: Gui, l: Props): JSX.Element {
+  const { Box } = g.els;
+  const v = view(l, g.surface);
+  const under = l.opened ?? {};
+  // Where rows can open, a row sits as far in as an opened row's text does, inside its panel, so
+  // opening one moves nothing beside it.
+  const inset = across.inset + (l.opened ? tokens.gui.panel.x : 0);
   return (
-    <Box flexDirection="column" rowGap={space.md}>
-      {l.groups.map((group, i) => {
-        const capped = options.more && !options.more.isAll && group.rows.length > max;
-        const isOpened = (r: ListRow) => r.hit !== undefined && opened[r.hit] !== undefined;
-        const shown = capped ? group.rows.filter((r, n) => n < max || isOpened(r)) : group.rows;
-        const left = group.rows.length - shown.length;
-        return (
-          <Box key={`g${i}`} flexDirection="column" rowGap={space.xs}>
-            {group.label ? headingOf(g, group, `g${i}:head`, action) : null}
-            <Box flexDirection="column" rowGap={space.xs}>
-              {shown.flatMap((r, n) => {
-                const under = r.hit === undefined ? undefined : opened[r.hit];
-                const row = rowOf(
-                  g,
-                  r,
-                  `g${i}:r${n}`,
-                  hasMarks,
-                  under ? closeAction : action,
-                  isCut && !under,
-                );
-                // An opened row sits with what belongs to it in a well, so where it ends shows.
-                return under
-                  ? [
-                      <Box
-                        key={`g${i}:r${n}:opened`}
-                        flexDirection="column"
-                        rowGap={space.sm}
-                        paddingY={space.sm}
-                        backgroundColor={tokens.gui.fill}
-                        // A round border is the surface's only rounded corner; it is drawn in no colour.
-                        borderStyle="round"
-                        borderColor="#00000000"
-                      >
-                        {row}
-                        {under}
-                      </Box>,
-                    ]
-                  : [row];
-              })}
+    <Box flexDirection="column" rowGap={tokens.gui.space.md}>
+      {v.groups.map((group, i) => (
+        <Box key={`g${i}`} flexDirection="column" rowGap={tokens.gui.row.gap}>
+          {group.label ? (
+            <Box key="head" paddingX={across.inset} flexDirection="column">
+              {heading(g, group, `g${i}:head`)}
             </Box>
-            {capped && options.more ? (
-              <Box key={`g${i}:more`} paddingX={across.inset}>
-                <Button
-                  key={`g${i}:more:${options.more.hit}`}
-                  dimColor
-                  label={`${left} more`}
-                  onPress={() => g.press?.(options.more!.hit)}
-                />
-              </Box>
-            ) : null}
-          </Box>
-        );
-      })}
+          ) : null}
+          {column(
+            g,
+            { key: "rows" },
+            ...group.rows.map((r, n) => {
+              const key = `g${i}:r${n}`;
+              const isCut = l.lines === 1 && !r.isOpened;
+              const row = item(g, r, key, isCut, v.asideCells);
+              const open = r.hit === undefined ? undefined : under[r.hit];
+              // An opened row sits with what belongs to it in a panel, so where it ends shows.
+              return open ? (
+                <Box key={`${key}:panel`} paddingX={across.inset} flexDirection="column">
+                  {panel(g, { gap: "sm" }, row, open)}
+                </Box>
+              ) : (
+                <Box key={`${key}:row`} paddingX={inset} flexDirection="column">
+                  {row}
+                </Box>
+              );
+            }),
+          )}
+          {group.more ? (
+            <Box key="more" paddingX={inset} flexDirection="row">
+              {rowOf(g, {}, control(g, group.more, `g${i}:more:${group.more.hit}`))}
+            </Box>
+          ) : null}
+        </Box>
+      ))}
     </Box>
   );
 }

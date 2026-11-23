@@ -32,7 +32,7 @@ A component's functions take props and a width and return `Line[]`. They never s
 
 The graphical surfaces have a proportional font, native controls and a pane that scrolls itself, so a component has a second drawing, `<component>/src/gui.tsx`, with this convention:
 
-- It exports the functions of `terminal.ts` under the **same names**, each taking `(g: Gui, ...)` first and then the **same contract props** (for `prose`, `terminal.ts` is `prose(text, width, options)` and `gui.tsx` is `prose(g, text, options)`: the width goes, nothing else).
+- It exports the functions of `terminal.ts` under the **same names**, each taking `(g: Gui, ...)` first and then the **same contract props** (for `prose`, `terminal.ts` is `prose({ text, width })` and `gui.tsx` is `prose(g, { text })`: the width goes, nothing else).
 - `Gui` is `{ els, surface, press? }` (from [`core/src/paint/gui.tsx`](core/src/paint/gui.tsx)). A control's `hit` becomes a native `Button`'s `onPress`, which calls `g.press(hit)`: a mod wires **one reducer** for both surfaces.
 - Terminal-only props are ignored on the graphical surfaces: width, height, `top` and `offset` (the surface scrolls), `focused`, `hovered` and the pointer. The manifest says so per feature.
 - What only a host can type (an editor element, a fuller sentence) is an option of the `gui.tsx` function, never a prop of `contract.ts`, which stays free of hosts.
@@ -48,11 +48,11 @@ import { prose } from "@agents/kit-prose/terminal.ts";
 on("ui.render", { component: "Pane", requestId: "docs" }, async ($, e) => {
   const els = $.ui.resolve(e);
   return forSurface(e, {
-    tui: () => paintLines(els, prose(text, width), { width }),
+    tui: () => paintLines(els, prose({ text, width }), { width }),
     gui: () =>
       proseGui(
         guiOf(els, e, (hit) => dispatch(hit)),
-        text,
+        { text },
       ),
   });
 });
@@ -60,7 +60,7 @@ on("ui.render", { component: "Pane", requestId: "docs" }, async ($, e) => {
 
 `forSurface(e, { tui, gui, desktop?, vscode?, mobile? })` runs only the drawing of the event's surface; `desktop`, `vscode` and `mobile` replace `gui` on that one. `paneOptions` opens a pane in the house style, and `bandShell` and `onlyOwnRows` carry the band's shell. In a mod's test, mount the screen with `surface: "vscode"` and `"desktop"` and call `expectNative(ui)` from `@agents/kit-core/paint/checks.tsx`.
 
-A story has a graphical drawing when it says `gui: true` and `<component>/src/stories.gui.tsx` draws its props. The catalogue mod draws it on both graphical surfaces and its test mounts each one (`pnpm turbo run test:claude --filter=@agents/kit-catalog`), and the site's VS Code pictures of it are taken by its recording (see the [replay guide](../tools/drive/README.md#site-media)).
+A story is model data in `stories.ts`. Its manifest says which surfaces draw it, and the catalogue adapts it to each drawing. The catalogue mod mounts each supported VS Code and Desktop story (`pnpm turbo run test:claude --filter=@agents/kit-catalog`); the site's VS Code pictures come from [recording](../tools/drive/README.md#site-media).
 
 ## Draw with a component
 
@@ -102,7 +102,7 @@ pnpm turbo run test --filter=@agents/kit-catalog                               #
 `kit-new` also adds the component's stories to `catalog/src/registry.ts` and the package to the catalogue's and the site's dependencies. `drive live` runs in your terminal: [the driver's guide](../tools/drive/README.md#live-mode) says how to use it.
 
 1. Put the types in `src/contract.ts` and draw in `src/terminal.ts` and in `src/gui.tsx`. Use roles from `lines.ts` and glyphs from `tokens.ts`, never a colour or a literal glyph. Give each control a `hit`, on its row or on its spans.
-2. Add a story per state in the component's `src/stories.ts`. A story is one call that returns lines for a width; keep its props in an exported constant so `src/stories.gui.tsx` draws the same ones, and mark it `gui: true`.
+2. Add a data story per state in `src/stories.ts`, naming it from the manifest feature it shows. The catalogue draws the same model on each supported surface.
 3. Fill in `src/manifest.ts`: what it is for, its features, the story that shows each, and for each surface whether it is on the system. `impl.gui` names the `gui.tsx` exports and each feature has a `gui` answer; a component without `impl.gui` needs no graphical answers. A feature on a `system` surface is supported or says why the engine can't; "not built yet" is not an answer there.
 4. Record and run the tests. [`parity.spec.ts`](catalog/src/parity.spec.ts) fails when a client's snapshot is not exactly the shared drawing at its width, or when the two clients differ at the same width.
 
@@ -112,15 +112,24 @@ To change how something looks everywhere, edit its `src/terminal.ts` or `core/sr
 
 ## Schema 2: one API, five surfaces
 
-A component may opt into `schema: 2` in its `manifest.ts`; the old schema keeps working until every component has moved. It is proved on a throwaway component, [`catalog/src/fixture/`](catalog/src/fixture/), and its specs ([`schema2.spec.ts`](catalog/src/schema2.spec.ts)) show each check firing.
+Every component uses `schema: 2` in its `manifest.ts`; the legacy pi catalogue entries are separate. [`catalog/src/fixture/`](catalog/src/fixture/) and [`schema2.spec.ts`](catalog/src/schema2.spec.ts) show each check firing.
 
 - **Surfaces** are `pi`, `claude-terminal`, `vscode`, `desktop` and `mobile`, each drawn by `terminal` or `gui`. [`surfaces.ts`](core/src/surfaces.ts) is the one table of what each can do. A fact has a value, a note and a source; one nobody has checked is `unverified()`, and the types treat it as absent. Add a fact when you learn one, with where you checked it.
 - **Contracts** hold the model every surface honours. A field that needs a capability is named in a `needs` table (`focused: "keyFocus:kit|ring"`), and `Props<Model, typeof needs, S>` keeps the fields surface `S` can honour (on a union, those all of them can). Passing the rest is a type error naming the field. A drawing narrows with `can(ctx, "inputRows:many")`, never by a surface's name. List the model's fields with `modelFields<Model>()([...])`, which fails on one left out.
 - **Manifests** are `as const`. They declare `parts` (the exports of each drawing, `none: <why>` for a drawing without one) and features that name the `fields` they cover and the capabilities they `need`. A feature's answer on each surface is derived from the table, never written; a `limits` entry makes it `partial` for a limit of the component itself. The catalogue fails on a model field or a gated field that no feature covers.
-- **Exports** are held by `exports.check.ts`, compiled by `check-types`: `assertExports<typeof import("./gui.tsx"), PartsOf<typeof manifest, "gui">>(true)` fails on a stray export or a missing part. Helpers go in `internal.ts`, which apps may not import (the lint says so).
-- **Stories** are plain data in `stories.ts`: one model and each drawing's `ext`. What needs a host element (an `Input`) is described as data and built by [`catalog/src/adapters.tsx`](catalog/src/adapters.tsx). The manifest says which surfaces draw a story: those where a feature that names it is not `no`.
+- **Exports** are held by `exports.check.ts`, compiled by `check-types`: `assertExports<typeof import("./gui.tsx"), PartsOf<typeof manifest, "gui">>(true)` fails on a stray export or a missing part. Helpers a drawing needs go in `internal.ts`, which apps may not import (the lint says so), or stay unexported. The catalogue's claude program is where `.tsx` compiles: add the two lines to [`catalog/src/exports.check.ts`](catalog/src/exports.check.ts).
+- **Stories** are plain data in `stories.ts`: one model and each drawing's `ext`. What needs a host element (an `Input`) or the terminal's lines (a described body) is built by an adapter: [`catalog/src/adapters.tsx`](catalog/src/adapters.tsx) for the graphical drawings, [`catalog/src/terminal2.ts`](catalog/src/terminal2.ts) for the terminals, and `registry.ts` hands the catalogues the result. The manifest says which surfaces draw a story: those where a feature that names it is not `no`. A component that moves lists its stories in `kitStories2` and leaves the old list.
 - **View models** (`src/model.ts`, pure, `view(model, surface)`) are snapshotted per story on all five surfaces, with the same decisions grouped, in `e2e/__snapshots__/model/`. That is the parity check; nothing is mounted.
 - **Events** go through the drawing context, the same on every surface: `press(hit)`, `input(hit, text)` and `submit(hit, text)` (`Gui` for the graphical drawings, `terminalCtx` and `piCtx` for the terminals).
+
+## The design foundation
+
+What a graphical drawing is built from, in `core`; each piece has a story to look at it alone (`pnpm drive goto kit-catalog foundation/roles --harness vscode`, then `icons`, `light`, `panel`, `rhythm`). The house rules that use them are in [the layout reference](../../skills/agent-plugin-dev/references/style.md#graphical-surfaces).
+
+- **Type roles** (`tokens.type`: `title`, `heading`, `section`, `body`, `caption`, each a `Text` `size` and `weight`). A drawing calls `typed(g, role, words)` (`typedSpans` for spans) and never picks a size; a count or a time adds `tabular`. A terminal has one size, so `typed(role, text)` in `lines.ts` keeps the look it always had: bold for a semibold weight, dim for `caption`. **VS Code's webview draws no `Text` size** (the table's `textSize` is `false` there), so `typed` draws a `title` or `heading` as the host's own Markdown heading, which has real sizes, and a `section` as semibold and dim; Desktop and mobile take `size` as the types say, which nobody has driven.
+- **Panels** (`panel(g, {}, …parts)`, `panelLines(lines)`). What opens in place sits in one: an editor, a note, a warning with its own actions (Close's question is one), an opened row. A filled well on graphical surfaces, a rail on the terminal. A list that is always there is not a panel.
+- **Meaning icons** (`core/src/icons.ts`: `priority:high`, `kind:stale`, `decision:apply`, `state:error`, `field:project`). `meaning(g, name)` draws the kit's `Svg` in the meaning's tone; `meaningSpan(name)` is the glyph in its role on a terminal. Add a meaning there, with its drawing in `paint/gui.tsx`'s `ICONS`. An `Svg` is an image and keeps its colours on any theme, so tones are mid-tones (`foundation/light` shows them on white and on near-black).
+- **Row rhythm** (`tokens.gui.row`; `rowOf` and `rows`). A row is its line plus one pad above and below whether or not a Button is in it (a Box may carry no height, so the beat is padding), and rows stand one gap apart.
 
 ## What still differs between the clients
 

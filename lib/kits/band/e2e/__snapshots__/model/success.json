@@ -1,0 +1,26 @@
+{
+  "pi, claude-terminal": {
+    "text": "LIN-482 Retry-After is ignored",
+    "buttons": [],
+    "layout": "line"
+  },
+  "vscode, desktop, mobile": {
+    "mark": "state:success",
+    "text": "Filed LIN-482: Retry-After is ignored",
+    "buttons": [
+      {
+        "label": "Open",
+        "hit": "open"
+      },
+      {
+        "label": "Copy link",
+        "hit": "copy"
+      },
+      {
+        "label": "Dismiss",
+        "hit": "dismiss"
+      }
+    ],
+    "layout": "stacked"
+  }
+}

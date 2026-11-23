@@ -1,51 +1,55 @@
-/** The detail on the graphical surfaces: a meta line, a title, sections of text and keyed rows. */
+/**
+ * The detail on the graphical surfaces: a meta caption, a heading, and sections whose headings
+ * take the `section` role, with text and keyed items in an aligned two-column block.
+ */
 import { inline } from "@agents/kit-core/lines.ts";
-import { capital, spans, type Gui } from "@agents/kit-core/paint/gui.tsx";
-import { prose } from "@agents/kit-prose/gui.tsx";
+import {
+  hasHeadingGap,
+  rowOf,
+  typed,
+  typedSpans,
+  type Gui,
+  type GuiSurface,
+} from "@agents/kit-core/paint/gui.tsx";
+import { capital } from "@agents/kit-buttons/model.ts";
 import { tokens } from "@agents/kit-core/tokens.ts";
-import type { Detail, DetailItem, DetailSection } from "./contract.ts";
+import type { DetailItem, DetailProps, DetailSection } from "./contract.ts";
 
 const { across, space } = tokens.gui;
 
-/** A rule's dim words, and its action at the far edge as a quiet Button: the style allows no drawn line across. */
-function ruleOf(g: Gui, s: DetailSection, key: string): JSX.Element {
-  const { Box, Button, Text } = g.els;
+/** A section's heading: its words in the `section` role, its action at the far edge as a quiet Button. */
+function headingOf(g: Gui, s: DetailSection, key: string): JSX.Element | null {
+  const { Box, Button } = g.els;
   const parts = (typeof s.rule === "string" ? [s.rule] : (s.rule ?? [])).filter(Boolean);
+  const words = parts.length ? parts.join("  ·  ") : (s.heading ?? "");
   const action = s.action?.hit === undefined ? undefined : s.action;
-  return (
-    <Box
-      key={key}
-      flexDirection="row"
-      flexWrap="nowrap"
-      alignItems="center"
-      columnGap={across.md}
-      paddingX={across.inset}
-    >
-      <Box flexShrink={1}>
-        <Text dimColor weight="semibold">
-          {parts.join("  ·  ")}
-        </Text>
+  if (!words && !action) return null;
+  return rowOf(
+    g,
+    { key, justify: "space-between" },
+    words ? (
+      <Box key="words" flexShrink={1}>
+        {typed(g, "section", words)}
       </Box>
-      <Box flexGrow={1} />
-      {action ? (
-        <Box flexShrink={0}>
-          <Button
-            key={action.hit}
-            dimColor
-            label={capital(action.label)}
-            onPress={() => g.press?.(action.hit!)}
-          />
-        </Box>
-      ) : null}
-    </Box>
+    ) : null,
+    action ? (
+      <Box key="action" flexShrink={0}>
+        <Button
+          key={action.hit}
+          dimColor
+          label={capital(action.label)}
+          onPress={() => g.press(action.hit!)}
+        />
+      </Box>
+    ) : null,
   );
 }
 
-/** Keyed rows: the keys in one dim column, each value wrapped beside its key. */
+/** Keyed items: a fixed label column and the values, aligned; a quote stays italic. */
 function itemsOf(g: Gui, items: readonly DetailItem[], key: string): JSX.Element {
   const { Box, Text } = g.els;
   return (
-    <Box key={key} flexDirection="column" rowGap={space.xs} paddingX={across.inset}>
+    <Box key={key} flexDirection="column" rowGap={tokens.gui.row.gap}>
       {items.map((item, i) => (
         <Box key={`${key}:${i}`} flexDirection="row" flexWrap="nowrap" columnGap={across.md}>
           <Box flexShrink={0} minWidth={tokens.gui.labelColumn}>
@@ -63,48 +67,31 @@ function itemsOf(g: Gui, items: readonly DetailItem[], key: string): JSX.Element
 }
 
 function sectionOf(g: Gui, s: DetailSection, i: number): JSX.Element {
-  const { Box, Text } = g.els;
+  const { Box, Markdown } = g.els;
+  const head = headingOf(g, s, `s${i}:head`);
   return (
     <Box key={`s${i}`} flexDirection="column" rowGap={space.xs}>
-      {s.rule !== undefined ? ruleOf(g, s, `s${i}:rule`) : null}
-      {s.heading ? (
-        <Box key={`s${i}:head`} paddingX={across.inset}>
-          <Text dimColor weight="semibold">
-            {s.heading}
-          </Text>
-        </Box>
-      ) : null}
-      {s.text ? prose(g, s.text) : null}
+      {head}
+      {s.text ? <Markdown text={s.text} /> : null}
       {s.items?.length ? itemsOf(g, s.items, `s${i}:items`) : null}
     </Box>
   );
 }
 
-/** What only a graphical surface decides about a detail. */
-export type DetailGuiOptions = {
-  /** The word on the quiet Button the detail's `hit` is. @default "Open" */
-  action?: string;
-  /**
-   * The Button on the first row (the meta line, or the title without one) at the far edge, as a
-   * caption rule's control is, instead of a row of its own under the title.
-   */
-  isActionAtEdge?: boolean;
-};
-
 /**
- * One item read whole: a dim meta line, a semibold title, then sections a step apart, each under
- * a rule or a dim heading, of Markdown and of keyed rows. The surface scrolls, so there is no
- * `height`, `offset` nor frame. With a `hit` a quiet Button, `action` ("Open") its word, sits
- * under the title (a Button never wraps), or at the first row's far edge with `isActionAtEdge`.
+ * One item read whole: a dim meta line, a heading, then sections a step apart, each under a
+ * `section` heading, of Markdown and of keyed items. The surface scrolls, so there is no
+ * `height`, `offset` nor frame. With a `hit` a quiet Button, `action` its word, sits under the
+ * title (a Button never wraps), or at the first row's far edge with `isActionAtEdge`.
  */
-export function detail(g: Gui, d: Detail, options: DetailGuiOptions = {}): JSX.Element {
-  const { Box, Button, Text } = g.els;
+export function detail(g: Gui, d: DetailProps<GuiSurface>): JSX.Element {
+  const { Box, Button } = g.els;
   const hit = d.hit;
-  const title = d.title ? <Text weight="semibold">{spans(g, inline(d.title))}</Text> : null;
-  const isEdge = Boolean(options.isActionAtEdge) && hit !== undefined;
+  const title = d.title ? typedSpans(g, "heading", inline(d.title)) : null;
+  const isEdge = Boolean(d.isActionAtEdge) && hit !== undefined;
   const button =
     hit !== undefined ? (
-      <Button key={hit} dimColor label={options.action ?? "Open"} onPress={() => g.press?.(hit)} />
+      <Button key={hit} dimColor label={d.action ?? "Open"} onPress={() => g.press(hit)} />
     ) : null;
   // The first row: its words shrink, the Button keeps its size.
   const first = (words: JSX.Element) =>
@@ -125,20 +112,30 @@ export function detail(g: Gui, d: Detail, options: DetailGuiOptions = {}): JSX.E
     );
   const head =
     d.meta || d.title ? (
-      <Box key="head" flexDirection="column" rowGap={space.xs} paddingX={across.inset}>
-        {d.meta ? first(<Text dimColor>{d.meta}</Text>) : null}
-        {d.meta ? title : first(title ?? <Text />)}
+      <Box key="head" flexDirection="column" rowGap={space.xs}>
+        {d.meta ? first(typed(g, "caption", d.meta)) : null}
+        {d.meta ? title : first(title ?? <Box />)}
       </Box>
     ) : null;
+  const rest = [
+    hit !== undefined && !isEdge ? (
+      <Box key="open" flexDirection="row">
+        {button}
+      </Box>
+    ) : null,
+    ...(d.sections ?? []).map((s, i) => sectionOf(g, s, i)),
+  ].filter(Boolean);
+  // A heading of the host's own leaves its space below it, which is the step to what follows.
   return (
-    <Box flexDirection="column" rowGap={space.md}>
+    <Box
+      flexDirection="column"
+      rowGap={d.title && hasHeadingGap(g) ? 0 : space.md}
+      paddingX={d.isFlush ? undefined : across.inset}
+    >
       {head}
-      {hit !== undefined && !isEdge ? (
-        <Box key="open" paddingX={across.inset}>
-          {button}
-        </Box>
-      ) : null}
-      {(d.sections ?? []).map((s, i) => sectionOf(g, s, i))}
+      <Box flexDirection="column" rowGap={space.md}>
+        {rest}
+      </Box>
     </Box>
   );
 }

@@ -7,9 +7,10 @@
  * taking `(g: Gui, props)` with the same contract props. See the kit's README.
  */
 import type { ElementTable } from "claude-code";
-import type { Role, Span } from "../lines.ts";
-import type { Ctx } from "../surfaces.ts";
-import { tokens } from "../tokens.ts";
+import { escapeMarkdown, markdownOfSpans, type Role, type Span } from "../lines.ts";
+import { meaningOf, type MeaningName, type IconShape } from "../icons.ts";
+import { can, type Ctx } from "../surfaces.ts";
+import { tokens, type TypeRole } from "../tokens.ts";
 
 /** The elements a graphical drawing uses, from `$.ui.resolve(e)` on a graphical surface. */
 export type GuiEls = Pick<
@@ -54,6 +55,176 @@ export const roleProps = (role: Role | undefined) => {
   }
 };
 
+// ---- type roles
+
+/**
+ * The `Text` props of a type role: its size and weight from the host's scale, and dim for a role
+ * that is. A drawing takes a role and never a size.
+ * @param o `tabular` sets digits of one width, for a count or a time that changes or lines up.
+ * `isSized: false` leaves the size out, for a host that draws none: its `section` is then dim,
+ * since it cannot be smaller. `isToned: false` leaves the role's tone to the spans inside.
+ */
+export const typeProps = (
+  role: TypeRole,
+  o: { tabular?: boolean; isSized?: boolean; isToned?: boolean } = {},
+) => {
+  const r: {
+    size: "caption" | "footnote" | "body" | "heading" | "title";
+    weight: string;
+    role?: string;
+  } = tokens.type[role];
+  const isSized = o.isSized !== false;
+  const isDim = o.isToned !== false && (r.role === "dim" || (!isSized && role === "section"));
+  return {
+    ...(isSized ? { size: r.size } : {}),
+    weight: r.weight as "regular" | "semibold",
+    ...(isDim ? { dimColor: true as const } : {}),
+    ...(o.tabular ? { tabular: true as const } : {}),
+  };
+};
+
+/**
+ * The Markdown heading level a role takes where the host draws no `Text` sizes. The webview
+ * leaves about an em under a heading, which a `Box` cannot take back (it reads no negative
+ * margin), so a heading sits a little further from what it heads than a `Text` would.
+ */
+const HEADING = { title: "##", heading: "###" } as const;
+
+/**
+ * Words in a type role: a `Text` that sets its size, weight and tone from `tokens.type`. Where
+ * the host draws no `Text` size (`textSize`: VS Code's webview reads none), a `title` or a
+ * `heading` of plain words is the host's own Markdown heading, which has real sizes; every other
+ * role is told apart by weight and tone. `wrap: "truncate-end"` cuts the words at the edge with
+ * `…` instead of wrapping them.
+ */
+export function typed(
+  g: Gui,
+  role: TypeRole,
+  children: JSX.Element | string | readonly (JSX.Element | string)[],
+  o: { tabular?: boolean; key?: string; wrap?: "truncate-end" } = {},
+): JSX.Element {
+  const { Box, Markdown, Text } = g.els;
+  const isSized = can(g, "textSize");
+  if (!isSized && (role === "title" || role === "heading") && typeof children === "string")
+    return (
+      <Box key={o.key}>
+        <Markdown text={`${HEADING[role]} ${escapeMarkdown(children)}`} />
+      </Box>
+    );
+  return (
+    <Text key={o.key} wrap={o.wrap} {...typeProps(role, { ...o, isSized })}>
+      {children}
+    </Text>
+  );
+}
+
+/**
+ * Whether a `title` or `heading` is drawn as the host's Markdown heading, which leaves about an
+ * em of its own space below it: what follows takes no further step, so the gap under a title is
+ * the gap between two groups and no more.
+ */
+export const hasHeadingGap = (g: Gui) => !can(g, "textSize");
+
+/**
+ * Spans in a type role, as `typed` draws words. Where the host draws no `Text` size, a `title` or
+ * `heading` becomes a Markdown heading of the spans: plain words escaped, code as inline code,
+ * bold and dim dropped. Elsewhere they are nested runs in a `Text` of the role.
+ */
+export function typedSpans(
+  g: Gui,
+  role: TypeRole,
+  list: readonly Span[],
+  o: { tabular?: boolean; key?: string } = {},
+): JSX.Element {
+  const { Box, Markdown } = g.els;
+  if (!can(g, "textSize") && (role === "title" || role === "heading"))
+    return (
+      <Box key={o.key}>
+        <Markdown text={`${HEADING[role]} ${markdownOfSpans(list)}`} />
+      </Box>
+    );
+  const { Text } = g.els;
+  return (
+    <Text key={o.key} {...typeProps(role, { ...o, isSized: can(g, "textSize") })}>
+      {spans(g, list)}
+    </Text>
+  );
+}
+
+// ---- panels and rows
+
+/**
+ * What opens in place, set apart as one object: a filled well, set in by `tokens.gui.panel`, so
+ * its words stay a step inside the fill and a control in it stays on it. A terminal draws the
+ * same object as a rail (`panelLines`).
+ * Use it for an editor, a note, a warning with its own actions and an opened row: whatever the
+ * person opens or is asked about, not for a group of rows that is always there.
+ * @param o `key` addresses it. `gap` is the step between its parts. @default "sm"
+ */
+export function panel(
+  g: Gui,
+  o: { key?: string; gap?: keyof typeof tokens.gui.space },
+  ...parts: readonly (JSX.Element | null | undefined | false)[]
+): JSX.Element {
+  const { Box } = g.els;
+  return (
+    <Box
+      key={o.key}
+      flexDirection="column"
+      rowGap={tokens.gui.space[o.gap ?? "sm"]}
+      paddingX={tokens.gui.panel.x}
+      paddingY={tokens.gui.panel.y}
+      backgroundColor={tokens.gui.fill}
+      // A round border is the surface's only rounded corner; it is drawn in no colour.
+      borderStyle="round"
+      borderColor="#00000000"
+    >
+      {parts.filter(Boolean)}
+    </Box>
+  );
+}
+
+/**
+ * One row of a list or a form: its line and `tokens.gui.row.pad` above and below, whether or not a Button is in it, its
+ * parts on one centre line a step apart. A column of these keeps one beat.
+ * @param o `align: "start"` sets the parts on the first line instead of the centre, for a row whose
+ * text may wrap: its icon stays beside the first line.
+ */
+export function rowOf(
+  g: Gui,
+  o: { key?: string; justify?: "space-between"; align?: "start" },
+  ...parts: readonly (JSX.Element | null | undefined | false)[]
+): JSX.Element {
+  const { Box } = g.els;
+  return (
+    <Box
+      key={o.key}
+      flexDirection="row"
+      flexWrap="nowrap"
+      alignItems={o.align === "start" ? "flex-start" : "center"}
+      justifyContent={o.justify}
+      paddingY={tokens.gui.row.pad}
+      columnGap={tokens.gui.across.sm}
+    >
+      {parts.filter(Boolean)}
+    </Box>
+  );
+}
+
+/** Rows under each other, `tokens.gui.row.gap` apart: the column a list's `rowOf`s stand in. */
+export function rows(
+  g: Gui,
+  o: { key?: string },
+  ...parts: readonly (JSX.Element | null | undefined | false)[]
+): JSX.Element {
+  const { Box } = g.els;
+  return (
+    <Box key={o.key} flexDirection="column" rowGap={tokens.gui.row.gap}>
+      {parts.filter(Boolean)}
+    </Box>
+  );
+}
+
 /**
  * Blocks of a pane under each other, a step apart: the column a mod lays the kit's drawings in.
  * Parts that are `null` are left out.
@@ -79,7 +250,13 @@ export function blocks(
  */
 export function column(
   g: Gui,
-  o: { key?: string; gap?: keyof typeof tokens.gui.space; isMeasured?: boolean },
+  o: {
+    key?: string;
+    gap?: keyof typeof tokens.gui.space;
+    isMeasured?: boolean;
+    /** Set in by `tokens.gui.across.inset` on each side, where a form's other rows are. */
+    isInset?: boolean;
+  },
   ...parts: readonly (JSX.Element | null | undefined | false)[]
 ): JSX.Element {
   const { Box } = g.els;
@@ -91,6 +268,7 @@ export function column(
       flexShrink={o.isMeasured ? 1 : undefined}
       minWidth={o.isMeasured ? 0 : undefined}
       rowGap={tokens.gui.space[o.gap ?? "sm"]}
+      paddingX={o.isInset ? tokens.gui.across.inset : undefined}
     >
       {parts.filter(Boolean)}
     </Box>
@@ -112,11 +290,23 @@ export const capital = (text: string) => `${text.charAt(0).toUpperCase()}${text.
  * Styled spans as one `Text`: a nested run per span, in its role and face. A span's `hit` is not
  * a control here: a graphical control is a `Button`, which a component draws itself.
  * @param spans A caption or a line of a contract, as `terminal.ts` takes it.
+ * @param options `type` sets the line in a type role; `wrap: "truncate-end"` cuts it at the
+ * edge with `…` instead of wrapping.
  */
-export function spans(g: Gui, list: readonly Span[]): JSX.Element {
+export function spans(
+  g: Gui,
+  list: readonly Span[],
+  options: { type?: TypeRole; tabular?: boolean; wrap?: "truncate-end" } = {},
+): JSX.Element {
   const { Text } = g.els;
   return (
-    <Text>
+    <Text
+      wrap={options.wrap}
+      {...(options.type
+        ? // The spans say their own tone, so a caption's words are dim only where a span is.
+          typeProps(options.type, { ...options, isSized: can(g, "textSize"), isToned: false })
+        : {})}
+    >
       {list.map((s, i) => (
         <Text
           key={`s${i}`}
@@ -157,8 +347,8 @@ const ICONS = {
   status: '<circle cx="8" cy="8" r="5.6"/><circle cx="8" cy="8" r="1.6" fill="currentColor"/>',
   priorityNone: '<path d="M3.2 8h1.4M7.3 8h1.4M11.4 8h1.4"/>',
   priorityLow:
-    '<path d="M4 13v-2.6"/><path d="M8 13V7.4" stroke-opacity=".35"/><path d="M12 13V4.4" stroke-opacity=".35"/>',
-  priorityMedium: '<path d="M4 13v-2.6M8 13V7.4"/><path d="M12 13V4.4" stroke-opacity=".35"/>',
+    '<path d="M4 13v-2.6"/><path d="M8 13V7.4" stroke-opacity=".4"/><path d="M12 13V4.4" stroke-opacity=".4"/>',
+  priorityMedium: '<path d="M4 13v-2.6M8 13V7.4"/><path d="M12 13V4.4" stroke-opacity=".4"/>',
   priorityHigh: '<path d="M4 13v-2.6M8 13V7.4M12 13V4.4"/>',
   priorityUrgent:
     '<rect x="2.6" y="2.6" width="10.8" height="10.8" rx="2.6" fill="currentColor" stroke="none"/><path d="M8 5.2v3.4M8 10.8v.01" stroke="#ffffff"/>',
@@ -170,6 +360,10 @@ const ICONS = {
 
 /** One of the kit's icons. */
 export type IconName = keyof typeof ICONS;
+
+// Every shape a meaning draws is in the set.
+const _shapes: IconShape extends IconName ? true : never = true;
+void _shapes;
 
 /** The colour an icon is drawn in: grey, or the state it marks. */
 export type IconTone = keyof typeof tokens.gui.tone;
@@ -198,4 +392,19 @@ export function icon(
   const { Svg } = g.els;
   const { tone = "neutral", alt = name, size = tokens.gui.icon } = options;
   return <Svg source={iconSvg(name, tone, size)} alt={alt} width={size} height={size} />;
+}
+
+/**
+ * An icon that carries a meaning (`priority:high`, `kind:stale`, `decision:apply`,
+ * `state:error`): the kit's drawing for it, in its role's colour. A terminal draws the same
+ * name as a glyph (`meaningSpan`).
+ * @param o `size` in CSS pixels; `alt` replaces what it says.
+ */
+export function meaning(
+  g: Gui,
+  name: MeaningName,
+  o: { size?: number; alt?: string } = {},
+): JSX.Element {
+  const m = meaningOf(name);
+  return icon(g, m.shape, { tone: m.tone, alt: o.alt ?? m.alt, size: o.size });
 }

@@ -1,0 +1,23 @@
+{
+  "pi, claude-terminal": {
+    "type": "body",
+    "rows": "cut",
+    "text": [
+      {
+        "text": "The draft changed on disk",
+        "role": "warning"
+      }
+    ]
+  },
+  "vscode, desktop, mobile": {
+    "mark": "state:warning",
+    "type": "body",
+    "rows": "wrap",
+    "text": [
+      {
+        "text": "The draft changed on disk",
+        "role": "warning"
+      }
+    ]
+  }
+}

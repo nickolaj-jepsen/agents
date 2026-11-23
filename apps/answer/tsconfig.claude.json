@@ -1,5 +1,5 @@
 {
-  "extends": "./dist/.claude-plugin/types/tsconfig.json",
+  "extends": "./.claude-types/tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
     "incremental": true,

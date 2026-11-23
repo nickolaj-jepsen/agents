@@ -1,0 +1,23 @@
+{
+  "pi, claude-terminal": {
+    "type": "body",
+    "rows": "cut",
+    "text": [
+      {
+        "text": "Linear refused the issue: no team",
+        "role": "error"
+      }
+    ]
+  },
+  "vscode, desktop, mobile": {
+    "mark": "state:error",
+    "type": "body",
+    "rows": "wrap",
+    "text": [
+      {
+        "text": "Linear refused the issue: no team",
+        "role": "error"
+      }
+    ]
+  }
+}

@@ -375,8 +375,9 @@ for (const surface of ["desktop", "vscode"] as const) {
     // Folded, a row is one line the surface cuts at its edge.
     expect((await ui.find({ type: "Text", text: /sjusk/ }))?.props.wrap).toBe("truncate-end");
     expect(await ui.find({ type: "Text", text: /A second gap/ })).toBeDefined();
-    expect(await ui.find({ type: "Text", text: /^missing$/ })).toBeDefined();
-    expect(await ui.find({ type: "Svg" })).toBeDefined();
+    // Its kind is an icon, which says it for a reader that cannot see it.
+    const icons = (await ui.findAll({ type: "Svg" })).map((s) => String(s.props.alt));
+    expect(icons).toContain("Missing");
     const open = await ui.find({ type: "Button", key: `row:${ID}` });
     expect(open?.text).toBe("Open");
     expect(open?.props.dimColor).toBe(true);
@@ -472,7 +473,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     const rows = async () => (await ui.findAll({ type: "Button", text: /^Open$/ })).length;
     expect(await rows()).toBe(12);
     const more = await ui.find({ type: "Button", text: /more$/ });
-    expect(more?.text).toBe("8 more");
+    expect(more?.text).toBe("Show 8 more");
     await ui.press({ key: String(more?.key) });
     expect(await rows()).toBe(20);
     expect(await ui.find({ type: "Button", text: /more$/ })).toBeUndefined();

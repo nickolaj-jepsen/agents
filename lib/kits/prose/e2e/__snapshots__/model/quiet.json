@@ -1,0 +1,6 @@
+{
+  "pi, claude-terminal, vscode, desktop, mobile": {
+    "shape": "whole",
+    "isDim": true
+  }
+}

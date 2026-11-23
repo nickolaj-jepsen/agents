@@ -2,6 +2,7 @@
  * The catalogue's stories: one per kit component per state, as data. Adding a component to
  * the kit means adding its stories here in the same change (see ../../README.md).
  */
+import { hasTerminalStory } from "@agents/kit-core/stories.ts";
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import {
   Key,
@@ -985,7 +986,7 @@ export const stories: Story[] = [
     make: () => pure((theme, width) => emptyState(theme, width, `${SENTENCE} ${SENTENCE}`)),
   },
   // The kit's own stories: the same props Claude Code's catalogue draws.
-  ...kitStories.map((s): Story => ({
+  ...kitStories.filter(hasTerminalStory).map((s): Story => ({
     component: s.component,
     state: s.state,
     about: s.about,

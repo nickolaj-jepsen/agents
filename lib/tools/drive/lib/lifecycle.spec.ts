@@ -10,10 +10,16 @@
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type * as Lifecycle from "./lifecycle.ts";
 import type { Session } from "./session.ts";
 import type { SessionRecord } from "./sessions.ts";
+
+const { tuiTest } = vi.hoisted(() => ({ tuiTest: vi.fn(async (_args: string[]) => "") }));
+vi.mock("./term.ts", async (original) => ({
+  ...(await original<typeof import("./term.ts")>()),
+  tuiTest,
+}));
 
 const dir = mkdtempSync(join(tmpdir(), "drive-reload-"));
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
@@ -89,6 +95,28 @@ const reload = (deps: Lifecycle.ReloadDeps) =>
     ...deps,
   });
 
+it("stops only its own daemon slots, even beside an older session named with -next", async () => {
+  const id = sessions.checkoutId;
+  const other = parked({ daemon: `d-${id}-default-next`, runDir: join(dir, "run-other") });
+  sessions.writeSession("default-next", other);
+  mkdirSync(other.runDir);
+  for (const active of [`d-${id}-default`, `d1-${id}-default`]) {
+    tuiTest.mockClear();
+    sessions.writeSession("default", parked({ daemon: active }));
+    await lifecycle.stopSession("default");
+
+    const expected = new Set([`d0-${id}-default`, `d1-${id}-default`, active]);
+    expect(tuiTest.mock.calls.map(([args]) => args)).toEqual(
+      [...expected].flatMap((daemon) => [
+        ["--session", daemon, "close"],
+        ["daemon", "stop", "--session", daemon],
+      ]),
+    );
+    expect(sessions.readSession("default-next")).toEqual(other);
+    expect(existsSync(other.runDir)).toBe(true);
+  }
+});
+
 describe("replacing a terminal session", () => {
   it("publishes a ready candidate at the size the old session had", async () => {
     const rec = parked();
@@ -104,10 +132,14 @@ describe("replacing a terminal session", () => {
     expect(seen.closed).toBe(false);
     const now = sessions.readSession("default")!;
     expect(now.runDir).toBe(runDir);
-    expect(now.daemon).not.toBe(rec.daemon);
+    expect(now.daemon).toBe(`d0-${sessions.checkoutId}-default`);
     // The session it replaced is gone, with its folder.
     expect(existsSync(oldRun)).toBe(false);
     void session;
+
+    const nextRun = join(dir, "run-next-again");
+    await reload({ runDir: () => nextRun, start: candidate(nextRun).start as never });
+    expect(sessions.readSession("default")?.daemon).toBe(`d1-${sessions.checkoutId}-default`);
   });
 
   it("leaves the old session when the candidate does not start", async () => {

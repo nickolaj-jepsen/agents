@@ -23,7 +23,7 @@ export const vscodeKitScenarios = (plugin: string, owns: (component: string) => 
     harness: "vscode",
     scenarios: Object.fromEntries(
       stories
-        .filter((s) => s.gui && owns(s.component))
+        .filter((s) => s.surfaces.includes("vscode") && owns(s.component))
         .map((s): [string, VscodeScenario] => [
           storyId(s),
           {

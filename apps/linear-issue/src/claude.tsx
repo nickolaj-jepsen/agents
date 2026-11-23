@@ -1,7 +1,7 @@
 import { atom, read, update } from "claude-code";
 import type { ElementTable, EngineInterface, Register, RenderElement } from "claude-code";
 
-import { drafter, PRIORITIES, type Form as CoreForm, type TeamCache } from "./lib/draft.ts";
+import { drafter, type Form as CoreForm, type TeamCache } from "./lib/draft.ts";
 import {
   act,
   isControl,
@@ -298,13 +298,11 @@ export const register: Register = (on) => {
     const set = (patch: Partial<Form>) => patchForm($, patch);
     const setEditing = (patch: (cur: Editing) => Partial<Editing>) =>
       update($, editing, (cur) => ({ ...cur, ...patch(cur) }));
-    const gui = (isReadOnly: boolean) =>
+    const gui = () =>
       guiPane(guiOf(els, e), {
         form: f,
         isDuplicateOpen: isOpen,
         editing: edit,
-        priorities: PRIORITIES,
-        isReadOnly,
         on: {
           create: () => file($, { open: false }),
           createOpen: () => file($, { open: true }),
@@ -313,17 +311,9 @@ export const register: Register = (on) => {
           toggleDuplicate: () => update($, isDuplicateOpen, (open) => !open),
           set,
           switchTeam: (team) => drafter(host($), teams).switchTeam(team),
-          // Opening labels shows the chosen ones as on-or-off, so one turned off can be turned
-          // back on.
-          open: (field) =>
-            setEditing((cur) => ({
-              field,
-              query: "",
-              queryRevision: cur.queryRevision + 1,
-              shown: field === "labels" ? (f?.labelIds ?? []) : [],
-            })),
-          close: () =>
-            setEditing((cur) => ({ field: null, query: "", queryRevision: cur.queryRevision + 1 })),
+          // Only the title opens: every other property is its own control in its own cell.
+          open: (field) => setEditing(() => ({ field })),
+          close: () => setEditing(() => ({ field: null })),
           search: (query) => setEditing(() => ({ query })),
           addLabel: async (id) => {
             await update(
@@ -337,8 +327,10 @@ export const register: Register = (on) => {
               shown: [...cur.shown.filter((l) => l !== id), id],
             }));
           },
-          toggleLabel: (id) =>
-            update(
+          // A label turned off stays drawn as a chip, so it can be turned back on.
+          toggleLabel: async (id) => {
+            await setEditing((cur) => ({ shown: [...new Set([...cur.shown, id])] }));
+            await update(
               $,
               form,
               (cur) =>
@@ -348,7 +340,8 @@ export const register: Register = (on) => {
                     ? cur.labelIds.filter((l) => l !== id)
                     : [...cur.labelIds, id],
                 },
-            ),
+            );
+          },
         },
       });
     // The terminal's screen is the shared one, painted from the kit's lines; a graphical
@@ -370,8 +363,7 @@ export const register: Register = (on) => {
         lastDrawn = pane.drawn;
         return pane.tree;
       },
-      gui: () => gui(false),
-      mobile: () => gui(true),
+      gui,
     });
   });
 

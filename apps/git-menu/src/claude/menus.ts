@@ -31,7 +31,7 @@ export type Pr = { url: string; number: number; state: PrKind };
 /** The branch's pull request: `null` for none, `unknown` when gh could not say. */
 export type PrAnswer = Pr | null | "unknown" | "no-gh";
 
-export const FOLDER_APPS: readonly FolderApp[] = ["code", "zed", "smerge", "files", "ghostty"];
+export const FOLDER_APPS: readonly FolderApp[] = ["code", "zed", "smerge", "files", "terminal"];
 
 /** The desktop's editor, `fireproof.desktop.editor`; the other keeps its row, not the keys. */
 export const preferredEditor = (value: string | undefined): EditorApp =>
@@ -291,8 +291,8 @@ export const appLabel = (app: FolderApp, isMac: boolean): string => {
       return "Sublime Merge";
     case "files":
       return isMac ? "Finder" : "Files";
-    case "ghostty":
-      return "Ghostty";
+    case "terminal":
+      return "Terminal";
   }
 };
 
@@ -309,8 +309,16 @@ export const folderMenu = (
     ...FOLDER_APPS.map((app): Row => {
       const argv = launchers[app];
       return argv
-        ? { id: app, label: appLabel(app, isMac), action: { kind: "launch", argv } }
-        : { id: app, label: appLabel(app, isMac), unavailable: "not installed" };
+        ? {
+            id: app,
+            label: appLabel(app, isMac),
+            action: { kind: "launch", argv, ...(app === "terminal" ? { cwd } : {}) },
+          }
+        : {
+            id: app,
+            label: appLabel(app, isMac),
+            unavailable: app === "terminal" ? "no terminal launcher found" : "not installed",
+          };
     }),
     { id: "copy", label: "Copy path", action: { kind: "copy", text: cwd, what: "path" } },
     { id: "notes", label: "Notes", action: { kind: "menu", menu: "notes" } },

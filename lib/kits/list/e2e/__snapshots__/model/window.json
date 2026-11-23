@@ -1,0 +1,1093 @@
+{
+  "pi, claude-terminal": {
+    "groups": [
+      {
+        "label": "docs/page-1.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 1 about page 1",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 1 abou"
+          },
+          {
+            "text": "Claim 2 about page 1",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 2 abou"
+          },
+          {
+            "text": "Claim 3 about page 1",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 3 abou"
+          },
+          {
+            "text": "Claim 4 about page 1",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 4 abou"
+          }
+        ]
+      },
+      {
+        "label": "docs/page-2.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 5 about page 2",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 5 abou"
+          },
+          {
+            "text": "Claim 6 about page 2",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 6 abou"
+          },
+          {
+            "text": "Claim 7 about page 2",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 7 abou"
+          },
+          {
+            "text": "Claim 8 about page 2",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 8 abou"
+          }
+        ]
+      },
+      {
+        "label": "docs/page-3.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 9 about page 3",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 9 abou"
+          },
+          {
+            "text": "Claim 10 about page 3",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 10 abo"
+          },
+          {
+            "text": "Claim 11 about page 3",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 11 abo"
+          },
+          {
+            "text": "Claim 12 about page 3",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 12 abo"
+          }
+        ]
+      },
+      {
+        "label": "docs/page-4.md",
+        "isActive": true,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 13 about page 4",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 13 abo"
+          },
+          {
+            "text": "Claim 14 about page 4",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 14 abo"
+          },
+          {
+            "text": "Claim 15 about page 4",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 15 abo"
+          },
+          {
+            "text": "Claim 16 about page 4",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 16 abo"
+          }
+        ]
+      },
+      {
+        "label": "docs/page-5.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 17 about page 5",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 17 abo"
+          },
+          {
+            "text": "Claim 18 about page 5",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 18 abo"
+          },
+          {
+            "text": "Claim 19 about page 5",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 19 abo"
+          },
+          {
+            "text": "Claim 20 about page 5",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 20 abo"
+          }
+        ]
+      },
+      {
+        "label": "docs/page-6.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 21 about page 6",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 21 abo"
+          },
+          {
+            "text": "Claim 22 about page 6",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 22 abo"
+          },
+          {
+            "text": "Claim 23 about page 6",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 23 abo"
+          },
+          {
+            "text": "Claim 24 about page 6",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 24 abo"
+          }
+        ]
+      },
+      {
+        "label": "docs/page-7.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 25 about page 7",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 25 abo"
+          },
+          {
+            "text": "Claim 26 about page 7",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 26 abo"
+          },
+          {
+            "text": "Claim 27 about page 7",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 27 abo"
+          },
+          {
+            "text": "Claim 28 about page 7",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 28 abo"
+          }
+        ]
+      },
+      {
+        "label": "docs/page-8.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 29 about page 8",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 29 abo"
+          },
+          {
+            "text": "Claim 30 about page 8",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 30 abo"
+          },
+          {
+            "text": "Claim 31 about page 8",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 31 abo"
+          },
+          {
+            "text": "Claim 32 about page 8",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "isOpened": false,
+            "hit": "row:Claim 32 abo"
+          }
+        ]
+      }
+    ],
+    "asideCells": 0
+  },
+  "vscode, desktop, mobile": {
+    "groups": [
+      {
+        "label": "docs/page-1.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 1 about page 1",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 1 abou",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 1 abou",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 1 abou"
+          },
+          {
+            "text": "Claim 2 about page 1",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 2 abou",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 2 abou",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 2 abou"
+          },
+          {
+            "text": "Claim 3 about page 1",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 3 abou",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 3 abou",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 3 abou"
+          },
+          {
+            "text": "Claim 4 about page 1",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 4 abou",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 4 abou",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 4 abou"
+          }
+        ]
+      },
+      {
+        "label": "docs/page-2.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 5 about page 2",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 5 abou",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 5 abou",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 5 abou"
+          },
+          {
+            "text": "Claim 6 about page 2",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 6 abou",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 6 abou",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 6 abou"
+          },
+          {
+            "text": "Claim 7 about page 2",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 7 abou",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 7 abou",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 7 abou"
+          },
+          {
+            "text": "Claim 8 about page 2",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 8 abou",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 8 abou",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 8 abou"
+          }
+        ]
+      },
+      {
+        "label": "docs/page-3.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 9 about page 3",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 9 abou",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 9 abou",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 9 abou"
+          },
+          {
+            "text": "Claim 10 about page 3",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 10 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 10 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 10 abo"
+          },
+          {
+            "text": "Claim 11 about page 3",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 11 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 11 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 11 abo"
+          },
+          {
+            "text": "Claim 12 about page 3",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 12 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 12 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 12 abo"
+          }
+        ]
+      },
+      {
+        "label": "docs/page-4.md",
+        "isActive": true,
+        "isDone": false,
+        "actions": [
+          {
+            "hit": "all:apply",
+            "label": "Apply all"
+          },
+          {
+            "hit": "all:dismiss",
+            "label": "Dismiss all"
+          }
+        ],
+        "rows": [
+          {
+            "text": "Claim 13 about page 4",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 13 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 13 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 13 abo"
+          },
+          {
+            "text": "Claim 14 about page 4",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 14 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 14 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 14 abo"
+          },
+          {
+            "text": "Claim 15 about page 4",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 15 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 15 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 15 abo"
+          },
+          {
+            "text": "Claim 16 about page 4",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 16 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 16 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 16 abo"
+          }
+        ]
+      },
+      {
+        "label": "docs/page-5.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 17 about page 5",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 17 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 17 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 17 abo"
+          },
+          {
+            "text": "Claim 18 about page 5",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 18 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 18 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 18 abo"
+          },
+          {
+            "text": "Claim 19 about page 5",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 19 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 19 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 19 abo"
+          },
+          {
+            "text": "Claim 20 about page 5",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 20 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 20 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 20 abo"
+          }
+        ]
+      },
+      {
+        "label": "docs/page-6.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 21 about page 6",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 21 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 21 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 21 abo"
+          },
+          {
+            "text": "Claim 22 about page 6",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 22 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 22 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 22 abo"
+          },
+          {
+            "text": "Claim 23 about page 6",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 23 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 23 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 23 abo"
+          },
+          {
+            "text": "Claim 24 about page 6",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 24 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 24 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 24 abo"
+          }
+        ]
+      },
+      {
+        "label": "docs/page-7.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 25 about page 7",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 25 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 25 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 25 abo"
+          },
+          {
+            "text": "Claim 26 about page 7",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 26 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 26 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 26 abo"
+          },
+          {
+            "text": "Claim 27 about page 7",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 27 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 27 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 27 abo"
+          },
+          {
+            "text": "Claim 28 about page 7",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 28 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 28 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 28 abo"
+          }
+        ]
+      },
+      {
+        "label": "docs/page-8.md",
+        "isActive": false,
+        "isDone": false,
+        "actions": [],
+        "rows": [
+          {
+            "text": "Claim 29 about page 8",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 29 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 29 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 29 abo"
+          },
+          {
+            "text": "Claim 30 about page 8",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 30 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 30 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 30 abo"
+          },
+          {
+            "text": "Claim 31 about page 8",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "action": {
+              "hit": "row:Claim 31 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 31 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 31 abo"
+          },
+          {
+            "text": "Claim 32 about page 8",
+            "isLiteral": false,
+            "isDim": false,
+            "lead": {
+              "mark": "open"
+            },
+            "aside": "2×",
+            "asideIn": "column",
+            "action": {
+              "hit": "row:Claim 32 abo",
+              "label": "Open"
+            },
+            "step": {
+              "hit": "mark:Claim 32 abo",
+              "label": "Choose"
+            },
+            "isOpened": false,
+            "hit": "row:Claim 32 abo"
+          }
+        ]
+      }
+    ],
+    "asideCells": 2
+  }
+}

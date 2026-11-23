@@ -10,7 +10,8 @@
  * session, so only the scenarios it never touched carry on in fresh ones.
  */
 import { availableParallelism } from "node:os";
-import { captureMedia, gateCapture, type Capture } from "./check.ts";
+import { join } from "node:path";
+import { captureMedia, gateCapture, type Capture, type MediaCapture } from "./check.ts";
 import type { HarnessName } from "./harness.ts";
 import { options } from "./options.ts";
 import { openPool } from "./pool.ts";
@@ -24,13 +25,13 @@ import {
 } from "./scenario.ts";
 import { Session, startStats } from "./session.ts";
 
-export type Outcome = { error?: Error; captures: Capture[] };
+export type Outcome<T = Capture> = { error?: Error; captures: T[] };
 
 /**
  * What the runner needs of a scenario: start its agent and play its steps, read its screen at each
  * size, and photograph what a failure left. The gate's and recording's differ only in the capture.
  */
-export type Stage = {
+export type Stage<T = Capture> = {
   /**
    * The engine its sessions run in. The gate leaves this out and runs in process: a picture of a
    * mismatched or `--png` screen is drawn of that very screen, so it cannot come from a session of
@@ -38,7 +39,7 @@ export type Stage = {
    */
   backend?: "lib" | "daemon";
   reach: (r: Resolved, backend: "lib" | "daemon", name: string) => Promise<Session>;
-  capture: (session: Session, r: Resolved) => Promise<Capture[]>;
+  capture: (session: Session, r: Resolved) => Promise<T[]>;
   failShot: (session: Session, r: Resolved) => Promise<void>;
 };
 
@@ -59,13 +60,18 @@ export const realStage: Stage = {
   failShot,
 };
 
-/** Recording's stage: its screens are checked by nobody, and its pictures are the point. */
-export const mediaStage: Stage = {
-  backend: "daemon",
-  reach,
-  capture: captureMedia,
-  failShot,
-};
+/** Recording leaves every picture, including failure evidence, in its private staging folder. */
+export function mediaStage(dir: string): Stage<MediaCapture> {
+  const failure = async (session: Session, r: Resolved) => {
+    await session.png(join(dir, r.harness, `${r.name}@failed.png`));
+  };
+  return {
+    backend: "daemon",
+    reach: (r, backend, name) => reach(r, backend, name, undefined, failure),
+    capture: (session, r) => captureMedia(session, r, dir),
+    failShot: failure,
+  };
+}
 
 export type Job = { plugin: string; harness: HarnessName; name: string; set: ScenarioSet };
 
@@ -182,15 +188,15 @@ let seq = 0;
  * fail is captured like any other: whether its screen is compared, or drawn at all, is the stage's
  * rule, so a recording keeps the screen the gate passes over.
  */
-async function snap(stage: Stage, session: Session, r: Resolved): Promise<Outcome> {
+async function snap<T>(stage: Stage<T>, session: Session, r: Resolved): Promise<Outcome<T>> {
   return { captures: await stage.capture(session, r) };
 }
 
 /** Runs one chain; what a broken step leaves untouched is handed back as work of its own. */
-async function runChain(
-  stage: Stage,
+async function runChain<T>(
+  stage: Stage<T>,
   task: Task,
-  out: Map<string, Outcome>,
+  out: Map<string, Outcome<T>>,
   requeue: (t: Task) => void,
 ) {
   const { set, chain } = task;
@@ -199,15 +205,14 @@ async function runChain(
   const head = resolveScenario(set, chain.head);
   let session: Session | undefined;
   try {
-    session = await stage.reach(
-      head,
-      stage.backend ?? "lib",
-      `e2e-${head.plugin}-${head.harness}-${++seq}`,
-    );
+    session = await stage.reach(head, stage.backend ?? "lib", `e2e-${process.pid}-${++seq}`);
     out.set(k(head.name), await snap(stage, session, head));
   } catch (error) {
     out.set(k(head.name), { captures: [], error: error as Error });
-    await session?.close();
+    if (session) {
+      await stage.failShot(session, head).catch(() => undefined);
+      await session.close();
+    }
     // The rest still run, each in a session of its own.
     for (const n of chain.next) requeue(fresh(n.name));
     return;
@@ -234,7 +239,7 @@ async function runChain(
         );
         // The failure is the result of the one attempt it got: no second one alone. What the broken
         // session never reached runs fresh.
-        await stage.failShot(session, r);
+        await stage.failShot(session, r).catch(() => undefined);
         out.set(k(r.name), { captures: [], error: error as Error });
         for (const n of chain.next.slice(i + 1)) requeue(fresh(n.name));
         return;
@@ -248,14 +253,14 @@ async function runChain(
 export type Stats = { sessions: number; seconds: number };
 
 /** Plays every job's scenarios and returns what each came to, by `plugin/harness/name`. */
-export async function runAll(
+export async function runAll<T>(
   sets: ScenarioSet[],
   wanted: (plugin: string, harness: string, name: string) => boolean,
-  stage: Stage = realStage,
-): Promise<{ outcomes: Map<string, Outcome>; stats: Stats }> {
+  stage: Stage<T>,
+): Promise<{ outcomes: Map<string, Outcome<T>>; stats: Stats }> {
   const began = Date.now();
   const startedWith = { ...startStats };
-  const out = new Map<string, Outcome>();
+  const out = new Map<string, Outcome<T>>();
   const queues: Record<HarnessName, Task[]> = { claude: [], pi: [] };
   for (const set of sets) {
     for (const chain of planChains(set)) {

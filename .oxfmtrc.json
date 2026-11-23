@@ -1,5 +1,7 @@
 {
   "ignorePatterns": [
+    // Vendored project skill installs are pinned by skills-lock.json.
+    ".agents/skills/**",
     "skills/mermaid/scripts/vendor/**",
     "skills/agent-plugin-dev/references/upstream/**",
     "lib/kits/catalog/COMPONENTS.md",

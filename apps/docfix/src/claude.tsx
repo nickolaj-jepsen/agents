@@ -551,22 +551,22 @@ export const register: Register = (on) => {
     const els = $.ui.resolve(e);
     const open = () => openPane($);
     const band = isGui(e)
-      ? statusBandGui(
-          guiOf(els, e, open),
-          {
+      ? statusBandGui(guiOf(els, e, open), {
+          text: `docfix: docs ${n}`,
+          hint: "review",
+          hit: BAND,
+          status: "warning",
+          words: n === 1 ? "1 doc suggestion to review" : `${n} doc suggestions to review`,
+        })
+      : paintLines(
+          els,
+          statusBand({
             text: `docfix: docs ${n}`,
             hint: "review",
             hit: BAND,
             status: "warning",
-          },
-          { text: n === 1 ? "1 doc suggestion to review" : `${n} doc suggestions to review` },
-        )
-      : paintLines(
-          els,
-          statusBand(
-            { text: `docfix: docs ${n}`, hint: "review", hit: BAND, status: "warning" },
-            e.props.bodyColumns,
-          ),
+            width: e.props.bodyColumns,
+          }),
           { press: open, width: e.props.bodyColumns },
         );
     return stack(els, below as JSX.Element, band);

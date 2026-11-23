@@ -1,0 +1,65 @@
+{
+  "pi, claude-terminal": {
+    "lead": "2 of 3",
+    "rows": [
+      [
+        {
+          "label": "Send",
+          "hit": "send",
+          "key": "↵",
+          "tone": "lit"
+        },
+        {
+          "label": "Note",
+          "hit": "note",
+          "key": "[n]",
+          "tone": "plain"
+        },
+        {
+          "label": "toggle",
+          "key": "space",
+          "tone": "hint"
+        },
+        {
+          "label": "Review",
+          "hit": "review",
+          "key": "[r]",
+          "tone": "plain"
+        },
+        {
+          "label": "Back",
+          "hit": "back",
+          "key": "[esc]",
+          "tone": "plain"
+        }
+      ]
+    ]
+  },
+  "vscode, desktop, mobile": {
+    "lead": "2 of 3",
+    "rows": [
+      [
+        {
+          "label": "Send",
+          "hit": "send",
+          "tone": "lit"
+        },
+        {
+          "label": "Note",
+          "hit": "note",
+          "tone": "quiet"
+        },
+        {
+          "label": "Review",
+          "hit": "review",
+          "tone": "quiet"
+        },
+        {
+          "label": "Back",
+          "hit": "back",
+          "tone": "quiet"
+        }
+      ]
+    ]
+  }
+}

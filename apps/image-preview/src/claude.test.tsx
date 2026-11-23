@@ -36,7 +36,10 @@ function world(on: On) {
     return { value: { isPlaced: true, requestId: e.id } };
   });
   on("ui.render", ($, e) => {
-    return paintLines($.ui.resolve(e), notice(`host ${e.component}`, 80, "text"));
+    return paintLines(
+      $.ui.resolve(e),
+      notice({ text: `host ${e.component}`, width: 80, status: "text" }),
+    );
   });
   return { reads, placed };
 }

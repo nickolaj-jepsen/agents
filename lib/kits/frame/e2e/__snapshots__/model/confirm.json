@@ -1,0 +1,90 @@
+{
+  "pi, claude-terminal": {
+    "head": {
+      "title": "Storage",
+      "caption": "",
+      "close": "question",
+      "question": {
+        "lead": "",
+        "rows": [
+          [
+            {
+              "label": "Discard",
+              "hit": "frame:discard",
+              "key": "↵",
+              "tone": "quiet"
+            },
+            {
+              "label": "Keep",
+              "hit": "frame:keep",
+              "key": "[esc]",
+              "tone": "quiet"
+            }
+          ]
+        ]
+      }
+    },
+    "footer": {
+      "lead": "",
+      "rows": [
+        [
+          {
+            "label": "Choose",
+            "hit": "choose",
+            "key": "↵",
+            "tone": "quiet"
+          },
+          {
+            "label": "Note",
+            "hit": "note",
+            "key": "[n]",
+            "tone": "quiet"
+          }
+        ]
+      ]
+    },
+    "notice": ""
+  },
+  "vscode, desktop, mobile": {
+    "head": {
+      "title": "Storage",
+      "caption": "",
+      "close": "question",
+      "question": {
+        "lead": "",
+        "rows": [
+          [
+            {
+              "label": "Discard",
+              "hit": "frame:discard",
+              "tone": "quiet"
+            },
+            {
+              "label": "Keep",
+              "hit": "frame:keep",
+              "tone": "quiet"
+            }
+          ]
+        ]
+      }
+    },
+    "footer": {
+      "lead": "",
+      "rows": [
+        [
+          {
+            "label": "Choose",
+            "hit": "choose",
+            "tone": "quiet"
+          },
+          {
+            "label": "Note",
+            "hit": "note",
+            "tone": "quiet"
+          }
+        ]
+      ]
+    },
+    "notice": ""
+  }
+}

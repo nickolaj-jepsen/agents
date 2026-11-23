@@ -1,0 +1,22 @@
+{
+  "pi, claude-terminal": {
+    "text": "Linear draft",
+    "buttons": [],
+    "layout": "line"
+  },
+  "vscode, desktop, mobile": {
+    "mark": "field:draft",
+    "text": "The sync worker never reads Retry-After, so it retries sooner than the API allows",
+    "buttons": [
+      {
+        "label": "Open",
+        "hit": "open"
+      },
+      {
+        "label": "Discard",
+        "hit": "discard"
+      }
+    ],
+    "layout": "line"
+  }
+}

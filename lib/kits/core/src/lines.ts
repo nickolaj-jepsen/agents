@@ -3,7 +3,8 @@
  * terminal are both cell grids, so a component is drawn once, here, and each client only paints
  * the result (`paint/pi.ts`, `paint/claude.tsx`). No host imports.
  */
-import { tokens } from "./tokens.ts";
+import { meaningOf, type MeaningName } from "./icons.ts";
+import { tokens, type TypeRole } from "./tokens.ts";
 
 /**
  * A colour role of the style. Each painter maps it to its own theme.
@@ -528,3 +529,57 @@ export function scrolled(lines: readonly Line[], scroll: Scroll): Scrolled<Line>
 /** `top` after a step of `by` lines, for a window that was drawn with `scrolled`. */
 export const scrollBy = (window: Pick<Scrolled<unknown>, "top" | "max">, by: number) =>
   Math.max(0, Math.min(window.max, window.top + by));
+
+// ---- type roles and panels on the terminal
+
+/**
+ * The style a type role has on a terminal, which has one size: bold for a semibold or bold
+ * weight, dim for a role that is dim. What the drawings always did by hand.
+ */
+export const terminalStyle = (role: TypeRole): Style => {
+  const r: { weight: string; role?: Role } = tokens.type[role];
+  return { ...(r.role ? { role: r.role } : {}), ...(r.weight !== "regular" ? { bold: true } : {}) };
+};
+
+/** A span in a type role. `style` is added to the role's own, such as a hit or an accent. */
+export const typed = (role: TypeRole, text: string, style: Style & { hit?: string } = {}): Span =>
+  span(text, { ...terminalStyle(role), ...style });
+
+/** Cells a panel's rail and its gap take: a row of a panel starts this far in. */
+export const PANEL_INSET = cellWidth(tokens.glyph.rail) + tokens.gutter;
+
+/**
+ * What opens in place, set apart as one object: on a terminal, a rail down its left. A row
+ * with nothing on it keeps the rail, so the panel reads as one.
+ * @param tone The rail's colour role. @default "dim"
+ */
+export function panelLines(lines: readonly Line[], tone: Role = "dim"): Line[] {
+  const rail = span(tokens.glyph.rail, { role: tone });
+  const gap = span(" ".repeat(tokens.gutter));
+  return lines.map((l) => ({ ...l, spans: l.spans.length ? [rail, gap, ...l.spans] : [rail] }));
+}
+
+/** The glyph of a meaning (`priority:high`) in its role: the terminal's form of an icon. */
+export const meaningSpan = (name: MeaningName, style: Style & { hit?: string } = {}): Span => {
+  const m = meaningOf(name);
+  return span(m.glyph, { role: m.role, ...style });
+};
+
+/** Markdown's own characters in words that are only words. */
+export const escapeMarkdown = (text: string) => text.replace(/([\\`*_{}[\]<>()#+!|~-])/g, "\\$1");
+
+/**
+ * Spans as one line of Markdown, for a host that sets a heading with Markdown: plain words are
+ * escaped, a code span is inline code, and bold, dim and links are dropped (a heading is bold).
+ */
+export function markdownOfSpans(list: readonly Span[]): string {
+  return list
+    .map((s) => {
+      const text = s.text.replace(/\s*\n\s*/g, " ");
+      if (s.role !== "code") return escapeMarkdown(text);
+      // A code span holding backticks is fenced by one more than its longest run.
+      const fence = "`".repeat(Math.max(0, ...(text.match(/`+/g) ?? []).map((r) => r.length)) + 1);
+      return text.includes("`") ? `${fence} ${text} ${fence}` : `${fence}${text}${fence}`;
+    })
+    .join("");
+}

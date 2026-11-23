@@ -1,0 +1,41 @@
+{
+  "pi, claude-terminal": {
+    "type": "caption",
+    "rows": "cut",
+    "text": [
+      {
+        "text": "…and check that each one retries after a 429, and that ",
+        "role": "dim"
+      },
+      {
+        "text": "backoff",
+        "role": "error",
+        "bold": true,
+        "underline": true
+      },
+      {
+        "text": " doubles the delay each time and gives up after five tries…",
+        "role": "dim"
+      }
+    ]
+  },
+  "vscode, desktop, mobile": {
+    "type": "caption",
+    "rows": "cut",
+    "text": [
+      {
+        "text": "and check that each one retries after a 429, and that ",
+        "role": "dim"
+      },
+      {
+        "text": "backoff",
+        "role": "error",
+        "bold": true
+      },
+      {
+        "text": " doubles the delay each time and gives up after five tries",
+        "role": "dim"
+      }
+    ]
+  }
+}

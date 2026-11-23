@@ -5,7 +5,10 @@
   "repository": "github:nickolaj-jepsen/agents",
   "type": "module",
   "scripts": {
-    "drive": "node lib/tools/drive/drive.ts"
+    "drive": "node lib/tools/drive/drive.ts",
+    "gate": "turbo run check --concurrency=2",
+    "gate:nix": "turbo run check:nix --concurrency=1",
+    "gate:all": "pnpm gate && pnpm gate:nix"
   },
   "devDependencies": {
     "turbo": "2.11.13"

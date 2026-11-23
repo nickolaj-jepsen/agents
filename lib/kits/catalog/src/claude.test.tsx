@@ -3,8 +3,6 @@ import { expect, test } from "claude-code/testing";
 import type { Engine } from "claude-code/testing";
 import { expectNative } from "@agents/kit-core/paint/checks.tsx";
 import { guiStoryIds, guiStoryOf } from "./stories.gui.tsx";
-import { storyId } from "@agents/kit-core/stories.ts";
-import { kitStories } from "./registry.ts";
 
 const PANE = {
   plugin: "kit-catalog",
@@ -42,7 +40,7 @@ async function draw($: Engine, id: string, surface: "vscode" | "desktop") {
 for (const surface of ["vscode", "desktop"] as const)
   test(`every graphical story draws natively on ${surface}`, async ($, on) => {
     engine(on);
-    const ids = guiStoryIds();
+    const ids = guiStoryIds(surface);
     expect(ids.length).toBeGreaterThan(0);
     for (const id of ids) {
       const ui = await draw($, id, surface);
@@ -53,9 +51,9 @@ for (const surface of ["vscode", "desktop"] as const)
     }
   });
 
-test("a story that says `gui: true` has a drawing", () => {
-  for (const s of kitStories.filter((s) => s.gui))
-    expect(guiStoryOf(storyId(s)), storyId(s)).toBeDefined();
+test("a story supported on a graphical surface has an adapter", () => {
+  for (const surface of ["vscode", "desktop", "mobile"] as const)
+    for (const id of guiStoryIds(surface)) expect(guiStoryOf(id, surface), id).toBeDefined();
 });
 
 test("prose is the host's Markdown, dim only when the story says so", async ($, on) => {

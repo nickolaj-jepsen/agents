@@ -1,0 +1,92 @@
+{
+  "pi, claude-terminal": {
+    "head": {
+      "title": "Linear draft",
+      "caption": "",
+      "close": "question",
+      "question": {
+        "lead": "",
+        "rows": [
+          [
+            {
+              "label": "Discard",
+              "hit": "frame:discard",
+              "key": "↵",
+              "tone": "quiet"
+            },
+            {
+              "label": "Keep",
+              "hit": "frame:keep",
+              "key": "[esc]",
+              "tone": "quiet"
+            }
+          ]
+        ]
+      }
+    },
+    "footer": {
+      "lead": "",
+      "rows": [
+        [
+          {
+            "label": "Create",
+            "hit": "create",
+            "key": "↵",
+            "tone": "quiet"
+          },
+          {
+            "label": "Discard",
+            "hit": "discard",
+            "key": "[d]",
+            "tone": "quiet"
+          }
+        ]
+      ]
+    },
+    "notice": "PLT-212 may already cover this",
+    "foot": "edge"
+  },
+  "vscode, desktop, mobile": {
+    "head": {
+      "title": "Linear draft",
+      "caption": "",
+      "close": "question",
+      "question": {
+        "lead": "",
+        "rows": [
+          [
+            {
+              "label": "Discard",
+              "hit": "frame:discard",
+              "tone": "quiet"
+            },
+            {
+              "label": "Keep",
+              "hit": "frame:keep",
+              "tone": "quiet"
+            }
+          ]
+        ]
+      }
+    },
+    "footer": {
+      "lead": "",
+      "rows": [
+        [
+          {
+            "label": "Create",
+            "hit": "create",
+            "tone": "quiet"
+          },
+          {
+            "label": "Discard",
+            "hit": "discard",
+            "tone": "quiet"
+          }
+        ]
+      ]
+    },
+    "notice": "PLT-212 may already cover this",
+    "foot": "host"
+  }
+}

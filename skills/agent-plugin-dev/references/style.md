@@ -43,4 +43,14 @@ On Claude Code, a pane or the band has the keyboard only after `ctrl+x tab` or a
 
 Use native controls on Desktop and VS Code. Use a button for an action, a labelled field for input, and an expandable row when the same item has detail. Don't simulate a button with a glyph or print a row of terminal key hints. Let the pane or band size and scroll its contents.
 
+These are the house's rules for a graphical screen, held for every plugin. A design that needs to break one asks the owner first.
+
+1. **Controls line up.** Controls that repeat down a screen share a column, and a label column has a fixed width. A label and its control never wrap together like words. A row of chips of one kind (labels, suggestions) may wrap; a row of fields of different kinds may not.
+2. **Editing stays in place.** A value's editor takes the value's own cell, at its width. Opening one may push what's below it down, but never moves anything above or beside it. Read and edit are not two layouts.
+3. **State has an icon.** A row's kind or state is an icon from the kit's set, in its role's colour (`meaning`, `priority:high`, `kind:stale`, `decision:apply`). A bare chosen mark is for terminals. An icon is an image, so it keeps its colour on a light theme: only a mid-tone reads on both.
+4. **Hierarchy comes from size.** Titles, headings, body and captions take the kit's type roles (`typed`, `tokens.type`), never a raw size. Dim and bold are not the only levels. A count or a time sets `tabular` digits.
+5. **What opens in place sits in a panel.** An editor, a warning with its own actions, or an opened row is set apart as one object (`panel`): filled on graphical surfaces, on a rail on the terminal (`panelLines`). A group of rows that is always there is not a panel.
+
+Rows keep one beat: a row is its line plus `tokens.gui.row.pad` of space above and below whether or not a Button is in it, with `tokens.gui.row.gap` between rows (`rowOf`, `rows`). One Button per screen is lit, and the pane's own Close is the host's: the kit draws Discard and Keep only while Close asks.
+
 Choose an existing pattern before adding one: `docfix` has a queue with evidence that opens in place; `linear-issue` has an editable draft; `answer` has a set of choices. On the terminal, `linear-issue` is also the pattern for a record reviewed before it is sent: lettered fields that open their choices in place, and only Enter sends. The [Claude reference](claude.md) covers what the host actually renders and which actions can take focus.

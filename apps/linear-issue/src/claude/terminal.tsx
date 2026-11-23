@@ -19,6 +19,7 @@ import { CARD_INSET } from "@agents/kit-card/terminal.ts";
 import { blank, line, span, type Line } from "@agents/kit-core/lines.ts";
 import { hotkeys, keysHint, paintLines, ring, stack } from "@agents/kit-core/paint/claude.tsx";
 import { sheetHead } from "@agents/kit-sheet/terminal.ts";
+import { ctxOf } from "@agents/kit-core/surfaces.ts";
 import { tokens } from "@agents/kit-core/tokens.ts";
 
 type Els = ElementTable<"terminal">;
@@ -83,6 +84,16 @@ export function terminalPane(k: Els, p: PaneProps): { tree: JSX.Element; drawn: 
     ...(p.held ? [] : [blank()]),
   ];
   const typing = p.form?.phase === "ready" && !p.view.isConfirming ? typingOf(p.view) : undefined;
+  const hit = typing && fieldKey(p.form, typing);
+  const g = ctxOf("claude-terminal", {
+    press: (key) => p.send({ hit: key }, drawn),
+    input: (key, text) => {
+      if (typing === "body" && key === hit) return p.typed(text);
+    },
+    submit: (key, text) => {
+      if (key === hit) return p.send({ text }, drawn);
+    },
+  });
   const field = lines.find((l) => l.slot?.kind === "input")?.slot;
   const fieldRows = field?.kind === "input" ? (field.rows ?? 1) : 1;
   const fieldWidth = field?.kind === "input" ? field.width : 0;
@@ -101,8 +112,8 @@ export function terminalPane(k: Els, p: PaneProps): { tree: JSX.Element; drawn: 
     ),
     paintLines(k, lines, {
       width: p.width,
-      press: (hit) => p.send({ hit }, drawn),
-      input: !typing ? undefined : typing === "body" ? (
+      press: g.press,
+      input: !hit ? undefined : typing === "body" ? (
         // The description as the Markdown it is filed as, between two rules that mark the
         // field: the engine's own draws none. It stands at the pane's left edge, as the drawing
         // has it: the engine measures a field of several lines by its pane, and set in at all
@@ -111,7 +122,7 @@ export function terminalPane(k: Els, p: PaneProps): { tree: JSX.Element; drawn: 
           k,
           rule(),
           <Input
-            key={fieldKey(p.form, "body")}
+            key={hit}
             value={p.form?.description ?? ""}
             // The key that opened it: with a label the rows hang under the first one's words.
             label={BODY_KEY.toUpperCase()}
@@ -119,15 +130,15 @@ export function terminalPane(k: Els, p: PaneProps): { tree: JSX.Element; drawn: 
             // The engine's own hint names Enter and the key for a new line.
             submitLabel=""
             autoFocus
-            onInput={(text) => p.typed(text)}
-            onSubmit={(text) => p.send({ text }, drawn)}
+            onInput={(text) => g.input(hit, text)}
+            onSubmit={(text) => g.submit(hit, text)}
           />,
           rule(),
         )
       ) : (
         // Enter empties an Input unless the hook draws a different value, so each submit remounts it.
         <Input
-          key={fieldKey(p.form, "title")}
+          key={hit}
           value={p.form?.title ?? ""}
           // Two rows: a field of one shows a long title's start and hides what is typed past
           // it (Claude Code 2.1.325); one of several keeps the cursor in sight.
@@ -138,7 +149,7 @@ export function terminalPane(k: Els, p: PaneProps): { tree: JSX.Element; drawn: 
           // The buttons under the draft say what Enter does; the field's own hint stays short.
           submitLabel=""
           autoFocus
-          onSubmit={(text) => p.send({ text }, drawn)}
+          onSubmit={(text) => g.submit(hit, text)}
         />
       ),
     }),

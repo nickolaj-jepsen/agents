@@ -1,0 +1,23 @@
+{
+  "pi, claude-terminal": {
+    "type": "caption",
+    "rows": "cut",
+    "text": [
+      {
+        "text": "Drafting the issue",
+        "role": "dim"
+      }
+    ]
+  },
+  "vscode, desktop, mobile": {
+    "mark": "state:pending",
+    "type": "caption",
+    "rows": "wrap",
+    "text": [
+      {
+        "text": "Drafting the issue",
+        "role": "dim"
+      }
+    ]
+  }
+}

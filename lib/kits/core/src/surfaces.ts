@@ -54,10 +54,17 @@ export type CapValues = {
   textSize: boolean;
   /** A `Box` can be pressed. */
   boxPress: boolean;
+  /** The host can scroll to a keyed element inside a mod's AssistantMessage. */
+  transcriptKeyScroll: boolean;
   /** A `Button`'s label wraps onto a second line. */
   labelWraps: boolean;
   /** An `Image` is drawn. */
   images: boolean;
+  /**
+   * The drawing is laid out in cells: the kit sets every line to a width and cuts a row that
+   * does not fit. Otherwise the host lays out and wraps, and the kit sets no width.
+   */
+  cells: boolean;
 };
 export type CapName = keyof CapValues;
 
@@ -67,9 +74,9 @@ type Row = { readonly drawing: Drawing } & {
 
 const README = "lib/kits/README.md, What still differs between the clients";
 const CLAUDE_MD =
-  "skills/agent-plugin-dev/references/claude.md, VS Code quirks (extension 2.1.327)";
+  "49167447:skills/agent-plugin-dev/references/claude.md, Graphical surfaces (extension 2.1.327)";
 const TYPES =
-  "claude-code types, Elements (apps/*/dist/.claude-plugin/types/claude-code/index.d.ts, `pnpm drive types <app>`)";
+  "claude-code types, Elements (apps/*/.claude-types/claude-code/index.d.ts, `pnpm drive types <app>`)";
 const VSCODE = "VS Code extension 2.1.327";
 
 /**
@@ -108,7 +115,13 @@ export const surfaces = {
     textSize: fact(false, "the terminal has one size", TYPES + ", TextProps.size"),
     boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
     labelWraps: unverified(),
+    transcriptKeyScroll: unverified(),
     images: fact(false, "pi-tui has no image component", "pi-tui exports (no Image)"),
+    cells: fact(
+      true,
+      "the kit lays out every line in cells: a row is cut to its room, and there is no toolbar line or element for a host to draw",
+      README,
+    ),
   },
   "claude-terminal": {
     drawing: "terminal",
@@ -153,7 +166,13 @@ export const surfaces = {
     ),
     boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
     labelWraps: unverified(),
+    transcriptKeyScroll: unverified(),
     images: fact(true, "the terminal's table has an `Image`", TYPES + ", Elements.terminal"),
+    cells: fact(
+      true,
+      "the kit lays out every line in cells: a row is cut to its room, and there is no toolbar line or element for a host to draw",
+      README,
+    ),
   },
   vscode: {
     drawing: "gui",
@@ -191,14 +210,32 @@ export const surfaces = {
       "drawn as an image, so it cannot take theme colours: check a light theme",
       TYPES + ", SvgProps (the editor draws an image)",
     ),
-    textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
+    textSize: fact(
+      false,
+      "the webview draws a Text's colour, dimColor, bold, italic and underline, and no `size`: every Text is the body's size. A Markdown heading has real sizes",
+      "extension 2.1.330 webview/index.js, the Text style function (read; probed live: every role drew 13px)",
+    ),
     boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
     labelWraps: fact(
       false,
       "a Button's label never wraps; a long one overflows a narrow pane",
       CLAUDE_MD,
     ),
-    images: unverified("the table has no `Image`"),
+    transcriptKeyScroll: fact(
+      false,
+      "scrolling to a key inside a mod's AssistantMessage is denied or does nothing",
+      CLAUDE_MD,
+    ),
+    images: fact(
+      false,
+      "the table has no `Image`: the host shows an image itself, and a mod draws nothing there",
+      TYPES + ", Elements.vscode (`Image` is the terminal's alone)",
+    ),
+    cells: fact(
+      false,
+      "the host lays out and wraps; the kit sets no width in cells",
+      README + ", Draw on Claude Desktop and VS Code",
+    ),
   },
   desktop: {
     drawing: "gui",
@@ -208,8 +245,16 @@ export const surfaces = {
     window: unverified(),
     framesPane: unverified(),
     inputRows: unverified(),
-    input: unverified("the table has an `Input`"),
-    select: unverified("the table has a `Select`"),
+    input: fact(
+      true,
+      "the extension's table has an `Input`, as VS Code's does; never driven",
+      TYPES + ", Elements.desktop",
+    ),
+    select: fact(
+      true,
+      "the extension's table has a `Select`, as VS Code's does; never driven",
+      TYPES + ", Elements.desktop",
+    ),
     progress: unverified("the table has a `Progress`"),
     // The element types, not a session: the brief for the table asks for these per surface.
     svg: fact(
@@ -220,7 +265,21 @@ export const surfaces = {
     textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
     boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
     labelWraps: unverified(),
-    images: unverified("the table has no `Image`"),
+    transcriptKeyScroll: fact(
+      true,
+      "the engine supports targeting element keys; Answer already relies on it for Desktop review, not verified live",
+      TYPES + ", ui.scroll; apps/answer/src/claude.tsx, roundActions",
+    ),
+    images: fact(
+      false,
+      "the table has no `Image`: the host shows an image itself, and a mod draws nothing there",
+      TYPES + ", Elements.desktop (`Image` is the terminal's alone)",
+    ),
+    cells: fact(
+      false,
+      "the host lays out and wraps; the kit sets no width in cells",
+      README + ", Draw on Claude Desktop and VS Code",
+    ),
   },
   mobile: {
     drawing: "gui",
@@ -249,7 +308,17 @@ export const surfaces = {
     textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
     boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
     labelWraps: unverified(),
-    images: unverified("the table has no `Image`"),
+    transcriptKeyScroll: unverified(),
+    images: fact(
+      false,
+      "the table has no `Image`: the host shows an image itself, and a mod draws nothing there",
+      TYPES + ", Elements.mobile (`Image` is the terminal's alone)",
+    ),
+    cells: fact(
+      false,
+      "the host lays out and wraps; the kit sets no width in cells",
+      README + ", Draw on Claude Desktop and VS Code",
+    ),
   },
 } as const satisfies Record<Surface, Row>;
 

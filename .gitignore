@@ -1,4 +1,6 @@
 node_modules/
+# Stable copy of the API types from `drive types`, separate from a live mod's dist.
+.claude-types/
 # Build output (`pnpm turbo run build`); it holds the mod API types Claude Code lays when it loads a mod from its folder.
 apps/*/dist/
 lib/kits/catalog/dist/

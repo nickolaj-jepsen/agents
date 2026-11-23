@@ -113,6 +113,13 @@ describe("the lifecycle is drive's", () => {
     });
   });
 
+  it("rejects invalid names before looking up a record", () => {
+    const read = () => {
+      throw new Error("should not read a record");
+    };
+    expect(() => planTerminal(["--session=../b", "text"], "default", read)).toThrow(/use up to 24/);
+  });
+
   it("refuses a session of the CLI's own, where its options start", () => {
     expect(() => plan(["text", "--session", "other"], parked())).toThrow(
       /--session.*belongs before the command/,

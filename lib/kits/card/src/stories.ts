@@ -1,18 +1,7 @@
-/** The question card's stories. No host imports. */
-import { blank } from "@agents/kit-core/lines.ts";
-import type { KitStory } from "@agents/kit-core/stories.ts";
-import type { CardState, ChoiceList, ChoiceListItem, ChoiceListState } from "./contract.ts";
-import {
-  choice,
-  choiceList,
-  closing,
-  heading,
-  note,
-  rail,
-  sections,
-  steps,
-  summary,
-} from "./terminal.ts";
+/** The question card's stories: the model as data, and what each drawing adds. No host imports. */
+import type { StageExt, Story } from "@agents/kit-core/stories.ts";
+import type { Choice, ChoiceList, ChoiceListItem, ChoiceListState } from "./contract.ts";
+import type { CardModel } from "./model.ts";
 
 export const QUESTION =
   "How much of each session should be kept, once the run that made it is over?";
@@ -45,63 +34,100 @@ export const WRITTEN = {
   note: "Rotate the credentials first.",
 };
 
+/** The answers as the model's rows. */
+const choicesOf = (items: readonly ChoiceListItem[], rest: Partial<Choice> = {}): Choice[] =>
+  items.map((item) => ({
+    key: item.key,
+    text: item.text,
+    detail: item.detail,
+    literal: item.writeIn,
+    ...rest,
+  }));
+
+/** What the terminal adds: the card's state, and the stage. `chosen` and `focus` are rows' places. */
+export type TerminalExt = StageExt & {
+  active?: true;
+  chosen?: readonly number[];
+  focus?: number;
+  /** Two cards behind their rails: the keyboard's, and one that has its answer. */
+  cards?: readonly { state: "active" | "answered"; label: string; chosen: number; note: string }[];
+};
+
 const card = "card";
 
-export const cardStories: KitStory[] = [
+export const cardStories: Story<CardModel, TerminalExt>[] = [
   {
     component: card,
     state: "choices",
-    gui: true,
     about: "One of many: the chosen answer in the accent with a filled mark",
     settings: "choiceList({chosen: [1]})",
-    extreme: true,
-    lines: (width) => choiceList({ items: ITEMS, chosen: [1] }, width),
+    model: { choices: choicesOf(ITEMS).map((c, i) => ({ ...c, chosen: i === 1 })) },
+    ext: { terminal: { extreme: true, chosen: [1] } },
   },
   {
     component: card,
     state: "checkboxes",
-    gui: true,
     about: "Several of many, the keyboard on an answer that is not chosen",
     settings: "choiceList({multiple: true, chosen: [0, 2], focus: 1})",
-    lines: (width) => choiceList({ items: ITEMS, multiple: true, chosen: [0, 2], focus: 1 }, width),
+    model: {
+      choices: choicesOf(ITEMS, { multiple: true }).map((c, i) => ({
+        ...c,
+        chosen: i === 0 || i === 2,
+        focused: i === 1,
+      })),
+    },
+    ext: { terminal: { chosen: [0, 2], focus: 1 } },
   },
   {
     component: card,
     state: "live",
-    gui: true,
     about: "Keys and clicks pick; the keyboard's row has a neutral pointer and a bold label",
     settings: "choiceList({chosen: [0], focus: 0}), picked by letter, click or the focused row",
     isLive: true,
-    lines: (width) => choiceList(liveChoices, width),
+    model: {
+      choices: choicesOf(liveChoices.items).map((c, i) => ({
+        ...c,
+        chosen: i === 0,
+        focused: i === 0,
+      })),
+    },
+    ext: { terminal: { active: true, chosen: [0], focus: 0 } },
   },
   {
     component: card,
     state: "form",
-    gui: true,
     about: "A question in a form: its label, then the answers and the note under them",
     settings: "sections(heading, [choiceList({focus: 0}), note])",
-    lines: (width) =>
-      sections(heading({ active: true, label: "Q1", title: QUESTION }, width), [
-        ...choiceList({ items: ITEMS, active: true, chosen: [], focus: 0 }, width),
-        ...note({ active: true, value: "" }, width),
-      ]),
+    model: {
+      heading: { label: "Q1", title: QUESTION, answered: true },
+      choices: choicesOf(ITEMS).map((c, i) =>
+        i === 0 ? { ...c, aside: "Recommended", chosen: true } : c,
+      ),
+      note: { value: "" },
+    },
+    ext: { terminal: { active: true, chosen: [], focus: 0 } },
   },
   {
     component: card,
     state: "fields",
-    gui: true,
     about:
       "A write-in and a note written in place: one field each, or one per line where the host's field is one line",
     settings: "sections(choice({literal, chosen}), note({value}))",
-    lines: (width) =>
-      sections(
-        [],
-        choice(
-          { key: "D", text: WRITTEN.answer, literal: true, chosen: true, active: true },
-          width,
-        ),
-        note({ active: true, value: WRITTEN.note }, width),
-      ),
+    model: {
+      choices: [
+        {
+          key: "D",
+          text: WRITTEN.answer,
+          literal: true,
+          chosen: true,
+          hit: "write",
+          lines: 2,
+          invitation: "Type an answer",
+        },
+      ],
+      note: { value: WRITTEN.note, hit: "note", lines: 2, invitation: "Type a note" },
+    },
+    ext: { terminal: { active: true } },
   },
   {
     component: card,
@@ -109,99 +135,58 @@ export const cardStories: KitStory[] = [
     about:
       "The same cards behind their rails: the keyboard on one, a green rail by an answered one",
     settings: "rail(sections(heading({focused}), choice..., note))",
-    lines: (width) => {
-      const inner = width - 3;
-      const one = (
-        state: { active?: boolean; answered?: boolean },
-        label: string,
-        chosen: number,
-        noted: string,
-      ) =>
-        sections(heading({ ...state, focused: state.active, label, title: QUESTION }, inner), [
-          // A pane on a narrow terminal shows few rows, so the answers here are short ones.
-          ...[ITEMS[0], ITEMS[2], ITEMS[3]].flatMap((item, i) =>
-            item
-              ? choice(
-                  {
-                    ...state,
-                    key: "ABC"[i] ?? "",
-                    text: item.text,
-                    chosen: i === chosen,
-                    literal: item.writeIn,
-                  },
-                  inner,
-                )
-              : [],
-          ),
-          ...note({ ...state, value: noted }, inner),
-        ]).map((row) => rail(state, row));
-      return [
-        ...one({ active: true }, "Q1", -1, ""),
-        blank(),
-        ...one({ answered: true }, "Q2", 1, "Keep local copies as well"),
-      ];
+    model: {
+      heading: { title: QUESTION },
+      choices: choicesOf([ITEMS[0], ITEMS[2], ITEMS[3]].flatMap((i) => (i ? [i] : []))),
+    },
+    ext: {
+      terminal: {
+        cards: [
+          { state: "active", label: "Q1", chosen: -1, note: "" },
+          { state: "answered", label: "Q2", chosen: 1, note: "Keep local copies as well" },
+        ],
+      },
     },
   },
   {
     component: card,
     state: "closing",
-    gui: true,
     about:
       "The row after a round's last card: the count and Fill prompt, the round's note, and a sent round",
     settings: "rail(closing({answered, total, focused, canFill, hits}), note), closing({sent})",
-    lines: (width) => {
-      const inner = width - 3;
-      const hits = { count: "count", fill: "fill" };
-      const behind = (state: CardState, rows: ReturnType<typeof closing>) =>
-        rows.map((row) => rail(state, row));
-      return [
-        ...behind({}, closing({ answered: 0, total: 3, hits }, inner)),
-        blank(),
-        ...behind({ active: true }, [
-          ...closing({ answered: 2, total: 3, focused: true, canFill: true, hits }, inner),
-          ...note({ active: true, value: "Ship the 東京 cluster last.", hit: "note" }, inner),
-        ]),
-        blank(),
-        ...behind({ answered: true }, closing({ answered: 3, total: 3, sent: true }, inner)),
-      ];
+    model: {
+      closing: { answered: 2, total: 3, canFill: true, hits: { count: "count", fill: "fill" } },
+      note: { value: "Ship the 東京 cluster last.", hit: "note" },
     },
   },
   {
     component: card,
     state: "review",
-    gui: true,
     about: "The steps of several questions on one row, then each one's answers and note",
     settings: "steps([...]), summary({label, title, values, note})",
-    extreme: true,
-    lines: (width) => {
-      const row = steps(
-        [
-          { short: "1", name: "Storage", done: true, hit: "step:0" },
-          { short: "2", name: "Retention", done: true, hovered: true, hit: "step:1" },
-          { short: "Review", current: true, hit: "step:2" },
-        ],
-        width,
-      );
-      return sections(
-        row ? [row] : [],
-        summary(
-          { label: "1", title: "Storage", values: [{ text: "Postgres beside the app" }] },
-          width,
-        ),
-        summary(
-          {
-            label: "2",
-            title: "Retention",
-            values: [
-              { text: "The last turn only" },
-              { text: "Until the disk fills", literal: true },
-            ],
-            note: "履歴は保存されますが、古い出力は要約されます。",
-          },
-          width,
-        ),
-        summary({ label: "3", title: "Backups", values: [], hovered: true }, width),
-      );
+    model: {
+      steps: [
+        { short: "1", name: "Storage", done: true, hit: "step:0" },
+        { short: "2", name: "Retention", done: true, hovered: true, hit: "step:1" },
+        { short: "Review", current: true, hit: "step:2" },
+      ],
+      summaries: [
+        {
+          label: "1",
+          title: "Storage",
+          values: [{ text: "Postgres beside the app" }],
+          hit: "summary:0",
+        },
+        {
+          label: "2",
+          title: "Retention",
+          values: [{ text: "The last turn only" }, { text: "Until the disk fills", literal: true }],
+          note: "履歴は保存されますが、古い出力は要約されます。",
+          hit: "summary:1",
+        },
+        { label: "3", title: "Backups", values: [], hovered: true, hit: "summary:2" },
+      ],
     },
+    ext: { terminal: { extreme: true } },
   },
 ];

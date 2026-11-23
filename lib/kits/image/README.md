@@ -6,7 +6,7 @@ Draws PNG images at their aspect ratios, with optional file links and a caption.
 import { imageGallery } from "@agents/kit-image/terminal.ts";
 ```
 
-`src/terminal.ts` draws the component as styled lines for a width, `src/contract.ts` has its props and results, and `src/stories.ts` one sample per state. It has no graphical drawing: the graphical surfaces draw an image themselves, from the `image` slot of a line. `e2e/` plays the stories in pi and Claude Code and holds their snapshots.
+`src/terminal.ts` draws the component as styled lines for a width, `src/contract.ts` has its model and the props the terminal is given, and `src/stories.ts` one sample per state as data. It has no graphical drawing, and its manifest says why (`parts.imageGallery.none.gui`): the graphical surfaces draw an image themselves, from the `image` slot of a line. The component is on `schema: 2` (see the [kit guide](../README.md#schema-2-one-api-five-surfaces)). `e2e/` plays the stories in pi and Claude Code and holds their snapshots.
 
 ```bash
 pnpm drive ls kit-image                                    # the stories

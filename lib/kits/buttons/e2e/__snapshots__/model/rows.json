@@ -1,0 +1,53 @@
+{
+  "pi, claude-terminal": {
+    "lead": "",
+    "rows": [
+      [
+        {
+          "label": "Create",
+          "hit": "create",
+          "key": "↵",
+          "tone": "lit"
+        },
+        {
+          "label": "Create & open",
+          "hit": "create-open",
+          "key": "[o]",
+          "tone": "plain"
+        }
+      ],
+      [
+        {
+          "label": "Discard",
+          "hit": "discard",
+          "key": "[d]",
+          "tone": "plain"
+        }
+      ]
+    ]
+  },
+  "vscode, desktop, mobile": {
+    "lead": "",
+    "rows": [
+      [
+        {
+          "label": "Create",
+          "hit": "create",
+          "tone": "lit"
+        },
+        {
+          "label": "Create & open",
+          "hit": "create-open",
+          "tone": "quiet"
+        }
+      ],
+      [
+        {
+          "label": "Discard",
+          "hit": "discard",
+          "tone": "quiet"
+        }
+      ]
+    ]
+  }
+}

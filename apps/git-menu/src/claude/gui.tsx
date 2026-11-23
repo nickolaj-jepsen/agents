@@ -23,22 +23,19 @@ const says = (m: Menu): string | undefined => {
  * @param isAll Whether the rest of a long list is shown.
  */
 export function guiMenu(g: Gui, m: Menu | null, isAll: boolean): JSX.Element {
-  if (!m) return emptyState(g, "No menu open.");
+  if (!m) return emptyState(g, { text: "No menu open." });
   const detail = detailOf(m);
   const words = says(m);
-  return captionFrame(
-    g,
-    { title: m.title, caption: detail ? [span(detail, { role: "dim" })] : undefined },
-    {
-      hostTitle: m.title,
-      body:
-        words !== undefined
-          ? emptyState(g, words)
-          : list(
-              g,
-              { groups: [{ label: "", rows: menuRows(m.rows ?? []) }], rail: false },
-              { more: { isAll, hit: MORE } },
-            ),
-    },
-  );
+  return captionFrame(g, {
+    title: m.title,
+    caption: detail ? [span(detail, { role: "dim" })] : undefined,
+    hostTitle: m.title,
+    body:
+      words !== undefined
+        ? emptyState(g, { text: words })
+        : list(g, {
+            groups: [{ label: "", rows: menuRows(m.rows ?? []) }],
+            more: { isAll, hit: MORE },
+          }),
+  });
 }

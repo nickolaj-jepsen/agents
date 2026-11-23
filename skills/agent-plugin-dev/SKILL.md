@@ -33,7 +33,7 @@ If a plugin does nothing, look at the running session before guessing. In pi, `p
 ## Before handing back
 
 1. Add or use an `extreme: true` scenario with long text, wide characters and more items than fit. Check empty and error states as well.
-2. Run `pnpm drive sweep` and open each PNG (70×24, 112×32, 160×45, 240×60). Report what wraps or is cut, whether rows and columns stay aligned, whether the width stays bounded, and which hints and controls remain at 70 columns.
+2. Run `pnpm drive sweep --out <review-dir>` and open each PNG (70×24, 112×32, 160×45, 240×60). Report what wraps or is cut, whether rows and columns stay aligned, whether the width stays bounded, and which hints and controls remain at 70 columns.
 3. Try every visible key and click target with both an empty prompt and a draft. Run the plugin's scenarios and inspect any snapshot diff you accept.
 4. For a Claude mod, mount the states on `desktop` and `vscode` in mod tests, exercise keyed actions, and run `expectNative`. In VS Code, click the actions and inspect each state at 420×800, 420 wide at full height, and 1280×720. Use the [graphical screen procedure](references/claude.md#looking-at-a-graphical-screen). Report anything you could not check on Desktop.
 

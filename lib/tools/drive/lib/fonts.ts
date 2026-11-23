@@ -5,7 +5,15 @@
  * `HOME` to the daemon and test worker when they start, never switching it during capture.
  */
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readdirSync, symlinkSync, existsSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  symlinkSync,
+} from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -31,10 +39,15 @@ let fontHome: string | undefined;
 /** A `HOME` whose `.local/share/fonts` holds the wanted fonts; undefined when fontconfig has none. */
 export function fakeFontHome(): string | undefined {
   if (fontHome) return fontHome;
-  const home = join(cacheRoot(), "fonthome");
-  const dir = join(home, ".local", "share", "fonts");
-  mkdirSync(dir, { recursive: true });
-  if (readdirSync(dir).length === 0) {
+  const root = cacheRoot();
+  // The old cache could be partially populated by a writer; only use atomically published homes.
+  const home = join(root, "fonthome-v2");
+  if (existsSync(home)) return (fontHome = home);
+  mkdirSync(root, { recursive: true });
+  const stage = mkdtempSync(join(root, "fonts-"));
+  try {
+    const dir = join(stage, ".local", "share", "fonts");
+    mkdirSync(dir, { recursive: true });
     for (const family of WANTED) {
       let out = "";
       try {
@@ -50,8 +63,16 @@ export function fakeFontHome(): string | undefined {
         if (!existsSync(target)) symlinkSync(file, target);
       }
     }
+    if (readdirSync(dir).length === 0) return undefined;
+    try {
+      renameSync(stage, home);
+    } catch (error) {
+      // Another writer finished first. Its non-empty directory cannot be replaced by rename.
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code !== "EEXIST" && code !== "ENOTEMPTY") throw error;
+    }
+    return (fontHome = home);
+  } finally {
+    rmSync(stage, { recursive: true, force: true });
   }
-  if (readdirSync(dir).length === 0) return undefined;
-  fontHome = home;
-  return home;
 }

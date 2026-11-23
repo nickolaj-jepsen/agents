@@ -1,0 +1,22 @@
+{
+  "pi, claude-terminal": {
+    "type": "caption",
+    "rows": "wrap",
+    "text": [
+      {
+        "text": "No doc suggestions yet. They appear here as an agent finds a doc that is out of date.",
+        "role": "dim"
+      }
+    ]
+  },
+  "vscode, desktop, mobile": {
+    "type": "caption",
+    "rows": "wrap",
+    "text": [
+      {
+        "text": "Nothing to review. Suggestions appear here as an agent finds a doc that is out of date.",
+        "role": "dim"
+      }
+    ]
+  }
+}

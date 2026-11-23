@@ -3,7 +3,7 @@
  * for the screen to settle on it and leaves evidence when it differs; media takes the screen as it
  * is, whatever the run's own flags say, and fails only when the screen or its picture cannot be had.
  */
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, expect, it } from "vitest";
@@ -18,7 +18,7 @@ writeFileSync(join(snapDir, "look@70x24.snap"), "the stored screen");
 const previousRoot = process.env.AGENTS_DRIVE_ROOT;
 process.env.AGENTS_DRIVE_ROOT = root;
 
-const { capture, captureMedia, gateCapture } = await import("./check.ts");
+const { actualOf, capture, captureMedia, gateCapture, settleCapture } = await import("./check.ts");
 const { setOptions } = await import("./options.ts");
 const { resolveScenario } = await import("./scenario.ts");
 
@@ -36,14 +36,16 @@ const set: ScenarioSet = {
 const look: Resolved = resolveScenario(set, "look");
 
 /** A session whose screen is `screen`, and which records the pictures drawn of it. */
-function session(screen: string, png?: (path: string) => void): Session {
-  const size: Size = [70, 24];
+function session(screen: string | ((size: Size) => string), png?: (path: string) => void): Session {
+  let size: Size = [70, 24];
   return {
     harness: "pi",
     waitHintsGone: async () => undefined,
-    size: async () => size,
-    resize: async () => undefined,
-    snapshot: async () => screen,
+    size: async () => ({ cols: size[0], rows: size[1] }),
+    resize: async (cols: number, rows: number) => {
+      size = [cols, rows];
+    },
+    snapshot: async () => (typeof screen === "string" ? screen : screen(size)),
     png: async (path: string) => {
       if (png) png(path);
       return path;
@@ -51,21 +53,38 @@ function session(screen: string, png?: (path: string) => void): Session {
   } as unknown as Session;
 }
 
-it("captures media as the screen is now, whatever the test flags say", async () => {
-  // `--png --update` would compare nothing and draw everything; media must do the same because it
-  // is media, not because a test-only flag was set.
-  setOptions({ png: false, update: true });
-  const drawn: string[] = [];
+it("captures each media size privately, where a passing gate cannot take its picture", async () => {
+  setOptions({ png: false, update: false });
+  const [gate] = await capture(session("the stored screen"), look);
+  const stage = join(root, "media");
   const captures = await captureMedia(
-    session("the screen now", (p) => drawn.push(p)),
-    look,
+    session(
+      (size) => `screen at ${size.join("x")}`,
+      (png) => {
+        mkdirSync(join(stage, "pi"), { recursive: true });
+        writeFileSync(png, "recording");
+        // This runs while the picture is waiting to be cropped.
+        expect(settleCapture(gate!)).toBeUndefined();
+      },
+    ),
+    {
+      ...look,
+      sizes: [
+        [70, 24],
+        [112, 32],
+      ],
+    },
+    stage,
   );
 
-  expect(captures).toHaveLength(1);
-  expect(captures[0]).toMatchObject({ actual: "the screen now", expected: undefined });
-  // The picture is the evidence recording crops, and no snapshot was accepted.
-  expect(drawn).toEqual([join(snapDir, "look@70x24.actual.png")]);
-  expect(readFileSync(join(snapDir, "look@70x24.snap"), "utf8")).toBe("the stored screen");
+  expect(captures.map(({ actual, png }) => [actual, png])).toEqual([
+    ["screen at 70x24", join(stage, "pi", "look@70x24.png")],
+    ["screen at 112x32", join(stage, "pi", "look@112x32.png")],
+  ]);
+  for (const { png } of captures) expect(readFileSync(png, "utf8")).toBe("recording");
+  expect(existsSync(gate!.png)).toBe(false);
+  expect(existsSync(actualOf(gate!.png))).toBe(false);
+  expect(readFileSync(gate!.snap, "utf8")).toBe("the stored screen");
 });
 
 it("fails media capture when there is no picture", async () => {
@@ -73,7 +92,7 @@ it("fails media capture when there is no picture", async () => {
   const broken = session("the screen now", () => {
     throw new Error("no picture");
   });
-  await expect(captureMedia(broken, look)).rejects.toThrow(/no picture/);
+  await expect(captureMedia(broken, look, join(root, "media"))).rejects.toThrow(/no picture/);
 });
 
 it("still compares the gate's capture with the stored snapshot, and acceptance stays put", async () => {

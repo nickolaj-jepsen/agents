@@ -103,10 +103,15 @@ export default vscodeScenarios({
       steps: [...drafted, { click: "Edit" }, { wait: "Done" }],
     },
     priority: {
-      about: "the priority pressed: its Select in place of the value, with Done",
+      about: "the priority's Select changed in place: High, its icon after it; nothing else moves",
       setup: repo,
       start: start(draft()),
-      steps: [...drafted, { click: "Medium" }, { wait: "Done" }],
+      // Selects, in order: team, status, priority, project.
+      steps: [
+        ...drafted,
+        { run: async (v) => void (await v.evalInView(pick(2, "2"))) },
+        { sleep: 1500 },
+      ],
     },
     team: {
       about: "another team picked: its statuses and projects load, its labels stay",
@@ -114,18 +119,16 @@ export default vscodeScenarios({
       start: start(draft({ labels: ["Bug", "Feature", "reliability"] })),
       steps: [
         ...drafted,
-        { click: "Platform (PLT)" },
-        { wait: "Done" },
         // The Select is a native one: set it and raise the change the page listens for.
         { run: async (v) => void (await v.evalInView(pick(0, "MOB"))) },
         { sleep: 2000 },
       ],
     },
     "labels-edit": {
-      about: "the labels pressed: each turned off or on, the field that finds another",
+      about: "the labels are chips at rest: one turned off stays, to be turned back on",
       setup: repo,
       start: start(draft({ labels: ["Bug", "Feature", "reliability"] })),
-      steps: [...drafted, { click: "Bug, Feature, Area/reliability" }, { wait: "Done" }],
+      steps: [...drafted, { click: "Feature" }, { sleep: 1500 }],
     },
     "label-search": {
       about: "a label being found: what is typed offers the labels that match, a press adds one",
@@ -133,9 +136,7 @@ export default vscodeScenarios({
       start: start(draft()),
       steps: [
         ...drafted,
-        { click: "Bug" },
-        { wait: "Done" },
-        { run: async (v) => void (await v.evalInView(fill("Find a label to add", "per"))) },
+        { run: async (v) => void (await v.evalInView(fill("Find one to add", "per"))) },
         { wait: "Area/performance" },
       ],
     },

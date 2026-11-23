@@ -17,7 +17,7 @@ import {
   type Style,
 } from "@agents/kit-core/lines.ts";
 import { tokens } from "@agents/kit-core/tokens.ts";
-import type { ProseOptions } from "./contract.ts";
+import type { ProseTerminal } from "./contract.ts";
 
 const GAP = " ".repeat(tokens.gutter);
 
@@ -75,7 +75,7 @@ function table(rows: string[], width: number, base: Style): Line[] {
  * nested), headings, quotes, rules, fenced code and tables, with inline Markdown in each. One
  * blank row between blocks, none between the items of a list or the lines of a paragraph.
  */
-export function prose(text: string, width: number, { isDim = false }: ProseOptions = {}): Line[] {
+export function prose({ text, width, isDim = false }: ProseTerminal): Line[] {
   const base: Style = isDim ? { role: "dim" } : {};
   const quiet: Style = { role: "dim" };
   const out: Line[] = [];

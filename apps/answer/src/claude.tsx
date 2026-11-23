@@ -23,6 +23,7 @@ import {
   entryLetter,
   writeLetter,
   writerBand,
+  fieldEvents,
   type Els,
   type RoundActions,
   type Writing,
@@ -32,20 +33,24 @@ import type { Button } from "@agents/kit-buttons/contract.ts";
 import { buttonRow } from "@agents/kit-buttons/gui.tsx";
 import { statusBand } from "@agents/kit-band/gui.tsx";
 import {
-  choice as choiceGui,
+  choices as choicesGui,
   heading as headingGui,
   note as noteGui,
   sections,
   steps,
   summary as summaryGui,
-  type CardGuiOptions,
 } from "@agents/kit-card/gui.tsx";
+import type { Choice } from "@agents/kit-card/contract.ts";
 import { frameTop } from "@agents/kit-frame/gui.tsx";
 import { keyAddress } from "@agents/kit-core/paint/claude.tsx";
 import { column, type Gui } from "@agents/kit-core/paint/gui.tsx";
 import { stack } from "@agents/kit-core/paint/claude.tsx";
 import { forSurface, guiOf, onlyOwnRows } from "@agents/kit-core/paint/host.tsx";
 import { prose as proseGui } from "@agents/kit-prose/gui.tsx";
+import { ctxOf, holds, surfaces } from "@agents/kit-core/surfaces.ts";
+
+const singleLineEditor = (surface: RoundEditor["surface"]) =>
+  surface !== "terminal" && holds(surface, "inputRows:1");
 
 const PLUGIN = "answer";
 const WRITE = "write";
@@ -103,7 +108,6 @@ const over = (c: Current | null, held: Held): Current => {
     held,
     view,
     editing: isSameItem ? (c?.editing ?? null) : null,
-    isBodyOpen: isSameItem ? (c?.isBodyOpen ?? false) : false,
     isOpen: isSameForm ? (c?.isOpen ?? false) : false,
     filled: isSameForm ? (c?.filled ?? null) : null,
     filledRound: isSameForm ? c?.filledRound : undefined,
@@ -673,7 +677,7 @@ function roundActions(
         if (c?.transcript !== id) return;
         if (index === c.view.count) return toggleReview($, id, surface);
         await moveRound($, id, surface, index);
-        if (c.view.isReview && surface === "desktop")
+        if (c.view.isReview && surface !== "terminal" && holds(surface, "transcriptKeyScroll"))
           await $.ui
             .scroll({ to: { key: `question-${index}-card` }, block: "start" })
             .catch(() => undefined);
@@ -798,17 +802,17 @@ function writingOf($: EngineInterface, c: Current): Writing | null {
   const note = editing === NOTE;
   const saved = savedField(c);
   const value = () => (typed?.field === editing ? typed.text : saved);
-  const isCode = writer.surface === "vscode";
+  const isSingleLine = singleLineEditor(writer.surface);
   /** What the field now holds, once `line` of it changed: the text whole. */
   const joined = (text: string, line?: number) =>
     line === undefined ? text : withLine(value(), line, text);
-  const lines = isCode ? (writer.lines ?? saved.split("\n").length) : undefined;
+  const lines = isSingleLine ? (writer.lines ?? saved.split("\n").length) : undefined;
   const addLine = () =>
     edit($, (was) =>
       was.transcript === id &&
       was.view.step === view.step &&
       was.editing === editing &&
-      was.writer?.surface === "vscode"
+      was.writer?.surface === writer.surface
         ? {
             ...was,
             writer: { ...was.writer, lines: (was.writer.lines ?? saved.split("\n").length) + 1 },
@@ -820,23 +824,23 @@ function writingOf($: EngineInterface, c: Current): Writing | null {
     field: editing,
     value: value(),
     hit: hitOf(editing),
-    options: {
-      onInput: (_hit, text, line) => {
-        typed = { field: editing, text: joined(text, line) };
-      },
-      onSubmit: (_hit, text, line) => finishWriting($, id, joined(text, line)),
+    onInput: (text, line) => {
+      typed = { field: editing, text: joined(text, line) };
+    },
+    onSubmit: (text, line) => finishWriting($, id, joined(text, line)),
+    props: {
       invitation: note
-        ? isCode
+        ? isSingleLine
           ? "Type a note"
           : "Add a condition or follow-up"
         : "Type an answer",
-      autoFocus: !isCode,
+      autoFocus: !isSingleLine,
       lines,
-      rows: isCode ? undefined : 3,
+      rows: isSingleLine ? undefined : 3,
     },
     buttons: [
       { hotkey: "", label: "Save", hit: "keep", isLit: true },
-      ...(isCode ? [{ hotkey: "", label: "Add line", hit: "add-line" }] : []),
+      ...(isSingleLine ? [{ hotkey: "", label: "Add line", hit: "add-line" }] : []),
       { hotkey: "", label: "Cancel", hit: "cancel" },
     ],
     act: {
@@ -866,6 +870,15 @@ function writerOf(
   const value = () => (typed?.field === editing ? typed.text : saved);
   const detail = view.item?.title ?? "Review answers";
   const answer = view.review[view.step];
+  const hit = hitOf(editing);
+  const field = ctxOf("claude-terminal", {
+    input: (address, text) => {
+      if (address === hit) typed = { field: editing, text };
+    },
+    submit: (address, text) => {
+      if (address === hit) return finishWriting($, id, text);
+    },
+  });
   return writerBand(els, columns, {
     caption: view.item ? `${view.item.label}  ${detail}` : detail,
     answer: answer?.isAnswered && note ? answer.shown : undefined,
@@ -878,10 +891,8 @@ function writerOf(
         value={value()}
         placeholder={note ? "Add a condition or follow-up" : "Write your own answer"}
         submitLabel="save"
-        onInput={(text) => {
-          typed = { field: editing, text };
-        }}
-        onSubmit={(text) => finishWriting($, id, text)}
+        onInput={(text) => field.input(hit, text)}
+        onSubmit={(text) => field.submit(hit, text)}
       />
     ),
     rows: Math.min(2, Math.max(1, maxRows - 4)),
@@ -945,8 +956,6 @@ async function pressForm($: EngineInterface, hit: string) {
       return go(() => ({ do: "review" }));
     case "next":
       return go((shown) => ({ do: "go", step: shown + 1 }));
-    case "more":
-      return edit($, (was) => ({ ...was, isBodyOpen: !was.isBodyOpen }));
     case "accept":
       return accept($);
     case "skip":
@@ -968,22 +977,23 @@ async function pressForm($: EngineInterface, hit: string) {
  * and note, or the review. A field is always drawn where it belongs, so a click lands in it: a
  * press that reveals one would leave the focus on the press.
  */
-function form($: EngineInterface, c: Current, g: Gui): JSX.Element {
+function form($: EngineInterface, c: Current, base: Gui): JSX.Element {
   const { view, editing } = c;
   const { item } = view;
   /** What a field of the form does with what is typed, and with Enter. */
-  const typing = (
-    name: typeof WRITE | typeof NOTE,
-    submit: (text: string) => unknown,
-  ): CardGuiOptions => ({
-    onInput: (_hit, text) => {
+  const typing = (name: typeof WRITE | typeof NOTE, submit: (text: string) => unknown) => ({
+    input: (text: string) => {
       typed = { field: name, text };
     },
-    onSubmit: (_hit, text) => submit(text),
+    submit,
+  });
+  const g = fieldEvents(base, {
+    [hitOf(WRITE)]: typing(WRITE, (text) => move($, { do: "write", text })),
+    [hitOf(NOTE)]: typing(NOTE, (text) => keepNote($, text)),
   });
   const head = sections(
     g,
-    frameTop(g, { title: view.title }, { actions: [{ hotkey: "", label: "close", hit: "quit" }] }),
+    frameTop(g, { title: view.title, actions: [{ hotkey: "", label: "close", hit: "quit" }] }),
     steps(g, [
       ...view.review.map((row, i) => ({
         short: row.label,
@@ -1003,63 +1013,54 @@ function form($: EngineInterface, c: Current, g: Gui): JSX.Element {
   });
 
   if (!item)
-    // Each question with its answer and note, a press to go back to it.
+    // Each question with its answer and note: its label in the label column. The steps above go back.
     return sections(
       g,
       head,
-      ...view.review.map((row, i) =>
+      ...view.review.map((row) =>
         summaryGui(g, {
           label: row.label,
           title: row.title,
           values: row.isAnswered ? [{ text: row.shown, literal: true }] : [],
           note: row.note,
-          hit: `item${i}`,
         }),
       ),
-      noteGui(
-        g,
-        { value: view.note, hit: hitOf(NOTE) },
-        {
-          ...typing(NOTE, (text) => keepNote($, text)),
-          invitation: "Add a note on the whole round",
-        },
-      ),
-      buttonRow(g, [act("send", "send", Boolean(view.reply)), act("fill", "fill the prompt")]),
+      noteGui(g, {
+        value: view.note,
+        hit: hitOf(NOTE),
+        invitation: "Add a note on the whole round",
+      }),
+      buttonRow(g, {
+        rows: [[act("send", "send", Boolean(view.reply)), act("fill", "fill the prompt")]],
+      }),
     );
 
   const several = item.isSeveral;
   const isChosen = item.entries.some((row) => row.isChosen);
   const isNoteShown = isChosen || editing === NOTE || !!item.note;
-  const choices = item.entries.map((row, k) => {
+  const answered = view.review[view.step]?.isAnswered;
+  const choices: Choice[] = item.entries.map((row, k) => {
     if (row.kind === "write")
       // The field itself is the row: a click in it is what opens it.
-      return choiceGui(
-        g,
-        {
-          key: "",
-          text: item.written || row.text,
-          literal: true,
-          chosen: row.isChosen,
-          hit: hitOf(WRITE),
-        },
-        {
-          ...typing(WRITE, (text) => move($, { do: "write", text })),
-          invitation: row.text,
-        },
-      );
-    const option = {
-      tag: entryLetter(row, k),
-      label: row.kind === "accept" ? row.text : row.text.replace(/^[A-H0-9]{1,2}[.)]\s*/, ""),
-    };
-    return choiceGui(g, {
-      key: option.tag,
-      text: option.label,
+      return {
+        key: "",
+        text: item.written || row.text,
+        literal: true,
+        chosen: row.isChosen,
+        answered,
+        hit: hitOf(WRITE),
+        invitation: row.text,
+      };
+    return {
+      key: entryLetter(row, k),
+      text: row.kind === "accept" ? row.text : row.text.replace(/^[A-H0-9]{1,2}[.)]\s*/, ""),
       aside: row.isRecommended ? "Recommended" : undefined,
       detail: row.detail || undefined,
       chosen: row.isChosen,
       multiple: several,
+      answered,
       hit: `e${k}`,
-    });
+    };
   });
   const body = [item.body, item.recommended ? `**Recommended:** ${item.recommended}` : ""]
     .filter(Boolean)
@@ -1068,27 +1069,28 @@ function form($: EngineInterface, c: Current, g: Gui): JSX.Element {
     g,
     head,
     headingGui(g, { title: item.title }),
-    body ? proseGui(g, body, { excerpt: { hit: "more", isOpen: c.isBodyOpen } }) : null,
-    sections(g, ...choices),
+    // Whole: the band scrolls, so the question is never cut behind a More.
+    body ? proseGui(g, { text: body }) : null,
+    choicesGui(g, choices),
     isNoteShown
-      ? noteGui(
-          g,
-          { value: item.note, hit: hitOf(NOTE) },
-          { ...typing(NOTE, (text) => keepNote($, text)), invitation: "Add a note" },
-        )
+      ? noteGui(g, { value: item.note, hit: hitOf(NOTE), invitation: "Add a note" })
       : null,
-    buttonRow(g, [
-      act("skip", "skip"),
-      ...(isChosen || isNoteShown ? [] : [act("note", "add note")]),
-      // One press takes a recommendation of several options; one is a press on its row.
-      ...(item.canAccept && item.accepts.includes(",")
-        ? [act("accept", `Take ${item.accepts}`)]
-        : []),
-      // The way on, with this one answered and every other too, is the review.
-      ...(isChosen || several
-        ? [act("next", view.answered === view.count ? "Review" : "Next", isChosen)]
-        : []),
-    ]),
+    buttonRow(g, {
+      rows: [
+        [
+          act("skip", "skip"),
+          ...(isChosen || isNoteShown ? [] : [act("note", "add note")]),
+          // One press takes a recommendation of several options; one is a press on its row.
+          ...(item.canAccept && item.accepts.includes(",")
+            ? [act("accept", `Take ${item.accepts}`)]
+            : []),
+          // The way on, with this one answered and every other too, is the review.
+          ...(isChosen || several
+            ? [act("next", view.answered === view.count ? "Review" : "Next", isChosen)]
+            : []),
+        ],
+      ],
+    }),
   );
 }
 
@@ -1132,7 +1134,13 @@ export const register: Register = (on) => {
   on("prompt.submit", async ($, e, next) => {
     const c = PERSON.has(e.origin.kind) ? await read($, current) : null;
     if (!c) return next(e);
-    if (c.transcript && c.writer?.surface === "vscode" && e.origin.kind === "composer")
+    // A one-line inline editor does not take focus automatically; the composer stays live.
+    if (
+      c.transcript &&
+      c.writer &&
+      singleLineEditor(c.writer.surface) &&
+      e.origin.kind === "composer"
+    )
       return { drop: "Save or cancel the edit on the question card first" };
     // A field asked for by a click waits for the keys the prompt has. The first Enter is kept
     // back, with its draft still in the prompt, so it cannot send an ordinary message instead;
@@ -1181,7 +1189,13 @@ export const register: Register = (on) => {
 
   on("ui.render", { component: "AssistantMessage" }, async ($, e, next) => {
     const surface = e.surface;
-    if (surface !== "terminal" && surface !== "desktop" && surface !== "vscode") return next(e);
+    if (
+      surface !== "terminal" &&
+      (!Object.hasOwn(surfaces, surface) ||
+        surfaces[surface].drawing !== "gui" ||
+        !holds(surface, "input"))
+    )
+      return next(e);
     if (e.props.isSummary) return next(e);
     const match = await findRound($, surface, e.requestId, e.props.text);
     if (!match) return next(e);
@@ -1221,7 +1235,7 @@ export const register: Register = (on) => {
         return column(
           g,
           { gap: "sm", isMeasured: true },
-          round.preamble ? proseGui(g, round.preamble) : null,
+          round.preamble ? proseGui(g, { text: round.preamble }) : null,
           nativeRound(g, held, active, actions, writing, !active && round.sent, round.epilogue),
         );
       },
@@ -1299,17 +1313,15 @@ export const register: Register = (on) => {
     if (c.isOpen) return form($, c, g);
     const { view } = c;
     // The form's one row: what there is to answer, and the button that opens it.
-    return statusBand(
-      g,
-      { text: view.title, hint: view.kind === "picks" ? "pick" : "answer", hit: "answer" },
-      {
-        text: view.answered
-          ? `${view.title}, ${view.answered} of ${view.count} answered`
-          : view.title,
-        icon: "question",
-        tone: "neutral",
-      },
-    );
+    return statusBand(g, {
+      text: view.title,
+      hint: view.kind === "picks" ? "pick" : "answer",
+      hit: "answer",
+      words: view.answered
+        ? `${view.title}, ${view.answered} of ${view.count} answered`
+        : view.title,
+      mark: "state:question",
+    });
   });
 
   // The open form has the band to itself: the other plugins' rows wait until it folds.

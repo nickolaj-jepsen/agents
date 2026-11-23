@@ -29,6 +29,7 @@ import {
 } from "@agents/kit-core/lines.ts";
 import { prose } from "@agents/kit-prose/terminal.ts";
 import { tokens } from "@agents/kit-core/tokens.ts";
+import type { MeaningName } from "@agents/kit-core/icons.ts";
 import { labelOf, PRIORITIES, type Form, type Option } from "./draft.ts";
 
 export const TITLE = "Linear draft";
@@ -185,43 +186,62 @@ const FIELD_ROWS = 12;
 
 // ---- fields
 
-const isMultiple = (id: FieldId) => id === "labels";
+/** The meaning icon of a priority, as the graphical grid draws it before its Select. */
+const PRIORITY_ICON: Record<string, MeaningName> = {
+  "0": "priority:none",
+  "1": "priority:urgent",
+  "2": "priority:high",
+  "3": "priority:medium",
+  "4": "priority:low",
+};
 
-const optionsOf = (f: Form, id: FieldId): Option[] =>
-  id === "team"
-    ? f.teams
-    : id === "status"
-      ? f.statuses
-      : id === "priority"
-        ? PRIORITIES
-        : id === "labels"
-          ? f.labels
-          : f.projects;
-
-const chosenOf = (f: Form, id: FieldId): string[] =>
-  id === "team"
-    ? [f.team]
-    : id === "status"
-      ? [f.state]
-      : id === "priority"
-        ? [String(f.priority)]
-        : id === "labels"
-          ? f.labelIds
-          : [f.project];
-
-export function fieldRows(f: Form, hover?: string): Field[] {
+/**
+ * The draft's fields as the kit's data: each value, its icon and its editor. The terminal opens
+ * an editor's options as lettered choices in place; a graphical surface draws it in the value's
+ * own cell. `labels` is what the label search holds, where a surface draws one.
+ */
+export function fieldRows(
+  f: Form,
+  hover?: string,
+  labels: { shown?: readonly string[]; query?: string; revision?: number } = {},
+): Field[] {
   const chosen = f.labels.filter((l) => f.labelIds.includes(l.value)).map((l) => l.label);
-  const values: Record<FieldId, { value: string; empty?: boolean }> = {
-    team: { value: labelOf(f.teams, f.team) ?? f.team },
-    status: { value: labelOf(f.statuses, f.state) ?? "" },
+  const withIcons = PRIORITIES.map((p) => ({ ...p, icon: PRIORITY_ICON[p.value] }));
+  const values: Record<FieldId, Pick<Field, "value" | "empty" | "icon" | "editor">> = {
+    team: {
+      value: labelOf(f.teams, f.team) ?? f.team,
+      editor: { kind: "one", options: f.teams, value: f.team },
+    },
+    status: {
+      value: labelOf(f.statuses, f.state) ?? "",
+      icon: "field:status",
+      editor: { kind: "one", options: f.statuses, value: f.state },
+    },
     priority: {
       value: labelOf(PRIORITIES, String(f.priority)) ?? "No priority",
       empty: f.priority === 0,
+      icon: PRIORITY_ICON[String(f.priority)],
+      editor: { kind: "one", options: withIcons, value: String(f.priority) },
     },
-    labels: { value: chosen.join(", ") || "None", empty: chosen.length === 0 },
-    project: f.project
-      ? { value: labelOf(f.projects, f.project) ?? "" }
-      : { value: "None", empty: true },
+    labels: {
+      value: chosen.join(", ") || "None",
+      empty: chosen.length === 0,
+      editor: {
+        kind: "many",
+        options: f.labels,
+        chosen: f.labelIds,
+        shown: labels.shown,
+        query: labels.query,
+        revision: labels.revision,
+      },
+    },
+    project: {
+      ...(f.project
+        ? { value: labelOf(f.projects, f.project) ?? "" }
+        : { value: "None", empty: true }),
+      icon: "field:project",
+      editor: { kind: "one", options: f.projects, value: f.project },
+    },
   };
   return FIELDS.map((id) => ({
     key: FIELD_KEY[id],
@@ -231,6 +251,21 @@ export function fieldRows(f: Form, hover?: string): Field[] {
     ...values[id],
   }));
 }
+
+const editorOf = (f: Form, id: FieldId) => fieldRows(f).find((r) => fieldOf(r.hit) === id)?.editor;
+
+/** Labels are the one field of several: its editor is `many`, which `fieldRows` builds. */
+const isMultiple = (id: FieldId) => id === "labels";
+
+const optionsOf = (f: Form, id: FieldId): readonly Option[] => {
+  const e = editorOf(f, id);
+  return e && e.kind !== "text" ? e.options : [];
+};
+
+const chosenOf = (f: Form, id: FieldId): readonly string[] => {
+  const e = editorOf(f, id);
+  return e?.kind === "one" ? [e.value] : e?.kind === "many" ? e.chosen : [];
+};
 
 /** The keys a list of choices has: a letter each while they last. */
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -303,7 +338,7 @@ const titleLines = (f: Form, room: Room, max: number, isActive?: boolean): Line[
 
 /** The description as it is filed, the line saying where it came from quiet under it. */
 function description(f: Form, room: Room): Line[] {
-  const text = prose(f.description, innerOf(room));
+  const text = prose({ text: f.description, width: innerOf(room) });
   // The session's id at its end is filed with it, for whoever reads the issue later.
   const source = f.source
     ? block(inline(f.source.replace(/ · session \S+$/, ""), { role: "dim" }), innerOf(room), {

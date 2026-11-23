@@ -1,0 +1,18 @@
+{
+  "pi, claude-terminal": {
+    "text": "docfix: the queue is stuck",
+    "buttons": [],
+    "layout": "line"
+  },
+  "vscode, desktop, mobile": {
+    "mark": "state:error",
+    "text": "docfix: the queue is stuck",
+    "buttons": [
+      {
+        "label": "Retry",
+        "hit": "retry"
+      }
+    ],
+    "layout": "line"
+  }
+}

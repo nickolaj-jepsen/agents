@@ -151,7 +151,7 @@ export function note(n: Note, width: number): Line[] {
   );
 }
 
-export const FILL_LABEL = "Fill prompt";
+const FILL_LABEL = "Fill prompt";
 
 /**
  * The row after a round's last card: the pointer column, then how many questions have an

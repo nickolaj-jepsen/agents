@@ -1,0 +1,62 @@
+{
+  "pi, claude-terminal": {
+    "layout": "rows",
+    "rows": [
+      {
+        "label": "Team",
+        "cell": {
+          "kind": "lettered",
+          "text": "Platform",
+          "empty": false
+        }
+      },
+      {
+        "label": "Status",
+        "cell": {
+          "kind": "lettered",
+          "text": "Todo",
+          "empty": false
+        }
+      },
+      {
+        "label": "Priority",
+        "cell": {
+          "kind": "lettered",
+          "text": "Medium",
+          "empty": false
+        }
+      }
+    ]
+  },
+  "vscode, desktop, mobile": {
+    "layout": "grid",
+    "rows": [
+      {
+        "label": "Team",
+        "cell": {
+          "kind": "text",
+          "text": "Platform",
+          "empty": false
+        }
+      },
+      {
+        "label": "Status",
+        "cell": {
+          "kind": "text",
+          "text": "Todo",
+          "empty": false,
+          "icon": "field:status"
+        }
+      },
+      {
+        "label": "Priority",
+        "cell": {
+          "kind": "text",
+          "text": "Medium",
+          "empty": false,
+          "icon": "priority:medium"
+        }
+      }
+    ]
+  }
+}

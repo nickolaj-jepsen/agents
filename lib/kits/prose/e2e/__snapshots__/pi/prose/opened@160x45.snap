@@ -1,0 +1,16 @@
+# kit/pi/prose/opened 160x45 @2,2 (72x6)
+Which database should the journal use?
+
+Postgres runs beside the app; SQLite is one file and needs nothing
+running.
+
+Recommended: Postgres, for the second writer.
+--- styles
+-
+-
+-
+-
+-
+1x12
+--- legend
+1 bold

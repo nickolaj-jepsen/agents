@@ -14,7 +14,7 @@ import { liveChoices, liveStart } from "@agents/kit-card/stories.ts";
 import { choiceList } from "@agents/kit-card/terminal.ts";
 import { paintLines, ring } from "@agents/kit-core/paint/claude.tsx";
 import { storyId } from "@agents/kit-core/stories.ts";
-import { kitStories } from "../registry.ts";
+import { catalogueStories } from "../registry.ts";
 
 /** The elements a story is painted with: what `$.ui.resolve(e)` answers. */
 export type Els = Parameters<typeof paintLines>[0];
@@ -44,7 +44,7 @@ export type LiveState = { state: unknown; set: (next: unknown) => unknown };
 type Render = (els: Els, width: number, live?: LiveState) => JSX.Element;
 
 export const renders: Record<string, Render> = Object.fromEntries(
-  kitStories.map((s): [string, Render] => [
+  catalogueStories.map((s): [string, Render] => [
     storyId(s),
     (els, width, live) => {
       const { Box } = els;

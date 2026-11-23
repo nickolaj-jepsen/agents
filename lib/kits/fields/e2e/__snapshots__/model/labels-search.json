@@ -1,0 +1,66 @@
+{
+  "pi, claude-terminal": {
+    "layout": "rows",
+    "rows": [
+      {
+        "label": "Labels",
+        "hit": "field:labels",
+        "cell": {
+          "kind": "lettered",
+          "text": "Bug",
+          "empty": false
+        }
+      }
+    ]
+  },
+  "vscode, desktop": {
+    "layout": "grid",
+    "rows": [
+      {
+        "label": "Labels",
+        "hit": "field:labels",
+        "cell": {
+          "kind": "chips",
+          "chips": [
+            {
+              "value": "bug",
+              "label": "Bug",
+              "on": true
+            },
+            {
+              "value": "docs",
+              "label": "Docs",
+              "on": false
+            }
+          ],
+          "query": "re",
+          "revision": 0,
+          "matches": [
+            {
+              "value": "area",
+              "label": "Area/reliability"
+            },
+            {
+              "value": "decide",
+              "label": "Needs a decision before the next release"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "mobile": {
+    "layout": "grid",
+    "rows": [
+      {
+        "label": "Labels",
+        "hit": "field:labels",
+        "cell": {
+          "kind": "text",
+          "text": "Bug",
+          "empty": false
+        }
+      }
+    ]
+  }
+}

@@ -1,10 +1,10 @@
 {
-  "extends": "./dist/.claude-plugin/types/tsconfig.json",
+  "extends": "./.claude-types/tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
     "incremental": true,
     "allowImportingTsExtensions": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsc-claude.tsbuildinfo"
   },
-  "include": ["src/claude.tsx", "src/claude", "src/adapters.tsx"]
+  "include": ["src/claude.tsx", "src/claude", "src/adapters.tsx", "src/exports.check.ts"]
 }

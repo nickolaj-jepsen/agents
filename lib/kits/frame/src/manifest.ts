@@ -1,78 +1,92 @@
-import { defineComponent, no, partial, yes } from "@agents/kit-core/manifest.ts";
+import { defineComponent } from "@agents/kit-core/manifest.ts";
+import { frameFields, frameNeeds } from "./contract.ts";
 
 export default defineComponent({
+  schema: 2,
   id: "caption-frame",
   name: "Captioned frame",
   purpose:
     "A form between two rules: a caption and Close in the top one, buttons above the bottom one.",
-  impl: {
-    pi: ["captionFrame", "frameTop", "captionRule", "captionParts"],
-    claude: ["captionFrame", "frameTop", "captionRule", "captionParts"],
-    gui: ["captionFrame", "frameTop", "captionRule", "captionParts"],
+  contract: { fields: frameFields, needs: frameNeeds },
+  parts: {
+    captionFrame: {},
+    frameTop: {},
+    captionRule: {},
+    captionParts: {},
+    captionRoom: {
+      drawings: ["terminal"],
+      none: { gui: "no rule has a room to measure: the host lays the toolbar line out" },
+    },
+    closeSpans: {
+      drawings: ["terminal"],
+      none: { gui: "Close is the host's; the question it asks is drawn by `frameTop`" },
+    },
   },
-  status: { pi: "system", claude: "system", gui: "system" },
-  source: "frame/src/terminal.ts",
   features: [
     {
       id: "title",
       label: "A title in the top rule, Close at the right",
+      fields: ["title", "body"],
       story: "caption-frame/title",
-      pi: yes(),
-      claude: yes(),
-      gui: partial(
-        "a semibold title on the pane's toolbar line, left out where it repeats the host's (`hostTitle`); Close is the host's own, drawn only as the question it asks",
-      ),
+    },
+    {
+      id: "layout",
+      label: "Laid out in cells, to the width it is given",
+      fields: ["width"],
+      needs: ["cells"],
+      story: "caption-frame/title",
     },
     {
       id: "rule",
       label:
         "The top rule alone, `captionRule`: a caption after its first cell, a short rule between its parts, a control at its end; what a detail's section rule is",
-      story: { pi: "item-detail/rule", claude: "item-detail/rule", gui: "caption-frame/section" },
-      pi: yes(),
-      claude: yes(),
-      gui: yes(
-        "a heading: its words, and its end control as a quiet Button at the far edge; no rule line under it, which `expectNative` forbids",
-      ),
+      fields: ["end"],
+      story: "caption-frame/section",
     },
     {
       id: "steps",
       label: "A caption drawn in the room the rule has, such as the steps of a form",
+      fields: ["caption"],
       story: "caption-frame/steps",
-      pi: yes(),
-      claude: yes(),
-      gui: partial(
-        "the caption's spans are text, not controls; pass `head` (such as the card's steps as Buttons) for controls",
-      ),
+      limits: {
+        vscode: "the caption's spans are text, not controls; pass `head` for controls",
+        desktop: "the caption's spans are text, not controls; pass `head` for controls",
+        mobile: "the caption's spans are text, not controls; pass `head` for controls",
+      },
     },
     {
       id: "confirm",
       label: "Close asks before it throws the answers away, in the place it stood",
+      fields: ["close"],
       story: "caption-frame/confirm",
-      pi: yes("Discard and Keep are controls with a `hit` each"),
-      claude: yes("Discard and Keep are controls with a `hit` each"),
-      gui: yes(
-        "the question with a Discard and a Keep Button, both quiet, as the terminal draws them, and the footer quieted too",
-      ),
+    },
+    {
+      id: "footer",
+      label: "Buttons above the bottom rule, and a notice above them",
+      fields: ["footer", "notice"],
+      story: "caption-frame/title",
+    },
+    {
+      id: "host-title",
+      label: "The pane's own title, left out where the head would repeat it",
+      fields: ["hostTitle"],
+      needs: ["cells:false"],
+      story: "caption-frame/title",
     },
     {
       id: "toolbar-actions",
-      label: "The pane's own action at the head's far edge, where a long body scrolls",
+      label:
+        "The pane's own action at the head's far edge, where a long body scrolls; or the head's words as elements",
+      fields: ["actions", "head"],
+      needs: ["cells:false"],
       story: "caption-frame/title",
-      pi: no("the buttons stand above the bottom rule"),
-      claude: no("the buttons stand above the bottom rule"),
-      gui: yes(
-        "the gui function's `actions` option: Buttons after Close's question, quiet but the lit one; none while Close asks",
-      ),
     },
     {
       id: "hover",
       label: "The pointer's control is shown",
+      needs: ["hover:kit|painter"],
       story: "caption-frame/title",
-      pi: yes("the control is bold in the text colour; `close.hover` names it"),
-      claude: yes(
-        "the control sits on a soft fill: the engine inverts it, and the painter swaps its colours first",
-      ),
-      gui: no("the host draws a Button's hover state itself"),
+      limits: { pi: "the control is bold in the text colour; `close.hover` names it" },
     },
   ],
-});
+} as const);

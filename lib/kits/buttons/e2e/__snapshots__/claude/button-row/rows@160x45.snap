@@ -1,0 +1,9 @@
+# kit/claude/button-row/rows 160x45 @89,1 (71x2)
+Create ↵  Create & open [o]
+Discard [d]
+--- styles
+1x6 . 2 .x16 2x3
+.x8 2x3
+--- legend
+1 fg=#d77757 bold
+2 fg=#999999

@@ -1,8 +1,9 @@
-/** Prose's stories. No host imports. */
-import type { KitStory } from "@agents/kit-core/stories.ts";
-import { scrolled } from "@agents/kit-core/lines.ts";
-import type { ProseOptions } from "./contract.ts";
-import { prose } from "./terminal.ts";
+/** Prose's stories: the model as data, and what each drawing adds. No host imports. */
+import type { GuiExt, StageExt, Story } from "@agents/kit-core/stories.ts";
+import type { ProseModel } from "./model.ts";
+
+/** What the terminal adds to the window story: the rows the room shows, and where it starts. */
+export type TerminalExt = StageExt & { window?: { rows: number; top: number } };
 
 // Short enough for the catalogue's stage in a Claude Code pane, which is a third of the rows.
 const ISSUE = [
@@ -27,15 +28,6 @@ const ISSUE = [
   "**Where:** `src/sync.sh`",
 ].join("\n");
 
-/** The props of the stories that have a graphical drawing too (`stories.gui.tsx`). */
-export const proseProps = {
-  blocks: { text: ISSUE, options: {} },
-  quiet: {
-    text: "Filed from `acme/sync-worker` on **fix/retry-after**.",
-    options: { isDim: true },
-  },
-} satisfies Record<string, { text: string; options: ProseOptions }>;
-
 /** A passage that gives way to what follows it, once folded and once opened. */
 const PASSAGE = [
   "Which database should the journal use?",
@@ -45,47 +37,47 @@ const PASSAGE = [
   "**Recommended:** Postgres, for the second writer.",
 ].join("\n");
 
-export const proseExcerptProps = {
-  folded: { text: PASSAGE, options: { excerpt: { hit: "more", isOpen: false } } },
-  opened: { text: PASSAGE, options: { excerpt: { hit: "more", isOpen: true } } },
-} satisfies Record<string, { text: string; options: ProseOptions }>;
+const DIALOG = { stage: "dialog" } as const;
 
-export const proseStories: KitStory[] = [
+export const proseStories: Story<ProseModel, TerminalExt, GuiExt>[] = [
   {
     component: "prose",
     state: "blocks",
     about: "A text of several blocks: paragraphs, a list, a table, code and a quote",
-    settings: "prose(text, width)",
-    extreme: true,
-    width: "dialog",
-    gui: true,
-    lines: (width) => prose(proseProps.blocks.text, width, proseProps.blocks.options),
+    settings: "prose({text, width})",
+    model: { text: ISSUE },
+    ext: { terminal: { extreme: true, ...DIALOG } },
   },
   {
     component: "prose",
     state: "window",
     about: "A room too short shows a window: the rows at its edges count what is past them",
-    settings: "scrolled(prose(text, width), {rows: 8, top: 2})",
-    width: "dialog",
-    lines: (width) =>
-      scrolled(prose(ISSUE, width), { rows: 8, top: 2, hits: { up: "up", down: "down" } }).rows,
+    settings: "scrolled(prose({text, width}), {rows: 8, top: 2})",
+    model: { text: ISSUE },
+    ext: { terminal: { ...DIALOG, window: { rows: 8, top: 2 } } },
   },
   {
     component: "prose",
     state: "quiet",
     about: "Every word quiet: a text beside the main one",
-    settings: "prose(text, width, {isDim: true})",
-    width: "dialog",
-    gui: true,
-    lines: (width) => prose(proseProps.quiet.text, width, proseProps.quiet.options),
+    settings: "prose({text, width, isDim: true})",
+    model: { text: "Filed from `acme/sync-worker` on **fix/retry-after**.", isDim: true },
+    ext: { terminal: DIALOG },
   },
   {
     component: "prose",
     state: "excerpt",
     about: "A passage that gives way to what follows it: drawn whole in a terminal",
-    settings: "prose(text, width, {excerpt: {hit, isOpen}})",
-    width: "dialog",
-    gui: true,
-    lines: (width) => prose(proseExcerptProps.folded.text, width, proseExcerptProps.folded.options),
+    settings: "prose({text, width, excerpt: {hit, isOpen}})",
+    model: { text: PASSAGE, excerpt: { hit: "more", isOpen: false } },
+    ext: { terminal: DIALOG },
+  },
+  {
+    component: "prose",
+    state: "opened",
+    about: "The same passage opened: the whole of it in a panel, with Less",
+    settings: "prose({text, width, excerpt: {hit, isOpen: true}})",
+    model: { text: PASSAGE, excerpt: { hit: "more", isOpen: true } },
+    ext: { terminal: DIALOG },
   },
 ];

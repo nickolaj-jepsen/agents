@@ -1,0 +1,64 @@
+{
+  "pi, claude-terminal": {
+    "head": {
+      "title": "Linear draft",
+      "caption": "",
+      "close": "question",
+      "question": {
+        "lead": "",
+        "rows": [
+          [
+            {
+              "label": "Discard",
+              "hit": "frame:discard",
+              "key": "↵",
+              "tone": "quiet"
+            },
+            {
+              "label": "Keep",
+              "hit": "frame:keep",
+              "key": "[esc]",
+              "tone": "quiet"
+            }
+          ]
+        ]
+      }
+    },
+    "footer": {
+      "lead": "",
+      "rows": []
+    },
+    "notice": "",
+    "foot": "edge"
+  },
+  "vscode, desktop, mobile": {
+    "head": {
+      "title": "Linear draft",
+      "caption": "",
+      "close": "question",
+      "question": {
+        "lead": "",
+        "rows": [
+          [
+            {
+              "label": "Discard",
+              "hit": "frame:discard",
+              "tone": "quiet"
+            },
+            {
+              "label": "Keep",
+              "hit": "frame:keep",
+              "tone": "quiet"
+            }
+          ]
+        ]
+      }
+    },
+    "footer": {
+      "lead": "",
+      "rows": []
+    },
+    "notice": "",
+    "foot": "host"
+  }
+}

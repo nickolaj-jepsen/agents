@@ -1,0 +1,38 @@
+{
+  "pi, claude-terminal": {
+    "lead": "",
+    "rows": [
+      [
+        {
+          "label": "Create",
+          "hit": "create",
+          "key": "↵",
+          "tone": "quiet"
+        },
+        {
+          "label": "Discard",
+          "hit": "discard",
+          "key": "[d]",
+          "tone": "quiet"
+        }
+      ]
+    ]
+  },
+  "vscode, desktop, mobile": {
+    "lead": "",
+    "rows": [
+      [
+        {
+          "label": "Create",
+          "hit": "create",
+          "tone": "quiet"
+        },
+        {
+          "label": "Discard",
+          "hit": "discard",
+          "tone": "quiet"
+        }
+      ]
+    ]
+  }
+}

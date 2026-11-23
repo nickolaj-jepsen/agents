@@ -56,6 +56,18 @@ describe("watching a scenario", () => {
   });
 });
 
+it("rejects an invalid terminal session name in either flag position", () => {
+  for (const args of [
+    ["--session", "../outside", "terminal", "text"],
+    ["terminal", "--session", "../outside", "text"],
+    ["terminal", "--session=../outside", "text"],
+  ]) {
+    const result = drive(...args);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('--session "../outside": use up to 24 letters');
+  }
+});
+
 describe("changing one session at a time", () => {
   /** `drive` without blocking this process's event loop, which the lock below depends on. */
   const driveAsync = (...args: string[]) =>

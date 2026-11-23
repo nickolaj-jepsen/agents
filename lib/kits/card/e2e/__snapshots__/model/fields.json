@@ -1,0 +1,26 @@
+{
+  "pi, claude-terminal": {
+    "choices": {
+      "lead": "cells",
+      "rail": "caller",
+      "write": "field"
+    },
+    "note": "cells"
+  },
+  "vscode, desktop": {
+    "choices": {
+      "lead": "icon-button",
+      "rail": "none",
+      "write": "field"
+    },
+    "note": "panel"
+  },
+  "mobile": {
+    "choices": {
+      "lead": "icon-button",
+      "rail": "none",
+      "write": "text"
+    },
+    "note": "text"
+  }
+}

@@ -40,7 +40,7 @@ export type SessionRecord = {
   file: string;
   /** The session's scratch: the agent's folder, its logs, the stub's state. */
   runDir: string;
-  /** Terminal: the tui-test daemon session. A reload starts the next beside it. */
+  /** Terminal: the active tui-test daemon slot. A reload starts in the other slot. */
   daemon?: string;
   /** VS Code: the DevTools port of the window. */
   port?: number;

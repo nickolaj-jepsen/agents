@@ -1,5 +1,9 @@
 /** The list's contract: rows of a line or two each under group rows, behind rails. No host imports. */
 import type { Button } from "@agents/kit-buttons/contract.ts";
+import type { MeaningName } from "@agents/kit-core/icons.ts";
+import { modelFields } from "@agents/kit-core/manifest.ts";
+import type { Props, Surface } from "@agents/kit-core/surfaces.ts";
+import type { Plain } from "@agents/kit-core/stories.ts";
 
 /**
  * What a row is set to: left alone (`○`), chosen (`●`, in the accent) or set aside (`–`, the
@@ -15,7 +19,16 @@ export type ListRow = {
   literal?: boolean;
   /** @default "open" */
   mark?: ListMark;
-  /** Dim words in the list's aside column at the right, such as a count. */
+  /**
+   * What the row is or is set to, as a meaning (`kind:stale`, `decision:apply`): a graphical
+   * surface draws it in place of the mark, in its role's colour, so the row reads without its
+   * buttons. A terminal keeps `mark`.
+   */
+  icon?: MeaningName;
+  /**
+   * Dim words, such as a count: in the list's aside column at the right on a terminal, and
+   * after the row's text on a graphical surface, in digits of one width.
+   */
   aside?: string;
   /** The keyboard's row: a neutral bold pointer and a bold label. */
   focused?: boolean;
@@ -62,7 +75,11 @@ export type ListGroup = {
   actions?: Button[];
 };
 
-export type List = {
+/**
+ * The list's model.
+ * @typeParam Under What a row opened in place holds: an element on a graphical surface.
+ */
+export type List<Under = Plain> = {
   groups: ListGroup[];
   /**
    * Rows the list may take. A taller list is a window from `top`; its last row says how many
@@ -88,4 +105,60 @@ export type List = {
    * says whether a group is decided. For a list that is not a form to complete. @default true
    */
   rail?: boolean;
+  /** A group shows `maxItems` rows, then a `Show N more` Button that presses `hit`. Without it every row is shown: the pane scrolls. */
+  more?: {
+    /** The rest is shown: no `Show N more` row. */
+    isAll: boolean;
+    hit: string;
+  };
+  /** Rows a group shows before `Show N more`. @default `tokens.gui.maxItems` */
+  maxItems?: number;
+  /**
+   * The word on the quiet Button a row's `hit` (or a group's) is: a Button never wraps, so the
+   * text sits beside it and the Button names what pressing does. A row's own `action` replaces
+   * it. @default "Open"
+   */
+  action?: string;
+  /**
+   * Rows opened in place, by the row's `hit`: each is drawn with what belongs to it under its
+   * text, in a panel, and that row's Button says `closeAction`. The caller owns what is open. A
+   * long group keeps an opened row in view whatever `maxItems` says.
+   */
+  opened?: Record<string, Under>;
+  /** The word on the Button of an opened row. @default "Close" */
+  closeAction?: string;
 };
+
+/** The capability each gated field needs. The rest of the model is for every surface. */
+export const listNeeds = {
+  height: "window",
+  top: "window",
+  aside: "cells",
+  flat: "cells",
+  space: "cells",
+  rail: "cells",
+  more: "cells:false",
+  maxItems: "cells:false",
+  action: "cells:false",
+  opened: "cells:false",
+  closeAction: "cells:false",
+} as const;
+
+export const listFields = modelFields<List>()([
+  "groups",
+  "height",
+  "top",
+  "aside",
+  "lines",
+  "flat",
+  "space",
+  "rail",
+  "more",
+  "maxItems",
+  "action",
+  "opened",
+  "closeAction",
+]);
+
+/** The list as `S` surfaces are given it: a field a surface cannot draw is not in its type. */
+export type ListProps<S extends Surface, Under = Plain> = Props<List<Under>, typeof listNeeds, S>;

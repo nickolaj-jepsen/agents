@@ -6,7 +6,7 @@ What a record holds, one named value each: a row per field, or side by side.
 import { fields } from "@agents/kit-fields/terminal.ts";
 ```
 
-`src/terminal.ts` draws the component as styled lines for a width, `src/gui.tsx` in native controls for Claude Desktop and VS Code (the same names and props, less the width), `src/contract.ts` has its props and results, and `src/stories.ts` one sample per state, which `src/stories.gui.tsx` draws with `gui.tsx`. `e2e/` plays the stories in pi, Claude Code and VS Code and holds their snapshots.
+`src/terminal.ts` draws the component as styled lines for a width, `src/gui.tsx` in native controls for Claude Desktop and VS Code (the same names and props, less the width), `src/contract.ts` has its model (a field's editor is data: `one`, `many` or `text`) and the props each drawing is given, `src/model.ts` its view model (which control a value cell is), and `src/stories.ts` one sample per state as data, which the catalogue draws with each drawing's adapter. The component is on `schema: 2` (see the [kit guide](../README.md#schema-2-one-api-five-surfaces)). `e2e/` plays the stories in pi, Claude Code and VS Code and holds their snapshots.
 
 ```bash
 pnpm drive ls kit-fields                                    # the stories

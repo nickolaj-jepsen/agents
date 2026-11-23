@@ -77,9 +77,10 @@ const runProcess = async (
   $: EngineInterface,
   argv: string[],
   timeoutMs = GIT_TIMEOUT_MS,
+  cwd?: string,
 ): Promise<ProcessRunResult | undefined> => {
   try {
-    return await $.process.run(argv, { timeoutMs });
+    return await $.process.run(argv, { timeoutMs, ...(cwd ? { cwd } : {}) });
   } catch {
     return undefined;
   }
@@ -146,23 +147,36 @@ async function buildGit($: EngineInterface, cwd: string): Promise<Menu> {
   return gitMenu({ status, remote, base, pr });
 }
 
+/** Open a fresh shell, using the desktop's terminal selection rather than the host terminal. */
+async function terminalLauncher($: EngineInterface, cwd: string, mac: boolean) {
+  const override = (await $.env.get("GIT_MENU_TERMINAL"))?.trim();
+  if (override && (override.startsWith("/") || !override.includes("/"))) {
+    // A single executable, not a command line. A wrapper can supply terminal-specific flags.
+    const found = await locate($, override);
+    if (found?.startsWith("/")) return [found];
+  }
+  if (mac) return ["open", "-a", "Terminal", cwd];
+  const xdg = await locate($, "xdg-terminal-exec");
+  if (xdg && (await runProcess($, [xdg, "--print-id"]))?.exitCode === 0)
+    return [xdg, `--dir=${cwd}`];
+  const alternative = await locate($, "x-terminal-emulator");
+  return alternative ? [alternative] : undefined;
+}
+
 async function buildFolder($: EngineInterface, cwd: string): Promise<Menu> {
   const mac = await isMac($);
   const editor = preferredEditor(await $.env.get("FIREPROOF_EDITOR"));
   const launchers: Partial<Record<FolderApp, string[]>> = {};
+  const terminal = terminalLauncher($, cwd, mac);
   if (mac) {
-    const bundle = async (app: FolderApp, name: string, args: string[], fresh = false) => {
+    const bundle = async (app: FolderApp, name: string) => {
       if (await $.fs.exists(`/Applications/${name}.app`))
-        launchers[app] = fresh
-          ? ["open", "-na", `${name}.app`, "--args", ...args]
-          : ["open", "-a", name, ...args];
+        launchers[app] = ["open", "-a", name, cwd];
     };
     await Promise.all([
-      bundle("code", "Visual Studio Code", [cwd]),
-      bundle("zed", "Zed", [cwd]),
-      bundle("smerge", "Sublime Merge", [cwd]),
-      // Ghostty takes a directory only as a second instance.
-      bundle("ghostty", "Ghostty", [`--working-directory=${cwd}`], true),
+      bundle("code", "Visual Studio Code"),
+      bundle("zed", "Zed"),
+      bundle("smerge", "Sublime Merge"),
     ]);
     launchers.files = ["open", cwd];
   } else {
@@ -175,7 +189,6 @@ async function buildFolder($: EngineInterface, cwd: string): Promise<Menu> {
       "smerge",
       "nautilus",
       "xdg-open",
-      "ghostty",
     ]);
     const found = new Set((probe?.stdout ?? "").split("\n").filter(Boolean));
     if (found.has("code")) launchers.code = ["code", cwd];
@@ -185,9 +198,9 @@ async function buildFolder($: EngineInterface, cwd: string): Promise<Menu> {
     if (found.has("smerge")) launchers.smerge = ["smerge", cwd];
     if (found.has("nautilus")) launchers.files = ["nautilus", cwd];
     else if (found.has("xdg-open")) launchers.files = ["xdg-open", cwd];
-    // A fresh shell in the checkout, not this session resumed.
-    if (found.has("ghostty")) launchers.ghostty = ["ghostty", `--working-directory=${cwd}`];
   }
+  const launcher = await terminal;
+  if (launcher) launchers.terminal = launcher;
   return folderMenu(cwd, launchers, mac, editor);
 }
 
@@ -323,7 +336,12 @@ async function press($: EngineInterface, row: Row, surface: RenderSurface) {
   } else {
     const argv =
       action.kind === "url" ? [(await isMac($)) ? "open" : "xdg-open", action.url] : action.argv;
-    const r = await runProcess($, [...DETACH, ...argv]);
+    const r = await runProcess(
+      $,
+      [...DETACH, ...argv],
+      GIT_TIMEOUT_MS,
+      action.kind === "launch" ? action.cwd : undefined,
+    );
     if (r?.exitCode !== 0) $.ui.toast(`Couldn't start ${argv[0]}`);
   }
   await close($);

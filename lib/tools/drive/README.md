@@ -58,7 +58,7 @@ pnpm drive terminal click text "B ○ Postgres"           # click visible text; 
 pnpm drive terminal expect text "B ● Postgres"          # wait for it; exits 1 when it never shows
 pnpm drive terminal screenshot -o /tmp/shot.png         # a PNG of the screen
 pnpm drive terminal --json get size                     # structured output, as the CLI prints it
-pnpm drive sweep                                        # the four test sizes, for a layout check
+pnpm drive sweep --out ./review                         # four test sizes; PNGs survive stop
 pnpm drive snap                                         # the scenario's own snapshot: its region and masks
 pnpm drive reload                                       # after an edit: rebuild, replay in a fresh session
 pnpm drive stop                                         # end the session, its daemon, stub and folder
@@ -104,7 +104,7 @@ pnpm turbo run e2e:update --filter=@nickolaj-jepsen/docfix   # the same with --u
 
 `drive test` also takes `--jobs N` (or `claude=1,pi=2`) for the sessions at once per harness, `--keep` to keep the run folders and logs, `--timing` and `--tmp DIR`; none of them is an environment variable. Each app and kit package with scenarios has one `e2e` task, which reruns when its scenarios or snapshots, the harness (`lib/tools/drive/`), the builds it loads or the kit packages change. A cache hit writes no PNGs, so add `--force` when you want them. Commit only the `.snap` files under `__snapshots__/`. A mismatch writes `.actual.snap` and `.actual.png`; failed steps leave `*.actual.png`. Use `--jobs 1` to diagnose contention. A scenario that fails in a shared session fails the gate as it stands: it is not tried again alone, so look for state leaking between scenarios instead of updating the snapshot.
 
-A plain `drive test` uses the in-process terminal adapter in a forked Vitest worker for fast text reads. If a step or snapshot fails, that worker can draw the original screen without replaying it: the font environment is fixed when the worker starts, not changed during capture. `--png` and terminal recordings use daemon sessions, which rasterize in the daemon. The recorder passes any fallback `ffmpeg` on the recording daemon's PATH, without changing the parent process's environment. The one picture still drawn in process is the evidence of a difference or failed step in a run without `--png`: that screen exists only in the in-process session, and drawing it from the daemon would mean replaying the scenario (which the gate does not do), so it is taken where it was read. `LibTerm` swaps `HOME` only around that call and queues such calls, so nothing else in the process sees the swap.
+A plain `drive test` uses the in-process terminal adapter in a forked Vitest worker for fast text reads. If a step or snapshot fails, that worker can draw the original screen without replaying it: the font environment is fixed when the worker starts, not changed during capture. `--png` and terminal recordings use daemon sessions, which rasterize in the daemon. The recorder passes any fallback `ffmpeg` on the recording daemon's PATH, without changing the parent process's environment. The one picture still drawn in process is the evidence of a difference or failed step in a run without `--png`: that screen exists only in the in-process session, and drawing it from the daemon would mean replaying the scenario (which the gate does not do), so it is taken where it was read. The font home is published only when it is complete, so parallel jobs can share it.
 
 Under Ghostty's test backend, Claude's terminal `Image` may show only its alt text. To check pixels, use a graphics-capable terminal or [capture inline graphics](#capture-inline-graphics).
 
@@ -137,7 +137,8 @@ pnpm drive stop                                                # close the windo
 - `reload` can replay a different scenario of the same package. Use `goto` when launch options change; the extension's own **New session** doesn't reload code. For parallel windows give each its own `--session`.
 - `wait` can't match an input placeholder. Wait for a label instead. If a shot shows icon alt text after `reload`, run `goto` and take it again.
 - A mod that reads the prompt while rendering doesn't redraw on typing. If testing it requires a redraw, resize below the prompt's maximum width, then back; see [spellfix's recording](../../../apps/spellfix/src/e2e/site.scenarios.ts).
-- For a failed start, retain the run with `--keep` and inspect `vscode.log`. See [graphical screen inspection](../../../skills/agent-plugin-dev/references/claude.md#looking-at-a-graphical-screen) for narrow, wide, and full-height screenshots.
+- Headless `goto` gives each compositor a private Wayland runtime directory. If the launcher exits before startup, the error prints a saved startup log path that survives run cleanup. Pass `--keep` to retain the rest of the failed run as well. If the installed VS Code exits before opening the workbench, try the pinned build: `nix run .#media -- goto docfix queue --harness vscode`.
+- `sweep --out <dir>` keeps PNGs outside the run folder. Without `--out`, `stop` removes them with the run. See [graphical screen inspection](../../../skills/agent-plugin-dev/references/claude.md#looking-at-a-graphical-screen) for narrow, wide, and full-height screenshots.
 
 ## Claude Desktop
 
@@ -154,7 +155,7 @@ Desktop needs `claude` and `claude-desktop` on PATH. Sign in to the isolated tes
 
 The site's pictures and demos are recorded, not committed. A package's `site.scenarios.ts` says what to record, and `record` writes it to `apps/site/media/<package>/`, replacing the files its own recorder wrote so no file outlives its scenario and the other recorder's stay. A kit package's pictures go to `apps/site/media/kit/<name>/`. The site builds without any of it and warns about what is missing.
 
-A recording stages its files in a folder of its own and publishes them only when every scenario came out and fits its budget, so a failed capture leaves the published media as they were. The failure keeps that staging folder — the screenshots a broken step left or a screen it could not photograph — and prints where it is, for inspection without replaying the recording; `--keep` and `--timing` are not needed for it. Recording depends on no stored snapshot and no test flag: a scenario marked as a known failure is recorded like any other, and a VS Code panel whose pictures are still undrawn fails its first capture instead of being given a fresh window.
+A recording stages its files in a folder of its own and publishes them only when every scenario came out and fits its budget, so a failed capture leaves the published media as they were. The failure keeps that staging folder — the screenshots a broken step left or a screen it could not photograph — and prints where it is, for inspection without replaying the recording; `--keep` and `--timing` are not needed for it. Kit recording writes its pictures and failure evidence directly to its own staging folder, never beside the test snapshots. Recording depends on no stored snapshot and no test flag: a scenario marked as a known failure is recorded like any other, and a VS Code panel whose pictures are still undrawn fails its first capture instead of being given a fresh window.
 
 Record in the media environment: `nix run .#media -- <drive verb>` runs the driver with VS Code, the fonts and the tools the scenarios call, and any other command runs as given.
 
@@ -189,4 +190,4 @@ It replays the cast's terminal escape sequences and overwrites the output prefix
 
 ## Load a mod's types
 
-Claude writes the API types a Claude half is written against only when it loads the mod. `pnpm drive types <app>` starts a hermetic Claude with the app's build (`kit-catalog` works too), waits for `dist/.claude-plugin/types/` to appear and stops. The package's `types` task runs it, and `check-types` reads what it wrote. Run `pnpm turbo run types` after a Claude Code upgrade.
+Claude writes its API types when it loads the mod. `pnpm drive types <app>` starts a hermetic Claude with a copy of the app's build (`kit-catalog` works too), waits for the declarations to finish writing, then publishes `.claude-types/` beside the app's `dist/`. The package's `types` task runs it, and `check-types` reads the snapshot without racing a Claude session writing into `dist/`. Run `pnpm turbo run types` after a Claude Code upgrade.

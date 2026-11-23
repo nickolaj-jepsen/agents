@@ -240,7 +240,13 @@ export async function play(session: Session, steps: Step[]) {
 }
 
 /** Starts the scenario's agent and plays its steps; the session is left on the screen. */
-export async function reach(r: Resolved, backend: "lib" | "daemon", name: string, runDir?: string) {
+export async function reach(
+  r: Resolved,
+  backend: "lib" | "daemon",
+  name: string,
+  runDir?: string,
+  onFailure = failShot,
+) {
   const session = await Session.open({
     harness: r.harness,
     start: r.start,
@@ -254,7 +260,7 @@ export async function reach(r: Resolved, backend: "lib" | "daemon", name: string
     await play(session, r.steps);
     await session.settle();
   } catch (err) {
-    await failShot(session, r);
+    await onFailure(session, r).catch(() => undefined);
     await session.close();
     throw err;
   }

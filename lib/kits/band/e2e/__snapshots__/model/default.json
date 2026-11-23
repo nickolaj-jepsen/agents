@@ -1,0 +1,18 @@
+{
+  "pi, claude-terminal": {
+    "text": "spellfix: 3 typos",
+    "buttons": [],
+    "layout": "line"
+  },
+  "vscode, desktop, mobile": {
+    "mark": "state:warning",
+    "text": "3 typos to review",
+    "buttons": [
+      {
+        "label": "Review",
+        "hit": "open"
+      }
+    ],
+    "layout": "line"
+  }
+}

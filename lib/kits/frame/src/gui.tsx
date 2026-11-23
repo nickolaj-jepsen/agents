@@ -2,107 +2,92 @@
  * The captioned frame on the graphical surfaces. The host frames a pane and owns its Close, so
  * there are no rules and no edges: the frame's top is a toolbar line, its body a column.
  *
- * The body and the footer are laid out for cells in the contract (`Line[]`); here they are
- * elements, in the options of `captionFrame`, drawn with the kit's own `gui.tsx` functions.
+ * The body and the notice are elements and spans here, in the props of `captionFrame`, drawn with
+ * the kit's own `gui.tsx` functions; the footer is the model's `Button[][]`, which the buttons'
+ * view model decides: one lit, and every control quiet while Close asks.
  */
 import { buttonRow } from "@agents/kit-buttons/gui.tsx";
-import type { Button } from "@agents/kit-buttons/contract.ts";
-import type { Gui } from "@agents/kit-core/paint/gui.tsx";
-import { capital, spans } from "@agents/kit-core/paint/gui.tsx";
+import { settle } from "@agents/kit-buttons/model.ts";
+import type { Gui, GuiSurface } from "@agents/kit-core/paint/gui.tsx";
+import {
+  meaning,
+  panel,
+  roleProps,
+  rowOf,
+  spans,
+  typed,
+  typeProps,
+} from "@agents/kit-core/paint/gui.tsx";
 import type { Span } from "@agents/kit-core/lines.ts";
 import { tokens } from "@agents/kit-core/tokens.ts";
-import { closeHit, type CaptionFrame } from "./contract.ts";
+import type { FrameProps, GuiSlots } from "./contract.ts";
+import { view, type FrameModel, type FrameView } from "./model.ts";
 
-/** What only a graphical host can say about the frame's head. */
-export type FrameHeadOptions = {
-  /** The pane's own title as the host draws it above the body: the frame leaves a title that repeats it out. */
-  hostTitle?: string;
-  /** In place of `caption` and the title: the words as elements, such as a card's steps as Buttons. */
-  head?: JSX.Element;
-  /**
-   * Buttons at the toolbar's far edge, after Close's question: the pane's own action, where a long
-   * body scrolls and a footer would be out of sight. Only the lit one is filled.
-   */
-  actions?: readonly Button[];
-};
+/** What `captionFrame` is given on a graphical surface; a field only a terminal has is not in it. */
+export type FrameGui = FrameProps<GuiSlots<JSX.Element>, GuiSurface>;
 
-export type FrameOptions = FrameHeadOptions & {
-  /** The body, drawn by the kit's gui functions in place of `Line[]`. */
-  body: JSX.Element;
-  /** The footer's buttons, drawn by `buttonRow`; none is lit while `close.confirming`. */
-  footer?: readonly Button[];
-};
+/** What the head alone needs: `frameTop`'s props. */
+export type FrameTopGui = Pick<
+  FrameGui,
+  "title" | "caption" | "close" | "hostTitle" | "head" | "actions"
+>;
 
-/** `CaptionFrame` without what a graphical host lays out itself or takes as elements. */
-export type FrameGui = Omit<CaptionFrame, "width" | "body" | "footer">;
+const asModel = (f: Partial<FrameGui>): FrameModel => ({
+  title: f.title ?? "",
+  caption: f.caption,
+  close: f.close,
+  hostTitle: f.hostTitle,
+  actions: f.actions,
+  footer: f.footer,
+  notice: f.notice,
+  body: { question: "" },
+});
 
-/**
- * Close's question, once it asks: the words and a Button each for Discard and Keep, both quiet
- * as the terminal draws them. Close itself is the host's, so it is not drawn while nothing is
- * asked.
- */
-export function closeRow(g: Gui, close: CaptionFrame["close"]): JSX.Element | null {
+/** Close's question, once it asks, set apart as a panel: it is a warning with its own actions. */
+function question(g: Gui, f: FrameTopGui, v: FrameView): JSX.Element {
   const { Box, Button, Text } = g.els;
-  if (!close?.confirming) return null;
   return (
-    <Box
-      flexDirection="row"
-      flexWrap="wrap"
-      alignItems="center"
-      columnGap={tokens.gui.across.xs}
-      rowGap={tokens.gui.space.xs}
-    >
-      <Text color="warning">{close.question ?? "Discard answers?"}</Text>
-      <Button label={capital("discard")} dimColor onPress={() => g.press?.(closeHit("discard"))} />
-      <Button label={capital("keep")} dimColor onPress={() => g.press?.(closeHit("keep"))} />
+    <Box flexDirection="column" paddingX={tokens.gui.across.inset}>
+      {panel(
+        g,
+        { key: "ask" },
+        rowOf(
+          g,
+          {},
+          meaning(g, "state:warning"),
+          <Text {...typeProps("body")} {...roleProps("warning")}>
+            {f.close?.question ?? "Discard answers?"}
+          </Text>,
+          <Box flexDirection="row" flexWrap="wrap" columnGap={tokens.gui.across.xs}>
+            {v.head.question?.rows[0]?.map((b) => (
+              <Button
+                key={b.hit}
+                dimColor
+                label={b.label}
+                onPress={() => g.press(b.hit as string)}
+              />
+            ))}
+          </Box>,
+        ),
+      )}
     </Box>
   );
 }
 
-/** The words of a head: its caption, or its title unless it repeats the host's. */
-function words(g: Gui, f: Pick<FrameGui, "title" | "caption">, o: FrameHeadOptions) {
-  const { Text } = g.els;
-  if (o.head) return o.head;
-  const caption = typeof f.caption === "function" ? f.caption(Infinity) : f.caption;
-  if (caption?.length) return spans(g, caption);
-  if (!f.title || f.title === o.hostTitle) return null;
-  return <Text weight="semibold">{f.title}</Text>;
-}
-
-/** The toolbar line both heads are: words at the start, Close's question at the far edge. */
-export function head(
-  g: Gui,
-  f: Pick<FrameGui, "title" | "caption" | "close">,
-  options: FrameHeadOptions = {},
-): JSX.Element | null {
+/** The toolbar line both heads are: the words at the start, the pane's own actions at the far edge. */
+function head(g: Gui, f: FrameTopGui, v: FrameView): JSX.Element | null {
   const { Box, Button } = g.els;
-  const left = words(g, f, options);
-  const asked = closeRow(g, f.close);
-  const acts = (options.actions ?? []).filter((b) => b.hit !== undefined);
-  if (!left && !asked && acts.length === 0) return null;
-  const right =
-    asked || acts.length > 0 ? (
-      <Box
-        flexDirection="row"
-        flexWrap="wrap"
-        alignItems="center"
-        columnGap={tokens.gui.across.xs}
-        rowGap={tokens.gui.space.xs}
-      >
-        {asked}
-        {f.close?.confirming
-          ? null
-          : acts.map((b) => (
-              <Button
-                key={b.hit}
-                variant={b.isLit ? "primary" : undefined}
-                dimColor={!b.isLit || undefined}
-                label={capital(b.label)}
-                onPress={() => g.press?.(b.hit as string)}
-              />
-            ))}
+  if (v.head.close === "question") return question(g, f, v);
+  const words =
+    f.head ??
+    (v.head.title || v.head.caption ? (
+      <Box flexDirection="column" rowGap={tokens.gui.space.xs}>
+        {v.head.title ? typed(g, "heading", v.head.title) : null}
+        {v.head.caption ? spans(g, f.caption ?? [], { type: "caption" }) : null}
       </Box>
-    ) : null;
+    ) : null);
+  const acts = v.head.actions?.rows[0] ?? [];
+  if (!words && acts.length === 0) return null;
   return (
     <Box
       flexDirection="row"
@@ -112,37 +97,56 @@ export function head(
       columnGap={tokens.gui.across.md}
       rowGap={tokens.gui.space.xs}
       paddingX={tokens.gui.across.inset}
+      paddingY={tokens.gui.row.pad}
     >
-      {left}
-      {right}
+      {words}
+      {acts.length ? (
+        <Box
+          flexDirection="row"
+          flexWrap="wrap"
+          alignItems="center"
+          columnGap={tokens.gui.across.xs}
+        >
+          {acts.map((b) => (
+            <Button
+              key={b.hit}
+              variant={b.tone === "lit" ? "primary" : undefined}
+              dimColor={b.tone !== "lit" || undefined}
+              label={b.label}
+              onPress={() => g.press(b.hit as string)}
+            />
+          ))}
+        </Box>
+      ) : null}
+    </Box>
+  );
+}
+
+/** A notice's row: an icon for the state its words are in, then the words. */
+function notice(g: Gui, words: readonly Span[] | undefined): JSX.Element | null {
+  const { Box } = g.els;
+  if (!words?.length) return null;
+  const role = words[0]?.role;
+  const state = role === "warning" ? "state:warning" : role === "error" ? "state:error" : undefined;
+  return (
+    <Box paddingX={tokens.gui.across.inset}>
+      {rowOf(
+        g,
+        {},
+        state ? meaning(g, state) : null,
+        spans(g, words, { type: state ? "body" : "caption" }),
+      )}
     </Box>
   );
 }
 
 /**
- * A frame's top: the pane's toolbar line. Its title is semibold and left out where it repeats
- * `hostTitle`; a `caption` replaces it, drawn in its own roles. Close is the host's, so it
- * appears only as the question it asks, with Discard and Keep.
+ * A frame's top: the pane's toolbar line. Its title is the `heading` and left out where it
+ * repeats `hostTitle`; a `caption` follows it as a `caption`. Close is the host's, so it appears
+ * only as the question it asks, with Discard and Keep.
  */
-export function frameTop(
-  g: Gui,
-  f: Pick<FrameGui, "title" | "caption" | "close">,
-  options: FrameHeadOptions = {},
-): JSX.Element | null {
-  return head(g, f, options);
-}
-
-/** A footer's buttons, quiet while Close asks: the question is what the frame is about. */
-export function footerRow(g: Gui, buttons: readonly Button[] | undefined, confirming?: boolean) {
-  if (!buttons?.length) return null;
-  return buttonRow(g, confirming ? buttons.map((b) => ({ ...b, isLit: false })) : buttons);
-}
-
-/** A notice's row: its spans at the inset. */
-export function noticeRow(g: Gui, notice: { spans: readonly Span[] } | undefined) {
-  const { Box } = g.els;
-  if (!notice?.spans.length) return null;
-  return <Box paddingX={tokens.gui.across.inset}>{spans(g, notice.spans)}</Box>;
+export function frameTop(g: Gui, f: FrameTopGui): JSX.Element | null {
+  return head(g, f, view(asModel(f), g.surface));
 }
 
 /** `a ── b`: the parts of a caption, a short dim rule between two, as the terminal sets them. */
@@ -156,14 +160,14 @@ export const captionParts = (_g: Gui, parts: readonly Span[][]): Span[] =>
     );
 
 /**
- * A section's heading: its caption words at the start and its control at the far edge, which is
- * a quiet Button for the span that has a `hit` (the words of one without are text). No rule is
- * drawn: a drawn line is not the surface's, and the heading reads as one without.
- * @param tail Cells of rule after the control: a terminal's corner, nothing here.
+ * A section's heading: its caption words at the start, in the `section` role (a dim part in
+ * `caption`), and its control at the far edge, which is a quiet Button for the span that has a
+ * `hit` (the words of one without are text). No rule is drawn: a drawn line is not the surface's,
+ * and the heading reads as one without.
  */
 export function captionRule(
   g: Gui,
-  { caption = [], end = [] }: { caption?: Span[]; end?: Span[]; tail?: number },
+  { caption = [], end = [] }: Pick<FrameGui, "caption" | "end">,
 ): JSX.Element | null {
   const { Box, Button, Text } = g.els;
   if (!caption.length && !end.length) return null;
@@ -181,34 +185,44 @@ export function captionRule(
       columnGap={tokens.gui.across.md}
       rowGap={tokens.gui.space.xs}
       paddingX={tokens.gui.across.inset}
+      paddingY={tokens.gui.row.pad}
     >
-      {caption.length
-        ? spans(
-            g,
-            caption.map((s) => (s.bold ? s : { ...s, role: s.role ?? "dim" })),
-          )
-        : null}
+      {caption.length ? (
+        <Box
+          flexDirection="row"
+          flexWrap="wrap"
+          alignItems="center"
+          columnGap={tokens.gui.across.sm}
+        >
+          {caption.map((s, i) =>
+            typed(g, s.bold ? "section" : "caption", s.text.trim(), { key: `c${i}` }),
+          )}
+        </Box>
+      ) : null}
       {hit !== undefined ? (
-        <Button label={capital(label)} dimColor onPress={() => g.press?.(hit)} />
+        <Button label={label} dimColor onPress={() => g.press(hit)} />
       ) : label ? (
-        <Text dimColor>{label}</Text>
+        <Text {...typeProps("caption")}>{label}</Text>
       ) : null}
     </Box>
   );
 }
 
 /**
- * An inline form: its head, its body, a notice and its footer in a column, a space between.
- * @param options `body` and `footer` are elements; see `FrameOptions`.
+ * An inline form: its head, its body, a notice and its footer in a column, a space between. The
+ * footer's buttons are the model's rows, decided by the buttons' view model.
  */
-export function captionFrame(g: Gui, f: FrameGui, options: FrameOptions): JSX.Element {
+export function captionFrame(g: Gui, f: FrameGui): JSX.Element {
   const { Box } = g.els;
+  const v = view(asModel(f), g.surface);
+  // The head's actions come first, so a lit one there quiets the footer's (one lit per screen).
+  const [, ...footer] = settle([f.actions ?? [], ...(f.footer ?? [])], !!f.close?.confirming);
   return (
     <Box flexDirection="column" rowGap={tokens.gui.space.md}>
-      {head(g, f, options)}
-      {options.body}
-      {noticeRow(g, f.notice)}
-      {footerRow(g, options.footer, f.close?.confirming)}
+      {head(g, f, v)}
+      {Array.isArray(f.body) ? f.body.filter(Boolean) : f.body}
+      {notice(g, f.notice)}
+      {buttonRow(g, { rows: footer, confirming: !!f.close?.confirming })}
     </Box>
   );
 }

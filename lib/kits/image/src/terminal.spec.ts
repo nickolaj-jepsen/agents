@@ -1,19 +1,19 @@
 import { describe, expect, test } from "vitest";
 import { textOf, widthOf } from "@agents/kit-core/lines.ts";
+import { fileUrl, fitImage } from "./internal.ts";
 import { imageStories } from "./stories.ts";
+import { imageGallery } from "./terminal.ts";
 
 describe("every image-gallery story", () => {
   test.each(imageStories.map((s) => ({ id: `${s.component}/${s.state}`, story: s })))(
     "$id fits every width",
     ({ story }) => {
       for (let width = 32; width <= 130; width++)
-        for (const l of story.lines(width))
+        for (const l of imageGallery({ ...story.model, columns: width }))
           expect(widthOf(l), `${width}: ${textOf(l)}`).toBeLessThanOrEqual(width);
     },
   );
 });
-
-import { fileUrl, fitImage, imageGallery } from "./terminal.ts";
 
 describe("fitImage", () => {
   test("keeps the aspect ratio within the box, a cell being twice as tall as wide", () => {
@@ -37,6 +37,9 @@ test("fileUrl escapes each part and keeps the slashes", () => {
 
 test("a gallery is image, blank, link rows with a blank between images", () => {
   const image = { key: "a", source: { png: "x" }, size: null, alt: "alt", path: "/p/a.png" };
-  const rows = imageGallery([image, { ...image, key: "b", path: undefined }], { columns: 30 });
+  const rows = imageGallery({
+    images: [image, { ...image, key: "b", path: undefined }],
+    columns: 30,
+  });
   expect(rows.map((l) => l.slot?.kind ?? "")).toEqual(["image", "", "link", "", "image"]);
 });
