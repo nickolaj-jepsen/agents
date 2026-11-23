@@ -44,11 +44,11 @@ const start = {
   },
 };
 
-/** Type the draft, open the review, and wait until the model's answer has landed. */
+/** Type the draft, open the review, and wait until its findings are drawn. */
 const open = (text: string): Step[] => [
   { type: text },
   { press: "Ctrl+q" },
-  { wait: /spellfix · [1-9]\d* to apply/ },
+  { wait: /spellfix · \d+ to apply · [1-9]\d* found/ },
 ];
 
 export default scenarios({
@@ -77,12 +77,25 @@ export default scenarios({
       sizes: [[70, 24]],
       steps: [...open(MANY), { press: "End" }, { wait: "7/7" }],
     },
+    nomodel: {
+      about:
+        "the review when the side model is not in the catalog: every finding waits, and the notice says why",
+      start: { turns: [{ text: "unused" }], env: { PI_SPELLFIX_MODEL: "nope/nope" } },
+      steps: [...open(ONE), { wait: "model: no answer" }],
+    },
     click: {
       about: "a click on the second finding's word focuses it; the pointer moves there",
       start: { turns: [answer(...FIXES)] },
       size: [160, 45],
       sizes: [[160, 45]],
       steps: [...open(MANY), { hover: "seperate" }, { click: "seperate" }, { wait: "2/7" }],
+    },
+    close: {
+      about: "a click on Close in the top rule closes the review and leaves the draft as it was",
+      from: "review",
+      // The review is gone: the prompt holds the draft, above its rule.
+      region: region.rows(ONE, /^─+$/),
+      steps: [{ click: "Close ×" }, { wait: /spellfix ·/, gone: true }, { wait: ONE }],
     },
   },
 });

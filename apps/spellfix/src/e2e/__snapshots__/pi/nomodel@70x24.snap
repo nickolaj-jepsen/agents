@@ -1,0 +1,25 @@
+# spellfix/pi/nomodel 70x24 @1,15 (68x8)
+╭─ spellfix · 0 to apply · 1 found ────────────────────── Close × ─╮
+│                                                                  │
+│ ❯ ■ [typo]                                                       │
+│   Please fix teh handler before it breaks                        │
+│   1/1                                                            │
+│ model: no answer                                                 │
+│ Apply ↵  Toggle [space]  Keep word [d]  esc close                │
+╰──────────────────────────────────────────────────────────────────╯
+--- styles
+1x2 . 2x8 3x23 . 1x22 . 4x7 . 1x2
+1 .x66 1
+1 . 5 . 2 . 5x6 .x55 1
+1 .x3 3x11 6x3 3x25 .x24 1
+1 .x3 3x3 .x60 1
+1 . 3x16 .x49 1
+1 . 2x5 . 3 .x2 4x6 . 3x7 .x2 4x9 . 3x3 .x2 3x9 .x16 1
+1x68
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#7e888e
+4 fg=#dee0e1
+5 fg=#dee0e1 bold
+6 fg=#cd9a22 underline=single

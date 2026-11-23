@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 
 import { textOf, type Line } from "@agents/kit-core/lines.ts";
+import { tokens } from "@agents/kit-core/tokens.ts";
 import {
   FINDING_LINES,
   MAX_FINDINGS,
@@ -162,6 +163,15 @@ test("a finding is two lines: its kind, mark and count, then the draft with the 
   const lines = reviewBody(view({ findings }), 70);
   expect(lines).toHaveLength(FINDING_LINES + 1);
   expect(textOf(lines[0]!)).toBe("❯ ■ [typo]");
+  // The keyboard's row has a neutral pointer and a bold label; the mark is the accent.
+  expect(lines[0]!.spans.find((s) => s.text === tokens.glyph.pointer)).toMatchObject({
+    role: "text",
+    bold: true,
+  });
+  expect(lines[0]!.spans.find((s) => s.text === "[typo]")?.bold).toBe(true);
+  expect(lines[0]!.spans.find((s) => s.text === tokens.glyph.multi.on)).toMatchObject({
+    role: "accent",
+  });
   expect(textOf(lines[1]!)).toContain("teh the");
   expect(spansOf(lines, "teh")[0]).toMatchObject({ role: "error" });
   expect(spansOf(lines, "the")[0]).toMatchObject({ role: "success" });

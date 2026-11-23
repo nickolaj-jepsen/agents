@@ -215,8 +215,9 @@ function findingLines(view: ReviewView, index: number, width: number): Line[] {
     ...(finding.checked ? { role: "accent", bold: true } : { role: "dim" }),
     hit: markHit(index),
   };
-  // A hovered row's label is bold, as the kit's lists bold theirs; the pointer stays where the keyboard is.
-  const label = { ...controlStyle({ highlighted: isHovered, rest: "dim" }), hit: row };
+  // A focused or hovered row's label is bold, as the kit's lists bold theirs; the pointer is the
+  // accent-free mark the keyboard is on, so the focus stays neutral.
+  const label = { ...controlStyle({ highlighted: focused || isHovered, rest: "dim" }), hit: row };
   const count =
     finding.offsets.length > 1
       ? [span(` ×${finding.offsets.length}`, { role: "dim", hit: row })]

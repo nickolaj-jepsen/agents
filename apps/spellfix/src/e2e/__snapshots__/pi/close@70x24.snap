@@ -1,0 +1,9 @@
+# spellfix/pi/close 70x24 @0,20 (70x2)
+Please fix teh handler before it breaks
+──────────────────────────────────────────────────────────────────────
+--- styles
+.x39 1
+2x70
+--- legend
+1 inverse
+2 fg=#6c767b

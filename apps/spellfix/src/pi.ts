@@ -702,9 +702,8 @@ class Review implements Component {
       return { handled: true, render: true };
     }
     if (event.type !== "click" || event.button !== "left") return undefined;
-    if (hit === undefined) return { handled: true, focus: true };
-    this.press(hit);
-    return { handled: true, focus: true };
+    if (hit !== undefined) this.press(hit);
+    return { handled: true };
   }
 
   private press(hit: string) {
