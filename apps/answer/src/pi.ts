@@ -9,6 +9,7 @@ import { contentText } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { Component, TUI } from "@earendil-works/pi-tui";
 import { type Action, hasWork, offer, step as stepForm, type View, viewOf } from "./lib/forms.ts";
+import { offerNote } from "./lib/offer.ts";
 import { AnswerOffer } from "./pi/offer.ts";
 import { AnswerGuide, type Round, type RoundAction, Transcript, reveal } from "./pi/transcript.ts";
 
@@ -141,7 +142,7 @@ export default function (pi: ExtensionAPI) {
       shown = signature(view);
       if (!view) return { render: () => [], invalidate() {} };
       const { answered, title } = view;
-      const note = `${answered ? `${answered} answered · ` : ""}${SHORTCUT} or /answer`;
+      const note = offerNote(answered, SHORTCUT);
       return new AnswerOffer(theme, title, note, () => void open(ctx));
     });
   };
