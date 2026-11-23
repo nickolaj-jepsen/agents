@@ -48,6 +48,41 @@ const tokens = {
 		/** The mark of a row set aside: it stays in the list, left out of what is carried out. */
 		dropped: "–"
 	},
+	/**
+	* The type roles of a graphical surface: what a line of text is, never a size. A drawing picks
+	* a role (`typed`, `typeProps`) and the host's scale supplies the size, so the hierarchy
+	* is one edit here. The terminal has one size: `terminalStyle` keeps its look, bold for a
+	* semibold or bold weight and dim for a role that is dim, as the drawings always had it.
+	* - `title`: a screen's own name, where the host draws none.
+	* - `heading`: one record's title, or a group's.
+	* - `section`: a small semibold heading over a part of a record (`Evidence`).
+	* - `body`: the words of a screen.
+	* - `caption`: meta: a count, an age, a hint.
+	* Digits that line up or change (a count, a time) ask for `tabular` where they are drawn.
+	*/
+	type: {
+		title: {
+			size: "title",
+			weight: "semibold"
+		},
+		heading: {
+			size: "heading",
+			weight: "semibold"
+		},
+		section: {
+			size: "footnote",
+			weight: "semibold"
+		},
+		body: {
+			size: "body",
+			weight: "regular"
+		},
+		caption: {
+			size: "caption",
+			weight: "regular",
+			role: "dim"
+		}
+	},
 	/** The graphical surfaces' numbers: none of them is a cell. */
 	gui: {
 		/** A long list shows this many rows, then an `N more` row. */
@@ -62,7 +97,7 @@ const tokens = {
 		* the neutral is one mid-grey that reads on light and dark; colour marks a state only.
 		*/
 		tone: {
-			neutral: "#8b8f98",
+			neutral: "#7f838c",
 			/** The accent: what is chosen. */
 			accent: "#d97757",
 			error: "#e5534b",
@@ -110,6 +145,24 @@ const tokens = {
 		fill: "userMessageBackground",
 		/** Behind a code span in a Text, which has no code face: the theme's code background. */
 		chip: "bashMessageBackgroundColor",
+		/**
+		* One row of a list or a form: its line with `pad` lines of space above and below, whether or
+		* not it holds a Button, so a column of them keeps one beat. A Box may carry no height
+		* (`expectNative` says so), so the beat is padding. `gap` is the space between two rows
+		* (`rows` and `rowOf` in `paint/gui.tsx`).
+		*/
+		row: {
+			pad: .25,
+			gap: .15
+		},
+		/**
+		* A panel, what opens in place: the fill, set in by `x` cells and `y` lines of its own, so
+		* the words stay a step inside the fill and a control beside them stays on it.
+		*/
+		panel: {
+			x: 1,
+			y: .5
+		},
 		/** A thin rule's colour: one grey at low alpha, which reads on a light theme and a dark one. */
 		rule: "#8b8f9866",
 		/**

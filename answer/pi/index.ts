@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { contentText } from "@earendil-works/pi-ai";
-import { Container, Editor, Markdown, ScrollView, matchesKey, truncateToWidth, visibleWidth, wrapTextWithAnsi } from "@earendil-works/pi-tui";
 import { getMarkdownTheme, getSelectListTheme } from "@earendil-works/pi-coding-agent";
+import { Editor, Markdown, ScrollView, matchesKey, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 // src/lib/parse/doc.ts
-const FENCE = /^\s*(`{3,}|~{3,})(.*)$/;
-const RULE = /^\s*(-{3,}|\*{3,}|_{3,})\s*$/;
+const FENCE$1 = /^\s*(`{3,}|~{3,})(.*)$/;
+const RULE$1 = /^\s*(-{3,}|\*{3,}|_{3,})\s*$/;
 const HEADING = /^#{1,6}\s+/;
 const BULLET = /^[-*+]\s+/;
 const QUOTE = /^>\s*/;
@@ -89,7 +89,7 @@ function markOf(raw, indent) {
 function codeLines(lines) {
 	let open = "";
 	return lines.map((line) => {
-		const [, marks = "", said = ""] = FENCE.exec(line) ?? [];
+		const [, marks = "", said = ""] = FENCE$1.exec(line) ?? [];
 		const isCode = open !== "" || marks !== "";
 		if (open && marks.startsWith(open) && !said.trim()) open = "";
 		else if (!open) open = marks;
@@ -118,7 +118,7 @@ function readDoc(text) {
 				quoted,
 				kind: "blank"
 			};
-			if (RULE.test(raw)) return {
+			if (RULE$1.test(raw)) return {
 				at,
 				raw,
 				indent,
@@ -1016,45 +1016,16 @@ function step(held, action, id) {
 }
 const viewOf = (held) => held ? view(held.form, held.draft) : null;
 
-// src/pi/offer.ts
-var AnswerOffer = class {
-	theme;
-	title;
-	note;
-	open;
-	isHover = false;
-	constructor(theme, title, note, open) {
-		this.theme = theme;
-		this.title = title;
-		this.note = note;
-		this.open = open;
-	}
-	invalidate() {}
-	render(width) {
-		const t = this.theme;
-		const title = t.fg("accent", this.isHover ? t.bold(this.title) : this.title);
-		return [truncateToWidth(` ${title}${t.fg("dim", this.note)}`, width, "…")];
-	}
-	handleMouse(event) {
-		if (event.type === "move") {
-			if (this.isHover) return { handled: true };
-			this.isHover = true;
-			return {
-				handled: true,
-				render: true
-			};
-		}
-		if (event.type === "click" && event.button === "left") {
-			this.open();
-			return { handled: true };
-		}
-		return { handled: true };
-	}
-};
+// src/lib/offer.ts
+/**
+* The words beside the offer's title: how many answers are in, then the key that opens the
+* form. The separator belongs to the note, so the title and the note never run together.
+*/
+const offerNote = (answered, shortcut) => `${answered ? ` · ${answered} answered` : ""} · ${shortcut} or /answer`;
 
 // ../../lib/kits/core/src/tokens.ts
 /** The style's numbers and glyphs, shared by every client; one edit here restyles them all. No host imports. */
-const tokens$1 = {
+const tokens = {
 	/** Width classes: caps in columns, never targets. `wide` is the room less `wideMargin`. */
 	width: {
 		reading: 96,
@@ -1102,6 +1073,41 @@ const tokens$1 = {
 		/** The mark of a row set aside: it stays in the list, left out of what is carried out. */
 		dropped: "–"
 	},
+	/**
+	* The type roles of a graphical surface: what a line of text is, never a size. A drawing picks
+	* a role (`typed`, `typeProps`) and the host's scale supplies the size, so the hierarchy
+	* is one edit here. The terminal has one size: `terminalStyle` keeps its look, bold for a
+	* semibold or bold weight and dim for a role that is dim, as the drawings always had it.
+	* - `title`: a screen's own name, where the host draws none.
+	* - `heading`: one record's title, or a group's.
+	* - `section`: a small semibold heading over a part of a record (`Evidence`).
+	* - `body`: the words of a screen.
+	* - `caption`: meta: a count, an age, a hint.
+	* Digits that line up or change (a count, a time) ask for `tabular` where they are drawn.
+	*/
+	type: {
+		title: {
+			size: "title",
+			weight: "semibold"
+		},
+		heading: {
+			size: "heading",
+			weight: "semibold"
+		},
+		section: {
+			size: "footnote",
+			weight: "semibold"
+		},
+		body: {
+			size: "body",
+			weight: "regular"
+		},
+		caption: {
+			size: "caption",
+			weight: "regular",
+			role: "dim"
+		}
+	},
 	/** The graphical surfaces' numbers: none of them is a cell. */
 	gui: {
 		/** A long list shows this many rows, then an `N more` row. */
@@ -1116,7 +1122,7 @@ const tokens$1 = {
 		* the neutral is one mid-grey that reads on light and dark; colour marks a state only.
 		*/
 		tone: {
-			neutral: "#8b8f98",
+			neutral: "#7f838c",
 			/** The accent: what is chosen. */
 			accent: "#d97757",
 			error: "#e5534b",
@@ -1164,6 +1170,24 @@ const tokens$1 = {
 		fill: "userMessageBackground",
 		/** Behind a code span in a Text, which has no code face: the theme's code background. */
 		chip: "bashMessageBackgroundColor",
+		/**
+		* One row of a list or a form: its line with `pad` lines of space above and below, whether or
+		* not it holds a Button, so a column of them keeps one beat. A Box may carry no height
+		* (`expectNative` says so), so the beat is padding. `gap` is the space between two rows
+		* (`rows` and `rowOf` in `paint/gui.tsx`).
+		*/
+		row: {
+			pad: .25,
+			gap: .15
+		},
+		/**
+		* A panel, what opens in place: the fill, set in by `x` cells and `y` lines of its own, so
+		* the words stay a step inside the fill and a control beside them stays on it.
+		*/
+		panel: {
+			x: 1,
+			y: .5
+		},
 		/** A thin rule's colour: one grey at low alpha, which reads on a light theme and a dark one. */
 		rule: "#8b8f9866",
 		/**
@@ -1179,10 +1203,173 @@ const tokens$1 = {
 */
 function widthCap(cls, columns, content = 0) {
 	const cap = (n) => Math.max(1, Math.min(n, columns));
-	if (cls === "wide") return cap(columns - tokens$1.width.wideMargin);
-	if (cls === "auto") return cap(Math.min(content, tokens$1.width.dialog));
-	return cap(tokens$1.width[cls]);
+	if (cls === "wide") return cap(columns - tokens.width.wideMargin);
+	if (cls === "auto") return cap(Math.min(content, tokens.width.dialog));
+	return cap(tokens.width[cls]);
 }
+
+// ../../lib/kits/core/src/icons.ts
+const g = tokens.glyph;
+/**
+* Every meaning the kit draws. Seeded from what `main`'s designs marked: a tracker's status and
+* priority, a doc suggestion's kind and what it is set to, and the states a notice has.
+*/
+const meanings = {
+	"state:success": {
+		shape: "success",
+		tone: "success",
+		glyph: g.done,
+		role: "success",
+		alt: "Done"
+	},
+	"state:error": {
+		shape: "error",
+		tone: "error",
+		glyph: g.times,
+		role: "error",
+		alt: "Failed"
+	},
+	"state:warning": {
+		shape: "warning",
+		tone: "warning",
+		glyph: g.status.warning,
+		role: "warning",
+		alt: "Needs a look"
+	},
+	"state:pending": {
+		shape: "pending",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "dim",
+		alt: "Pending"
+	},
+	"state:question": {
+		shape: "question",
+		tone: "neutral",
+		glyph: "?",
+		role: "dim",
+		alt: "Waiting for an answer"
+	},
+	"kind:wrong": {
+		shape: "wrong",
+		tone: "error",
+		glyph: "!",
+		role: "error",
+		alt: "Wrong"
+	},
+	"kind:stale": {
+		shape: "stale",
+		tone: "warning",
+		glyph: "↻",
+		role: "warning",
+		alt: "Stale"
+	},
+	"kind:missing": {
+		shape: "missing",
+		tone: "neutral",
+		glyph: "+",
+		role: "text",
+		alt: "Missing"
+	},
+	"decision:open": {
+		shape: "open",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "text",
+		alt: "Not decided"
+	},
+	"decision:apply": {
+		shape: "success",
+		tone: "success",
+		glyph: g.single.on,
+		role: "accent",
+		alt: "Set to apply"
+	},
+	"decision:dismiss": {
+		shape: "dropped",
+		tone: "neutral",
+		glyph: g.dropped,
+		role: "dim",
+		alt: "Set to dismiss"
+	},
+	"choice:open": {
+		shape: "open",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "text",
+		alt: "Not chosen"
+	},
+	"choice:chosen": {
+		shape: "chosen",
+		tone: "accent",
+		glyph: g.single.on,
+		role: "accent",
+		alt: "Chosen"
+	},
+	"priority:none": {
+		shape: "priorityNone",
+		tone: "neutral",
+		glyph: "-",
+		role: "dim",
+		alt: "No priority"
+	},
+	"priority:low": {
+		shape: "priorityLow",
+		tone: "neutral",
+		glyph: "!",
+		role: "dim",
+		alt: "Low priority"
+	},
+	"priority:medium": {
+		shape: "priorityMedium",
+		tone: "neutral",
+		glyph: "!!",
+		role: "dim",
+		alt: "Medium priority"
+	},
+	"priority:high": {
+		shape: "priorityHigh",
+		tone: "neutral",
+		glyph: "!!!",
+		role: "text",
+		alt: "High priority"
+	},
+	"priority:urgent": {
+		shape: "priorityUrgent",
+		tone: "warning",
+		glyph: g.status.warning,
+		role: "warning",
+		alt: "Urgent"
+	},
+	"field:status": {
+		shape: "status",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "dim",
+		alt: "Status"
+	},
+	"field:project": {
+		shape: "project",
+		tone: "neutral",
+		glyph: g.multi.off,
+		role: "dim",
+		alt: "Project"
+	},
+	"field:label": {
+		shape: "label",
+		tone: "neutral",
+		glyph: g.single.on,
+		role: "dim",
+		alt: "Label"
+	},
+	"field:draft": {
+		shape: "draft",
+		tone: "neutral",
+		glyph: "✎",
+		role: "dim",
+		alt: "Draft"
+	}
+};
 
 // ../../lib/kits/core/src/lines.ts
 const span = (text, style = {}) => ({
@@ -1193,8 +1380,10 @@ const line = (spans, hit) => hit === void 0 ? { spans } : {
 	spans,
 	hit
 };
+/** An empty row. */
+const blank = () => ({ spans: [] });
 /** Cells a code point takes: 0 for marks and joiners, 2 for East Asian wide and emoji. */
-const cellsOf = (c) => {
+const cellsOf$1 = (c) => {
 	if (c < 32 || c >= 127 && c < 160) return 0;
 	if (c < 768) return 1;
 	if (c >= 768 && c <= 879 || c >= 8203 && c <= 8207 || c >= 8400 && c <= 8447 || c >= 65024 && c <= 65039 || c === 65279 || c >= 917760 && c <= 917999) return 0;
@@ -1203,7 +1392,7 @@ const cellsOf = (c) => {
 /** Cells `text` takes: wide characters two, marks and joiners none. Never `.length`. */
 function cellWidth(text) {
 	let n = 0;
-	for (const ch of text) n += cellsOf(ch.codePointAt(0) ?? 0);
+	for (const ch of text) n += cellsOf$1(ch.codePointAt(0) ?? 0);
 	return n;
 }
 /** The longest start of `text` that fits `cells`, and the rest. */
@@ -1211,7 +1400,7 @@ function split(text, cells) {
 	let used = 0;
 	let at = 0;
 	for (const ch of text) {
-		const w = cellsOf(ch.codePointAt(0) ?? 0);
+		const w = cellsOf$1(ch.codePointAt(0) ?? 0);
 		if (used + w > cells) break;
 		used += w;
 		at += ch.length;
@@ -1226,7 +1415,7 @@ function units(word) {
 	const out = [];
 	let run = "";
 	for (const ch of word) {
-		const w = cellsOf(ch.codePointAt(0) ?? 0);
+		const w = cellsOf$1(ch.codePointAt(0) ?? 0);
 		if (w === 2) {
 			if (run) out.push(run);
 			run = "";
@@ -1284,7 +1473,7 @@ function truncate(text, width) {
 * Plain text wrapped to `width` cells and bounded in lines: `{min: 1, max: 1}` truncates to one
 * line; no options wraps without limit.
 */
-function clamp$1(text, width, options = {}) {
+function clamp(text, width, options = {}) {
 	if (width < 1) return [];
 	const { min = 0, max = 1e400 } = options;
 	const cap = Math.max(min, max);
@@ -1429,6 +1618,11 @@ function block(spans, width, options = {}) {
 	}
 	return rows.map((row, i) => line([...i ? hang : lead, ...row], options.hit));
 }
+/** A line with each of its spans marked as part of `hit`, where the row holds other things too. */
+const hitSpans = (spans, hit) => spans.map((s) => ({
+	...s,
+	hit
+}));
 /** `spans` cut to `width` cells, the last ending in `…` when they were longer. */
 function truncateSpans(spans, width) {
 	if (spansWidth(spans) <= width) return [...spans];
@@ -1451,196 +1645,8 @@ function truncateSpans(spans, width) {
 	});
 	return out;
 }
-
-// ../../lib/kits/card/src/contract.ts
-/** A digit picks by a row's place, not by the letter printed on it. */
-function digitChoice(key) {
-	return /^[1-9]$/.test(key) ? Number(key) - 1 : -1;
-}
-
-// ../../lib/kits/card/src/terminal.ts
-/** The question card's parts as styled lines: the one drawing both terminals paint. */
-const GAP = " ".repeat(tokens$1.gutter);
-/**
-* One style for every label a person can act on. The keyboard's or the pointer's target is
-* bold in the text colour; only what is chosen takes the accent, and is underlined when it is
-* the target too.
-*/
-function controlStyle({ primary = false, highlighted = false, rest = "text", primaryRole = "accent" } = {}) {
-	return {
-		role: primary ? primaryRole : highlighted ? "text" : rest,
-		bold: primary || highlighted || void 0,
-		underline: primary && highlighted || void 0
-	};
-}
-/**
-* The rail's colour: the success colour beside a card that has its answer, else bright beside
-* the keyboard's card and quiet beside every other.
-*/
-const railRole = (state) => state.answered ? "success" : state.active ? "text" : "dim";
-/** What a person can press on a card: in the accent on the keyboard's card, quiet elsewhere. */
-const keyRole = (state) => state.active ? "accent" : "dim";
-/**
-* The column every row of a card keeps for the focus pointer, as blank cells: what a host sets
-* before a row of its own, such as an input, to line it up with the card's.
-*/
-const CARD_INSET = " ".repeat(cellWidth(tokens$1.glyph.pointer) + 1);
-/** The pointer column of one row: the pointer where the keyboard is, else blank. */
-const pointerLead = (isFocused = false) => isFocused ? [span(tokens$1.glyph.pointer, {
-	role: "text",
-	bold: true
-}), span(" ")] : [span(CARD_INSET)];
-/**
-* The question: the pointer column, its label, then the title hanging from it. That it is
-* answered is the rail's to say.
-*/
-function heading(h, width) {
-	return block(inline(h.title, {
-		role: "text",
-		bold: true
-	}), width, { lead: [...pointerLead(h.focused), ...h.label ? [span(h.label + GAP, { role: keyRole(h) })] : []] });
-}
-/**
-* One answer: the pointer column, its key, its mark and its words, wrapped to hang under their
-* first line. Only a chosen one takes a colour, the accent.
-*/
-function choice(c, width) {
-	const { chosen = false, literal: isLiteral = false, focused = false, hovered = false } = c;
-	const marks = c.multiple ? tokens$1.glyph.multi : tokens$1.glyph.single;
-	const isLit = chosen || focused || hovered;
-	const label = controlStyle({
-		primary: chosen,
-		highlighted: focused || hovered,
-		rest: isLiteral ? "dim" : "text"
-	});
-	const words = [...isLiteral ? literal(c.text, label) : inline(c.text, isLit ? label : {}), ...c.aside ? [span(c.aside, { role: "dim" })] : []];
-	const mark = chosen ? {
-		role: "accent",
-		bold: true
-	} : { role: "dim" };
-	const lead = [
-		...pointerLead(focused),
-		span(c.key || " ", { role: keyRole(c) }),
-		span(" "),
-		span(chosen ? marks.on : marks.off, mark),
-		span(" ")
-	];
-	const hang = [span(" ".repeat(spansWidth(lead)))];
-	return [...block(words, width, {
-		lead,
-		hang,
-		hit: c.hit
-	}), ...c.detail ? block(inline(c.detail, { role: "dim" }), width, {
-		lead: hang,
-		hang,
-		max: c.detailLines ?? 3,
-		hit: c.hit
-	}) : []];
-}
-const NOTE_LABEL = "Note: ";
-/** The card's note after the pointer column and its label, or the invitation to add one. */
-function note(n, width) {
-	const isLit = n.focused || n.hovered;
-	const style = controlStyle({
-		highlighted: isLit,
-		rest: "dim"
-	});
-	const room = width - cellWidth(CARD_INSET) - cellWidth(NOTE_LABEL);
-	const words = isLit ? style : { role: n.value ? "text" : "dim" };
-	return clamp$1(n.value || "Add a note", room, { max: n.max }).map((text, i) => line([...i ? [span(CARD_INSET + " ".repeat(cellWidth(NOTE_LABEL)))] : [...pointerLead(n.focused), span(NOTE_LABEL, isLit ? style : { role: "dim" })], span(text, words)], n.hit));
-}
-const FILL_LABEL = "Fill prompt";
-/**
-* The row after a round's last card: the pointer column, then how many questions have an
-* answer, which goes to the first question, and Fill prompt, a button whose key (Enter on this
-* step) is not printed. Fill takes the accent only when there is a reply to fill; once the round
-* is sent the row says so instead. With no room beside the count, Fill goes under it.
-*/
-function closing(c, width) {
-	const { hits } = c;
-	const count = span(`${c.answered} of ${c.total} answered`, {
-		...controlStyle({ highlighted: c.focused || c.hovered === "count" }),
-		...hits ? { hit: hits.count } : {}
-	});
-	const head = [
-		...pointerLead(c.focused),
-		count,
-		...c.sent ? [span(` ${tokens$1.glyph.done} Sent`, { role: "success" })] : []
-	];
-	if (!hits || c.sent) return [line(truncateSpans(head, width))];
-	const fill = span(FILL_LABEL, {
-		...controlStyle({
-			primary: c.canFill,
-			highlighted: c.hovered === "fill"
-		}),
-		hit: hits.fill
-	});
-	if (spansWidth(head) + tokens$1.gutter + cellWidth("Fill prompt") <= width) return [line([
-		...head,
-		span(GAP),
-		fill
-	])];
-	return [line(truncateSpans(head, width)), line(truncateSpans([span(CARD_INSET), fill], width))];
-}
-/** The nonempty sections of a card, `gap` between them: for rows that are not lines yet. */
-function sectionsOf(gap, ...parts) {
-	return parts.filter((part) => part.length > 0).flatMap((part, i) => i ? [gap, ...part] : part);
-}
-
-// ../../lib/kits/buttons/src/terminal.ts
-/** The button row as styled lines: the one drawing both terminals paint. */
-/** How a button's key is printed after its label: `↵` for Enter, else in brackets; nothing for none. */
-const shortcutOf = (b) => b.hit === void 0 || !b.hotkey ? b.hotkey : b.hotkey === "enter" ? tokens$1.glyph.enter : `[${b.hotkey}]`;
-/**
-* Actions left to right, label first with the key dim after it, the suggested one in the
-* accent; and dim keyboard-only hints, key first. One row drops what is neither suggested nor
-* essential, last first, until it fits; with `wrap` nothing drops.
-*/
-function buttonRow(keys, width, { wrap = false, lead = [], hover } = {}) {
-	const chips = keys.map((key) => {
-		const shortcut = shortcutOf(key);
-		return {
-			...key,
-			shortcut,
-			width: cellWidth(shortcut ? `${key.label} ${shortcut}` : key.label)
-		};
-	});
-	const prefix = truncateSpans(lead, width);
-	if (!wrap) {
-		let remaining = spansWidth(prefix) + chips.reduce((n, chip) => n + chip.width + tokens$1.gutter, 0) - (prefix.length || !chips.length ? 0 : tokens$1.gutter);
-		while (remaining > width) {
-			const index = chips.map((chip) => !chip.essential && !chip.isLit).lastIndexOf(true);
-			if (index < 0) break;
-			remaining -= (chips.splice(index, 1)[0]?.width ?? 0) + tokens$1.gutter;
-		}
-	}
-	const rows = [];
-	let spans = [...prefix];
-	for (const chip of chips) {
-		if (wrap && spans.length && spansWidth(spans) + tokens$1.gutter + chip.width > width) {
-			rows.push(line(spans));
-			spans = [];
-		}
-		const start = spansWidth(spans) + (spans.length ? tokens$1.gutter : 0);
-		if (start >= width) break;
-		const isHovered = chip.hovered || hover?.y === rows.length && hover.x >= start && hover.x < start + chip.width;
-		const entry = chip.hit === void 0 ? [span(`${chip.shortcut} ${chip.label}`, { role: "dim" })] : [span(chip.label, {
-			...controlStyle({
-				primary: chip.isLit,
-				highlighted: isHovered,
-				rest: chip.isQuiet ? "dim" : "text"
-			}),
-			hit: chip.hit
-		}), ...chip.shortcut ? [span(" ", { hit: chip.hit }), span(chip.shortcut, {
-			role: "dim",
-			hit: chip.hit
-		})] : []];
-		if (spans.length) spans.push(span(" ".repeat(tokens$1.gutter)));
-		spans.push(...truncateSpans(entry, width - start));
-	}
-	rows.push(line(spans));
-	return rows;
-}
+/** Cells a panel's rail and its gap take: a row of a panel starts this far in. */
+const PANEL_INSET = cellWidth(tokens.glyph.rail) + tokens.gutter;
 
 // ../../lib/kits/core/src/surfaces.ts
 const fact = (value, note, source) => ({
@@ -1653,8 +1659,8 @@ const unverified = (hint) => ({
 	hint
 });
 const README = "lib/kits/README.md, What still differs between the clients";
-const CLAUDE_MD = "skills/agent-plugin-dev/references/claude.md, VS Code quirks (extension 2.1.327)";
-const TYPES = "claude-code types, Elements (apps/*/dist/.claude-plugin/types/claude-code/index.d.ts, `pnpm drive types <app>`)";
+const CLAUDE_MD = "49167447:skills/agent-plugin-dev/references/claude.md, Graphical surfaces (extension 2.1.327)";
+const TYPES = "claude-code types, Elements (apps/*/.claude-types/claude-code/index.d.ts, `pnpm drive types <app>`)";
 /**
 * The table. Surfaces are the rows, capabilities the columns; each column's value type is
 * `CapValues`, which the `satisfies` clause checks, and the literals stay for the types below.
@@ -1675,7 +1681,9 @@ const surfaces = {
 		textSize: fact(false, "the terminal has one size", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		images: fact(false, "pi-tui has no image component", "pi-tui exports (no Image)")
+		transcriptKeyScroll: unverified(),
+		images: fact(false, "pi-tui has no image component", "pi-tui exports (no Image)"),
+		cells: fact(true, "the kit lays out every line in cells: a row is cut to its room, and there is no toolbar line or element for a host to draw", README)
 	},
 	"claude-terminal": {
 		drawing: "terminal",
@@ -1692,7 +1700,9 @@ const surfaces = {
 		textSize: fact(false, "the terminal has one size and ignores `size`", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		images: fact(true, "the terminal's table has an `Image`", TYPES + ", Elements.terminal")
+		transcriptKeyScroll: unverified(),
+		images: fact(true, "the terminal's table has an `Image`", TYPES + ", Elements.terminal"),
+		cells: fact(true, "the kit lays out every line in cells: a row is cut to its room, and there is no toolbar line or element for a host to draw", README)
 	},
 	vscode: {
 		drawing: "gui",
@@ -1706,10 +1716,12 @@ const surfaces = {
 		select: fact(true, "the extension's table has a `Select`", TYPES + ", Elements.vscode"),
 		progress: fact(true, "the extension's table has a `Progress`", TYPES + ", Elements.vscode"),
 		svg: fact(true, "drawn as an image, so it cannot take theme colours: check a light theme", TYPES + ", SvgProps (the editor draws an image)"),
-		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
+		textSize: fact(false, "the webview draws a Text's colour, dimColor, bold, italic and underline, and no `size`: every Text is the body's size. A Markdown heading has real sizes", "extension 2.1.330 webview/index.js, the Text style function (read; probed live: every role drew 13px)"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: fact(false, "a Button's label never wraps; a long one overflows a narrow pane", CLAUDE_MD),
-		images: unverified("the table has no `Image`")
+		transcriptKeyScroll: fact(false, "scrolling to a key inside a mod's AssistantMessage is denied or does nothing", CLAUDE_MD),
+		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.vscode (`Image` is the terminal's alone)"),
+		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
 	},
 	desktop: {
 		drawing: "gui",
@@ -1719,14 +1731,16 @@ const surfaces = {
 		window: unverified(),
 		framesPane: unverified(),
 		inputRows: unverified(),
-		input: unverified("the table has an `Input`"),
-		select: unverified("the table has a `Select`"),
+		input: fact(true, "the extension's table has an `Input`, as VS Code's does; never driven", TYPES + ", Elements.desktop"),
+		select: fact(true, "the extension's table has a `Select`, as VS Code's does; never driven", TYPES + ", Elements.desktop"),
 		progress: unverified("the table has a `Progress`"),
 		svg: fact(true, "drawn as an image, or in a sandboxed frame when `isInteractive`", TYPES + ", SvgProps; never driven"),
 		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		images: unverified("the table has no `Image`")
+		transcriptKeyScroll: fact(true, "the engine supports targeting element keys; Answer already relies on it for Desktop review, not verified live", TYPES + ", ui.scroll; apps/answer/src/claude.tsx, roundActions"),
+		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.desktop (`Image` is the terminal's alone)"),
+		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
 	},
 	mobile: {
 		drawing: "gui",
@@ -1743,7 +1757,9 @@ const surfaces = {
 		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		images: unverified("the table has no `Image`")
+		transcriptKeyScroll: unverified(),
+		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.mobile (`Image` is the terminal's alone)"),
+		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
 	}
 };
 
@@ -1888,163 +1904,456 @@ function paintLine(theme, l, width) {
 		cells: painted.cells[0] ?? []
 	};
 }
-/** Lines painted, for where only the rows are wanted. */
-const draw = (theme, lines, width) => paintLines(theme, lines, width).lines;
-/** One run of text in a style of the kit. */
-const paintText = (theme, text, style = {}) => paintSpan(theme, {
-	...style,
-	text
-});
 
-// ../../lib/kits/legacy/src/pi/tokens.ts
-const tokens = {
-	/** Width classes: caps in columns, never targets. `wide` is the terminal less `wideMargin`. */
-	width: {
-		reading: 96,
-		split: 124,
-		dialog: 72,
-		wideMargin: 2
-	},
-	/** Prose is wrapped at this measure even in a wider pane. */
-	prose: 80,
-	/** From this many terminal columns a list with detail is two panes; below it stacks. */
-	splitFrom: 110,
-	/** The list pane's share of a split's content width. */
-	splitRatio: .55,
-	/** Cells of padding inside a border. */
-	padding: 1,
-	/** Cells between metadata columns, and before the first. */
-	gutter: 2,
-	/** From this pane width dated entries use a date column; narrower, a date line. */
-	entriesFrom: 50,
-	/** Cells of the date column of dated entries: an ISO date. */
-	dateWidth: 10,
-	/** A row's title is never given less than this; metadata columns drop first. */
-	minTitle: 16,
-	/** Blank rows kept clear of the terminal's edge by a modal. */
-	margin: 1,
-	glyph: {
-		pointer: "❯",
-		multi: {
-			off: "□",
-			on: "■"
-		},
-		writeIn: "+",
-		single: {
-			off: "○",
-			on: "●"
-		},
-		ellipsis: "…",
-		more: {
-			up: "↑",
-			down: "↓"
-		},
-		rule: "─",
-		done: "✓",
-		times: "×",
-		enter: "↵",
-		noteMid: "│",
-		noteEnd: "╰▸",
-		kind: {
-			missing: "+",
-			stale: "↻",
-			wrong: "!"
+// src/pi/offer.ts
+var AnswerOffer = class {
+	theme;
+	title;
+	note;
+	open;
+	isHover = false;
+	constructor(theme, title, note, open) {
+		this.theme = theme;
+		this.title = title;
+		this.note = note;
+		this.open = open;
+	}
+	invalidate() {}
+	render(width) {
+		const spans = [
+			span(" "),
+			span(this.title, {
+				role: "accent",
+				bold: this.isHover
+			}),
+			span(this.note, { role: "dim" })
+		];
+		return paintLines(this.theme, [line(truncateSpans(spans, width))], width).lines;
+	}
+	handleMouse(event) {
+		if (event.type === "move") {
+			if (this.isHover) return { handled: true };
+			this.isHover = true;
+			return {
+				handled: true,
+				render: true
+			};
 		}
-	},
-	border: {
-		tl: "╭",
-		tr: "╮",
-		bl: "╰",
-		br: "╯",
-		h: "─",
-		v: "│",
-		down: "┬",
-		up: "┴"
-	},
-	/** The four roles of the style, plus the frame's own line. Values are pi theme colours. */
-	role: {
-		text: "text",
-		dim: "dim",
-		accent: "accent",
-		success: "success",
-		warning: "warning",
-		error: "error",
-		border: "borderMuted"
+		if (event.type === "click" && event.button === "left") {
+			this.open();
+			return { handled: true };
+		}
+		return { handled: true };
 	}
 };
-/**
-* `text` coloured in a role of the theme. Call at render time so a theme change shows.
-* @param role One of the style's colour roles, never a raw theme colour.
-*/
-const paint = (theme, role, text) => theme.fg(tokens.role[role], text);
 
-// ../../lib/kits/legacy/src/pi/text.ts
+// ../../lib/kits/core/src/manifest.ts
+/** A contract's model fields, checked against the model type: a field left out is an error. */
+const modelFields = () => (keys) => keys;
+
+// ../../lib/kits/card/src/contract.ts
 /**
-* `{min: 1, max: 1}` truncates to one line; no options wraps without limit.
-* @param width Cells, not characters; wide characters count two.
+* The question card's contract: its model, what each drawing is given, and the intents a list of
+* choices sends back. No host imports.
 */
-function clamp(text, width, options = {}) {
-	if (width < 1) return [];
-	const { min = 0, max = 1e400, target } = options;
-	const wanted = target === void 0 ? 1e400 : Math.max(1, Math.ceil(target / width));
-	const cap = Math.max(0, Math.max(min, Math.min(max, wanted)));
-	let lines = wrapTextWithAnsi(text, width);
-	if (lines.length > cap) {
-		if (cap === 0) return [];
-		const rest = lines.slice(cap - 1).join(" ");
-		lines = [...lines.slice(0, cap - 1), truncateToWidth(rest, width, tokens.glyph.ellipsis)];
+const cardFields = modelFields()([
+	"heading",
+	"choices",
+	"note",
+	"steps",
+	"summaries",
+	"closing",
+	"width"
+]);
+/** A digit picks by a row's place, not by the letter printed on it. */
+function digitChoice(key) {
+	return /^[1-9]$/.test(key) ? Number(key) - 1 : -1;
+}
+
+// ../../lib/kits/card/src/terminal.ts
+/** The question card's parts as styled lines: the one drawing both terminals paint. */
+const GAP$1 = " ".repeat(tokens.gutter);
+/**
+* One style for every label a person can act on. The keyboard's or the pointer's target is
+* bold in the text colour; only what is chosen takes the accent, and is underlined when it is
+* the target too.
+*/
+function controlStyle({ primary = false, highlighted = false, rest = "text", primaryRole = "accent" } = {}) {
+	return {
+		role: primary ? primaryRole : highlighted ? "text" : rest,
+		bold: primary || highlighted || void 0,
+		underline: primary && highlighted || void 0
+	};
+}
+/**
+* The rail's colour: the success colour beside a card that has its answer, else bright beside
+* the keyboard's card and quiet beside every other.
+*/
+const railRole = (state) => state.answered ? "success" : state.active ? "text" : "dim";
+/** What a person can press on a card: in the accent on the keyboard's card, quiet elsewhere. */
+const keyRole = (state) => state.active ? "accent" : "dim";
+/**
+* The column every row of a card keeps for the focus pointer, as blank cells: what a host sets
+* before a row of its own, such as an input, to line it up with the card's.
+*/
+const CARD_INSET = " ".repeat(cellWidth(tokens.glyph.pointer) + 1);
+/** The pointer column of one row: the pointer where the keyboard is, else blank. */
+const pointerLead = (isFocused = false) => isFocused ? [span(tokens.glyph.pointer, {
+	role: "text",
+	bold: true
+}), span(" ")] : [span(CARD_INSET)];
+/** A line behind a card's rail, which still draws on a blank row. */
+function rail(state, row) {
+	const mark = span(tokens.glyph.rail, { role: railRole(state) });
+	return {
+		...row,
+		spans: row.spans.length ? [
+			mark,
+			span(GAP$1),
+			...row.spans
+		] : [mark]
+	};
+}
+/**
+* The question: the pointer column, its label, then the title hanging from it. That it is
+* answered is the rail's to say.
+*/
+function heading(h, width) {
+	return block(inline(h.title, {
+		role: "text",
+		bold: true
+	}), width, { lead: [...pointerLead(h.focused), ...h.label ? [span(h.label + GAP$1, { role: keyRole(h) })] : []] });
+}
+/**
+* One answer: the pointer column, its key, its mark and its words, wrapped to hang under their
+* first line. Only a chosen one takes a colour, the accent.
+*/
+function choice(c, width) {
+	const { chosen = false, literal: isLiteral = false, focused = false, hovered = false } = c;
+	const marks = c.multiple ? tokens.glyph.multi : tokens.glyph.single;
+	const isLit = chosen || focused || hovered;
+	const label = controlStyle({
+		primary: chosen,
+		highlighted: focused || hovered,
+		rest: isLiteral ? "dim" : "text"
+	});
+	const words = [...isLiteral ? literal(c.text, label) : inline(c.text, isLit ? label : {}), ...c.aside ? [span(c.aside, { role: "dim" })] : []];
+	const mark = chosen ? {
+		role: "accent",
+		bold: true
+	} : { role: "dim" };
+	const lead = [
+		...pointerLead(focused),
+		span(c.key || " ", { role: keyRole(c) }),
+		span(" "),
+		span(chosen ? marks.on : marks.off, mark),
+		span(" ")
+	];
+	const hang = [span(" ".repeat(spansWidth(lead)))];
+	return [...block(words, width, {
+		lead,
+		hang,
+		hit: c.hit
+	}), ...c.detail ? block(inline(c.detail, { role: "dim" }), width, {
+		lead: hang,
+		hang,
+		max: c.detailLines ?? 3,
+		hit: c.hit
+	}) : []];
+}
+const NOTE_LABEL = "Note: ";
+/** The card's note after the pointer column and its label, or the invitation to add one. */
+function note(n, width) {
+	const isLit = n.focused || n.hovered;
+	const style = controlStyle({
+		highlighted: isLit,
+		rest: "dim"
+	});
+	const room = width - cellWidth(CARD_INSET) - cellWidth(NOTE_LABEL);
+	const words = isLit ? style : { role: n.value ? "text" : "dim" };
+	return clamp(n.value || "Add a note", room, { max: n.max }).map((text, i) => line([...i ? [span(CARD_INSET + " ".repeat(cellWidth(NOTE_LABEL)))] : [...pointerLead(n.focused), span(NOTE_LABEL, isLit ? style : { role: "dim" })], span(text, words)], n.hit));
+}
+const FILL_LABEL = "Fill prompt";
+/**
+* The row after a round's last card: the pointer column, then how many questions have an
+* answer, which goes to the first question, and Fill prompt, a button whose key (Enter on this
+* step) is not printed. Fill takes the accent only when there is a reply to fill; once the round
+* is sent the row says so instead. With no room beside the count, Fill goes under it.
+*/
+function closing(c, width) {
+	const { hits } = c;
+	const count = span(`${c.answered} of ${c.total} answered`, {
+		...controlStyle({ highlighted: c.focused || c.hovered === "count" }),
+		...hits ? { hit: hits.count } : {}
+	});
+	const head = [
+		...pointerLead(c.focused),
+		count,
+		...c.sent ? [span(` ${tokens.glyph.done} Sent`, { role: "success" })] : []
+	];
+	if (!hits || c.sent) return [line(truncateSpans(head, width))];
+	const fill = span(FILL_LABEL, {
+		...controlStyle({
+			primary: c.canFill,
+			highlighted: c.hovered === "fill"
+		}),
+		hit: hits.fill
+	});
+	if (spansWidth(head) + tokens.gutter + cellWidth(FILL_LABEL) <= width) return [line([
+		...head,
+		span(GAP$1),
+		fill
+	])];
+	return [line(truncateSpans(head, width)), line(truncateSpans([span(CARD_INSET), fill], width))];
+}
+/** The nonempty sections of a card, `gap` between them: for rows that are not lines yet. */
+function sectionsOf(gap, ...parts) {
+	return parts.filter((part) => part.length > 0).flatMap((part, i) => i ? [gap, ...part] : part);
+}
+
+// ../../lib/kits/buttons/src/model.ts
+/**
+* The button row's view model: what is lit, what goes quiet and what is drawn on a surface.
+* Pure and plain: the drawings read it, and so does the snapshot that holds it across surfaces.
+* No host imports.
+*/
+/** How a button's key is printed after its label: `↵` for Enter, else in brackets; nothing for none. */
+const shortcutOf = (b) => b.hit === void 0 || !b.hotkey ? b.hotkey : b.hotkey === "enter" ? tokens.glyph.enter : `[${b.hotkey}]`;
+/**
+* The buttons as a screen shows them. One button of a screen is lit, the first that asks, so a
+* screen never has two suggested actions; while Close asks, none is lit and every control is
+* quiet, whatever the caller said.
+*/
+function settle(rows, confirming = false) {
+	let isLitOne = false;
+	return rows.map((row) => row.map((b) => {
+		if (confirming) return {
+			...b,
+			isLit: false,
+			isQuiet: b.hit === void 0 ? void 0 : true
+		};
+		if (!b.isLit) return b;
+		if (isLitOne) return {
+			...b,
+			isLit: false
+		};
+		isLitOne = true;
+		return b;
+	}));
+}
+
+// ../../lib/kits/buttons/src/terminal.ts
+/** The button row as styled lines: the one drawing both terminals paint. */
+/**
+* Actions left to right, label first with the key dim after it, the suggested one in the
+* accent; and dim keyboard-only hints, key first. One row drops what is neither suggested nor
+* essential, last first, until it fits; with `wrap` nothing drops. One button is lit: the
+* first that asks (`settle`).
+*/
+function buttonRow(keys, width, { wrap = false, lead = [], hover } = {}) {
+	const chips = (settle([keys])[0] ?? []).map((key) => {
+		const shortcut = shortcutOf(key);
+		return {
+			...key,
+			shortcut,
+			width: cellWidth(shortcut ? `${key.label} ${shortcut}` : key.label)
+		};
+	});
+	const prefix = truncateSpans(lead, width);
+	if (!wrap) {
+		let remaining = spansWidth(prefix) + chips.reduce((n, chip) => n + chip.width + tokens.gutter, 0) - (prefix.length || !chips.length ? 0 : tokens.gutter);
+		while (remaining > width) {
+			const index = chips.map((chip) => !chip.essential && !chip.isLit).lastIndexOf(true);
+			if (index < 0) break;
+			remaining -= (chips.splice(index, 1)[0]?.width ?? 0) + tokens.gutter;
+		}
 	}
-	while (lines.length < min) lines.push("");
-	return lines;
-}
-
-// ../../lib/kits/legacy/src/pi/blocks.ts
-/**
-* Wrapped prose, at the measure when the pane is wider than it.
-* @param options Bounds for the wrap, as `clamp` takes them.
-*/
-function prose(theme, width, text, options = {}, role = "text") {
-	return clamp(text, Math.min(width, tokens.prose), options).map((l) => paint(theme, role, l));
-}
-/** A left gutter that still draws its mark on a blank line. */
-function gutterLine(mark, text, gap = tokens.gutter) {
-	return text ? mark + " ".repeat(gap) + text : mark;
-}
-
-// ../../lib/kits/legacy/src/pi/band.ts
-/** The visible control at `x`; separators and keyboard-only hints have no target. */
-function cellAt(cells, x) {
-	return cells?.find(({ start, end }) => x >= start && x < end);
-}
-/**
-* What a pointer at (`x`, `y`) of the band hits: a chip by its columns, else the row's own
-* target where its text reaches. Coordinates are zero-based from the band's top-left cell.
-* @param band What `bandShell` drew.
-*/
-function bandAct(band, x, y) {
-	const row = band.hits.get(y);
-	const at = x - 1;
-	return cellAt(row?.cells, at)?.act ?? (row?.act !== void 0 && at < visibleWidth(row.text.trimEnd()) ? row.act : void 0);
-}
-
-// ../../lib/kits/legacy/src/pi/frame.ts
-/** Where a modal's body starts, in the frame's own cells. */
-const bodyOrigin = {
-	x: 1 + tokens.padding,
-	y: 2
-};
-/** Body origin and the total number of rows used for the frame, notice and key hints. */
-const captionFrameLayout = {
-	...bodyOrigin,
-	chrome: 5,
-	caption: {
-		x: 2,
-		y: 0,
-		reserved: 5
+	const rows = [];
+	let spans = [...prefix];
+	for (const chip of chips) {
+		if (wrap && spans.length && spansWidth(spans) + tokens.gutter + chip.width > width) {
+			rows.push(line(spans));
+			spans = [];
+		}
+		const start = spansWidth(spans) + (spans.length ? tokens.gutter : 0);
+		if (start >= width) break;
+		const isHovered = chip.hovered || hover?.y === rows.length && hover.x >= start && hover.x < start + chip.width;
+		const entry = chip.hit === void 0 ? [span(`${chip.shortcut} ${chip.label}`, { role: "dim" })] : [span(chip.label, {
+			...controlStyle({
+				primary: chip.isLit,
+				highlighted: isHovered,
+				rest: chip.isQuiet ? "dim" : "text"
+			}),
+			hit: chip.hit
+		}), ...chip.shortcut ? [span(" ", { hit: chip.hit }), span(chip.shortcut, {
+			role: "dim",
+			hit: chip.hit
+		})] : []];
+		if (spans.length) spans.push(span(" ".repeat(tokens.gutter)));
+		spans.push(...truncateSpans(entry, width - start));
 	}
-};
+	rows.push(line(spans));
+	return rows;
+}
+
+// ../../lib/kits/prose/src/terminal.ts
+/**
+* Prose as styled lines: the one drawing both terminals paint. A text of several blocks is set
+* here, not by each host's Markdown renderer, wherever its rows have to be counted: in a room
+* that shows a window of it and scrolls. A host's own renderer (a `slot` line) still draws what
+* needs syntax colours or runs as long as it likes.
+*/
+const GAP = " ".repeat(tokens.gutter);
+const ITEM = /^(\s*)(?:([-*+])|(\d+)[.)])\s+(?:\[([ xX])\]\s+)?(.*)$/;
+const FENCE = /^\s*(```|~~~)/;
+const ROW = /^\s*\|.*\|\s*$/;
+const DIVIDER = /^:?-{2,}:?$/;
+const RULE = /^\s*([-*_])(?:\s*\1){2,}\s*$/;
+/** A table row's cells. */
+const cellsOf = (row) => row.trim().replace(/^\||\|$/g, "").split("|").map((cell) => cell.trim());
+/**
+* A table to `width` cells: columns two apart, each as wide as its widest cell while they fit
+* and sharing the room in proportion when they do not, cells wrapped, the first row bold.
+*/
+function table(rows, width, base) {
+	const all = rows.map(cellsOf).filter((cells) => !cells.every((cell) => DIVIDER.test(cell)));
+	const count = Math.max(0, ...all.map((cells) => cells.length));
+	if (!count) return [];
+	const plain = (cell) => inline(cell).reduce((n, s) => n + cellWidth(s.text), 0);
+	const natural = Array.from({ length: count }, (_, i) => Math.max(1, ...all.map((cells) => plain(cells[i] ?? ""))));
+	const room = Math.max(count, width - (count - 1) * tokens.gutter);
+	const total = natural.reduce((n, w) => n + w, 0);
+	const widths = natural.map((w) => total <= room ? w : Math.max(1, Math.floor(room * w / total)));
+	return all.flatMap((cells, r) => {
+		const style = r === 0 ? {
+			...base,
+			role: base.role ?? "text",
+			bold: true
+		} : base;
+		const columns = widths.map((w, i) => block(inline(cells[i] ?? "", style), w));
+		const height = Math.max(1, ...columns.map((column) => column.length));
+		return Array.from({ length: height }, (_, y) => {
+			const spans = [];
+			columns.forEach((column, i) => {
+				const cell = column[y]?.spans ?? [];
+				const used = cell.reduce((n, s) => n + cellWidth(s.text), 0);
+				const isLast = i === columns.length - 1;
+				spans.push(...cell);
+				if (!isLast) spans.push(span(" ".repeat(Math.max(0, (widths[i] ?? 0) - used)) + GAP));
+			});
+			return line(spans);
+		});
+	});
+}
+/**
+* Markdown's blocks as lines of `width` cells: paragraphs, lists (bulleted, numbered, ticked,
+* nested), headings, quotes, rules, fenced code and tables, with inline Markdown in each. One
+* blank row between blocks, none between the items of a list or the lines of a paragraph.
+*/
+function prose({ text, width, isDim = false }) {
+	const base = isDim ? { role: "dim" } : {};
+	const quiet = { role: "dim" };
+	const out = [];
+	/** A blank row before a block, unless it follows one or starts the text. */
+	const gap = () => {
+		const last = out[out.length - 1];
+		if (last && (last.spans.length || last.slot)) out.push(blank());
+	};
+	const rows = text.replace(/\r\n?/g, "\n").split("\n");
+	let paragraph = [];
+	let wasItem = false;
+	const flush = () => {
+		if (!paragraph.length) return;
+		gap();
+		for (const words of paragraph) out.push(...block(inline(words, base), width));
+		paragraph = [];
+	};
+	for (let i = 0; i < rows.length; i++) {
+		const row = rows[i] ?? "";
+		const fence = FENCE.exec(row);
+		if (fence) {
+			flush();
+			gap();
+			const code = [];
+			for (i++; i < rows.length && !(rows[i] ?? "").trim().startsWith(fence[1] ?? "```"); i++) code.push(rows[i] ?? "");
+			for (const l of code) out.push(line([span(GAP), span(truncate(l, width - tokens.gutter), { role: "code" })]));
+			wasItem = false;
+			continue;
+		}
+		if (ROW.test(row)) {
+			flush();
+			gap();
+			const from = i;
+			while (i + 1 < rows.length && ROW.test(rows[i + 1] ?? "")) i++;
+			out.push(...table(rows.slice(from, i + 1), width, base));
+			wasItem = false;
+			continue;
+		}
+		if (!row.trim()) {
+			flush();
+			wasItem = false;
+			continue;
+		}
+		if (RULE.test(row)) {
+			flush();
+			gap();
+			out.push(line([span(tokens.glyph.rule.repeat(width), { role: "border" })]));
+			wasItem = false;
+			continue;
+		}
+		const heading = /^\s*#{1,6}\s+(.*?)\s*#*\s*$/.exec(row);
+		if (heading) {
+			flush();
+			gap();
+			out.push(...block(inline(heading[1] ?? "", {
+				...base,
+				role: base.role ?? "text",
+				bold: true
+			}), width));
+			wasItem = false;
+			continue;
+		}
+		const quote = /^\s*>\s?(.*)$/.exec(row);
+		if (quote) {
+			flush();
+			const lead = [span(tokens.glyph.rail, quiet), span(" ")];
+			if (!wasItem) gap();
+			out.push(...block(inline(quote[1] ?? "", quiet), width, {
+				lead,
+				hang: lead
+			}));
+			wasItem = true;
+			continue;
+		}
+		const item = ITEM.exec(row);
+		if (item) {
+			flush();
+			if (!wasItem) gap();
+			const [, indent = "", , number, tick, words = ""] = item;
+			let rest = words;
+			while (i + 1 < rows.length && /^\s+\S/.test(rows[i + 1] ?? "") && !ITEM.test(rows[i + 1] ?? "") && !FENCE.test(rows[i + 1] ?? "")) rest += ` ${(rows[++i] ?? "").trim()}`;
+			const depth = Math.min(3, Math.floor(indent.replace(/\t/g, "  ").length / 2));
+			const mark = tick !== void 0 ? span(tick === " " ? "[ ]" : "[x]", tick === " " ? quiet : { role: "success" }) : span(number ? `${number}.` : tokens.glyph.bullet, quiet);
+			out.push(...block(inline(rest, base), width, { lead: [
+				span(" ".repeat(depth * tokens.gutter)),
+				mark,
+				span(" ")
+			] }));
+			wasItem = true;
+			continue;
+		}
+		wasItem = false;
+		paragraph.push(row.trim());
+	}
+	flush();
+	while (out.length && !out[out.length - 1]?.spans.length) out.pop();
+	return out;
+}
 
 // src/pi/transcript.ts
+/** The control at `x` on a row, if the pointer is over one. */
+const cellAt = (cells, x) => cells.find((cell) => x >= cell.start && x < cell.end);
+const atCell = (cells, x) => cellAt(cells, x)?.act;
 const choiceLetters = (item) => {
 	const unused = [...item.entries.some((entry) => /^[1-9]$/.test(entry.key)) ? "123456789" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ"].filter((letter) => !item.entries.some((entry) => entry.key === letter));
 	return item.entries.map((entry) => entry.key || unused.shift() || "");
@@ -2081,56 +2390,64 @@ var Transcript = class {
 		if (!state || columns < 20) return [];
 		const { round, active, field } = state;
 		const { theme } = this;
-		const width = widthCap("reading", columns - tokens$1.gutter);
-		const inner = Math.min(width - tokens$1.gutter, tokens$1.prose);
+		const width = widthCap("reading", columns - tokens.gutter);
+		const inner = Math.min(width - tokens.gutter, tokens.prose);
 		const out = [];
-		const dim = (text) => paintText(theme, text, { role: "dim" });
 		const room = inner - cellWidth(CARD_INSET);
-		const inset = (text) => CARD_INSET + text;
-		const asRows = (lines, act) => lines.map((text) => ({
-			text,
-			act
-		}));
+		const inset = (spans) => line([span(CARD_INSET), ...spans]);
+		const actions = /* @__PURE__ */ new Map();
+		let rowHits = 0;
+		const asRows = (lines, act) => lines.map((drawn) => {
+			if (!act) return { line: drawn };
+			const hit = `row:${rowHits++}`;
+			actions.set(hit, act);
+			return { line: {
+				...drawn,
+				spans: hitSpans(drawn.spans, hit)
+			} };
+		});
 		const editRows = (step, kind, label) => {
 			if (!field || field.step !== step || field.kind !== kind) return void 0;
-			const width = inner - cellWidth(label);
-			return field.editor.render(width).slice(1, -1).map((line, i) => ({
-				text: dim(i ? " ".repeat(cellWidth(label)) : label) + line,
-				editorWidth: width
+			const labelWidth = cellWidth(label);
+			const editorWidth = inner - labelWidth;
+			return field.editor.render(editorWidth).slice(1, -1).map((text, i) => ({
+				line: line([span(i ? " ".repeat(labelWidth) : label, { role: "dim" }), span(text)]),
+				editorWidth
 			}));
 		};
 		const section = (step, heading, body, state) => {
 			if (out.length) out.push("", "");
 			this.stops[step] = out.length;
 			const append = (row) => {
-				const text = state ? gutterLine(paintText(theme, tokens$1.glyph.rail, { role: railRole({
-					active: state.here,
-					answered: state.answered
-				}) }), row.text) : gutterLine(dim(tokens$1.glyph.rail), row.text);
+				const painted = paintLine(theme, rail({
+					active: state?.here,
+					answered: state?.answered
+				}, row.line), inner + 1 + tokens.gutter);
 				if (row.editorWidth !== void 0 && field) {
 					if (this.input) this.input.height++;
 					else this.input = {
 						field,
 						first: out.length,
-						x: 1 + tokens$1.gutter + inner - row.editorWidth,
+						x: 1 + tokens.gutter + inner - row.editorWidth,
 						width: row.editorWidth,
 						height: 1
 					};
-				} else if (row.act || row.cells) {
-					const cells = row.cells?.map(({ start, end, act }) => ({
-						start: start + tokens$1.gutter,
-						end: end + tokens$1.gutter,
-						act
-					}));
-					this.hits.set(out.length, {
-						...row,
-						text,
-						cells
-					});
 				}
-				out.push(text);
+				const cells = painted.cells.flatMap((cell) => {
+					const act = actions.get(cell.hit);
+					return act ? [{
+						start: cell.start,
+						end: cell.end,
+						act
+					}] : [];
+				});
+				if (cells.length) this.hits.set(out.length, {
+					text: painted.text,
+					cells
+				});
+				out.push(painted.text);
 			};
-			sectionsOf({ text: "" }, heading, body).forEach(append);
+			sectionsOf({ line: line([]) }, heading, body).forEach(append);
 			this.ends[step] = out.length;
 		};
 		const current = view(round.form, round.draft);
@@ -2142,19 +2459,19 @@ var Transcript = class {
 			if (!item) continue;
 			const here = active && current.step === step;
 			const answered = current.review[step]?.isAnswered ?? false;
-			const heading$1 = asRows(draw(theme, heading({
+			const heading$1 = asRows(heading({
 				title: item.title,
 				label: item.label,
 				active: here,
 				focused: here,
 				answered
-			}, inner), inner));
+			}, inner));
 			const rows = [];
 			if (item.body) {
-				const detail = new Markdown(item.body, 0, 0, getMarkdownTheme()).render(room);
-				rows.push(...asRows(detail.slice(0, 3).map(inset)));
-				if (detail.length > 3) rows.push({ text: dim(inset("… full context in the message above")) });
-				rows.push({ text: "" });
+				const detail = markdownLines(theme, item.body, room);
+				rows.push(...asRows(detail.slice(0, 3).map((text) => inset([span(text)]))));
+				if (detail.length > 3) rows.push({ line: inset([span("… full context in the message above", { role: "dim" })]) });
+				rows.push({ line: line([]) });
 			}
 			const letters = choiceLetters(item);
 			item.entries.forEach((entry, index) => {
@@ -2174,7 +2491,7 @@ var Transcript = class {
 					step,
 					entry: index
 				};
-				rows.push(...asRows(draw(theme, choice({
+				rows.push(...asRows(choice({
 					key: key ?? "",
 					text,
 					detail: entry.detail,
@@ -2184,40 +2501,44 @@ var Transcript = class {
 					active: here,
 					multiple: item.isSeveral,
 					literal: entry.kind === "write"
-				}, inner), inner), action));
+				}, inner), action));
 			});
 			const more = [];
-			if (item.recommended) more.push(...asRows(markdownLines(theme, `Recommended: ${item.recommended}`, room, { color: dim }, 3).map(inset)));
-			if (active && item.accepts.includes(",")) more.push(...asRows(prose(theme, room, `Take ${item.accepts}`, {}, "dim").map(inset), {
+			if (item.recommended) more.push(...asRows(markdownLines(theme, `Recommended: ${item.recommended}`, room, { color: (text) => paintSpan(theme, span(text, { role: "dim" })) }, 3).map((text) => inset([span(text)]))));
+			if (active && item.accepts.includes(",")) more.push(...asRows(prose({
+				text: `Take ${item.accepts}`,
+				width: room,
+				isDim: true
+			}).map((drawn) => inset(drawn.spans)), {
 				kind: "accept",
 				step
 			}));
-			if (active || item.note) rows.push(...editRows(step, "note", CARD_INSET + "Note: ") ?? asRows(draw(theme, note({
+			if (active || item.note) rows.push(...editRows(step, "note", CARD_INSET + "Note: ") ?? asRows(note({
 				value: item.note,
 				active: here,
 				answered,
 				hovered: this.hovered?.kind === "note" && this.hovered.step === step
-			}, inner), inner), active ? {
+			}, inner), active ? {
 				kind: "note",
 				step
 			} : void 0));
-			section(step, heading$1, sectionsOf({ text: "" }, rows, more), {
+			section(step, heading$1, sectionsOf({ line: line([]) }, rows, more), {
 				here,
 				answered
 			});
 		}
 		const last = active && current.isReview;
-		const ends = [
+		[
 			{ kind: "top" },
 			{ kind: "fill" },
 			{
 				kind: "note",
 				step: current.count
 			}
-		];
+		].forEach((action, i) => actions.set(String(i), action));
 		const hovered = this.hovered;
 		const editingNote = editRows(current.count, "note", CARD_INSET + NOTE_LABEL);
-		const closed = paintLines(theme, [...closing({
+		const closingRow = [...closing({
 			answered: current.answered,
 			total: current.count,
 			focused: last,
@@ -2233,15 +2554,7 @@ var Transcript = class {
 			active: last,
 			hovered: hovered?.kind === "note" && hovered.step === current.count,
 			hit: active ? "2" : void 0
-		}, inner) : []], inner);
-		const closingRow = closed.lines.map((text, i) => ({
-			text,
-			cells: closed.cells[i]?.map(({ start, end, hit }) => ({
-				start,
-				end,
-				act: ends[Number(hit)]
-			}))
-		}));
+		}, inner) : []].map((drawn) => ({ line: drawn }));
 		section(current.count, [...closingRow, ...editingNote ?? []], [], {
 			here: last,
 			answered: current.answered === current.count
@@ -2250,7 +2563,7 @@ var Transcript = class {
 	}
 	handleMouse(event) {
 		const input = this.input;
-		if (input && event.y >= input.first && event.y < input.first + input.height && event.x >= 1 + tokens$1.gutter && event.x < input.x + input.width && event.type === "click" && event.button === "left") {
+		if (input && event.y >= input.first && event.y < input.first + input.height && event.x >= 1 + tokens.gutter && event.x < input.x + input.width && event.type === "click" && event.button === "left") {
 			this.onAction({ kind: "focus" });
 			input.field.editor.handleMouse({
 				...event,
@@ -2261,7 +2574,7 @@ var Transcript = class {
 			});
 			return { handled: true };
 		}
-		const action = event.x < 1 + tokens$1.gutter ? void 0 : bandAct({ hits: this.hits }, event.x, event.y);
+		const action = atCell(this.hits.get(event.y)?.cells ?? [], event.x);
 		if (event.type === "move") {
 			const changed = JSON.stringify(this.hovered) !== JSON.stringify(action);
 			this.hovered = action;
@@ -2310,7 +2623,7 @@ var AnswerGuide = class {
 	}
 	edit(kind, step, text, done) {
 		const editor = new Editor(this.tui, {
-			borderColor: (s) => this.theme.fg("borderAccent", s),
+			borderColor: (s) => paintSpan(this.theme, span(s, { role: "border" })),
 			selectList: getSelectListTheme()
 		});
 		editor.setText(text);
@@ -2383,15 +2696,14 @@ var AnswerGuide = class {
 		this.hits.clear();
 		const v = viewOf(this.read());
 		if (!v) return [];
-		const dim = (text) => paintText(this.theme, text, { role: "dim" });
 		const label = v.isReview ? "Review" : v.item?.label ?? "Answer";
 		if (columns < 20) return [];
 		const size = `${columns}x${this.tui.terminal.rows}`;
 		if (this.size && size !== this.size) queueMicrotask(this.onResize);
 		this.size = size;
-		const gap = " ".repeat(tokens$1.gutter);
+		const gap = " ".repeat(tokens.gutter);
 		if (this.field) {
-			if (!this.focused) return this.offer(columns, "Resume editing", "");
+			if (!this.focused) return this.offer(columns, "Resume editing", []);
 			return this.shortcuts(columns, [
 				{
 					hotkey: "enter",
@@ -2411,8 +2723,7 @@ var AnswerGuide = class {
 			], [() => this.handleInput("\r"), () => this.finishEdit()]);
 		}
 		const progressText = `${label}  ${v.answered}/${v.count} answered`;
-		const progress = dim(progressText);
-		if (!this.focused) return this.offer(columns, "Answer", `${gap}${progress}`);
+		if (!this.focused) return this.offer(columns, "Answer", [span(gap), span(progressText, { role: "dim" })]);
 		const acts = [];
 		const hint = (hotkey, label) => ({
 			hotkey,
@@ -2479,15 +2790,19 @@ var AnswerGuide = class {
 			const { text, cells } = paintLine(this.theme, row, columns - 1);
 			this.hits.set(y, {
 				text,
-				cells: cells.map((cell) => ({
-					start: cell.start,
-					end: cell.end,
-					act: acts[Number(cell.hit.slice(4))]
-				}))
+				cells: cells.flatMap((cell) => {
+					const act = acts[Number(cell.hit.slice(4))];
+					return act ? [{
+						start: cell.start,
+						end: cell.end,
+						act
+					}] : [];
+				})
 			});
 			return ` ${text}`;
 		});
 	}
+	/** The one row that offers the keys, with what follows it on the row, cut to the component. */
 	offer(columns, label, suffix) {
 		const act = () => this.onAction({ kind: "focus" });
 		const [row] = buttonRow([{
@@ -2496,7 +2811,7 @@ var AnswerGuide = class {
 			hit: "key:0",
 			essential: true
 		}], columns - 1, { hover: this.hover });
-		const painted = paintLine(this.theme, row, columns - 1);
+		const painted = paintLine(this.theme, line(truncateSpans([...row?.spans ?? [], ...suffix], columns - 1)), columns - 1);
 		this.hits.set(0, {
 			text: painted.text,
 			cells: painted.cells.map((cell) => ({
@@ -2505,10 +2820,10 @@ var AnswerGuide = class {
 				act
 			}))
 		});
-		return clamp(` ${painted.text}${suffix}`, columns, { max: 1 });
+		return [` ${painted.text}`];
 	}
 	handleMouse(event) {
-		const cell = cellAt(this.hits.get(event.y)?.cells, event.x - 1);
+		const cell = cellAt(this.hits.get(event.y)?.cells ?? [], event.x - 1);
 		if (event.type === "move") {
 			const next = cell && {
 				x: cell.start,
@@ -2521,9 +2836,8 @@ var AnswerGuide = class {
 				render: true
 			} : void 0;
 		}
-		const action = cell?.act;
-		if (!action || event.button !== "left") return void 0;
-		if (event.type === "click") action();
+		if (!cell || event.button !== "left") return void 0;
+		if (event.type === "click") cell.act();
 		return event.type === "press" || event.type === "click" ? { handled: true } : void 0;
 	}
 };
@@ -2538,9 +2852,10 @@ function reveal(tui, card, step, align) {
 	const width = scroll.getContentWidth(tui.terminal.columns);
 	function locate(component) {
 		if (component === card) return 0;
-		if (!(component instanceof Container)) return void 0;
+		const children = component.children;
+		if (!Array.isArray(children)) return void 0;
 		let preceding = 0;
-		for (const child of component.children) {
+		for (const child of children) {
 			const found = locate(child);
 			if (found !== void 0) return preceding + found;
 			preceding += child.render(width).length;
@@ -2651,7 +2966,7 @@ function pi_default(pi) {
 				invalidate() {}
 			};
 			const { answered, title } = view;
-			const note = `${answered ? ` · ${answered} answered` : ""} · ${SHORTCUT} or /answer`;
+			const note = offerNote(answered, SHORTCUT);
 			return new AnswerOffer(theme, title, note, () => void open(ctx));
 		});
 	};

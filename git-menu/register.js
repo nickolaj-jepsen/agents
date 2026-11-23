@@ -1,232 +1,170 @@
 import { atom, read, update } from "claude-code";
-import { t as tokens } from "./tokens-CBtsVN7m.js";
+import { t as tokens } from "./tokens-B6LwkIOZ.js";
 
-// ../../lib/kits/core/src/paint/gui.tsx
-/** The props of a `Text` in a role of the style. `code` is a chip; `link` is underlined. */
-const roleProps = (role) => {
-	switch (role) {
-		case void 0:
-		case "text": return {};
-		case "dim":
-		case "border": return { dimColor: true };
-		case "accent": return { color: "claude" };
-		case "warning": return { color: tokens.gui.tone.warning };
-		case "success":
-		case "error": return { color: role };
-		case "code": return {
-			backgroundColor: tokens.gui.chip,
-			mono: true
-		};
-		case "link": return { underline: true };
+// ../../lib/kits/core/src/icons.ts
+const g = tokens.glyph;
+/**
+* Every meaning the kit draws. Seeded from what `main`'s designs marked: a tracker's status and
+* priority, a doc suggestion's kind and what it is set to, and the states a notice has.
+*/
+const meanings = {
+	"state:success": {
+		shape: "success",
+		tone: "success",
+		glyph: g.done,
+		role: "success",
+		alt: "Done"
+	},
+	"state:error": {
+		shape: "error",
+		tone: "error",
+		glyph: g.times,
+		role: "error",
+		alt: "Failed"
+	},
+	"state:warning": {
+		shape: "warning",
+		tone: "warning",
+		glyph: g.status.warning,
+		role: "warning",
+		alt: "Needs a look"
+	},
+	"state:pending": {
+		shape: "pending",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "dim",
+		alt: "Pending"
+	},
+	"state:question": {
+		shape: "question",
+		tone: "neutral",
+		glyph: "?",
+		role: "dim",
+		alt: "Waiting for an answer"
+	},
+	"kind:wrong": {
+		shape: "wrong",
+		tone: "error",
+		glyph: "!",
+		role: "error",
+		alt: "Wrong"
+	},
+	"kind:stale": {
+		shape: "stale",
+		tone: "warning",
+		glyph: "↻",
+		role: "warning",
+		alt: "Stale"
+	},
+	"kind:missing": {
+		shape: "missing",
+		tone: "neutral",
+		glyph: "+",
+		role: "text",
+		alt: "Missing"
+	},
+	"decision:open": {
+		shape: "open",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "text",
+		alt: "Not decided"
+	},
+	"decision:apply": {
+		shape: "success",
+		tone: "success",
+		glyph: g.single.on,
+		role: "accent",
+		alt: "Set to apply"
+	},
+	"decision:dismiss": {
+		shape: "dropped",
+		tone: "neutral",
+		glyph: g.dropped,
+		role: "dim",
+		alt: "Set to dismiss"
+	},
+	"choice:open": {
+		shape: "open",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "text",
+		alt: "Not chosen"
+	},
+	"choice:chosen": {
+		shape: "chosen",
+		tone: "accent",
+		glyph: g.single.on,
+		role: "accent",
+		alt: "Chosen"
+	},
+	"priority:none": {
+		shape: "priorityNone",
+		tone: "neutral",
+		glyph: "-",
+		role: "dim",
+		alt: "No priority"
+	},
+	"priority:low": {
+		shape: "priorityLow",
+		tone: "neutral",
+		glyph: "!",
+		role: "dim",
+		alt: "Low priority"
+	},
+	"priority:medium": {
+		shape: "priorityMedium",
+		tone: "neutral",
+		glyph: "!!",
+		role: "dim",
+		alt: "Medium priority"
+	},
+	"priority:high": {
+		shape: "priorityHigh",
+		tone: "neutral",
+		glyph: "!!!",
+		role: "text",
+		alt: "High priority"
+	},
+	"priority:urgent": {
+		shape: "priorityUrgent",
+		tone: "warning",
+		glyph: g.status.warning,
+		role: "warning",
+		alt: "Urgent"
+	},
+	"field:status": {
+		shape: "status",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "dim",
+		alt: "Status"
+	},
+	"field:project": {
+		shape: "project",
+		tone: "neutral",
+		glyph: g.multi.off,
+		role: "dim",
+		alt: "Project"
+	},
+	"field:label": {
+		shape: "label",
+		tone: "neutral",
+		glyph: g.single.on,
+		role: "dim",
+		alt: "Label"
+	},
+	"field:draft": {
+		shape: "draft",
+		tone: "neutral",
+		glyph: "✎",
+		role: "dim",
+		alt: "Draft"
 	}
 };
-/** `word` with its first letter in capitals: a graphical button's label, which has no key beside it. */
-const capital = (text) => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
-/**
-* Styled spans as one `Text`: a nested run per span, in its role and face. A span's `hit` is not
-* a control here: a graphical control is a `Button`, which a component draws itself.
-* @param spans A caption or a line of a contract, as `terminal.ts` takes it.
-*/
-function spans(g, list) {
-	const { Text } = g.els;
-	return /* @__PURE__ */ h(Text, null, list.map((s, i) => /* @__PURE__ */ h(Text, {
-		key: `s${i}`,
-		...roleProps(s.role),
-		weight: s.bold ? "bold" : void 0,
-		italic: s.italic || void 0,
-		underline: s.underline || void 0,
-		inverse: s.inverse || void 0
-	}, s.text)));
-}
-/** The kit's icons: small stroked drawings on a 16-pixel grid. */
-const ICONS = {
-	wrong: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M8 4.7v4\"/><path d=\"M8 11.3v.01\"/>",
-	stale: "<path d=\"M13.2 8.2A5.2 5.2 0 1 1 11.7 4.4\"/><path d=\"M13.4 2.4v3.2h-3.2\"/>",
-	missing: "<path d=\"M8 3.2v9.6M3.2 8h9.6\"/>",
-	warning: "<path d=\"M8 2.6 14.2 13.2H1.8L8 2.6Z\"/><path d=\"M8 6.8v2.9\"/><path d=\"M8 11.7v.01\"/>",
-	success: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M5.2 8.2l2 2 3.6-4\"/>",
-	error: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M5.9 5.9l4.2 4.2M10.1 5.9l-4.2 4.2\"/>",
-	pending: "<circle cx=\"8\" cy=\"8\" r=\"6.2\" stroke-dasharray=\"2.4 2.4\"/>",
-	open: "<circle cx=\"8\" cy=\"8\" r=\"5.4\"/>",
-	chosen: "<circle cx=\"8\" cy=\"8\" r=\"5.4\"/><circle cx=\"8\" cy=\"8\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
-	dropped: "<circle cx=\"8\" cy=\"8\" r=\"5.4\"/><path d=\"M5.6 8h4.8\"/>",
-	note: "<path d=\"M2.6 3.4h10.8v7.2H7.4l-3 2.4v-2.4H2.6Z\"/><path d=\"M5.2 6h5.6M5.2 8h3.6\"/>",
-	question: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M6.3 6.3a1.8 1.8 0 1 1 2.5 1.7c-.5.2-.8.6-.8 1.1v.4\"/><path d=\"M8 11.4v.01\"/>",
-	write: "<path d=\"M10.6 2.9l2.5 2.5-7.6 7.6-3.1.6.6-3.1 7.6-7.6Z\"/><path d=\"M9.2 4.3l2.5 2.5\"/>",
-	status: "<circle cx=\"8\" cy=\"8\" r=\"5.6\"/><circle cx=\"8\" cy=\"8\" r=\"1.6\" fill=\"currentColor\"/>",
-	priorityNone: "<path d=\"M3.2 8h1.4M7.3 8h1.4M11.4 8h1.4\"/>",
-	priorityLow: "<path d=\"M4 13v-2.6\"/><path d=\"M8 13V7.4\" stroke-opacity=\".35\"/><path d=\"M12 13V4.4\" stroke-opacity=\".35\"/>",
-	priorityMedium: "<path d=\"M4 13v-2.6M8 13V7.4\"/><path d=\"M12 13V4.4\" stroke-opacity=\".35\"/>",
-	priorityHigh: "<path d=\"M4 13v-2.6M8 13V7.4M12 13V4.4\"/>",
-	priorityUrgent: "<rect x=\"2.6\" y=\"2.6\" width=\"10.8\" height=\"10.8\" rx=\"2.6\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M8 5.2v3.4M8 10.8v.01\" stroke=\"#ffffff\"/>",
-	project: "<path d=\"M8 2.4 13.2 5.2v5.6L8 13.6 2.8 10.8V5.2Z\"/><path d=\"M2.8 5.2 8 8l5.2-2.8M8 8v5.6\"/>",
-	label: "<circle cx=\"8\" cy=\"8\" r=\"3.4\" fill=\"currentColor\" stroke=\"none\"/>",
-	draft: "<path d=\"M10.6 2.8 13.2 5.4 5.7 12.9 2.6 13.4 3.1 10.3Z\"/><path d=\"M9.2 4.2l2.6 2.6\"/>"
-};
-/**
-* The markup of an icon, a whole `<svg>` document.
-* @param tone The state it marks; grey when none.
-* @param size Its side in CSS pixels.
-*/
-const iconSvg = (name, tone = "neutral", size = tokens.gui.icon) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 16 16" fill="none" color="${tokens.gui.tone[tone]}" stroke="${tokens.gui.tone[tone]}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
-/**
-* An icon: an image, grey or in the colour of the state it marks.
-* @param alt What it says, for a reader that cannot see it. @default the icon's name
-*/
-function icon(g, name, options = {}) {
-	const { Svg } = g.els;
-	const { tone = "neutral", alt = name, size = tokens.gui.icon } = options;
-	return /* @__PURE__ */ h(Svg, {
-		source: iconSvg(name, tone, size),
-		alt,
-		width: size,
-		height: size
-	});
-}
-
-// ../../lib/kits/buttons/src/gui.tsx
-/**
-* A row of actions at the inset: a Button each, the suggested one filled and the rest quiet
-* (VS Code paints a Button by its `dimColor` alone, so the variant follows it). The host wraps
-* the row, so nothing drops and `wrap`, `essential`, `isQuiet` and `hover` have nothing to do.
-* A keyboard-only hint (no `hit`) is not drawn: a surface with a pointer has no use for a key
-* and no place to show one.
-* @param buttons The actions; a label is capitalised unless it is `isLiteral`.
-* @param options `lead` is drawn as text before the first Button.
-* @returns `null` when there is nothing to draw.
-*/
-function buttonRow$1(g, buttons, { lead } = {}) {
-	const { Box, Button } = g.els;
-	const drawn = buttons.filter((b) => b.hit !== void 0);
-	if (drawn.length === 0 && !lead?.length) return null;
-	return /* @__PURE__ */ h(Box, {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		alignItems: "center",
-		columnGap: tokens.gui.across.xs,
-		rowGap: tokens.gui.space.xs,
-		paddingX: tokens.gui.across.inset
-	}, lead?.length ? spans(g, lead) : null, drawn.map((b) => /* @__PURE__ */ h(Button, {
-		key: b.hit,
-		variant: b.isLit ? "primary" : void 0,
-		dimColor: !b.isLit || void 0,
-		label: b.isLiteral ? b.label : capital(b.label),
-		onPress: () => g.press?.(b.hit)
-	})));
-}
-
-// ../../lib/kits/frame/src/contract.ts
-/** The control a close action is, as a drawn span's `hit`. */
-const closeHit = (action) => `frame:${action}`;
-/** The close action a `hit` names. */
-const closeOf = (hit) => hit === "frame:close" || hit === "frame:discard" || hit === "frame:keep" ? hit.slice(6) : void 0;
-/** Where the frame puts its body, and the rows it takes besides. */
-const captionFrameLayout = {
-	/** Cells and rows from the frame's corner to the body's. */
-	x: 2,
-	y: 2,
-	/** Rows of the frame, its notice and its buttons. */
-	chrome: 5,
-	/** Cells of the top rule the caption may not take. */
-	reserved: 5
-};
-
-// ../../lib/kits/frame/src/gui.tsx
-/**
-* The captioned frame on the graphical surfaces. The host frames a pane and owns its Close, so
-* there are no rules and no edges: the frame's top is a toolbar line, its body a column.
-*
-* The body and the footer are laid out for cells in the contract (`Line[]`); here they are
-* elements, in the options of `captionFrame`, drawn with the kit's own `gui.tsx` functions.
-*/
-/**
-* Close's question, once it asks: the words and a Button each for Discard and Keep, both quiet
-* as the terminal draws them. Close itself is the host's, so it is not drawn while nothing is
-* asked.
-*/
-function closeRow(g, close) {
-	const { Box, Button, Text } = g.els;
-	if (!close?.confirming) return null;
-	return /* @__PURE__ */ h(Box, {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		alignItems: "center",
-		columnGap: tokens.gui.across.xs,
-		rowGap: tokens.gui.space.xs
-	}, /* @__PURE__ */ h(Text, { color: "warning" }, close.question ?? "Discard answers?"), /* @__PURE__ */ h(Button, {
-		label: capital("discard"),
-		dimColor: true,
-		onPress: () => g.press?.(closeHit("discard"))
-	}), /* @__PURE__ */ h(Button, {
-		label: capital("keep"),
-		dimColor: true,
-		onPress: () => g.press?.(closeHit("keep"))
-	}));
-}
-/** The words of a head: its caption, or its title unless it repeats the host's. */
-function words(g, f, o) {
-	const { Text } = g.els;
-	if (o.head) return o.head;
-	const caption = typeof f.caption === "function" ? f.caption(1e400) : f.caption;
-	if (caption?.length) return spans(g, caption);
-	if (!f.title || f.title === o.hostTitle) return null;
-	return /* @__PURE__ */ h(Text, { weight: "semibold" }, f.title);
-}
-/** The toolbar line both heads are: words at the start, Close's question at the far edge. */
-function head(g, f, options = {}) {
-	const { Box, Button } = g.els;
-	const left = words(g, f, options);
-	const asked = closeRow(g, f.close);
-	const acts = (options.actions ?? []).filter((b) => b.hit !== void 0);
-	if (!left && !asked && acts.length === 0) return null;
-	const right = asked || acts.length > 0 ? /* @__PURE__ */ h(Box, {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		alignItems: "center",
-		columnGap: tokens.gui.across.xs,
-		rowGap: tokens.gui.space.xs
-	}, asked, f.close?.confirming ? null : acts.map((b) => /* @__PURE__ */ h(Button, {
-		key: b.hit,
-		variant: b.isLit ? "primary" : void 0,
-		dimColor: !b.isLit || void 0,
-		label: capital(b.label),
-		onPress: () => g.press?.(b.hit)
-	}))) : null;
-	return /* @__PURE__ */ h(Box, {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		alignItems: "center",
-		justifyContent: "space-between",
-		columnGap: tokens.gui.across.md,
-		rowGap: tokens.gui.space.xs,
-		paddingX: tokens.gui.across.inset
-	}, left, right);
-}
-/** A footer's buttons, quiet while Close asks: the question is what the frame is about. */
-function footerRow(g, buttons, confirming) {
-	if (!buttons?.length) return null;
-	return buttonRow$1(g, confirming ? buttons.map((b) => ({
-		...b,
-		isLit: false
-	})) : buttons);
-}
-/** A notice's row: its spans at the inset. */
-function noticeRow(g, notice) {
-	const { Box } = g.els;
-	if (!notice?.spans.length) return null;
-	return /* @__PURE__ */ h(Box, { paddingX: tokens.gui.across.inset }, spans(g, notice.spans));
-}
-/**
-* An inline form: its head, its body, a notice and its footer in a column, a space between.
-* @param options `body` and `footer` are elements; see `FrameOptions`.
-*/
-function captionFrame(g, f, options) {
-	const { Box } = g.els;
-	return /* @__PURE__ */ h(Box, {
-		flexDirection: "column",
-		rowGap: tokens.gui.space.md
-	}, head(g, f, options), options.body, noticeRow(g, f.notice), footerRow(g, options.footer, f.close?.confirming));
-}
+/** What a name draws as. */
+const meaningOf = (name) => meanings[name];
 
 // ../../lib/kits/core/src/lines.ts
 const span = (text, style = {}) => ({
@@ -239,6 +177,8 @@ const line = (spans, hit) => hit === void 0 ? { spans } : {
 };
 /** An empty row. */
 const blank = () => ({ spans: [] });
+/** A line's characters, without its styles. */
+const textOf = (l) => l.spans.map((s) => s.text).join("");
 /** Cells a code point takes: 0 for marks and joiners, 2 for East Asian wide and emoji. */
 const cellsOf = (c) => {
 	if (c < 32 || c >= 127 && c < 160) return 0;
@@ -504,204 +444,984 @@ function truncateSpans(spans, width) {
 }
 /** What a window's marker says of the rows past its edge: `↓ 3 more`. */
 const moreText = (glyph, count) => `${glyph} ${count} more`;
+/** Cells a panel's rail and its gap take: a row of a panel starts this far in. */
+const PANEL_INSET = cellWidth(tokens.glyph.rail) + tokens.gutter;
+/** Markdown's own characters in words that are only words. */
+const escapeMarkdown = (text) => text.replace(/([\\`*_{}[\]<>()#+!|~-])/g, "\\$1");
+
+// ../../lib/kits/core/src/surfaces.ts
+const fact = (value, note, source) => ({
+	value,
+	note,
+	source
+});
+const unverified = (hint) => ({
+	unverified: true,
+	hint
+});
+const README = "lib/kits/README.md, What still differs between the clients";
+const CLAUDE_MD = "49167447:skills/agent-plugin-dev/references/claude.md, Graphical surfaces (extension 2.1.327)";
+const TYPES = "claude-code types, Elements (apps/*/.claude-types/claude-code/index.d.ts, `pnpm drive types <app>`)";
+/**
+* The table. Surfaces are the rows, capabilities the columns; each column's value type is
+* `CapValues`, which the `satisfies` clause checks, and the literals stay for the types below.
+*/
+const surfaces = {
+	pi: {
+		drawing: "terminal",
+		keyFocus: fact("kit", "the extension owns every key and draws its own pointer", README),
+		hover: fact("kit", "pi reports the pointer; the kit bolds the label", README),
+		hotkeys: fact(true, "the caller owns the binding; the key is drawn dim after the label", "lib/kits/buttons/src/manifest.ts, feature `bind`"),
+		window: fact(true, "the kit draws ↑/↓ more and moves `top`", "lib/kits/list/src/manifest.ts, feature `window`"),
+		framesPane: fact(false, "the kit draws a sheet's edges", "lib/kits/sheet/src/manifest.ts, feature `edges`"),
+		inputRows: fact(1, "pi's field is one row and follows the cursor", README + ", Blocks"),
+		input: fact(true, "pi's own field, in the row an `input` slot keeps", README + ", Blocks"),
+		select: unverified(),
+		progress: unverified(),
+		svg: fact(false, "pi draws cells; there is no vector element", "pi-tui has no image or vector component"),
+		textSize: fact(false, "the terminal has one size", TYPES + ", TextProps.size"),
+		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
+		labelWraps: unverified(),
+		transcriptKeyScroll: unverified(),
+		images: fact(false, "pi-tui has no image component", "pi-tui exports (no Image)"),
+		cells: fact(true, "the kit lays out every line in cells: a row is cut to its room, and there is no toolbar line or element for a host to draw", README)
+	},
+	"claude-terminal": {
+		drawing: "terminal",
+		keyFocus: fact("ring", "a parked ring plus a `ui.focus` hook put the kit's pointer on the row", README),
+		hover: fact("painter", "the engine inverts a Button under the pointer; the painter swaps the row's colours first", README),
+		hotkeys: fact(true, "a Button's `hotkey` presses it while the plugin's site holds the focus", TYPES + ", ButtonProps.hotkey"),
+		window: fact(true, "the wheel reaches the mod as `ui.scroll`; the kit moves `top`", "lib/kits/list/src/manifest.ts, feature `window`"),
+		framesPane: fact(true, "a pane or box has the engine's frame and Close; a mod draws `sheetHead` and the body", README + ", A panel over the screen"),
+		inputRows: fact("many", "the engine's field wraps, and stands alone on its rows", README + ", Blocks"),
+		input: fact(true, "the engine's `Input`", TYPES + ", Elements.terminal"),
+		select: fact(true, "the engine's `Select`", TYPES + ", Elements.terminal"),
+		progress: fact(true, "the engine's `Progress`", TYPES + ", Elements.terminal"),
+		svg: fact(false, "the terminal's table has no `Svg`", TYPES + ", Elements.terminal"),
+		textSize: fact(false, "the terminal has one size and ignores `size`", TYPES + ", TextProps.size"),
+		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
+		labelWraps: unverified(),
+		transcriptKeyScroll: unverified(),
+		images: fact(true, "the terminal's table has an `Image`", TYPES + ", Elements.terminal"),
+		cells: fact(true, "the kit lays out every line in cells: a row is cut to its room, and there is no toolbar line or element for a host to draw", README)
+	},
+	vscode: {
+		drawing: "gui",
+		keyFocus: fact("host", "the host draws a Button's focus itself", "lib/kits/band/src/manifest.ts, feature `focus`"),
+		hover: fact("host", "the host draws a Button's hover state itself", "lib/kits/buttons/src/manifest.ts, feature `hover`"),
+		hotkeys: fact(false, "the webview does not act on a Button's `hotkey` (checked live)", "lib/kits/buttons/src/manifest.ts, feature `bind`; VS Code extension 2.1.327"),
+		window: fact(false, "the surface scrolls the pane, so there is no window for the kit to move", "lib/kits/list/src/manifest.ts, feature `window`"),
+		framesPane: fact(true, "the host frames the pane and owns its Close", "lib/kits/sheet/src/manifest.ts, feature `edges`"),
+		inputRows: fact(1, "an `Input` is one line", CLAUDE_MD),
+		input: fact(true, "the extension's table has an `Input`", TYPES + ", Elements.vscode"),
+		select: fact(true, "the extension's table has a `Select`", TYPES + ", Elements.vscode"),
+		progress: fact(true, "the extension's table has a `Progress`", TYPES + ", Elements.vscode"),
+		svg: fact(true, "drawn as an image, so it cannot take theme colours: check a light theme", TYPES + ", SvgProps (the editor draws an image)"),
+		textSize: fact(false, "the webview draws a Text's colour, dimColor, bold, italic and underline, and no `size`: every Text is the body's size. A Markdown heading has real sizes", "extension 2.1.330 webview/index.js, the Text style function (read; probed live: every role drew 13px)"),
+		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
+		labelWraps: fact(false, "a Button's label never wraps; a long one overflows a narrow pane", CLAUDE_MD),
+		transcriptKeyScroll: fact(false, "scrolling to a key inside a mod's AssistantMessage is denied or does nothing", CLAUDE_MD),
+		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.vscode (`Image` is the terminal's alone)"),
+		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
+	},
+	desktop: {
+		drawing: "gui",
+		keyFocus: unverified(),
+		hover: unverified(),
+		hotkeys: unverified(),
+		window: unverified(),
+		framesPane: unverified(),
+		inputRows: unverified(),
+		input: fact(true, "the extension's table has an `Input`, as VS Code's does; never driven", TYPES + ", Elements.desktop"),
+		select: fact(true, "the extension's table has a `Select`, as VS Code's does; never driven", TYPES + ", Elements.desktop"),
+		progress: unverified("the table has a `Progress`"),
+		svg: fact(true, "drawn as an image, or in a sandboxed frame when `isInteractive`", TYPES + ", SvgProps; never driven"),
+		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
+		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
+		labelWraps: unverified(),
+		transcriptKeyScroll: fact(true, "the engine supports targeting element keys; Answer already relies on it for Desktop review, not verified live", TYPES + ", ui.scroll; apps/answer/src/claude.tsx, roundActions"),
+		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.desktop (`Image` is the terminal's alone)"),
+		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
+	},
+	mobile: {
+		drawing: "gui",
+		keyFocus: unverified(),
+		hover: unverified(),
+		hotkeys: unverified(),
+		window: unverified(),
+		framesPane: unverified(),
+		inputRows: unverified(),
+		input: fact(false, "an app is sent an `Input` only if it named it in `draws` on its `ui_attach`; the kit's apps name none", TYPES + ", Elements.mobile"),
+		select: fact(false, "an app is sent a `Select` only if it named it in `draws` on its `ui_attach`; the kit's apps name none", TYPES + ", Elements.mobile"),
+		progress: fact(false, "an app is sent a `Progress` only if it named it in `draws`; its Box and Text otherwise", TYPES + ", Elements.mobile"),
+		svg: fact(true, "drawn in a web view", TYPES + ", SvgProps"),
+		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
+		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
+		labelWraps: unverified(),
+		transcriptKeyScroll: unverified(),
+		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.mobile (`Image` is the terminal's alone)"),
+		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
+	}
+};
+/** What the table says of one capability on one surface: `undefined` when unverified. */
+const factOf = (surface, cap) => {
+	const f = surfaces[surface][cap];
+	return "unverified" in f ? void 0 : f;
+};
+/** `undefined` when `surface` has the need, otherwise why not. */
+function lackOf(surface, need) {
+	const [cap, values] = need.split(":", 2);
+	const f = factOf(surface, cap);
+	if (!f) {
+		const hint = surfaces[surface][cap].hint;
+		return {
+			cap,
+			note: `${cap} has not been checked on ${surface}${hint ? ` (${hint})` : ""}`
+		};
+	}
+	return (values === void 0 ? !(f.value === false || f.value === 0 || f.value === "") : values.split("|").includes(String(f.value))) ? void 0 : {
+		cap,
+		note: f.note
+	};
+}
+/** Whether `surface` has the need. */
+const holds = (surface, need) => lackOf(surface, need) === void 0;
+/** Every fact a surface has, by name, for `ctx.caps`. */
+function capsOf(surface) {
+	const out = {};
+	for (const cap of Object.keys(surfaces[surface])) {
+		if (cap === "drawing") continue;
+		const f = factOf(surface, cap);
+		if (f) out[cap] = f.value;
+	}
+	return out;
+}
+const nothing = () => void 0;
+/** A context for `surface`; events left out do nothing. */
+const ctxOf = (surface, events = {}) => ({
+	surface,
+	caps: capsOf(surface),
+	press: events.press ?? nothing,
+	input: events.input ?? nothing,
+	submit: events.submit ?? nothing
+});
+/**
+* Whether the context's surface has the capability, narrowing it to the surfaces that do.
+* A drawing asks this, never which surface it is.
+*/
+function can(ctx, need) {
+	return holds(ctx.surface, need);
+}
+
+// ../../lib/kits/core/src/paint/gui.tsx
+/** The props of a `Text` in a role of the style. `code` is a chip; `link` is underlined. */
+const roleProps = (role) => {
+	switch (role) {
+		case void 0:
+		case "text": return {};
+		case "dim":
+		case "border": return { dimColor: true };
+		case "accent": return { color: "claude" };
+		case "warning": return { color: tokens.gui.tone.warning };
+		case "success":
+		case "error": return { color: role };
+		case "code": return {
+			backgroundColor: tokens.gui.chip,
+			mono: true
+		};
+		case "link": return { underline: true };
+	}
+};
+/**
+* The `Text` props of a type role: its size and weight from the host's scale, and dim for a role
+* that is. A drawing takes a role and never a size.
+* @param o `tabular` sets digits of one width, for a count or a time that changes or lines up.
+* `isSized: false` leaves the size out, for a host that draws none: its `section` is then dim,
+* since it cannot be smaller. `isToned: false` leaves the role's tone to the spans inside.
+*/
+const typeProps = (role, o = {}) => {
+	const r = tokens.type[role];
+	const isSized = o.isSized !== false;
+	const isDim = o.isToned !== false && (r.role === "dim" || !isSized && role === "section");
+	return {
+		...isSized ? { size: r.size } : {},
+		weight: r.weight,
+		...isDim ? { dimColor: true } : {},
+		...o.tabular ? { tabular: true } : {}
+	};
+};
+/**
+* The Markdown heading level a role takes where the host draws no `Text` sizes. The webview
+* leaves about an em under a heading, which a `Box` cannot take back (it reads no negative
+* margin), so a heading sits a little further from what it heads than a `Text` would.
+*/
+const HEADING = {
+	title: "##",
+	heading: "###"
+};
+/**
+* Words in a type role: a `Text` that sets its size, weight and tone from `tokens.type`. Where
+* the host draws no `Text` size (`textSize`: VS Code's webview reads none), a `title` or a
+* `heading` of plain words is the host's own Markdown heading, which has real sizes; every other
+* role is told apart by weight and tone. `wrap: "truncate-end"` cuts the words at the edge with
+* `…` instead of wrapping them.
+*/
+function typed(g, role, children, o = {}) {
+	const { Box, Markdown, Text } = g.els;
+	const isSized = can(g, "textSize");
+	if (!isSized && (role === "title" || role === "heading") && typeof children === "string") return /* @__PURE__ */ h(Box, { key: o.key }, /* @__PURE__ */ h(Markdown, { text: `${HEADING[role]} ${escapeMarkdown(children)}` }));
+	return /* @__PURE__ */ h(Text, {
+		key: o.key,
+		wrap: o.wrap,
+		...typeProps(role, {
+			...o,
+			isSized
+		})
+	}, children);
+}
+/**
+* What opens in place, set apart as one object: a filled well, set in by `tokens.gui.panel`, so
+* its words stay a step inside the fill and a control in it stays on it. A terminal draws the
+* same object as a rail (`panelLines`).
+* Use it for an editor, a note, a warning with its own actions and an opened row: whatever the
+* person opens or is asked about, not for a group of rows that is always there.
+* @param o `key` addresses it. `gap` is the step between its parts. @default "sm"
+*/
+function panel(g, o, ...parts) {
+	const { Box } = g.els;
+	return /* @__PURE__ */ h(Box, {
+		key: o.key,
+		flexDirection: "column",
+		rowGap: tokens.gui.space[o.gap ?? "sm"],
+		paddingX: tokens.gui.panel.x,
+		paddingY: tokens.gui.panel.y,
+		backgroundColor: tokens.gui.fill,
+		borderStyle: "round",
+		borderColor: "#00000000"
+	}, parts.filter(Boolean));
+}
+/**
+* One row of a list or a form: its line and `tokens.gui.row.pad` above and below, whether or not a Button is in it, its
+* parts on one centre line a step apart. A column of these keeps one beat.
+* @param o `align: "start"` sets the parts on the first line instead of the centre, for a row whose
+* text may wrap: its icon stays beside the first line.
+*/
+function rowOf(g, o, ...parts) {
+	const { Box } = g.els;
+	return /* @__PURE__ */ h(Box, {
+		key: o.key,
+		flexDirection: "row",
+		flexWrap: "nowrap",
+		alignItems: o.align === "start" ? "flex-start" : "center",
+		justifyContent: o.justify,
+		paddingY: tokens.gui.row.pad,
+		columnGap: tokens.gui.across.sm
+	}, parts.filter(Boolean));
+}
+/** Rows under each other, `tokens.gui.row.gap` apart: the column a list's `rowOf`s stand in. */
+function rows(g, o, ...parts) {
+	const { Box } = g.els;
+	return /* @__PURE__ */ h(Box, {
+		key: o.key,
+		flexDirection: "column",
+		rowGap: tokens.gui.row.gap
+	}, parts.filter(Boolean));
+}
+/**
+* Styled spans as one `Text`: a nested run per span, in its role and face. A span's `hit` is not
+* a control here: a graphical control is a `Button`, which a component draws itself.
+* @param spans A caption or a line of a contract, as `terminal.ts` takes it.
+* @param options `type` sets the line in a type role; `wrap: "truncate-end"` cuts it at the
+* edge with `…` instead of wrapping.
+*/
+function spans(g, list, options = {}) {
+	const { Text } = g.els;
+	return /* @__PURE__ */ h(Text, {
+		wrap: options.wrap,
+		...options.type ? typeProps(options.type, {
+			...options,
+			isSized: can(g, "textSize"),
+			isToned: false
+		}) : {}
+	}, list.map((s, i) => /* @__PURE__ */ h(Text, {
+		key: `s${i}`,
+		...roleProps(s.role),
+		weight: s.bold ? "bold" : void 0,
+		italic: s.italic || void 0,
+		underline: s.underline || void 0,
+		inverse: s.inverse || void 0
+	}, s.text)));
+}
+/** The kit's icons: small stroked drawings on a 16-pixel grid. */
+const ICONS = {
+	wrong: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M8 4.7v4\"/><path d=\"M8 11.3v.01\"/>",
+	stale: "<path d=\"M13.2 8.2A5.2 5.2 0 1 1 11.7 4.4\"/><path d=\"M13.4 2.4v3.2h-3.2\"/>",
+	missing: "<path d=\"M8 3.2v9.6M3.2 8h9.6\"/>",
+	warning: "<path d=\"M8 2.6 14.2 13.2H1.8L8 2.6Z\"/><path d=\"M8 6.8v2.9\"/><path d=\"M8 11.7v.01\"/>",
+	success: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M5.2 8.2l2 2 3.6-4\"/>",
+	error: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M5.9 5.9l4.2 4.2M10.1 5.9l-4.2 4.2\"/>",
+	pending: "<circle cx=\"8\" cy=\"8\" r=\"6.2\" stroke-dasharray=\"2.4 2.4\"/>",
+	open: "<circle cx=\"8\" cy=\"8\" r=\"5.4\"/>",
+	chosen: "<circle cx=\"8\" cy=\"8\" r=\"5.4\"/><circle cx=\"8\" cy=\"8\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\"/>",
+	dropped: "<circle cx=\"8\" cy=\"8\" r=\"5.4\"/><path d=\"M5.6 8h4.8\"/>",
+	note: "<path d=\"M2.6 3.4h10.8v7.2H7.4l-3 2.4v-2.4H2.6Z\"/><path d=\"M5.2 6h5.6M5.2 8h3.6\"/>",
+	question: "<circle cx=\"8\" cy=\"8\" r=\"6.2\"/><path d=\"M6.3 6.3a1.8 1.8 0 1 1 2.5 1.7c-.5.2-.8.6-.8 1.1v.4\"/><path d=\"M8 11.4v.01\"/>",
+	write: "<path d=\"M10.6 2.9l2.5 2.5-7.6 7.6-3.1.6.6-3.1 7.6-7.6Z\"/><path d=\"M9.2 4.3l2.5 2.5\"/>",
+	status: "<circle cx=\"8\" cy=\"8\" r=\"5.6\"/><circle cx=\"8\" cy=\"8\" r=\"1.6\" fill=\"currentColor\"/>",
+	priorityNone: "<path d=\"M3.2 8h1.4M7.3 8h1.4M11.4 8h1.4\"/>",
+	priorityLow: "<path d=\"M4 13v-2.6\"/><path d=\"M8 13V7.4\" stroke-opacity=\".4\"/><path d=\"M12 13V4.4\" stroke-opacity=\".4\"/>",
+	priorityMedium: "<path d=\"M4 13v-2.6M8 13V7.4\"/><path d=\"M12 13V4.4\" stroke-opacity=\".4\"/>",
+	priorityHigh: "<path d=\"M4 13v-2.6M8 13V7.4M12 13V4.4\"/>",
+	priorityUrgent: "<rect x=\"2.6\" y=\"2.6\" width=\"10.8\" height=\"10.8\" rx=\"2.6\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M8 5.2v3.4M8 10.8v.01\" stroke=\"#ffffff\"/>",
+	project: "<path d=\"M8 2.4 13.2 5.2v5.6L8 13.6 2.8 10.8V5.2Z\"/><path d=\"M2.8 5.2 8 8l5.2-2.8M8 8v5.6\"/>",
+	label: "<circle cx=\"8\" cy=\"8\" r=\"3.4\" fill=\"currentColor\" stroke=\"none\"/>",
+	draft: "<path d=\"M10.6 2.8 13.2 5.4 5.7 12.9 2.6 13.4 3.1 10.3Z\"/><path d=\"M9.2 4.2l2.6 2.6\"/>"
+};
+/**
+* The markup of an icon, a whole `<svg>` document.
+* @param tone The state it marks; grey when none.
+* @param size Its side in CSS pixels.
+*/
+const iconSvg = (name, tone = "neutral", size = tokens.gui.icon) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 16 16" fill="none" color="${tokens.gui.tone[tone]}" stroke="${tokens.gui.tone[tone]}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
+/**
+* An icon: an image, grey or in the colour of the state it marks.
+* @param alt What it says, for a reader that cannot see it. @default the icon's name
+*/
+function icon(g, name, options = {}) {
+	const { Svg } = g.els;
+	const { tone = "neutral", alt = name, size = tokens.gui.icon } = options;
+	return /* @__PURE__ */ h(Svg, {
+		source: iconSvg(name, tone, size),
+		alt,
+		width: size,
+		height: size
+	});
+}
+/**
+* An icon that carries a meaning (`priority:high`, `kind:stale`, `decision:apply`,
+* `state:error`): the kit's drawing for it, in its role's colour. A terminal draws the same
+* name as a glyph (`meaningSpan`).
+* @param o `size` in CSS pixels; `alt` replaces what it says.
+*/
+function meaning(g, name, o = {}) {
+	const m = meaningOf(name);
+	return icon(g, m.shape, {
+		tone: m.tone,
+		alt: o.alt ?? m.alt,
+		size: o.size
+	});
+}
+
+// ../../lib/kits/buttons/src/model.ts
+/**
+* The button row's view model: what is lit, what goes quiet and what is drawn on a surface.
+* Pure and plain: the drawings read it, and so does the snapshot that holds it across surfaces.
+* No host imports.
+*/
+/** How a button's key is printed after its label: `↵` for Enter, else in brackets; nothing for none. */
+const shortcutOf = (b) => b.hit === void 0 || !b.hotkey ? b.hotkey : b.hotkey === "enter" ? tokens.glyph.enter : `[${b.hotkey}]`;
+/** `word` with its first letter in capitals: a graphical button's label, which has no key beside it. */
+const capital$1 = (text) => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+/**
+* The buttons as a screen shows them. One button of a screen is lit, the first that asks, so a
+* screen never has two suggested actions; while Close asks, none is lit and every control is
+* quiet, whatever the caller said.
+*/
+function settle(rows, confirming = false) {
+	let isLitOne = false;
+	return rows.map((row) => row.map((b) => {
+		if (confirming) return {
+			...b,
+			isLit: false,
+			isQuiet: b.hit === void 0 ? void 0 : true
+		};
+		if (!b.isLit) return b;
+		if (isLitOne) return {
+			...b,
+			isLit: false
+		};
+		isLitOne = true;
+		return b;
+	}));
+}
+/** What `settle`d buttons are drawn as on `surface`. */
+function view$3(model, surface) {
+	const hasKeys = holds(surface, "hotkeys");
+	const isGui = surfaces[surface].drawing === "gui";
+	const rows = settle(model.rows, model.confirming).flatMap((row) => {
+		const drawn = row.flatMap((b) => {
+			if (b.hit === void 0) return hasKeys ? [{
+				label: b.label,
+				key: b.hotkey,
+				tone: "hint"
+			}] : [];
+			const key = hasKeys ? shortcutOf(b) : "";
+			return [{
+				label: isGui && !b.isLiteral ? capital$1(b.label) : b.label,
+				hit: b.hit,
+				...key ? { key } : {},
+				tone: b.isLit ? "lit" : b.isChosen && isGui && !model.confirming ? "chosen" : b.isQuiet ? "quiet" : isGui ? "quiet" : "plain"
+			}];
+		});
+		return drawn.length ? [drawn] : [];
+	});
+	return {
+		lead: textOf({ spans: [...model.lead ?? []] }),
+		rows
+	};
+}
+
+// ../../lib/kits/buttons/src/gui.tsx
+/** Before the label of the chosen button. */
+const CHECK = "✓";
+/**
+* The buttons of a screen's footer: a row each, every row starting at the same edge, a Button
+* per action. The view model decides what is lit (one only), what is quiet while Close asks, and
+* that a keyboard-only hint is not drawn: a surface with a pointer has no use for a key and no
+* place to show one. VS Code paints a Button by its `dimColor` alone, so the suggested one is
+* `primary` and the rest are dimmed. The host wraps a row, so nothing drops.
+* @param props `rows` are the actions; a label is capitalised unless it is `isLiteral`. `lead`
+* is drawn as a caption before the first Button of the first row.
+* @returns `null` when there is nothing to draw.
+*/
+function buttonRow$1(g, props) {
+	const { Box, Button } = g.els;
+	const drawn = view$3(props, g.surface);
+	const lead = props.lead?.length ? spans(g, props.lead, { type: "caption" }) : null;
+	if (drawn.rows.length === 0 && !lead) return null;
+	const all = drawn.rows.length ? drawn.rows : [[]];
+	return rows(g, {}, ...all.map((row, r) => /* @__PURE__ */ h(Box, {
+		key: `r${r}`,
+		flexDirection: "row",
+		flexWrap: "wrap",
+		alignItems: "center",
+		columnGap: tokens.gui.across.xs,
+		rowGap: tokens.gui.space.xs,
+		paddingX: props.isFlush ? void 0 : tokens.gui.across.inset
+	}, r === 0 ? lead : null, row.map((b) => /* @__PURE__ */ h(Button, {
+		key: b.hit,
+		variant: b.tone === "lit" ? "primary" : void 0,
+		dimColor: b.tone !== "lit" || void 0,
+		label: b.tone === "chosen" ? `${CHECK} ${b.label}` : b.label,
+		onPress: () => g.press(b.hit)
+	})))));
+}
+
+// ../../lib/kits/frame/src/model.ts
+/**
+* The frame's view model: what its head, its footer and its notice are on a surface. Pure and
+* plain: the graphical drawing reads it, and so does the snapshot that holds it across surfaces.
+* The footer is decided by the buttons' view model (`@agents/kit-buttons/model.ts`), which
+* says what is lit and what goes quiet while Close asks. A frame has one lit button: the head's
+* own actions come first, so the footer's lit one is quieted where they have one. No host imports.
+*/
+const words$1 = (spans) => textOf({ spans: [...spans ?? []] });
+function view$2(model, surface) {
+	const isCells = holds(surface, "cells");
+	const asks = !!model.close?.confirming;
+	const hasCaption = (model.caption?.length ?? 0) > 0;
+	const keep = model.close?.keep ?? "esc";
+	const [acts = [], ...footer] = settle([model.actions ?? [], ...model.footer ?? []], asks);
+	return {
+		head: {
+			title: isCells ? hasCaption ? void 0 : model.title : model.title && model.title !== model.hostTitle ? model.title : void 0,
+			caption: words$1(model.caption),
+			close: asks ? "question" : isCells ? "control" : "host",
+			question: asks ? view$3({
+				rows: [[{
+					hotkey: "enter",
+					label: "Discard",
+					hit: "frame:discard",
+					essential: true
+				}, {
+					hotkey: keep,
+					label: "Keep",
+					hit: "frame:keep",
+					essential: true
+				}]],
+				confirming: true
+			}, surface) : void 0,
+			actions: !isCells && !asks && acts.length ? view$3({ rows: [acts] }, surface) : void 0
+		},
+		footer: view$3({
+			rows: footer,
+			confirming: asks
+		}, surface),
+		notice: words$1(model.notice)
+	};
+}
+
+// ../../lib/kits/frame/src/gui.tsx
+/**
+* The captioned frame on the graphical surfaces. The host frames a pane and owns its Close, so
+* there are no rules and no edges: the frame's top is a toolbar line, its body a column.
+*
+* The body and the notice are elements and spans here, in the props of `captionFrame`, drawn with
+* the kit's own `gui.tsx` functions; the footer is the model's `Button[][]`, which the buttons'
+* view model decides: one lit, and every control quiet while Close asks.
+*/
+const asModel = (f) => ({
+	title: f.title ?? "",
+	caption: f.caption,
+	close: f.close,
+	hostTitle: f.hostTitle,
+	actions: f.actions,
+	footer: f.footer,
+	notice: f.notice,
+	body: { question: "" }
+});
+/** Close's question, once it asks, set apart as a panel: it is a warning with its own actions. */
+function question(g, f, v) {
+	const { Box, Button, Text } = g.els;
+	return /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		paddingX: tokens.gui.across.inset
+	}, panel(g, { key: "ask" }, rowOf(g, {}, meaning(g, "state:warning"), /* @__PURE__ */ h(Text, {
+		...typeProps("body"),
+		...roleProps("warning")
+	}, f.close?.question ?? "Discard answers?"), /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		columnGap: tokens.gui.across.xs
+	}, v.head.question?.rows[0]?.map((b) => /* @__PURE__ */ h(Button, {
+		key: b.hit,
+		dimColor: true,
+		label: b.label,
+		onPress: () => g.press(b.hit)
+	}))))));
+}
+/** The toolbar line both heads are: the words at the start, the pane's own actions at the far edge. */
+function head(g, f, v) {
+	const { Box, Button } = g.els;
+	if (v.head.close === "question") return question(g, f, v);
+	const words = f.head ?? (v.head.title || v.head.caption ? /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		rowGap: tokens.gui.space.xs
+	}, v.head.title ? typed(g, "heading", v.head.title) : null, v.head.caption ? spans(g, f.caption ?? [], { type: "caption" }) : null) : null);
+	const acts = v.head.actions?.rows[0] ?? [];
+	if (!words && acts.length === 0) return null;
+	return /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		alignItems: "center",
+		justifyContent: "space-between",
+		columnGap: tokens.gui.across.md,
+		rowGap: tokens.gui.space.xs,
+		paddingX: tokens.gui.across.inset,
+		paddingY: tokens.gui.row.pad
+	}, words, acts.length ? /* @__PURE__ */ h(Box, {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		alignItems: "center",
+		columnGap: tokens.gui.across.xs
+	}, acts.map((b) => /* @__PURE__ */ h(Button, {
+		key: b.hit,
+		variant: b.tone === "lit" ? "primary" : void 0,
+		dimColor: b.tone !== "lit" || void 0,
+		label: b.label,
+		onPress: () => g.press(b.hit)
+	}))) : null);
+}
+/** A notice's row: an icon for the state its words are in, then the words. */
+function notice$1(g, words) {
+	const { Box } = g.els;
+	if (!words?.length) return null;
+	const role = words[0]?.role;
+	const state = role === "warning" ? "state:warning" : role === "error" ? "state:error" : void 0;
+	return /* @__PURE__ */ h(Box, { paddingX: tokens.gui.across.inset }, rowOf(g, {}, state ? meaning(g, state) : null, spans(g, words, { type: state ? "body" : "caption" })));
+}
+/**
+* An inline form: its head, its body, a notice and its footer in a column, a space between. The
+* footer's buttons are the model's rows, decided by the buttons' view model.
+*/
+function captionFrame(g, f) {
+	const { Box } = g.els;
+	const v = view$2(asModel(f), g.surface);
+	const [, ...footer] = settle([f.actions ?? [], ...f.footer ?? []], !!f.close?.confirming);
+	return /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		rowGap: tokens.gui.space.md
+	}, head(g, f, v), Array.isArray(f.body) ? f.body.filter(Boolean) : f.body, notice$1(g, f.notice), buttonRow$1(g, {
+		rows: footer,
+		confirming: !!f.close?.confirming
+	}));
+}
+
+// ../../lib/kits/list/src/model.ts
+/**
+* The list's view model: what each row and group is on a surface. Pure and plain: the graphical
+* drawing reads it, and so does the snapshot that holds it across surfaces. A terminal's rows
+* are its own lines (`terminal.ts`), so its view says only what they are marked with. No host
+* imports.
+*/
+/** What a row's `markHit` Button says a press steps the mark to. */
+const STEP_TEXT = {
+	open: "Choose",
+	chosen: "Set aside",
+	dropped: "Restore"
+};
+/** The longest an aside is, in cells, to scan as a column. */
+const COLUMN_MAX = 8;
+/** A count or a time: it starts with a digit and is short. */
+const isColumn = (aside) => /^\d/.test(aside) && [...aside].length <= COLUMN_MAX;
+const words = (text, fallback) => text ?? fallback;
+/** How a row is drawn on `surface`. */
+function rowView(r, l, isGui, isOpened) {
+	const mark = r.mark ?? "open";
+	const isDisabled = Boolean(r.disabled);
+	const lead = mark === "none" ? void 0 : isGui && r.icon ? { meaning: r.icon } : { mark };
+	const hasHit = isGui && r.hit !== void 0 && !isDisabled;
+	return {
+		text: r.text,
+		isLiteral: Boolean(r.literal),
+		isDim: isDisabled || mark === "dropped",
+		...lead ? { lead } : {},
+		...r.aside ? {
+			aside: r.aside,
+			...isGui ? { asideIn: isColumn(r.aside) ? "column" : "text" } : {}
+		} : {},
+		...hasHit ? { action: {
+			hit: r.hit,
+			label: isOpened ? words(l.closeAction, "Close") : words(r.action ?? l.action, "Open")
+		} } : {},
+		...isGui && r.markHit !== void 0 && !isDisabled && mark !== "none" ? { step: {
+			hit: r.markHit,
+			label: STEP_TEXT[mark]
+		} } : {},
+		isOpened,
+		...r.hit !== void 0 ? { hit: r.hit } : {}
+	};
+}
+const capital = (text) => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+/** What the list is on `surface`: rows with their leads and controls, groups capped. */
+function view$1(model, surface) {
+	const isGui = surfaces[surface].drawing === "gui";
+	const max = model.maxItems ?? tokens.gui.maxItems;
+	const opened = model.opened ?? {};
+	const isOpened = (r) => r.hit !== void 0 && opened[r.hit] !== void 0;
+	const groups = model.groups.map((g) => {
+		const capped = isGui && model.more && !model.more.isAll && g.rows.length > max;
+		const shown = capped ? g.rows.filter((r, n) => n < max || isOpened(r)) : g.rows;
+		const left = g.rows.length - shown.length;
+		return {
+			label: g.label,
+			isActive: Boolean(g.active),
+			isDone: Boolean(g.done),
+			...isGui && g.hit !== void 0 ? { action: {
+				hit: g.hit,
+				label: words(model.action, "Open")
+			} } : {},
+			actions: isGui ? (g.actions ?? []).flatMap((a) => a.hit ? [{
+				hit: a.hit,
+				label: capital(a.label)
+			}] : []) : [],
+			rows: shown.map((r) => rowView(r, model, isGui, isOpened(r))),
+			...capped && left > 0 && model.more ? { more: {
+				hit: model.more.hit,
+				label: `Show ${left} more`
+			} } : {}
+		};
+	});
+	return {
+		groups,
+		asideCells: Math.max(0, ...groups.flatMap((g) => g.rows.flatMap((r) => r.asideIn === "column" ? [[...r.aside ?? ""].length] : [])))
+	};
+}
 
 // ../../lib/kits/list/src/gui.tsx
-/** The list on the graphical surfaces: groups under a heading, rows as full-width Buttons. */
+/**
+* The list on the graphical surfaces: groups under a `section` heading, rows of one height a
+* step apart, each led by an icon that says what it is.
+*/
+const { across } = tokens.gui;
 /** What each mark is called for a reader who cannot see its icon. */
 const MARK_TEXT = {
 	open: "Left alone",
 	chosen: "Chosen",
 	dropped: "Set aside"
 };
-/** What a press on a `markHit` Button does: it steps the mark on, in the order of `ListMark`. */
-const STEP_TEXT = {
-	open: "Choose",
-	chosen: "Set aside",
-	dropped: "Restore"
-};
-/** A row's mark: an icon. */
-function markOf(g, mark) {
+/** A row's lead: its meaning, or the bare mark where it was given none. */
+function leadOf(g, r) {
+	if (!r.lead) return null;
 	const { Box } = g.els;
 	return /* @__PURE__ */ h(Box, {
-		key: "mark",
-		flexShrink: 0,
-		height: 1,
-		alignItems: "center"
-	}, icon(g, mark, {
-		tone: mark === "chosen" ? "accent" : "neutral",
-		alt: MARK_TEXT[mark]
+		key: "lead",
+		flexShrink: 0
+	}, "meaning" in r.lead ? meaning(g, r.lead.meaning) : icon(g, r.lead.mark, {
+		tone: r.lead.mark === "chosen" ? "accent" : "neutral",
+		alt: MARK_TEXT[r.lead.mark]
 	}));
 }
-/** The control a `markHit` is: a quiet Button naming what a press changes the row to (never filled: many rows may be chosen). */
-function markButton(g, r, mark) {
+/** A quiet Button at a row's or heading's edge. */
+function control(g, c, key = c.hit) {
 	const { Box, Button } = g.els;
-	const hit = r.markHit;
-	if (hit === void 0 || r.disabled) return null;
 	return /* @__PURE__ */ h(Box, {
-		key: "markHit",
+		key: `c:${c.hit}`,
 		flexShrink: 0
 	}, /* @__PURE__ */ h(Button, {
-		key: hit,
+		key,
 		dimColor: true,
-		label: STEP_TEXT[mark],
-		onPress: () => g.press?.(hit)
+		label: c.label,
+		onPress: () => g.press(c.hit)
 	}));
 }
-/** One row: its mark, its text wrapped, its aside and Buttons dim at the far edge. */
-function rowOf(g, r, key, hasMarks, action, isCut) {
-	const { Box, Button, Text } = g.els;
-	const mark = r.mark ?? "open";
-	const isDim = r.disabled || mark === "dropped";
-	const words = spans(g, r.literal ? literal(r.text) : inline(r.text));
-	const hit = r.hit;
-	const open = hit !== void 0 && !r.disabled ? /* @__PURE__ */ h(Box, {
-		key: "open",
-		flexShrink: 0
-	}, /* @__PURE__ */ h(Button, {
-		key: hit,
-		dimColor: true,
-		label: r.action ?? action,
-		onPress: () => g.press?.(hit)
-	})) : null;
-	const stepper = mark === "none" ? null : markButton(g, r, mark);
-	const twoButtons = open !== null && stepper !== null;
-	return /* @__PURE__ */ h(Box, {
-		key,
+/**
+* One row: its lead beside the first line, the text (wrapped whole, or one line the surface cuts),
+* a count or time in the list's shared right-aligned column before the Button, which is at the far
+* edge. A word aside follows the text. Two Buttons would crowd the text of a narrow pane, so they
+* sit under it. A row opened in place gives its claim the panel's width: its lead, aside and
+* Button are a line of their own over it.
+* @param asideCells The width of the shared aside column, 0 where the list has none.
+*/
+function item(g, r, key, isCut, asideCells) {
+	const { Box, Text } = g.els;
+	const words = /* @__PURE__ */ h(Text, {
+		dimColor: r.isDim || void 0,
+		wrap: isCut ? "truncate-end" : void 0
+	}, spans(g, r.isLiteral ? literal(r.text) : inline(r.text)));
+	const isStacked = r.action !== void 0 && r.step !== void 0;
+	const single = isStacked ? null : r.action ?? r.step;
+	const under = isStacked ? /* @__PURE__ */ h(Box, {
+		key: "under",
 		flexDirection: "row",
-		flexWrap: "nowrap",
-		alignItems: "flex-start",
-		columnGap: tokens.gui.across.sm,
-		paddingX: tokens.gui.across.inset
-	}, hasMarks && mark !== "none" ? markOf(g, mark) : null, /* @__PURE__ */ h(Box, {
+		flexWrap: "wrap",
+		columnGap: across.xs
+	}, control(g, r.action), control(g, r.step)) : null;
+	const column = asideCells > 0 ? /* @__PURE__ */ h(Box, {
+		key: "count",
+		flexShrink: 0,
+		minWidth: asideCells,
+		justifyContent: "flex-end"
+	}, r.asideIn === "column" ? /* @__PURE__ */ h(Text, typeProps("caption", { tabular: true }), r.aside) : null) : null;
+	if (r.isOpened) return /* @__PURE__ */ h(Box, {
+		key,
+		flexDirection: "column",
+		rowGap: tokens.gui.space.xs
+	}, rowOf(g, {
+		key: `${key}:head`,
+		justify: "space-between"
+	}, /* @__PURE__ */ h(Box, {
+		key: "who",
+		flexDirection: "row",
+		alignItems: "center",
+		columnGap: across.sm
+	}, leadOf(g, r), r.aside ? /* @__PURE__ */ h(Text, typeProps("caption", { tabular: true }), r.aside) : null), single ? control(g, single) : null), /* @__PURE__ */ h(Box, { key: "claim" }, words), under);
+	const follows = r.asideIn === "text" ? /* @__PURE__ */ h(Box, {
+		key: "aside",
+		flexShrink: 0
+	}, /* @__PURE__ */ h(Text, typeProps("caption"), r.aside)) : null;
+	return rowOf(g, {
+		key,
+		align: "start"
+	}, leadOf(g, r), /* @__PURE__ */ h(Box, {
+		key: "body",
 		flexDirection: "column",
 		flexGrow: 1,
 		flexShrink: 1,
 		rowGap: tokens.gui.space.xs
 	}, /* @__PURE__ */ h(Box, {
+		key: "line",
 		flexDirection: "row",
 		flexWrap: "nowrap",
 		alignItems: "flex-start",
-		columnGap: tokens.gui.across.md
+		columnGap: across.sm
 	}, /* @__PURE__ */ h(Box, {
-		width: 0,
-		flexGrow: 1,
+		key: "text",
 		flexShrink: 1,
-		overflow: "hidden"
+		flexGrow: follows ? 0 : 1
+	}, words), follows), under), column, single ? control(g, single) : null);
+}
+/** A group's heading: its label in the `section` role, its controls at the far edge. */
+function heading(g, group, key) {
+	const { Box, Text } = g.els;
+	const section = typeProps("section", { isSized: can(g, "textSize") });
+	const label = /* @__PURE__ */ h(Box, {
+		key: "label",
+		flexDirection: "row",
+		alignItems: "center",
+		columnGap: across.sm,
+		flexShrink: 1
 	}, /* @__PURE__ */ h(Text, {
-		dimColor: isDim || void 0,
-		wrap: isCut ? "truncate-end" : void 0
-	}, words)), r.aside ? /* @__PURE__ */ h(Box, { flexShrink: 0 }, /* @__PURE__ */ h(Text, { dimColor: true }, r.aside)) : null, twoButtons ? null : open ?? stepper), twoButtons ? /* @__PURE__ */ h(Box, {
+		...section,
+		...group.isActive ? roleProps("accent") : {},
+		dimColor: void 0
+	}, group.label), group.isDone ? meaning(g, "state:success", { alt: "Decided" }) : null);
+	if (!group.action && !group.actions.length) return label;
+	return rowOf(g, {
+		key,
+		justify: "space-between"
+	}, label, /* @__PURE__ */ h(Box, {
+		key: "actions",
 		flexDirection: "row",
 		flexWrap: "wrap",
-		columnGap: tokens.gui.across.xs
-	}, open, stepper) : null));
-}
-/** A group's heading: its label semibold, its controls quiet Buttons at the far edge. */
-function headingOf(g, group, key, action) {
-	const { Box, Button, Text } = g.els;
-	const label = /* @__PURE__ */ h(Text, {
-		weight: "semibold",
-		color: group.active ? "claude" : void 0
-	}, group.label);
-	const hit = group.hit;
-	const actions = (group.actions ?? []).filter((a) => a.hit);
-	return /* @__PURE__ */ h(Box, {
-		key,
-		flexDirection: "row",
-		flexWrap: "nowrap",
-		alignItems: "center",
-		columnGap: tokens.gui.across.md,
-		paddingX: tokens.gui.across.inset
-	}, /* @__PURE__ */ h(Box, {
-		flexDirection: "row",
-		flexGrow: 1,
-		flexShrink: 1,
-		alignItems: "center",
-		columnGap: tokens.gui.across.sm
-	}, /* @__PURE__ */ h(Box, { flexShrink: 1 }, label), group.done ? /* @__PURE__ */ h(Box, { flexShrink: 0 }, icon(g, "success", {
-		tone: "success",
-		alt: "Decided"
-	})) : null), hit !== void 0 ? /* @__PURE__ */ h(Box, {
-		key: "open",
+		columnGap: across.xs,
 		flexShrink: 0
-	}, /* @__PURE__ */ h(Button, {
-		key: hit,
-		dimColor: true,
-		label: action,
-		onPress: () => g.press?.(hit)
-	})) : null, actions.map((a) => /* @__PURE__ */ h(Box, {
-		key: `a:${a.hit}`,
-		flexShrink: 0
-	}, /* @__PURE__ */ h(Button, {
-		key: a.hit,
-		dimColor: true,
-		label: capital(a.label),
-		onPress: () => g.press?.(a.hit)
-	}))));
+	}, group.action ? control(g, group.action) : null, group.actions.map((a) => control(g, a))));
 }
 /**
-* Groups of rows under a heading, a step apart. The host scrolls the pane, so there is no window
-* (`height`, `top`), no rails, no flat rows and no key; a row's text wraps whole, or with `lines: 1`
-* is one line the surface cuts at its edge. A group of more
-* than `maxItems` rows shows that many, then an `N more` Button (`more`).
+* Groups of rows under a heading, a step apart. The host scrolls the pane, so there is no window,
+* no rails, no flat rows and no key. A row's text wraps whole, or with `lines: 1` is one line the
+* surface cuts at its edge, except an opened row's, which is shown whole in a panel with what
+* belongs to it. A group of more than `maxItems` rows shows that many, then `Show N more`.
 */
-function list$1(g, l, options = {}) {
-	const { Box, Button } = g.els;
-	const { space, across } = tokens.gui;
-	const action = options.action ?? "Open";
-	const max = options.maxItems ?? tokens.gui.maxItems;
-	const opened = options.opened ?? {};
-	const closeAction = options.closeAction ?? "Close";
-	const isCut = l.lines === 1;
-	const hasMarks = l.groups.some((group) => group.rows.some((r) => r.mark !== "none"));
+function list$1(g, l) {
+	const { Box } = g.els;
+	const v = view$1(l, g.surface);
+	const under = l.opened ?? {};
+	const inset = across.inset + (l.opened ? tokens.gui.panel.x : 0);
 	return /* @__PURE__ */ h(Box, {
 		flexDirection: "column",
-		rowGap: space.md
-	}, l.groups.map((group, i) => {
-		const capped = options.more && !options.more.isAll && group.rows.length > max;
-		const isOpened = (r) => r.hit !== void 0 && opened[r.hit] !== void 0;
-		const shown = capped ? group.rows.filter((r, n) => n < max || isOpened(r)) : group.rows;
-		const left = group.rows.length - shown.length;
-		return /* @__PURE__ */ h(Box, {
-			key: `g${i}`,
-			flexDirection: "column",
-			rowGap: space.xs
-		}, group.label ? headingOf(g, group, `g${i}:head`, action) : null, /* @__PURE__ */ h(Box, {
-			flexDirection: "column",
-			rowGap: space.xs
-		}, shown.flatMap((r, n) => {
-			const under = r.hit === void 0 ? void 0 : opened[r.hit];
-			const row = rowOf(g, r, `g${i}:r${n}`, hasMarks, under ? closeAction : action, isCut && !under);
-			return under ? [/* @__PURE__ */ h(Box, {
-				key: `g${i}:r${n}:opened`,
-				flexDirection: "column",
-				rowGap: space.sm,
-				paddingY: space.sm,
-				backgroundColor: tokens.gui.fill,
-				borderStyle: "round",
-				borderColor: "#00000000"
-			}, row, under)] : [row];
-		})), capped && options.more ? /* @__PURE__ */ h(Box, {
-			key: `g${i}:more`,
-			paddingX: across.inset
-		}, /* @__PURE__ */ h(Button, {
-			key: `g${i}:more:${options.more.hit}`,
-			dimColor: true,
-			label: `${left} more`,
-			onPress: () => g.press?.(options.more.hit)
-		})) : null);
+		rowGap: tokens.gui.space.md
+	}, v.groups.map((group, i) => /* @__PURE__ */ h(Box, {
+		key: `g${i}`,
+		flexDirection: "column",
+		rowGap: tokens.gui.row.gap
+	}, group.label ? /* @__PURE__ */ h(Box, {
+		key: "head",
+		paddingX: across.inset,
+		flexDirection: "column"
+	}, heading(g, group, `g${i}:head`)) : null, rows(g, { key: "rows" }, ...group.rows.map((r, n) => {
+		const key = `g${i}:r${n}`;
+		const row = item(g, r, key, l.lines === 1 && !r.isOpened, v.asideCells);
+		const open = r.hit === void 0 ? void 0 : under[r.hit];
+		return open ? /* @__PURE__ */ h(Box, {
+			key: `${key}:panel`,
+			paddingX: across.inset,
+			flexDirection: "column"
+		}, panel(g, { gap: "sm" }, row, open)) : /* @__PURE__ */ h(Box, {
+			key: `${key}:row`,
+			paddingX: inset,
+			flexDirection: "column"
+		}, row);
+	})), group.more ? /* @__PURE__ */ h(Box, {
+		key: "more",
+		paddingX: inset,
+		flexDirection: "row"
+	}, rowOf(g, {}, control(g, group.more, `g${i}:more:${group.more.hit}`))) : null)));
+}
+
+// ../../lib/kits/notice/src/model.ts
+/** The meaning a state is marked with, on a surface that draws icons. */
+const MARKS = {
+	success: "state:success",
+	warning: "state:warning",
+	error: "state:error",
+	pending: "state:pending"
+};
+/** The colour role each status's words take: a pending one is quiet, as the dim words are. */
+const TONES = {
+	success: "success",
+	warning: "warning",
+	error: "error",
+	pending: "dim",
+	dim: "dim",
+	text: "text"
+};
+function view(model, surface) {
+	const isCells = holds(surface, "cells");
+	const status = model.isEmpty ? "dim" : model.status ?? "warning";
+	const tone = TONES[status];
+	const said = isCells ? model.text : model.words ?? model.text;
+	const text = typeof said === "string" ? [{
+		text: said,
+		role: tone
+	}] : said.map((s) => ({
+		...s,
+		role: s.role ?? tone
 	}));
+	return {
+		mark: !isCells && !model.isEmpty ? MARKS[status] : void 0,
+		type: model.isEmpty || tone === "dim" ? "caption" : "body",
+		rows: model.isEmpty ? "wrap" : (isCells ? model.isWrapped : !model.isCut) ? "wrap" : "cut",
+		text
+	};
 }
 
 // ../../lib/kits/notice/src/gui.tsx
+/** The notice and the empty state on the graphical surfaces: the same model, in native controls. */
 /**
-* What a list says when there is nothing in it: dim, at the inset, wrapped by the surface.
-* @param text Say what is missing and, if it helps, what makes rows appear.
+* The words in their type role. One plain span is a single `Text` carrying its role's colour;
+* spans of several styles are nested runs.
 */
-function emptyState$1(g, text, options = {}) {
-	const { Box, Text } = g.els;
-	return /* @__PURE__ */ h(Box, { paddingX: tokens.gui.across.inset }, /* @__PURE__ */ h(Text, { dimColor: true }, options.text ?? text));
+function said(g, v, wrap) {
+	const { Text } = g.els;
+	const [only] = v.text;
+	if (v.text.length === 1 && only && !only.bold && !only.italic && !only.underline) return /* @__PURE__ */ h(Text, {
+		wrap,
+		...typeProps(v.type, {
+			isSized: can(g, "textSize"),
+			isToned: false
+		}),
+		...roleProps(only.role)
+	}, only.text);
+	return spans(g, v.text, {
+		type: v.type,
+		wrap
+	});
 }
+/**
+* What a list says when there is nothing in it: a caption-role line at the inset, wrapped by the
+* surface. `words` is the fuller sentence a graphical surface says in its place.
+*/
+function emptyState$1(g, e) {
+	const { Box } = g.els;
+	const v = view({
+		...e,
+		isEmpty: true
+	}, g.surface);
+	return /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		paddingX: tokens.gui.across.inset
+	}, said(g, v));
+}
+
+// ../../lib/kits/core/src/manifest.ts
+/** A contract's model fields, checked against the model type: a field left out is an error. */
+const modelFields = () => (keys) => keys;
+
+// ../../lib/kits/frame/src/contract.ts
+/** The control a close action is, as a drawn span's `hit`. */
+const closeHit = (action) => `frame:${action}`;
+/** The close action a `hit` names. */
+const closeOf = (hit) => hit === "frame:close" || hit === "frame:discard" || hit === "frame:keep" ? hit.slice(6) : void 0;
+/** Where the frame puts its body, and the rows it takes besides. */
+const captionFrameLayout = {
+	/** Cells and rows from the frame's corner to the body's. */
+	x: 2,
+	y: 2,
+	/** Rows of the frame, its notice and its buttons. */
+	chrome: 5,
+	/** Cells of the top rule the caption may not take. */
+	reserved: 5
+};
+const frameFields = modelFields()([
+	"title",
+	"caption",
+	"end",
+	"close",
+	"body",
+	"footer",
+	"notice",
+	"width",
+	"hostTitle",
+	"head",
+	"actions"
+]);
+
+// ../../lib/kits/card/src/contract.ts
+/**
+* The question card's contract: its model, what each drawing is given, and the intents a list of
+* choices sends back. No host imports.
+*/
+const cardFields = modelFields()([
+	"heading",
+	"choices",
+	"note",
+	"steps",
+	"summaries",
+	"closing",
+	"width"
+]);
 
 // ../../lib/kits/card/src/terminal.ts
 /** The question card's parts as styled lines: the one drawing both terminals paint. */
@@ -743,15 +1463,14 @@ function rail(state, row) {
 
 // ../../lib/kits/buttons/src/terminal.ts
 /** The button row as styled lines: the one drawing both terminals paint. */
-/** How a button's key is printed after its label: `↵` for Enter, else in brackets; nothing for none. */
-const shortcutOf = (b) => b.hit === void 0 || !b.hotkey ? b.hotkey : b.hotkey === "enter" ? tokens.glyph.enter : `[${b.hotkey}]`;
 /**
 * Actions left to right, label first with the key dim after it, the suggested one in the
 * accent; and dim keyboard-only hints, key first. One row drops what is neither suggested nor
-* essential, last first, until it fits; with `wrap` nothing drops.
+* essential, last first, until it fits; with `wrap` nothing drops. One button is lit: the
+* first that asks (`settle`).
 */
 function buttonRow(keys, width, { wrap = false, lead = [], hover } = {}) {
-	const chips = keys.map((key) => {
+	const chips = (settle([keys])[0] ?? []).map((key) => {
 		const shortcut = shortcutOf(key);
 		return {
 			...key,
@@ -1174,16 +1893,15 @@ function list(l, width) {
 /** The notice and the empty state as styled lines: the one drawing both terminals paint. */
 /**
 * One line telling the person what just happened, in the role of its status, cut to the room
-* with `…`.
-* @param text Words, or spans where part of the line stands out (a word in its context); a span
-* with no role takes the status's.
-* @param status Success, warning and error only for an actual state. @default "warning"
+* with `…`. A terminal has no icon: the words take the status's colour, and a span with no role
+* takes it too.
 */
-function notice(text, width, status = "warning", { isWrapped = false } = {}) {
+function notice({ text, width, status = "warning", isWrapped = false }) {
+	const role = status === "pending" ? "dim" : status;
 	if (typeof text !== "string") {
 		const styled = text.map((s) => ({
 			...s,
-			role: s.role ?? status
+			role: s.role ?? role
 		}));
 		return isWrapped ? wrapSpans(styled, width).map((row) => line(row)) : [line(truncateSpans(styled, width))];
 	}
@@ -1192,14 +1910,14 @@ function notice(text, width, status = "warning", { isWrapped = false } = {}) {
 		max: 1
 	})).map((row) => line([{
 		text: row,
-		role: status
+		role
 	}]));
 }
 /**
 * What a list says when there is nothing in it: dim words standing in for its rows, wrapped.
-* @param text Say what is missing and, if it helps, what makes rows appear.
+* Say what is missing and, if it helps, what makes rows appear.
 */
-function emptyState(text, width) {
+function emptyState({ text, width }) {
 	return clamp$1(text, width).map((row) => line([{
 		text: row,
 		role: "dim"
@@ -1302,7 +2020,10 @@ const caption = (m) => captionParts([[span(m.title, {
 function drawMenu(m, look, width, height) {
 	const inner = Math.max(1, width - INSET);
 	if (!m) return {
-		body: emptyState("No menu open.", inner),
+		body: emptyState({
+			text: "No menu open.",
+			width: inner
+		}),
 		hint: []
 	};
 	const head = frameTop({
@@ -1314,15 +2035,25 @@ function drawMenu(m, look, width, height) {
 		}),
 		close: {}
 	});
-	const hint = notice(HINT, inner, "dim");
+	const hint = notice({
+		text: HINT,
+		width: inner,
+		status: "dim"
+	});
 	if (m.error) return {
 		head,
-		body: emptyState(m.error, inner),
+		body: emptyState({
+			text: m.error,
+			width: inner
+		}),
 		hint: []
 	};
 	if (m.rows === null) return {
 		head,
-		body: emptyState(m.kind === "notes" ? "Looking for notes…" : "Asking git…", inner),
+		body: emptyState({
+			text: m.kind === "notes" ? "Looking for notes…" : "Asking git…",
+			width: inner
+		}),
 		hint: []
 	};
 	const room = listRoom(m.rows, look.held, width, height);
@@ -1350,155 +2081,25 @@ const says = (m) => {
 * @param isAll Whether the rest of a long list is shown.
 */
 function guiMenu(g, m, isAll) {
-	if (!m) return emptyState$1(g, "No menu open.");
+	if (!m) return emptyState$1(g, { text: "No menu open." });
 	const detail = detailOf(m);
 	const words = says(m);
 	return captionFrame(g, {
 		title: m.title,
-		caption: detail ? [span(detail, { role: "dim" })] : void 0
-	}, {
+		caption: detail ? [span(detail, { role: "dim" })] : void 0,
 		hostTitle: m.title,
-		body: words !== void 0 ? emptyState$1(g, words) : list$1(g, {
+		body: words !== void 0 ? emptyState$1(g, { text: words }) : list$1(g, {
 			groups: [{
 				label: "",
 				rows: menuRows(m.rows ?? [])
 			}],
-			rail: false
-		}, { more: {
-			isAll,
-			hit: MORE
-		} })
+			more: {
+				isAll,
+				hit: MORE
+			}
+		})
 	});
 }
-
-// ../../lib/kits/core/src/surfaces.ts
-const fact = (value, note, source) => ({
-	value,
-	note,
-	source
-});
-const unverified = (hint) => ({
-	unverified: true,
-	hint
-});
-const README = "lib/kits/README.md, What still differs between the clients";
-const CLAUDE_MD = "skills/agent-plugin-dev/references/claude.md, VS Code quirks (extension 2.1.327)";
-const TYPES = "claude-code types, Elements (apps/*/dist/.claude-plugin/types/claude-code/index.d.ts, `pnpm drive types <app>`)";
-/**
-* The table. Surfaces are the rows, capabilities the columns; each column's value type is
-* `CapValues`, which the `satisfies` clause checks, and the literals stay for the types below.
-*/
-const surfaces = {
-	pi: {
-		drawing: "terminal",
-		keyFocus: fact("kit", "the extension owns every key and draws its own pointer", README),
-		hover: fact("kit", "pi reports the pointer; the kit bolds the label", README),
-		hotkeys: fact(true, "the caller owns the binding; the key is drawn dim after the label", "lib/kits/buttons/src/manifest.ts, feature `bind`"),
-		window: fact(true, "the kit draws ↑/↓ more and moves `top`", "lib/kits/list/src/manifest.ts, feature `window`"),
-		framesPane: fact(false, "the kit draws a sheet's edges", "lib/kits/sheet/src/manifest.ts, feature `edges`"),
-		inputRows: fact(1, "pi's field is one row and follows the cursor", README + ", Blocks"),
-		input: fact(true, "pi's own field, in the row an `input` slot keeps", README + ", Blocks"),
-		select: unverified(),
-		progress: unverified(),
-		svg: fact(false, "pi draws cells; there is no vector element", "pi-tui has no image or vector component"),
-		textSize: fact(false, "the terminal has one size", TYPES + ", TextProps.size"),
-		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
-		labelWraps: unverified(),
-		images: fact(false, "pi-tui has no image component", "pi-tui exports (no Image)")
-	},
-	"claude-terminal": {
-		drawing: "terminal",
-		keyFocus: fact("ring", "a parked ring plus a `ui.focus` hook put the kit's pointer on the row", README),
-		hover: fact("painter", "the engine inverts a Button under the pointer; the painter swaps the row's colours first", README),
-		hotkeys: fact(true, "a Button's `hotkey` presses it while the plugin's site holds the focus", TYPES + ", ButtonProps.hotkey"),
-		window: fact(true, "the wheel reaches the mod as `ui.scroll`; the kit moves `top`", "lib/kits/list/src/manifest.ts, feature `window`"),
-		framesPane: fact(true, "a pane or box has the engine's frame and Close; a mod draws `sheetHead` and the body", README + ", A panel over the screen"),
-		inputRows: fact("many", "the engine's field wraps, and stands alone on its rows", README + ", Blocks"),
-		input: fact(true, "the engine's `Input`", TYPES + ", Elements.terminal"),
-		select: fact(true, "the engine's `Select`", TYPES + ", Elements.terminal"),
-		progress: fact(true, "the engine's `Progress`", TYPES + ", Elements.terminal"),
-		svg: fact(false, "the terminal's table has no `Svg`", TYPES + ", Elements.terminal"),
-		textSize: fact(false, "the terminal has one size and ignores `size`", TYPES + ", TextProps.size"),
-		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
-		labelWraps: unverified(),
-		images: fact(true, "the terminal's table has an `Image`", TYPES + ", Elements.terminal")
-	},
-	vscode: {
-		drawing: "gui",
-		keyFocus: fact("host", "the host draws a Button's focus itself", "lib/kits/band/src/manifest.ts, feature `focus`"),
-		hover: fact("host", "the host draws a Button's hover state itself", "lib/kits/buttons/src/manifest.ts, feature `hover`"),
-		hotkeys: fact(false, "the webview does not act on a Button's `hotkey` (checked live)", "lib/kits/buttons/src/manifest.ts, feature `bind`; VS Code extension 2.1.327"),
-		window: fact(false, "the surface scrolls the pane, so there is no window for the kit to move", "lib/kits/list/src/manifest.ts, feature `window`"),
-		framesPane: fact(true, "the host frames the pane and owns its Close", "lib/kits/sheet/src/manifest.ts, feature `edges`"),
-		inputRows: fact(1, "an `Input` is one line", CLAUDE_MD),
-		input: fact(true, "the extension's table has an `Input`", TYPES + ", Elements.vscode"),
-		select: fact(true, "the extension's table has a `Select`", TYPES + ", Elements.vscode"),
-		progress: fact(true, "the extension's table has a `Progress`", TYPES + ", Elements.vscode"),
-		svg: fact(true, "drawn as an image, so it cannot take theme colours: check a light theme", TYPES + ", SvgProps (the editor draws an image)"),
-		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
-		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
-		labelWraps: fact(false, "a Button's label never wraps; a long one overflows a narrow pane", CLAUDE_MD),
-		images: unverified("the table has no `Image`")
-	},
-	desktop: {
-		drawing: "gui",
-		keyFocus: unverified(),
-		hover: unverified(),
-		hotkeys: unverified(),
-		window: unverified(),
-		framesPane: unverified(),
-		inputRows: unverified(),
-		input: unverified("the table has an `Input`"),
-		select: unverified("the table has a `Select`"),
-		progress: unverified("the table has a `Progress`"),
-		svg: fact(true, "drawn as an image, or in a sandboxed frame when `isInteractive`", TYPES + ", SvgProps; never driven"),
-		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
-		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
-		labelWraps: unverified(),
-		images: unverified("the table has no `Image`")
-	},
-	mobile: {
-		drawing: "gui",
-		keyFocus: unverified(),
-		hover: unverified(),
-		hotkeys: unverified(),
-		window: unverified(),
-		framesPane: unverified(),
-		inputRows: unverified(),
-		input: fact(false, "an app is sent an `Input` only if it named it in `draws` on its `ui_attach`; the kit's apps name none", TYPES + ", Elements.mobile"),
-		select: fact(false, "an app is sent a `Select` only if it named it in `draws` on its `ui_attach`; the kit's apps name none", TYPES + ", Elements.mobile"),
-		progress: fact(false, "an app is sent a `Progress` only if it named it in `draws`; its Box and Text otherwise", TYPES + ", Elements.mobile"),
-		svg: fact(true, "drawn in a web view", TYPES + ", SvgProps"),
-		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
-		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
-		labelWraps: unverified(),
-		images: unverified("the table has no `Image`")
-	}
-};
-/** What the table says of one capability on one surface: `undefined` when unverified. */
-const factOf = (surface, cap) => {
-	const f = surfaces[surface][cap];
-	return "unverified" in f ? void 0 : f;
-};
-/** Every fact a surface has, by name, for `ctx.caps`. */
-function capsOf(surface) {
-	const out = {};
-	for (const cap of Object.keys(surfaces[surface])) {
-		if (cap === "drawing") continue;
-		const f = factOf(surface, cap);
-		if (f) out[cap] = f.value;
-	}
-	return out;
-}
-const nothing = () => void 0;
-/** A context for `surface`; events left out do nothing. */
-const ctxOf = (surface, events = {}) => ({
-	surface,
-	caps: capsOf(surface),
-	press: events.press ?? nothing,
-	input: events.input ?? nothing,
-	submit: events.submit ?? nothing
-});
 
 // ../../lib/kits/core/src/paint/host.tsx
 /** Whether the event's surface draws with native controls (Desktop, VS Code, mobile), not cells. */
@@ -1780,7 +2381,7 @@ const FOLDER_APPS = [
 	"zed",
 	"smerge",
 	"files",
-	"ghostty"
+	"terminal"
 ];
 /** The desktop's editor, `fireproof.desktop.editor`; the other keeps its row, not the keys. */
 const preferredEditor = (value) => value === "vscode" ? "code" : "zed";
@@ -1988,7 +2589,7 @@ const appLabel = (app, isMac) => {
 		case "zed": return "Zed";
 		case "smerge": return "Sublime Merge";
 		case "files": return isMac ? "Finder" : "Files";
-		case "ghostty": return "Ghostty";
+		case "terminal": return "Terminal";
 	}
 };
 /** The checkout in the desktop's apps; one missing keeps its row, so the order never moves. */
@@ -2003,12 +2604,13 @@ const folderMenu = (cwd, launchers, isMac, editor) => ({
 				label: appLabel(app, isMac),
 				action: {
 					kind: "launch",
-					argv
+					argv,
+					...app === "terminal" ? { cwd } : {}
 				}
 			} : {
 				id: app,
 				label: appLabel(app, isMac),
-				unavailable: "not installed"
+				unavailable: app === "terminal" ? "no terminal launcher found" : "not installed"
 			};
 		}),
 		{
@@ -2121,9 +2723,12 @@ const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 /** The row the keyboard is on: the one it was moved to, else the menu's own pick, else the first. */
 const focusOf = (m, at) => m?.rows?.find((r) => r.id === at)?.id ?? m?.preferred ?? m?.rows?.[0]?.id;
 let isMacAnswer;
-const runProcess = async ($, argv, timeoutMs = GIT_TIMEOUT_MS) => {
+const runProcess = async ($, argv, timeoutMs = GIT_TIMEOUT_MS, cwd) => {
 	try {
-		return await $.process.run(argv, { timeoutMs });
+		return await $.process.run(argv, {
+			timeoutMs,
+			...cwd ? { cwd } : {}
+		});
 	} catch {
 		return;
 	}
@@ -2222,30 +2827,42 @@ async function buildGit($, cwd) {
 		pr
 	});
 }
+/** Open a fresh shell, using the desktop's terminal selection rather than the host terminal. */
+async function terminalLauncher($, cwd, mac) {
+	const override = (await $.env.get("GIT_MENU_TERMINAL"))?.trim();
+	if (override && (override.startsWith("/") || !override.includes("/"))) {
+		const found = await locate($, override);
+		if (found?.startsWith("/")) return [found];
+	}
+	if (mac) return [
+		"open",
+		"-a",
+		"Terminal",
+		cwd
+	];
+	const xdg = await locate($, "xdg-terminal-exec");
+	if (xdg && (await runProcess($, [xdg, "--print-id"]))?.exitCode === 0) return [xdg, `--dir=${cwd}`];
+	const alternative = await locate($, "x-terminal-emulator");
+	return alternative ? [alternative] : void 0;
+}
 async function buildFolder($, cwd) {
 	const mac = await isMac($);
 	const editor = preferredEditor(await $.env.get("FIREPROOF_EDITOR"));
 	const launchers = {};
+	const terminal = terminalLauncher($, cwd, mac);
 	if (mac) {
-		const bundle = async (app, name, args, fresh = false) => {
-			if (await $.fs.exists(`/Applications/${name}.app`)) launchers[app] = fresh ? [
-				"open",
-				"-na",
-				`${name}.app`,
-				"--args",
-				...args
-			] : [
+		const bundle = async (app, name) => {
+			if (await $.fs.exists(`/Applications/${name}.app`)) launchers[app] = [
 				"open",
 				"-a",
 				name,
-				...args
+				cwd
 			];
 		};
 		await Promise.all([
-			bundle("code", "Visual Studio Code", [cwd]),
-			bundle("zed", "Zed", [cwd]),
-			bundle("smerge", "Sublime Merge", [cwd]),
-			bundle("ghostty", "Ghostty", [`--working-directory=${cwd}`], true)
+			bundle("code", "Visual Studio Code"),
+			bundle("zed", "Zed"),
+			bundle("smerge", "Sublime Merge")
 		]);
 		launchers.files = ["open", cwd];
 	} else {
@@ -2257,8 +2874,7 @@ async function buildFolder($, cwd) {
 			...editorCandidates(editor),
 			"smerge",
 			"nautilus",
-			"xdg-open",
-			"ghostty"
+			"xdg-open"
 		]);
 		const found = new Set((probe?.stdout ?? "").split("\n").filter(Boolean));
 		if (found.has("code")) launchers.code = ["code", cwd];
@@ -2267,8 +2883,9 @@ async function buildFolder($, cwd) {
 		if (found.has("smerge")) launchers.smerge = ["smerge", cwd];
 		if (found.has("nautilus")) launchers.files = ["nautilus", cwd];
 		else if (found.has("xdg-open")) launchers.files = ["xdg-open", cwd];
-		if (found.has("ghostty")) launchers.ghostty = ["ghostty", `--working-directory=${cwd}`];
 	}
+	const launcher = await terminal;
+	if (launcher) launchers.terminal = launcher;
 	return folderMenu(cwd, launchers, mac, editor);
 }
 /** A command by absolute path: on PATH, then the profiles a trimmed PATH may miss, then `also`. */
@@ -2395,7 +3012,7 @@ async function press($, row, surface) {
 		$.ui.toast(r.isCopied ? `Copied the ${action.what}` : `Couldn't copy: ${r.reason}`);
 	} else {
 		const argv = action.kind === "url" ? [await isMac($) ? "open" : "xdg-open", action.url] : action.argv;
-		if ((await runProcess($, [...DETACH, ...argv]))?.exitCode !== 0) $.ui.toast(`Couldn't start ${argv[0]}`);
+		if ((await runProcess($, [...DETACH, ...argv], GIT_TIMEOUT_MS, action.kind === "launch" ? action.cwd : void 0))?.exitCode !== 0) $.ui.toast(`Couldn't start ${argv[0]}`);
 	}
 	await close($);
 }

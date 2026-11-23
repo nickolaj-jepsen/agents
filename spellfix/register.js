@@ -1,5 +1,5 @@
 import { atom, read, update } from "claude-code";
-import { a as ringMove, c as notice$1, d as span, f as spansWidth, i as ring, l as cellWidth, m as tokens, n as actionKey, o as stack, p as truncateSpans, r as paintLines, s as ctxOf, t as RING, u as line } from "./claude-DzpLJgIW.js";
+import { _ as textOf, a as ringMove, b as tokens, c as can, d as surfaces, f as cellWidth, g as spansWidth, h as span, i as ring, l as ctxOf, m as line, n as actionKey, o as stack, p as escapeMarkdown, r as paintLines, s as notice$1, t as RING, u as holds, v as truncateSpans, y as meaningOf } from "./claude-B3pwfCuK.js";
 
 // ../../lib/kits/core/src/paint/gui.tsx
 /** The props of a `Text` in a role of the style. `code` is a chip; `link` is underlined. */
@@ -20,16 +20,97 @@ const roleProps = (role) => {
 		case "link": return { underline: true };
 	}
 };
-/** `word` with its first letter in capitals: a graphical button's label, which has no key beside it. */
-const capital = (text) => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+/**
+* The `Text` props of a type role: its size and weight from the host's scale, and dim for a role
+* that is. A drawing takes a role and never a size.
+* @param o `tabular` sets digits of one width, for a count or a time that changes or lines up.
+* `isSized: false` leaves the size out, for a host that draws none: its `section` is then dim,
+* since it cannot be smaller. `isToned: false` leaves the role's tone to the spans inside.
+*/
+const typeProps = (role, o = {}) => {
+	const r = tokens.type[role];
+	const isSized = o.isSized !== false;
+	const isDim = o.isToned !== false && (r.role === "dim" || !isSized && role === "section");
+	return {
+		...isSized ? { size: r.size } : {},
+		weight: r.weight,
+		...isDim ? { dimColor: true } : {},
+		...o.tabular ? { tabular: true } : {}
+	};
+};
+/**
+* The Markdown heading level a role takes where the host draws no `Text` sizes. The webview
+* leaves about an em under a heading, which a `Box` cannot take back (it reads no negative
+* margin), so a heading sits a little further from what it heads than a `Text` would.
+*/
+const HEADING = {
+	title: "##",
+	heading: "###"
+};
+/**
+* Words in a type role: a `Text` that sets its size, weight and tone from `tokens.type`. Where
+* the host draws no `Text` size (`textSize`: VS Code's webview reads none), a `title` or a
+* `heading` of plain words is the host's own Markdown heading, which has real sizes; every other
+* role is told apart by weight and tone. `wrap: "truncate-end"` cuts the words at the edge with
+* `…` instead of wrapping them.
+*/
+function typed(g, role, children, o = {}) {
+	const { Box, Markdown, Text } = g.els;
+	const isSized = can(g, "textSize");
+	if (!isSized && (role === "title" || role === "heading") && typeof children === "string") return /* @__PURE__ */ h(Box, { key: o.key }, /* @__PURE__ */ h(Markdown, { text: `${HEADING[role]} ${escapeMarkdown(children)}` }));
+	return /* @__PURE__ */ h(Text, {
+		key: o.key,
+		wrap: o.wrap,
+		...typeProps(role, {
+			...o,
+			isSized
+		})
+	}, children);
+}
+/**
+* One row of a list or a form: its line and `tokens.gui.row.pad` above and below, whether or not a Button is in it, its
+* parts on one centre line a step apart. A column of these keeps one beat.
+* @param o `align: "start"` sets the parts on the first line instead of the centre, for a row whose
+* text may wrap: its icon stays beside the first line.
+*/
+function rowOf(g, o, ...parts) {
+	const { Box } = g.els;
+	return /* @__PURE__ */ h(Box, {
+		key: o.key,
+		flexDirection: "row",
+		flexWrap: "nowrap",
+		alignItems: o.align === "start" ? "flex-start" : "center",
+		justifyContent: o.justify,
+		paddingY: tokens.gui.row.pad,
+		columnGap: tokens.gui.across.sm
+	}, parts.filter(Boolean));
+}
+/** Rows under each other, `tokens.gui.row.gap` apart: the column a list's `rowOf`s stand in. */
+function rows(g, o, ...parts) {
+	const { Box } = g.els;
+	return /* @__PURE__ */ h(Box, {
+		key: o.key,
+		flexDirection: "column",
+		rowGap: tokens.gui.row.gap
+	}, parts.filter(Boolean));
+}
 /**
 * Styled spans as one `Text`: a nested run per span, in its role and face. A span's `hit` is not
 * a control here: a graphical control is a `Button`, which a component draws itself.
 * @param spans A caption or a line of a contract, as `terminal.ts` takes it.
+* @param options `type` sets the line in a type role; `wrap: "truncate-end"` cuts it at the
+* edge with `…` instead of wrapping.
 */
-function spans(g, list) {
+function spans(g, list, options = {}) {
 	const { Text } = g.els;
-	return /* @__PURE__ */ h(Text, null, list.map((s, i) => /* @__PURE__ */ h(Text, {
+	return /* @__PURE__ */ h(Text, {
+		wrap: options.wrap,
+		...options.type ? typeProps(options.type, {
+			...options,
+			isSized: can(g, "textSize"),
+			isToned: false
+		}) : {}
+	}, list.map((s, i) => /* @__PURE__ */ h(Text, {
 		key: `s${i}`,
 		...roleProps(s.role),
 		weight: s.bold ? "bold" : void 0,
@@ -55,8 +136,8 @@ const ICONS = {
 	write: "<path d=\"M10.6 2.9l2.5 2.5-7.6 7.6-3.1.6.6-3.1 7.6-7.6Z\"/><path d=\"M9.2 4.3l2.5 2.5\"/>",
 	status: "<circle cx=\"8\" cy=\"8\" r=\"5.6\"/><circle cx=\"8\" cy=\"8\" r=\"1.6\" fill=\"currentColor\"/>",
 	priorityNone: "<path d=\"M3.2 8h1.4M7.3 8h1.4M11.4 8h1.4\"/>",
-	priorityLow: "<path d=\"M4 13v-2.6\"/><path d=\"M8 13V7.4\" stroke-opacity=\".35\"/><path d=\"M12 13V4.4\" stroke-opacity=\".35\"/>",
-	priorityMedium: "<path d=\"M4 13v-2.6M8 13V7.4\"/><path d=\"M12 13V4.4\" stroke-opacity=\".35\"/>",
+	priorityLow: "<path d=\"M4 13v-2.6\"/><path d=\"M8 13V7.4\" stroke-opacity=\".4\"/><path d=\"M12 13V4.4\" stroke-opacity=\".4\"/>",
+	priorityMedium: "<path d=\"M4 13v-2.6M8 13V7.4\"/><path d=\"M12 13V4.4\" stroke-opacity=\".4\"/>",
 	priorityHigh: "<path d=\"M4 13v-2.6M8 13V7.4M12 13V4.4\"/>",
 	priorityUrgent: "<rect x=\"2.6\" y=\"2.6\" width=\"10.8\" height=\"10.8\" rx=\"2.6\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M8 5.2v3.4M8 10.8v.01\" stroke=\"#ffffff\"/>",
 	project: "<path d=\"M8 2.4 13.2 5.2v5.6L8 13.6 2.8 10.8V5.2Z\"/><path d=\"M2.8 5.2 8 8l5.2-2.8M8 8v5.6\"/>",
@@ -83,6 +164,48 @@ function icon(g, name, options = {}) {
 		height: size
 	});
 }
+/**
+* An icon that carries a meaning (`priority:high`, `kind:stale`, `decision:apply`,
+* `state:error`): the kit's drawing for it, in its role's colour. A terminal draws the same
+* name as a glyph (`meaningSpan`).
+* @param o `size` in CSS pixels; `alt` replaces what it says.
+*/
+function meaning(g, name, o = {}) {
+	const m = meaningOf(name);
+	return icon(g, m.shape, {
+		tone: m.tone,
+		alt: o.alt ?? m.alt,
+		size: o.size
+	});
+}
+
+// ../../lib/kits/band/src/internal.ts
+/** The meaning each status marks the band with on a graphical surface. */
+const statusMeaning = (status) => `state:${status}`;
+
+// ../../lib/kits/band/src/model.ts
+const capital$1 = (text) => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+function view$2(model, surface) {
+	if (holds(surface, "cells")) return {
+		mark: void 0,
+		text: model.text,
+		buttons: [],
+		layout: "line"
+	};
+	const actions = model.actions ?? [];
+	return {
+		mark: model.mark ?? statusMeaning(model.status ?? "warning"),
+		text: model.words ?? model.text,
+		buttons: [{
+			label: capital$1(model.hint),
+			hit: model.hit
+		}, ...actions].map((b) => ({
+			label: capital$1(b.label),
+			hit: b.hit
+		})),
+		layout: actions.length === 0 || model.isOneLine ? "line" : "stacked"
+	};
+}
 
 // ../../lib/kits/band/src/gui.tsx
 /** The status band on the graphical surfaces: an icon, the text and quiet buttons. */
@@ -90,65 +213,61 @@ function icon(g, name, options = {}) {
 * The band's line: the status mark, the text, a quiet way-in button (`hint`) and a quiet button
 * per further action, at the inset. A button's `hit` goes to `g.press`.
 */
-function statusBand$1(g, { text, hint, hit, status = "warning", actions = [] }, options = {}) {
-	const { Box, Button, Text } = g.els;
-	const isOneLine = Boolean(options.isOneLine);
-	const mark = icon(g, options.icon ?? status, { tone: options.tone ?? status });
+function statusBand$1(g, b) {
+	const { Box, Button } = g.els;
+	const v = view$2(b, g.surface);
+	const { across } = tokens.gui;
+	const isOneLine = Boolean(b.isOneLine);
+	const mark = v.mark ? meaning(g, v.mark) : null;
 	const words = /* @__PURE__ */ h(Box, {
 		flexShrink: 1,
 		flexGrow: isOneLine ? 1 : void 0
-	}, /* @__PURE__ */ h(Text, { wrap: isOneLine ? "truncate-end" : void 0 }, options.text ?? text));
-	const buttons = [/* @__PURE__ */ h(Button, {
-		key: hit,
+	}, typed(g, "body", v.text, { wrap: isOneLine ? "truncate-end" : void 0 }));
+	const buttons = v.buttons.map((x) => /* @__PURE__ */ h(Button, {
+		key: x.hit,
 		dimColor: true,
-		label: capital(hint),
-		onPress: () => g.press?.(hit)
-	}), ...actions.map((a) => /* @__PURE__ */ h(Button, {
-		key: a.hit,
-		dimColor: true,
-		label: capital(a.label),
-		onPress: () => g.press?.(a.hit)
-	}))];
-	const { across, space } = tokens.gui;
-	if (actions.length === 0 || isOneLine) return /* @__PURE__ */ h(Box, {
+		label: x.label,
+		onPress: () => g.press?.(x.hit)
+	}));
+	if (v.layout === "line") return /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		paddingX: across.inset
+	}, rowOf(g, {}, /* @__PURE__ */ h(Box, {
 		flexDirection: "row",
 		flexWrap: "nowrap",
-		columnGap: across.sm,
 		alignItems: "center",
-		paddingX: across.inset
+		columnGap: across.sm,
+		flexGrow: 1
 	}, mark, words, /* @__PURE__ */ h(Box, {
 		flexDirection: "row",
 		flexShrink: 0,
 		columnGap: across.xs
-	}, buttons));
+	}, buttons))));
 	return /* @__PURE__ */ h(Box, {
 		flexDirection: "column",
-		rowGap: space.xs,
 		paddingX: across.inset
-	}, /* @__PURE__ */ h(Box, {
+	}, rows(g, {}, rowOf(g, {}, /* @__PURE__ */ h(Box, {
 		flexDirection: "row",
 		flexWrap: "nowrap",
+		alignItems: "center",
 		columnGap: across.sm
-	}, mark, words), /* @__PURE__ */ h(Box, {
+	}, mark, words)), rowOf(g, {}, /* @__PURE__ */ h(Box, {
 		flexDirection: "row",
 		flexWrap: "wrap",
 		columnGap: across.xs
-	}, buttons));
+	}, buttons))));
 }
 
 // ../../lib/kits/band/src/terminal.ts
 /** The status band as styled lines: the one drawing both terminals paint. */
-/** The mark of each status in a terminal. */
-const statusGlyph = (status) => status === "success" ? tokens.glyph.done : status === "error" ? tokens.glyph.times : tokens.glyph.status.warning;
 /**
 * The band's line: the status mark and the text in the status's role, the hint dim after it,
 * and the whole line one control. The text is cut with `…` so the hint stays whole.
-* @param width The room in cells.
 */
-function statusBand({ text, hint, hit, status = "warning", hovered }, width) {
+function statusBand({ text, hint, hit, width, status = "warning", hovered }) {
 	const tail = ` ${hint}`;
 	const room = Math.max(1, width - cellWidth(tail));
-	const head = truncateSpans([span(`${statusGlyph(status)} ${text}`, {
+	const head = truncateSpans([span(`${meaningOf(statusMeaning(status)).glyph} ${text}`, {
 		role: status,
 		bold: hovered
 	})], room);
@@ -158,36 +277,119 @@ function statusBand({ text, hint, hit, status = "warning", hovered }, width) {
 	})], hit)];
 }
 
-// ../../lib/kits/buttons/src/gui.tsx
+// ../../lib/kits/buttons/src/model.ts
 /**
-* A row of actions at the inset: a Button each, the suggested one filled and the rest quiet
-* (VS Code paints a Button by its `dimColor` alone, so the variant follows it). The host wraps
-* the row, so nothing drops and `wrap`, `essential`, `isQuiet` and `hover` have nothing to do.
-* A keyboard-only hint (no `hit`) is not drawn: a surface with a pointer has no use for a key
-* and no place to show one.
-* @param buttons The actions; a label is capitalised unless it is `isLiteral`.
-* @param options `lead` is drawn as text before the first Button.
+* The button row's view model: what is lit, what goes quiet and what is drawn on a surface.
+* Pure and plain: the drawings read it, and so does the snapshot that holds it across surfaces.
+* No host imports.
+*/
+/** How a button's key is printed after its label: `↵` for Enter, else in brackets; nothing for none. */
+const shortcutOf = (b) => b.hit === void 0 || !b.hotkey ? b.hotkey : b.hotkey === "enter" ? tokens.glyph.enter : `[${b.hotkey}]`;
+/** `word` with its first letter in capitals: a graphical button's label, which has no key beside it. */
+const capital = (text) => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+/**
+* The buttons as a screen shows them. One button of a screen is lit, the first that asks, so a
+* screen never has two suggested actions; while Close asks, none is lit and every control is
+* quiet, whatever the caller said.
+*/
+function settle(rows, confirming = false) {
+	let isLitOne = false;
+	return rows.map((row) => row.map((b) => {
+		if (confirming) return {
+			...b,
+			isLit: false,
+			isQuiet: b.hit === void 0 ? void 0 : true
+		};
+		if (!b.isLit) return b;
+		if (isLitOne) return {
+			...b,
+			isLit: false
+		};
+		isLitOne = true;
+		return b;
+	}));
+}
+/** What `settle`d buttons are drawn as on `surface`. */
+function view$1(model, surface) {
+	const hasKeys = holds(surface, "hotkeys");
+	const isGui = surfaces[surface].drawing === "gui";
+	const rows = settle(model.rows, model.confirming).flatMap((row) => {
+		const drawn = row.flatMap((b) => {
+			if (b.hit === void 0) return hasKeys ? [{
+				label: b.label,
+				key: b.hotkey,
+				tone: "hint"
+			}] : [];
+			const key = hasKeys ? shortcutOf(b) : "";
+			return [{
+				label: isGui && !b.isLiteral ? capital(b.label) : b.label,
+				hit: b.hit,
+				...key ? { key } : {},
+				tone: b.isLit ? "lit" : b.isChosen && isGui && !model.confirming ? "chosen" : b.isQuiet ? "quiet" : isGui ? "quiet" : "plain"
+			}];
+		});
+		return drawn.length ? [drawn] : [];
+	});
+	return {
+		lead: textOf({ spans: [...model.lead ?? []] }),
+		rows
+	};
+}
+
+// ../../lib/kits/buttons/src/gui.tsx
+/** Before the label of the chosen button. */
+const CHECK$1 = "✓";
+/**
+* The buttons of a screen's footer: a row each, every row starting at the same edge, a Button
+* per action. The view model decides what is lit (one only), what is quiet while Close asks, and
+* that a keyboard-only hint is not drawn: a surface with a pointer has no use for a key and no
+* place to show one. VS Code paints a Button by its `dimColor` alone, so the suggested one is
+* `primary` and the rest are dimmed. The host wraps a row, so nothing drops.
+* @param props `rows` are the actions; a label is capitalised unless it is `isLiteral`. `lead`
+* is drawn as a caption before the first Button of the first row.
 * @returns `null` when there is nothing to draw.
 */
-function buttonRow$1(g, buttons, { lead } = {}) {
+function buttonRow$1(g, props) {
 	const { Box, Button } = g.els;
-	const drawn = buttons.filter((b) => b.hit !== void 0);
-	if (drawn.length === 0 && !lead?.length) return null;
-	return /* @__PURE__ */ h(Box, {
+	const drawn = view$1(props, g.surface);
+	const lead = props.lead?.length ? spans(g, props.lead, { type: "caption" }) : null;
+	if (drawn.rows.length === 0 && !lead) return null;
+	const all = drawn.rows.length ? drawn.rows : [[]];
+	return rows(g, {}, ...all.map((row, r) => /* @__PURE__ */ h(Box, {
+		key: `r${r}`,
 		flexDirection: "row",
 		flexWrap: "wrap",
 		alignItems: "center",
 		columnGap: tokens.gui.across.xs,
 		rowGap: tokens.gui.space.xs,
-		paddingX: tokens.gui.across.inset
-	}, lead?.length ? spans(g, lead) : null, drawn.map((b) => /* @__PURE__ */ h(Button, {
+		paddingX: props.isFlush ? void 0 : tokens.gui.across.inset
+	}, r === 0 ? lead : null, row.map((b) => /* @__PURE__ */ h(Button, {
 		key: b.hit,
-		variant: b.isLit ? "primary" : void 0,
-		dimColor: !b.isLit || void 0,
-		label: b.isLiteral ? b.label : capital(b.label),
-		onPress: () => g.press?.(b.hit)
-	})));
+		variant: b.tone === "lit" ? "primary" : void 0,
+		dimColor: b.tone !== "lit" || void 0,
+		label: b.tone === "chosen" ? `${CHECK$1} ${b.label}` : b.label,
+		onPress: () => g.press(b.hit)
+	})))));
 }
+
+// ../../lib/kits/core/src/manifest.ts
+/** A contract's model fields, checked against the model type: a field left out is an error. */
+const modelFields = () => (keys) => keys;
+
+// ../../lib/kits/card/src/contract.ts
+/**
+* The question card's contract: its model, what each drawing is given, and the intents a list of
+* choices sends back. No host imports.
+*/
+const cardFields = modelFields()([
+	"heading",
+	"choices",
+	"note",
+	"steps",
+	"summaries",
+	"closing",
+	"width"
+]);
 
 // ../../lib/kits/card/src/terminal.ts
 /** The question card's parts as styled lines: the one drawing both terminals paint. */
@@ -212,15 +414,14 @@ const CARD_INSET = " ".repeat(cellWidth(tokens.glyph.pointer) + 1);
 
 // ../../lib/kits/buttons/src/terminal.ts
 /** The button row as styled lines: the one drawing both terminals paint. */
-/** How a button's key is printed after its label: `↵` for Enter, else in brackets; nothing for none. */
-const shortcutOf = (b) => b.hit === void 0 || !b.hotkey ? b.hotkey : b.hotkey === "enter" ? tokens.glyph.enter : `[${b.hotkey}]`;
 /**
 * Actions left to right, label first with the key dim after it, the suggested one in the
 * accent; and dim keyboard-only hints, key first. One row drops what is neither suggested nor
-* essential, last first, until it fits; with `wrap` nothing drops.
+* essential, last first, until it fits; with `wrap` nothing drops. One button is lit: the
+* first that asks (`settle`).
 */
 function buttonRow(keys, width, { wrap = false, lead = [], hover } = {}) {
-	const chips = keys.map((key) => {
+	const chips = (settle([keys])[0] ?? []).map((key) => {
 		const shortcut = shortcutOf(key);
 		return {
 			...key,
@@ -266,7 +467,9 @@ function buttonRow(keys, width, { wrap = false, lead = [], hover } = {}) {
 }
 
 // ../../lib/kits/card/src/gui.tsx
-const { space, across, lead, maxLabel } = tokens.gui;
+const { space, across, lead } = tokens.gui;
+/** The column that leads a row of answers: the mark's icon and the key's Button. */
+const LEAD = lead + 2.2;
 /** The nonempty parts of a card, a gap between them. */
 function sections(g, ...parts) {
 	const { Box } = g.els;
@@ -276,34 +479,85 @@ function sections(g, ...parts) {
 	}, parts.filter(Boolean));
 }
 
-// ../../lib/kits/notice/src/gui.tsx
-const MARKED = {
+// ../../lib/kits/notice/src/model.ts
+/** The meaning a state is marked with, on a surface that draws icons. */
+const MARKS = {
+	success: "state:success",
+	warning: "state:warning",
+	error: "state:error",
+	pending: "state:pending"
+};
+/** The colour role each status's words take: a pending one is quiet, as the dim words are. */
+const TONES = {
 	success: "success",
 	warning: "warning",
-	error: "error"
+	error: "error",
+	pending: "dim",
+	dim: "dim",
+	text: "text"
 };
+function view(model, surface) {
+	const isCells = holds(surface, "cells");
+	const status = model.isEmpty ? "dim" : model.status ?? "warning";
+	const tone = TONES[status];
+	const said = isCells ? model.text : model.words ?? model.text;
+	const text = typeof said === "string" ? [{
+		text: said,
+		role: tone
+	}] : said.map((s) => ({
+		...s,
+		role: s.role ?? tone
+	}));
+	return {
+		mark: !isCells && !model.isEmpty ? MARKS[status] : void 0,
+		type: model.isEmpty || tone === "dim" ? "caption" : "body",
+		rows: model.isEmpty ? "wrap" : (isCells ? model.isWrapped : !model.isCut) ? "wrap" : "cut",
+		text
+	};
+}
+
+// ../../lib/kits/notice/src/gui.tsx
+/** The notice and the empty state on the graphical surfaces: the same model, in native controls. */
 /**
-* One line telling the person what just happened: an icon for a state (success, warning,
-* error) and the text in its role at the inset. The surface wraps it; width is not a prop.
-* @param text Words, or spans where part of the line stands out; a span with no role takes the status's.
-* @param status Success, warning and error only for an actual state. @default "warning"
+* The words in their type role. One plain span is a single `Text` carrying its role's colour;
+* spans of several styles are nested runs.
 */
-function notice(g, text, status = "warning", { isCut, isFlush } = {}) {
-	const { Box, Text } = g.els;
-	const mark = MARKED[status];
+function said(g, v, wrap) {
+	const { Text } = g.els;
+	const [only] = v.text;
+	if (v.text.length === 1 && only && !only.bold && !only.italic && !only.underline) return /* @__PURE__ */ h(Text, {
+		wrap,
+		...typeProps(v.type, {
+			isSized: can(g, "textSize"),
+			isToned: false
+		}),
+		...roleProps(only.role)
+	}, only.text);
+	return spans(g, v.text, {
+		type: v.type,
+		wrap
+	});
+}
+/**
+* One line telling the person what just happened: an icon for the state it is in (success,
+* warning, error, pending) and its words in a type role, at the inset. The surface wraps it, or
+* with `isCut` cuts it at the edge.
+*/
+function notice(g, n) {
+	const { Box } = g.els;
+	const v = view({
+		...n,
+		isEmpty: false
+	}, g.surface);
 	return /* @__PURE__ */ h(Box, {
+		flexDirection: "column",
+		paddingX: tokens.gui.across.inset
+	}, rowOf(g, {}, /* @__PURE__ */ h(Box, {
 		flexDirection: "row",
 		flexWrap: "nowrap",
 		alignItems: "center",
-		columnGap: tokens.gui.across.sm,
-		paddingX: isFlush ? void 0 : tokens.gui.across.inset
-	}, mark ? icon(g, mark, {
-		tone: status,
-		alt: status
-	}) : null, /* @__PURE__ */ h(Box, { flexShrink: 1 }, /* @__PURE__ */ h(Text, {
-		wrap: isCut ? "truncate-end" : void 0,
-		...roleProps(status)
-	}, typeof text === "string" ? text : spans(g, text))));
+		columnGap: tokens.gui.across.sm
+	}, v.mark ? meaning(g, v.mark) : null, /* @__PURE__ */ h(Box, { flexShrink: 1 }, said(g, v, v.rows === "cut" ? "truncate-end" : void 0)))));
 }
 
 // src/claude/band.tsx
@@ -425,18 +679,23 @@ function terminalBand(els, v, a, width) {
 	const press = bandPress(v, a);
 	const focus = v.focus === null ? void 0 : focusOf(v);
 	const { picker: p, count: n } = v;
-	const status = (hint) => ({
+	const status = (hint, width) => ({
 		text: countText(n),
 		hint: `${hint} ctrl+q`,
 		hit: TOGGLE,
 		status: "warning",
+		width,
 		hovered: focus === TOGGLE
 	});
 	const marked = (buttons) => buttons.map((b) => ({
 		...b,
 		hovered: b.hit === focus
 	}));
-	const notes = (list) => list.flatMap((x) => notice$1(x.text, width, x.status));
+	const notes = (list) => list.flatMap((x) => notice$1({
+		text: x.text,
+		width,
+		status: x.status
+	}));
 	/** `buttons` are every key the band binds, drawn or not. */
 	const painted = (lines, buttons) => stack(els, ring(els, () => focus ? press(focus) : void 0, buttons.map((b) => ({
 		key: b.hotkey,
@@ -455,8 +714,12 @@ function terminalBand(els, v, a, width) {
 		const isMute = p.isAiDone && !p.ai;
 		const lead = isMute ? [span("Haiku has no suggestion", { role: "dim" })] : [];
 		return painted([
-			...statusBand(status("close"), width),
-			...notice$1(context(p, `…${p.before}`, `${p.after}…`, true), width, "text"),
+			...statusBand(status("close", width)),
+			...notice$1({
+				text: context(p, `…${p.before}`, `${p.after}…`, true),
+				width,
+				status: "text"
+			}),
 			...buttonRow(marked(isMute ? buttons.slice(1) : buttons), width, {
 				wrap: true,
 				lead
@@ -465,7 +728,11 @@ function terminalBand(els, v, a, width) {
 		], buttons);
 	}
 	const isMarkedNow = isMarked(v);
-	const head = v.isBusy ? notice$1("Checking spelling", width, "dim") : n > 0 ? statusBand(status("review"), width) : [];
+	const head = v.isBusy ? notice$1({
+		text: "Checking spelling",
+		width,
+		status: "dim"
+	}) : n > 0 ? statusBand(status("review", width)) : [];
 	if (head.length === 0 && !isMarkedNow) return null;
 	return painted([
 		...head,
@@ -485,15 +752,28 @@ function guiBand(g, v) {
 		hit: TOGGLE,
 		status: "warning"
 	});
-	const notes = (list) => list.map((x) => notice(g, x.text, x.status, { isCut: x.isCut }));
+	const notes = (list) => list.map((x) => notice(g, {
+		text: x.text,
+		status: x.status,
+		isCut: x.isCut
+	}));
 	if (p) {
 		const ai = [];
 		if (p.ai || !p.isAiDone) ai.push(aiButton(p, p.isAiDone ? p.ai ?? "" : p.wantsAi ? "waiting" : "checking"));
 		const lead = [span(ai.length > 0 ? "Haiku" : "Haiku has no suggestion", { role: "dim" })];
-		return sections(g, head("close"), notice(g, context(p, p.lead, p.trail, false), "text"), buttonRow$1(g, ai, { lead }), buttonRow$1(g, suggestionButtons(p)), ...notes(pickerNotes(v, p)), buttonRow$1(g, pickerActions(v, p)));
+		return sections(g, head("close"), notice(g, {
+			text: context(p, p.lead, p.trail, false),
+			status: "text"
+		}), buttonRow$1(g, {
+			rows: [ai],
+			lead
+		}), buttonRow$1(g, { rows: [suggestionButtons(p)] }), ...notes(pickerNotes(v, p)), buttonRow$1(g, { rows: [pickerActions(v, p)] }));
 	}
 	const marked = isMarked(v);
-	return sections(g, v.isBusy ? notice(g, "Checking spelling", "dim") : n > 0 ? head("review") : null, ...notes(reportNotes(v)), marked ? buttonRow$1(g, reportActions) : null);
+	return sections(g, v.isBusy ? notice(g, {
+		text: "Checking spelling",
+		status: "pending"
+	}) : n > 0 ? head("review") : null, ...notes(reportNotes(v)), marked ? buttonRow$1(g, { rows: [reportActions] }) : null);
 }
 
 // ../../lib/kits/core/src/paint/host.tsx

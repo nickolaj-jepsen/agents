@@ -54,6 +54,41 @@ const tokens = {
 		/** The mark of a row set aside: it stays in the list, left out of what is carried out. */
 		dropped: "–"
 	},
+	/**
+	* The type roles of a graphical surface: what a line of text is, never a size. A drawing picks
+	* a role (`typed`, `typeProps`) and the host's scale supplies the size, so the hierarchy
+	* is one edit here. The terminal has one size: `terminalStyle` keeps its look, bold for a
+	* semibold or bold weight and dim for a role that is dim, as the drawings always had it.
+	* - `title`: a screen's own name, where the host draws none.
+	* - `heading`: one record's title, or a group's.
+	* - `section`: a small semibold heading over a part of a record (`Evidence`).
+	* - `body`: the words of a screen.
+	* - `caption`: meta: a count, an age, a hint.
+	* Digits that line up or change (a count, a time) ask for `tabular` where they are drawn.
+	*/
+	type: {
+		title: {
+			size: "title",
+			weight: "semibold"
+		},
+		heading: {
+			size: "heading",
+			weight: "semibold"
+		},
+		section: {
+			size: "footnote",
+			weight: "semibold"
+		},
+		body: {
+			size: "body",
+			weight: "regular"
+		},
+		caption: {
+			size: "caption",
+			weight: "regular",
+			role: "dim"
+		}
+	},
 	/** The graphical surfaces' numbers: none of them is a cell. */
 	gui: {
 		/** A long list shows this many rows, then an `N more` row. */
@@ -68,7 +103,7 @@ const tokens = {
 		* the neutral is one mid-grey that reads on light and dark; colour marks a state only.
 		*/
 		tone: {
-			neutral: "#8b8f98",
+			neutral: "#7f838c",
 			/** The accent: what is chosen. */
 			accent: "#d97757",
 			error: "#e5534b",
@@ -116,6 +151,24 @@ const tokens = {
 		fill: "userMessageBackground",
 		/** Behind a code span in a Text, which has no code face: the theme's code background. */
 		chip: "bashMessageBackgroundColor",
+		/**
+		* One row of a list or a form: its line with `pad` lines of space above and below, whether or
+		* not it holds a Button, so a column of them keeps one beat. A Box may carry no height
+		* (`expectNative` says so), so the beat is padding. `gap` is the space between two rows
+		* (`rows` and `rowOf` in `paint/gui.tsx`).
+		*/
+		row: {
+			pad: .25,
+			gap: .15
+		},
+		/**
+		* A panel, what opens in place: the fill, set in by `x` cells and `y` lines of its own, so
+		* the words stay a step inside the fill and a control beside them stays on it.
+		*/
+		panel: {
+			x: 1,
+			y: .5
+		},
 		/** A thin rule's colour: one grey at low alpha, which reads on a light theme and a dark one. */
 		rule: "#8b8f9866",
 		/**
@@ -136,12 +189,170 @@ function widthCap(cls, columns, content = 0) {
 	return cap(tokens.width[cls]);
 }
 
-// ../../lib/kits/core/src/lines.ts
+// ../../lib/kits/core/src/icons.ts
+const g = tokens.glyph;
 /**
-* Styled lines: what a terminal component draws before a client paints it. pi and Claude Code's
-* terminal are both cell grids, so a component is drawn once, here, and each client only paints
-* the result (`paint/pi.ts`, `paint/claude.tsx`). No host imports.
+* Every meaning the kit draws. Seeded from what `main`'s designs marked: a tracker's status and
+* priority, a doc suggestion's kind and what it is set to, and the states a notice has.
 */
+const meanings = {
+	"state:success": {
+		shape: "success",
+		tone: "success",
+		glyph: g.done,
+		role: "success",
+		alt: "Done"
+	},
+	"state:error": {
+		shape: "error",
+		tone: "error",
+		glyph: g.times,
+		role: "error",
+		alt: "Failed"
+	},
+	"state:warning": {
+		shape: "warning",
+		tone: "warning",
+		glyph: g.status.warning,
+		role: "warning",
+		alt: "Needs a look"
+	},
+	"state:pending": {
+		shape: "pending",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "dim",
+		alt: "Pending"
+	},
+	"state:question": {
+		shape: "question",
+		tone: "neutral",
+		glyph: "?",
+		role: "dim",
+		alt: "Waiting for an answer"
+	},
+	"kind:wrong": {
+		shape: "wrong",
+		tone: "error",
+		glyph: "!",
+		role: "error",
+		alt: "Wrong"
+	},
+	"kind:stale": {
+		shape: "stale",
+		tone: "warning",
+		glyph: "↻",
+		role: "warning",
+		alt: "Stale"
+	},
+	"kind:missing": {
+		shape: "missing",
+		tone: "neutral",
+		glyph: "+",
+		role: "text",
+		alt: "Missing"
+	},
+	"decision:open": {
+		shape: "open",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "text",
+		alt: "Not decided"
+	},
+	"decision:apply": {
+		shape: "success",
+		tone: "success",
+		glyph: g.single.on,
+		role: "accent",
+		alt: "Set to apply"
+	},
+	"decision:dismiss": {
+		shape: "dropped",
+		tone: "neutral",
+		glyph: g.dropped,
+		role: "dim",
+		alt: "Set to dismiss"
+	},
+	"choice:open": {
+		shape: "open",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "text",
+		alt: "Not chosen"
+	},
+	"choice:chosen": {
+		shape: "chosen",
+		tone: "accent",
+		glyph: g.single.on,
+		role: "accent",
+		alt: "Chosen"
+	},
+	"priority:none": {
+		shape: "priorityNone",
+		tone: "neutral",
+		glyph: "-",
+		role: "dim",
+		alt: "No priority"
+	},
+	"priority:low": {
+		shape: "priorityLow",
+		tone: "neutral",
+		glyph: "!",
+		role: "dim",
+		alt: "Low priority"
+	},
+	"priority:medium": {
+		shape: "priorityMedium",
+		tone: "neutral",
+		glyph: "!!",
+		role: "dim",
+		alt: "Medium priority"
+	},
+	"priority:high": {
+		shape: "priorityHigh",
+		tone: "neutral",
+		glyph: "!!!",
+		role: "text",
+		alt: "High priority"
+	},
+	"priority:urgent": {
+		shape: "priorityUrgent",
+		tone: "warning",
+		glyph: g.status.warning,
+		role: "warning",
+		alt: "Urgent"
+	},
+	"field:status": {
+		shape: "status",
+		tone: "neutral",
+		glyph: g.single.off,
+		role: "dim",
+		alt: "Status"
+	},
+	"field:project": {
+		shape: "project",
+		tone: "neutral",
+		glyph: g.multi.off,
+		role: "dim",
+		alt: "Project"
+	},
+	"field:label": {
+		shape: "label",
+		tone: "neutral",
+		glyph: g.single.on,
+		role: "dim",
+		alt: "Label"
+	},
+	"field:draft": {
+		shape: "draft",
+		tone: "neutral",
+		glyph: "✎",
+		role: "dim",
+		alt: "Draft"
+	}
+};
+
+// ../../lib/kits/core/src/lines.ts
 const span = (text, style = {}) => ({
 	text,
 	...style
@@ -480,6 +691,8 @@ function scrolled(lines, scroll) {
 }
 /** `top` after a step of `by` lines, for a window that was drawn with `scrolled`. */
 const scrollBy = (window, by) => Math.max(0, Math.min(window.max, window.top + by));
+/** Cells a panel's rail and its gap take: a row of a panel starts this far in. */
+const PANEL_INSET = cellWidth(tokens.glyph.rail) + tokens.gutter;
 
 // ../../lib/kits/core/src/surfaces.ts
 const fact = (value, note, source) => ({
@@ -492,8 +705,8 @@ const unverified = (hint) => ({
 	hint
 });
 const README = "lib/kits/README.md, What still differs between the clients";
-const CLAUDE_MD = "skills/agent-plugin-dev/references/claude.md, VS Code quirks (extension 2.1.327)";
-const TYPES = "claude-code types, Elements (apps/*/dist/.claude-plugin/types/claude-code/index.d.ts, `pnpm drive types <app>`)";
+const CLAUDE_MD = "49167447:skills/agent-plugin-dev/references/claude.md, Graphical surfaces (extension 2.1.327)";
+const TYPES = "claude-code types, Elements (apps/*/.claude-types/claude-code/index.d.ts, `pnpm drive types <app>`)";
 /**
 * The table. Surfaces are the rows, capabilities the columns; each column's value type is
 * `CapValues`, which the `satisfies` clause checks, and the literals stay for the types below.
@@ -514,7 +727,9 @@ const surfaces = {
 		textSize: fact(false, "the terminal has one size", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		images: fact(false, "pi-tui has no image component", "pi-tui exports (no Image)")
+		transcriptKeyScroll: unverified(),
+		images: fact(false, "pi-tui has no image component", "pi-tui exports (no Image)"),
+		cells: fact(true, "the kit lays out every line in cells: a row is cut to its room, and there is no toolbar line or element for a host to draw", README)
 	},
 	"claude-terminal": {
 		drawing: "terminal",
@@ -531,7 +746,9 @@ const surfaces = {
 		textSize: fact(false, "the terminal has one size and ignores `size`", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		images: fact(true, "the terminal's table has an `Image`", TYPES + ", Elements.terminal")
+		transcriptKeyScroll: unverified(),
+		images: fact(true, "the terminal's table has an `Image`", TYPES + ", Elements.terminal"),
+		cells: fact(true, "the kit lays out every line in cells: a row is cut to its room, and there is no toolbar line or element for a host to draw", README)
 	},
 	vscode: {
 		drawing: "gui",
@@ -545,10 +762,12 @@ const surfaces = {
 		select: fact(true, "the extension's table has a `Select`", TYPES + ", Elements.vscode"),
 		progress: fact(true, "the extension's table has a `Progress`", TYPES + ", Elements.vscode"),
 		svg: fact(true, "drawn as an image, so it cannot take theme colours: check a light theme", TYPES + ", SvgProps (the editor draws an image)"),
-		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
+		textSize: fact(false, "the webview draws a Text's colour, dimColor, bold, italic and underline, and no `size`: every Text is the body's size. A Markdown heading has real sizes", "extension 2.1.330 webview/index.js, the Text style function (read; probed live: every role drew 13px)"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: fact(false, "a Button's label never wraps; a long one overflows a narrow pane", CLAUDE_MD),
-		images: unverified("the table has no `Image`")
+		transcriptKeyScroll: fact(false, "scrolling to a key inside a mod's AssistantMessage is denied or does nothing", CLAUDE_MD),
+		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.vscode (`Image` is the terminal's alone)"),
+		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
 	},
 	desktop: {
 		drawing: "gui",
@@ -558,14 +777,16 @@ const surfaces = {
 		window: unverified(),
 		framesPane: unverified(),
 		inputRows: unverified(),
-		input: unverified("the table has an `Input`"),
-		select: unverified("the table has a `Select`"),
+		input: fact(true, "the extension's table has an `Input`, as VS Code's does; never driven", TYPES + ", Elements.desktop"),
+		select: fact(true, "the extension's table has a `Select`, as VS Code's does; never driven", TYPES + ", Elements.desktop"),
 		progress: unverified("the table has a `Progress`"),
 		svg: fact(true, "drawn as an image, or in a sandboxed frame when `isInteractive`", TYPES + ", SvgProps; never driven"),
 		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		images: unverified("the table has no `Image`")
+		transcriptKeyScroll: fact(true, "the engine supports targeting element keys; Answer already relies on it for Desktop review, not verified live", TYPES + ", ui.scroll; apps/answer/src/claude.tsx, roundActions"),
+		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.desktop (`Image` is the terminal's alone)"),
+		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
 	},
 	mobile: {
 		drawing: "gui",
@@ -582,7 +803,9 @@ const surfaces = {
 		textSize: fact(true, "`size` maps to the surface's type sizes", TYPES + ", TextProps.size"),
 		boxPress: fact(false, "a Box has no press handler", TYPES + ", BoxProps"),
 		labelWraps: unverified(),
-		images: unverified("the table has no `Image`")
+		transcriptKeyScroll: unverified(),
+		images: fact(false, "the table has no `Image`: the host shows an image itself, and a mod draws nothing there", TYPES + ", Elements.mobile (`Image` is the terminal's alone)"),
+		cells: fact(false, "the host lays out and wraps; the kit sets no width in cells", README + ", Draw on Claude Desktop and VS Code")
 	}
 };
 
@@ -1132,7 +1355,24 @@ function drafter(host, teamOptions = /* @__PURE__ */ new Map()) {
 	};
 }
 
+// ../../lib/kits/core/src/manifest.ts
+/** A contract's model fields, checked against the model type: a field left out is an error. */
+const modelFields = () => (keys) => keys;
+
 // ../../lib/kits/card/src/contract.ts
+/**
+* The question card's contract: its model, what each drawing is given, and the intents a list of
+* choices sends back. No host imports.
+*/
+const cardFields = modelFields()([
+	"heading",
+	"choices",
+	"note",
+	"steps",
+	"summaries",
+	"closing",
+	"width"
+]);
 /** The row id of a list's item, as a drawn line's `hit`. */
 const choiceHit = (index) => `choice:${index}`;
 /** The item a `hit` names, or -1. */
@@ -1218,17 +1458,47 @@ function choiceList(list, width) {
 	}, width));
 }
 
-// ../../lib/kits/buttons/src/terminal.ts
-/** The button row as styled lines: the one drawing both terminals paint. */
+// ../../lib/kits/buttons/src/model.ts
+/**
+* The button row's view model: what is lit, what goes quiet and what is drawn on a surface.
+* Pure and plain: the drawings read it, and so does the snapshot that holds it across surfaces.
+* No host imports.
+*/
 /** How a button's key is printed after its label: `↵` for Enter, else in brackets; nothing for none. */
 const shortcutOf = (b) => b.hit === void 0 || !b.hotkey ? b.hotkey : b.hotkey === "enter" ? tokens.glyph.enter : `[${b.hotkey}]`;
 /**
+* The buttons as a screen shows them. One button of a screen is lit, the first that asks, so a
+* screen never has two suggested actions; while Close asks, none is lit and every control is
+* quiet, whatever the caller said.
+*/
+function settle(rows, confirming = false) {
+	let isLitOne = false;
+	return rows.map((row) => row.map((b) => {
+		if (confirming) return {
+			...b,
+			isLit: false,
+			isQuiet: b.hit === void 0 ? void 0 : true
+		};
+		if (!b.isLit) return b;
+		if (isLitOne) return {
+			...b,
+			isLit: false
+		};
+		isLitOne = true;
+		return b;
+	}));
+}
+
+// ../../lib/kits/buttons/src/terminal.ts
+/** The button row as styled lines: the one drawing both terminals paint. */
+/**
 * Actions left to right, label first with the key dim after it, the suggested one in the
 * accent; and dim keyboard-only hints, key first. One row drops what is neither suggested nor
-* essential, last first, until it fits; with `wrap` nothing drops.
+* essential, last first, until it fits; with `wrap` nothing drops. One button is lit: the
+* first that asks (`settle`).
 */
 function buttonRow(keys, width, { wrap = false, lead = [], hover } = {}) {
-	const chips = keys.map((key) => {
+	const chips = (settle([keys])[0] ?? []).map((key) => {
 		const shortcut = shortcutOf(key);
 		return {
 			...key,
@@ -1314,6 +1584,14 @@ function draftChip(form, width, o) {
 }
 
 // ../../lib/kits/fields/src/contract.ts
+/** The fields' contract: what a record holds, one named value each, and how each is edited. No host imports. */
+const fieldsFields = modelFields()([
+	"fields",
+	"active",
+	"inline",
+	"valueLines",
+	"width"
+]);
 /** The control a field is, as a drawn row's `hit`. */
 const fieldHit = (id) => `field:${id}`;
 /** The field a `hit` names. */
@@ -1386,6 +1664,26 @@ function fields(all, width, options = {}) {
 const closeHit = (action) => `frame:${action}`;
 /** The close action a `hit` names. */
 const closeOf = (hit) => hit === "frame:close" || hit === "frame:discard" || hit === "frame:keep" ? hit.slice(6) : void 0;
+/** The capability each gated field needs. The rest of the model is for every surface. */
+const frameNeeds = {
+	width: "cells",
+	hostTitle: "cells:false",
+	head: "cells:false",
+	actions: "cells:false"
+};
+const frameFields = modelFields()([
+	"title",
+	"caption",
+	"end",
+	"close",
+	"body",
+	"footer",
+	"notice",
+	"width",
+	"hostTitle",
+	"head",
+	"actions"
+]);
 
 // ../../lib/kits/prose/src/terminal.ts
 /**
@@ -1441,7 +1739,7 @@ function table(rows, width, base) {
 * nested), headings, quotes, rules, fenced code and tables, with inline Markdown in each. One
 * blank row between blocks, none between the items of a list or the lines of a paragraph.
 */
-function prose(text, width, { isDim = false } = {}) {
+function prose({ text, width, isDim = false }) {
 	const base = isDim ? { role: "dim" } : {};
 	const quiet = { role: "dim" };
 	const out = [];
@@ -1602,25 +1900,76 @@ const BODY_KEY = "x";
 * a short draft grows to be written in.
 */
 const FIELD_ROWS = 12;
-const isMultiple = (id) => id === "labels";
-const optionsOf = (f, id) => id === "team" ? f.teams : id === "status" ? f.statuses : id === "priority" ? PRIORITIES : id === "labels" ? f.labels : f.projects;
-const chosenOf = (f, id) => id === "team" ? [f.team] : id === "status" ? [f.state] : id === "priority" ? [String(f.priority)] : id === "labels" ? f.labelIds : [f.project];
-function fieldRows(f, hover) {
+/** The meaning icon of a priority, as the graphical grid draws it before its Select. */
+const PRIORITY_ICON = {
+	"0": "priority:none",
+	"1": "priority:urgent",
+	"2": "priority:high",
+	"3": "priority:medium",
+	"4": "priority:low"
+};
+/**
+* The draft's fields as the kit's data: each value, its icon and its editor. The terminal opens
+* an editor's options as lettered choices in place; a graphical surface draws it in the value's
+* own cell. `labels` is what the label search holds, where a surface draws one.
+*/
+function fieldRows(f, hover, labels = {}) {
 	const chosen = f.labels.filter((l) => f.labelIds.includes(l.value)).map((l) => l.label);
+	const withIcons = PRIORITIES.map((p) => ({
+		...p,
+		icon: PRIORITY_ICON[p.value]
+	}));
 	const values = {
-		team: { value: labelOf(f.teams, f.team) ?? f.team },
-		status: { value: labelOf(f.statuses, f.state) ?? "" },
+		team: {
+			value: labelOf(f.teams, f.team) ?? f.team,
+			editor: {
+				kind: "one",
+				options: f.teams,
+				value: f.team
+			}
+		},
+		status: {
+			value: labelOf(f.statuses, f.state) ?? "",
+			icon: "field:status",
+			editor: {
+				kind: "one",
+				options: f.statuses,
+				value: f.state
+			}
+		},
 		priority: {
 			value: labelOf(PRIORITIES, String(f.priority)) ?? "No priority",
-			empty: f.priority === 0
+			empty: f.priority === 0,
+			icon: PRIORITY_ICON[String(f.priority)],
+			editor: {
+				kind: "one",
+				options: withIcons,
+				value: String(f.priority)
+			}
 		},
 		labels: {
 			value: chosen.join(", ") || "None",
-			empty: chosen.length === 0
+			empty: chosen.length === 0,
+			editor: {
+				kind: "many",
+				options: f.labels,
+				chosen: f.labelIds,
+				shown: labels.shown,
+				query: labels.query,
+				revision: labels.revision
+			}
 		},
-		project: f.project ? { value: labelOf(f.projects, f.project) ?? "" } : {
-			value: "None",
-			empty: true
+		project: {
+			...f.project ? { value: labelOf(f.projects, f.project) ?? "" } : {
+				value: "None",
+				empty: true
+			},
+			icon: "field:project",
+			editor: {
+				kind: "one",
+				options: f.projects,
+				value: f.project
+			}
 		}
 	};
 	return FIELDS.map((id) => ({
@@ -1631,6 +1980,17 @@ function fieldRows(f, hover) {
 		...values[id]
 	}));
 }
+const editorOf = (f, id) => fieldRows(f).find((r) => fieldOf(r.hit) === id)?.editor;
+/** Labels are the one field of several: its editor is `many`, which `fieldRows` builds. */
+const isMultiple = (id) => id === "labels";
+const optionsOf = (f, id) => {
+	const e = editorOf(f, id);
+	return e && e.kind !== "text" ? e.options : [];
+};
+const chosenOf = (f, id) => {
+	const e = editorOf(f, id);
+	return e?.kind === "one" ? [e.value] : e?.kind === "many" ? e.chosen : [];
+};
 /** The keys a list of choices has: a letter each while they last. */
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const choiceItems = (options) => options.map((o, i) => ({
@@ -1684,7 +2044,10 @@ const titleLines = (f, room, max, isActive) => setAll(block(literal(f.title || "
 }));
 /** The description as it is filed, the line saying where it came from quiet under it. */
 function description(f, room) {
-	const text = prose(f.description, innerOf(room));
+	const text = prose({
+		text: f.description,
+		width: innerOf(room)
+	});
 	const source = f.source ? block(inline(f.source.replace(/ · session \S+$/, ""), { role: "dim" }), innerOf(room), { max: 1 }) : [];
 	return source.length ? [
 		...text,
@@ -2645,6 +3008,7 @@ function linearBridge(pi) {
 }
 
 // ../../lib/kits/sheet/src/contract.ts
+/** The sheet's contract: its model and what each drawing is given. No host imports. */
 /** Where the sheet puts its body, and the rows it takes besides. */
 const sheetLayout = {
 	/**
@@ -2660,6 +3024,12 @@ const sheetLayout = {
 const sheetChrome = (foot = "edge") => sheetLayout.chrome - (foot === "none" ? 1 : 0);
 /** The cells a body row has in a sheet `width` cells wide. */
 const sheetRoom = (width) => Math.max(0, width - 2 * sheetLayout.x);
+/** The capability each gated field needs: a frame's, and the cells `foot` is set in. */
+const sheetNeeds = {
+	...frameNeeds,
+	foot: "cells"
+};
+const sheetFields = modelFields()([...frameFields.filter((k) => k !== "end"), "foot"]);
 
 // ../../lib/kits/frame/src/terminal.ts
 /** The captioned frame as styled lines: the one drawing both terminals paint. */

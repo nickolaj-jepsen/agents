@@ -1,4 +1,4 @@
-import { a as clamp, i as blank, n as stack, o as line, r as notice, s as span, t as paintLines } from "./claude-D9ioVTBF.js";
+import { a as clamp, i as blank, n as stack, o as line, r as notice, s as span, t as paintLines } from "./claude-lsFLeane.js";
 
 // src/lib/images.ts
 const MAX_INLINE_BYTES = 2097152;
@@ -156,12 +156,7 @@ function* imageLinks(markdown) {
 	}
 }
 
-// ../../lib/kits/image/src/terminal.ts
-/**
-* Images as styled lines, for the terminal only: the graphical clients show images themselves.
-* An image is one line with an `image` slot, whose alt text stands in where the client cannot
-* draw one (pi, a terminal without images); its path is `link` lines under it.
-*/
+// ../../lib/kits/image/src/internal.ts
 /** Fits an image inside a terminal cell box without changing its aspect ratio. */
 function fitImage(size, options) {
 	const bound = (value, fallback) => Math.max(1, Math.min(255, Math.floor(Number.isFinite(value) ? value : fallback)));
@@ -186,16 +181,24 @@ function fitImage(size, options) {
 }
 /** Encodes an absolute path as a file URL without escaping its slashes. */
 const fileUrl = (path) => `file://${path.split("/").map(encodeURIComponent).join("/")}`;
+
+// ../../lib/kits/image/src/terminal.ts
+/**
+* Images as styled lines, for the terminal only: the graphical clients show images themselves.
+* An image is one line with an `image` slot, whose alt text stands in where the client cannot
+* draw one (pi, a terminal without images); its path is `link` lines under it.
+*/
 /**
 * Draws images at their aspect ratios, a blank row between parts, each with its path as a dim
 * link below it. `columns` is the room for the lines too.
 */
-function imageGallery(images, options) {
-	const room = Math.max(1, Math.floor(options.columns));
+function imageGallery(gallery) {
+	const { images, caption } = gallery;
+	const room = Math.max(1, Math.floor(gallery.columns));
 	const parts = [];
-	if (options.caption) parts.push(clamp(options.caption, room).map((row) => line([span(row, { role: "dim" })])));
+	if (caption) parts.push(clamp(caption, room).map((row) => line([span(row, { role: "dim" })])));
 	for (const image of images) {
-		const box = fitImage(image.size, options);
+		const box = fitImage(image.size, gallery);
 		const rows = [{
 			spans: [span(image.alt, { role: "dim" })],
 			slot: {
@@ -226,7 +229,10 @@ const fullSize = (viewport) => ({
 	rows: Math.max(1, Math.min(42, Math.floor((viewport?.rows ?? 48) * .6)))
 });
 /** The images as the terminal draws them: the kit's lines, painted with the event's elements. */
-const gallery = (els, images, options) => paintLines(els, imageGallery(images, options));
+const gallery = (els, images, options) => paintLines(els, imageGallery({
+	images,
+	...options
+}));
 const thumbnail = {
 	columns: 24,
 	rows: 6
@@ -370,13 +376,18 @@ const register = (on) => {
 		if (!first) return native;
 		const els = $.ui.resolve(e);
 		const columns = Math.min(thumbnail.columns, fullSize(e.viewport).columns);
-		const lines = [...imageGallery([{
-			...first,
-			path: void 0
-		}], {
+		const lines = [...imageGallery({
+			images: [{
+				...first,
+				path: void 0
+			}],
 			...thumbnail,
 			columns
-		}), ...count > 1 ? notice(`+${count - 1} more`, columns, "dim") : []];
+		}), ...count > 1 ? notice({
+			text: `+${count - 1} more`,
+			width: columns,
+			status: "dim"
+		}) : []];
 		return stack(els, native, paintLines(els, lines, { indent: 2 }));
 	});
 	on("ui.render", { component: "ToolResult" }, async ($, e, next) => {
@@ -398,7 +409,10 @@ const register = (on) => {
 				path: void 0
 			});
 		}
-		return images.length ? stack(els, native, paintLines(els, [blank(), ...imageGallery(images, fullSize(e.viewport))])) : native;
+		return images.length ? stack(els, native, paintLines(els, [blank(), ...imageGallery({
+			images,
+			...fullSize(e.viewport)
+		})])) : native;
 	});
 	on("turn.complete", async ($, e, next) => {
 		if (e.agentId || e.reason !== "answer" || !e.answer.includes("](")) return next(e);
