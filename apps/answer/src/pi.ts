@@ -141,7 +141,7 @@ export default function (pi: ExtensionAPI) {
       shown = signature(view);
       if (!view) return { render: () => [], invalidate() {} };
       const { answered, title } = view;
-      const note = `${answered ? ` · ${answered} answered` : ""} · ${SHORTCUT} or /answer`;
+      const note = `${answered ? `${answered} answered · ` : ""}${SHORTCUT} or /answer`;
       return new AnswerOffer(theme, title, note, () => void open(ctx));
     });
   };

@@ -3,12 +3,9 @@
  * are in, and the key. A click anywhere on it opens the form.
  */
 import type { Theme } from "@earendil-works/pi-coding-agent";
-import {
-  type Component,
-  type TuiMouseEvent,
-  type TuiMouseEventResult,
-  truncateToWidth,
-} from "@earendil-works/pi-tui";
+import type { Component, TuiMouseEvent, TuiMouseEventResult } from "@earendil-works/pi-tui";
+import { line, span, truncateSpans } from "@agents/kit-core/lines.ts";
+import { paintLines } from "@agents/kit-core/paint/pi.ts";
 
 export class AnswerOffer implements Component {
   private isHover = false;
@@ -23,9 +20,14 @@ export class AnswerOffer implements Component {
   invalidate(): void {}
 
   render(width: number): string[] {
-    const t = this.theme;
-    const title = t.fg("accent", this.isHover ? t.bold(this.title) : this.title);
-    return [truncateToWidth(` ${title}${t.fg("dim", this.note)}`, width, "…")];
+    // The accent names what there is to open; the count and the key stay quiet. Nothing here
+    // marks a state, so the row is drawn from the kit's line model rather than a status band.
+    const spans = [
+      span(" "),
+      span(this.title, { role: "accent", bold: this.isHover }),
+      span(this.note, { role: "dim" }),
+    ];
+    return paintLines(this.theme, [line(truncateSpans(spans, width))], width).lines;
   }
 
   handleMouse(event: TuiMouseEvent): TuiMouseEventResult | undefined {

@@ -14,7 +14,6 @@
     "@agents/kit-card": "workspace:*",
     "@agents/kit-core": "workspace:*",
     "@agents/kit-frame": "workspace:*",
-    "@agents/kit-legacy": "workspace:*",
     "@agents/kit-notice": "workspace:*",
     "@agents/kit-prose": "workspace:*",
     "@anthropic-ai/claude-code": "catalog:",
