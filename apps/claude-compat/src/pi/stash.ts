@@ -15,7 +15,11 @@ import {
   getAgentDir,
   type ExtensionAPI,
   type ExtensionContext,
+  type Theme,
 } from "@earendil-works/pi-coding-agent";
+import type { Component } from "@earendil-works/pi-tui";
+import { line, span, truncateSpans } from "@agents/kit-core/lines.ts";
+import { paintLines } from "@agents/kit-core/paint/pi.ts";
 
 type Held = { text: string; at: string };
 
@@ -23,9 +27,24 @@ const WIDGET_KEY = "stash";
 const PREVIEW_CHARS = 60;
 
 const preview = (text: string) => {
-  const line = text.trim().split("\n")[0] ?? "";
-  return line.length > PREVIEW_CHARS ? `${line.slice(0, PREVIEW_CHARS)}…` : line;
+  const first = text.trim().split("\n")[0] ?? "";
+  return first.length > PREVIEW_CHARS ? `${first.slice(0, PREVIEW_CHARS)}…` : first;
 };
+
+/** The stash's line: the words Claude Code uses, dim, cut to the width pi gives the widget. */
+class StashLine implements Component {
+  constructor(
+    private readonly theme: Theme,
+    private readonly text: string,
+  ) {}
+
+  invalidate() {}
+
+  render(width: number): string[] {
+    const drawn = line(truncateSpans([span(this.text, { role: "dim" })], width));
+    return paintLines(this.theme, [drawn], width).lines;
+  }
+}
 
 // A print, JSON or RPC run has no editor; its prompt must not consume the stash.
 const hasEditor = (ctx: ExtensionContext) => ctx.mode === "tui" && ctx.hasUI;
@@ -102,11 +121,11 @@ export default function (pi: ExtensionAPI) {
 
   // A widget rather than setStatus so the preview keeps its own line.
   const show = (ctx: ExtensionContext) => {
+    const text =
+      stash === undefined ? undefined : `stashed (ctrl+s restores): ${preview(stash.text)}`;
     ctx.ui.setWidget(
       WIDGET_KEY,
-      stash === undefined
-        ? undefined
-        : [ctx.ui.theme.fg("dim", `stashed (ctrl+s restores): ${preview(stash.text)}`)],
+      text === undefined ? undefined : (_tui, theme) => new StashLine(theme, text),
     );
   };
 
