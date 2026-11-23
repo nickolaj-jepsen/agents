@@ -2,7 +2,7 @@
 
 One design system for the plugins on both clients. A terminal component is drawn once, as styled lines, and pi and Claude Code's terminal each only paint those lines, so the two cannot drift apart. Claude Desktop and VS Code get their own drawing with native controls.
 
-The [component catalogue](catalog/COMPONENTS.md) lists every component, where it is drawn and which pi still draws with its legacy kit. The [rendered catalogue](https://nickolaj-jepsen.github.io/agents/dev/) shows them in both terminals. The [layout reference](../../skills/agent-plugin-dev/references/style.md) holds the rules every component follows.
+The [component catalogue](catalog/COMPONENTS.md) lists every component, where it is drawn, and the entries the catalogue still shows from pi's legacy kit. The [rendered catalogue](https://nickolaj-jepsen.github.io/agents/dev/) shows them in both terminals. The [layout reference](../../skills/agent-plugin-dev/references/style.md) holds the rules every component follows.
 
 ## How it fits together
 
@@ -22,7 +22,7 @@ The [component catalogue](catalog/COMPONENTS.md) lists every component, where it
 | [`core/src/paint/checks.tsx`](core/src/paint/checks.tsx)                      | `expectNative`: the graphical house rules as assertions for a mod's tests.                                                                                                                                                                                                                                      |
 | [`core/src/stories.ts`](core/src/stories.ts) and `<component>/src/stories.ts` | One set of sample props per state, drawn by every catalogue; [`catalog/src/registry.ts`](catalog/src/registry.ts) lists them all, and [`catalog/src/stories.gui.tsx`](catalog/src/stories.gui.tsx) draws the same props with each `gui.tsx`.                                                                    |
 | `<component>/e2e/`                                                            | The component's stories played in pi and Claude Code, and their snapshots.                                                                                                                                                                                                                                      |
-| [`legacy/`](legacy) (`@agents/kit-legacy`)                                    | `legacy/src/pi/`, pi's kit from before, for what has not moved yet. Don't add to it.                                                                                                                                                                                                                            |
+| [`legacy/`](legacy) (`@agents/kit-legacy`)                                    | `legacy/src/pi/`, pi's kit from before, kept for the catalogue's legacy entries only. Don't add to it, and don't import it from a plugin.                                                                                                                                                                       |
 
 Each component is a workspace package, `lib/kits/<component>`, named `@agents/kit-<component>`; its files are imported as `@agents/kit-card/terminal.ts`. A package lists the kit packages it imports as `workspace:*` dependencies, and an app lists the components it draws with.
 
@@ -145,7 +145,7 @@ The facts about each host, with their evidence, are the capability table, [`core
 
 ## The legacy kit
 
-`legacy/src/pi/` holds what pi has not moved; answer's pi transcript still uses it. Claude Code has no legacy kit: every mod draws with the kit. The lint keeps a list of the plugin files that still draw around the kit (`.oxlintrc.json`); the list only shrinks, and a file leaves it when it imports nothing from `legacy/` and styles nothing by hand.
+No plugin draws with the legacy kit any more: every app's terminal drawing and every Claude Code mod is the kit's. `legacy/src/pi/` survives for the catalogue alone, which still lists pi's old components and stories as `pi legacy`. The lint holds every plugin file to the kit: `.oxlintrc.json` keeps no list of exceptions, so importing `legacy/` or styling by hand fails a plugin's lint.
 
 ## Snapshots and the catalogue
 

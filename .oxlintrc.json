@@ -274,20 +274,6 @@
     {
       "files": ["apps/site/src/content.config.ts", "apps/site/src/loaders/**"],
       "rules": { "no-restricted-imports": "off" }
-    },
-    // Legacy files: they still draw around the kit. List only shrinks; never add a file here.
-    {
-      "files": [
-        "apps/answer/src/pi/offer.ts",
-        "apps/answer/src/pi/transcript.ts",
-        "apps/spellfix/src/pi.ts",
-        "apps/transcript-tweaks/src/pi/condense.ts"
-      ],
-      "rules": {
-        "no-restricted-imports": "off",
-        "no-restricted-properties": "off",
-        "react/forbid-elements": "off"
-      }
     }
   ]
 }
