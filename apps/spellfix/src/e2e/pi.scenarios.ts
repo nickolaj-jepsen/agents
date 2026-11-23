@@ -108,6 +108,12 @@ export default scenarios({
       sizes: [[160, 45]],
       steps: [...open(MANY), { hover: "seperate" }, { click: "seperate" }, { wait: "2/7" }],
     },
+    captured: {
+      about:
+        "the review keeps the keys: typing and the arrows move it, and the draft under it is untouched",
+      from: "extreme",
+      steps: [{ type: "zzz" }, { press: "Down" }, { press: "Down" }, { wait: "3/7" }],
+    },
     close: {
       about: "a click on Close in the top rule closes the review and leaves the draft as it was",
       from: "review",

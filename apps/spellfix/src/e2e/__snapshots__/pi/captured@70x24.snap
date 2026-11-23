@@ -1,0 +1,54 @@
+# spellfix/pi/captured 70x24 @0,1 (70x21)
+ ╭─ spellfix · 7 to apply · 7 found ────────────────────── Close × ─╮
+ │                                                                  │
+ │   ■ [typo]                                                       │
+ │   …429, and in particular that teh the delay doubles each time … │
+ │   ■ [typo]                                                       │
+ │   …lently dropped the job, and seperate separate the orders, an… │
+ │ ❯ ■ [typo]                                                       │
+ │   …nd seperate the orders, and recieve receive the patch, and o… │
+ │   ■ [typo]                                                       │
+ │   … and recieve the patch, and occured occurred yesterday, and … │
+ │   ↓ 3 more                                                       │
+ │   3/7                                                            │
+ │ Apply ↵  Apply all [a]  Toggle [space]  Keep word [d]  esc close │
+──────────────────────────────────────────────────────────────────────
+Before the release we need to go through every handler in the worker
+and check that each one still retries after a 429, and in particular
+that teh delay doubles each time and gives up after five tries,
+because the old code silently dropped the job, and seperate the
+orders, and recieve the patch, and occured yesterday, and wierd
+output, and goverment rules, and tommorow morning
+──────────────────────────────────────────────────────────────────────
+--- styles
+. 1x2 . 2x8 3x23 . 1x22 . 4x7 . 1x2
+. 1 .x66 1
+. 1 .x3 2 . 3x6 .x55 1
+. 1 .x3 3x29 5x3 . 6x3 3x26 . 1
+. 1 .x3 2 . 3x6 .x55 1
+. 1 .x3 3x29 5x8 . 6x8 3x16 . 1
+. 1 . 7 . 2 . 7x6 .x55 1
+. 1 .x3 3x29 5x7 . 6x7 3x18 . 1
+. 1 .x3 2 . 3x6 .x55 1
+. 1 .x3 3x29 5x7 . 6x8 3x17 . 1
+. 1 .x3 3x8 .x55 1
+. 1 .x3 3x3 .x60 1
+. 1 . 2x5 . 3 .x2 4x9 . 3x3 .x2 4x6 . 3x7 .x2 4x9 . 3x3 .x2 3x9 . 1
+8x70
+-
+-
+-
+-
+-
+.x49 9
+8x70
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#7e888e
+4 fg=#dee0e1
+5 fg=#ea7f81
+6 fg=#68b78d
+7 fg=#dee0e1 bold
+8 fg=#6c767b
+9 inverse
