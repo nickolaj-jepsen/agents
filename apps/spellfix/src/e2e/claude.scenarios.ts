@@ -1,6 +1,7 @@
 import type { Turn } from "@agents/drive/lib/harness.ts";
 import { gridLines, type Region } from "@agents/drive/lib/screen.ts";
 import { scenarios, type Step } from "@agents/drive/lib/scenario.ts";
+import { HUNSPELL } from "./hunspell.ts";
 
 const ONE = "Please fix teh handler before it breaks";
 const TWO = "Please fix teh handler, it should seperate the orders";
@@ -51,7 +52,9 @@ const belowTurn: Region = (grid) => {
 export default scenarios({
   plugin: "spellfix",
   harness: "claude",
-  start: { hermetic: true, plugins: ["spellfix"], turns: [reply] },
+  // The stand-in first on the session's PATH, so the count, the findings and the picker's
+  // suggestions are the same on a machine with hunspell and on CI without one (see hunspell.ts).
+  start: { hermetic: true, plugins: ["spellfix"], turns: [reply], bin: { hunspell: HUNSPELL } },
   region: belowTurn,
   scenarios: {
     band: {

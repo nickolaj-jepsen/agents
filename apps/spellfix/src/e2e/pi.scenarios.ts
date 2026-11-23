@@ -1,6 +1,7 @@
 import type { Turn } from "@agents/drive/lib/harness.ts";
 import { gridLines, type Region } from "@agents/drive/lib/screen.ts";
 import { scenarios, type Step } from "@agents/drive/lib/scenario.ts";
+import { HUNSPELL } from "./hunspell.ts";
 
 /**
  * The sheet and the prompt it stands on: from its title rule down through the draft's own rule,
@@ -49,12 +50,15 @@ const FIXES = [
 const start = {
   hermetic: true,
   plugins: ["spellfix"],
+  // The stand-in first on the session's PATH, so which words are flagged is the same on a machine
+  // with hunspell and on CI without one (see hunspell.ts).
+  bin: { hunspell: HUNSPELL },
   env: {
     // The side call's own model, pointed at the replay provider so no real call is made.
     PI_SPELLFIX_MODEL: "fixture/replay",
     PI_SPELLFIX_DICTS: "en_US",
-    // The session's own hunspell and no personal dictionary: a developer's words must not change
-    // what the review finds, or a machine that learned `recieve` would draw one finding fewer.
+    // No personal dictionary: a developer's words must not change what the review finds, or a
+    // machine that learned `recieve` would draw one finding fewer.
     PI_SPELLFIX_HUNSPELL: "hunspell",
     PI_SPELLFIX_PERSONAL: "",
   },
