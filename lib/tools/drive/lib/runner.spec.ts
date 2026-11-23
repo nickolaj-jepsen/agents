@@ -4,12 +4,12 @@
  * and the scenarios a broken step never touched still get their result in a fresh session.
  */
 import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { availableParallelism, tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, expect, it } from "vitest";
 import { settleCapture, type Capture } from "./check.ts";
 import { options } from "./options.ts";
-import { mediaStage, realStage, runAll, type Stage } from "./runner.ts";
+import { mediaStage, poolSize, realStage, runAll, type Stage } from "./runner.ts";
 import type { Resolved, Scenario, ScenarioSet } from "./scenario.ts";
 import type { Session } from "./session.ts";
 
@@ -358,4 +358,40 @@ it("tries to photograph a head capture failure before closing and keeps the orig
   const { outcomes } = await runAll([set({ head: { steps: [] } })], () => true, stage);
   expect(events).toEqual(["picture", "close"]);
   expect(outcomes.get("fake/pi/head")?.error).toBe(failure);
+});
+
+it("sizes a pool from the flag, then DRIVE_JOBS, then the cores", () => {
+  const jobs = options.jobs;
+  const env = process.env.DRIVE_JOBS;
+  const cpus = availableParallelism();
+  const defaults = {
+    claude: Math.max(1, Math.min(2, Math.floor(cpus / 4))),
+    pi: Math.max(1, Math.min(4, Math.floor(cpus / 2))),
+  };
+  const sizes = () => [poolSize("claude"), poolSize("pi")];
+  try {
+    options.jobs = undefined;
+    delete process.env.DRIVE_JOBS;
+    expect(sizes()).toEqual([defaults.claude, defaults.pi]);
+
+    // `DRIVE_JOBS` takes `--jobs`'s grammar, so a whole gate can be sized without flags.
+    process.env.DRIVE_JOBS = "1";
+    expect(sizes()).toEqual([1, 1]);
+    process.env.DRIVE_JOBS = "claude=1,pi=2";
+    expect(sizes()).toEqual([1, 2]);
+    // A harness it leaves out keeps the default.
+    process.env.DRIVE_JOBS = "pi=1";
+    expect(sizes()).toEqual([defaults.claude, 1]);
+
+    // The flag wins, and a value that cannot be read fails the run rather than sizing a crowd.
+    options.jobs = 4;
+    expect(sizes()).toEqual([4, 4]);
+    options.jobs = undefined;
+    process.env.DRIVE_JOBS = "nope=1";
+    expect(() => poolSize("pi")).toThrow(/claude=N/);
+  } finally {
+    options.jobs = jobs;
+    if (env === undefined) delete process.env.DRIVE_JOBS;
+    else process.env.DRIVE_JOBS = env;
+  }
 });

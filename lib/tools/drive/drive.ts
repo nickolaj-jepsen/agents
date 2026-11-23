@@ -24,6 +24,7 @@ import { loadTypes } from "./lib/mod-types.ts";
 import { setOptions } from "./lib/options.ts";
 import { e2ePackages } from "./lib/packages.ts";
 import { record } from "./lib/record.ts";
+import { parseJobs } from "./lib/runner.ts";
 import { loadSet, reach, resolveScenario } from "./lib/scenario.ts";
 import { DEFAULT_SESSION, sessionName, sessionNames, readSession } from "./lib/sessions.ts";
 import { runTerminal, terminalCall } from "./lib/terminal.ts";
@@ -37,23 +38,13 @@ const size = (value: string): [number, number] => {
     throw new InvalidArgumentError("use COLSxROWS for a terminal, WIDTHxHEIGHT for VS Code");
   return [Number(m[1]), Number(m[2])];
 };
-/** `4`, or `claude=1,pi=2` for one pool each. */
+/** `4`, or `claude=1,pi=2` for one pool each: the grammar `DRIVE_JOBS` takes too. */
 const jobs = (value: string): number | { claude?: number; pi?: number } => {
-  const whole = (v: string) => {
-    const n = Number(v);
-    if (!Number.isInteger(n) || n < 1)
-      throw new InvalidArgumentError("whole numbers of 1 or more: 4, or claude=1,pi=2");
-    return n;
-  };
-  if (!value.includes("=")) return whole(value);
-  const out: { claude?: number; pi?: number } = {};
-  for (const part of value.split(",")) {
-    const [k, v] = part.split("=");
-    if ((k !== "claude" && k !== "pi") || v === undefined)
-      throw new InvalidArgumentError("whole numbers of 1 or more: 4, or claude=1,pi=2");
-    out[k] = whole(v);
+  try {
+    return parseJobs(value);
+  } catch (error) {
+    throw new InvalidArgumentError(error instanceof Error ? error.message : String(error));
   }
-  return out;
 };
 const count = (value: string) => {
   const n = Number(value);

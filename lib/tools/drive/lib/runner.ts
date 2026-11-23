@@ -169,13 +169,52 @@ export function planChains(set: ScenarioSet): Chain[] {
 
 const cpuCount = () => Math.max(1, availableParallelism());
 
-/** Sessions at once per harness: Claude Code is the heavier, and starts less reliably when crowded. */
+/**
+ * `4`, or `claude=1,pi=2`: sessions at once per harness. `--jobs` and `DRIVE_JOBS` take the same
+ * grammar, so a whole gate can be sized without flags (`DRIVE_JOBS=1 pnpm gate`).
+ */
+export function parseJobs(value: string): number | { claude?: number; pi?: number } {
+  const whole = (v: string) => {
+    const n = Number(v);
+    if (!Number.isInteger(n) || n < 1)
+      throw new Error(`not a whole number of 1 or more: "${v}" ("4", or "claude=1,pi=2")`);
+    return n;
+  };
+  if (!value.includes("=")) return whole(value);
+  const out: { claude?: number; pi?: number } = {};
+  for (const part of value.split(",")) {
+    const [key, v] = part.split("=");
+    if ((key !== "claude" && key !== "pi") || v === undefined)
+      throw new Error(`not "claude=N" or "pi=N": "${part}"`);
+    out[key] = whole(v);
+  }
+  return out;
+}
+
+/** What `--jobs` or `DRIVE_JOBS` says for one harness; none when neither names it. */
+function namedJobs(harness: HarnessName): number | undefined {
+  const fromFlag = typeof options.jobs === "object" ? options.jobs[harness] : options.jobs;
+  if (fromFlag && fromFlag >= 1) return Math.floor(fromFlag);
+  const env = process.env.DRIVE_JOBS?.trim();
+  if (!env) return undefined;
+  const fromEnv = parseJobs(env);
+  const n = typeof fromEnv === "object" ? fromEnv[harness] : fromEnv;
+  return n && n >= 1 ? Math.floor(n) : undefined;
+}
+
+/**
+ * Sessions at once per harness: Claude Code is the heavier, and starts less reliably when crowded.
+ * The default scales with the cores but no further than 2 Claude and 4 pi sessions: a gate runs two
+ * packages' worth at once, and on a many-core machine the sessions alone were enough to bring the
+ * machine to its memory limit, where earlyoom takes build and test workers first. `DRIVE_JOBS=1`
+ * (or `--jobs 1`) is the answer on a machine that is already loaded.
+ */
 export function poolSize(harness: HarnessName): number {
-  const named = typeof options.jobs === "object" ? options.jobs[harness] : options.jobs;
-  if (named && named >= 1) return Math.floor(named);
+  const named = namedJobs(harness);
+  if (named) return named;
   return harness === "claude"
-    ? Math.max(1, Math.min(4, Math.floor(cpuCount() / 4)))
-    : Math.max(1, Math.min(8, Math.floor(cpuCount() / 2)));
+    ? Math.max(1, Math.min(2, Math.floor(cpuCount() / 4)))
+    : Math.max(1, Math.min(4, Math.floor(cpuCount() / 2)));
 }
 
 type Task = { set: ScenarioSet; chain: Chain };

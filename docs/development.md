@@ -36,7 +36,7 @@ Everything under `apps/`, `lib/kits/` and `lib/tools/` is a pnpm workspace packa
 
 ## Tasks
 
-Use `pnpm gate` for the full local/CI gate; it runs only two Turbo tasks at a time because the E2E tasks each start their own session pools. Use `pnpm gate:all` on a Nix machine to run the gate, the Nix checks and the Pages half, not in parallel. `pnpm gate:pages` is the Pages half alone.
+Use `pnpm gate` for the full local/CI gate; it runs only two Turbo tasks at a time because the E2E tasks each start their own session pools. Each pool is sized from the cores, to at most 2 Claude and 4 pi sessions; on a machine that is already loaded, `DRIVE_JOBS=1 pnpm gate` (or `claude=1,pi=2`) keeps the gate out of the memory pressure that gets build and test workers killed. Use `pnpm gate:all` on a Nix machine to run the gate, the Nix checks and the Pages half, not in parallel. `pnpm gate:pages` is the Pages half alone.
 
 Run focused tasks as `pnpm turbo run <task> --filter=<package>`. A per-package task runs in each package that defines it.
 
