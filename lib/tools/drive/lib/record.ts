@@ -377,7 +377,14 @@ type VscodeStill = {
   surface: "vscode";
   width: number;
   height: number;
+  /** A kit picture's story (`<component>/<state>`), and the pane it is drawn in. */
+  story?: string;
+  layout?: Layout;
 };
+
+/** A kit picture's pane: docked beside a wide window, or above the prompt of a narrow one. */
+type Layout = "wide" | "narrow";
+type Picture = SiteVscode & { layout?: Layout };
 
 /** The window of a run folder, photographed whole: what a failed step left on screen. */
 async function failedShot(runDir: string, file: string) {
@@ -392,17 +399,23 @@ async function failedShot(runDir: string, file: string) {
 
 /**
  * A kit package's pictures: each graphical story of its `vscode.scenarios.ts` at the window's size
- * and again at a phone pane's width (the narrow layout the house rules cap).
+ * and again at a phone pane's width (the narrow layout the house rules cap), each cut to the
+ * catalogue's pane.
  */
-const kitPictures = (set: VscodeSet): [string, SiteVscode][] =>
-  Object.entries(set.scenarios).flatMap(([id, s]): [string, SiteVscode][] => {
+const kitPictures = (set: VscodeSet): [string, Picture][] =>
+  Object.entries(set.scenarios).flatMap(([id, s]): [string, Picture][] => {
     const name = id.replace("/", "-");
     const about = s.about ?? id;
     return [
-      [name, { caption: about, scenario: id }],
+      [name, { caption: about, scenario: id, layout: "wide" }],
       [
         `${name}-narrow`,
-        { caption: `${about}, in a narrow pane`, scenario: id, steps: [{ resize: [420, 800] }] },
+        {
+          caption: `${about}, in a narrow pane`,
+          scenario: id,
+          steps: [{ resize: [420, 800] }],
+          layout: "narrow",
+        },
       ],
     ];
   });
@@ -425,7 +438,7 @@ async function recordVscode(p: E2EPackage, named: boolean, asked: boolean) {
   // A kit package keeps its media in a folder of its own, under `kit/`.
   const folder = kit ? `kit/${kitFolder(p)}` : plugin;
   const scenarios = await loadVscodeSet(vscodeFile);
-  const pictures = kit
+  const pictures: [string, Picture][] = kit
     ? kitPictures(scenarios)
     : Object.entries(((await loadSet(site)) as unknown as SiteSet).vscode ?? {});
   if (pictures.length === 0) return;
@@ -467,7 +480,8 @@ async function recordVscode(p: E2EPackage, named: boolean, asked: boolean) {
       await photograph(async () => {
         const session = reloaded ? await reloadVscode(r, window!.runDir) : await fresh();
         return {
-          shot: (file) => session.shot(file, { panel: true }),
+          // A kit story is the catalogue's pane alone, as its terminal crops are the component alone.
+          shot: (file) => session.shot(file, kit ? { pane: "kit" } : { panel: true }),
           undrawn: () => session.undrawn(),
           close: () => session.close(),
         };
@@ -495,6 +509,7 @@ async function recordVscode(p: E2EPackage, named: boolean, asked: boolean) {
       harness: "claude",
       surface: "vscode",
       ...pngSize(png),
+      ...(pic.layout ? { story: pic.scenario, layout: pic.layout } : {}),
     };
   });
   writeFileSync(join(stage, VSCODE_MANIFEST), `${JSON.stringify({ stills }, null, 2)}\n`);

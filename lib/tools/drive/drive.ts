@@ -417,17 +417,23 @@ program
   .description("a PNG of the screen; prints the path")
   .argument("[file]")
   .option("--window", "VS Code: the whole window, not the Claude panel")
+  .option(
+    "--pane <name>",
+    "VS Code: one mod pane, cut where what it draws ends (the kit's is `kit`)",
+  )
   .addOption(scaleOption())
   .action(
-    verb(async (file: string | undefined, o: { window?: boolean; scale: number }) => {
-      setOptions({ scale: o.scale });
-      const { target } = await attach(session());
-      try {
-        console.log(await target.shot(file, o));
-      } finally {
-        target.detach();
-      }
-    }),
+    verb(
+      async (file: string | undefined, o: { window?: boolean; pane?: string; scale: number }) => {
+        setOptions({ scale: o.scale });
+        const { target } = await attach(session());
+        try {
+          console.log(await target.shot(file, o));
+        } finally {
+          target.detach();
+        }
+      },
+    ),
   );
 
 program

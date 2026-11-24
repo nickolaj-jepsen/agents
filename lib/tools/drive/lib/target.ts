@@ -27,7 +27,7 @@ export interface Target {
   /** Columns by rows for a terminal, pixels for VS Code. */
   resize(a: number, b: number): Promise<void>;
   /** A PNG of the screen; the path it was written to. */
-  shot(file: string | undefined, o: { window?: boolean }): Promise<string>;
+  shot(file: string | undefined, o: { window?: boolean; pane?: string }): Promise<string>;
   /** PNGs at the sizes a screen has to hold at; their paths. */
   sweep(out?: string): Promise<string[]>;
   /** The scenario's snapshot of the screen as it is now. */
@@ -76,7 +76,7 @@ abstract class Base implements Target {
   resize(_a: number, _b: number): Promise<void> {
     return this.no("resize");
   }
-  shot(_file: string | undefined, _o: { window?: boolean }): Promise<string> {
+  shot(_file: string | undefined, _o: { window?: boolean; pane?: string }): Promise<string> {
     return this.no("shot");
   }
   sweep(_out?: string): Promise<string[]> {
@@ -212,11 +212,12 @@ export class VscodeTarget extends Base {
   resize(w: number, h: number) {
     return this.session.resize(w, h);
   }
-  async shot(file: string | undefined, o: { window?: boolean }) {
+  async shot(file: string | undefined, o: { window?: boolean; pane?: string }) {
     await this.session.setScale(options.scale ?? 1);
-    return this.session.shot(file ?? join(this.session.runDir, `shot-${stamp()}.png`), {
-      panel: !o.window,
-    });
+    return this.session.shot(
+      file ?? join(this.session.runDir, `shot-${stamp()}.png`),
+      o.pane ? { pane: o.pane } : { panel: !o.window },
+    );
   }
   async sweep(outDir?: string) {
     await this.session.setScale(options.scale ?? 1);

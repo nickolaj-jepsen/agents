@@ -115,14 +115,14 @@ Use Linux with `code`, the `anthropic.claude-code` extension, and Nix for the he
 ```bash
 pnpm drive goto docfix queue --harness vscode --size 420x800   # open the real Claude panel
 pnpm drive cap                                                 # read the panel as text
-pnpm drive shot                                                # write a PNG of the panel (--window: the whole window)
+pnpm drive shot                                                # write a PNG of the panel (--window: the whole window; --pane kit: one mod pane)
 pnpm drive reload                                              # read edited mods in a new Claude tab
 pnpm drive stop                                                # close the window and its stub
 ```
 
 - `shot` and `sweep` photograph VS Code at a device scale of 2, so text and icons are sharp when the picture is opened. The layout, which is the window's size in CSS pixels, is the same as at scale 1; zooming VS Code is not an option because it would change it. `--scale 1` gives the window's own density. `record` and the site's media keep scale 1.
 
-- The kit's graphical stories have scenarios too: `pnpm drive goto kit-prose prose/blocks --harness vscode --size 420x800`. `nix run .#media -- record kit-prose --harness vscode` photographs each at the window's size and at a narrow pane, as `apps/site/media/kit/<name>/vscode-<component>-<state>[-narrow].png`.
+- The kit's graphical stories have scenarios too: `pnpm drive goto kit-prose prose/blocks --harness vscode --size 420x800`. `nix run .#media -- record kit-prose --harness vscode` photographs each at the window's size and at a narrow pane, cut to the catalogue's pane, as `apps/site/media/kit/<name>/vscode-<component>-<state>[-narrow].png`; `media-vscode.json` names each one's story and layout, and the site shows them beside the story's terminal renders.
 - `compare` answers "is this screen at least as good as `main`'s?" in one command: it photographs every VS Code scenario of a package in this checkout and in another, wide (1280x720) and narrow (420x800), and writes a page that sets each pair side by side.
 
   ```bash

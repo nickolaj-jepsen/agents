@@ -490,7 +490,32 @@ function chord(spec: string): string {
 const matcher = (p: Pattern) =>
   typeof p === "string" ? { text: p } : { re: p.source, flags: p.flags };
 
-export type Shot = { panel?: boolean };
+/**
+ * What a shot takes: the window, the Claude panel (`panel`), or one mod pane by its name (`pane`):
+ * the pane's frame, docked or above the prompt, cut where what it draws ends.
+ */
+export type Shot = { panel?: boolean; pane?: string };
+
+/**
+ * The box, in the webview's document, of the pane named `name`: from its frame's top (its title
+ * and the plugin's mark) to the end of what its body draws, plus the body's own padding below. A
+ * docked pane runs to the window's foot whatever it holds; the cut leaves the empty rest out.
+ */
+const paneBox = (name: string) => `(() => {
+  const body = document.querySelector('[data-engine-site="Pane"][data-engine-pane=' + ${JSON.stringify(JSON.stringify(name))} + ']');
+  if (!body) return null;
+  const frame = body.closest('[data-pane-fill], [data-engine-panes]') ?? body;
+  const f = frame.getBoundingClientRect();
+  let end = body.getBoundingClientRect().top;
+  for (const e of body.querySelectorAll('*')) {
+    if (getComputedStyle(e).visibility === 'hidden') continue;
+    const r = e.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) end = Math.max(end, r.bottom);
+  }
+  end += parseFloat(getComputedStyle(body).paddingBottom) || 0;
+  const bottom = Math.min(f.bottom, Math.ceil(end) + 1);
+  return { x: f.x, y: f.y, width: f.width, height: bottom - f.y };
+})()`;
 
 /** A VS Code window with the Claude tab open, and the calls to look at it and drive it. */
 export class VscodeSession {
@@ -780,9 +805,17 @@ export class VscodeSession {
    * did not set, so the DevTools capture is used: at clip scale 1 it takes the override's device scale, clipped to the same box.
    */
   private async capture(o: Shot): Promise<Buffer> {
-    if (this.scale === 1) return (o.panel ? this.panel : this.page).screenshot({ type: "png" });
     let clip: { x: number; y: number; width: number; height: number } | null;
-    if (o.panel) clip = await this.panel.boundingBox();
+    if (o.pane) {
+      const box = await this.evalInView<typeof clip>(paneBox(o.pane));
+      const view = await this.panel.boundingBox();
+      if (!box || !view) throw new Error(`the ${o.pane} pane is not on screen`);
+      // The webview's document starts at the panel's corner.
+      clip = { ...box, x: box.x + view.x, y: box.y + view.y };
+      if (this.scale === 1) return this.page.screenshot({ type: "png", clip });
+    } else if (this.scale === 1)
+      return (o.panel ? this.panel : this.page).screenshot({ type: "png" });
+    else if (o.panel) clip = await this.panel.boundingBox();
     else {
       const [width, height] = await this.viewport();
       clip = { x: 0, y: 0, width, height };
