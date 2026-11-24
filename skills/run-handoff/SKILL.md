@@ -22,13 +22,13 @@ metadata:
 
 ## Models
 
-- Item workers and ordinary gate/area reviewers use explicit cheap profiles: Claude Code `sonnet`; pi `worker` for builds and `reviewer` for reads and reviews, both `auto/deepseek-v4.1-flash`, so the lead's Sol model never becomes a worker's by accident.
+- Item workers and ordinary gate/area reviewers use explicit cheap models: Claude Code `sonnet`, named on every spawn because a subagent otherwise inherits the lead's; pi `worker` for builds and `reviewer` for reads and reviews, both `auto/deepseek-v4.1-flash`, so the lead's Sol model never becomes a worker's by accident.
 - The final whole-branch reviewer uses Claude Code `opus`. In pi it is a `reviewer` too: don't force a strong review on every handoff, and pi's `expert` (`openai-codex/gpt-6.1-sol`) is a last resort for a demonstrated hard blocker or a high-risk uncertainty that needs independent reasoning. The whole handoff gets at most two expert subagents, across items, gates and sessions, not per item.
   - Before spawning one, state the blocker and why a cheap read can't settle it, and reuse an expert already running with `agent_send` instead of spawning another.
   - Track the two in the conversation: no ledger file, and no PROGRESS or HANDOFF budget field. If this conversation can't tell whether an expert was already used, ask the user; never assume the budget reset.
 - `--review-model MODEL`, or an explicit choice in this invocation, picks the gate reviewers' model. In pi that is a `reviewer` spawn with an explicit `model`, the same as HANDOFF's review-model override.
 - An unavailable model fails the spawn in pi instead of silently using the lead's model, and a profile whose model doesn't resolve isn't offered at all. After spawning, compare the model the harness reports with the intended one; if they differ, use the cheap fallback once and record the downgrade in `PROGRESS.md` and the final report. Ordinary tool errors or review findings are not reasons to downgrade.
-- Delegate only bounded work: research an area, build one item, run one check. A task you can finish in a few tool calls stays yours.
+- In pi, delegate only bounded work: research an area, build one item, run one check. A task you can finish in a few tool calls stays yours.
 - One full review per checkpoint, followed by focused verification of confirmed repairs. Repeat the full review only when repairs substantially change the design or scope.
 
 ## Decisions
@@ -44,7 +44,7 @@ metadata:
 2. **Read `HANDOFF.md` in full** and `references/runtime.md`. Amendments override everything above them. Resolve this skill's bundled `scripts/watch.py` to an absolute path. Read `notes/` files only when an item needs them.
 3. **Resume** if `PROGRESS.md` exists.
    - Check it against git: the integration branch, item worktrees and their commits. Where they disagree, git wins; fix `PROGRESS.md`.
-   - Reconcile worker IDs (pi: names), watchdog jobs, dispatch times and recovery counts as well, with `agent_status` for the agents. pi agents belong to the session that spawned them, so after a session reset recover from the branch and logs. Re-arm the same attempt's watcher if it died; never renew the deadline merely because the lead resumed.
+   - Reconcile worker IDs, watchdog jobs, dispatch times and recovery counts as well. In pi, reconcile names too, with `agent_status`; its agents belong to the session that spawned them, so after a session reset recover from the branch and logs. Re-arm the same attempt's watcher if it died; never renew the deadline merely because the lead resumed.
    - Reuse recorded verification only when the tree and test inputs are unchanged; otherwise run the standard checks before dispatch. If a crash left the integration branch broken, fixing that comes first.
    - Add any of HANDOFF's Open questions missing from "Blocked on you".
    - Continue from "Now".
@@ -61,16 +61,16 @@ metadata:
 2. **Dispatch** frontier items up to HANDOFF's concurrency cap (default 3). For each one:
    - create a worktree `<slug>-<id>` off the integration branch's current head;
    - start a cheap worker with the item brief below;
-   - record its name, dispatch Unix timestamp, attempt directory, budget and persistent recovery count; arm the bundled watcher as a notifying background command in the lead, as in `references/runtime.md`.
+   - record its ID (pi: name), dispatch Unix timestamp, attempt directory, budget and persistent recovery count; arm the bundled watcher as a notifying background command in the lead, as in `references/runtime.md`.
 
-   Do contracts and gates yourself. Claude Code: the Agent tool runs subagents in the background and notifies you. pi: one `agent_spawn` call per item, with a single entry carrying the item brief as `job`, `profile: "worker"`, its `name` (`a1`, `a2`) and the `cwd` of its worktree, so each report arrives on its own. It returns at once, and a report is a message that starts a turn. `agent_wait` with `names` and a short `timeout` only when a turn must combine results or finish a bounded attempt; a result it returns doesn't also arrive as a message.
+   Do contracts and gates yourself. Claude Code: the Agent tool runs subagents in the background and notifies you. Spawn item subagents without a `name`; a named one runs as a teammate when agent teams are on, and wakes you with an idle notice every time it pauses. Message a running subagent by its agent ID. pi: one `agent_spawn` call per item, with a single entry carrying the item brief as `job`, `profile: "worker"`, its `name` (`a1`, `a2`) and the `cwd` of its worktree, so each report arrives on its own. It returns at once, and a report is a message that starts a turn. `agent_wait` with `names` and a short `timeout` only when a turn must combine results or finish a bounded attempt; a result it returns doesn't also arrive as a message.
 
    Every pi worker stays one level deep: don't set `spawn: true` on an item, reviewer or verifier, and don't give a worker the agent tools. Fresh contexts are the point, and there is no nested delegation: a job that turns out to need splitting comes back to the lead as a report.
 
 3. **While items run,** do gate work or end your turn and wait for the reports. Every turn re-reads your whole context, so don't schedule recurring check-ins, crons or polls.
    - The watcher wakes you on report, no progress (default 10 minutes) or attempt deadline (default 60 minutes). Use HANDOFF's explicit overrides; a live foreground command within its finite lease is not a stall. Test duration alone is not an implementation budget.
    - On a stall or expired deadline, inspect commits, changed files and processes once. Stop an over-deadline attempt and its launched processes before recovery. Recover at most once per item, continuing the same worker or replacing a dead one without losing its work. If it stalls again, block that item, notify the user and continue independent work.
-   - An idle notice or status ping isn't a report: end the turn without acting. A timed-out short join likewise means wait for the report or the watcher, not start another polling loop. `agent_status` is for a turn that needs the state, not for polling.
+   - An idle notice or status ping isn't a report: end the turn without acting. A timed-out short join likewise means wait for the report or the watcher, not start another polling loop. In pi, `agent_status` is for a turn that needs the state, not for polling.
    - Claude Code: a subagent reads messages only between its own tool calls; to stop a run now, stop its processes yourself. pi: `agent_send` with `mode: "interrupt"` stops a worker's current work before delivering the message, and `agent_stop` ends the agent and its agents.
    - Stopping a subagent doesn't stop what it launched. Find its parent scripts as well as their children, and select them by `/proc/<pid>/cwd` under its worktree or by exact argv. `pgrep -f <text>` also matches your own shell.
 4. **Route** each report by its status line:
