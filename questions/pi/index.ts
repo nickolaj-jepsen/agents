@@ -2326,7 +2326,13 @@ async function askQuestions(ctx, questions, signal, previous) {
 		}, previous);
 		if (signal?.aborted) queueMicrotask(abort);
 		return Object.assign(dialog, { dispose });
-	}, { overlay: false });
+	}, {
+		overlay: false,
+		blocked: {
+			kind: "question",
+			message: questions[0]?.question ?? "Answer questions"
+		}
+	});
 }
 /**
 * RPC, JSON and print hosts get the same answers through their own prompt
