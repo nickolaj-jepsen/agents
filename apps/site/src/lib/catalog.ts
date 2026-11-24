@@ -1,21 +1,27 @@
 /**
  * The UI kit's catalogue for the /dev/components/ pages: the `components` collection (see
  * `src/loaders/kit.ts`: the catalogue's model joined with the crops each kit package's `media` task
- * leaves in `apps/site/media/kit/<package>/`).
+ * leaves in `apps/site/media/kit/<package>/`, and the VS Code pictures of its `media:vscode`).
  */
 import { getCollection } from "astro:content";
 import type { ComponentModel, StoryModel } from "../../../../lib/kits/catalog/src/model.ts";
 import type { Harness } from "../../../../lib/kits/core/src/manifest.ts";
+import type { Layout } from "../../../../lib/kits/catalog/src/crops.ts";
 import { href, mediaUrl } from "./content.ts";
 
-export type { Harness };
+export type { Harness, Layout };
 /** Claude Code first, as everywhere on the site; the columns and the switch follow it. */
 export const HARNESSES: Harness[] = ["claude", "pi"];
 export const TITLES: Record<Harness, string> = { pi: "pi", claude: "Claude Code" };
 
 /** One render of a story: the terminal size it was drawn at, and the crop's URL and pixels. */
 export type Shot = { w: number; h: number; src: string; width: number; height: number };
-export type Story = StoryModel & { shots: Partial<Record<Harness, Shot[]>> };
+/** A story in VS Code, its pane docked beside a wide window or above a narrow one's prompt. */
+export type GuiShot = { src: string; width: number; height: number };
+export type Story = StoryModel & {
+  shots: Partial<Record<Harness, Shot[]>>;
+  gui: Partial<Record<Layout, GuiShot>>;
+};
 export type Component = Omit<ComponentModel, "stories"> & { stories: Story[] };
 
 /** The kit's components in the order of the catalogue, with each story's renders at their URLs, smallest first. */
@@ -36,9 +42,23 @@ export async function getComponents(): Promise<Component[]> {
               .sort((a, b) => a.w - b.w || a.h - b.h),
           ]),
         ) as Story["shots"],
+        gui: Object.fromEntries(
+          Object.entries(s.gui).map(([k, { png, ...p }]) => [k, { ...p, src: mediaUrl(png) }]),
+        ) as Story["gui"],
       })),
     }));
 }
+
+/** The pictures of a story in VS Code, wide first. */
+export const guiShots = (s: Story) =>
+  (["wide", "narrow"] as const).flatMap((l) => (s.gui[l] ? [{ layout: l, ...s.gui[l] }] : []));
+export const LAYOUT_LABEL: Record<Layout, string> = { wide: "Wide window", narrow: "Narrow pane" };
+/**
+ * From how many columns a terminal size stands for the wide window: Claude Code docks a pane
+ * beside the transcript from there (`lib/kits/catalog/src/e2e/claude.ts`), as VS Code does beside
+ * a wide window. Below it, the pane sits above the prompt in both.
+ */
+export const WIDE_FROM = 110;
 
 /** The overview is `/dev/`; a component has a page; a story is an anchor on it. */
 export const catalogHref = (c?: Component, s?: Story) =>
@@ -91,7 +111,7 @@ export const differs = (f: Component["features"][number]) =>
 /** Why a harness shows no render of a story at a size. */
 export function whyNot(c: Component, s: Story, h: Harness): string {
   if (c.impl[h].state === "none") return `not possible: ${s.missing[h] ?? c.impl[h].reason ?? ""}`;
-  if (!s.by[h]) return s.missing[h] ? `not drawn: ${s.missing[h]}` : "no story yet";
+  if (!s.by[h]) return s.missing[h] ? `no terminal drawing: ${s.missing[h]}` : "no story yet";
   return "no render yet (turbo run catalog)";
 }
 

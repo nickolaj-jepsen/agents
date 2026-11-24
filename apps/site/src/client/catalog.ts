@@ -2,7 +2,8 @@
  * The developer pages' controls: the harness and size switches, and a story's text beside its
  * renders where they leave room. A choice lives in the URL's query (`h`, `size`), so a link shows
  * what it says; the harness is remembered across the site, the size for the next page. `f`
- * switches between the harnesses: Claude Code and pi.
+ * switches between the harnesses: Claude Code and pi. A story's VS Code picture is Claude Code's,
+ * and the size picks its wide window or narrow pane.
  */
 import { readHarness, writeHarness } from "./prefs.ts";
 
@@ -92,6 +93,16 @@ function applySize(): void {
   for (const cell of $$(".cell")) {
     const views = $$(".view", cell);
     if (!views.length) continue;
+    // VS Code has a wide window and a narrow pane, not terminal sizes: the one the size stands for.
+    if (cell.classList.contains("gui")) {
+      const layout = sw >= Number(cell.dataset.wideFrom) ? "wide" : "narrow";
+      const shown = views.find((v) => v.dataset.layout === layout) ?? views[0]!;
+      for (const v of views) v.hidden = v !== shown;
+      cell.style.setProperty("--nat", `${shown.dataset.px}px`);
+      const tag = cell.querySelector<HTMLElement>("[data-sz]");
+      if (tag) tag.textContent = shown.dataset.label ?? "";
+      continue;
+    }
     const shown =
       views.find((v) => v.dataset.size === size) ??
       views.reduce((a, b) => (Math.abs(+b.dataset.w! - sw) < Math.abs(+a.dataset.w! - sw) ? b : a));

@@ -6,6 +6,7 @@
 import { defineCollection } from "astro:content";
 import { z } from "astro/zod";
 import type { Doc, Meta, Plugin, Skill } from "../../../lib/tools/build/content.ts";
+import type { Pictures } from "../../../lib/kits/catalog/src/crops.ts";
 import type { ComponentModel } from "../../../lib/kits/catalog/src/model.ts";
 import { contentLoader } from "./loaders/content.ts";
 import { kitLoader, type Render } from "./loaders/kit.ts";
@@ -15,7 +16,10 @@ import type { Positioned } from "./loaders/sync.ts";
 type Category = { slug: string; title: string; blurb?: string; skills: string[] } & Positioned;
 type Component = Omit<ComponentModel, "stories"> &
   Positioned & {
-    stories: (ComponentModel["stories"][number] & { shots: Record<string, Render[]> })[];
+    stories: (ComponentModel["stories"][number] & {
+      shots: Record<string, Render[]>;
+      gui: Pictures[string];
+    })[];
   };
 
 export const collections = {

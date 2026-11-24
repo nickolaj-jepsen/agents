@@ -2,11 +2,25 @@
 /**
  * A story's renders, one figure per harness that has any: every size it was drawn at, the one
  * nearest the chosen size shown (catalog.ts switches them and decides whether two fit side by
- * side). A harness with none is one line after them, saying why, not an empty frame.
+ * side). A harness with none is one line after them, saying why, not an empty frame. A story the
+ * graphical clients draw has a figure of its pane in VS Code too, Claude Code's: a wide window's
+ * docked pane for a wide terminal size, a narrow one's pane above the prompt for a narrow size.
  */
 import Glyph from '../Glyph.astro';
 import Mark from './Mark.astro';
-import { HARNESSES, sizeKey, sizeLabel, storyMark, TITLES, whyNot, type Component, type Story } from '../../lib/catalog.ts';
+import {
+  guiShots,
+  HARNESSES,
+  LAYOUT_LABEL,
+  sizeKey,
+  sizeLabel,
+  storyMark,
+  TITLES,
+  WIDE_FROM,
+  whyNot,
+  type Component,
+  type Story,
+} from '../../lib/catalog.ts';
 
 interface Props {
   c: Component;
@@ -24,10 +38,12 @@ const pick = (shots: NonNullable<Story['shots']['pi']>) =>
     : shots[0];
 const drawn = HARNESSES.filter((h) => (s.shots[h] ?? []).length > 0);
 const absent = HARNESSES.filter((h) => !drawn.includes(h));
+const gui = guiShots(s);
+const guiShown = gui.find((x) => x.layout === (size && size.w < WIDE_FROM ? 'narrow' : 'wide')) ?? gui[0];
 ---
 
 {
-  drawn.length > 0 && (
+  (drawn.length > 0 || guiShown) && (
     <div class="pair">
       {drawn.map((h) => {
         const shots = s.shots[h]!;
@@ -59,6 +75,31 @@ const absent = HARNESSES.filter((h) => !drawn.includes(h));
           </figure>
         );
       })}
+      {guiShown && (
+        <figure class="cell gui" data-h="claude" data-wide-from={WIDE_FROM} style={`--nat: ${guiShown.width}px`}>
+          <figcaption>
+            <span class="k claude">
+              <Glyph h="claude" />
+            </span>
+            <strong>VS Code</strong>
+            <span class="sz" data-sz>
+              {LAYOUT_LABEL[guiShown.layout]}
+            </span>
+          </figcaption>
+          {gui.map((x) => (
+            <div class="view" data-layout={x.layout} data-label={LAYOUT_LABEL[x.layout]} data-px={x.width} hidden={x !== guiShown}>
+              <img
+                src={x.src}
+                width={x.width}
+                height={x.height}
+                alt={`Claude Code in VS Code: ${s.id}, ${LAYOUT_LABEL[x.layout].toLowerCase()}`}
+                loading={eager ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+            </div>
+          ))}
+        </figure>
+      )}
     </div>
   )
 }
