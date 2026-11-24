@@ -52,9 +52,11 @@ jobs:
           chmod 700 "$dir"
           echo "XDG_RUNTIME_DIR=$dir" >> "$GITHUB_ENV"
       # One `media` task per app and kit package (and `media:vscode` per app with VS Code pictures): a
-      # package whose scenarios, build or imports did not change is restored from the cache.
+      # package whose scenarios, build or imports did not change is restored from the cache. Three at
+      # once: a recorder waits more than it computes (two at once keep one core busy), but a VS Code
+      # panel draws no pictures when its timers are starved, so the runner's four cores are not filled.
       - name: Record the media
-        run: pnpm turbo run media --concurrency=2
+        run: pnpm turbo run media --concurrency=3
         env:
           NIX_CONFIG: access-tokens = github.com=${{ github.token }}
       # Reads what the recordings left under apps/site/, so it runs after them.
