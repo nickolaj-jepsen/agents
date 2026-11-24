@@ -166,7 +166,7 @@ nix run .#media -- record kit-card                 # a kit package's story pictu
 nix run .#media -- record                          # every package
 ```
 
-Turbo runs the same through each package's `media` task (the terminal's media) and `media:vscode` (VS Code's, Linux only). The `//#media-env` task builds the environment first, so its hash is part of each recording's cache key and a recording from another environment is never restored. A recording whose inputs didn't change is restored, not replayed; add `--force` to record it anyway.
+Turbo runs the same through each package's `media` task (the terminal's media) and `media:vscode` (VS Code's, Linux only). The `@agents/drive#media-env` task builds the environment first, so its hash is part of each recording's cache key and a recording from another environment is never restored. A recording whose inputs didn't change is restored, not replayed; add `--force` to record it anyway.
 
 ```bash
 pnpm turbo run media                                    # every package's media, or restore it from the cache

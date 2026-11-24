@@ -108,10 +108,17 @@
     },
     // Builds the recording environment (VS Code, fonts, tools), so nix has it before a recorder
     // asks. No outputs: its hash is the point. Every recording depends on it, so a recording from
-    // another environment misses the cache.
-    "//#media-env": {
-      "command": ["nix", "build", ".#mediaEnvironment", "--no-link"],
-      "inputs": ["pkgs/media-environment.nix", "devshell.nix", "flake.nix", "flake.lock"],
+    // another environment misses the cache. It is the driver's task and not the root's, because
+    // this file is an input to every task of the root: as `//#media-env`, any edit here, a comment
+    // too, recorded everything again.
+    "@agents/drive#media-env": {
+      "command": ["nix", "build", "../../..#mediaEnvironment", "--no-link"],
+      "inputs": [
+        "$TURBO_ROOT$/pkgs/media-environment.nix",
+        "$TURBO_ROOT$/devshell.nix",
+        "$TURBO_ROOT$/flake.nix",
+        "$TURBO_ROOT$/flake.lock"
+      ],
       "outputs": [],
       "passThroughEnv": [
         "NIX_*",
@@ -129,7 +136,7 @@
     // and the other recorder read. The site's own `media` is all of them (apps/site/turbo.json).
     // CAST_*, E2E_VSCODE_* and FONTCONFIG_FILE are the environment's own, not passed through.
     "media": {
-      "dependsOn": ["^topo", "build", "//#media-env", "@agents/drive#tui-test"],
+      "dependsOn": ["^topo", "build", "@agents/drive#media-env", "@agents/drive#tui-test"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",
@@ -160,7 +167,7 @@
     // The VS Code pictures need a Linux compositor, and fail anywhere else: a skip that succeeded
     // with no pictures would be cached as the task's result, and restored on Linux.
     "media:vscode": {
-      "dependsOn": ["^topo", "build", "//#media-env"],
+      "dependsOn": ["^topo", "build", "@agents/drive#media-env"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",

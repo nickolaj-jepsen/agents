@@ -7,7 +7,7 @@
     media = pkgs.callPackage ./pkgs/media-environment.nix {};
     mediaPackages = media.packages ++ media.graphicsPackages ++ media.vscodePackages;
     # A file naming every tool and path the recorders use: its store path changes with any of them,
-    # and building it fetches them all. `//#media-env` builds it, so turbo's key for a recording
+    # and building it fetches them all. `@agents/drive#media-env` builds it, so turbo's key for a recording
     # changes when the environment does.
     mediaEnvironment = pkgs.writeText "agents-media-environment" (
       pkgs.lib.concatMapStringsSep "\n" toString (
