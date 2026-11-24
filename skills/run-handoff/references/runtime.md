@@ -4,7 +4,7 @@ Use the bundled `scripts/watch.py` with Python 3. It watches git-visible changes
 
 ## Arm each attempt
 
-Resolve `watch` to the absolute path of this skill's `scripts/watch.py`, not a file copied into the project. Put runtime state outside the worktree, under the plan's `runtime/<item>/<attempt>/`; the helper refuses state inside the worktree because its own writes would count as progress. Record that path, dispatch Unix timestamp, worker name, worktree, budgets and recovery count in `PROGRESS.md`.
+Resolve `watch` to the absolute path of this skill's `scripts/watch.py`, not a file copied into the project. Put runtime state outside the worktree, under the plan's `runtime/<item>/<attempt>/`; the helper refuses state inside the worktree because its own writes would count as progress. Record that path, dispatch Unix timestamp, worker ID (pi: name), worktree, budgets and recovery count in `PROGRESS.md`. The watcher is keyed to the worktree and the fixed `.handoff-report.md`, not to the harness's worker: it stats that file and reads its first line for the status, so nothing about pi-agents' store is involved. In pi a name addresses the agent for `agent_send`, `agent_wait` and `agent_stop` only, so a name that no longer resolves is not a way to resume a report: recover from the worktree, git and the report, and dispatch a fresh worker if the attempt needs one.
 
 Before dispatch, prepare the attempt so the worker cannot run before an attempt clock exists:
 

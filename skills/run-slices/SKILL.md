@@ -49,7 +49,7 @@ Take the slices in order. For each one:
 4. **Green:** record the slice in `PROGRESS.md`, add any interface it settled to the plan's Interfaces, and take the next slice.
 5. **Red, or the worker stopped short:** Record the last commit, dirty paths, failed command/log or missing verdict, and next repair before dispatching again.
    - Give one repair to a fresh worker, with the failing output and what is already on the branch. Continue the same worker only if its run was short, since a long worker re-reads its whole history on every turn (pi: `agent_send` to the same name).
-   - If it is still red, escalate. Never send the same brief to the same model twice. In this order: ask the expert one narrow question, with the failing output and the diff (which condition fails, and why); give the slice to the lead or an expert; or split the slice at what is green, land that, and add the rest to the plan as a new slice. An expert asked here counts against the run's two (Models).
+   - If it is still red, escalate. Never send the same brief to the same model twice. In this order: ask the strong model one narrow question, with the failing output and the diff (which condition fails, and why); give the slice to the strong model; or split the slice at what is green, land that, and add the rest to the plan as a new slice. In pi the strong model is the lead or a `worker`; an `expert` is the last resort in Models, and its budget is tracked in the conversation.
    - Log the route you took. A blocked slice is not a stopped run.
 6. **Answer every concern** a worker reports before the next slice: fix it now, add it to the plan as a named slice, or reject it with a reason in Decisions. Concerns carried as prose all land on the last slice.
 
@@ -84,11 +84,12 @@ Set the harness's turn cap where it has one: in Claude Code, about 250 for a bui
 
 ## Models
 
-- **Cheap** (Claude Code `sonnet`; pi `worker`, `reviewer`, `verifier` and `researcher`, all `auto/deepseek-v4.1-flash`): routine slices, repairs to them, research, running checks and the security review. Name the profile on every spawn, because an agent otherwise runs on your Sol model.
-- **Hard** (pi `worker`, or the lead): hard slices and escalations. Build it yourself when no worker has the capacity for it.
-- **Expert** (pi `expert`, `openai-codex/gpt-6.1-sol`): a last resort for a demonstrated hard blocker or a high-risk uncertainty that needs independent reasoning. A run gets at most two expert subagents in total, not per slice. State the blocker and why a cheap answer can't settle it, reuse an expert already running with `agent_send`, and record each use in `PROGRESS.md`'s Decisions; no separate ledger file.
+- **Cheap** (Claude Code `sonnet`; pi `worker`, `reviewer`, `verifier` and `researcher`, all `auto/deepseek-v4.1-flash`): routine slices, repairs to them, research, and the security review.
+- **Strong** (Claude Code your own model; pi the lead): hard slices, escalations, and the two reviews. If the harness can't give a worker the strong model, build that slice yourself. In pi, a hard slice can also go to a `worker`, and the reviews stay on `reviewer`.
+- **Expert** (pi only: the `expert` profile, `openai-codex/gpt-6.1-sol`): a last resort for a demonstrated hard blocker or a high-risk uncertainty that needs independent reasoning. A run gets at most two expert subagents in total, not per slice. State the blocker and why a cheap answer can't settle it, and reuse an expert already running with `agent_send` instead of spawning another.
+  - Track the two in the conversation: no ledger file, and no PROGRESS budget field. If you can't tell whether an expert was already used, ask the user; never assume the budget reset.
 - The owner's word on models overrides this. Record it in `PROGRESS.md` so a resumed lead keeps to it.
-- pi profiles carry their own model, and an explicit `model` on a spawn overrides it. An unavailable model fails the spawn instead of inheriting the lead's model, and a profile whose model doesn't resolve isn't offered. Record what actually ran when the worker reports.
+- pi profiles carry their own model, and an explicit `model` on a spawn overrides it. Name the profile on every pi spawn, because an agent otherwise runs on the lead's own model. An unavailable model fails the spawn instead of inheriting, and a profile whose model doesn't resolve isn't offered. Record what actually ran when the worker reports.
 - Treat a provider rate limit as a failed dispatch, not a review verdict. Reduce concurrency or use an available independent route rather than repeating the same throttled batch.
 - Delegate only bounded work: one slice, one repair, one check run, one research area. A task you can finish in a few tool calls stays yours.
 
@@ -98,7 +99,7 @@ Set the harness's turn cap where it has one: in Claude Code, about 250 for a bui
 - A reviewer is a fresh, read-only subagent (pi: `reviewer`). Give it the exact diff range, the paths and acceptance criteria it owns, and the behaviour to verify, not the workers' reports. Record each verdict and actionable finding when it arrives. A capped or missing report is not approval.
 - Ask it for defects, checks that pass without proving the outcome, scope drift, uncovered Risks, and owner decisions with no reachable path yet. The security reviewer gets only the boundaries and the diff, and is asked for a path by which untrusted input crosses one.
 - One round each. Fix the confirmed findings in one pass, then verify those fixes with a focused check. Run a second full review only if the fixes changed the design.
-- Above about 3,000 changed lines, cheap readers can cover areas separately for the final review. One reviewer still reads the whole diff and owns what crosses areas.
+- Above about 3,000 changed lines, cheap readers can cover areas separately for the final review. One strong reviewer still reads the whole diff and owns what crosses areas. In pi that is the `reviewer` unless an expert is already justified.
 
 ## Stops
 
@@ -131,7 +132,7 @@ Rewrite it; don't append. Keep it under about 150 lines. Detail lives in commits
 
 ## Now
 
-<Worktree, branch, base and candidate commits; uncommitted paths to preserve; in-flight work, its worker name and scope; the next action.>
+<Worktree, branch, base and candidate commits; uncommitted paths to preserve; in-flight work, its worker ID or pi name and scope; the next action.>
 
 ## Slices
 
