@@ -24,14 +24,14 @@ You were in this session, so start from what you remember and then check it. You
 
 - `report [session] [--top N]`: where the time and money went.
 - `timeline <session> [--brief]`: the session in order, with exact events (rewinds, interrupts, rejections) marked `!`.
-- `window <session> FROM TO [--agent ID] [--grep REGEX] [--full]`: the transcript of requests rFROM to rTO, or where something happened. A subagent's own turns need `--agent`.
+- `window <session> FROM TO [--agent ID] [--grep REGEX] [--full]`: the transcript of requests rFROM to rTO, or where something happened. A Claude Code subagent's own turns need `--agent`; a pi agent's conversation isn't in the session file, see above.
 - `outcome <session>`: the session's commits, and later changes to the lines they added. It finds commits by timing, so check the subjects fit.
 
 Read as much as the question needs. A specific complaint needs `timeline --brief` and a few windows, plus the source of whatever is being blamed. Only an open "how did this go?" needs the whole timeline. For a session a day or more old, what happened afterwards (`git log`, `gh pr view`) often shows a diagnosis was wrong, which the transcript can't.
 
-About the numbers: dollars are list price and item costs are estimates, so don't promise a saving. `unattributed` is usage that never reached the transcript. Everything from the session's last `/retro` on is left out, so a retro doesn't review itself.
+About the numbers: dollars are list price and item costs are estimates, so don't promise a saving. `unattributed` is usage that never reached the transcript. Everything from the session's last `/retro` on is left out, so a retro doesn't review itself. pi-agents stores an agent's own conversation outside the Pi session, and the readers don't read it yet: a pi delegation shows its spawn and result messages, not the agent's turns or cost. Say that rather than reporting the work as free.
 
-When the question is whether your own judgement in the session was sound, or the session is long and mostly compacted, an independent read is worth one subagent. Use a fresh one (pi: the `retro-reviewer` role), since a fork inherits your turns and your blind spots. Give it the session id, the reader commands, what the user said and the privacy rules, and let it read the transcript itself. Skip it when the complaint already says what went wrong.
+When the question is whether your own judgement in the session was sound, or the session is long and mostly compacted, an independent read is worth one subagent. Use a fresh one (pi: the `reviewer` profile, read-only at thinking high), since a fork inherits your turns and your blind spots. Give it the session id, the reader commands, what the user said and the privacy rules, and let it read the transcript itself. Skip it when the complaint already says what went wrong.
 
 ## Finding the cause
 

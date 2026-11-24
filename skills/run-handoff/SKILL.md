@@ -22,11 +22,13 @@ metadata:
 
 ## Models
 
-- Item workers and ordinary gate/area reviewers use explicit cheap models: Claude Code `sonnet`; pi `general-purpose` or `reviewer` (`opencode-go/deepseek-v4.1-flash`). Never inherit the lead's model by accident.
-- The final whole-branch reviewer uses Claude Code `opus`; pi `handoff-review` (`openai-codex/gpt-6.2-sol`). `--review-model MODEL` or an explicit choice in this invocation overrides HANDOFF's review-model override, then the harness default. In pi use a role that allows the override, not the ordinary reviewer's locked model.
-- pi resolves a role's own unavailable model by silently using the lead's model. After spawning any reviewer, compare the harness's reported model with the intended one; if it differs, treat that role's default as unavailable and use the fallback. An explicitly requested unavailable model errors instead and then uses the fallback.
-- The fallback is the cheap read-only reviewer, used once. Prominently record the actual model and downgrade in `PROGRESS.md` and the final report. Ordinary tool errors or review findings are not reasons to downgrade.
-- Keep `opencode-go/deepseek-v4.1-flash` for cheap workers and reviews. Its fallback when unavailable is Sonnet in Claude Code or `kimi-coding/k3.1-pro` in pi; report the substitution rather than silently using the lead's model.
+- Item workers and ordinary gate/area reviewers use explicit cheap profiles: Claude Code `sonnet`; pi `worker` for builds and `reviewer` for reads and reviews, both `auto/deepseek-v4.1-flash`, so the lead's Sol model never becomes a worker's by accident.
+- The final whole-branch gate is a `reviewer` too. Don't force a strong review on every handoff: pi's `expert` (`openai-codex/gpt-6.1-sol`) is a last resort for a demonstrated hard blocker or a high-risk uncertainty that needs independent reasoning. The whole handoff gets at most two expert subagents, across items, gates and sessions, not per item.
+  - Before spawning one, state the blocker and why a cheap read can't settle it, and reuse an expert already running with `agent_send` instead of spawning another.
+  - Record each use and its reason in `PROGRESS.md`'s decision log; there is no separate ledger file. An expert that HANDOFF's Context already counts reduces the two.
+- `--review-model MODEL`, or an explicit choice in this invocation, picks the gate reviewers' model. In pi that is a `reviewer` spawn with an explicit `model`, the same as HANDOFF's review-model override.
+- An unavailable model fails the spawn in pi instead of silently using the lead's model, and a profile whose model doesn't resolve isn't offered at all. After spawning, compare the model the harness reports with the intended one; if they differ, use the cheap fallback once and record the downgrade in `PROGRESS.md`. Ordinary tool errors or review findings are not reasons to downgrade.
+- Delegate only bounded work: research an area, build one item, run one check. A task you can finish in a few tool calls stays yours.
 - One full review per checkpoint, followed by focused verification of confirmed repairs. Repeat the full review only when repairs substantially change the design or scope.
 
 ## Decisions
@@ -42,7 +44,7 @@ metadata:
 2. **Read `HANDOFF.md` in full** and `references/runtime.md`. Amendments override everything above them. Resolve this skill's bundled `scripts/watch.py` to an absolute path. Read `notes/` files only when an item needs them.
 3. **Resume** if `PROGRESS.md` exists.
    - Check it against git: the integration branch, item worktrees and their commits. Where they disagree, git wins; fix `PROGRESS.md`.
-   - Reconcile worker IDs, watchdog jobs, dispatch times and recovery counts as well. Re-arm the same attempt's watcher if it died; never renew the deadline merely because the lead resumed.
+   - Reconcile worker names, watchdog jobs, dispatch times and recovery counts as well, with `agent_status` for the agents. pi agents belong to the session that spawned them, so after a session reset recover from the branch and logs. Re-arm the same attempt's watcher if it died; never renew the deadline merely because the lead resumed.
    - Reuse recorded verification only when the tree and test inputs are unchanged; otherwise run the standard checks before dispatch. If a crash left the integration branch broken, fixing that comes first.
    - Add any of HANDOFF's Open questions missing from "Blocked on you".
    - Continue from "Now".
@@ -58,23 +60,23 @@ metadata:
 1. **Frontier.** Every item whose blockers are done, or integrated with only device or person acceptance open, and whose `Owns` doesn't overlap an item in flight.
 2. **Dispatch** frontier items up to HANDOFF's concurrency cap (default 3). For each one:
    - create a worktree `<slug>-<id>` off the integration branch's current head;
-   - start a cheap background subagent with the item brief below;
-   - record its ID, dispatch Unix timestamp, attempt directory, budget and persistent recovery count; arm the bundled watcher as a notifying background command in the lead, as in `references/runtime.md`.
+   - start a cheap worker with the item brief below;
+   - record its name, dispatch Unix timestamp, attempt directory, budget and persistent recovery count; arm the bundled watcher as a notifying background command in the lead, as in `references/runtime.md`.
 
-   Spawn item subagents without a `name`. A named one runs as a teammate when agent teams are on, and wakes you with an idle notice every time it pauses. Message a running subagent by its agent ID.
+   Do contracts and gates yourself. Claude Code: the Agent tool runs subagents in the background and notifies you. pi: one `agent_spawn` call per item, with a single entry carrying the item brief as `job`, `profile: "worker"`, its `name` (`a1`, `a2`) and the `cwd` of its worktree, so each report arrives on its own. It returns at once, and a report is a message that starts a turn. `agent_wait` with `names` and a short `timeout` only when a turn must combine results or finish a bounded attempt; a result it returns doesn't also arrive as a message.
 
-   Do contracts and gates yourself. Claude Code: the Agent tool runs subagents in the background and notifies you. pi: `subagent` with `run_in_background: true`; bound each `get_subagent_result` wait to at most 60 seconds and the remaining attempt time.
+   Every pi worker stays one level deep: don't set `spawn: true` on an item, reviewer or verifier, and don't give a worker the agent tools. Fresh contexts are the point, and there is no nested delegation: a job that turns out to need splitting comes back to the lead as a report.
 
-3. **While items run,** do gate work or end your turn and wait for completion notices. Every turn re-reads your whole context, so don't schedule recurring check-ins, crons or polls.
+3. **While items run,** do gate work or end your turn and wait for the reports. Every turn re-reads your whole context, so don't schedule recurring check-ins, crons or polls.
    - The watcher wakes you on report, no progress (default 10 minutes) or attempt deadline (default 60 minutes). Use HANDOFF's explicit overrides; a live foreground command within its finite lease is not a stall. Test duration alone is not an implementation budget.
    - On a stall or expired deadline, inspect commits, changed files and processes once. Stop an over-deadline attempt and its launched processes before recovery. Recover at most once per item, continuing the same worker or replacing a dead one without losing its work. If it stalls again, block that item, notify the user and continue independent work.
-   - An idle notice or status ping isn't a report: end the turn without acting. A timed-out short join likewise means wait for completion or the watcher, not start another polling loop.
-   - A subagent reads messages only between its own tool calls. To stop a run now, stop its processes yourself.
+   - An idle notice or status ping isn't a report: end the turn without acting. A timed-out short join likewise means wait for the report or the watcher, not start another polling loop. `agent_status` is for a turn that needs the state, not for polling.
+   - Claude Code: a subagent reads messages only between its own tool calls; to stop a run now, stop its processes yourself. pi: `agent_send` with `mode: "interrupt"` stops a worker's current work before delivering the message, and `agent_stop` ends the agent and its agents.
    - Stopping a subagent doesn't stop what it launched. Find its parent scripts as well as their children, and select them by `/proc/<pid>/cwd` under its worktree or by exact argv. `pgrep -f <text>` also matches your own shell.
 4. **Route** each report by its status line:
    - `DONE`: integrate.
    - `DONE_WITH_CONCERNS`: read the concerns, then integrate or send back; log the call in the decision log.
-   - `NEEDS_CONTEXT`: answer from HANDOFF or its notes and continue the subagent. If the answer is the user's to give, treat it as blocked.
+   - `NEEDS_CONTEXT`: answer from HANDOFF or its notes and continue the subagent (pi: `agent_send` to it; a finished agent keeps its conversation). If the answer is the user's to give, treat it as blocked.
    - `BLOCKED`: mark the item blocked with the reason.
 
    A report that changed a default: check its evidence before integrating, and log the change in the decision log.
@@ -86,7 +88,7 @@ metadata:
    - Shape reviewable history before integrating: preserve logical changes, fold repairs into the commits they repair with fixups/autosquash, and avoid arbitrary one-commit-per-item squashing. Do not leave history reconstruction for the user after the build.
    - A pure history rewrite with the same final `git rev-parse HEAD^{tree}` and unchanged test inputs retains the verified result. Do not run full suites at every rewritten commit. Content-changing rebases or changed test inputs still need fresh verification.
    - If it passes: fast-forward the integration branch, record the command, its result, commit and verified tree ID, then read and delete the worktree's `.handoff-report.md`, stop its watcher and remove the worktree.
-   - If it fails: send the failing output back to the same subagent, continuing it if the harness allows. After two send-backs, mark the item blocked with the last failing output.
+   - If it fails: send the failing output back to the same subagent, continuing it if the harness allows (pi: `agent_send`). After two send-backs, mark the item blocked with the last failing output.
    - If the desktop part passes and only a device or a person is left: integrate it now and record that acceptance as open in `PROGRESS.md`, so its dependents can run. Run the open step when it can run, and put any fix it needs on top.
 6. **Re-check the frontier** after every integration and dispatch what opened up.
 7. **Update `PROGRESS.md`** after every item and before any long operation. It is how you resume after a context reset, so keep it accurate, not optimistic.
@@ -107,7 +109,7 @@ Long operations:
 
 ### Reviewer
 
-- A fresh, read-only subagent, using the cheap reviewer for ordinary gates and the stronger reviewer for the final whole-branch gate (Models above).
+- A fresh, read-only `reviewer` agent, for ordinary gates and the final whole-branch gate alike. A stronger review is not required on every handoff; see Models for the two-expert budget.
 - It gets the gate's diff since the previous gate (the final gate: since the base), the `HANDOFF.md` path, and the gate's item IDs. It does not get the subagents' reports.
 - Ask it for:
   - defects;
@@ -116,7 +118,7 @@ Long operations:
   - uncovered review-focus risks;
   - acceptance checks that pass without proving the outcome;
   - decisions or user actions in HANDOFF that have no reachable path yet.
-- Above about 3k changed lines, cheap area readers can cover backend, UI or deployment separately. Keep one stronger final reviewer responsible for the whole branch and cross-area contracts; it reads the actual diff, not only summaries.
+- Above about 3k changed lines, cheap area readers can cover backend, UI or deployment separately. One reviewer still reads the whole branch and owns what crosses areas, and it reads the actual diff, not only summaries.
 - If HANDOFF has Trust boundaries, the first gate after an item that touches one and the final gate add a security reviewer. It gets only the boundaries and the diff, and is asked for a path by which untrusted input reaches a secret or crosses a boundary.
 
 ### After a gate
@@ -137,7 +139,7 @@ Never edit `HANDOFF.md` to get unstuck. Propose the change in `PROGRESS.md`; it 
 
 ## Item brief
 
-Each item subagent's prompt contains:
+Each item worker's job contains:
 
 - **Role:** builds one item. The lead owns `PROGRESS.md`, integration, contracts and gate reviews.
 - **Where:** its worktree path. Work and commit only there, in logical reviewable commits matching the repo's style; repairs are fixups to the change they repair.
@@ -190,7 +192,7 @@ Each item subagent's prompt contains:
 
 ## Measurements
 
-<Actual worker/review models and any downgrade; command timings, retries and available usage. Separate cached input from fresh input and output; do not invent dollar estimates.>
+<Actual worker/review models and any downgrade; expert uses out of the two and what each settled; command timings, retries and available usage. Separate cached input from fresh input and output; do not invent dollar estimates.>
 
 ## Handoff retro
 
@@ -199,12 +201,12 @@ Each item subagent's prompt contains:
 
 ## Final report
 
-1. Stop every subagent and watchdog still running, idle ones included. Confirm the branch has logical reviewable commits, not an unfinished history-cleanup job. Write the handoff retro.
+1. Stop every subagent and watchdog still running, idle ones included (pi: `agent_stop` each one). Confirm the branch has logical reviewable commits, not an unfinished history-cleanup job. Write the handoff retro.
 2. Report in chat:
    - what is done and verified, with acceptance results;
    - what is blocked and on what;
    - failures and skips, stated plainly;
-   - measured timings, actual worker/final-review models and any review downgrade;
+   - measured timings, actual worker/final-review models, any review downgrade, and expert uses out of the two;
    - the retro;
    - the integration branch and any worktrees left.
 3. Ask, in one round, every unanswered entry in "Blocked on you" that the user can answer now, with what was done meanwhile as the recommended answer. This applies with `--auto` too, since the run is over and a question interrupts nothing. Use the harness's question tool when they fit, otherwise a numbered list with your pick on each. Record each answer, and build what it calls for on the integration branch.
