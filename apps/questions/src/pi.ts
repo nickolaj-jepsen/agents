@@ -102,7 +102,10 @@ export async function askQuestions(
       if (signal?.aborted) queueMicrotask(abort);
       return Object.assign(dialog, { dispose });
     },
-    { overlay: false },
+    {
+      overlay: false,
+      blocked: { kind: "question", message: questions[0]?.question ?? "Answer questions" },
+    },
   );
 }
 
