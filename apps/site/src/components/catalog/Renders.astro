@@ -6,7 +6,7 @@
  */
 import Glyph from '../Glyph.astro';
 import Mark from './Mark.astro';
-import { HARNESSES, sizeKey, sizeLabel, TITLES, whyNot, type Component, type Story } from '../../lib/catalog.ts';
+import { HARNESSES, sizeKey, sizeLabel, storyMark, TITLES, whyNot, type Component, type Story } from '../../lib/catalog.ts';
 
 interface Props {
   c: Component;
@@ -68,7 +68,7 @@ const absent = HARNESSES.filter((h) => !drawn.includes(h));
       {absent.map((h) => (
         <li data-h={h}>
           <span class="kb">
-            <Mark h={h} state={c.impl[h].state === 'none' ? 'none' : 'plan'} />
+            <Mark h={h} state={storyMark(c, s, h)} />
           </span>
           <span>
             <strong>{TITLES[h]}</strong> {whyNot(c, s, h)}

@@ -6,6 +6,7 @@
 import { existsSync, readdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { hasTerminalStory } from "@agents/kit-core/stories.ts";
 import { kitStories2 } from "./registry.ts";
 import { answers, checkComponent2, drawnOn } from "./schema2.ts";
 import {
@@ -46,6 +47,9 @@ export type ImplState = {
 };
 
 export type HarnessStory = { about?: string; settings?: string };
+
+/** Why a terminal shows no render of a story that only the graphical clients draw. */
+const GUI_ONLY = "only the graphical clients draw this story";
 
 export type StoryModel = {
   id: string;
@@ -349,7 +353,6 @@ export function modelOf2(
       story: f.story ? { pi: f.story, claude: f.story, gui: f.story } : {},
     };
   });
-  const by = (): StoryModel["by"] => ({});
   const apiOf = (d: "terminal" | "gui") => {
     const kit = sources[d];
     if (!kit) return null;
@@ -371,17 +374,20 @@ export function modelOf2(
     features,
     api: { pi: apiOf("terminal"), claude: apiOf("terminal") },
     guiApi: apiOf("gui"),
-    stories: own.map((s): StoryModel => ({
-      id: `${c.id}/${s.state}`,
-      state: s.state,
-      by: {
-        ...by(),
-        pi: { about: s.about, settings: s.settings },
-        claude: { about: s.about, settings: s.settings },
-      },
-      isGui: drawnOn(c, `${c.id}/${s.state}`).includes("vscode"),
-      missing: {},
-    })),
+    stories: own.map((s): StoryModel => {
+      const on = drawnOn(c, `${c.id}/${s.state}`);
+      const meta = { about: s.about, settings: s.settings };
+      // As the terminal recorders do (`hasTerminalStory`): a story either terminal draws is played
+      // in both, and one only the graphical clients draw is in neither.
+      const isTerminal = hasTerminalStory({ surfaces: on });
+      return {
+        id: `${c.id}/${s.state}`,
+        state: s.state,
+        by: isTerminal ? { pi: meta, claude: meta } : {},
+        isGui: on.includes("vscode"),
+        missing: isTerminal ? {} : { pi: GUI_ONLY, claude: GUI_ONLY },
+      };
+    }),
   } satisfies ComponentModel;
 }
 

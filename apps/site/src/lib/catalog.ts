@@ -76,7 +76,14 @@ export const implMark = (c: Component, h: Harness): Mark =>
 
 /** A story's state in a harness: rendered, not rendered yet, or not possible. */
 export const storyMark = (c: Component, s: Story, h: Harness): Mark =>
-  c.impl[h].state === "none" ? "none" : (s.shots[h]?.length ?? 0) > 0 ? "on" : "plan";
+  c.impl[h].state === "none" || !drawsIn(s, h)
+    ? "none"
+    : (s.shots[h]?.length ?? 0) > 0
+      ? "on"
+      : "plan";
+
+/** Whether a harness draws the story at all: one only the graphical clients draw is in neither terminal. */
+export const drawsIn = (s: Story, h: Harness) => s.by[h] !== undefined || !s.isGui;
 
 export const differs = (f: Component["features"][number]) =>
   f.support.pi.status !== f.support.claude.status;
@@ -84,7 +91,7 @@ export const differs = (f: Component["features"][number]) =>
 /** Why a harness shows no render of a story at a size. */
 export function whyNot(c: Component, s: Story, h: Harness): string {
   if (c.impl[h].state === "none") return `not possible: ${s.missing[h] ?? c.impl[h].reason ?? ""}`;
-  if (!s.by[h]) return "no story yet";
+  if (!s.by[h]) return s.missing[h] ? `not drawn: ${s.missing[h]}` : "no story yet";
   return "no render yet (turbo run catalog)";
 }
 

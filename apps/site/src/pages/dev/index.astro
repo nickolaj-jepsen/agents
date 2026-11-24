@@ -1,7 +1,7 @@
 ---
 import Shell from '../../components/catalog/Shell.astro';
 import Glyph from '../../components/Glyph.astro';
-import { catalogHref, getComponents, HARNESSES, TITLES, type Component, type Harness } from '../../lib/catalog.ts';
+import { catalogHref, drawsIn, getComponents, HARNESSES, TITLES, type Component, type Harness } from '../../lib/catalog.ts';
 import { content, docHref, github } from '../../lib/content.ts';
 import { renderInline } from '../../lib/markdown.ts';
 
@@ -26,6 +26,8 @@ const counts = (c: Component, h: Harness) => {
   return n;
 };
 const rendered = (c: Component, h: Harness) => c.stories.filter((s) => (s.shots[h]?.length ?? 0) > 0).length;
+/** The stories a harness draws: not those only the graphical clients draw. */
+const drawn = (c: Component, h: Harness) => c.stories.filter((s) => drawsIn(s, h)).length;
 const total = Object.fromEntries(
   HARNESSES.map((h) => {
     const n = { yes: 0, partial: 0, no: 0, r: 0, of: 0 };
@@ -36,7 +38,7 @@ const total = Object.fromEntries(
       n.partial += k.partial;
       n.no += k.no;
       n.r += rendered(c, h);
-      n.of += c.stories.length;
+      n.of += drawn(c, h);
     }
     return [h, n];
   }),
@@ -188,7 +190,7 @@ const storyCount = (r: number, of: number) => (r === of ? `${of} ${of === 1 ? 's
                                   </span>
                                 ))}
                             </span>
-                            <span class="nstories">{storyCount(rendered(c, h), c.stories.length)}</span>
+                            <span class="nstories">{storyCount(rendered(c, h), drawn(c, h))}</span>
                           </p>
                         </>
                       )}
