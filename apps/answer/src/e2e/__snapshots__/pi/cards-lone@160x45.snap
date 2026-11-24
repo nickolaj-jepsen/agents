@@ -20,8 +20,6 @@
 
 │  ❯ Q1  Your decision: where the cache lives.
 │
-│    Which do you want?
-│
 │    A ○ In memory. Fast, and lost on restart.  Recommended
 │    B ○ On disk. Slower, and it survives restarts.
 │    C ○ Write your own answer
@@ -31,6 +29,8 @@
 
 
 │    0 of 1 answered  Fill prompt
+
+
 
 
 
@@ -66,8 +66,6 @@
 -
 6 .x2 7 . 5x4 7x37
 6
-6
-6
 6 .x4 5 . 8 .x38 8x13
 6 .x4 5 . 8
 6 .x4 5 . 8 . 8x21
@@ -77,6 +75,8 @@
 -
 -
 8 .x4 6x15 .x2 6x11
+-
+-
 -
 -
 -

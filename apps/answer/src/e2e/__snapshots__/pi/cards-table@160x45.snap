@@ -1,4 +1,14 @@
 # answer/pi/cards-table 160x45 @0,0 (159x45)
+
+ Warning: fd not found. Offline mode enabled, skipping download.
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
+
+
+ ask
+
+
+ Q1. Pick the storage layer?
+
  ┌──────────┬─────────┬────────────────┐
  │ Engine   │ Latency │ Notes          │
  ├──────────┼─────────┼────────────────┤
@@ -17,19 +27,6 @@
 
 │  ❯ Q1  Pick the storage layer?
 │
-│    ┌──────────┬─────────┬────────────────┐
-│    │ Engine   │ Latency │ Notes          │
-│    ├──────────┼─────────┼────────────────┤
-│    │ SQLite   │ •••     │ embedded       │
-│    ├──────────┼─────────┼────────────────┤
-│    │ Postgres │ •••     │ needs a server │
-│    └──────────┴─────────┴────────────────┘
-│
-│    ```ts
-│      const db = open("app.db");
-│      await db.exec("select 1");
-│    ```
-│
 │    A ○ SQLite
 │    B ○ Postgres
 │    C ○ Write your own answer
@@ -37,6 +34,9 @@
 
 
 │    0 of 1 answered  Fill prompt
+
+
+
 
  Answer [alt+a]  Q1  0/1 answered
 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -46,58 +46,61 @@
 ••••/200k (auto)                                                                                                                                          repla
 --- styles
 -
-.x3 1x8 .x3 1x7 .x3 1x14
+. 1x63
+. 1x68
+-
+2x159
+2 3x3 2x155
+2x159
+-
+. 4x27
+-
+-
+.x3 4x8 .x3 4x7 .x3 4x14
 -
 -
 -
 -
 -
 -
-. 2x5
-.x3 3x5 4x11 5x8 4x2
-.x3 3x5 4x9 5x10 4x2
-. 2x3
+. 5x5
+.x3 6x5 7x11 8x8 7x2
+.x3 6x5 7x9 8x10 7x2
+. 5x3
 -
-. 6x2 1x2
-. 6x2 1x2
+. 9x2 4x2
+. 9x2 4x2
 -
-4 .x2 7 . 6x4 7x23
-4
-4
-4 .x6 1x8 .x3 1x7 .x3 1x14
-4
-4
-4
-4
-4
-4
-4 .x4 2x5
-4 .x6 3x5 4x11 5x8 4x2
-4 .x6 3x5 4x9 5x10 4x2
-4 .x4 2x3
-4
-4 .x4 6 . 8
-4 .x4 6 . 8
-4 .x4 6 . 8 . 8x21
-4 .x4 8x16
+7 .x2 a . 9x4 ax23
+7
+7 .x4 9 . b
+7 .x4 9 . b
+7 .x4 9 . b . bx21
+7 .x4 bx16
 -
 -
-8 .x4 4x15 .x2 4x11
+b .x4 7x15 .x2 7x11
 -
-. 4x6 . 8x7 .x2 8x16
-9x159
-a
-9x159
-8x5
-8x159
+-
+-
+-
+. 7x6 . bx7 .x2 bx16
+cx159
+d
+cx159
+bx5
+bx159
 --- legend
-1 bold
-2 fg=#9da5a9
-3 fg=#69add0
-4 fg=#dee0e1
-5 fg=#de8d5a
-6 fg=#a798d7
-7 fg=#dee0e1 bold
-8 fg=#7e888e
-9 fg=#6c767b
-a inverse
+1 fg=#cd9a22
+2 bg=#213b49
+3 fg=#dee0e1 bg=#213b49
+4 bold
+5 fg=#9da5a9
+6 fg=#69add0
+7 fg=#dee0e1
+8 fg=#de8d5a
+9 fg=#a798d7
+a fg=#dee0e1 bold
+b fg=#7e888e
+c fg=#6c767b
+d inverse

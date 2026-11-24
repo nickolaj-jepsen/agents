@@ -264,7 +264,7 @@ export default scenarios({
     },
     "cards-table": {
       about:
-        "a question whose body is a table and a code block draws whole under it, never cut mid-block",
+        "a question whose body is a table and a code block: the message keeps them, the card does not repeat them",
       start: cards("table-code"),
       region: FULL_CARD,
       steps: CARD_ASK,

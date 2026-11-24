@@ -14,21 +14,21 @@
 
 │  ❯ 1  Should we use a monorepo?
 │
-│    Yes or no.
-│
 │    A ○ Write your own answer
 │    Note: Add a note
 
 
 │    2  Pick a license?
 │
-│    MIT or Apache.
-│
 │    A ○ Write your own answer
 │    Note: Add a note
 
 
 │    0 of 2 answered  Fill prompt
+
+
+
+
 
 
 
@@ -60,21 +60,21 @@
 -
 6 .x2 7 . 4x3 7x25
 6
-6
-6
 6 .x4 4 . 8 . 8x21
 6 .x4 8x16
 -
 -
 8 .x4 8x3 7x15
 8
-8
-8
 8 .x4 8 . 8 . 8x21
 8 .x4 8x16
 -
 -
 8 .x4 6x15 .x2 6x11
+-
+-
+-
+-
 -
 -
 -

@@ -1,11 +1,11 @@
 # answer/pi/cards-lone 70x24 @0,0 (69x24)
+ - B. On disk. Slower, and it survives restarts.
+
  I'd pick A, since restarts are rare.
 
  Which do you want?
 
 │  ❯ Q1  Your decision: where the cache lives.
-│
-│    Which do you want?
 │
 │    A ○ In memory. Fast, and lost on restart.  Recommended
 │    B ○ On disk. Slower, and it survives restarts.
@@ -24,35 +24,35 @@
 <tmp>
 ••••/200k (auto)                                                repla
 --- styles
-.x10 1
+. 1x2 2x2
+-
+.x10 2
 -
 -
 -
-2 .x2 3 . 4x4 3x37
-2
-2
-2
-2 .x4 4 . 5 .x38 5x13
-2 .x4 4 . 5
-2 .x4 4 . 5 . 5x21
-2 .x4 5x16
-2
-2 .x4 5x49
+3 .x2 4 . 1x4 4x37
+3
+3 .x4 1 . 5 .x38 5x13
+3 .x4 1 . 5
+3 .x4 1 . 5 . 5x21
+3 .x4 5x16
+3
+3 .x4 5x49
 -
 -
-5 .x4 2x15 .x2 2x11
+5 .x4 3x15 .x2 3x11
 -
-. 2x6 . 5x7 .x2 5x16
+. 3x6 . 5x7 .x2 5x16
 6x69
 7
 6x69
 5x5
 5x69
 --- legend
-1 bold
-2 fg=#dee0e1
-3 fg=#dee0e1 bold
-4 fg=#a798d7
+1 fg=#a798d7
+2 bold
+3 fg=#dee0e1
+4 fg=#dee0e1 bold
 5 fg=#7e888e
 6 fg=#6c767b
 7 inverse

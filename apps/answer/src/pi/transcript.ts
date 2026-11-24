@@ -186,10 +186,10 @@ export class Transcript implements Component {
         ),
       );
       const rows: Row[] = [];
-      if (item.body) {
-        // The whole of what the question says, as the message above draws it: a card that repeats
-        // only the first three lines cuts a table or a code block in half, and the message above
-        // can be scrolled out of view while the card is what the person answers from.
+      // A round's body is not repeated: pi keeps the assistant message above the cards with its own
+      // Markdown, so a second copy is either a block cut in half or the whole text twice. A pick
+      // list's body is its row's own line (the size, the route), which the row wording does not say.
+      if (round.form.kind === "picks" && item.body) {
         const detail = markdownLines(theme, item.body, room);
         rows.push(...asRows(detail.map((text) => inset([span(text)]))));
         rows.push({ line: line([]) });

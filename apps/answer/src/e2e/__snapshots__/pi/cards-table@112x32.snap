@@ -1,21 +1,21 @@
 # answer/pi/cards-table 112x32 @0,0 (111x32)
+ ┌──────────┬─────────┬────────────────┐
+ │ Engine   │ Latency │ Notes          │
+ ├──────────┼─────────┼────────────────┤
+ │ SQLite   │ •••     │ embedded       │
+ ├──────────┼─────────┼────────────────┤
+ │ Postgres │ •••     │ needs a server │
+ └──────────┴─────────┴────────────────┘
+
+ ```ts
+   const db = open("app.db");
+   await db.exec("select 1");
+ ```
+
  - A. SQLite
  - B. Postgres
 
 │  ❯ Q1  Pick the storage layer?
-│
-│    ┌──────────┬─────────┬────────────────┐
-│    │ Engine   │ Latency │ Notes          │
-│    ├──────────┼─────────┼────────────────┤
-│    │ SQLite   │ •••     │ embedded       │
-│    ├──────────┼─────────┼────────────────┤
-│    │ Postgres │ •••     │ needs a server │
-│    └──────────┴─────────┴────────────────┘
-│
-│    ```ts
-│      const db = open("app.db");
-│      await db.exec("select 1");
-│    ```
 │
 │    A ○ SQLite
 │    B ○ Postgres
@@ -32,46 +32,46 @@
 <tmp>
 ••••/200k (auto)                                                                                          repla
 --- styles
-. 1x2 2x2
-. 1x2 2x2
 -
-3 .x2 4 . 1x4 4x23
-3
-3
-3 .x6 2x8 .x3 2x7 .x3 2x14
-3
-3
-3
-3
-3
-3
-3 .x4 5x5
-3 .x6 6x5 3x11 7x8 3x2
-3 .x6 6x5 3x9 7x10 3x2
-3 .x4 5x3
-3
-3 .x4 1 . 8
-3 .x4 1 . 8
-3 .x4 1 . 8 . 8x21
-3 .x4 8x16
+.x3 1x8 .x3 1x7 .x3 1x14
 -
 -
-8 .x4 3x15 .x2 3x11
 -
-. 3x6 . 8x7 .x2 8x16
+-
+-
+-
+. 2x5
+.x3 3x5 4x11 5x8 4x2
+.x3 3x5 4x9 5x10 4x2
+. 2x3
+-
+. 6x2 1x2
+. 6x2 1x2
+-
+4 .x2 7 . 6x4 7x23
+4
+4 .x4 6 . 8
+4 .x4 6 . 8
+4 .x4 6 . 8 . 8x21
+4 .x4 8x16
+-
+-
+8 .x4 4x15 .x2 4x11
+-
+. 4x6 . 8x7 .x2 8x16
 9x111
 a
 9x111
 8x5
 8x111
 --- legend
-1 fg=#a798d7
-2 bold
-3 fg=#dee0e1
-4 fg=#dee0e1 bold
-5 fg=#9da5a9
-6 fg=#69add0
-7 fg=#de8d5a
+1 bold
+2 fg=#9da5a9
+3 fg=#69add0
+4 fg=#dee0e1
+5 fg=#de8d5a
+6 fg=#a798d7
+7 fg=#dee0e1 bold
 8 fg=#7e888e
 9 fg=#6c767b
 a inverse

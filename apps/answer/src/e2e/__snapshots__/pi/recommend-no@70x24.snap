@@ -1,7 +1,5 @@
-# answer/pi/recommend-no 70x24 @0,7 (69x13)
+# answer/pi/recommend-no 70x24 @0,9 (69x11)
 │  ❯ Q1  Show a separate card for the closing question?
-│
-│    The current flow already handles the final reply.
 │
 │    A ● No. A plain reply is enough.
 │    B ○ Write your own answer
@@ -14,8 +12,6 @@
 ─────────────────────────────────────────────────────────────────────
 --- styles
 1 .x2 2 . 3x4 2x46
-1
-1
 1
 1 .x4 3 . 4 . 4x28
 1 .x4 3 . 5 . 5x21

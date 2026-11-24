@@ -27,19 +27,6 @@
 
 │  ❯ Q1  Pick the storage layer?
 │
-│    ┌──────────┬─────────┬────────────────┐
-│    │ Engine   │ Latency │ Notes          │
-│    ├──────────┼─────────┼────────────────┤
-│    │ SQLite   │ •••     │ embedded       │
-│    ├──────────┼─────────┼────────────────┤
-│    │ Postgres │ •••     │ needs a server │
-│    └──────────┴─────────┴────────────────┘
-│
-│    ```ts
-│      const db = open("app.db");
-│      await db.exec("select 1");
-│    ```
-│
 │    A ○ SQLite
 │    B ○ Postgres
 │    C ○ Write your own answer
@@ -47,6 +34,19 @@
 
 
 │    0 of 1 answered  Fill prompt
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -88,19 +88,6 @@
 -
 7 .x2 a . 9x4 ax23
 7
-7
-7 .x6 4x8 .x3 4x7 .x3 4x14
-7
-7
-7
-7
-7
-7
-7 .x4 5x5
-7 .x6 6x5 7x11 8x8 7x2
-7 .x6 6x5 7x9 8x10 7x2
-7 .x4 5x3
-7
 7 .x4 9 . b
 7 .x4 9 . b
 7 .x4 9 . b . bx21
@@ -108,6 +95,19 @@
 -
 -
 b .x4 7x15 .x2 7x11
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
 -
 -
 -
