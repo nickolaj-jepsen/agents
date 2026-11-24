@@ -287,6 +287,10 @@ async function startWorkbench(
   const args = [
     `--ozone-platform=${!visible || env.WAYLAND_DISPLAY ? "wayland" : "x11"}`,
     "--disable-gpu",
+    // Chromium can take a new tab's webview for a hidden frame and wake its timers once a second.
+    // The extension draws a mod's pictures only after a probe that counts 4 ms ticks, so that tab
+    // would show their alt text for good.
+    "--disable-background-timer-throttling",
     // A prerender target may never answer. Headless windows also have no desktop portal UI.
     `--disable-features=Prerender2,SpeculationRulesPrerender2${visible ? "" : ",DbusSecretPortal,GlobalShortcutsPortal"}`,
     "--password-store=basic",
@@ -753,8 +757,7 @@ export class VscodeSession {
     // Attaching re-applies the viewport, which redraws the panel; a shot taken at once catches
     // it blank.
     await this.settle(1000, 8000);
-    // A new tab can take seconds to draw a mod's pictures, and a reload's tab may not draw them
-    // at all (e2e README, VS Code, Traps).
+    // A new tab can take seconds to draw a mod's pictures.
     const until = Date.now() + 10_000;
     let left = 0;
     while ((left = await this.undrawn()) > 0 && Date.now() < until) await sleep(200);
