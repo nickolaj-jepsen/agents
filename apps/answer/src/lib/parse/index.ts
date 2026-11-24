@@ -10,7 +10,9 @@
  *   they are tried in.
  *
  * The three parts of a message, head, items and tail, cover every line: nothing an agent wrote
- * goes unshown. Parsing is lenient on purpose: a false positive costs a hint the person ignores.
+ * goes unshown. A message is read strictly on purpose: a card on a message that asks nothing, or
+ * whose rows are not the answer, costs more than a card never shown, so a shape has to say what it
+ * is. A question the reader skips stays answerable in the prompt.
  */
 import type { Form } from "../forms.ts";
 import { type Doc, isLabel, type LabelLine, readDoc, type Split, tidy } from "./doc.ts";

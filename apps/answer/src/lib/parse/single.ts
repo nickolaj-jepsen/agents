@@ -36,9 +36,18 @@ const BOLD = /^\*\*/;
 // A line that is itself the question a numbered list answers: "Want me to:" 1. 2. 3.
 const MENU_CUE =
   /(?:^|[.!?—–]\s+)((?:want me to|shall i|should i|do you want me to|would you like me to)\b[^?]*):\s*$/i;
-// A closing question that picks among the list above it, not one that asks to go ahead.
-const CHOOSING =
-  /\b(?:which|pick|choose|prefer|go with|start with|one of|both|either|option\s*[0-9]|[0-9]\s*(?:or|\/)\s*[0-9])\b/i;
+// A closing question that selects among the list above it: "Which do you want?", "Which should I
+// take?". The word opens the question, so a report's passing "which" or "I'd start with 1" above
+// the question never makes a list its options.
+const SELECTS = /^(?:\*\*)?(?:ok[,.]?\s+|so[,.]?\s+)?(?:which|what)\b/i;
+// A closing question that asks to go ahead on the list as work items: "Want me to go ahead?" over
+// the fixes to make, "Should I do both?". Anything narrower is about something the list is not.
+const GO_AHEAD =
+  /^(?:want|do you want|shall i|should i)\b[^?]*\b(?:go ahead|do (?:both|either|it|them|these|all)|make (?:these|those|both) changes?|implement (?:them|these))\b/i;
+// A question that names its own alternatives — "or both", "or wait until…", "Which do you want: X,
+// or Y?" — is answered without the list, so the list is no menu however it is worded. "Or none"
+// names no second alternative and leaves the list the answer.
+const ALTERNATIVES = /\s+or\s+(?!none\b)|:\s*\S/i;
 // What a question that asks for a pick says, as against one that asks to go ahead.
 const WHICH = /\b(?:which|pick|choose|prefer)\b/i;
 // The closer of a grilling is answered with a plain "yes"; it gets no card.
@@ -164,10 +173,15 @@ function listed(doc: Doc, run: LabelLine[], end: number): Choices {
   return choices;
 }
 
+/** Whether a closing question asks the person to answer with the list above it. */
+const selects = (ask: string) =>
+  !ALTERNATIVES.test(ask) && (SELECTS.test(ask) || GO_AHEAD.test(ask));
+
 /**
  * A numbered list of alternatives as one question. `cued` reads only a list under a line that is
  * itself the question, which makes the list its options before any item is read as a question of
  * its own; otherwise the paragraph after the list must close on a question that picks among them.
+ * A list of steps under a report stays prose: a false card costs more than a lost one.
  */
 export function menuOf(doc: Doc, run: LabelLine[], cued: boolean): Split | null {
   const [first] = run;
@@ -181,12 +195,13 @@ export function menuOf(doc: Doc, run: LabelLine[], cued: boolean): Split | null 
   const closing = closingOf(after);
   // The question picks from the list nearest above it: lettered options after the numbers are
   // what it asks about. Prose after the question only counts when the question itself asks which,
-  // so a closing "…shared understanding? If yes, I'll start with step 1" is no menu.
+  // so a closing "…shared understanding? If yes, I'll start with step 1" is no menu. Only the
+  // question sentence decides; what the paragraph says before it is prose, not an ask.
   const picking =
     closing &&
     after.filter(isOption).length < 2 &&
     (!closing.after || WHICH.test(closing.ask)) &&
-    CHOOSING.test(`${closing.before} ${closing.ask}`)
+    selects(closing.ask)
       ? closing
       : null;
   if (cued ? !cue : !picking) return null;
