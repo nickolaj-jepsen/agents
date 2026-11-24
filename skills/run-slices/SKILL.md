@@ -89,9 +89,9 @@ Set the harness's turn cap where it has one: in Claude Code, about 250 for a bui
 - **Expert** (pi only: the `expert` profile, `openai-codex/gpt-6.1-sol`): a last resort for a demonstrated hard blocker or a high-risk uncertainty that needs independent reasoning. A run gets at most two expert subagents in total, not per slice. State the blocker and why a cheap answer can't settle it, and reuse an expert already running with `agent_send` instead of spawning another.
   - Track the two in the conversation: no ledger file, and no PROGRESS budget field. If you can't tell whether an expert was already used, ask the user; never assume the budget reset.
 - The owner's word on models overrides this. Record it in `PROGRESS.md` so a resumed lead keeps to it.
-- pi profiles carry their own model, and an explicit `model` on a spawn overrides it. Name the profile on every pi spawn, because an agent otherwise runs on the lead's own model. An unavailable model fails the spawn instead of inheriting, and a profile whose model doesn't resolve isn't offered. Record what actually ran when the worker reports.
+- In Claude Code, request the model on every spawn, since a subagent otherwise inherits yours, and record what actually ran when the worker reports. In pi, profiles carry their own model, and an explicit `model` on a spawn overrides it; name the profile on every spawn, because an agent otherwise runs on the lead's own model. An unavailable model fails the spawn instead of inheriting, and a profile whose model doesn't resolve isn't offered.
 - Treat a provider rate limit as a failed dispatch, not a review verdict. Reduce concurrency or use an available independent route rather than repeating the same throttled batch.
-- Delegate only bounded work: one slice, one repair, one check run, one research area. A task you can finish in a few tool calls stays yours.
+- In pi, delegate only bounded work: one slice, one repair, one check run, one research area. A task you can finish in a few tool calls stays yours.
 
 ## Reviews
 
@@ -116,7 +116,8 @@ Before stopping, finish what doesn't depend on the answer. Write the question un
 
 ## Traps
 
-- Give every worker a `name` in pi (`s1`, `s2`): `agent_send`, `agent_wait` and `agent_stop` address it by name. Claude Code ignores the name.
+- Spawn workers without a `name`. With agent teams on, a named one runs as a teammate and wakes you with an idle notice every time it pauses.
+- In pi, give every worker a `name` (`s1`, `s2`): `agent_send`, `agent_wait` and `agent_stop` address it by name.
 - Every pi spawn stays one level deep: don't set `spawn: true` and don't give a worker the agent tools. A worker that needs splitting reports back instead. Every job stands alone, because an agent can't see your conversation.
 - A worker killed by a usage limit leaves its commits. After the reset, continue with a fresh worker from the branch.
 - Stopping a subagent doesn't stop what it launched. Select its processes by `/proc/<pid>/cwd` under the worktree; `pgrep -f <text>` also matches your own shell. In pi, `agent_stop` stops the agent, not its shell processes.

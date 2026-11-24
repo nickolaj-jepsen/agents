@@ -45,7 +45,7 @@ Transcripts are rarely the only evidence, and often not the fastest:
 
 With a handful of runs, read them yourself with `--show`. With more, take the most recent, keep a few from each version, and say how many you left unread. Hand batches of about eight to fresh subagents on a cheaper model (`model: "sonnet"` in Claude Code; in pi the `researcher` or `reviewer` profile, which carries `auto/deepseek-v4.1-flash`), and say how many you're starting.
 
-Give each one the question, its run ids, the reader command to run itself and the privacy rules below. Ask for notes in its reply and no files. A fresh pi agent can't see this conversation, so the brief stands alone, and no agent may spawn another (`spawn: true` stays off). Per run, what's worth asking for: the first point where it went worse than it should have, with its turn number, or "clean"; what the user did once the target's part was done; and what went wrong that wasn't the target's fault.
+Give each one the question, its run ids, the reader command to run itself and the privacy rules below. Ask for notes in its reply and no files. A fresh pi agent can't see this conversation, so the brief stands alone, and no pi agent may spawn another (`spawn: true` stays off). Per run, what's worth asking for: the first point where it went worse than it should have, with its turn number, or "clean"; what the user did once the target's part was done; and what went wrong that wasn't the target's fault.
 
 A correction is the user redirecting, repeating themselves, rejecting an approach or interrupting. "Yes", "no" and a letter in an interview are answers.
 

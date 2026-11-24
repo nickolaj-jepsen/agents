@@ -17,12 +17,12 @@ metadata:
 
 ## Models
 
-- Research uses explicit cheap profiles: Claude Code `sonnet`; pi `researcher` and `reviewer`, both `auto/deepseek-v4.1-flash`. In pi, a build, test or probe that takes minutes goes to a `verifier`, which reports the command, its exit and the failing lines, and every spawn names its profile: an agent otherwise runs on the lead's own model.
+- Research uses explicit cheap models: Claude Code `sonnet`, named on every spawn because a subagent otherwise inherits the lead's; pi `researcher` and `reviewer`, both `auto/deepseek-v4.1-flash`. In pi, a build, test or probe that takes minutes goes to a `verifier`, which reports the command, its exit and the failing lines, and every spawn names its profile.
 - The cold read uses Claude Code `opus`; pi `reviewer` (read-only, thinking high), which is enough for the read below. Don't force a strong read: pi's `expert` (`openai-codex/gpt-6.1-sol`) is a last resort for a hard blocker or a high-risk uncertainty that needs independent reasoning. A handoff gets at most two expert reads across the plan and its build.
   - Use one here only when a cheap read leaves the risk unresolved, and say why in the report. Track the two in the conversation: no ledger file, and no PROGRESS or HANDOFF budget field. A run that can't tell from the conversation what was already spent asks the user; never assume the budget is fresh.
 - `--review-model MODEL`, or the user's explicit choice, overrides the cold read's model; an explicit `model` on the pi spawn does the same.
 - An unavailable model fails the spawn in pi instead of silently using the lead's model, and a profile whose model doesn't resolve isn't offered. If the model that ran differs from the one intended, use the cheap fallback once and report the downgrade. Ordinary tool errors or findings are not reasons to downgrade.
-- Delegate only bounded work: research one area, read the plan cold. A fact you can check in a few tool calls stays yours.
+- In pi, delegate only bounded work: research one area, read the plan cold. A fact you can check in a few tool calls stays yours.
 - One full cold read, then focused verification of its fixes. Repeat the full read only if repairs substantially change the design or scope.
 
 ## Spine
@@ -46,7 +46,7 @@ metadata:
    - In pi, one `agent_spawn` call with an entry per area starts them together; their results arrive as one group message. `agent_wait` only when the round must combine results.
    - In pi, a command whose measurement is part of the evidence goes to a `verifier`, with the command, its working directory and the known-red baseline it should expect.
    - Each gets an objective, an output format and explicit boundaries ("X is another subagent's"). Launch in the background and join once; progress pings are not findings. A pi agent has a fresh context and can't see this conversation, so each brief stands alone.
-   - No nested delegation: don't set `spawn: true`, so a researcher starts no researchers of its own.
+   - In pi, no nested delegation: don't set `spawn: true`, so a researcher starts no researchers of its own.
    - They verify what the plan leans on:
      - the files, modules and APIs each item will touch;
      - real interfaces and versions, from installed source or type definitions rather than READMEs;

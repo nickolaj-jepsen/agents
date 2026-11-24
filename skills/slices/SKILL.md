@@ -30,7 +30,7 @@ The plan is an ordered list of slices. A **slice** is one reviewable change that
   - Run it while planning and record what it does now: it fails for the reason the slice fixes, or it doesn't exist and the slice writes it first.
   - A check that already passes proves nothing, and "tests pass" alone is not a check.
   - If the product has a real end-to-end run (an e2e suite, a device, a testbed), the thread's check includes the cheapest one. Saving it for the end finds the regressions last.
-- **Mark each slice `hard` or `routine`.** Hard means it needs diagnosis or judgement: the thread, any cutover, concurrency, an unknown mechanism, or anything whose failure blocks every later slice. Routine means the recipe is known and the check decides. The builder gives a hard slice more care and its most capable available worker, and builds it itself when no worker can.
+- **Mark each slice `hard` or `routine`.** Hard means it needs diagnosis or judgement: the thread, any cutover, concurrency, an unknown mechanism, or anything whose failure blocks every later slice. Routine means the recipe is known and the check decides. The builder gives hard slices to its strongest model. In pi, that is the lead or a `worker`, with the `expert` reserved as Models says.
 - **Size.** If a slice's outcome needs "and", or you can't name the modules it changes, it is more than one slice.
 - **Plan in detail only as far as you can see.** Slices past the point where the work depends on what earlier ones discover go in `Later`, one line each. The builder slices them when it gets there, with what it has learned. A plan with more than about eight detailed slices is usually guessing.
 - **Interfaces are recorded, not frozen.** State an interface only where code already proves it, and mark the rest `proposed`. An interface written before anything ran on it gets amended by nearly every slice that touches it.
@@ -71,10 +71,10 @@ The plan is an ordered list of slices. A **slice** is one reviewable change that
 
 ## Models
 
-- Research and the cold read run on cheap profiles: Claude Code `sonnet`; pi `researcher` and `reviewer`, both `auto/deepseek-v4.1-flash` (the reviewer reads a plan cold, at thinking high). A build, test or probe that takes minutes goes to a `verifier`, which reports the command, its exit and the failing lines.
+- Research and the cold read run on the harness's cheap model: Claude Code `sonnet`, named on every spawn because a subagent otherwise inherits yours; pi `researcher` and `reviewer`, both `auto/deepseek-v4.1-flash` (the reviewer reads a plan cold, at thinking high). In pi, a build, test or probe that takes minutes goes to a `verifier`, which reports the command, its exit and the failing lines.
 - In pi, name the profile on every spawn, because an agent otherwise runs on the lead's own model. An explicit `model` overrides the profile, an unavailable model fails the spawn rather than inheriting, and a profile whose model doesn't resolve isn't offered. Report the model each subagent actually ran on.
 - The pi `expert` (`openai-codex/gpt-6.1-sol`) is not part of planning: keep it for the build's hard blockers, and don't spend one on a plan that a cheap read can check.
-- Delegate only bounded work: research one area, read the plan cold. A fact you can check in a few tool calls stays yours.
+- In pi, delegate only bounded work: research one area, read the plan cold. A fact you can check in a few tool calls stays yours.
 
 ## SLICES.md
 
