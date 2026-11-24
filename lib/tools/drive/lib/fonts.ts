@@ -18,7 +18,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 
 export const FONT_FAMILIES =
-  "Hack Nerd Font Mono,DejaVu Sans Mono,DejaVu Sans,Noto Sans CJK JP,Unifont";
+  "Hack Nerd Font Mono,DejaVu Sans Mono,DejaVu Sans,Noto Sans CJK JP,Unifont,Unifont Upper";
 
 const WANTED = [
   "Hack Nerd Font Mono",
@@ -26,6 +26,8 @@ const WANTED = [
   "DejaVu Sans",
   "Noto Sans CJK JP",
   "Unifont",
+  // Beyond the basic plane, for the emoji DejaVu lacks, such as U+1F642.
+  "Unifont Upper",
 ];
 
 // The test worker's HOME is for rasterization only; spawned agents still need their real home.
@@ -40,8 +42,9 @@ let fontHome: string | undefined;
 export function fakeFontHome(): string | undefined {
   if (fontHome) return fontHome;
   const root = cacheRoot();
-  // The old cache could be partially populated by a writer; only use atomically published homes.
-  const home = join(root, "fonthome-v2");
+  // The name changes with the list above, so a home laid for an older list is not taken for this
+  // one. A home is published whole: one a writer left half-filled is never used.
+  const home = join(root, "fonthome-v3");
   if (existsSync(home)) return (fontHome = home);
   mkdirSync(root, { recursive: true });
   const stage = mkdtempSync(join(root, "fonts-"));

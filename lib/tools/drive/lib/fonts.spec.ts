@@ -50,7 +50,7 @@ printf '%s\\n' "$XDG_CACHE_HOME/one.ttf" "$XDG_CACHE_HOME/two.otf"
         ),
       ),
     );
-    const home = join(root, "agent-tools-e2e", "fonthome-v2");
+    const home = join(root, "agent-tools-e2e", "fonthome-v3");
     for (const result of results) {
       if (result.status === "rejected") throw result.reason;
       expect(result.value.stdout.trim()).toBe(home);
@@ -59,7 +59,7 @@ printf '%s\\n' "$XDG_CACHE_HOME/one.ttf" "$XDG_CACHE_HOME/two.otf"
       "one.ttf",
       "two.otf",
     ]);
-    expect(readdirSync(join(root, "agent-tools-e2e"))).toEqual(["fonthome-v2"]);
+    expect(readdirSync(join(root, "agent-tools-e2e"))).toEqual(["fonthome-v3"]);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
