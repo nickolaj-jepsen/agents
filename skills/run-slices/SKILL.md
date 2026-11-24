@@ -40,7 +40,7 @@ Pass the expected starting commit and zero or more absolute skill paths from the
 Take the slices in order. For each one:
 
 1. **Brief a fresh worker** with the brief below, on the model its `hard` or `routine` mark calls for (see Models). Build it yourself only when the change is smaller than its brief would be.
-2. **Wait.** Record the dispatch, exact diff scope and next check in `PROGRESS.md` before ending your turn. The harness wakes you when the background worker finishes. Don't poll, sleep, arm watchers or post status: `PROGRESS.md` is the status.
+2. **Wait.** Record the dispatch, exact diff scope and next check in `PROGRESS.md` before ending your turn. In pi the report arrives as a message that starts a turn; `agent_wait` with a short `timeout` only when a turn must combine results, and a result it returns doesn't arrive as a message as well. Don't poll, sleep, arm watchers or post status: `PROGRESS.md` is the status.
 3. **Check it yourself** on the branch tip: the slice's check, then the repo's standard checks. Never take the worker's "it passes" as the result.
    - Run them in the background with output to a file, and grep the file for failures instead of reading it.
    - One full suite at a time on the machine. Overlapping suites fail on timeouts that look like bugs.
@@ -48,8 +48,8 @@ Take the slices in order. For each one:
    - A failure that only shows under load is a defect until a cause is found.
 4. **Green:** record the slice in `PROGRESS.md`, add any interface it settled to the plan's Interfaces, and take the next slice.
 5. **Red, or the worker stopped short:** Record the last commit, dirty paths, failed command/log or missing verdict, and next repair before dispatching again.
-   - Give one repair to a fresh worker, with the failing output and what is already on the branch. Continue the same worker only if its run was short, since a long worker re-reads its whole history on every turn.
-   - If it is still red, escalate. Never send the same brief to the same model twice. In this order: ask the strong model one narrow question, with the failing output and the diff (which condition fails, and why); give the slice to the strong model; or split the slice at what is green, land that, and add the rest to the plan as a new slice.
+   - Give one repair to a fresh worker, with the failing output and what is already on the branch. Continue the same worker only if its run was short, since a long worker re-reads its whole history on every turn (pi: `agent_send` to the same name).
+   - If it is still red, escalate. Never send the same brief to the same model twice. In this order: ask the expert one narrow question, with the failing output and the diff (which condition fails, and why); give the slice to the lead or an expert; or split the slice at what is green, land that, and add the rest to the plan as a new slice. An expert asked here counts against the run's two (Models).
    - Log the route you took. A blocked slice is not a stopped run.
 6. **Answer every concern** a worker reports before the next slice: fix it now, add it to the plan as a named slice, or reject it with a reason in Decisions. Concerns carried as prose all land on the last slice.
 
@@ -62,7 +62,7 @@ When the detailed slices run out, turn the next `Later` lines into slices: an ou
 
 A **batch** is the only place workers run in parallel:
 
-- Give each member its own worktree off the branch tip, prepared as Context says, never copied from another checkout. Run at most three at once, fewer if Context says suites contend.
+- Give each member its own worktree off the branch tip, prepared as Context says, never copied from another checkout. Run at most three at once, fewer if Context says suites contend. In pi, one `agent_spawn` call with one entry per member, each with its own `name` and `cwd`, is the batch; the group reports once, with each member's final message.
 - Members run focused tests only. When all have returned, stack their commits on the branch and run the checks once on the combined tree.
 - Repair a member that conflicts or fails on the combined tree, alone.
 
@@ -80,23 +80,25 @@ Paste what the worker needs. Don't send it to read the plan: a worker carries ev
 - **Limits:** it never edits `SLICES.md` or `PROGRESS.md`, and sends no progress messages. A plan decision that blocks it is reported, not worked around.
 - **Report:** its final message, at most 15 lines. First line exactly `DONE`, `PARTIAL` or `BLOCKED`. Then the commits, the check command and the last lines of its output, what remains, concerns, and anything that contradicts the plan. Logs stay in files and the report gives their paths.
 
-Set the harness's turn cap where it has one (pi: `max_turns`): about 250 for a builder and 60 for a reviewer or a narrow question. A capped worker that returns nothing is a `PARTIAL`; read git to see what it left.
+Set the harness's turn cap where it has one (Claude Code; in pi a profile's `maxTurns` decides and a spawn can't set it): about 250 for a builder and 60 for a reviewer or a narrow question. A capped worker that returns nothing is a `PARTIAL`; read git to see what it left.
 
 ## Models
 
-- **Cheap** (Claude Code `sonnet`; pi the `general-purpose` and `reviewer` roles): routine slices, repairs to them, research, and the security review.
-- **Strong** (your own model; in pi a role that accepts a model override): hard slices, escalations, and the two reviews. If the harness can't give a worker the strong model, build that slice yourself.
+- **Cheap** (Claude Code `sonnet`; pi `worker`, `reviewer`, `verifier` and `researcher`, all `auto/deepseek-v4.1-flash`): routine slices, repairs to them, research, running checks and the security review. Name the profile on every spawn, because an agent otherwise runs on your Sol model.
+- **Hard** (pi `worker`, or the lead): hard slices and escalations. Build it yourself when no worker has the capacity for it.
+- **Expert** (pi `expert`, `openai-codex/gpt-6.1-sol`): a last resort for a demonstrated hard blocker or a high-risk uncertainty that needs independent reasoning. A run gets at most two expert subagents in total, not per slice. State the blocker and why a cheap answer can't settle it, reuse an expert already running with `agent_send`, and record each use in `PROGRESS.md`'s Decisions; no separate ledger file.
 - The owner's word on models overrides this. Record it in `PROGRESS.md` so a resumed lead keeps to it.
-- Before dispatch, check whether the role locks its model and whether the intended model is available in the harness. For a locked role, choose a role with the required model or do the work yourself. Request the model explicitly where the role accepts overrides, then record what actually ran when the worker reports.
+- pi profiles carry their own model, and an explicit `model` on a spawn overrides it. An unavailable model fails the spawn instead of inheriting the lead's model, and a profile whose model doesn't resolve isn't offered. Record what actually ran when the worker reports.
 - Treat a provider rate limit as a failed dispatch, not a review verdict. Reduce concurrency or use an available independent route rather than repeating the same throttled batch.
+- Delegate only bounded work: one slice, one repair, one check run, one research area. A task you can finish in a few tool calls stays yours.
 
 ## Reviews
 
 - Two by default: slice 1, and the whole branch against its base at the end. Add a security review after any slice that touches a trust boundary in the plan's Risks.
-- A reviewer is a fresh, read-only subagent. Give it the exact diff range, the paths and acceptance criteria it owns, and the behaviour to verify, not the workers' reports. Record each verdict and actionable finding when it arrives. A capped or missing report is not approval.
+- A reviewer is a fresh, read-only subagent (pi: `reviewer`). Give it the exact diff range, the paths and acceptance criteria it owns, and the behaviour to verify, not the workers' reports. Record each verdict and actionable finding when it arrives. A capped or missing report is not approval.
 - Ask it for defects, checks that pass without proving the outcome, scope drift, uncovered Risks, and owner decisions with no reachable path yet. The security reviewer gets only the boundaries and the diff, and is asked for a path by which untrusted input crosses one.
 - One round each. Fix the confirmed findings in one pass, then verify those fixes with a focused check. Run a second full review only if the fixes changed the design.
-- Above about 3,000 changed lines, cheap readers can cover areas separately for the final review. One strong reviewer still reads the whole diff and owns what crosses areas.
+- Above about 3,000 changed lines, cheap readers can cover areas separately for the final review. One reviewer still reads the whole diff and owns what crosses areas.
 
 ## Stops
 
@@ -113,9 +115,10 @@ Before stopping, finish what doesn't depend on the answer. Write the question un
 
 ## Traps
 
-- Spawn workers without a `name`. With agent teams on, a named one runs as a teammate and wakes you with an idle notice every time it pauses.
+- Give every worker a `name` in pi (`s1`, `s2`): `agent_send`, `agent_wait` and `agent_stop` address it by name. Claude Code ignores the name.
+- Every pi spawn stays one level deep: don't set `spawn: true` and don't give a worker the agent tools. A worker that needs splitting reports back instead. Every job stands alone, because an agent can't see your conversation.
 - A worker killed by a usage limit leaves its commits. After the reset, continue with a fresh worker from the branch.
-- Stopping a subagent doesn't stop what it launched. Select its processes by `/proc/<pid>/cwd` under the worktree; `pgrep -f <text>` also matches your own shell.
+- Stopping a subagent doesn't stop what it launched. Select its processes by `/proc/<pid>/cwd` under the worktree; `pgrep -f <text>` also matches your own shell. In pi, `agent_stop` stops the agent, not its shell processes.
 - Never pipe a rebase into another command: `git rebase … | tail` hides a conflict stop. Check `git status` afterwards.
 - A history rewrite that leaves `git rev-parse HEAD^{tree}` unchanged keeps its check results. Anything that changes the tree needs them run again.
 
@@ -128,7 +131,7 @@ Rewrite it; don't append. Keep it under about 150 lines. Detail lives in commits
 
 ## Now
 
-<Worktree, branch, base and candidate commits; uncommitted paths to preserve; in-flight work and its scope; the next action. A worker ID is optional.>
+<Worktree, branch, base and candidate commits; uncommitted paths to preserve; in-flight work, its worker name and scope; the next action.>
 
 ## Slices
 
@@ -155,7 +158,7 @@ Update it before handing off a turn and when a result changes the next action: d
 
 1. If the base moved, rebase onto it once. Then run the plan's "Done when" checks on the final tree.
 2. Run the final review, and the security review if the plan has trust boundaries. Fix and verify as in Reviews.
-3. Stop every subagent still running. Fold fixups into the commits they repair, so the branch reads as logical changes. Write the retro.
+3. Stop every agent and subagent still running (pi: `agent_stop`). Fold fixups into the commits they repair, so the branch reads as logical changes. Write the retro.
 4. Report in chat: what is done, with check results; failures and skips, stated plainly; what the run cost; the retro; the branch and worktree.
 5. Ask, in one round, every unanswered question under "For the owner", with what was done meanwhile as the recommended answer. Use the harness's question tool when they fit. Build what the answers call for.
 6. Landing is the owner's call. Once the branch has landed, offer to move the plan directory to `plans/history/<slug>/`, and move it only on a yes.

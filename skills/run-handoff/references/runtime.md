@@ -4,7 +4,7 @@ Use the bundled `scripts/watch.py` with Python 3. It watches git-visible changes
 
 ## Arm each attempt
 
-Resolve `watch` to the absolute path of this skill's `scripts/watch.py`, not a file copied into the project. Put runtime state outside the worktree, under the plan's `runtime/<item>/<attempt>/`; the helper refuses state inside the worktree because its own writes would count as progress. Record that path, dispatch Unix timestamp, worker ID, worktree, budgets and recovery count in `PROGRESS.md`.
+Resolve `watch` to the absolute path of this skill's `scripts/watch.py`, not a file copied into the project. Put runtime state outside the worktree, under the plan's `runtime/<item>/<attempt>/`; the helper refuses state inside the worktree because its own writes would count as progress. Record that path, dispatch Unix timestamp, worker name, worktree, budgets and recovery count in `PROGRESS.md`.
 
 Before dispatch, prepare the attempt so the worker cannot run before an attempt clock exists:
 
@@ -42,12 +42,12 @@ The activity lease prevents a live command within its finite timeout from being 
 
 The watcher emits one JSON result and exits. The harness's background-job notice wakes the lead.
 
-- `report`, exit 0: retrieve the worker's final result with a bounded wait, then read the report. File presence alone is not proof of completion or acceptance. A report older than the attempt is ignored, but still retire it before a new attempt.
+- `report`, exit 0: read the report. In Claude Code, retrieve the worker's final result with a bounded wait first; in pi the result is the agent's message and starts a turn, and a result fetched with `agent_wait` doesn't arrive as a message as well. File presence alone is not proof of completion or acceptance. A report older than the attempt is ignored, but still retire it before a new attempt.
 - `idle` or `deadline`, exit 124: inspect the worker, commits, changed files and command processes once. Stop an over-deadline attempt and its launched processes before recovery. A worker message is not an immediate stop.
 - `missing_worktree`, `invalid_report` or `watch_error`, exit 2: supervision failed; inspect and repair it rather than assuming the worker passed.
 
 For the first stalled attempt, recover once by continuing the existing worker or replacing a dead one, preserving its work. Only do so after ruling out duplicate processes. Use a fresh attempt directory and record recovery count 1. If it stalls again, mark that item blocked, notify the user and continue independent work. Do not reset the recovery count on a context reset or send-back.
 
-Stop or drain the old watcher before another attempt. A report may arrive before the worker exits; never treat the watcher's exit as the worker's report. Keep harness joins bounded by the remaining attempt deadline, with an individual wait no longer than sixty seconds. If a short wait expires, end the turn and rely on completion notices and the watchdog, not a polling loop.
+Stop or drain the old watcher before another attempt. A report may arrive before the worker exits; never treat the watcher's exit as the worker's report. Keep harness joins bounded by the remaining attempt deadline, with an individual wait no longer than sixty seconds (pi: `agent_wait` with a `timeout`). If a short wait expires, end the turn and rely on the result messages and the watchdog, not a polling loop.
 
 After worker completion or blocking, stop any remaining watcher before removing the worktree. A shutdown, worktree move or crash can cancel harness-owned background jobs; reconcile and re-arm them on resume. Runtime state is for recovery, not an always-on daemon.
