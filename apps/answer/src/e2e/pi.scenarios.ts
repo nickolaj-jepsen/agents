@@ -262,6 +262,14 @@ export default scenarios({
       steps: CARD_ASK,
       extreme: true,
     },
+    "cards-table": {
+      about:
+        "a question whose body is a table and a code block draws whole under it, never cut mid-block",
+      start: cards("table-code"),
+      region: FULL_CARD,
+      steps: CARD_ASK,
+      extreme: true,
+    },
     "cards-markdown": {
       about: "an option's code, bold and link are set as the body's are",
       start: cards("inline-markdown"),

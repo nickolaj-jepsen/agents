@@ -1,0 +1,136 @@
+# answer/pi/cards-table 240x60 @0,0 (239x60)
+
+ Warning: fd not found. Offline mode enabled, skipping download.
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
+
+
+ ask
+
+
+ Q1. Pick the storage layer?
+
+ ┌──────────┬─────────┬────────────────┐
+ │ Engine   │ Latency │ Notes          │
+ ├──────────┼─────────┼────────────────┤
+ │ SQLite   │ •••     │ embedded       │
+ ├──────────┼─────────┼────────────────┤
+ │ Postgres │ •••     │ needs a server │
+ └──────────┴─────────┴────────────────┘
+
+ ```ts
+   const db = open("app.db");
+   await db.exec("select 1");
+ ```
+
+ - A. SQLite
+ - B. Postgres
+
+│  ❯ Q1  Pick the storage layer?
+│
+│    ┌──────────┬─────────┬────────────────┐
+│    │ Engine   │ Latency │ Notes          │
+│    ├──────────┼─────────┼────────────────┤
+│    │ SQLite   │ •••     │ embedded       │
+│    ├──────────┼─────────┼────────────────┤
+│    │ Postgres │ •••     │ needs a server │
+│    └──────────┴─────────┴────────────────┘
+│
+│    ```ts
+│      const db = open("app.db");
+│      await db.exec("select 1");
+│    ```
+│
+│    A ○ SQLite
+│    B ○ Postgres
+│    C ○ Write your own answer
+│    Note: Add a note
+
+
+│    0 of 1 answered  Fill prompt
+
+
+
+
+
+
+ Answer [alt+a]  Q1  0/1 answered
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+<tmp>
+••••/200k (auto)                                                                                                                                                                                                                          repla
+--- styles
+-
+. 1x63
+. 1x68
+-
+2x239
+2 3x3 2x235
+2x239
+-
+. 4x27
+-
+-
+.x3 4x8 .x3 4x7 .x3 4x14
+-
+-
+-
+-
+-
+-
+. 5x5
+.x3 6x5 7x11 8x8 7x2
+.x3 6x5 7x9 8x10 7x2
+. 5x3
+-
+. 9x2 4x2
+. 9x2 4x2
+-
+7 .x2 a . 9x4 ax23
+7
+7
+7 .x6 4x8 .x3 4x7 .x3 4x14
+7
+7
+7
+7
+7
+7
+7 .x4 5x5
+7 .x6 6x5 7x11 8x8 7x2
+7 .x6 6x5 7x9 8x10 7x2
+7 .x4 5x3
+7
+7 .x4 9 . b
+7 .x4 9 . b
+7 .x4 9 . b . bx21
+7 .x4 bx16
+-
+-
+b .x4 7x15 .x2 7x11
+-
+-
+-
+-
+-
+-
+. 7x6 . bx7 .x2 bx16
+cx239
+d
+cx239
+bx5
+bx239
+--- legend
+1 fg=#cd9a22
+2 bg=#213b49
+3 fg=#dee0e1 bg=#213b49
+4 bold
+5 fg=#9da5a9
+6 fg=#69add0
+7 fg=#dee0e1
+8 fg=#de8d5a
+9 fg=#a798d7
+a fg=#dee0e1 bold
+b fg=#7e888e
+c fg=#6c767b
+d inverse

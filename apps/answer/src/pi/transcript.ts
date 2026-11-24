@@ -187,13 +187,11 @@ export class Transcript implements Component {
       );
       const rows: Row[] = [];
       if (item.body) {
-        // The original assistant message stays above the cards, with all its Markdown intact.
+        // The whole of what the question says, as the message above draws it: a card that repeats
+        // only the first three lines cuts a table or a code block in half, and the message above
+        // can be scrolled out of view while the card is what the person answers from.
         const detail = markdownLines(theme, item.body, room);
-        rows.push(...asRows(detail.slice(0, 3).map((text) => inset([span(text)]))));
-        if (detail.length > 3)
-          rows.push({
-            line: inset([span("… full context in the message above", { role: "dim" })]),
-          });
+        rows.push(...asRows(detail.map((text) => inset([span(text)]))));
         rows.push({ line: line([]) });
       }
       const letters = choiceLetters(item);
