@@ -84,7 +84,8 @@
     },
     // Screen tests, `drive test <package>`: the package's scenarios and snapshots, its build and the
     // kit packages and harness it imports. The flags of `drive test` are the command's, never the
-    // environment's.
+    // environment's, but for `DRIVE_JOBS`: it sizes the session pools and is no part of the key,
+    // since the sessions at once change how long a run takes and not what it reads.
     "e2e": {
       "dependsOn": ["^topo", "build"],
       "inputs": [
@@ -97,11 +98,13 @@
         "!tsconfig.claude.json",
         "!**/*.spec.ts",
         "!turbo.json"
-      ]
+      ],
+      "passThroughEnv": ["DRIVE_JOBS"]
     },
     "e2e:update": {
       "dependsOn": ["build"],
-      "cache": false
+      "cache": false,
+      "passThroughEnv": ["DRIVE_JOBS"]
     },
     // Builds the recording environment (VS Code, fonts, tools), so nix has it before a recorder
     // asks. No outputs: its hash is the point. Every recording depends on it, so a recording from
