@@ -30,6 +30,10 @@ jobs:
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
       # CI writes the cache; a local run only reads it (`.envrc`).
       TURBO_CACHE: local:rw,remote:rw
+      # The screen tests wait on their sessions and hardly compute: every package's, cold, is about
+      # seven minutes of one core. The runner's four cores would get one Claude and two pi sessions
+      # per task, so this names the most the driver gives a larger machine.
+      DRIVE_JOBS: claude=2,pi=4
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
