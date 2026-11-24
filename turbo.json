@@ -315,11 +315,14 @@
       "command": ["uv", "run", "--frozen", "ruff", "format"],
       "cache": false
     },
+    // The package fetches the shellcheck binary on its first run. Left to find the latest release it
+    // asks GitHub's API, which refuses a runner's shared address once its rate is spent; a named
+    // release is fetched without asking.
     "//#lint:sh": {
       "command": [
         "sh",
         "-c",
-        "git ls-files -z \"*.sh\" \".githooks/*\" | xargs -0 ./lib/tools/lint/node_modules/.bin/shellcheck -S warning"
+        "git ls-files -z \"*.sh\" \".githooks/*\" | SHELLCHECKJS_RELEASE=v0.11.0 xargs -0 ./lib/tools/lint/node_modules/.bin/shellcheck -S warning"
       ],
       "inputs": ["**/*.sh", ".githooks/*", "lib/tools/lint/package.json"]
     },
