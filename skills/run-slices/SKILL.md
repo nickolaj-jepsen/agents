@@ -80,7 +80,7 @@ Paste what the worker needs. Don't send it to read the plan: a worker carries ev
 - **Limits:** it never edits `SLICES.md` or `PROGRESS.md`, and sends no progress messages. A plan decision that blocks it is reported, not worked around.
 - **Report:** its final message, at most 15 lines. First line exactly `DONE`, `PARTIAL` or `BLOCKED`. Then the commits, the check command and the last lines of its output, what remains, concerns, and anything that contradicts the plan. Logs stay in files and the report gives their paths.
 
-Set the harness's turn cap where it has one (Claude Code; in pi a profile's `maxTurns` decides and a spawn can't set it): about 250 for a builder and 60 for a reviewer or a narrow question. A capped worker that returns nothing is a `PARTIAL`; read git to see what it left.
+Set the harness's turn cap where it has one: in Claude Code, about 250 for a builder and 60 for a reviewer or a narrow question. In pi the profile's `maxTurns` decides, and a spawn can't set it. A capped worker that returns nothing is a `PARTIAL`; read git to see what it left.
 
 ## Models
 
