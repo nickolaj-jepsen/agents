@@ -23,11 +23,11 @@ metadata:
 ## Models
 
 - Item workers and ordinary gate/area reviewers use explicit cheap profiles: Claude Code `sonnet`; pi `worker` for builds and `reviewer` for reads and reviews, both `auto/deepseek-v4.1-flash`, so the lead's Sol model never becomes a worker's by accident.
-- The final whole-branch gate is a `reviewer` too. Don't force a strong review on every handoff: pi's `expert` (`openai-codex/gpt-6.1-sol`) is a last resort for a demonstrated hard blocker or a high-risk uncertainty that needs independent reasoning. The whole handoff gets at most two expert subagents, across items, gates and sessions, not per item.
+- The final whole-branch reviewer uses Claude Code `opus`. In pi it is a `reviewer` too: don't force a strong review on every handoff, and pi's `expert` (`openai-codex/gpt-6.1-sol`) is a last resort for a demonstrated hard blocker or a high-risk uncertainty that needs independent reasoning. The whole handoff gets at most two expert subagents, across items, gates and sessions, not per item.
   - Before spawning one, state the blocker and why a cheap read can't settle it, and reuse an expert already running with `agent_send` instead of spawning another.
-  - Record each use and its reason in `PROGRESS.md`'s decision log; there is no separate ledger file. An expert that HANDOFF's Context already counts reduces the two.
+  - Track the two in the conversation: no ledger file, and no PROGRESS or HANDOFF budget field. If this conversation can't tell whether an expert was already used, ask the user; never assume the budget reset.
 - `--review-model MODEL`, or an explicit choice in this invocation, picks the gate reviewers' model. In pi that is a `reviewer` spawn with an explicit `model`, the same as HANDOFF's review-model override.
-- An unavailable model fails the spawn in pi instead of silently using the lead's model, and a profile whose model doesn't resolve isn't offered at all. After spawning, compare the model the harness reports with the intended one; if they differ, use the cheap fallback once and record the downgrade in `PROGRESS.md`. Ordinary tool errors or review findings are not reasons to downgrade.
+- An unavailable model fails the spawn in pi instead of silently using the lead's model, and a profile whose model doesn't resolve isn't offered at all. After spawning, compare the model the harness reports with the intended one; if they differ, use the cheap fallback once and record the downgrade in `PROGRESS.md` and the final report. Ordinary tool errors or review findings are not reasons to downgrade.
 - Delegate only bounded work: research an area, build one item, run one check. A task you can finish in a few tool calls stays yours.
 - One full review per checkpoint, followed by focused verification of confirmed repairs. Repeat the full review only when repairs substantially change the design or scope.
 
@@ -44,7 +44,7 @@ metadata:
 2. **Read `HANDOFF.md` in full** and `references/runtime.md`. Amendments override everything above them. Resolve this skill's bundled `scripts/watch.py` to an absolute path. Read `notes/` files only when an item needs them.
 3. **Resume** if `PROGRESS.md` exists.
    - Check it against git: the integration branch, item worktrees and their commits. Where they disagree, git wins; fix `PROGRESS.md`.
-   - Reconcile worker names, watchdog jobs, dispatch times and recovery counts as well, with `agent_status` for the agents. pi agents belong to the session that spawned them, so after a session reset recover from the branch and logs. Re-arm the same attempt's watcher if it died; never renew the deadline merely because the lead resumed.
+   - Reconcile worker IDs (pi: names), watchdog jobs, dispatch times and recovery counts as well, with `agent_status` for the agents. pi agents belong to the session that spawned them, so after a session reset recover from the branch and logs. Re-arm the same attempt's watcher if it died; never renew the deadline merely because the lead resumed.
    - Reuse recorded verification only when the tree and test inputs are unchanged; otherwise run the standard checks before dispatch. If a crash left the integration branch broken, fixing that comes first.
    - Add any of HANDOFF's Open questions missing from "Blocked on you".
    - Continue from "Now".
@@ -109,7 +109,7 @@ Long operations:
 
 ### Reviewer
 
-- A fresh, read-only `reviewer` agent, for ordinary gates and the final whole-branch gate alike. A stronger review is not required on every handoff; see Models for the two-expert budget.
+- A fresh, read-only subagent. Claude Code uses the cheap reviewer (`sonnet`) for ordinary gates and the stronger reviewer (`opus`) for the final whole-branch gate (Models above). pi uses the `reviewer` profile for both; a stronger review is not forced on every handoff.
 - It gets the gate's diff since the previous gate (the final gate: since the base), the `HANDOFF.md` path, and the gate's item IDs. It does not get the subagents' reports.
 - Ask it for:
   - defects;
@@ -118,7 +118,7 @@ Long operations:
   - uncovered review-focus risks;
   - acceptance checks that pass without proving the outcome;
   - decisions or user actions in HANDOFF that have no reachable path yet.
-- Above about 3k changed lines, cheap area readers can cover backend, UI or deployment separately. One reviewer still reads the whole branch and owns what crosses areas, and it reads the actual diff, not only summaries.
+- Above about 3k changed lines, cheap area readers can cover backend, UI or deployment separately. Keep one stronger final reviewer responsible for the whole branch and cross-area contracts; it reads the actual diff, not only summaries. Claude Code keeps it on `opus`; pi keeps it on `reviewer` unless an expert is already justified.
 - If HANDOFF has Trust boundaries, the first gate after an item that touches one and the final gate add a security reviewer. It gets only the boundaries and the diff, and is asked for a path by which untrusted input reaches a secret or crosses a boundary.
 
 ### After a gate
@@ -192,7 +192,7 @@ Each item worker's job contains:
 
 ## Measurements
 
-<Actual worker/review models and any downgrade; expert uses out of the two and what each settled; command timings, retries and available usage. Separate cached input from fresh input and output; do not invent dollar estimates.>
+<Actual worker/review models and any downgrade; command timings, retries and available usage. Separate cached input from fresh input and output; do not invent dollar estimates.>
 
 ## Handoff retro
 
@@ -206,7 +206,7 @@ Each item worker's job contains:
    - what is done and verified, with acceptance results;
    - what is blocked and on what;
    - failures and skips, stated plainly;
-   - measured timings, actual worker/final-review models, any review downgrade, and expert uses out of the two;
+   - measured timings, actual worker/final-review models, and any review downgrade;
    - the retro;
    - the integration branch and any worktrees left.
 3. Ask, in one round, every unanswered entry in "Blocked on you" that the user can answer now, with what was done meanwhile as the recommended answer. This applies with `--auto` too, since the run is over and a question interrupts nothing. Use the harness's question tool when they fit, otherwise a numbered list with your pick on each. Record each answer, and build what it calls for on the integration branch.

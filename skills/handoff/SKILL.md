@@ -17,9 +17,9 @@ metadata:
 
 ## Models
 
-- Research uses explicit cheap profiles: Claude Code `sonnet`; pi `researcher` and `reviewer`, both `auto/deepseek-v4.1-flash`. A build, test or probe that takes minutes goes to a `verifier`, which reports the command, its exit and the failing lines. Name the profile on every spawn: a pi agent otherwise runs on the lead's Sol model.
+- Research uses explicit cheap profiles: Claude Code `sonnet`; pi `researcher` and `reviewer`, both `auto/deepseek-v4.1-flash`. In pi, a build, test or probe that takes minutes goes to a `verifier`, which reports the command, its exit and the failing lines, and every spawn names its profile: an agent otherwise runs on the lead's own model.
 - The cold read uses Claude Code `opus`; pi `reviewer` (read-only, thinking high), which is enough for the read below. Don't force a strong read: pi's `expert` (`openai-codex/gpt-6.1-sol`) is a last resort for a hard blocker or a high-risk uncertainty that needs independent reasoning. A handoff gets at most two expert reads across the plan and its build.
-  - Use one here only when a cheap read leaves the risk unresolved, say why in the report, and write it into HANDOFF's Context (`Expert reads used here: 1 of 2, for <reason>`) so `/run-handoff` counts the same total.
+  - Use one here only when a cheap read leaves the risk unresolved, and say why in the report. Track the two in the conversation: no ledger file, and no PROGRESS or HANDOFF budget field. A run that can't tell from the conversation what was already spent asks the user; never assume the budget is fresh.
 - `--review-model MODEL`, or the user's explicit choice, overrides the cold read's model; an explicit `model` on the pi spawn does the same.
 - An unavailable model fails the spawn in pi instead of silently using the lead's model, and a profile whose model doesn't resolve isn't offered. If the model that ran differs from the one intended, use the cheap fallback once and report the downgrade. Ordinary tool errors or findings are not reasons to downgrade.
 - Delegate only bounded work: research one area, read the plan cold. A fact you can check in a few tool calls stays yours.
@@ -44,7 +44,7 @@ metadata:
 
 3. **Research.** Reuse the conversation and existing notes first, checking their commit/version and whether relevant paths changed. Fan out cheap read-only subagents only for missing evidence, one per independent area rather than per item.
    - In pi, one `agent_spawn` call with an entry per area starts them together; their results arrive as one group message. `agent_wait` only when the round must combine results.
-   - Commands whose measurement is part of the evidence go to a `verifier`, with the command, its working directory and the known-red baseline it should expect.
+   - In pi, a command whose measurement is part of the evidence goes to a `verifier`, with the command, its working directory and the known-red baseline it should expect.
    - Each gets an objective, an output format and explicit boundaries ("X is another subagent's"). Launch in the background and join once; progress pings are not findings. A pi agent has a fresh context and can't see this conversation, so each brief stands alone.
    - No nested delegation: don't set `spawn: true`, so a researcher starts no researchers of its own.
    - They verify what the plan leans on:
@@ -79,7 +79,7 @@ metadata:
    - A fact goes in Gotchas, and something the user has to do goes in the item or gate that needs it.
    - If nothing is open, skip this step.
 
-10. **Report** the checks performed or skipped and the cold-read model, including any downgrade and any expert read spent. End with the `HANDOFF.md` path, what stayed open, and the kickoff line `/run-handoff <dir>`, plus `--auto` to run it unattended.
+10. **Report** the checks performed or skipped and the cold-read model, including any downgrade and, in pi, any expert read spent. End with the `HANDOFF.md` path, what stayed open, and the kickoff line `/run-handoff <dir>`, plus `--auto` to run it unattended.
 
 ## Decomposition
 
@@ -138,7 +138,6 @@ In: … Out: …
 <Repo, base branch and evidence commit, how to build/test/run (exact commands, cwd, measured duration or unverified), known-red baseline, conventions, terms.>
 Skills: <skills the builder and its subagents should invoke, e.g. tdd, and when.>
 Review model override: <only if the user chose one; otherwise use the invoking harness's default>.
-Expert reads used here: <none, or n of 2 and what each settled; the build's budget is what remains>.
 
 ## Locked decisions
 

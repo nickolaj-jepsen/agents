@@ -54,7 +54,7 @@ The plan is an ordered list of slices. A **slice** is one reviewable change that
    - the repo's conventions and the skills it expects agents to use.
 
    Fan out cheap read-only subagents only for independent areas. Each gets an objective, an output format and its boundaries; launch them in the background and join once. In pi, one `agent_spawn` call with an entry per area, each with the `researcher` profile and no `after` between independent areas, starts them together.
-   - A build, test or probe that takes minutes goes to a `verifier` agent rather than to a `researcher`, with the command, its working directory and what would count as a failure.
+   - A build, test or probe that takes minutes goes, in pi, to a `verifier` agent rather than to a `researcher`, with the command, its working directory and what would count as a failure.
 
 4. **Slice** by the rules above.
 5. **Grill the gaps.** Load the `grilling` skill and ask only the decisions research couldn't settle and that are the user's to make. If there are none, skip this.
@@ -72,7 +72,7 @@ The plan is an ordered list of slices. A **slice** is one reviewable change that
 ## Models
 
 - Research and the cold read run on cheap profiles: Claude Code `sonnet`; pi `researcher` and `reviewer`, both `auto/deepseek-v4.1-flash` (the reviewer reads a plan cold, at thinking high). A build, test or probe that takes minutes goes to a `verifier`, which reports the command, its exit and the failing lines.
-- Name the profile on every spawn, because a pi agent otherwise runs on the lead's Sol model. An explicit `model` overrides the profile, an unavailable model fails the spawn rather than inheriting, and a profile whose model doesn't resolve isn't offered. Report the model each subagent actually ran on.
+- In pi, name the profile on every spawn, because an agent otherwise runs on the lead's own model. An explicit `model` overrides the profile, an unavailable model fails the spawn rather than inheriting, and a profile whose model doesn't resolve isn't offered. Report the model each subagent actually ran on.
 - The pi `expert` (`openai-codex/gpt-6.1-sol`) is not part of planning: keep it for the build's hard blockers, and don't spend one on a plan that a cheap read can check.
 - Delegate only bounded work: research one area, read the plan cold. A fact you can check in a few tool calls stays yours.
 
