@@ -279,19 +279,6 @@ export function apply(form: Form, draft: Draft, action: Action): Draft {
   }
 }
 
-const isSame = (a: number[], b: (number | undefined)[]) =>
-  a.length === b.length && a.every((value, i) => value === b[i]);
-
-function isRecommended(item: FormItem, answer: Answer | null): boolean {
-  if (!answer) return false;
-  if (answer.kind === "options")
-    return isSame(answer.indices, item.recommendedOptions ?? [item.recommendedOption]);
-  return (
-    answer.kind === "accept" ||
-    (answer.kind === "option" && answer.index === item.recommendedOption)
-  );
-}
-
 const keyAt = (item: FormItem, index: number) => item.options[index]?.key ?? "";
 
 /** A short button label and the prose beside it on native surfaces. */
@@ -336,19 +323,12 @@ const rowsOf = (form: Form, draft: Draft) =>
     note: draft.notes[i] ?? "",
   }));
 
+/**
+ * The reply every answer is spelt out in, one line each: "yes" standing for the whole round is
+ * shorthand for someone typing it, and the form already knows which recommendation each line took.
+ */
 function roundReply(form: Form, draft: Draft): string[] {
-  const rows = rowsOf(form, draft);
-  if (
-    !draft.note &&
-    rows.every(
-      ({ item, answer, note }) =>
-        !note &&
-        isRecommended(item, answer) &&
-        (answer?.kind !== "accept" || said(item, answer) === "yes"),
-    )
-  )
-    return ["yes"];
-  return rows.flatMap(({ item, answer, note }) => {
+  return rowsOf(form, draft).flatMap(({ item, answer, note }) => {
     if (answer) {
       const words = said(item, answer);
       return noted(item.unlabelled ? words : saying(item.label, words), note);

@@ -916,7 +916,8 @@ for (const surface of ["desktop", "vscode"] as const) {
     await expectNative(drawn);
     await drawn.press({ key: "fill" });
     await drawn.unmount();
-    expect(w.box).toBe("yes");
+    // Every answer is spelt out: "yes" for the whole round is one to type, not one to write.
+    expect(w.box).toBe("Q1: A, B, C");
   });
 
   test(`${surface}: a pick list and a long body keep every entry, the whole body and the style`, async ($, on) => {

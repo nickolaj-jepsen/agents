@@ -295,7 +295,7 @@ describe("a question with no number of its own", () => {
     expect(reply(form, steps(form, [pick(1), note("restarts happen weekly")]))).toBe(
       "B\n    Note: restarts happen weekly",
     );
-    expect(reply(form, steps(form, [ACCEPT]))).toBe("yes");
+    expect(reply(form, steps(form, [ACCEPT]))).toBe("A");
     expect(reply(form, steps(form, [write("neither, use redis")]))).toBe("neither, use redis");
   });
 
@@ -386,10 +386,10 @@ describe("apply", () => {
     );
   });
 
-  test("a round of recommendations collapses to yes unless something else is said", () => {
+  test("a round spells out every recommendation; only a note changes the reply", () => {
     const form = formOf(ROUND_AFTER_RESEARCH);
     const draft = steps(form, [pick(0), FORWARD, pick(0), FORWARD]);
-    expect(reply(form, draft)).toBe("yes");
+    expect(reply(form, draft)).toBe("Q19: yes\nQ25: yes");
     expect(reply(form, apply(form, draft, note("also look at subtraction")))).toBe(
       "Q19: yes\nQ25: yes\nOverall: also look at subtraction",
     );
@@ -467,7 +467,7 @@ describe("apply", () => {
           .join(", "),
       ).toBe(keys);
       expect(reply(form, steps(form, [pick(0)]))).toBe("Q1: A");
-      expect(reply(form, steps(form, [ACCEPT]))).toBe("yes");
+      expect(reply(form, steps(form, [ACCEPT]))).toBe(`Q1: ${keys}`);
       expect(reply(form, steps(form, [ACCEPT, pick(5)]))).toBe("Q1: F");
     }
     // One letter is still one pick, and a sentence that starts on "A" names none.
