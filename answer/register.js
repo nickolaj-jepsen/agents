@@ -534,7 +534,9 @@ function roundOf(doc, run, under = []) {
 const ASKS = /\?\**\s*$/;
 const BOLD = /^\*\*/;
 const MENU_CUE = /(?:^|[.!?—–]\s+)((?:want me to|shall i|should i|do you want me to|would you like me to)\b[^?]*):\s*$/i;
-const CHOOSING = /\b(?:which|pick|choose|prefer|go with|start with|one of|both|either|option\s*[0-9]|[0-9]\s*(?:or|\/)\s*[0-9])\b/i;
+const SELECTS = /^(?:\*\*)?(?:ok[,.]?\s+|so[,.]?\s+)?(?:which|what)\b/i;
+const GO_AHEAD = /^(?:want|do you want|shall i|should i)\b[^?]*\b(?:go ahead|do (?:both|either|it|them|these|all)|make (?:these|those|both) changes?|implement (?:them|these))\b/i;
+const ALTERNATIVES = /\s+or\s+(?!none\b)|:\s*\S/i;
 const WHICH = /\b(?:which|pick|choose|prefer)\b/i;
 const CLOSER = /shared understanding/i;
 const OPTION_REACH = 8;
@@ -639,10 +641,13 @@ function listed(doc, run, end) {
 	for (const [i, { at, mark }] of run.entries()) addOption(choices, String(mark.n), mark.title, [mark.rest, ...dedent(linesIn(doc, at + 1, run[i + 1]?.at ?? end))]);
 	return choices;
 }
+/** Whether a closing question asks the person to answer with the list above it. */
+const selects = (ask) => !ALTERNATIVES.test(ask) && (SELECTS.test(ask) || GO_AHEAD.test(ask));
 /**
 * A numbered list of alternatives as one question. `cued` reads only a list under a line that is
 * itself the question, which makes the list its options before any item is read as a question of
 * its own; otherwise the paragraph after the list must close on a question that picks among them.
+* A list of steps under a report stays prose: a false card costs more than a lost one.
 */
 function menuOf(doc, run, cued) {
 	const [first] = run;
@@ -654,7 +659,7 @@ function menuOf(doc, run, cued) {
 	const cue = lead && MENU_CUE.exec(wordsOf(lead))?.[1];
 	const after = linesIn(doc, listEnd, tail);
 	const closing = closingOf(after);
-	const picking = closing && after.filter(isOption).length < 2 && (!closing.after || WHICH.test(closing.ask)) && CHOOSING.test(`${closing.before} ${closing.ask}`) ? closing : null;
+	const picking = closing && after.filter(isOption).length < 2 && (!closing.after || WHICH.test(closing.ask)) && selects(closing.ask) ? closing : null;
 	if (cued ? !cue : !picking) return null;
 	return single(readQuestion({
 		label: "Q1",
@@ -848,12 +853,6 @@ function apply(form, draft, action) {
 		default: throw new Error(`no such action: ${JSON.stringify(action.do)}`);
 	}
 }
-const isSame = (a, b) => a.length === b.length && a.every((value, i) => value === b[i]);
-function isRecommended(item, answer) {
-	if (!answer) return false;
-	if (answer.kind === "options") return isSame(answer.indices, item.recommendedOptions ?? [item.recommendedOption]);
-	return answer.kind === "accept" || answer.kind === "option" && answer.index === item.recommendedOption;
-}
 const keyAt = (item, index) => item.options[index]?.key ?? "";
 /** A short button label and the prose beside it on native surfaces. */
 function recommendationChoice(text) {
@@ -888,10 +887,12 @@ const rowsOf = (form, draft) => form.items.map((item, i) => ({
 	answer: draft.answers[i] ?? null,
 	note: draft.notes[i] ?? ""
 }));
+/**
+* The reply every answer is spelt out in, one line each: "yes" standing for the whole round is
+* shorthand for someone typing it, and the form already knows which recommendation each line took.
+*/
 function roundReply(form, draft) {
-	const rows = rowsOf(form, draft);
-	if (!draft.note && rows.every(({ item, answer, note }) => !note && isRecommended(item, answer) && (answer?.kind !== "accept" || said$1(item, answer) === "yes"))) return ["yes"];
-	return rows.flatMap(({ item, answer, note }) => {
+	return rowsOf(form, draft).flatMap(({ item, answer, note }) => {
 		if (answer) {
 			const words = said$1(item, answer);
 			return noted(item.unlabelled ? words : saying(item.label, words), note);
