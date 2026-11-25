@@ -1312,6 +1312,12 @@ const MAX_ROWS = 24;
 const GAP = " ".repeat(tokens.gutter);
 /** The cells a card's row keeps for the pointer. */
 const INSET = cellWidth(CARD_INSET);
+/** Ignore incompatible session records rather than letting them break the terminal renderer. */
+function isQuestionsDraft(value) {
+	if (!value || typeof value !== "object") return false;
+	const { drafts, notes, tab, row, editing } = value;
+	return Array.isArray(drafts) && drafts.every((draft) => draft && Array.isArray(draft.picked) && draft.picked.every((index) => Number.isInteger(index) && index >= 0) && typeof draft.text === "string") && Array.isArray(notes) && notes.every((note) => typeof note === "string") && Number.isInteger(tab) && tab >= 0 && Number.isInteger(row) && row >= 0 && (editing === void 0 || editing === "answer" || editing === "note");
+}
 const isAnswered = (draft) => draft.picked.length > 0 || draft.text.trim() !== "";
 /** A row that carries a pointer target over the text it actually draws. */
 function target(text, item) {
@@ -1388,7 +1394,7 @@ var QuestionsDialog = class {
 	reviewMaxOffset = 0;
 	/** The footer's row, the cells of its buttons and what each does, by its place. */
 	footer;
-	constructor(tui, theme, questions, done, previous = []) {
+	constructor(tui, theme, questions, done, previous = [], saved) {
 		this.tui = tui;
 		this.theme = theme;
 		this.questions = questions;
@@ -1416,6 +1422,29 @@ var QuestionsDialog = class {
 			prompt: "",
 			placeholder: "Your note"
 		});
+		if (isQuestionsDraft(saved) && saved.drafts.length === questions.length && saved.notes.length === questions.length) {
+			this.drafts = saved.drafts.map((draft, index) => ({
+				...draft,
+				picked: draft.picked.filter((picked) => picked < questions[index].options.length)
+			}));
+			this.notes = [...saved.notes];
+			this.tab = Math.max(0, Math.min(saved.tab, this.tabs.length - 1));
+			this.row = Math.min(saved.row, Math.max(0, this.items().length - 1));
+			if (saved.editing) this.startEditing(saved.editing);
+		}
+	}
+	snapshot() {
+		this.keepDraft();
+		return {
+			drafts: this.drafts.map((draft) => ({
+				...draft,
+				picked: [...draft.picked]
+			})),
+			notes: [...this.notes],
+			tab: this.tab,
+			row: this.row,
+			...this.editing ? { editing: this.editing } : {}
+		};
 	}
 	/** Inline rather than an overlay: the transcript stays readable behind it. */
 	get focused() {
@@ -1522,6 +1551,7 @@ var QuestionsDialog = class {
 		this.input.focused = this.isFocused && field === "answer";
 		this.noteInput.focused = this.isFocused && field === "note";
 		this.editingInput.setValue(field === "note" ? this.notes[index] : this.drafts[index].text);
+		this.editingInput.handleInput("");
 		this.tui.requestRender();
 	}
 	/** Leaving the field, or the tab, keeps what was typed as a draft on the row. */
@@ -2269,6 +2299,7 @@ function validateQuestions(questions) {
 * Sequential on purpose. Two questionnaires in the editor slot would replace
 * each other, and pi resolves that by running this tool's calls one at a time.
 */
+const DRAFT_ENTRY = "questions-draft";
 const DESCRIPTION = `Ask the user multiple-choice questions and wait for the answers. Use it when you can't proceed without the user's decision, with every question in one call. Each question already gets a "Type something." row and Esc, so don't write "Other" or "Type something." options. Put a recommended option first, its label ending in "(Recommended)". Give options a \`preview\` only to compare concrete artifacts such as mockups, code, diagrams or configs.`;
 const OptionSchema = Type.Object({
 	label: Type.String({
@@ -2301,6 +2332,7 @@ function answerLines(answers) {
 }
 /** What the model sees: the answers as a list it can act on, or the refusal. */
 function formatResult(result) {
+	if (result.interrupted) return "The questions were interrupted, not answered or declined. Do not treat this as a decision.";
 	if (result.cancelled) return "The user cancelled the questions without answering. Do not treat this as a decision.";
 	return ["The user answered:", ...answerLines(result.answers)].join("\n");
 }
@@ -2309,30 +2341,66 @@ function formatResult(result) {
 * own dialogs. `previous` pre-selects its answers in the terminal dialog only,
 * which is where re-answering happens.
 */
-async function askQuestions(ctx, questions, signal, previous) {
+async function askQuestions(ctx, questions, signal, previous, lifecycle) {
 	if (ctx.mode !== "tui") return askSequentially(ctx, questions);
-	const cancelled = {
+	const interrupted = {
 		answers: [],
-		cancelled: true
+		cancelled: true,
+		interrupted: true
 	};
-	if (signal?.aborted) return cancelled;
-	return ctx.ui.custom((tui, theme, _keys, done) => {
-		const abort = () => done(cancelled);
-		signal?.addEventListener("abort", abort, { once: true });
-		const dispose = () => signal?.removeEventListener("abort", abort);
-		const dialog = new QuestionsDialog(tui, theme, questions, (result) => {
-			dispose();
-			done(result);
-		}, previous);
-		if (signal?.aborted) queueMicrotask(abort);
-		return Object.assign(dialog, { dispose });
-	}, {
-		overlay: false,
-		blocked: {
-			kind: "question",
-			message: questions[0]?.question ?? "Answer questions"
+	if (signal?.aborted) return interrupted;
+	const persist = (action) => {
+		try {
+			action();
+		} catch {
+			try {
+				ctx.ui.notify("Could not save the question draft to this session.", "warning");
+			} catch {}
 		}
-	});
+	};
+	let cleanup = () => {};
+	try {
+		return await ctx.ui.custom((tui, theme, _keys, done) => {
+			let closed = false;
+			const dialog = new QuestionsDialog(tui, theme, questions, (result) => {
+				if (closed) return;
+				closed = true;
+				persist(() => lifecycle?.complete());
+				cleanup();
+				done(result);
+			}, previous, lifecycle?.saved);
+			const suspend = () => {
+				if (closed) return;
+				closed = true;
+				persist(() => lifecycle?.suspend(dialog.snapshot()));
+			};
+			const abort = () => {
+				if (closed) return;
+				suspend();
+				cleanup();
+				done(interrupted);
+			};
+			cleanup = () => {
+				signal?.removeEventListener("abort", abort);
+				lifecycle?.interrupt(void 0);
+			};
+			lifecycle?.interrupt(abort);
+			signal?.addEventListener("abort", abort, { once: true });
+			if (signal?.aborted) queueMicrotask(abort);
+			return Object.assign(dialog, { dispose() {
+				suspend();
+				cleanup();
+			} });
+		}, {
+			overlay: false,
+			blocked: {
+				kind: "question",
+				message: questions[0]?.question ?? "Answer questions"
+			}
+		});
+	} finally {
+		cleanup();
+	}
 }
 /**
 * RPC, JSON and print hosts get the same answers through their own prompt
@@ -2385,6 +2453,23 @@ async function askMultiSelect(ctx, question) {
 	}
 }
 function pi_default(pi) {
+	let pending = null;
+	let interrupt;
+	const restore = (ctx) => {
+		pending = null;
+		for (const entry of ctx.sessionManager.getBranch()) {
+			if (entry.type !== "custom" || entry.customType !== DRAFT_ENTRY) continue;
+			const data = entry.data;
+			if (data === null) pending = null;
+			else if (typeof data?.key === "string" && isQuestionsDraft(data.draft)) pending = {
+				key: data.key,
+				draft: data.draft
+			};
+		}
+	};
+	pi.on("session_start", (_event, ctx) => restore(ctx));
+	pi.on("session_tree", (_event, ctx) => restore(ctx));
+	pi.on("session_shutdown", () => interrupt?.());
 	pi.registerTool({
 		name: TOOL_NAME,
 		label: "Ask",
@@ -2398,7 +2483,34 @@ function pi_default(pi) {
 		async execute(_toolCallId, params, signal, _onUpdate, ctx) {
 			const invalid = validateQuestions(params.questions);
 			if (invalid) throw new Error(`ask_user_question: ${invalid}`);
-			const result = await askQuestions(ctx, params.questions, signal);
+			const key = JSON.stringify(params.questions.map(({ header, question, options, multiSelect }) => ({
+				header,
+				question,
+				multiSelect: multiSelect ?? false,
+				options: options.map(({ label, description, preview }) => ({
+					label,
+					description,
+					preview
+				}))
+			})));
+			const result = await askQuestions(ctx, params.questions, signal, void 0, {
+				saved: pending?.key === key ? pending.draft : void 0,
+				suspend(draft) {
+					pending = {
+						key,
+						draft
+					};
+					pi.appendEntry(DRAFT_ENTRY, pending);
+				},
+				complete() {
+					if (pending && pending.key !== key) return;
+					pending = null;
+					pi.appendEntry(DRAFT_ENTRY, null);
+				},
+				interrupt(close) {
+					interrupt = close;
+				}
+			});
 			return {
 				content: [{
 					type: "text",

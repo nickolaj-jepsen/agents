@@ -18,4 +18,6 @@ When pi calls `ask_user_question`, pick an option, write your own answer, or add
 
 Click a header step to jump to it. In **Review**, click an answer or press its step number to edit it, then choose **Send**. **Close** (or `Esc` outside a text field) offers **Discard** and **Keep** in the header.
 
+In terminal hosts such as Herdr, an open form reports that pi needs an answer; answering, discarding or interrupting it clears that attention state. An interruption or reload saves your selections, write-in and notes, including text not yet confirmed with Enter. They return when the agent asks the same questionnaire again in this session. **Discard** deliberately forgets them.
+
 The tool isn't loaded in subagents. Outside the terminal, it uses the host's select and input prompts. For questions the agent wrote in chat, use [Answer](../answer/README.md) instead.

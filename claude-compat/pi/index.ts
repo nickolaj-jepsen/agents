@@ -12,7 +12,29 @@ import { Markdown, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui"
 * exact name, so muscle memory from other agents would land as a prompt.
 */
 const SKILL_TOKEN = /(?<=^|\s)\/(?:skill:)?([a-z0-9-]+)(?:$|[\s.,;:!?)])/g;
+const SELECTIONS = Symbol.for("agents.claude-compat.new-session-selections");
+const handoffs = globalThis;
 function aliases_default(pi) {
+	pi.on("session_shutdown", (event, ctx) => {
+		if (event.reason !== "new" || !ctx.model) return;
+		(handoffs[SELECTIONS] ??= /* @__PURE__ */ new Map()).set(event.targetSessionFile ?? ctx.cwd, {
+			provider: ctx.model.provider,
+			model: ctx.model.id,
+			thinking: pi.getThinkingLevel()
+		});
+	});
+	pi.on("session_start", async (event, ctx) => {
+		const key = ctx.sessionManager.getSessionFile() ?? ctx.cwd;
+		const selection = handoffs[SELECTIONS]?.get(key);
+		handoffs[SELECTIONS]?.delete(key);
+		if (event.reason !== "new" || !selection) return;
+		const model = ctx.modelRegistry.find(selection.provider, selection.model);
+		if (!model || !await pi.setModel(model)) {
+			ctx.ui.notify("Could not retain the previous model; using the new session default", "warning");
+			return;
+		}
+		pi.setThinkingLevel(selection.thinking);
+	});
 	pi.registerCommand("clear", {
 		description: "Start a new session (alias for /new)",
 		handler: async (_args, ctx) => {

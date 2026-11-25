@@ -3,6 +3,30 @@ import { contentText } from "@earendil-works/pi-ai";
 import { getMarkdownTheme, getSelectListTheme } from "@earendil-works/pi-coding-agent";
 import { Editor, Markdown, ScrollView, matchesKey, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
+// src/lib/draft.ts
+/**
+* The prompt's draft while a round's reply is filled into it: the reply goes above what the
+* person typed, and a second fill replaces that reply instead of stacking another. Their own
+* text, whitespace included, is kept exactly as they left it.
+*/
+/** What separates the reply from the person's own draft: one blank line. */
+const SEPARATOR = "\n\n";
+/** Whether the prompt's text carries `reply`: the text is the reply, or the reply above a draft. */
+const isReplyOf = (text, reply) => reply !== "" && (text === reply || text.startsWith(`${reply}\n`));
+/**
+* The prompt's text with `reply` above what the person had typed. Only an untouched prompt is
+* replaced: a draft of nothing but whitespace is still theirs, and stays under the reply.
+*/
+const placeReply = (draft, reply) => draft === "" ? reply : `${reply}${SEPARATOR}${draft}`;
+/**
+* What the person typed themselves: the prompt's text less the reply an earlier fill put above
+* it. Filling again writes the same text back, so the draft never drifts by a blank line.
+*/
+function ownDraft(text, filled) {
+	if (!filled || !isReplyOf(text, filled)) return text;
+	return text.slice(filled.length).replace(/^\n{1,2}/, "");
+}
+
 // src/lib/parse/doc.ts
 const FENCE$1 = /^\s*(`{3,}|~{3,})(.*)$/;
 const RULE$1 = /^\s*(-{3,}|\*{3,}|_{3,})\s*$/;
@@ -2603,6 +2627,24 @@ var AnswerGuide = class {
 	get activeField() {
 		return this.field;
 	}
+	/** What the open field holds, and the form it belongs to, for a redraw that takes it away. */
+	get typed() {
+		const field = this.field;
+		if (!field) return void 0;
+		const { form, kind, step } = field;
+		return {
+			form,
+			kind,
+			step,
+			text: field.editor.getText()
+		};
+	}
+	/** Drops the open field without saving it: its text has gone to the round it was typed into. */
+	forget() {
+		if (!this.field) return;
+		this.field = void 0;
+		this.tui.requestRender();
+	}
 	constructor(tui, theme, read, onAction, onResize) {
 		this.tui = tui;
 		this.theme = theme;
@@ -2621,7 +2663,7 @@ var AnswerGuide = class {
 	get editing() {
 		return this.field !== void 0;
 	}
-	edit(kind, step, text, done) {
+	edit(field, text, done, changed) {
 		const editor = new Editor(this.tui, {
 			borderColor: (s) => paintSpan(this.theme, span(s, { role: "border" })),
 			selectList: getSelectListTheme()
@@ -2629,9 +2671,9 @@ var AnswerGuide = class {
 		editor.setText(text);
 		editor.focused = this.focused;
 		editor.onSubmit = (value) => this.finishEdit(value);
+		if (changed) editor.onChange = changed;
 		this.field = {
-			kind,
-			step,
+			...field,
 			editor,
 			done
 		};
@@ -2895,13 +2937,6 @@ function lastAssistantText(messages) {
 	}
 	return "";
 }
-/** The reply above what the person had typed, never over it. */
-const placeReply = (draft, text) => draft.trim() ? `${text}\n\n${draft}` : text;
-/**
-* Whether an input carries the round's own reply: the text is what the reply says, or what the
-* form filled with the person's draft left under it (a fill puts the reply above the draft).
-*/
-const isReplyOf = (text, reply) => reply !== "" && (text === reply || text.startsWith(`${reply}\n`));
 /** What a send that sets the round aside says, counting the answers it keeps. */
 const asideNotice = (answered) => answered ? `${answered} answer${answered === 1 ? "" : "s"} set aside: /answer brings them back.` : "Answers set aside: /answer brings them back.";
 /** Everything the widget draws of a view, so a step that changes none of it costs no redraw. */
@@ -2913,11 +2948,17 @@ const isRound = (value) => {
 	const { form, draft } = value;
 	return Array.isArray(form?.items) && Array.isArray(draft?.answers) && Array.isArray(draft?.notes) && form.items.length === draft.answers.length && form.items.length === draft.notes.length;
 };
+/** A field another version wrote, or a corrupt one, is skipped rather than believed. */
+const isTyped = (value) => {
+	if (typeof value !== "object" || value === null) return false;
+	const { form, kind, step, text } = value;
+	return typeof form === "string" && (kind === "write" || kind === "note") && typeof step === "number" && Number.isInteger(step) && step >= 0 && typeof text === "string";
+};
 /** A record another version wrote, or a corrupt one, is skipped rather than believed. */
 const isSaved = (data) => {
 	if (typeof data !== "object" || data === null || !("held" in data)) return false;
-	const { held, aside, archived } = data;
-	return isRound(held) && (aside === void 0 || isRound(aside)) && (archived === void 0 || isRound(archived));
+	const { held, aside, archived, typing } = data;
+	return isRound(held) && (aside === void 0 || isRound(aside)) && (archived === void 0 || isRound(archived)) && (typing === void 0 || typing === null || isTyped(typing));
 };
 function pi_default(pi) {
 	let held = null;
@@ -2930,13 +2971,45 @@ function pi_default(pi) {
 	let reviewFrom = 0;
 	let filled;
 	let sending;
+	/** The text of a field a redraw took away, with the form and step it was typed into. */
+	let typing;
+	/** What a submit was, until the user message that proves it went in exists. */
+	let pending;
 	const visibleCards = /* @__PURE__ */ new Set();
 	/** The signature the widget last drew. */
 	let shown = "";
+	/** The last state entry saved, so one that repeats it writes nothing. */
+	let saved = "";
 	let lastText = "";
 	const isTranscript = () => !!held?.anchor && visibleCards.has(held.anchor);
 	const release = () => {
 		if (guide?.focused) tui?.setFocus(promptFocus);
+	};
+	const formOf = (round) => formId(round.form);
+	/** What a field at `kind` and `step` of `round` held when a redraw took it away. */
+	const keptAt = (round, kind, step) => typing && typing.form === formOf(round) && typing.kind === kind && typing.step === step ? typing.text : void 0;
+	/** Keeps what the guide's open field holds, before a redraw takes the component away. */
+	const keepTyping = () => {
+		const field = guide?.typed;
+		if (field) typing = field;
+	};
+	/**
+	* Gives an open field's text back to the round it was typed into, as an answer or a note. The
+	* field goes with it, so a round that replaces this one can never take its text.
+	*/
+	const commitTyping = (round) => {
+		const field = guide?.typed ?? typing;
+		guide?.forget();
+		typing = void 0;
+		if (!field || field.form !== formOf(round)) return round;
+		const written = step(at(round, field.step), {
+			do: field.kind,
+			text: field.text
+		});
+		return step(written, {
+			do: "go",
+			step: field.step
+		});
 	};
 	const draw = (ctx) => {
 		const view = viewOf(held);
@@ -2947,6 +3020,7 @@ function pi_default(pi) {
 			return;
 		}
 		if (shown === next && tui) return;
+		keepTyping();
 		release();
 		guide = void 0;
 		shown = next;
@@ -2958,6 +3032,7 @@ function pi_default(pi) {
 					if (made === guide && held) locate(held.draft.step, made.editing ? "nearest" : "start");
 				});
 				guide = made;
+				reopen(ctx, made);
 				return guide;
 			}
 			shown = signature(view);
@@ -2977,16 +3052,22 @@ function pi_default(pi) {
 		remember(held);
 		remember(aside);
 		remember(archived);
-		pi.appendEntry(ENTRY, {
+		const data = {
 			held,
 			aside,
-			archived
-		});
+			typing: typing ?? null,
+			...archived ? { archived } : {}
+		};
+		const key = JSON.stringify(data);
+		if (key === saved) return;
+		saved = key;
+		pi.appendEntry(ENTRY, data);
 	};
 	const hold = (ctx, next, archived) => {
 		const isSame = next === held;
 		const isToLast = next?.draft.step === next?.form.items.length;
 		if (next && isToLast && next.form === held?.form && held.draft.step !== next.draft.step) reviewFrom = held.draft.step;
+		if (next !== held) pending = void 0;
 		held = next;
 		if (!isSame || archived) save(archived);
 		draw(ctx);
@@ -3005,9 +3086,12 @@ function pi_default(pi) {
 		aside = null;
 		filled = void 0;
 		sending = void 0;
+		pending = void 0;
+		typing = void 0;
 		guide = void 0;
 		reviewFrom = 0;
 		lastText = "";
+		saved = "";
 		ctxOf = ctx;
 		rounds.clear();
 		cards.clear();
@@ -3015,6 +3099,7 @@ function pi_default(pi) {
 			if (entry.type !== "custom" || entry.customType !== ENTRY || !isSaved(entry.data)) continue;
 			held = entry.data.held;
 			aside = entry.data.aside ?? null;
+			typing = entry.data.typing ?? void 0;
 			remember(held);
 			remember(aside);
 			remember(entry.data.archived);
@@ -3033,6 +3118,9 @@ function pi_default(pi) {
 	pi.on("session_compact", (_event, ctx) => refreshProjection(ctx));
 	pi.on("session_tree", (_event, ctx) => restore(ctx));
 	pi.on("session_shutdown", () => {
+		if (!ctxOf) return;
+		keepTyping();
+		save();
 		ctxOf = void 0;
 	});
 	const locate = (step, align = "start") => {
@@ -3064,7 +3152,7 @@ function pi_default(pi) {
 		if (!hasEditor(ctx) || event.aborted) return;
 		const incoming = offer(held, lastText);
 		if (!incoming || incoming === held) return;
-		const previous = held;
+		const previous = held ? commitTyping(held) : null;
 		const anchor = place();
 		reviewFrom = 0;
 		filled = void 0;
@@ -3074,35 +3162,51 @@ function pi_default(pi) {
 		}, previous ?? void 0);
 		if (isTranscript()) locate(0);
 	});
-	pi.on("input", (event, ctx) => {
-		if (!held || !event.text.trim() || event.source === "extension") return;
-		const answering = held;
-		const submitted = filled && isReplyOf(event.text, filled.reply) ? filled.round : void 0;
-		const v = viewOf(answering);
-		const sent = submitted || isReplyOf(event.text, v?.reply ?? "");
-		if (!sent && hasWork(answering)) {
-			aside = answering;
-			if (event.source === "interactive") ctx.ui.notify(asideNotice(v?.answered ?? 0), "info");
+	pi.on("input", (event) => {
+		if (event.source === "extension") {
+			pending = void 0;
+			return;
 		}
 		sending = void 0;
-		filled = void 0;
-		hold(ctx, null, sent ? {
-			...submitted ?? answering,
-			sent: true
-		} : answering);
+		if (!held || !event.text.trim()) return;
+		const answering = held;
+		pending = {
+			round: answering,
+			sent: (filled && isReplyOf(event.text, filled.reply) ? filled.round : void 0) ?? (isReplyOf(event.text, viewOf(answering)?.reply ?? "") ? answering : void 0),
+			interactive: event.source === "interactive",
+			text: event.text
+		};
 	});
 	pi.on("message_start", (event, ctx) => {
-		const pending = sending;
-		if (!pending || event.message.role !== "user") return;
+		if (event.message.role !== "user") return;
 		const content = event.message.content;
 		const text = typeof content === "string" ? content : contentText(content, "\n");
+		const direct = sending;
 		sending = void 0;
-		if (text !== pending.reply || held?.form !== pending.round.form) return;
+		if (direct) {
+			if (text === direct.reply && held?.form === direct.round.form) {
+				filled = void 0;
+				hold(ctx, null, {
+					...direct.round,
+					sent: true
+				});
+				return;
+			}
+		}
+		const submitted = pending;
+		pending = void 0;
+		if (!submitted || submitted.text !== text) return;
 		filled = void 0;
-		hold(ctx, null, {
-			...pending.round,
+		const round = submitted.sent ? submitted.round : commitTyping(submitted.round);
+		const answered = viewOf(round)?.answered ?? 0;
+		if (!submitted.sent && hasWork(round)) {
+			aside = round;
+			if (submitted.interactive) ctx.ui.notify(asideNotice(answered), "info");
+		}
+		hold(ctx, null, submitted.sent ? {
+			...submitted.sent,
 			sent: true
-		});
+		} : round);
 	});
 	/** A new card for a round at the end of the transcript; its anchor. */
 	function place() {
@@ -3153,14 +3257,56 @@ function pi_default(pi) {
 		}
 		return true;
 	}
+	/** Gives a freshly made guide the field a redraw took away, with the text it held. */
+	function reopen(ctx, target) {
+		const round = held;
+		if (!round || !typing || typing.form !== formOf(round) || typing.step !== round.draft.step) return;
+		const { kind, step } = typing;
+		if (kind === "write" && !viewOf(round)?.item) return;
+		openField(ctx, round, target, kind, step, typing.text, false);
+	}
+	/** Opens a field on `round`'s `step` with the text it had, and keeps whatever is typed into it. */
+	function openField(ctx, round, target, kind, step, text, wasFocused) {
+		const form = formOf(round);
+		target.edit({
+			form,
+			kind,
+			step
+		}, text, (savedText) => {
+			if (guide !== target) return;
+			typing = void 0;
+			if (savedText !== void 0 && held && formOf(held) === form) advance(ctx, at(held, step), {
+				do: kind,
+				text: savedText
+			});
+			if (!wasFocused) release();
+			locate(held?.draft.step ?? step, "nearest");
+		}, (typedText) => {
+			typing = {
+				form,
+				kind,
+				step,
+				text: typedText
+			};
+		});
+	}
+	function editText(ctx, field) {
+		const round = held;
+		const v = viewOf(round);
+		const target = guide;
+		if (!round || !v || !target) return;
+		const wasFocused = target.focused;
+		if (!focusGuide()) return;
+		const prefill = keptAt(round, field, v.step) ?? (field === "write" ? v.item?.written ?? "" : v.item?.note ?? v.note);
+		openField(ctx, round, target, field, v.step, prefill, wasFocused);
+		locate(v.step, "nearest");
+	}
 	function submit(ctx, send) {
 		const round = held;
 		const reply = viewOf(round)?.reply;
 		if (!round || !reply) return;
 		if (!send) {
-			const text = ctx.ui.getEditorText();
-			const draft = filled && isReplyOf(text, filled.reply) ? text.slice(filled.reply.length).replace(/^\n\n?/, "") : text;
-			ctx.ui.setEditorText(placeReply(draft, reply));
+			ctx.ui.setEditorText(placeReply(ownDraft(ctx.ui.getEditorText(), filled?.reply ?? null), reply));
 			filled = {
 				reply,
 				round
@@ -3172,31 +3318,17 @@ function pi_default(pi) {
 			ctx.ui.notify("Wait for the current turn to finish before sending answers.", "info");
 			return;
 		}
+		if (!ctx.model) {
+			ctx.ui.notify("No model is selected: the answers are still here.", "info");
+			return;
+		}
 		release();
+		pending = void 0;
 		sending = {
 			round,
 			reply
 		};
 		pi.sendUserMessage(reply);
-	}
-	function editText(ctx, field) {
-		const round = held;
-		const v = viewOf(round);
-		const editingGuide = guide;
-		if (!round || !v || !editingGuide) return;
-		const wasFocused = editingGuide.focused;
-		if (!focusGuide()) return;
-		const prefill = field === "write" ? v.item?.written : v.item?.note ?? v.note;
-		editingGuide.edit(field, v.step, prefill ?? "", (text) => {
-			if (guide !== editingGuide || round !== held) return;
-			if (text !== void 0) advance(ctx, round, {
-				do: field,
-				text
-			});
-			if (!wasFocused) release();
-			locate(held?.draft.step ?? v.step, "nearest");
-		});
-		locate(v.step, "nearest");
 	}
 	function act(ctx, action) {
 		if (!held || guide?.editing && action.kind !== "focus") return;
