@@ -1,0 +1,20 @@
+{
+  "name": "@nickolaj-jepsen/bg",
+  "version": "0.1.0",
+  "description": "Background shell commands that never wake the agent: bg_run, bg_wait, bg_status, bg_stop",
+  "keywords": [
+    "pi-package"
+  ],
+  "type": "module",
+  "pi": {
+    "extensions": [
+      "./pi/index.ts"
+    ]
+  },
+  "agentTools": {
+    "subagents": true
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  }
+}
