@@ -10,7 +10,6 @@
     "@agents/kit-frame": "workspace:*",
     "@agents/kit-list": "workspace:*",
     "@agents/kit-notice": "workspace:*",
-    "@anthropic-ai/claude-code": "catalog:",
     "@types/node": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"

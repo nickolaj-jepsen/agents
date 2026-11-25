@@ -12,7 +12,6 @@
     "commander": "catalog:"
   },
   "devDependencies": {
-    "@anthropic-ai/claude-code": "catalog:",
     "@earendil-works/pi-ai": "catalog:",
     "@earendil-works/pi-coding-agent": "catalog:",
     "@microsoft/tui-test": "catalog:",

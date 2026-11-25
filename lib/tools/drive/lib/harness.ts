@@ -72,10 +72,15 @@ export const checkoutRoot = repoRoot;
 export const modWatchEnv = { CLAUDE_CODE_PLUGIN_DIR_WATCH: "1" };
 
 /**
- * `claude` or `pi` from this package's pinned npm dependencies, which the tasks' cache key stands
- * for, not whichever the shell finds first. Turbo puts only the root's `node_modules/.bin` on PATH.
+ * Claude comes from the flake's dev shell (CLAUDE_BIN). Pi remains pinned
+ * by this package's npm dependencies. Never use a stale node_modules Claude installation.
  */
 export function agentBin(name: HarnessName): string {
+  if (name === "claude") {
+    if (!process.env.CLAUDE_BIN)
+      throw new Error("CLAUDE_BIN is required; run drive inside `nix develop`");
+    return process.env.CLAUDE_BIN;
+  }
   const bin = join(here, "..", "node_modules", ".bin", name);
   return existsSync(bin) ? bin : name;
 }

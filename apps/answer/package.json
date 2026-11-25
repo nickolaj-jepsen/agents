@@ -16,7 +16,6 @@
     "@agents/kit-frame": "workspace:*",
     "@agents/kit-notice": "workspace:*",
     "@agents/kit-prose": "workspace:*",
-    "@anthropic-ai/claude-code": "catalog:",
     "@earendil-works/pi-agent-core": "catalog:",
     "@earendil-works/pi-ai": "catalog:",
     "@earendil-works/pi-coding-agent": "catalog:",

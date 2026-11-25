@@ -2,6 +2,8 @@
 
 Run from the repository root after [dev setup](../../../docs/development.md#set-up-and-check-a-change). `pnpm drive` is the one driver: it parks real Claude Code, pi, Claude Code in VS Code and Claude Desktop on a scenario's screen, runs the scenarios as tests with canned turns, and records the site's media. `pnpm drive --help` and `pnpm drive <verb> --help` list every verb and flag.
 
+Claude is provided by `nix develop` through `CLAUDE_BIN`, pinned by nixpkgs in `flake.lock` (currently 2.1.330). Hermetic runs and `drive types` use that binary, never `node_modules/.bin/claude`; outside the shell they require an explicit `CLAUDE_BIN` pointing to an immutable, version-specific binary (the path is hashed by Turbo). They fail rather than silently using a different Claude on PATH. `nix run .#media` supplies the same pinned binary for recordings. Pi remains npm-pinned. Non-hermetic terminal sessions still use your own `claude` on PATH and your config.
+
 A **package** is an app (`docfix`) or a kit component (`kit-card`); `kit` is every kit package and `apps` every app. A **scenario** is a named screen of a package, written for one harness in `src/e2e/` (apps) or `e2e/` (kit packages). A **session** is a parked agent on a scenario's screen.
 
 | Harness   | What it is                                                 | Scenario file          | Verbs                                                                                        |

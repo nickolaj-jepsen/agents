@@ -51,18 +51,16 @@ jobs:
       # Python from `.python-version`, fetched once, before turbo starts several uv tasks at once.
       - run: uv python install
       - run: pnpm install --frozen-lockfile
+      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
       - name: Check
-        run: pnpm gate
-      # `check:nix` is the one check that needs Nix. Ask Turbo whether its result is cached
-      # before installing Nix.
+        run: nix develop -c pnpm gate
+      # Ask Turbo whether the plugin builds are cached before running the Nix checks.
       - name: Does the nix check need to run
         id: nix
         run: |
-          status=$(pnpm turbo run check:nix --dry=json | jq -r '.tasks[] | select(.taskId == "//#check:nix") | .cache.status')
+          status=$(nix develop -c pnpm turbo run check:nix --dry=json | jq -r '.tasks[] | select(.taskId == "//#check:nix") | .cache.status')
           echo "check:nix is ${status:-unknown}"
           if [ "$status" = HIT ]; then echo "run=false" >> "$GITHUB_OUTPUT"; else echo "run=true" >> "$GITHUB_OUTPUT"; fi
-      - if: steps.nix.outputs.run == 'true'
-        uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
       # Pulls what earlier runs built and pushes what this one builds; read-only without the token,
       # as on a Dependabot PR.
       - if: steps.nix.outputs.run == 'true' && vars.CACHIX_CACHE != ''
@@ -72,7 +70,7 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - if: steps.nix.outputs.run == 'true'
         name: Check the nix files
-        run: pnpm gate:nix
+        run: nix develop -c pnpm gate:nix
         env:
           NIX_CONFIG: access-tokens = github.com=${{ github.token }}
       # A mismatch writes `.actual.snap` and `.actual.png` beside the snapshot; failed steps leave
