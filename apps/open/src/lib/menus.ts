@@ -53,6 +53,8 @@ export type Status = {
   branch: string | null;
   oid: string;
   upstream: boolean;
+  /** The upstream as git names it, `<remote>/<branch>`; none without one. */
+  upstreamRef?: string;
 };
 
 export type PrKind = "open" | "draft" | "merged" | "closed";
@@ -100,6 +102,7 @@ export const parseStatus = (output: string): Status => {
   let branch: string | null = null;
   let oid = "";
   let upstream = false;
+  let upstreamRef: string | undefined;
   for (const line of output.split("\n")) {
     if (line.startsWith("# branch.head ")) {
       const head = line.slice("# branch.head ".length);
@@ -108,9 +111,10 @@ export const parseStatus = (output: string): Status => {
       oid = line.slice("# branch.oid ".length);
     } else if (line.startsWith("# branch.upstream ")) {
       upstream = true;
+      upstreamRef = line.slice("# branch.upstream ".length).trim() || undefined;
     }
   }
-  return { branch, oid, upstream };
+  return { branch, oid, upstream, ...(upstreamRef ? { upstreamRef } : {}) };
 };
 
 /** A `gh pr view --json` answer as a Pr; undefined when it does not parse. */
@@ -146,6 +150,9 @@ export const parseRemote = (
     .replace(/\.git$/, "");
   let host: string;
   let path: string;
+  /** The names `open.json` may know the forge by, most exact first. */
+  let keys: string[];
+  let web: string;
   if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
     let url: URL;
     try {
@@ -153,23 +160,30 @@ export const parseRemote = (
     } catch {
       return undefined;
     }
-    host = url.hostname;
+    const isWeb = url.protocol === "http:" || url.protocol === "https:";
+    // A web remote is the page's own address, its port and scheme included; ssh and the like name
+    // a server, whose web page is `https://<hostname>`.
+    host = isWeb ? url.host : url.hostname;
+    keys = isWeb && url.port ? [url.host, url.hostname] : [url.hostname];
+    web = isWeb ? `${url.protocol}//${url.host}` : `https://${url.hostname}`;
     path = url.pathname;
   } else {
     // The scp-like form git writes for SSH: [user@]host:path.
     const match = /^(?:[^@/]+@)?([^:/]+):(.+)$/.exec(trimmed);
     if (!match?.[1] || !match[2]) return undefined;
     host = match[1];
+    keys = [host.toLowerCase()];
+    web = `https://${host.toLowerCase()}`;
     path = match[2];
   }
   host = host.toLowerCase();
-  const forge = forges[host];
+  const forge = keys.map((key) => forges[key]).find(Boolean);
   if (!forge) return undefined;
   const segments = path.split("/").filter(Boolean);
   if (segments.length < 2) return undefined;
   const repo = segments[segments.length - 1] ?? "";
   const owner = segments.slice(0, -1).join("/");
-  return { name, forge, host, owner, repo, web: `https://${host}/${owner}/${repo}` };
+  return { name, forge, host, owner, repo, web: `${web}/${owner}/${repo}` };
 };
 
 /** `config` holds `remote.<name>.url <url>` lines, as `git config --get-regexp` prints them. */
@@ -193,6 +207,36 @@ export const chooseRemote = (
     (supported.length === 1 ? supported[0] : undefined)
   );
 };
+
+/** The names of every remote in `remote.<name>.url` lines, supported or not. */
+export const remoteNames = (config: string): string[] => {
+  const names = new Set<string>();
+  for (const line of config.split("\n")) {
+    const match = /^remote\.(.+)\.url\s+(.+)$/.exec(line.trim());
+    if (match?.[1]) names.add(match[1]);
+  }
+  return [...names];
+};
+
+/**
+ * The branch's name on the remote the links go to, when it tracks one there under another name
+ * (`wip` on `origin/feature/real-name`); undefined for any other upstream. A remote's name may hold
+ * a `/`, so the longest configured name the upstream starts with is the remote.
+ */
+export function upstreamBranch(
+  status: Status,
+  remote: Remote,
+  names: readonly string[] = [],
+): string | undefined {
+  const ref = status.upstreamRef;
+  if (!ref) return undefined;
+  const owner = [...names, remote.name]
+    .filter((name) => ref.startsWith(`${name}/`))
+    .sort((a, b) => b.length - a.length)[0];
+  return owner === remote.name && ref.length > owner.length + 1
+    ? ref.slice(owner.length + 1)
+    : undefined;
+}
 
 /** A branch name as URL path segments, so a `#` or a space still links. */
 const segment = (text: string) => text.split("/").map(encodeURIComponent).join("/");
@@ -222,11 +266,15 @@ export type GitFacts = {
   /** The branch a new pull request targets, as `gh pr create` picks it. */
   base: string;
   pr: PrAnswer;
+  /** Every configured remote's name, to tell where an upstream's remote ends. */
+  remoteNames?: readonly string[];
 };
 
-export const gitMenu = ({ status, remote, base, pr }: GitFacts): Menu => {
+export const gitMenu = ({ status, remote, base, pr, remoteNames: names }: GitFacts): Menu => {
   const { branch } = status;
   const found = typeof pr === "object" ? pr : null;
+  // The branch as the forge knows it, which is not always its local name.
+  const onRemote = branch && remote ? (upstreamBranch(status, remote, names) ?? branch) : branch;
   const noRemote = "no supported remote";
   const rows: Row[] = [
     remote
@@ -244,7 +292,7 @@ export const gitMenu = ({ status, remote, base, pr }: GitFacts): Menu => {
       id: "branch",
       label: "Open branch",
       unavailable: remote ? undefined : noRemote,
-      action: remote ? { kind: "url", url: branchUrl(remote, branch) } : undefined,
+      action: remote ? { kind: "url", url: branchUrl(remote, onRemote ?? branch) } : undefined,
     });
   } else {
     const sha = status.oid || "HEAD";
@@ -291,7 +339,7 @@ export const gitMenu = ({ status, remote, base, pr }: GitFacts): Menu => {
           id: "create",
           label: create,
           description: `into ${base}`,
-          action: { kind: "url", url: compareUrl(remote, base, branch) },
+          action: { kind: "url", url: compareUrl(remote, base, onRemote ?? branch) },
         },
   );
 

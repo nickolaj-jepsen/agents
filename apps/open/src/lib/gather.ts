@@ -11,6 +11,7 @@ import {
   type Platform,
   preferred,
   probeArgv,
+  readyChecks,
   readConfig,
   readProbe,
 } from "@agents/launch/apps.ts";
@@ -23,6 +24,7 @@ import {
   type MenuKind,
   parsePr,
   parseStatus,
+  remoteNames,
   type PrAnswer,
   type Row,
   type Status,
@@ -31,6 +33,13 @@ import {
 /** How long git, the probe and a start may take; `gh` asks the network, so it gets longer. */
 export const GIT_TIMEOUT_MS = 3000;
 export const GH_TIMEOUT_MS = 5000;
+/** How long an app's readiness check may take. */
+export const READY_TIMEOUT_MS = 1500;
+/**
+ * How long after the rows come or change a press is not taken: one meant for the screen before (an
+ * Enter pressed twice for the command) would otherwise start the preselected row.
+ */
+export const SETTLE_MS = 600;
 
 export const TITLES: Record<MenuKind, string> = { git: "Git", folder: "Open folder" };
 
@@ -129,7 +138,12 @@ export async function loadApps(host: Host): Promise<Apps> {
   const { text, platform } = await host.config();
   const config = readConfig(text, platform);
   const probe = await host.run(probeArgv(config.apps), GIT_TIMEOUT_MS);
-  return { config, installed: readProbe(probe?.stdout ?? "") };
+  const found = readProbe(probe?.stdout ?? "");
+  // An app that is installed but says it is not set up (no terminal chosen) is no row to press.
+  const checks = readyChecks(config.apps, found);
+  const ran = await Promise.all(checks.map((check) => host.run(check.argv, READY_TIMEOUT_MS)));
+  const unready = new Set(checks.filter((_, i) => ran[i]?.exitCode !== 0).map((check) => check.id));
+  return { config, installed: unready.size ? { ...found, unready } : found };
 }
 
 const report = (host: Host, problems: readonly string[]) => {
@@ -158,7 +172,7 @@ export async function buildGit(host: Host, cwd: string): Promise<Menu> {
   const remote = chooseRemote(config, branchRemote, forges);
   // Mirrors `gh pr create`: the branch's gh-merge-base, else the remote's default branch.
   const base = mergeBase || (remote ? await defaultBranch(host, cwd, remote.name) : "main");
-  return gitMenu({ status, remote, base, pr });
+  return gitMenu({ status, remote, base, pr, remoteNames: remoteNames(config) });
 }
 
 export async function buildFolder(host: Host, cwd: string): Promise<Menu> {

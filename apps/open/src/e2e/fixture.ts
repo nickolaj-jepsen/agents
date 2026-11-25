@@ -49,7 +49,9 @@ const apps = Object.fromEntries(
 );
 
 // Called as `xdg-terminal-exec --dir=<cwd> [program...]`.
+// `--print-id` is the readiness check: a terminal is chosen when it prints one and exits 0.
 apps["xdg-terminal-exec"] = `#!/bin/sh
+[ "$1" = --print-id ] && { echo stub.desktop; exit 0; }
 printf 'xdg-terminal-exec %s\\n' "$*" >> "$(dirname "$0")/../launched.log"
 `;
 

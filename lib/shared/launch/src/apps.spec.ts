@@ -14,6 +14,7 @@ import {
   probeArgv,
   readConfig,
   readProbe,
+  readyChecks,
 } from "./apps.ts";
 
 const installed = (commands: Record<string, string>, paths: string[] = []): Installed => ({
@@ -22,6 +23,99 @@ const installed = (commands: Record<string, string>, paths: string[] = []): Inst
 });
 
 const ids = (apps: readonly App[]) => apps.map((app) => app.id);
+
+describe("reserved ids", () => {
+  it.each(["copy", "more", "frame:close", "frame:keep", "kit-key-1", "kit-ring"])(
+    "leaves out an app named %s",
+    (id) => {
+      const config = readConfig(
+        JSON.stringify({ apps: [{ id, command: "sh", dir: ["{dir}"] }] }),
+        "linux",
+      );
+      expect(config.problems).toEqual([`apps[0] (${id}): "${id}" is a reserved id; left out`]);
+      expect(ids(config.apps)).toEqual(ids(builtinApps("linux")));
+    },
+  );
+
+  it("still takes an id that only starts like one", () => {
+    const config = readConfig(
+      JSON.stringify({ apps: [{ id: "copyq", command: "copyq", dir: ["{dir}"] }] }),
+      "linux",
+    );
+    expect(config.problems).toEqual([]);
+    expect(ids(config.apps)[0]).toBe("copyq");
+  });
+});
+
+describe("ready", () => {
+  const terminal = builtinApps("linux").find((app) => app.id === "terminal");
+  const apps = builtinApps("linux");
+  const found = installed({
+    "xdg-terminal-exec": "/usr/bin/xdg-terminal-exec",
+    code: "/usr/bin/code",
+  });
+
+  it("is set on the built-in Linux terminal and on no macOS app", () => {
+    expect(terminal?.ready).toEqual(["--print-id"]);
+    expect(builtinApps("mac").some((app) => app.ready)).toBe(false);
+  });
+
+  it("lists a check for each installed app that has one, behind its found command", () => {
+    expect(readyChecks(apps, found)).toEqual([
+      { id: "terminal", argv: ["/usr/bin/xdg-terminal-exec", "--print-id"] },
+    ]);
+    expect(readyChecks(apps, installed({ code: "/usr/bin/code" }))).toEqual([]);
+  });
+
+  it("marks an installed app that is not set up, and keeps the rest", () => {
+    const target = { kind: "dir", dir: "/repo" } as const;
+    const offered = choices(apps, { ...found, unready: new Set(["terminal"]) }, target);
+    const row = offered.find((c) => c.app.id === "terminal");
+    expect(row).toEqual({ app: terminal, unavailable: "not set up" });
+    expect(offered.find((c) => c.app.id === "code")?.argv).toBeDefined();
+    // A missing app is still missing, not unready.
+    expect(
+      choices(apps, { ...installed({}), unready: new Set(["terminal"]) }, target).find(
+        (c) => c.app.id === "terminal",
+      )?.unavailable,
+    ).toBe("not installed");
+  });
+
+  it("leaves a program that needs a terminal with no terminal to run it in", () => {
+    const config = readConfig(
+      JSON.stringify({ apps: [{ id: "nvim", command: "nvim", dir: ["{dir}"], terminal: true }] }),
+      "linux",
+    );
+    const both = installed({ "xdg-terminal-exec": "/x/xdg-terminal-exec", nvim: "/x/nvim" });
+    const target = { kind: "dir", dir: "/repo" } as const;
+    expect(choices(config.apps, both, target)[0]?.argv).toBeDefined();
+    const unready = { ...both, unready: new Set(["terminal"]) };
+    expect(choices(config.apps, unready, target)[0]?.unavailable).toBe("no terminal to run it in");
+  });
+
+  it("is dropped with the command it was for, and read from open.json", () => {
+    const own = readConfig(
+      JSON.stringify({ apps: [{ id: "terminal", command: "kitty", dir: ["{dir}"] }] }),
+      "linux",
+    ).apps[0];
+    expect(own?.ready).toBeUndefined();
+    const set = readConfig(
+      JSON.stringify({ apps: [{ id: "x", command: "x", dir: ["{dir}"], ready: ["--ok"] }] }),
+      "linux",
+    ).apps[0];
+    expect(set?.ready).toEqual(["--ok"]);
+    const bad = readConfig(
+      JSON.stringify({ apps: [{ id: "x", command: "x", dir: ["{dir}"], ready: 3 }] }),
+      "linux",
+    );
+    expect(bad.problems).toEqual(['apps[0] (x): "ready" is not a list of arguments; left out']);
+    const removed = readConfig(
+      JSON.stringify({ apps: [{ id: "terminal", ready: null }] }),
+      "linux",
+    );
+    expect(removed.apps[0]?.ready).toBeUndefined();
+  });
+});
 
 describe("configPath", () => {
   it("prefers XDG_CONFIG_HOME and falls back to ~/.config", () => {

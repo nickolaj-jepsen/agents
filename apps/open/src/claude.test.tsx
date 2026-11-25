@@ -1,9 +1,10 @@
 import type { On } from "claude-code";
-import { expect, test } from "claude-code/testing";
-import type { Engine, Mounted } from "claude-code/testing";
+import { expect, mock, test } from "claude-code/testing";
+import type { Engine, MockClock, Mounted } from "claude-code/testing";
 
 import { expectNative } from "@agents/kit-core/paint/checks.tsx";
 import { DETACH } from "@agents/launch/apps.ts";
+import { SETTLE_MS } from "./lib/gather.ts";
 
 const PANE = {
   plugin: "open",
@@ -37,6 +38,9 @@ const CHECKOUT = "/repo with spaces/作業";
 /** What the machine has by default: Code, a file manager and a browser, and no terminal launcher. */
 const DEFAULT_INSTALLED = ["code", "nautilus", "xdg-open"];
 
+/** The engine's clock, which a menu's settling time is read from. */
+let clock: MockClock;
+
 type World = {
   /** Every argv started through `DETACH`, without it. */
   launched: string[][];
@@ -69,9 +73,20 @@ function world(
     /** The contents of `open.json`; undefined for no file. */
     config = undefined as string | undefined,
     remote = "git@github.com:me/repo.git",
+    /** The `branch.upstream` line `git status` prints. */
+    upstream = "origin/feat/x",
+    /** What `xdg-terminal-exec --print-id` exits with: non-zero when no terminal is chosen. */
+    printId = 0,
+    /** What running `gh` does: a result, or a rejection as when the engine's timeout fires. */
+    gh = undefined as "timeout" | undefined,
+    /** No `gh` on the machine at all. */
+    noGh = false,
+    /** Holds every detached start until it is called. */
+    hold = undefined as { release?: () => void } | undefined,
   } = {},
 ): World {
   const w: World = { launched: [], launchCwds: [], copied: [], toasts: [], closed: [], ran: [] };
+  clock = mock.clock(on);
   on("env.get", (_, e) => ({
     value: ({ HOME, USER: "me" } as Record<string, string>)[e.name],
   }));
@@ -95,18 +110,18 @@ function world(
     if (config === undefined || e.path !== CONFIG) throw new Error(`ENOENT: ${e.path}`);
     return { value: config };
   });
-  on("process.run", (_, e) => {
+  on("process.run", async (_, e) => {
     const argv = [...e.argv];
     const line = argv.join(" ");
     w.ran.push(argv);
     if (argv[0] === "uname") return ok(mac ? "Darwin\n" : "Linux\n");
-    if (argv[0] === "gh")
+    if (argv[0] === "gh") {
+      if (gh === "timeout") throw new Error("process timed out");
       return pr === null ? ok("", 1, "no pull requests found for branch") : ok(pr);
+    }
     if (argv[0] === "git") {
       if (line.includes(" status ")) {
-        return ok(
-          "# branch.oid abc1234def\n# branch.head feat/x\n# branch.upstream origin/feat/x\n",
-        );
+        return ok(`# branch.oid abc1234def\n# branch.head feat/x\n# branch.upstream ${upstream}\n`);
       }
       if (line.includes("--get-regexp")) return ok(`remote.origin.url ${remote}\n`);
       if (line.endsWith("branch.feat/x.remote")) return ok("origin\n");
@@ -126,7 +141,12 @@ function world(
         ].join(""),
       );
     }
+    // Whether a program that made `process.run` reject is there at all.
+    if (argv[0] === "sh" && argv[2]?.startsWith("command -v"))
+      return ok("", (argv[4] === "gh" && !noGh) || installed.includes(argv[4] ?? "") ? 0 : 1);
+    if (argv[0] === XDG && argv[1] === "--print-id") return ok("", printId);
     if (startsWith(argv, DETACH)) {
+      if (hold) await new Promise<void>((release) => (hold.release = release));
       w.launched.push(argv.slice(DETACH.length));
       w.launchCwds.push(e.init?.cwd);
       return ok("");
@@ -166,6 +186,7 @@ test("/git opens the branch's pull request on the forge", async ($, on) => {
   for (const surface of ["terminal", "desktop"] as const) {
     w.launched = [];
     await $.command.run({ ...RUN, command: "git" });
+    await clock.advance(SETTLE_MS);
     const pane = await $.ui.mount({ ...PANE, surface });
     await pane.press({ key: "pr" });
     await pane.unmount();
@@ -177,6 +198,7 @@ test("a row that cannot run starts nothing", async ($, on) => {
   const w = world(on);
   await start($, on);
   await $.command.run({ ...RUN, command: "git" });
+  await clock.advance(SETTLE_MS);
 
   // The branch already has an open pull request, so there is none to create: its row is no
   // control, and its number key says why.
@@ -192,6 +214,7 @@ test("without a pull request, create links the compare page into the default bra
   const w = world(on, { pr: null });
   await start($, on);
   await $.command.run({ ...RUN, command: "git" });
+  await clock.advance(SETTLE_MS);
 
   const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
   await pane.press({ key: "create" });
@@ -206,6 +229,7 @@ test("the copy row puts the branch name on the clipboard", async ($, on) => {
   const w = world(on);
   await start($, on);
   await $.command.run({ ...RUN, command: "git" });
+  await clock.advance(SETTLE_MS);
 
   const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
   await pane.press({ key: "copy" });
@@ -218,6 +242,7 @@ test("a repository on a host nobody named has no forge links", async ($, on) => 
   const w = world(on, { remote: "git@git.example.com:team/repo.git" });
   await start($, on);
   await $.command.run({ ...RUN, command: "git" });
+  await clock.advance(SETTLE_MS);
   const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
   expect(await pane.find({ type: "Button", key: "repo" })).toBeUndefined();
   await pane.press({ key: "kit-key-1" });
@@ -230,6 +255,7 @@ test("/open hands the checkout to an installed app and not to a missing one", as
   const w = world(on);
   await start($, on);
   await $.command.run({ ...RUN, command: "open" });
+  await clock.advance(SETTLE_MS);
 
   const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
   // Sublime Merge is not installed: its row is no control, and its number key says why.
@@ -263,6 +289,7 @@ for (const { label, options, argv } of [
     const w = world(on, { ...options, cwd: CHECKOUT });
     await start($, on);
     await $.command.run({ ...RUN, command: "open" });
+    await clock.advance(SETTLE_MS);
     const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
     await pane.press({ key: "terminal" });
     await pane.unmount();
@@ -279,6 +306,7 @@ test("/open on macOS offers the apps whose bundle exists", async ($, on) => {
   });
   await start($, on);
   await $.command.run({ ...RUN, command: "open" });
+  await clock.advance(SETTLE_MS);
   const keys = await buttonKeys($);
   // Zed has its bundle; Visual Studio Code does not.
   expect(keys).toContain("zed");
@@ -293,6 +321,7 @@ test("on macOS a link goes to `open`", async ($, on) => {
   const w = world(on, { mac: true, installed: ["open"] });
   await start($, on);
   await $.command.run({ ...RUN, command: "git" });
+  await clock.advance(SETTLE_MS);
   const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
   await pane.press({ key: "pr" });
   await pane.unmount();
@@ -303,6 +332,7 @@ test("/open Terminal is unavailable without a launcher", async ($, on) => {
   const w = world(on);
   await start($, on);
   await $.command.run({ ...RUN, command: "open" });
+  await clock.advance(SETTLE_MS);
   expect(await paneText($)).toContain("not installed");
   const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
   expect(await pane.find({ type: "Button", key: "terminal" })).toBeUndefined();
@@ -316,6 +346,7 @@ test("the terminal pane keeps its rows' keys, the keyboard on the pull request, 
   const w = world(on);
   await start($, on);
   await $.command.run({ ...RUN, command: "git" });
+  await clock.advance(SETTLE_MS);
   const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
   const said = (await pane.findAll({ type: "Text" })).map((t) => t.text).join("\n");
   // The menu's name and what it acts on in the caption, a number before each row, the pointer on
@@ -336,6 +367,7 @@ test("bare /open shows the folder menu, with a row to copy the path", async ($, 
   const w = world(on);
   await start($, on);
   await $.command.run({ ...RUN, command: "open" });
+  await clock.advance(SETTLE_MS);
   const keys = await buttonKeys($);
   expect(await paneText($)).toContain("Open folder");
   // Which apps the machine has decides their rows; Copy path is the menu's own, and there is no
@@ -353,6 +385,7 @@ test("/open plan is gone: the folder menu opens as for a bare /open", async ($, 
   world(on);
   await start($, on);
   await $.command.run({ ...RUN, command: "open", args: "plan" });
+  await clock.advance(SETTLE_MS);
   expect(await paneText($)).toContain("Open folder");
 });
 
@@ -368,6 +401,7 @@ test("open.json puts its apps first, and the first installed one is preselected"
   });
   await start($, on);
   await $.command.run({ ...RUN, command: "open" });
+  await clock.advance(SETTLE_MS);
   const keys = await buttonKeys($);
   // Zed is not installed and has no button, so the buttons run files, code, then the rest.
   expect(keys.filter((k) => !k.startsWith("kit-") && k !== "frame:close")).toEqual([
@@ -392,6 +426,7 @@ test("open.json adds an app of its own, started in a terminal", async ($, on) =>
   });
   await start($, on);
   await $.command.run({ ...RUN, command: "open" });
+  await clock.advance(SETTLE_MS);
   expect(await paneText($)).toContain("Neovim");
   const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
   await pane.press({ key: "nvim" });
@@ -405,6 +440,7 @@ test("open.json hides a built-in app", async ($, on) => {
   world(on, { config: JSON.stringify({ apps: [{ id: "zed", hidden: true }] }) });
   await start($, on);
   await $.command.run({ ...RUN, command: "open" });
+  await clock.advance(SETTLE_MS);
   const text = await paneText($);
   // Zed would otherwise show as "not installed".
   expect(text).not.toContain("Zed");
@@ -420,12 +456,15 @@ test("open.json names a self-hosted forge, and /git links it", async ($, on) => 
   });
   await start($, on);
   await $.command.run({ ...RUN, command: "git" });
+  await clock.advance(SETTLE_MS);
   const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
   await pane.press({ key: "repo" });
   await pane.unmount();
   expect(w.launched).toEqual([[`${BIN}/xdg-open`, "https://git.example.com/team/sub/repo"]]);
 
   await $.command.run({ ...RUN, command: "git" });
+
+  await clock.advance(SETTLE_MS);
   const again = await $.ui.mount({ ...PANE, surface: "terminal" });
   await again.press({ key: "branch" });
   await again.unmount();
@@ -439,6 +478,7 @@ test("a forge that is none of the three is reported", async ($, on) => {
   const w = world(on, { config: JSON.stringify({ forges: { "git.example.com": "gitea" } }) });
   await start($, on);
   await $.command.run({ ...RUN, command: "git" });
+  await clock.advance(SETTLE_MS);
   expect(w.toasts).toHaveLength(1);
   expect(w.toasts[0]).toMatch(/^open\.json: .*gitea/);
 });
@@ -447,6 +487,7 @@ test("a broken open.json is a toast, and the built-in apps still work", async ($
   const w = world(on, { config: "{ not json" });
   await start($, on);
   await $.command.run({ ...RUN, command: "open" });
+  await clock.advance(SETTLE_MS);
   const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
   await pane.press({ key: "code" });
   await pane.unmount();
@@ -459,6 +500,7 @@ test("a broken open.json is a toast in /git too", async ($, on) => {
   const w = world(on, { config: "[1, 2]" });
   await start($, on);
   await $.command.run({ ...RUN, command: "git" });
+  await clock.advance(SETTLE_MS);
   expect(w.toasts).toHaveLength(1);
   expect(w.toasts[0]).toMatch(/^open\.json:/);
 });
@@ -467,6 +509,7 @@ test("a link with no browser installed says so and starts nothing", async ($, on
   const w = world(on, { installed: ["code", "nautilus"] });
   await start($, on);
   await $.command.run({ ...RUN, command: "git" });
+  await clock.advance(SETTLE_MS);
   const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
   await pane.press({ key: "pr" });
   await pane.unmount();
@@ -489,6 +532,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     const w = world(on);
     await start($, on, surface);
     await $.command.run({ ...RUN, command: "git" });
+    await clock.advance(SETTLE_MS);
     const pane = await $.ui.mount({ ...PANE, surface });
     await expectNative(pane);
     // The toolbar says which repository the rows act on; the pane's own title is the host's.
@@ -504,6 +548,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     await pane.unmount();
     expect(w.launched).toEqual([[`${BIN}/xdg-open`, "https://github.com/me/repo/pull/12"]]);
     await $.command.run({ ...RUN, command: "git" });
+    await clock.advance(SETTLE_MS);
     const again = await $.ui.mount({ ...PANE, surface });
     await again.press({ key: "copy" });
     await again.unmount();
@@ -515,6 +560,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     const w = world(on, { pr: null });
     await start($, on, surface);
     await $.command.run({ ...RUN, command: "git" });
+    await clock.advance(SETTLE_MS);
     const pane = await $.ui.mount({ ...PANE, surface });
     await expectNative(pane);
     await pane.press({ key: "create" });
@@ -529,6 +575,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     const w = world(on, { installed: [...DEFAULT_INSTALLED, "xdg-terminal-exec"] });
     await start($, on, surface);
     await $.command.run({ ...RUN, command: "open" });
+    await clock.advance(SETTLE_MS);
     const pane = await mount($, "Open folder");
     await expectNative(pane);
     const keys = (await pane.findAll({ type: "Button" })).map((b) => b.key);
@@ -549,6 +596,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     world(on);
     await start($, on, surface);
     await $.command.run({ ...RUN, command: "open" });
+    await clock.advance(SETTLE_MS);
     const pane = await mount($, "Open folder");
     for (const b of await pane.findAll({ type: "Button" })) expect(b.props.hotkey).toBeUndefined();
     expect((await said(pane)).join(" ")).not.toMatch(/Enter|Esc/);
@@ -564,6 +612,7 @@ for (const surface of ["desktop", "vscode"] as const) {
     });
     await start($, on, surface);
     await $.command.run({ ...RUN, command: "open" });
+    await clock.advance(SETTLE_MS);
     const pane = await mount($, "Open folder");
     await expectNative(pane);
     expect(await said(pane)).toContain("IntelliJ");
@@ -572,3 +621,102 @@ for (const surface of ["desktop", "vscode"] as const) {
     expect(w.launched).toEqual([[`${BIN}/idea`, "/repo"]]);
   });
 }
+
+// A press is taken only once the rows have stood still, and one at a time.
+
+test("a press just after the rows come is ignored, and taken after the settling time", async ($, on) => {
+  const w = world(on);
+  await start($, on);
+  // No settling here: the Enter that ran the command arrives again as the menu opens.
+  await $.command.run({ ...RUN, command: "open" });
+  const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
+  await pane.press({ key: "code" });
+  await clock.advance(SETTLE_MS - 1);
+  await pane.press({ key: "kit-key-1" });
+  expect(w.launched).toEqual([]);
+  expect(w.closed).toEqual([]);
+  await clock.advance(1);
+  await pane.press({ key: "code" });
+  await pane.unmount();
+  expect(w.launched).toEqual([[`${BIN}/code`, "/repo"]]);
+});
+
+test("a press while another is under way is dropped", async ($, on) => {
+  const hold: { release?: () => void } = {};
+  const w = world(on, { hold });
+  await start($, on);
+  await $.command.run({ ...RUN, command: "open" });
+  await clock.advance(SETTLE_MS);
+  const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
+  const first = pane.press({ key: "code" });
+  for (let i = 0; i < 20 && !hold.release; i++) await clock.advance(0);
+  expect(hold.release).toBeDefined();
+  await pane.press({ key: "files" });
+  hold.release?.();
+  await first;
+  await pane.unmount();
+  expect(w.launched).toEqual([[`${BIN}/code`, "/repo"]]);
+});
+
+// A command that ran out of time is not a program that is missing.
+
+test("a gh that times out is `gh could not say`, not `gh not installed`", async ($, on) => {
+  world(on, { gh: "timeout" });
+  await start($, on);
+  await $.command.run({ ...RUN, command: "git" });
+  const text = await paneText($);
+  expect(text).toContain("gh could not say");
+  expect(text).not.toContain("gh not installed");
+});
+
+test("a gh that is not installed says so", async ($, on) => {
+  world(on, { gh: "timeout", installed: ["xdg-open"], noGh: true });
+  await start($, on);
+  await $.command.run({ ...RUN, command: "git" });
+  expect(await paneText($)).toContain("gh not installed");
+});
+
+// Where the forge's pages are.
+
+test("a web remote keeps its port and scheme, and open.json names the host with its port", async ($, on) => {
+  const w = world(on, {
+    remote: "http://git.example.com:8443/team/repo.git",
+    config: JSON.stringify({ forges: { "git.example.com:8443": "gitlab" } }),
+  });
+  await start($, on);
+  await $.command.run({ ...RUN, command: "git" });
+  await clock.advance(SETTLE_MS);
+  const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
+  await pane.press({ key: "repo" });
+  await pane.unmount();
+  expect(w.launched).toEqual([[`${BIN}/xdg-open`, "http://git.example.com:8443/team/repo"]]);
+});
+
+test("a branch that tracks another name links the upstream's", async ($, on) => {
+  const w = world(on, { upstream: "origin/feature/real-name", pr: null });
+  await start($, on);
+  await $.command.run({ ...RUN, command: "git" });
+  await clock.advance(SETTLE_MS);
+  const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
+  await pane.press({ key: "branch" });
+  await pane.unmount();
+  expect(w.launched).toEqual([
+    [`${BIN}/xdg-open`, "https://github.com/me/repo/tree/feature/real-name"],
+  ]);
+});
+
+// An installed terminal launcher that has no terminal chosen is not a row to press.
+
+test("/open Terminal is `not set up` while the launcher has no terminal chosen", async ($, on) => {
+  const w = world(on, { installed: [...DEFAULT_INSTALLED, "xdg-terminal-exec"], printId: 1 });
+  await start($, on);
+  await $.command.run({ ...RUN, command: "open" });
+  await clock.advance(SETTLE_MS);
+  expect(await paneText($)).toContain("not set up");
+  const pane = await $.ui.mount({ ...PANE, surface: "terminal" });
+  expect(await pane.find({ type: "Button", key: "terminal" })).toBeUndefined();
+  await pane.press({ key: "kit-key-5" });
+  await pane.unmount();
+  expect(w.toasts).toEqual(["Terminal: not set up"]);
+  expect(w.launched).toEqual([]);
+});

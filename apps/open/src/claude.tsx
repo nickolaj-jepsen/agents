@@ -20,6 +20,7 @@ import {
   GIT_TIMEOUT_MS,
   type Host,
   pressRow,
+  SETTLE_MS,
   type PressHost,
   problemsText,
   TITLES,
@@ -53,6 +54,10 @@ const held = atom({ plugin: "open", key: "held" } as const, false);
 let drawn = { width: 60, height: 10 };
 let hits = new Set<string>();
 let paneSurface: RenderSurface | undefined;
+/** When the rows last came or changed, in the engine's time; a press just after is not taken. */
+let changedAt = Number.NEGATIVE_INFINITY;
+/** A press is being carried out: another is dropped. */
+let isBusy = false;
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
@@ -67,9 +72,36 @@ const runProcess = async (
   try {
     return await $.process.run(argv, { timeoutMs, ...(cwd ? { cwd } : {}) });
   } catch {
-    return undefined;
+    // The engine rejects both for a command that could not start and for one that ran out of
+    // time, and its types give no way to tell them apart. A program that is on `PATH` (or named by
+    // a path) did start, so what rejected was its time, and that is a failed result, not a missing
+    // program.
+    return (await exists($, argv[0])) ? { ...FAILED } : undefined;
   }
 };
+
+/** What a command that ran out of time is: a result that is not a success. */
+const FAILED: ProcessRunResult = {
+  exitCode: 124,
+  stdout: "",
+  stderr: "timed out",
+  isStdoutTruncated: false,
+  isStderrTruncated: false,
+};
+
+/** Whether a program is there to run: found on `PATH`, or the path it is named by is executable. */
+async function exists($: EngineInterface, program: string | undefined) {
+  if (!program) return false;
+  try {
+    const r = await $.process.run(
+      ["sh", "-c", 'command -v -- "$1" >/dev/null 2>&1', "sh", program],
+      { timeoutMs: GIT_TIMEOUT_MS },
+    );
+    return r.exitCode === 0;
+  } catch {
+    return false;
+  }
+}
 
 const isMac = ($: EngineInterface) =>
   (isMacAnswer ??= runProcess($, ["uname", "-s"]).then((r) => r?.stdout.trim() === "Darwin"));
@@ -124,6 +156,7 @@ async function reset($: EngineInterface) {
   await update($, focus, () => null);
   await update($, top, () => 0);
   await update($, held, () => false);
+  changedAt = Number.NEGATIVE_INFINITY;
 }
 
 async function close($: EngineInterface) {
@@ -172,14 +205,26 @@ async function show($: EngineInterface, kind: MenuKind) {
   const built = await buildMenu(engineHost($), kind, cwd);
   // A close or another menu while git answered wins over this one.
   await update($, menu, (m) => (m?.kind === kind && m.rows === null ? built : m));
+  changedAt = await $.clock.now();
   const shown = await read($, menu);
   const first = focusOf(shown, null);
   if (shown?.kind === kind && shown.rows !== null && first) await focusRow($, first);
 }
 
-/** Carries a row's press out; the menu closes unless the row could not run. */
+/**
+ * Carries a row's press out; the menu closes unless the row could not run. Not before the rows
+ * have stood still for a moment, and not while another press is under way.
+ */
 async function press($: EngineInterface, row: Row, surface: RenderSurface) {
-  if ((await pressRow(pressHost($, surface), row)) === "close") await close($);
+  if (isBusy) return;
+  // Taken before the first wait, so a second press arriving meanwhile finds it held.
+  isBusy = true;
+  try {
+    if ((await $.clock.now()) - changedAt < SETTLE_MS) return;
+    if ((await pressRow(pressHost($, surface), row)) === "close") await close($);
+  } finally {
+    isBusy = false;
+  }
 }
 
 export const register: Register = (on) => {

@@ -35,6 +35,8 @@ type Machine = {
   platform?: "mac" | "linux";
   copy?: Awaited<ReturnType<PressHost["copy"]>>;
   starts?: boolean;
+  /** What `xdg-terminal-exec --print-id` exits with; none for a program that cannot run. */
+  printId?: number;
 };
 
 const ok = (stdout: string): Ran => ({ exitCode: 0, stdout, stderr: "" });
@@ -66,6 +68,11 @@ function fakeHost(m: Machine = {}) {
         const names = argv.slice(4, argv.indexOf("--"));
         const found = names.filter((n) => (m.installed ?? ["code", "xdg-open"]).includes(n));
         return ok(found.map((n) => `c\t${n}\t/usr/bin/${n}\n`).join(""));
+      }
+      if (argv[1] === "--print-id") {
+        return "printId" in m && m.printId !== undefined
+          ? { exitCode: m.printId, stdout: "", stderr: "" }
+          : ok("id");
       }
       return undefined;
     },
@@ -229,6 +236,27 @@ describe("buildFolder", () => {
     });
     expect(menu.preferred).toBe("code");
     expect(reported).toEqual([]);
+  });
+
+  test("a launcher with no terminal chosen is not set up, and the readiness is asked with a timeout", async () => {
+    const { host, calls } = fakeHost({
+      installed: ["code", "xdg-open", "xdg-terminal-exec"],
+      printId: 1,
+    });
+    const menu = await buildFolder(host, CWD);
+    expect(row(menu, "terminal").unavailable).toBe("not set up");
+    expect(row(menu, "terminal").action).toBeUndefined();
+    const asked = calls.find((c) => c.argv[1] === "--print-id");
+    expect(asked?.argv).toEqual(["/usr/bin/xdg-terminal-exec", "--print-id"]);
+    expect(asked?.timeoutMs).toBeLessThan(GIT_TIMEOUT_MS);
+  });
+
+  test("a launcher that has a terminal chosen is a row to press", async () => {
+    const menu = await buildFolder(
+      fakeHost({ installed: ["code", "xdg-open", "xdg-terminal-exec"] }).host,
+      CWD,
+    );
+    expect(row(menu, "terminal").action?.kind).toBe("launch");
   });
 
   test("macOS's apps come from the platform the host names", async () => {

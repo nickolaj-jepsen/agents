@@ -6,6 +6,9 @@ import {
   forgesOf,
   gitMenu,
   parseRemote,
+  parseStatus,
+  remoteNames,
+  upstreamBranch,
   type Forges,
   type Menu,
   type Pr,
@@ -110,6 +113,74 @@ describe("parseRemote", () => {
     expect(parseRemote("origin", "https://github.com/repo", custom)).toBeUndefined();
     expect(parseRemote("origin", "/srv/git/repo.git", custom)).toBeUndefined();
     expect(parseRemote("origin", "not a remote", custom)).toBeUndefined();
+  });
+});
+
+describe("parseRemote, web remotes", () => {
+  const forges = forgesOf({
+    "git.example.com": "gitlab",
+    "git.example.com:8443": "gitlab",
+    "ghe.example.com": "github",
+  }).forges;
+
+  it("keeps a web remote's scheme and port", () => {
+    expect(parseRemote("o", "https://git.example.com:8443/group/sub/repo.git", forges)?.web).toBe(
+      "https://git.example.com:8443/group/sub/repo",
+    );
+    expect(parseRemote("o", "http://git.example.com/group/repo.git", forges)?.web).toBe(
+      "http://git.example.com/group/repo",
+    );
+  });
+
+  it("finds the forge by the host with its port, then by the host alone", () => {
+    const named = forgesOf({ "git.example.com:8443": "gitlab" }).forges;
+    expect(parseRemote("o", "https://git.example.com:8443/g/r.git", named)?.forge).toBe("gitlab");
+    // The port is part of the name, so the bare host is another host.
+    expect(parseRemote("o", "https://git.example.com/g/r.git", named)).toBeUndefined();
+    const bare = forgesOf({ "ghe.example.com": "github" }).forges;
+    const found = parseRemote("o", "https://ghe.example.com:9443/g/r.git", bare);
+    expect(found?.forge).toBe("github");
+    expect(found?.web).toBe("https://ghe.example.com:9443/g/r");
+  });
+
+  it("links an ssh remote at https on the host, with no port", () => {
+    expect(parseRemote("o", "ssh://git@git.example.com:2222/group/repo.git", forges)?.web).toBe(
+      "https://git.example.com/group/repo",
+    );
+    expect(parseRemote("o", "git@git.example.com:group/repo.git", forges)?.web).toBe(
+      "https://git.example.com/group/repo",
+    );
+  });
+});
+
+describe("upstream names", () => {
+  it("keeps the upstream's name from the status", () => {
+    const out = "# branch.oid abc\n# branch.head wip\n# branch.upstream origin/feature/real-name\n";
+    expect(parseStatus(out).upstreamRef).toBe("origin/feature/real-name");
+    expect(parseStatus("# branch.head wip\n").upstreamRef).toBeUndefined();
+  });
+
+  it("lists every remote's name", () => {
+    expect(
+      remoteNames("remote.origin.url a\nremote.team/fork.url b\nremote.origin.url c\n"),
+    ).toEqual(["origin", "team/fork"]);
+  });
+
+  it("strips the chosen remote's name, which may hold a slash", () => {
+    const status = (upstreamRef: string): Status => ({ ...PUSHED, branch: "wip", upstreamRef });
+    expect(upstreamBranch(status("origin/feature/real-name"), GITHUB, ["origin"])).toBe(
+      "feature/real-name",
+    );
+    const nested: Remote = { ...GITHUB, name: "team/fork" };
+    expect(upstreamBranch(status("team/fork/wip2"), nested, ["team", "team/fork"])).toBe("wip2");
+    // `team` is the remote of this upstream, not `team/fork`.
+    expect(upstreamBranch(status("team/fork/wip2"), nested, ["team"])).toBe("wip2");
+    expect(
+      upstreamBranch(status("team/fork/wip2"), { ...GITHUB, name: "team" }, ["team", "team/fork"]),
+    ).toBeUndefined();
+    // Another remote's branch, or none: no name of its own.
+    expect(upstreamBranch(status("fork/wip"), GITHUB, ["origin", "fork"])).toBeUndefined();
+    expect(upstreamBranch(PUSHED, GITHUB, ["origin"])).toBeUndefined();
   });
 });
 
@@ -218,6 +289,42 @@ describe("gitMenu", () => {
     expect(url(at("gitlab", detached), "commit")).toBe(
       "https://h.example/me/repo/-/commit/abc1234def5678",
     );
+  });
+
+  it("links the upstream's name for the branch and the compare head when it differs", () => {
+    const status: Status = { ...PUSHED, branch: "wip", upstreamRef: "origin/feature/real-name" };
+    const menu = gitMenu({
+      status,
+      remote: GITHUB,
+      base: "main",
+      pr: null,
+      remoteNames: ["origin"],
+    });
+    expect(row(menu, "branch")?.action).toEqual({
+      kind: "url",
+      url: "https://github.com/me/repo/tree/feature/real-name",
+    });
+    expect(row(menu, "create")?.action).toEqual({
+      kind: "url",
+      url: "https://github.com/me/repo/compare/main...feature/real-name?expand=1",
+    });
+    // What is copied is the branch's own name.
+    expect(row(menu, "copy")?.action).toEqual({ kind: "copy", text: "wip", what: "branch name" });
+  });
+
+  it("keeps the local name for an upstream on another remote", () => {
+    const status: Status = { ...PUSHED, branch: "wip", upstreamRef: "fork/other" };
+    const menu = gitMenu({
+      status,
+      remote: GITHUB,
+      base: "main",
+      pr: null,
+      remoteNames: ["origin", "fork"],
+    });
+    expect(row(menu, "branch")?.action).toEqual({
+      kind: "url",
+      url: "https://github.com/me/repo/tree/wip",
+    });
   });
 
   it("encodes a branch name that is not a plain path", () => {

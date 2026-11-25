@@ -21,7 +21,7 @@ import { widthCap } from "@agents/kit-core/tokens.ts";
 import { notice } from "@agents/kit-notice/terminal.ts";
 import { sheetChrome, sheetRoom } from "@agents/kit-sheet/contract.ts";
 import { sheet } from "@agents/kit-sheet/terminal.ts";
-import { focusOf, type PressHost } from "../lib/gather.ts";
+import { focusOf, SETTLE_MS, type PressHost } from "../lib/gather.ts";
 import type { Menu, Row } from "../lib/menus.ts";
 import {
   CHROME,
@@ -39,11 +39,7 @@ import {
 const ABOVE = 1;
 /** The fewest rows the sheet's body and foot are given, however short the terminal. */
 const LEAST_ROWS = 4;
-/**
- * How long after the rows come a press is not taken: one meant for the screen before (an Enter
- * pressed twice for the command) would otherwise start the preselected row.
- */
-export const SETTLE_MS = 600;
+export { SETTLE_MS };
 
 /** What a press said: what happened, or as a `warning` what did not. */
 export type Said = { text: string; tone: Parameters<PressHost["say"]>[1] };

@@ -21,6 +21,11 @@ export type App = {
   command: string[];
   /** A path that must exist for the app to count as installed, e.g. a macOS bundle. */
   requires?: string;
+  /**
+   * Arguments that ask the found command whether the app is set up: it runs with them, and an exit
+   * other than 0 means it is not (`xdg-terminal-exec --print-id` when no terminal is chosen).
+   */
+  ready?: string[];
   /** The arguments for each kind of target; an app without one is not offered for it. */
   dir?: string[];
   file?: string[];
@@ -87,6 +92,7 @@ export const builtinApps = (platform: Platform): App[] =>
           label: "Terminal",
           command: ["xdg-terminal-exec"],
           dir: ["--dir={dir}"],
+          ready: ["--print-id"],
         },
         { id: BROWSER, label: "Browser", command: ["xdg-open"], url: ["{url}"] },
       ];
@@ -112,6 +118,15 @@ const strings = (value: unknown): string[] | undefined =>
 const KINDS = ["dir", "file", "url"] as const;
 
 /**
+ * Ids an app of `open.json` may not take: rows and controls of a menu are found by id, so an app
+ * named like one would take it over. `copy` is the folder menu's Copy path row, `more` the
+ * graphical list's control for the rest of its rows, and the `frame:` and `kit-` ids are the kit's
+ * own (the frame's Close and its answers, the terminal's key ring and number keys).
+ */
+export const isReservedId = (id: string) =>
+  id === "copy" || id === "more" || id.startsWith("frame:") || id.startsWith("kit-");
+
+/**
  * One entry of the file's `apps`, laid over the built-in app of the same id when there is one.
  * @returns The app, `null` for an entry that hides a built-in one, or why it was left out.
  */
@@ -119,6 +134,7 @@ function readApp(raw: unknown, at: number, base: App | undefined): App | null | 
   if (!isRecord(raw) || typeof raw.id !== "string" || !raw.id)
     return `apps[${at}] has no "id"; left out`;
   const where = `apps[${at}] (${raw.id})`;
+  if (isReservedId(raw.id)) return `${where}: "${raw.id}" is a reserved id; left out`;
   if (raw.hidden === true) return null;
   const app: App = base ? { ...base } : { id: raw.id, label: raw.id, command: [] };
   if (raw.label !== undefined) {
@@ -132,10 +148,19 @@ function readApp(raw: unknown, at: number, base: App | undefined): App | null | 
     app.command = command;
     // The built-in app's bundle says nothing about another command.
     delete app.requires;
+    delete app.ready;
   }
   if (raw.requires !== undefined) {
     if (typeof raw.requires !== "string") return `${where}: "requires" is not a path; left out`;
     app.requires = raw.requires;
+  }
+  if (raw.ready !== undefined) {
+    if (raw.ready === null) delete app.ready;
+    else {
+      const ready = strings(raw.ready);
+      if (!ready) return `${where}: "ready" is not a list of arguments; left out`;
+      app.ready = ready;
+    }
   }
   for (const kind of KINDS) {
     if (raw[kind] === undefined) continue;
@@ -217,6 +242,8 @@ export function readConfig(text: string | undefined, platform: Platform): Config
 export type Installed = {
   commands: ReadonlyMap<string, string>;
   paths: ReadonlySet<string>;
+  /** Ids of installed apps whose `ready` check failed; absent when none was run. */
+  unready?: ReadonlySet<string>;
 };
 
 // Prints `c<TAB>name<TAB>path` for a command on PATH and `p<TAB>path` for a path that exists.
@@ -247,6 +274,22 @@ export function readProbe(stdout: string): Installed {
     else if (kind === "p" && first) paths.add(first);
   }
   return { commands, paths };
+}
+
+/** One readiness check to run: the app it is for and the whole command. */
+export type ReadyCheck = { id: string; argv: string[] };
+
+/**
+ * The checks to run for what is installed: each installed app's `ready` arguments behind its found
+ * command. Run each one, and pass the ids of those that did not exit 0 as `Installed.unready`.
+ */
+export function readyChecks(apps: readonly App[], installed: Installed): ReadyCheck[] {
+  return apps.flatMap((app) => {
+    if (!app.ready) return [];
+    if (app.requires !== undefined && !installed.paths.has(app.requires)) return [];
+    const found = app.command.map((name) => installed.commands.get(name)).find(Boolean);
+    return found ? [{ id: app.id, argv: [found, ...app.ready] }] : [];
+  });
 }
 
 /** An app as a target's menu offers it: how it starts, or why it cannot. */
@@ -316,9 +359,10 @@ export function choices(apps: readonly App[], installed: Installed, target: Targ
     .map((app): Choice => {
       const argv = own(app, installed, target);
       if (!argv) return { app, unavailable: "not installed" };
+      if (installed.unready?.has(app.id)) return { app, unavailable: "not set up" };
       if (!app.terminal) return { app, argv, cwd };
       const window =
-        shell && cwd !== undefined && runsPrograms(shell)
+        shell && cwd !== undefined && runsPrograms(shell) && !installed.unready?.has(shell.id)
           ? own(shell, installed, { kind: "dir", dir: cwd })
           : undefined;
       return window
