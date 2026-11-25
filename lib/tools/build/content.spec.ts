@@ -38,6 +38,21 @@ describe("content", () => {
     }
   });
 
+  it("does not read an app with neither a claude nor a pi half as a plugin", () => {
+    // Herdr's UI and the site live in `apps/` and are not plugins: a folder there declares a half
+    // to be one, and nothing else does. Herdr's UI is also `"private": true`, so no page, row,
+    // version or marketplace entry lists it.
+    const root = checkout({
+      "apps/real/package.json": pkg("real"),
+      "apps/real/README.md": readme,
+      "apps/window/package.json": JSON.stringify({
+        name: "@nickolaj-jepsen/window",
+        version: "0.1.0",
+      }),
+    });
+    expect(loadContent(root).plugins.map((p) => p.name)).toEqual(["real"]);
+  });
+
   it("gives every skill a summary and a known category", () => {
     const slugs = CATEGORIES.map((c) => c.slug);
     for (const s of content.skills) {
