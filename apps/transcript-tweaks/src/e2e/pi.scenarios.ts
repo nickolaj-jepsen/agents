@@ -76,7 +76,13 @@ export default scenarios({
   plugin: "transcript-tweaks",
   harness: "pi",
   // Hermetic: its own config with this plugin alone, so nothing of the person's setup shows.
-  start: { hermetic: true, plugins: ["transcript-tweaks"], turns },
+  start: {
+    hermetic: true,
+    plugins: ["transcript-tweaks"],
+    turns,
+    // Freeze before layout: masking a variable-width duration cannot undo truncation.
+    env: { FIXTURE_TOOL_DURATION_MS: "12" },
+  },
   region: transcript,
   scenarios: {
     folded: {

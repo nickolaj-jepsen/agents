@@ -22,6 +22,7 @@ import {
 } from "@earendil-works/pi-ai";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { readFileSync } from "node:fs";
+import { fixedToolDuration } from "./fixed-tool-duration.ts";
 
 interface Turn {
   text?: string;
@@ -135,6 +136,8 @@ function streamFixture(model: Model<Api>): AssistantMessageEventStream {
 }
 
 export default function (pi: ExtensionAPI) {
+  const duration = process.env.FIXTURE_TOOL_DURATION_MS;
+  if (duration !== undefined) fixedToolDuration(pi, Number(duration));
   pi.registerProvider("fixture", {
     baseUrl: "http://fixture.invalid",
     apiKey: "fixture",
