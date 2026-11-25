@@ -26,6 +26,9 @@
     mkdir -p $out
     install -Dm644 ${src}/python/agents-update.py $out/agents-update.py
     install -Dm644 ${src}/python/agents-refresh.py $out/agents-refresh.py
+    # The UI deployer: agents-update.py puts this directory on sys.path, so the two travel
+    # together (it is imported, not executed).
+    install -Dm644 ${src}/python/agents_ui.py $out/agents_ui.py
   '';
 
   # `agents`: the publication CLI. A build is the only backend, so nix, git and coreutils are on
@@ -77,8 +80,8 @@
       # directory, and a store copy is read-only.
       mkdir tests
       cd tests
-      install -m644 ${scripts}/agents-update.py ${scripts}/agents-refresh.py .
-      install -m644 ${src}/python/test_agents_update.py ${src}/python/test_agents_refresh.py .
+      install -m644 ${scripts}/agents-update.py ${scripts}/agents-refresh.py ${scripts}/agents_ui.py .
+      install -m644 ${src}/python/test_agents_update.py ${src}/python/test_agents_refresh.py ${src}/python/test_agents_ui.py .
       export HOME="$TMPDIR/home"
       mkdir -p "$HOME"
       python3 -m unittest discover -s . -p 'test_agents_*.py'
@@ -97,6 +100,7 @@ in
       ln -s ${refresh}/bin/agents-refresh $out/bin/agents-refresh
       install -Dm644 ${scripts}/agents-update.py $out/share/agents-updates/python/agents-update.py
       install -Dm644 ${scripts}/agents-refresh.py $out/share/agents-updates/python/agents-refresh.py
+      install -Dm644 ${scripts}/agents_ui.py $out/share/agents-updates/python/agents_ui.py
       ln -s ${pi} $out/share/agents-updates/pi
       runHook postInstall
     '';
