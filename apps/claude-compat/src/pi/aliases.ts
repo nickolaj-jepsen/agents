@@ -8,7 +8,43 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 // A name standing alone, so paths like /tmp/x never match; the separator after it is consumed.
 const SKILL_TOKEN = /(?<=^|\s)\/(?:skill:)?([a-z0-9-]+)(?:$|[\s.,;:!?)])/g;
 
+type Selection = {
+  provider: string;
+  model: string;
+  thinking: ReturnType<ExtensionAPI["getThinkingLevel"]>;
+};
+const SELECTIONS = Symbol.for("agents.claude-compat.new-session-selections");
+// Pi reloads extension modules on /new: a module-local variable would be lost.
+// Keep only plain data, keyed by destination, never the outgoing pi/ctx objects.
+const handoffs = globalThis as typeof globalThis & { [SELECTIONS]?: Map<string, Selection> };
+
 export default function (pi: ExtensionAPI) {
+  pi.on("session_shutdown", (event, ctx) => {
+    if (event.reason !== "new" || !ctx.model) return;
+    const selections = (handoffs[SELECTIONS] ??= new Map());
+    selections.set(event.targetSessionFile ?? ctx.cwd, {
+      provider: ctx.model.provider,
+      model: ctx.model.id,
+      thinking: pi.getThinkingLevel(),
+    });
+  });
+
+  pi.on("session_start", async (event, ctx) => {
+    const key = ctx.sessionManager.getSessionFile() ?? ctx.cwd;
+    const selection = handoffs[SELECTIONS]?.get(key);
+    handoffs[SELECTIONS]?.delete(key);
+    if (event.reason !== "new" || !selection) return;
+    const model = ctx.modelRegistry.find(selection.provider, selection.model);
+    if (!model || !(await pi.setModel(model))) {
+      ctx.ui.notify(
+        "Could not retain the previous model; using the new session default",
+        "warning",
+      );
+      return;
+    }
+    pi.setThinkingLevel(selection.thinking);
+  });
+
   pi.registerCommand("clear", {
     description: "Start a new session (alias for /new)",
     handler: async (_args, ctx) => {
