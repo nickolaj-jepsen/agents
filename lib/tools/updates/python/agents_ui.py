@@ -321,15 +321,50 @@ class _Changes:
     pruned: list = field(default_factory=list)  # (path, bytes it held before)
 
 
-def _previous_bytes(target):
+def previous_regular_bytes(target):
+    """What `target` held as a regular file, or None when there is nothing to restore.
+
+    A symlink is deliberately not read: this tool never writes one, so a link at a deployed
+    path belongs to home-manager or to the person, and undoing a deploy must never replace it
+    with the bytes of whatever it pointed at.
+    """
+    if target.is_symlink() or not target.is_file():
+        return None
     try:
-        return (
-            target.read_bytes()
-            if target.is_file() and not target.is_symlink()
-            else None
-        )
+        return target.read_bytes()
     except OSError as exc:
         raise DeployError(f"cannot read {target}: {exc.strerror or exc}") from None
+
+
+def _restore(target, previous, console):
+    """Put `previous` back at `target` the way a forward write goes in: via a rename.
+
+    A truncating write here would expose a half-written file to the app's watcher for as long as
+    it takes to finish - the one thing a rollback of a watched tree must not do. Falls back to
+    a plain write only when no scratch directory can be made, and says so.
+    """
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        handle, temporary = tempfile.mkstemp(
+            dir=str(target.parent), prefix=f".{target.name}.restore."
+        )
+        try:
+            with os.fdopen(handle, "wb") as stream:
+                stream.write(previous)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.chmod(temporary, MODE)
+            os.replace(temporary, target)
+        except BaseException:
+            with contextlib.suppress(OSError):
+                os.unlink(temporary)
+            raise
+    except OSError as exc:
+        console.warn(
+            f"agents: {target} could not be restored atomically ({exc.strerror or exc}); "
+            "writing it in place"
+        )
+        target.write_bytes(previous)
 
 
 def _rollback(changes, console):
@@ -337,14 +372,12 @@ def _rollback(changes, console):
     failures = []
     for target, previous in changes.pruned:
         try:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(previous)
+            _restore(target, previous, console)
         except OSError as exc:
             failures.append(f"{target}: {exc.strerror or exc}")
     for target, previous in changes.replaced:
         try:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(previous)
+            _restore(target, previous, console)
         except OSError as exc:
             failures.append(f"{target}: {exc.strerror or exc}")
     for target in changes.created:
@@ -362,9 +395,13 @@ def _rollback(changes, console):
 
 
 def _write(source, target, scratch, changes):
-    previous = (
-        _previous_bytes(target) if (target.exists() or target.is_symlink()) else None
-    )
+    if target.is_symlink():
+        # The caller skips a symlink before writing; this is the tripwire for a new caller that
+        # does not, so a link is never replaced and later "restored" as a file.
+        raise DeployError(
+            f"{target} is a symlink this tool does not manage ({os.readlink(target)})"
+        )
+    previous = previous_regular_bytes(target) if target.exists() else None
     if previous is None:
         changes.created.append(target)
     else:
@@ -409,7 +446,6 @@ def deploy(name, source, target, state, console, dry_run=False):
         # The record describes another tree: nothing in this one is ours to prune, and claiming
         # the old paths would let a later run in the old tree delete files it still needs.
         previous = []
-    ours = set(previous)
 
     result = DeployResult(name=name, source=source, destination=target, dry_run=dry_run)
     wanted = set(files)
@@ -424,10 +460,10 @@ def deploy(name, source, target, state, console, dry_run=False):
                     (relative, f"{blocker} is a symlink this tool does not manage")
                 )
                 continue
-            if path.is_symlink() and relative not in ours:
-                # The precedent agents-refresh sets for a directory it shares: an entry a
-                # previous generation wrote is replaced, anything else is reported and left
-                # alone. Another owner's link is not ours to overwrite.
+            if path.is_symlink():
+                # Never replaced, whatever the record says: this tool writes real files, so a
+                # link at a deployed path was put there by someone else - home-manager, or the
+                # person - and a deploy cannot faithfully undo having overwritten it.
                 result.skipped.append(
                     (
                         relative,
@@ -449,6 +485,20 @@ def deploy(name, source, target, state, console, dry_run=False):
             _write(source / relative, path, scratch, changes)
 
         _prune(target, previous, wanted, result, changes, dry_run)
+
+        # The record is the ledger of what may be pruned later, so it is part of the same
+        # transaction: a deploy that cannot record itself is undone, and the tree and the record
+        # never disagree. The write is atomic (beside, then rename), so a failure leaves the
+        # previous record whole while the files this run wrote are rolled back.
+        if not dry_run:
+            left_alone = {relative for relative, _ in result.skipped}
+            save_record(
+                record_file,
+                name,
+                source,
+                target,
+                [r for r in files if r not in left_alone],
+            )
     except BaseException:
         if not dry_run:
             _rollback(changes, console)
@@ -458,11 +508,6 @@ def deploy(name, source, target, state, console, dry_run=False):
             with contextlib.suppress(OSError):
                 scratch.rmdir()  # only when this run left it empty
 
-    if not dry_run:
-        left_alone = {relative for relative, _ in result.skipped}
-        save_record(
-            record_file, name, source, target, [r for r in files if r not in left_alone]
-        )
     return result
 
 
@@ -500,7 +545,7 @@ def _prune(target, previous, wanted, result, changes, dry_run):
         result.pruned.append(relative)
         if dry_run:
             continue
-        changes.pruned.append((path, _previous_bytes(path) or b""))
+        changes.pruned.append((path, previous_regular_bytes(path) or b""))
         try:
             path.unlink()
         except OSError as exc:

@@ -392,6 +392,40 @@ def _ordered_plugin(entry):
     }
 
 
+def state_bytes(state):
+    """`current.json` as it is now, or None when there is no state to put back."""
+    try:
+        return (Path(state) / STATE_FILE).read_bytes()
+    except FileNotFoundError:
+        return None
+
+
+def restore_state(state, previous):
+    """Put `previous` (from `state_bytes`) back, or drop the file when there was none.
+
+    Used when an operation fails after it has written the state: a publication is only real if
+    what the tree reads and what `resolve` reports agree, so a half-done operation puts the
+    state file back the way it was rather than leaving the two disagreeing.
+    """
+    path = Path(state) / STATE_FILE
+    if previous is None:
+        with contextlib.suppress(FileNotFoundError):
+            path.unlink()
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle, temporary = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.")
+    try:
+        with os.fdopen(handle, "wb") as stream:
+            stream.write(previous)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    except BaseException:
+        with contextlib.suppress(OSError):
+            os.unlink(temporary)
+        raise
+
+
 @contextlib.contextmanager
 def state_lock(state, timeout):
     """Serialise updates and resets; the lock lives beside the state it guards."""
@@ -874,15 +908,6 @@ def cmd_update(args, env, console):
                 keep = True
                 raise
 
-            # Deploy before recording the publication: a build that cannot be put where Herdr
-            # reads it is not published, and the state keeps naming a snapshot that is in place.
-            deployed = deploy_ui(
-                context.state,
-                env,
-                console,
-                {name: (Path(path), "published") for name, path in ui_built.items()},
-            )
-
             plugins = apply_plugins(
                 plugins, baseline.revision, planned, supported, built, args.harness
             )
@@ -890,7 +915,34 @@ def cmd_update(args, env, console):
                 skills, baseline.revision, selected_skills, skills_store
             )
             ui = apply_ui(ui, baseline.revision, ui_built)
+
+            # The state file first, the deployed tree second. Both are atomic on their own - one
+            # renamed JSON file, and per-file renames that roll themselves back - so a failure to
+            # write the state changes nothing, and a failure to deploy is undone by putting the
+            # state file back. Publishing before the tree is in place would leave `resolve`
+            # naming an artifact the app is not reading.
+            previous_state = state_bytes(context.state)
             save_state(context.state, plugins, skills, ui)
+            if ui_built:
+                try:
+                    deployed = deploy_ui(
+                        context.state,
+                        env,
+                        console,
+                        {
+                            name: (Path(path), "published")
+                            for name, path in ui_built.items()
+                        },
+                    )
+                except BaseException:
+                    try:
+                        restore_state(context.state, previous_state)
+                    except OSError as exc:
+                        console.warn(
+                            f"{PROG}: could not put {STATE_FILE} back after a failed deploy: "
+                            f"{exc.strerror or exc}"
+                        )
+                    raise
         finally:
             if keep:
                 console.warn(f"{PROG}: kept the published snapshot in {temporary}")
@@ -1146,8 +1198,8 @@ def cmd_reset(args, env, console):
 
         # A UI artifact is deployed, not linked: dropping the override is only the first half,
         # so the writable tree is converged on the baseline as part of the reset.
+        sources = {}
         if not args.skill:
-            sources = {}
             for name in names:
                 if name not in ui:
                     continue
@@ -1160,14 +1212,28 @@ def cmd_reset(args, env, console):
                 source, label = _reset_ui_source(env, name, console)
                 if source is not None:
                     sources[name] = (source, label)
-            if sources:
-                deployed = deploy_ui(state, env, console, sources)
 
+        # Same order as an update, for the same reason: the state file is one atomic write, and
+        # a deploy that fails is undone by putting it back - so a reset that cannot finish leaves
+        # the publication (and the pinned revision it recorded) exactly as it was.
+        previous_state = state_bytes(state)
         if changed:
             save_state(state, plugins, skills, ui)
             console.say(f"reset to the baseline: {', '.join(changed)}")
         else:
             console.say("nothing to reset: no snapshot for those names")
+        if sources:
+            try:
+                deployed = deploy_ui(state, env, console, sources)
+            except BaseException:
+                try:
+                    restore_state(state, previous_state)
+                except OSError as exc:
+                    console.warn(
+                        f"{PROG}: could not put {STATE_FILE} back after a failed deploy: "
+                        f"{exc.strerror or exc}"
+                    )
+                raise
     report_deployed(console, deployed)
     return 0
 

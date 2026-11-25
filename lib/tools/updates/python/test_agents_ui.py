@@ -312,6 +312,48 @@ class DestinationOwnershipTest(Fixture):
         self.assertTrue(target.is_symlink())
         self.assertNotIn("mods/demo/main.js", self.record()["files"])
 
+    def test_a_recorded_path_taken_over_by_a_symlink_is_left_alone(self):
+        # This tool writes real files, so a link at a path it once wrote was put there by
+        # someone else. Replacing it would be a change no deploy can undo faithfully.
+        self.deploy()
+        elsewhere = self.temporary / "taken-over.js"
+        write(elsewhere, "// someone else's\n")
+        target = self.destination / "mods" / "demo" / "main.js"
+        target.unlink()
+        target.symlink_to(elsewhere)
+        write(self.source / "mods" / "demo" / "main.js", "// new upstream\n")
+        result = self.deploy()
+        self.assertIn(("mods/demo/main.js", mock.ANY), result.skipped)
+        self.assertTrue(target.is_symlink())
+        self.assertEqual(target.read_text(encoding="utf-8"), "// someone else's\n")
+        # It is no longer ours: a later prune must not remove another owner's link.
+        self.assertNotIn("mods/demo/main.js", self.record()["files"])
+
+    def test_a_failed_deploy_never_deletes_a_symlink_that_took_a_path_over(self):
+        # The mislabel this guards: reading no bytes from a symlink used to record it as a file
+        # this run created, so a rollback would unlink it.
+        self.deploy()
+        elsewhere = self.temporary / "taken-over.js"
+        write(elsewhere, "// someone else's\n")
+        target = self.destination / "mods" / "demo" / "main.js"
+        target.unlink()
+        target.symlink_to(elsewhere)
+        write(self.source / "mods" / "demo" / "helper.js", "// changed\n")
+        real = os.replace
+        calls = {"n": 0}
+
+        def explode(source_path, target_path):
+            calls["n"] += 1
+            if calls["n"] == 2:
+                raise OSError("disk full")
+            return real(source_path, target_path)
+
+        with mock.patch.object(agents_ui.os, "replace", explode):
+            with self.assertRaises(OSError):
+                self.deploy()
+        self.assertTrue(target.is_symlink())
+        self.assertEqual(target.read_text(encoding="utf-8"), "// someone else's\n")
+
     def test_a_symlinked_mod_directory_inside_the_tree_is_left_alone(self):
         shared = self.destination / "mods" / "shared-demo"
         write(shared / "main.js", "// linked\n")
@@ -444,6 +486,64 @@ class RollbackTest(Fixture):
                 self.deploy()
         self.assertFalse((self.destination / "mods" / "demo" / "helper.js").exists())
         self.assertFalse((self.state / "ui" / "herdr-ui.json").exists())
+
+    def test_a_record_that_cannot_be_written_rolls_the_files_back(self):
+        # The record is the ledger a later prune trusts, so it is part of the transaction: a
+        # deploy that cannot record itself leaves neither the files nor a record that differs
+        # from them.
+        self.deploy()
+        before = self.record()
+        write(self.source / "mods" / "demo" / "helper.js", "// new helper\n")
+        write(self.source / "mods" / "demo" / "main.js", "// new main\n")
+        with mock.patch.object(
+            agents_ui, "save_record", side_effect=OSError("disk full")
+        ):
+            with self.assertRaises(OSError):
+                self.deploy()
+        self.assertEqual(
+            self.deployed("mods/demo/helper.js"), "export const helper = 1;\n"
+        )
+        self.assertEqual(self.deployed("mods/demo/main.js"), "// main\n")
+        self.assertEqual(self.record(), before)
+
+    def test_a_rollback_restores_by_rename_and_never_truncates_a_file(self):
+        # The deployed tree is watched, so a restore that truncated a mod would expose a
+        # half-written file to the app for as long as the write took. This fails the third
+        # rename - the ownership record's - so two files have been replaced and both must come
+        # back through a rename of their own.
+        self.deploy()
+        write(self.source / "mods" / "demo" / "helper.js", "// new helper\n")
+        write(self.source / "mods" / "demo" / "main.js", "// new main\n")
+        real = os.replace
+        calls = {"n": 0}
+
+        def explode(source_path, target_path):
+            calls["n"] += 1
+            if calls["n"] == 3:
+                raise OSError("disk full")
+            return real(source_path, target_path)
+
+        truncating = AssertionError(
+            "a rollback truncated a file instead of renaming over it"
+        )
+        with (
+            mock.patch.object(agents_ui.os, "replace", explode),
+            mock.patch.object(Path, "write_bytes", side_effect=truncating),
+            self.assertRaises(OSError),
+        ):
+            self.deploy()
+        self.assertEqual(
+            self.deployed("mods/demo/helper.js"), "export const helper = 1;\n"
+        )
+        self.assertEqual(self.deployed("mods/demo/main.js"), "// main\n")
+        self.assertEqual(
+            [
+                path.name
+                for path in self.destination.iterdir()
+                if path.name.startswith(".")
+            ],
+            [],
+        )
 
     def test_a_failed_prune_restores_what_it_removed(self):
         self.deploy()
