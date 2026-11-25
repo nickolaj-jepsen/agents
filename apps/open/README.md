@@ -1,7 +1,6 @@
 ---
 tagline: "Open the checkout in your own editor, file manager or terminal, and its repository, branch or pull request on the forge."
 featured: true
-status: in-progress
 requires:
   - "`git`"
   - "`gh`, for the pull request"
