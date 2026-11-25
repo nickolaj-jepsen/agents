@@ -41,7 +41,7 @@ metadata:
 
 ## Start or resume
 
-1. **Resolve the directory.** If none is given, take the most recently modified `plans/<slug>/` holding a `HANDOFF.md` in the project's store, skipping `plans/history/`, and confirm it before starting. The store is `.agents/store/` at the checkout's root, shared by all its checkouts when the notes plugin is installed.
+1. **Resolve the directory.** If none is given, take the most recently modified `plans/<slug>/` holding a `HANDOFF.md` in the project's store, skipping `plans/history/`, and confirm it before starting. The store is `.agents/store/` in the checkout the session started in, which the notes plugin links to the repository's one shared store; from another worktree, use its absolute path.
 2. **Read `HANDOFF.md` in full** and `references/runtime.md`. Amendments override everything above them. Resolve this skill's bundled `scripts/watch.py` to an absolute path. Read `notes/` files only when an item needs them.
 3. **Resume** if `PROGRESS.md` exists.
    - Check it against git: the integration branch, item worktrees and their commits. Where they disagree, git wins; fix `PROGRESS.md`.

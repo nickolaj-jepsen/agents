@@ -32,7 +32,7 @@ Every subagent brief repeats these.
 
 ## Files
 
-- Reports are `onboard/overview.md` and `onboard/<subsystem slug>.md` in the project's store (`.agents/store/` at the checkout's root, shared by all its checkouts when the notes plugin is installed; create the folder if it is missing), each with its evidence file `<report name>-evidence.md` beside it, with `onboard/files/assets/` for images and `onboard/files/devshell/` for a generated flake. Never commit them.
+- Reports are `onboard/overview.md` and `onboard/<subsystem slug>.md` in the project's store (`.agents/store/` in the checkout the session started in, which the notes plugin links to the repository's one shared store; create the folder if it is missing, and from another worktree use its absolute path), each with its evidence file `<report name>-evidence.md` beside it, with `onboard/files/assets/` for images and `onboard/files/devshell/` for a generated flake. Never commit them.
 - Clones live under `/tmp/onboard/<checkout path as a slug>/`, as `trace/` and `dive-<subsystem>/`. They're disposable: a rerun resets them, so nothing there is kept.
 - If the target file exists, this is a rerun. Read it, then go by its state:
   - Marked **short** or **not run:** unfinished. Run from stage 1, keeping what still holds.

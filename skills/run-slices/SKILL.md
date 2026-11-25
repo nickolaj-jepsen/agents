@@ -18,7 +18,7 @@ metadata:
 
 ## Start or resume
 
-1. **Resolve the directory.** If none is given, take the most recently modified `plans/<slug>/` holding a `SLICES.md` in the project's store, skipping `plans/history/`, and confirm it before starting. The store is `.agents/store/` at the checkout's root, shared by all its checkouts when the notes plugin is installed.
+1. **Resolve the directory.** If none is given, take the most recently modified `plans/<slug>/` holding a `SLICES.md` in the project's store, skipping `plans/history/`, and confirm it before starting. The store is `.agents/store/` in the checkout the session started in, which the notes plugin links to the repository's one shared store; from another worktree, use its absolute path.
 2. **Read `SLICES.md` in full.** Read `notes/` files only when a slice needs them.
 3. **Resume** if `PROGRESS.md` exists. Resolve the recorded worktree, branch and base in Git. Compare its tip, diff and working tree with the handoff before changing anything; keep uncommitted work. Reuse checks only for the verified tree. Recover unfinished work from Git, logs and the handoff, not from worker IDs, which can expire on reset. Continue from "Now".
 4. **First run.**
@@ -34,7 +34,7 @@ Before dispatch, run [preflight.sh](preflight.sh) from this skill's directory:
 sh preflight.sh "$worktree" "$branch" "$base_commit" "$skill_file"
 ```
 
-Pass the expected starting commit and zero or more absolute skill paths from the brief. The command checks the clean branch and commit, the readable skill files, and creates the project store folder if it is missing. If a skill moved, resolve its installed path or give the worker the applicable procedure. If the store cannot be created, stop writing notes and report the path. Retain the worktree tool's diagnostics.
+Pass the expected starting commit and zero or more absolute skill paths from the brief. The command checks the clean branch and commit, the readable skill files, and links the worktree's `.agents/store` to the project's store, so what a worker writes there lands where the lead reads it and survives the worktree's removal. If a skill moved, resolve its installed path or give the worker the applicable procedure. If the store cannot be created, stop writing notes and report the path. Retain the worktree tool's diagnostics.
 
 ## Loop
 

@@ -135,7 +135,7 @@ const reminded = new Set<string>();
 
 /**
  * The reminder for docs this session hasn't read yet, or undefined; only in a checkout with a
- * store, since without one there is nowhere to file.
+ * store (`.agents/store`), so a repository that never kept one is left quiet.
  */
 async function reminderFor($: EngineInterface, paths: readonly string[]) {
   if (paths.length === 0) return undefined;

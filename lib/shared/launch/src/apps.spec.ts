@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { chmodSync, mkdtempSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -8,6 +8,7 @@ import {
   builtinApps,
   choices,
   configPath,
+  DETACH,
   type Installed,
   preferred,
   probeArgv,
@@ -27,6 +28,7 @@ describe("configPath", () => {
     expect(configPath({ XDG_CONFIG_HOME: "/x", HOME: "/h" })).toBe("/x/agents/open.json");
     expect(configPath({ HOME: "/h" })).toBe("/h/.config/agents/open.json");
     expect(configPath({})).toBeUndefined();
+    expect(configPath({ XDG_CONFIG_HOME: "rel", HOME: "/h" })).toBe("/h/.config/agents/open.json");
   });
 });
 
@@ -147,6 +149,44 @@ describe("choices", () => {
     expect(preferred(offered)?.cwd).toBe("/work");
   });
 
+  it("keeps a $ in a path or a link as it is", () => {
+    const has = installed({ code: "/bin/code", "xdg-open": "/bin/xdg-open", nautilus: "/bin/n" });
+    const file = choices(apps, has, { kind: "file", file: "/w/a$$b $&.md", line: 3 });
+    expect(file[0]?.argv?.at(-1)).toBe("/w/a$$b $&.md:3");
+    const dir = choices(apps, has, { kind: "dir", dir: "/srv/$$app" });
+    expect(dir.find((c) => c.app.id === "code")?.argv).toEqual(["/bin/code", "/srv/$$app"]);
+    const url = choices(apps, has, { kind: "url", url: "https://h/p?a=$&b=1" });
+    expect(url[0]?.argv).toEqual(["/bin/xdg-open", "https://h/p?a=$&b=1"]);
+  });
+
+  it("fills {dir} for a file with its folder", () => {
+    const custom = readConfig(
+      JSON.stringify({
+        apps: [{ id: "ed", command: "ed", file: ["-w", "{dir}", "{file}:{line}"] }],
+      }),
+      "linux",
+    ).apps;
+    const [ed] = choices(custom, installed({ ed: "/bin/ed" }), { kind: "file", file: "/w/x/a.md" });
+    expect(ed?.argv).toEqual(["/bin/ed", "-w", "/w/x", "/w/x/a.md"]);
+  });
+
+  it("runs a terminal program in a terminal that names a path it requires", () => {
+    const custom = readConfig(
+      JSON.stringify({
+        apps: [
+          { id: "terminal", command: "kitty", requires: "/opt/kitty", dir: ["-d", "{dir}"] },
+          { id: "lazygit", command: "lazygit", dir: ["-p", "{dir}"], terminal: true },
+        ],
+      }),
+      "linux",
+    ).apps;
+    const has = installed({ kitty: "/bin/kitty", lazygit: "/bin/lazygit" }, ["/opt/kitty"]);
+    const lazygit = choices(custom, has, { kind: "dir", dir: "/w" }).find(
+      (c) => c.app.id === "lazygit",
+    );
+    expect(lazygit?.argv).toEqual(["/bin/kitty", "-d", "/w", "/bin/lazygit", "-p", "/w"]);
+  });
+
   it("fills a file's line, or drops it", () => {
     const has = installed({ code: "/bin/code", zed: "/bin/zed" });
     const at = (line?: number) =>
@@ -195,6 +235,19 @@ describe("choices", () => {
     expect(
       choices(mac, installed(open, ["/Applications/Visual Studio Code.app"]), target)[0]?.argv,
     ).toEqual(["/usr/bin/open", "-a", "Visual Studio Code", "/work"]);
+  });
+});
+
+describe("DETACH", () => {
+  it("starts the command and returns before it ends", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "launch-detach-"));
+    const done = join(dir, "done");
+    const [command, ...args] = [...DETACH, "sh", "-c", `sleep 1; touch '${done}'`];
+    const started = Date.now();
+    execFileSync(command as string, args);
+    expect(Date.now() - started).toBeLessThan(900);
+    for (let i = 0; i < 40 && !existsSync(done); i++) await new Promise((r) => setTimeout(r, 100));
+    expect(existsSync(done)).toBe(true);
   });
 });
 

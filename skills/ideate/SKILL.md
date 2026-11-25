@@ -73,7 +73,7 @@ After the reply, do what the user says: build the picks in this session and run 
 
 ## The ideas file
 
-A ranked-ideas run is worth a file: `ideas/<focus slug>.md` in the project's store (`.agents/store/` at the checkout's root, shared by all its checkouts when the notes plugin is installed; create the folder if it is missing), never committed. It holds each idea with its basis, payoff and status, plus the rejected ones with a reason, so a rerun can read it first, re-check carried-over ideas against the code and not re-propose what was rejected unless the reason no longer holds. Update the status when ideas are picked or built. Skip the file when the ask was answered in chat.
+A ranked-ideas run is worth a file: `ideas/<focus slug>.md` in the project's store (`.agents/store/` in the checkout the session started in, which the notes plugin links to the repository's one shared store; create the folder if it is missing, and from another worktree use its absolute path), never committed. It holds each idea with its basis, payoff and status, plus the rejected ones with a reason, so a rerun can read it first, re-check carried-over ideas against the code and not re-propose what was rejected unless the reason no longer holds. Update the status when ideas are picked or built. Skip the file when the ask was answered in chat.
 
 ## Privacy
 

@@ -91,9 +91,13 @@ export const builtinApps = (platform: Platform): App[] =>
         { id: BROWSER, label: "Browser", command: ["xdg-open"], url: ["{url}"] },
       ];
 
-/** Where the person's configuration is: `$XDG_CONFIG_HOME/agents/open.json`. */
+/**
+ * Where the person's configuration is: `$XDG_CONFIG_HOME/agents/open.json`. A relative
+ * `XDG_CONFIG_HOME` is ignored, as the XDG spec says.
+ */
 export const configPath = (env: { XDG_CONFIG_HOME?: string; HOME?: string }) => {
-  const base = env.XDG_CONFIG_HOME || (env.HOME ? `${env.HOME}/.config` : undefined);
+  const config = env.XDG_CONFIG_HOME?.startsWith("/") ? env.XDG_CONFIG_HOME : undefined;
+  const base = config ?? (env.HOME?.startsWith("/") ? `${env.HOME}/.config` : undefined);
   return base ? `${base}/agents/open.json` : undefined;
 };
 
@@ -269,20 +273,27 @@ const cwdOf = (target: Target) =>
       ? (target.dir ?? parent(target.file))
       : undefined;
 
-/** An app's arguments for a target, its placeholders filled; a file with no line loses `:{line}`. */
+/**
+ * An app's arguments for a target, its placeholders filled; a file with no line loses `:{line}`.
+ * Each value goes in through a function, so a `$&` or `$$` in a path or a link stays as it is.
+ */
 function fill(args: readonly string[], target: Target): string[] {
   const line =
     target.kind === "file" && target.line !== undefined ? String(target.line) : undefined;
+  const dir = cwdOf(target);
+  const put = (text: string, name: string, value: string) => text.replaceAll(name, () => value);
   return args.map((arg) => {
-    let out = arg;
-    if (line === undefined) out = out.replaceAll(":{line}", "").replaceAll("{line}", "1");
-    else out = out.replaceAll("{line}", line);
-    if (target.kind === "dir") out = out.replaceAll("{dir}", target.dir);
-    if (target.kind === "file") out = out.replaceAll("{file}", target.file);
-    if (target.kind === "url") out = out.replaceAll("{url}", target.url);
+    let out =
+      line === undefined ? put(put(arg, ":{line}", ""), "{line}", "1") : put(arg, "{line}", line);
+    if (dir !== undefined) out = put(out, "{dir}", dir);
+    if (target.kind === "file") out = put(out, "{file}", target.file);
+    if (target.kind === "url") out = put(out, "{url}", target.url);
     return out;
   });
 }
+
+/** `open -a Terminal` and the like: a macOS app takes a folder, and nothing to run in it. */
+const runsPrograms = (shell: App) => !/(^|\/)open$/.test(shell.command[0] ?? "");
 
 /** The app's own command for a target: its first installed executable and the filled arguments. */
 function own(app: App, installed: Installed, target: Target): string[] | undefined {
@@ -306,9 +317,8 @@ export function choices(apps: readonly App[], installed: Installed, target: Targ
       const argv = own(app, installed, target);
       if (!argv) return { app, unavailable: "not installed" };
       if (!app.terminal) return { app, argv, cwd };
-      // `open -a Terminal` takes a folder and nothing to run in it.
       const window =
-        shell && cwd !== undefined && !shell.requires && shell.command[0] !== "open"
+        shell && cwd !== undefined && runsPrograms(shell)
           ? own(shell, installed, { kind: "dir", dir: cwd })
           : undefined;
       return window
@@ -322,12 +332,14 @@ export const preferred = (offered: readonly Choice[]): Choice | undefined =>
   offered.find((choice) => choice.argv);
 
 /**
- * Put before a command, starts it without waiting: its output is closed and it gets a session
- * of its own, so it outlives the call that started it.
+ * Put before a command, starts it without waiting: its output is closed and, where `setsid` is
+ * there (Linux, GNU or busybox), it gets a session of its own, so it outlives the call that
+ * started it. A background child of a shell without job control leads no process group, so
+ * `setsid` needs no `-f`, which busybox lacks.
  */
 export const DETACH = [
   "sh",
   "-c",
-  'exec >/dev/null 2>&1 </dev/null; if command -v setsid >/dev/null; then exec setsid -f "$@"; fi; "$@" &',
+  'exec >/dev/null 2>&1 </dev/null; if command -v setsid >/dev/null; then setsid "$@" & else "$@" & fi',
   "sh",
 ];

@@ -142,7 +142,7 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand("docfix", {
     description: "Review the doc suggestions agents filed for this repo",
     handler: async (_args, ctx) => {
-      const where = await place(ctx.cwd);
+      const where = await place(ctx.cwd, false);
       if (typeof where === "string") return ctx.ui.notify(where, "warning");
       const load = () => loadAll(where.dir);
       if (!ctx.hasUI || ctx.mode !== "tui") {
