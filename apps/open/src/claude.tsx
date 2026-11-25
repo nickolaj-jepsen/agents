@@ -12,32 +12,19 @@ import {
   ringMove,
   stack,
 } from "@agents/kit-core/paint/claude.tsx";
+import { configPath, DETACH } from "@agents/launch/apps.ts";
 import {
-  BROWSER,
-  choices,
-  type Config,
-  configPath,
-  DETACH,
-  type Installed,
-  type Platform,
-  preferred,
-  probeArgv,
-  readConfig,
-  readProbe,
-} from "@agents/launch/apps.ts";
-import {
-  chooseRemote,
-  folderMenu,
-  forgesOf,
-  gitMenu,
-  type Menu,
-  type MenuKind,
-  parsePr,
-  parseStatus,
-  type PrAnswer,
-  type Row,
-  type Status,
-} from "./lib/menus.ts";
+  buildMenu,
+  COMMANDS,
+  focusOf,
+  GIT_TIMEOUT_MS,
+  type Host,
+  pressRow,
+  type PressHost,
+  problemsText,
+  TITLES,
+} from "./lib/gather.ts";
+import type { MenuKind, Row } from "./lib/menus.ts";
 import {
   CHROME,
   drawMenu,
@@ -47,14 +34,10 @@ import {
   maxTop,
   MORE,
   type Look,
+  WHEEL_ROWS,
 } from "./lib/screen.ts";
 
 const PANE = "open";
-const TITLES: Record<MenuKind, string> = { git: "Git", folder: "Open folder" };
-/** Rows a turn of the wheel moves the window by. */
-const WHEEL_ROWS = 3;
-const GIT_TIMEOUT_MS = 3000;
-const GH_TIMEOUT_MS = 5000;
 
 const menu = atom({ plugin: "open", key: "menu" } as const, null);
 /** Whether the rest of a long list is shown: a graphical surface lists the first few. */
@@ -73,10 +56,6 @@ let paneSurface: RenderSurface | undefined;
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
-/** The row the keyboard is on: the one it was moved to, else the menu's own pick, else the first. */
-const focusOf = (m: Menu | null, at: string | null) =>
-  m?.rows?.find((r) => r.id === at)?.id ?? m?.preferred ?? m?.rows?.[0]?.id;
-
 let isMacAnswer: Promise<boolean> | undefined;
 
 const runProcess = async (
@@ -92,108 +71,49 @@ const runProcess = async (
   }
 };
 
-/** One read-only git command; anything it refuses is an empty answer. */
-const git = async ($: EngineInterface, cwd: string, args: string[]) => {
-  const r = await runProcess($, ["git", "--no-optional-locks", "-C", cwd, ...args]);
-  return r?.exitCode === 0 ? r.stdout.trim() : "";
-};
-
 const isMac = ($: EngineInterface) =>
   (isMacAnswer ??= runProcess($, ["uname", "-s"]).then((r) => r?.stdout.trim() === "Darwin"));
 
-async function lookupPr($: EngineInterface, cwd: string, status: Status): Promise<PrAnswer> {
-  // A branch that was never pushed has no pull request yet, and that is an answer.
-  if (!status.branch || !status.upstream) return null;
-  let r: ProcessRunResult;
-  try {
-    r = await $.process.run(["gh", "pr", "view", "--json", "url,number,state,isDraft"], {
-      cwd,
-      timeoutMs: GH_TIMEOUT_MS,
-    });
-  } catch {
-    return "no-gh";
-  }
-  if (r.exitCode !== 0) {
-    // These two are answers; anything else (offline, auth, timeout) is not.
-    return /no pull requests found|no git remotes found/.test(r.stderr) ? null : "unknown";
-  }
-  return parsePr(r.stdout) ?? "unknown";
+/**
+ * What the shared gathering (`lib/gather.ts`) asks of the mod: the engine runs the commands and
+ * reads `open.json`, and a problem in it is a toast, each one in the debug log.
+ */
+function engineHost($: EngineInterface): Host {
+  return {
+    run: (argv, timeoutMs, cwd) => runProcess($, argv, timeoutMs, cwd),
+    async config() {
+      const [home, xdg, mac] = await Promise.all([
+        $.env.get("HOME"),
+        $.env.get("XDG_CONFIG_HOME"),
+        isMac($),
+      ]);
+      const path = configPath({ HOME: home, XDG_CONFIG_HOME: xdg });
+      const text =
+        path && (await $.fs.exists(path).catch(() => false))
+          ? await $.fs.read(path).catch(() => undefined)
+          : undefined;
+      return { text, platform: mac ? "mac" : "linux" };
+    },
+    report(problems) {
+      const text = problemsText(problems);
+      if (text) $.ui.toast(text);
+      for (const problem of problems) $.ui.log(`open: ${problem}`, { to: "debug" });
+    },
+  };
 }
 
-/** The remote's default branch, then the local main/master refs, then `main`. */
-async function defaultBranch($: EngineInterface, cwd: string, remote: string) {
-  const head = await git($, cwd, [
-    "symbolic-ref",
-    "--quiet",
-    "--short",
-    `refs/remotes/${remote}/HEAD`,
-  ]);
-  if (head.startsWith(`${remote}/`)) return head.slice(remote.length + 1);
-  for (const candidate of ["main", "master"]) {
-    const ref = `refs/remotes/${remote}/${candidate}`;
-    if (await git($, cwd, ["rev-parse", "--verify", "--quiet", ref])) return candidate;
-  }
-  return "main";
-}
-
-/** The apps on offer and which of them are installed, asked once for each menu that opens. */
-type Apps = { config: Config; installed: Installed };
-
-async function loadApps($: EngineInterface): Promise<Apps> {
-  const [home, xdg, mac] = await Promise.all([
-    $.env.get("HOME"),
-    $.env.get("XDG_CONFIG_HOME"),
-    isMac($),
-  ]);
-  const platform: Platform = mac ? "mac" : "linux";
-  const path = configPath({ HOME: home, XDG_CONFIG_HOME: xdg });
-  const text =
-    path && (await $.fs.exists(path).catch(() => false))
-      ? await $.fs.read(path).catch(() => undefined)
-      : undefined;
-  const config = readConfig(text, platform);
-  const probe = await runProcess($, probeArgv(config.apps));
-  return { config, installed: readProbe(probe?.stdout ?? "") };
-}
-
-/** Says what `open.json` got wrong, once per menu, where the person looks next. */
-function reportProblems($: EngineInterface, problems: readonly string[]) {
-  if (problems.length === 0) return;
-  const rest = problems.length > 1 ? ` (and ${problems.length - 1} more)` : "";
-  $.ui.toast(`open.json: ${problems[0]}${rest}`);
-  for (const problem of problems) $.ui.log(`open: ${problem}`, { to: "debug" });
-}
-
-async function buildGit($: EngineInterface, cwd: string): Promise<Menu> {
-  const out = await git($, cwd, ["status", "--porcelain=v2", "--branch", "--untracked-files=no"]);
-  if (!out) return { kind: "git", title: TITLES.git, rows: [], error: "Not a git repository." };
-  const status = parseStatus(out);
-  const branch = status.branch;
-  const [config, branchRemote, mergeBase, pr, apps] = await Promise.all([
-    git($, cwd, ["config", "--get-regexp", "^remote\\..*\\.url$"]),
-    branch ? git($, cwd, ["config", "--get", `branch.${branch}.remote`]) : "",
-    branch ? git($, cwd, ["config", "--get", `branch.${branch}.gh-merge-base`]) : "",
-    lookupPr($, cwd, status),
-    loadApps($),
-  ]);
-  const { forges, problems } = forgesOf(apps.config.forges);
-  reportProblems($, [...apps.config.problems, ...problems]);
-  const remote = chooseRemote(config, branchRemote, forges);
-  // Mirrors `gh pr create`: the branch's gh-merge-base, else the remote's default branch.
-  const base = mergeBase || (remote ? await defaultBranch($, cwd, remote.name) : "main");
-  return gitMenu({ status, remote, base, pr });
-}
-
-async function buildFolder($: EngineInterface, cwd: string): Promise<Menu> {
-  const { config, installed } = await loadApps($);
-  reportProblems($, config.problems);
-  return folderMenu(cwd, choices(config.apps, installed, { kind: "dir", dir: cwd }));
-}
-
-/** The command that opens a link: the first installed app that takes one. */
-async function browse($: EngineInterface, url: string) {
-  const { config, installed } = await loadApps($);
-  return preferred(choices(config.apps, installed, { kind: "url", url }))?.argv;
+/** What a press asks besides: the clipboard of the surface pressed on, a detached start, a toast. */
+function pressHost($: EngineInterface, surface: RenderSurface): PressHost {
+  return {
+    ...engineHost($),
+    copy: (text) => $.ui.copy({ text, surface }),
+    async start(argv, cwd) {
+      // Detached: `$.process.run` would wait for a GUI app's output to close.
+      const r = await runProcess($, [...DETACH, ...argv], GIT_TIMEOUT_MS, cwd);
+      return r?.exitCode === 0;
+    },
+    say: (text) => $.ui.toast(text),
+  };
 }
 
 const isOpen = async ($: EngineInterface) => (await $.ui.panes()).some((p) => p.id === PANE);
@@ -249,7 +169,7 @@ async function show($: EngineInterface, kind: MenuKind) {
     paneOptions({ id: PANE, title, focus: true, closeOnEscape: true, rows: 10 }),
   );
   if (!opened.isPlaced) $.ui.toast(`The ${title} menu can't show yet: ${opened.reason}`);
-  const built = kind === "git" ? await buildGit($, cwd) : await buildFolder($, cwd);
+  const built = await buildMenu(engineHost($), kind, cwd);
   // A close or another menu while git answered wins over this one.
   await update($, menu, (m) => (m?.kind === kind && m.rows === null ? built : m));
   const shown = await read($, menu);
@@ -257,45 +177,16 @@ async function show($: EngineInterface, kind: MenuKind) {
   if (shown?.kind === kind && shown.rows !== null && first) await focusRow($, first);
 }
 
+/** Carries a row's press out; the menu closes unless the row could not run. */
 async function press($: EngineInterface, row: Row, surface: RenderSurface) {
-  if (!row.action) {
-    $.ui.toast(`${row.label}: ${row.unavailable ?? "not available"}`);
-    return;
-  }
-  const action = row.action;
-  if (action.kind === "copy") {
-    const r = await $.ui.copy({ text: action.text, surface });
-    $.ui.toast(r.isCopied ? `Copied the ${action.what}` : `Couldn't copy: ${r.reason}`);
-  } else {
-    const argv = action.kind === "url" ? await browse($, action.url) : action.argv;
-    if (!argv) {
-      $.ui.toast(`No ${BROWSER} app is installed to open the link`);
-      return;
-    }
-    // Detached: `$.process.run` would wait for a GUI app's output to close.
-    const r = await runProcess(
-      $,
-      [...DETACH, ...argv],
-      GIT_TIMEOUT_MS,
-      action.kind === "launch" ? action.cwd : undefined,
-    );
-    if (r?.exitCode !== 0) $.ui.toast(`Couldn't start ${argv[0]}`);
-  }
-  await close($);
+  if ((await pressRow(pressHost($, surface), row)) === "close") await close($);
 }
 
 export const register: Register = (on) => {
   on("session.start", async ($, e, next) => {
-    for (const [name, description, argumentHint] of [
-      ["git", "Open the git menu: the repository, branch and pull request on the forge", undefined],
-      [
-        "open",
-        "Open the folder menu: this checkout in an editor, file manager or terminal",
-        undefined,
-      ],
-    ] as const) {
+    for (const { name, description } of COMMANDS) {
       await $.command
-        .register({ name, description, argumentHint, immediate: true })
+        .register({ name, description, immediate: true })
         .catch((error) =>
           $.ui.log(`open: /${name} not registered: ${String(error)}`, { to: "debug" }),
         );

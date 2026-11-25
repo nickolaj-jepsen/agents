@@ -63,13 +63,26 @@ export const start = (gh: "pr" | "none") => ({
 });
 
 /**
+ * The clipboard of a pi run: pi copies with `wl-copy` when it is told of a Wayland display, so the
+ * stand-in takes what is copied to `copied.log` and the person's own clipboard is never written.
+ */
+export const clipboard = {
+  bin: { "wl-copy": '#!/bin/sh\ncat > "$(dirname "$0")/../copied.log"\n' },
+  env: { WAYLAND_DISPLAY: "e2e-fixture", DISPLAY: "" },
+};
+
+/** An app that is on the PATH but cannot start: its interpreter does not exist. */
+export const BROKEN = "#!/nonexistent/interpreter\n";
+
+/**
  * The person's `open.json` for a run, in the run's own `$XDG_CONFIG_HOME` (`configHome`): no
- * scenario reads the real one.
+ * scenario reads the real one. A string is written as it is, for a file that does not parse.
  */
 export const writeConfig = (ctx: SetupContext, config: unknown) => {
   const dir = join(configHome(ctx.runDir), "agents");
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, "open.json"), JSON.stringify(config, null, 2));
+  const text = typeof config === "string" ? config : JSON.stringify(config, null, 2);
+  writeFileSync(join(dir, "open.json"), text);
 };
 
 /** A custom app listed first, and the file manager hidden. */
@@ -80,6 +93,20 @@ export const withConfig = (ctx: SetupContext) => {
       { id: "nvim", label: "Neovim", command: "nvim-stub", dir: ["{dir}"], terminal: true },
       { id: "files", hidden: true },
     ],
+  });
+};
+
+/** An `open.json` that is not JSON: the built-in apps stay, and the menu says what went wrong. */
+export const withBrokenConfig = (ctx: SetupContext) => {
+  checkout(ctx);
+  writeConfig(ctx, "{ not json");
+};
+
+/** An app first in the list whose program is installed but will not start (`BROKEN`). */
+export const withBrokenApp = (ctx: SetupContext) => {
+  checkout(ctx);
+  writeConfig(ctx, {
+    apps: [{ id: "broken", label: "Broken editor", command: "broken-stub", dir: ["{dir}"] }],
   });
 };
 

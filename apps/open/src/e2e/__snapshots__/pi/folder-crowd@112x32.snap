@@ -1,0 +1,52 @@
+# open/pi/folder-crowd 112x32 @20,7 (72x21)
+╭─ Open folder ────────────────────────────────────────────── Close × ─╮
+│                                                                      │
+│  ❯ 1 Neovim in the terminal with the project's                       │
+│      long-named profile and plugins                                  │
+│    2 日本語のエディタ（プロジェクトを開く）            not installed │
+│    3 Review the checkout in the browser-based editor                 │
+│      on the company's intranet                                       │
+│    4 Helix                                             not installed │
+│    5 Emacs, started as a daemon with a very long                     │
+│      server name                                                     │
+│    6 Kakoune                                           not installed │
+│    7 ターミナルで開く長い名前のアプリケーション                      │
+│    8 Micro                                             not installed │
+│    9 VS Code                                                         │
+│      Zed                                               not installed │
+│      Sublime Merge                                     not installed │
+│      Files                                                           │
+│      Terminal                                                        │
+│      Copy path                                                       │
+│  Enter picks · Esc closes                                            │
+────────────────────────────────────────────────────────────────────────
+--- styles
+1x2 . 2x11 . 1x46 . 3x7 . 1x2
+1 .x70 1
+1 .x2 4 . 5 . 4x41 .x23 1
+1 .x6 4x30 .x34 1
+1 .x4 6 . 6x38 .x12 6x13 . 1
+1 .x4 5 . 3x47 .x17 1
+1 .x6 3x25 .x39 1
+1 .x4 6 . 6x5 .x45 6x13 . 1
+1 .x4 5 . 3x43 .x21 1
+1 .x6 3x11 .x53 1
+1 .x4 6 . 6x7 .x43 6x13 . 1
+1 .x4 5 . 3x42 .x22 1
+1 .x4 6 . 6x5 .x45 6x13 . 1
+1 .x4 5 . 3x7 .x57 1
+1 .x4 6 . 6x3 .x47 6x13 . 1
+1 .x4 6 . 6x13 .x37 6x13 . 1
+1 .x4 5 . 3x5 .x59 1
+1 .x4 5 . 3x8 .x56 1
+1 .x4 5 . 3x9 .x55 1
+1 .x2 6x24 .x44 1
+7x72
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#dee0e1
+4 fg=#dee0e1 bold
+5 fg=#a798d7
+6 fg=#7e888e
+7 fg=#6c767b

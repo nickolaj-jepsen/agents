@@ -14,7 +14,17 @@ order: 2
 | `/git`  | Open a repository, branch, commit or pull request on GitHub, GitLab or Codeberg, or copy the branch, SHA or PR URL. For a new PR, open the compare page. |
 | `/open` | Open the checkout in an editor, the file manager or a terminal, or copy its path.                                                                        |
 
-Press the row's number in the terminal or click its action in Desktop or VS Code. A row that can't run keeps its place and says why, for example `not installed`. The keyboard starts on the first app that is installed. Links open in the first installed app that takes a link, which is the browser unless you say otherwise.
+Both commands work in Claude Code and in pi, with the same rows in the same order. Press the row's number in a terminal or click its action in Desktop or VS Code. A row that can't run keeps its place and says why, for example `not installed`. The keyboard starts on the first app that is installed. Links open in the first installed app that takes a link, which is the browser unless you say otherwise.
+
+## In pi
+
+The menu is a sheet over the transcript that stands on the prompt's top rule. The keys are the same as in Claude Code: the arrows move, Enter or a row's number presses it, and Esc closes the menu. You can also click a row or Close, and the wheel scrolls a long list.
+
+- The menu ignores a press for the first 600 ms after its rows appear, so a second Enter meant for the command doesn't open the preselected row.
+- The menu shows its own messages under the rows: why a row can't run, that no app takes a link, and what's wrong with `open.json`. After a press closes the menu, the transcript says what happened, such as `Copied the branch name` or `Couldn't start …`.
+- Copy uses pi's clipboard, the same one `/copy` uses.
+- Apps start detached from pi, so closing pi leaves them open.
+- In RPC mode, where pi draws no terminal UI, the command shows the menu as a numbered list of what each row would open or copy and doesn't run anything.
 
 ## Apps
 

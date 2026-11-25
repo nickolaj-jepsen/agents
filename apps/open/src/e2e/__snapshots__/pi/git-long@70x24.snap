@@ -1,0 +1,30 @@
+# open/pi/git-long 70x24 @1,10 (68x10)
+╭─ Git ── acme/orders-api ─────────────────────────────── Close × ─╮
+│                                                                  │
+│    1 Open repository                                  github.com │
+│  ❯ 2 Open branch                                                 │
+│    3 Create pull request into                                    │
+│      release/2026-11-payments-integration-train-for-             │
+│      the-eu-region-rollout                                       │
+│    4 Copy branch name                                            │
+│  Enter picks · Esc closes                                        │
+────────────────────────────────────────────────────────────────────
+--- styles
+1x2 . 2x3 . 1x2 . 3x15 . 1x31 . 4x7 . 1x2
+1 .x66 1
+1 .x4 5 . 4x15 .x34 3x10 . 1
+1 .x2 6 . 5 . 6x11 .x49 1
+1 .x4 5 . 4x24 .x36 1
+1 .x6 4x47 .x13 1
+1 .x6 4x21 .x39 1
+1 .x4 5 . 4x16 .x44 1
+1 .x2 3x24 .x40 1
+7x68
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#7e888e
+4 fg=#dee0e1
+5 fg=#a798d7
+6 fg=#dee0e1 bold
+7 fg=#6c767b

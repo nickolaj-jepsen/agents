@@ -1,0 +1,26 @@
+# open/pi/git-new 160x45 @44,33 (72x8)
+╭─ Git ── acme/orders-api ─────────────────────────────────── Close × ─╮
+│                                                                      │
+│    1 Open repository                                      github.com │
+│  ❯ 2 Open branch                                                     │
+│    3 Create pull request                                   into main │
+│    4 Copy branch name                                                │
+│  Enter picks · Esc closes                                            │
+────────────────────────────────────────────────────────────────────────
+--- styles
+1x2 . 2x3 . 1x2 . 3x15 . 1x35 . 4x7 . 1x2
+1 .x70 1
+1 .x4 5 . 4x15 .x38 3x10 . 1
+1 .x2 6 . 5 . 6x11 .x53 1
+1 .x4 5 . 4x19 .x34 3x10 . 1
+1 .x4 5 . 4x16 .x48 1
+1 .x2 3x24 .x44 1
+7x72
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#7e888e
+4 fg=#dee0e1
+5 fg=#a798d7
+6 fg=#dee0e1 bold
+7 fg=#6c767b

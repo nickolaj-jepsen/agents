@@ -598,9 +598,21 @@ importers:
       '@agents/kit-notice':
         specifier: workspace:*
         version: link:../../lib/kits/notice
+      '@agents/kit-sheet':
+        specifier: workspace:*
+        version: link:../../lib/kits/sheet
       '@agents/launch':
         specifier: workspace:*
         version: link:../../lib/shared/launch
+      '@earendil-works/pi-ai':
+        specifier: 'catalog:'
+        version: 1.6.1(@smithy/signature-v4@5.7.5)(google-auth-library@10.9.1)(undici@8.13.0)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-coding-agent':
+        specifier: 'catalog:'
+        version: 1.6.1(@smithy/signature-v4@5.7.5)(google-auth-library@10.9.1)(ws@8.23.0)(zod@4.6.7)
+      '@earendil-works/pi-tui':
+        specifier: 'catalog:'
+        version: 1.6.1
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6

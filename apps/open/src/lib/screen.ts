@@ -17,6 +17,8 @@ import type { Menu, Row } from "./menus.ts";
 
 /** What a Button's `hit` is for the rest of a long list on a graphical surface. */
 export const MORE = "more";
+/** Rows a turn of the wheel moves the terminal list's window by. */
+export const WHEEL_ROWS = 3;
 /** The words under the rows while the pane has the keyboard. */
 export const HINT = "Enter picks · Esc closes";
 /** Cells a row's note may take at its right; a longer one goes into the row's own text. */
@@ -37,8 +39,9 @@ export const detailOf = (m: Menu): string | undefined => m.context;
 /**
  * The menu's rows as the list takes them. A note on a row (a host, a state, why it cannot run)
  * is the dim aside when it is short, else part of the row's text, which wraps.
+ * @param hover The row under the pointer, where the host leaves hover to the drawing (pi).
  */
-export function menuRows(rows: readonly Row[], focus?: string): ListRow[] {
+export function menuRows(rows: readonly Row[], focus?: string, hover?: string): ListRow[] {
   return rows.map((row, i) => {
     const note = row.unavailable ?? row.description;
     const isAside = note !== undefined && cellWidth(note) <= ASIDE_MAX;
@@ -49,6 +52,7 @@ export function menuRows(rows: readonly Row[], focus?: string): ListRow[] {
       key: i < 9 ? String(i + 1) : undefined,
       aside: isAside ? note : undefined,
       focused: row.id === focus,
+      ...(hover !== undefined && row.id === hover ? { hovered: true } : {}),
       // A row that cannot run keeps its place and its key, and says why when pressed.
       disabled: row.action === undefined,
       hit: row.action ? hitOf(row) : undefined,
@@ -70,11 +74,13 @@ export type Look = {
   held: boolean;
   /** The window's first line. */
   top: number;
+  /** The control under the pointer, where the drawing shows it: a row's `hit`. */
+  hover?: string;
 };
 
 /** The menu's list, as a window `height` rows tall when it is given. */
 export function menuList(rows: readonly Row[], look: Look, height?: number): List {
-  const items = menuRows(rows, look.focus);
+  const items = menuRows(rows, look.focus, look.hover);
   const aside = Math.max(0, ...items.map((r) => cellWidth(r.aside ?? "")));
   return {
     groups: [{ label: "", active: look.held, rows: items }],
@@ -114,11 +120,14 @@ export type Drawn = {
   hint: Line[];
 };
 
-/** The caption's words: the menu's name in the accent, what it acts on after a short rule. */
-const caption = (m: Pick<Menu, "title"> & { detail?: string }): Span[] =>
+/**
+ * The caption's words: the menu's name in the accent, what it acts on after a short rule. A frame
+ * that draws its own top edge, as pi's sheet does, is given them too.
+ */
+export const menuCaption = (m: Pick<Menu, "title" | "context">): Span[] =>
   captionParts([
     [span(m.title, { role: "accent", bold: true })],
-    m.detail ? [span(m.detail, { role: "dim" })] : [],
+    m.context ? [span(m.context, { role: "dim" })] : [],
   ]);
 
 /**
@@ -131,7 +140,7 @@ export function drawMenu(m: Menu | null, look: Look, width: number, height: numb
   const head = frameTop({
     width,
     title: m.title,
-    caption: caption({ title: m.title, detail: detailOf(m) }),
+    caption: menuCaption(m),
     close: {},
   });
   const hint = notice({ text: HINT, width: inner, status: "dim" });

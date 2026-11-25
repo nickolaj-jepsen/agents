@@ -1,0 +1,55 @@
+# open/pi/folder-terminal 70x24 @0,0 (70x24)
+
+ Warning: fd not found. Offline mode enabled, skipping download.
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+──────────────────────────────────────────────────────────────────────
+
+──────────────────────────────────────────────────────────────────────
+<tmp> (feature/retry-after)
+••••/200k (auto)                                                replay
+--- styles
+-
+. 1x63
+. 1x68
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+2x70
+3
+2x70
+4x5 .x14 4x8
+4x70
+--- legend
+1 fg=#cd9a22
+2 fg=#6c767b
+3 inverse
+4 fg=#7e888e

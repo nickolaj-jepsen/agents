@@ -1,0 +1,48 @@
+# open/pi/folder-crowd 70x24 @1,1 (68x19)
+╭─ Open folder ────────────────────────────────────────── Close × ─╮
+│                                                                  │
+│  ❯ 1 Neovim in the terminal with the project's                   │
+│      long-named profile and plugins                              │
+│    2 日本語のエディタ（プロジェクトを開く）        not installed │
+│    3 Review the checkout in the browser-based                    │
+│      editor on the company's intranet                            │
+│    4 Helix                                         not installed │
+│    5 Emacs, started as a daemon with a very long                 │
+│      server name                                                 │
+│    6 Kakoune                                       not installed │
+│    7 ターミナルで開く長い名前のアプリケーション                  │
+│    8 Micro                                         not installed │
+│    9 VS Code                                                     │
+│      Zed                                           not installed │
+│      Sublime Merge                                 not installed │
+│      Files                                                       │
+│  ↓ 2 more                                                        │
+────────────────────────────────────────────────────────────────────
+--- styles
+1x2 . 2x11 . 1x42 . 3x7 . 1x2
+1 .x66 1
+1 .x2 4 . 5 . 4x41 .x19 1
+1 .x6 4x30 .x30 1
+1 .x4 6 . 6x38 .x8 6x13 . 1
+1 .x4 5 . 3x40 .x20 1
+1 .x6 3x32 .x28 1
+1 .x4 6 . 6x5 .x41 6x13 . 1
+1 .x4 5 . 3x43 .x17 1
+1 .x6 3x11 .x49 1
+1 .x4 6 . 6x7 .x39 6x13 . 1
+1 .x4 5 . 3x42 .x18 1
+1 .x4 6 . 6x5 .x41 6x13 . 1
+1 .x4 5 . 3x7 .x53 1
+1 .x4 6 . 6x3 .x43 6x13 . 1
+1 .x4 6 . 6x13 .x33 6x13 . 1
+1 .x4 5 . 3x5 .x55 1
+1 .x2 6x8 .x56 1
+7x68
+--- legend
+1 fg=#768186
+2 fg=#a798d7 bold
+3 fg=#dee0e1
+4 fg=#dee0e1 bold
+5 fg=#a798d7
+6 fg=#7e888e
+7 fg=#6c767b
