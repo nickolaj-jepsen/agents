@@ -1,0 +1,4 @@
+# Two branches that each add a line under `[Unreleased]` both keep theirs: a changelog is a list, and
+# agents in separate worktrees add to the same one.
+apps/*/CHANGELOG.md merge=union
+skills/*/CHANGELOG.md merge=union

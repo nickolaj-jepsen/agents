@@ -54,6 +54,11 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
       - name: Check
         run: nix develop -c pnpm gate
+      # A report, never a failure: the units whose build or folder differs from what `dist` holds at
+      # the same version, or that have lines under `[Unreleased]`. The gate built every plugin, so a
+      # kit or dependency change that reached one shows here.
+      - name: What is waiting on a version bump
+        run: pnpm release --status --summary "$GITHUB_STEP_SUMMARY"
       # Ask Turbo whether the plugin builds are cached before running the Nix checks.
       - name: Does the nix check need to run
         id: nix
@@ -84,13 +89,82 @@ jobs:
             lib/kits/*/e2e/__snapshots__/**/*.actual.*
           if-no-files-found: ignore
 
-  # The plugins as the marketplace installs them: built by nix (`nix build .#plugins`) from the commit
-  # the gate passed on, appended to the `dist` branch as one commit per publish (see
-  # .github/publish-dist.sh). Nothing else holds a write token.
-  publish:
-    name: Publish plugins
+  # What a push of this commit to main releases: each plugin and skill whose version differs from the
+  # one the `dist` branch records (lib/tools/build/plan.ts). A merged version bump is the whole
+  # release. On a pull request this is the preview, on the run's summary page; it fails on a version
+  # that goes down or carries a suffix, and on a bump with no changelog section.
+  plan:
+    name: Release plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      # Whether anything is published or retired.
+      release: ${{ steps.plan.outputs.release }}
+      # The plugins to build, as a JSON list of names.
+      plugins: ${{ steps.plan.outputs.plugins }}
+      # The whole plan, for publish.ts.
+      plan: ${{ steps.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      # The plan reads SKILL.md frontmatter, so it needs the build tool's one dependency.
+      - run: pnpm install --frozen-lockfile --filter @agents/build
+      - id: plan
+        name: Plan the release
+        run: |
+          node lib/tools/build/plan.ts --json plan.json --summary "$GITHUB_STEP_SUMMARY"
+          {
+            echo "release=$(jq '(.publish | length) + (.retire | length) > 0' plan.json)"
+            echo "plugins=$(jq -c '[.publish[] | select(.kind == "plugin") | .name]' plan.json)"
+            echo "plan=$(jq -c . plan.json)"
+          } >> "$GITHUB_OUTPUT"
+
+  # Every plugin's nix build, pushed to Cachix on each push to main, whether or not the push
+  # releases anything: a flake consumer builds main at any commit, and substitutes these instead of
+  # building them. Its own job, because `publish` runs only when a version moved.
+  cache:
+    name: Cache plugin builds
     needs: check
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && vars.CACHIX_CACHE != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+      - uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
+        with:
+          name: ${{ vars.CACHIX_CACHE }}
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      # Push each output explicitly, including paths substituted from another cache: the action
+      # uploads only what this run built.
+      - name: Cache each plugin
+        run: |
+          mapfile -t plugins < <(nix eval --json .#lib.plugins --apply builtins.attrNames | jq -r '.[] | ".#" + .')
+          nix build --no-link --json "${plugins[@]}" | jq -r '.[].outputs[]' | cachix push "$CACHIX_CACHE"
+        env:
+          CACHIX_CACHE: ${{ vars.CACHIX_CACHE }}
+          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          NIX_CONFIG: access-tokens = github.com=${{ github.token }}
+
+  # The plan, carried out: the released plugins built by nix (`nix build .#<name>`) from the commit
+  # the gate passed on, the released skills copied from it, appended to the `dist` branch as one
+  # commit with a `<name>--v<version>` tag per unit (lib/tools/build/publish.ts), then a GitHub
+  # Release each. Nothing else holds a write token. To retry a publish that failed, run this workflow
+  # on main: the plan is made against `dist`, so what did not get there is planned again.
+  publish:
+    name: Publish releases
+    needs: [check, plan]
+    if: >-
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+      github.ref == 'refs/heads/main' && needs.plan.outputs.release == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -103,30 +177,49 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
-      - if: vars.CACHIX_CACHE != ''
+      # publish.ts imports nothing but node, so there is no install.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+      - if: needs.plan.outputs.plugins != '[]'
+        uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+      - if: needs.plan.outputs.plugins != '[]' && vars.CACHIX_CACHE != ''
         uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
         with:
           name: ${{ vars.CACHIX_CACHE }}
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-      - name: Build the plugins
-        run: nix build .#plugins --print-build-logs --out-link plugins
-        env:
-          NIX_CONFIG: access-tokens = github.com=${{ github.token }}
-      # `plugins` copies the app outputs, so its runtime closure does not retain the individual
-      # derivations. Push each output explicitly, including paths substituted from another cache.
-      - if: vars.CACHIX_CACHE != ''
-        name: Cache each plugin
+      - name: Build the released plugins
+        if: needs.plan.outputs.plugins != '[]'
         run: |
-          mapfile -t plugins < <(nix eval --json .#lib.plugins --apply builtins.attrNames | jq -r '.[] | ".#" + .')
-          nix build --no-link --json "${plugins[@]}" | jq -r '.[].outputs[]' | cachix push "$CACHIX_CACHE"
+          mkdir -p built
+          jq -r '.[]' <<<"$PLUGINS" | while read -r name; do
+            nix build ".#$name" --print-build-logs --out-link "built/$name"
+          done
         env:
-          CACHIX_CACHE: ${{ vars.CACHIX_CACHE }}
-          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          PLUGINS: ${{ needs.plan.outputs.plugins }}
           NIX_CONFIG: access-tokens = github.com=${{ github.token }}
-      - name: Commit them to dist
-        run: .github/publish-dist.sh plugins
+      - name: Commit them to dist and tag them
+        run: |
+          mkdir -p built
+          printf '%s' "$PLAN" > plan.json
+          node lib/tools/build/publish.ts --plan plan.json --built built --result result.json
         env:
+          PLAN: ${{ needs.plan.outputs.plan }}
           DIST_REMOTE: ${{ github.server_url }}/${{ github.repository }}
           DIST_TOKEN: ${{ github.token }}
           DIST_SOURCE: ${{ github.sha }}
+      # One per published unit, flagged a pre-release below 1.0.0 and never "latest": the repo has no
+      # one latest. The cutover names none. A Release that is already there is left as it is.
+      - name: Make the GitHub Releases
+        run: |
+          jq -c '.releases[]' result.json | while read -r release; do
+            tag=$(jq -r .tag <<<"$release")
+            if gh release view "$tag" >/dev/null 2>&1; then continue; fi
+            flags=(--latest=false --verify-tag)
+            if [ "$(jq -r .prerelease <<<"$release")" = true ]; then flags+=(--prerelease); fi
+            jq -r .notes <<<"$release" |
+              gh release create "$tag" --title "$(jq -r .title <<<"$release")" --notes-file - "${flags[@]}"
+          done
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}

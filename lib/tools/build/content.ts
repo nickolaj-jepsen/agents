@@ -4,7 +4,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
-import { isSemver, tierOf, type Tier } from "./version.ts";
+import { isSemver, tagName, tierOf, type Tier } from "./version.ts";
 
 export type { Tier };
 
@@ -70,6 +70,8 @@ export type Skill = {
   install: string[];
   /** The same install at its release tag: what pins a skill to the version it shows. */
   pinnedInstall: string;
+  /** Its `CHANGELOG.md`, repo-relative, when it keeps one. */
+  changelog?: string;
   body: string;
   path: string;
   files: string[];
@@ -117,8 +119,13 @@ export const CATEGORIES: { slug: string; title: string; blurb?: string }[] = [
 /** What an unfinished plugin or skill (0.0.x) says about itself. */
 export const IN_PROGRESS = "Unfinished, and not ready for anyone else to use.";
 
-/** Where the skills CLI installs a skill from. */
+/**
+ * Where the skills CLI installs a skill from: the `dist` branch, which holds each skill at its
+ * released version. Without the `#dist` the CLI reads main, where an edit has no version yet.
+ * Quoted, because zsh's extended globbing reads a bare `#`.
+ */
 export const SKILLS_REPO = "nickolaj-jepsen/agents";
+export const SKILLS_SOURCE = `'${SKILLS_REPO}#dist'`;
 
 /** Adds the marketplace once per machine; a plugin's Claude install runs it first. */
 export const MARKETPLACE_ADD = "claude plugin marketplace add nickolaj-jepsen/agents";
@@ -228,7 +235,9 @@ function loadPlugins(root: string): Plugin[] {
       const install: Plugin["install"] = {};
       if (harness.claude && listed.has(name))
         install.claude = `${MARKETPLACE_ADD} && claude plugin install ${name}@nickolaj-jepsen`;
-      if (harness.pi) install.pi = `git clone ${REPO_URL} && pi install ./agents/apps/${name}`;
+      // The built package on dist, at its released version: an app's source imports the workspace.
+      if (harness.pi)
+        install.pi = `git clone --branch dist ${REPO_URL} && pi install ./agents/${name}`;
       const changelog = join(dir, "CHANGELOG.md");
       return [
         {
@@ -295,11 +304,16 @@ function loadSkills(root: string): Skill[] {
       tier: tierOf(skillVersion),
       ...(typeof meta.credit === "string" ? { credit: meta.credit } : {}),
       ...(typeof data["argument-hint"] === "string" ? { argumentHint: data["argument-hint"] } : {}),
-      install: [`npx skills add ${SKILLS_REPO} --skill ${name}`],
-      pinnedInstall: `npx skills add ${SKILLS_REPO}@${name}-v${skillVersion} --skill ${name}`,
+      install: [`npx skills add ${SKILLS_SOURCE} --skill ${name}`],
+      // `#<tag>`, not `@<tag>`: the CLI reads `@x` as a ref only when x looks like a bare version.
+      pinnedInstall: `npx skills add '${SKILLS_REPO}#${tagName(name, skillVersion)}' --skill ${name}`,
+      ...(existsSync(join(dir, "CHANGELOG.md"))
+        ? { changelog: `skills/${name}/CHANGELOG.md` }
+        : {}),
       body: body.trimEnd(),
       path: `skills/${name}`,
-      files: listFiles(dir).filter((f) => f !== "SKILL.md"),
+      // The changelog stays on main: it is not part of what a skill installs.
+      files: listFiles(dir).filter((f) => f !== "SKILL.md" && f !== "CHANGELOG.md"),
       lines,
     };
   });

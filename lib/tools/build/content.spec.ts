@@ -275,7 +275,28 @@ describe("page fields", () => {
   it("offers a skill install at its release tag", () => {
     const content = loadContent(checkout(SKILL));
     expect(content.skills[0]?.pinnedInstall).toBe(
-      "npx skills add nickolaj-jepsen/agents@demo-v1.2.3 --skill demo",
+      "npx skills add 'nickolaj-jepsen/agents#demo--v1.2.3' --skill demo",
     );
+  });
+
+  it("installs a skill and a pi package from the dist branch, where the released versions are", () => {
+    const content = loadContent(checkout({ ...PLUGIN, ...SKILL }));
+    expect(content.skills[0]?.install).toEqual([
+      "npx skills add 'nickolaj-jepsen/agents#dist' --skill demo",
+    ]);
+    expect(content.plugins[0]?.install.pi).toContain("--branch dist");
+    expect(content.plugins[0]?.install.pi).toContain("pi install ./agents/demo");
+  });
+
+  it("links a skill's changelog and keeps it out of the files the skill installs", () => {
+    const content = loadContent(
+      checkout({
+        ...SKILL,
+        "skills/demo/CHANGELOG.md": "# Changelog\n",
+        "skills/demo/ref.md": "x\n",
+      }),
+    );
+    expect(content.skills[0]?.changelog).toBe("skills/demo/CHANGELOG.md");
+    expect(content.skills[0]?.files).toEqual(["ref.md"]);
   });
 });

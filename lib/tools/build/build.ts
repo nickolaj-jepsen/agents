@@ -9,6 +9,7 @@
  *   dist/types.d.ts                   the mod's state contract (`src/claude/types.d.ts`)
  *   dist/pi/index.ts, dist/package.json   `src/pi.ts`, and the manifest pi reads it from
  *   dist/README.md
+ *   dist/CHANGELOG.md                 the released versions of the app's changelog, which pi shows
  *
  * Everything the mod engine reads is bundled, because a mod cannot import outside its folder. Two
  * things about that, both of which `claude plugin validate --strict` reports:
@@ -23,6 +24,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { build, type InlineConfig } from "tsdown";
+import { publishedChangelog } from "./changelog.ts";
 
 type Pkg = {
   name: string;
@@ -84,6 +86,12 @@ function writeMetadata() {
   }
   if (existsSync(join(dir, "README.md")))
     put(join(dist, "README.md"), readFileSync(join(dir, "README.md")));
+  // Without `[Unreleased]`: a line written there changes no build until a version releases it.
+  if (existsSync(join(dir, "CHANGELOG.md")))
+    put(
+      join(dist, "CHANGELOG.md"),
+      publishedChangelog(readFileSync(join(dir, "CHANGELOG.md"), "utf8")),
+    );
 }
 
 /** Empties `dist/` of what a build writes, keeping what the engine lays there. */

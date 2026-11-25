@@ -116,7 +116,7 @@ export const skillInstall = (s: Skill) => ({
   commands: s.install.map((command) => ({ command })),
   more: [
     { label: "This version", command: s.pinnedInstall },
-    { label: "Every skill", command: "npx skills add nickolaj-jepsen/agents" },
+    { label: "Every skill", command: "npx skills add 'nickolaj-jepsen/agents#dist'" },
     {
       label: "Every skill, as a Claude Code plugin",
       command: `${MARKETPLACE_ADD} && claude plugin install skills@nickolaj-jepsen`,

@@ -65,6 +65,9 @@ export function compareSemver(a: string, b: string): number {
   return 0;
 }
 
+/** The tag naming a published version, in the form `claude plugin tag` makes. */
+export const tagName = (name: string, version: string): string => `${name}--v${version}`;
+
 export type Level = "patch" | "minor" | "major";
 export const LEVELS: readonly Level[] = ["patch", "minor", "major"];
 

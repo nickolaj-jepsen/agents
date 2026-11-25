@@ -1,7 +1,7 @@
-**One skill:** install `grill-me` with the [skills CLI](https://github.com/vercel-labs/skills), or substitute another skill’s name.
+**One skill:** install `grill-me` with the [skills CLI](https://github.com/vercel-labs/skills), or substitute another skill’s name. `#dist` is the branch that holds each skill at its released version.
 
 ```bash
-npx skills add nickolaj-jepsen/agents --skill grill-me
+npx skills add 'nickolaj-jepsen/agents#dist' --skill grill-me
 ```
 
 **One Claude Code plugin:** add the marketplace once, then install the plugin you want.

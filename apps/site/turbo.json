@@ -36,6 +36,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/.claude-plugin/marketplace.json",
         "$TURBO_ROOT$/lib/tools/build/content.ts",
+        "$TURBO_ROOT$/lib/tools/build/version.ts",
         "$TURBO_ROOT$/apps/*/README.md",
         "$TURBO_ROOT$/apps/*/CHANGELOG.md",
         "$TURBO_ROOT$/lib/kits/README.md",

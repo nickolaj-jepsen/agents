@@ -11,6 +11,7 @@
     "gate:pages": "turbo run check:pages --concurrency=2",
     "gate:all": "pnpm gate && pnpm gate:nix && pnpm gate:pages",
     "hooks": "git config core.hooksPath .githooks",
+    "release": "node lib/tools/build/release.ts",
     "test": "turbo run test"
   },
   "devDependencies": {

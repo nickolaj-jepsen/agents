@@ -1,6 +1,6 @@
 {
   "name": "@nickolaj-jepsen/bg-herdr",
-  "version": "0.2.0",
+  "version": "0.0.1",
   "description": "Show bg tasks in read-only Herdr child terminals: lifecycle and live log tail, one terminal per task",
   "keywords": [
     "pi-package"

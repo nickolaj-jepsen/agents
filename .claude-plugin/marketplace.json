@@ -11,8 +11,12 @@
     {
       "name": "skills",
       "description": "Agent skills from nickolaj-jepsen/agents",
-      "source": "./",
-      "strict": false
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "skills",
+        "ref": "dist"
+      }
     },
     {
       "name": "spellfix",
@@ -29,15 +33,6 @@
         "source": "git-subdir",
         "url": "nickolaj-jepsen/agents",
         "path": "linear-issue",
-        "ref": "dist"
-      }
-    },
-    {
-      "name": "git-menu",
-      "source": {
-        "source": "git-subdir",
-        "url": "nickolaj-jepsen/agents",
-        "path": "git-menu",
         "ref": "dist"
       }
     },

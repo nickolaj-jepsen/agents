@@ -13,8 +13,11 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
+import { checkChangelog } from "./changelog.ts";
 import { repoRoot } from "./content.ts";
+import { planRelease } from "./plan.ts";
 import { checkReadme } from "./readme.ts";
+import { releasedUnits } from "./units.ts";
 
 type Entry = { name: string; source: string | Record<string, string> };
 /** An app folder's facts: whether it has a Claude half, and whether it is unreleased. */
@@ -40,6 +43,14 @@ const fromDist = (name: string) => ({
   ref: "dist",
 });
 
+/** The `skills` plugin's entry: the folder of released skills on the `dist` branch. */
+const SKILLS_ENTRY = {
+  source: "git-subdir",
+  url: "nickolaj-jepsen/agents",
+  path: "skills",
+  ref: "dist",
+};
+
 function entries(root: string): Entry[] {
   const file = join(root, ".claude-plugin/marketplace.json");
   return (JSON.parse(readFileSync(file, "utf8")) as { plugins: Entry[] }).plugins;
@@ -51,7 +62,7 @@ function entries(root: string): Entry[] {
  * entry for an app that has no Claude half at all.
  */
 function problems(root: string): { missing: string[]; unreleased: string[]; stray: string[] } {
-  // `skills` is the other entry: it discovers `skills/` without a per-skill list.
+  // `skills` is the other entry: dist's `skills/` folder, which lists no skill by name.
   const published = entries(root).filter((p) => p.name !== "skills");
   const listed = new Map(published.map((p) => [p.name, p.source]));
   const facts = apps(root);
@@ -82,7 +93,7 @@ function checkout(listings: string[], folders: { name: string; pkg: Record<strin
     join(root, ".claude-plugin/marketplace.json"),
     JSON.stringify({
       plugins: [
-        { name: "skills", source: "./" },
+        { name: "skills", source: SKILLS_ENTRY },
         ...listings.map((name) => ({ name, source: fromDist(name) })),
       ],
     }),
@@ -124,11 +135,12 @@ describe(".claude-plugin/marketplace.json", () => {
     expect(twice, "an entry of .claude-plugin/marketplace.json is repeated").toEqual([]);
   });
 
-  it("keeps the skills entry, sourced from the repo root", () => {
+  it("keeps the skills entry, sourced from the dist branch's skills/ folder", () => {
+    // Not `./`: main holds every skill as it was last edited, dist the versions that were released.
     expect(
       all.find((p) => p.name === "skills")?.source,
-      'add { "name": "skills", "source": "./", "strict": false } to .claude-plugin/marketplace.json',
-    ).toBe("./");
+      `add { "name": "skills", "source": ${JSON.stringify(SKILLS_ENTRY)} } to .claude-plugin/marketplace.json`,
+    ).toEqual(SKILLS_ENTRY);
   });
 });
 
@@ -149,6 +161,27 @@ describe("the marketplace rule", () => {
     roots.push(root);
     expect(problems(root).missing, "a released Claude half must be listed").toEqual(["open"]);
     expect(problems(root).unreleased, "an unreleased app must not be listed").toEqual(["hidden"]);
+  });
+});
+
+describe("versions and changelogs", () => {
+  const units = releasedUnits(repoRoot);
+
+  it("keeps a changelog beside every released plugin and skill, its newest section the unit's version", () => {
+    const wrong = units.flatMap((unit) => {
+      const file = join(repoRoot, unit.changelog);
+      if (!existsSync(file))
+        return [`${unit.changelog}: missing; start it with \`## [Unreleased]\` over the version`];
+      return checkChangelog(readFileSync(file, "utf8"), unit.version).map(
+        (problem) => `${unit.changelog}: ${problem}`,
+      );
+    });
+    expect(wrong.join("\n")).toBe("");
+  });
+
+  it("could publish every unit as it stands: plain versions, one name each, notes for each", () => {
+    // The cutover plan compares against nothing, so it holds only what the checkout itself decides.
+    expect(planRelease(repoRoot, undefined).problems.join("\n")).toBe("");
   });
 });
 

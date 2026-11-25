@@ -66,6 +66,18 @@ const inst = skillInstall(s);
       <code>{s.version}</code>
       {s.tier === 'pre-release' && <Pre />}
     </dd>
+    {
+      s.changelog && (
+        <>
+          <dt>Changelog</dt>
+          <dd>
+            <a href={github(s.changelog)}>
+              <code>CHANGELOG.md</code>
+            </a>
+          </dd>
+        </>
+      )
+    }
     <dt>Invoke</dt>
     <dd><code>{usage}</code></dd>
     <dt>Used when</dt>
