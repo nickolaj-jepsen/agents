@@ -24,6 +24,7 @@ import tempfile
 import textwrap
 import unittest
 from pathlib import Path
+from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 CLI_PATH = HERE / "agents-update.py"
@@ -1304,6 +1305,80 @@ class UiTest(Fixture):
         self.assertEqual(code, 1)
         self.assertIn("nothing to deploy", err)
 
+    def test_a_state_write_that_fails_leaves_the_tree_and_the_state_alone(self):
+        # ENOSPC on the state file: nothing is deployed, so nothing can disagree with the state
+        # that survived.
+        with mock.patch.object(
+            cli, "save_state", side_effect=OSError(28, "No space left")
+        ):
+            code, _, err = self.update("herdr-ui")
+        self.assertEqual(code, 1)
+        self.assertIn("No space left", err)
+        self.assertFalse(self.current.exists())
+        # Built, but never deployed: the state write comes first, so the tree cannot disagree.
+        self.assertIn('name = "ui/herdr-ui"', self.expr())
+        self.assertFalse(self.deployed.exists())
+
+    def test_a_config_write_that_fails_undoes_the_publication(self):
+        # The mirror image: the state was written and the deploy failed, so the state is put
+        # back and `resolve` keeps naming what the app is actually reading.
+        with mock.patch.object(
+            cli.agents_ui, "deploy", side_effect=cli.DeployError("disk full")
+        ):
+            code, _, err = self.update("herdr-ui")
+        self.assertEqual(code, 1)
+        self.assertIn("disk full", err)
+        self.assertFalse(self.current.exists())
+        self.assertFalse(self.deployed.exists())
+        resolved = json.loads(self.assert_ok(self.run_cli("resolve"))[0])
+        self.assertEqual(
+            resolved["ui"], {"herdr-ui": str(self.store / "baseline-herdr-ui")}
+        )
+
+    def test_a_failed_republish_keeps_the_previous_publication_whole(self):
+        self.assert_ok(self.update("herdr-ui"))
+        before = self.current.read_bytes()
+        deployed = self.deployed_text("mods/demo/main.js")
+        with mock.patch.object(
+            cli.agents_ui, "deploy", side_effect=cli.DeployError("disk full")
+        ):
+            code, _, err = self.update("herdr-ui")
+        self.assertEqual(code, 1)
+        self.assertIn("disk full", err)
+        self.assertEqual(self.current.read_bytes(), before)
+        self.assertEqual(self.deployed_text("mods/demo/main.js"), deployed)
+        resolved = json.loads(self.assert_ok(self.run_cli("resolve"))[0])
+        self.assertEqual(
+            resolved["ui"], {"herdr-ui": str(self.store / "out-ui-herdr-ui")}
+        )
+
+    def test_a_failed_reset_keeps_the_publication_and_its_pinned_revision(self):
+        self.assert_ok(self.update("herdr-ui"))
+        before = self.current.read_bytes()
+        deployed = self.deployed_text("mods/demo/main.js")
+        with mock.patch.object(
+            cli.agents_ui, "deploy", side_effect=cli.DeployError("disk full")
+        ):
+            code, _, err = self.run_cli("reset", "herdr-ui")
+        self.assertEqual(code, 1)
+        self.assertIn("disk full", err)
+        self.assertEqual(self.current.read_bytes(), before)
+        # The override, and the revision it was published from, are both still there.
+        self.assertEqual(self.ui_state()["herdr-ui"]["baseline"], REVISION)
+        self.assertEqual(self.deployed_text("mods/demo/main.js"), deployed)
+
+    def test_a_reset_whose_state_write_fails_deploys_nothing(self):
+        self.assert_ok(self.update("herdr-ui"))
+        before = self.current.read_bytes()
+        with mock.patch.object(
+            cli, "save_state", side_effect=OSError(28, "No space left")
+        ):
+            code, _, err = self.run_cli("reset", "herdr-ui")
+        self.assertEqual(code, 1)
+        self.assertIn("No space left", err)
+        self.assertEqual(self.current.read_bytes(), before)
+        self.assertEqual(self.deployed_text("mods/demo/main.js"), "// main\n")
+
     def test_status_lists_the_ui_artifact(self):
         self.assert_ok(self.update("herdr-ui"))
         out, err = self.assert_ok(self.run_cli("status"))
@@ -1825,6 +1900,306 @@ class ExecutableTest(Fixture):
         )
         self.assertEqual(result.returncode, 2)
         self.assertIn("COMMAND", result.stderr)
+
+
+@unittest.skipUnless(
+    os.environ.get("AGENTS_UPDATE_REAL_NIX") == "1",
+    "set AGENTS_UPDATE_REAL_NIX=1 to build and deploy a real Herdr UI artifact",
+)
+class RealHerdrUiTest(unittest.TestCase):
+    """The whole way round with real Nix: publish, resolve, deploy, reset.
+
+    Everything here is a scratch directory: its own XDG state and config, its own baseline, and a
+    clean clone of this repository as the thing `update` publishes from. Nothing reads or writes
+    the person's `~/.config/herdr-app` or `~/.local/state/agents-updates`, and no store path is
+    collected: the GC root under the scratch state dies with it.
+
+    `AGENTS_UPDATE_REAL_NIX=1` opts in, like RealNixTest: the build is real, so it needs a
+    store (and the checkout's flake inputs in it) rather than a fake `nix`.
+    """
+
+    def setUp(self):
+        self.temporary = Path(tempfile.mkdtemp(prefix="agents-real-ui-"))
+        self.addCleanup(shutil.rmtree, self.temporary, ignore_errors=True)
+        self.state_home = self.temporary / "state"
+        self.config_home = self.temporary / "config"
+        self.deployed = self.config_home / "herdr-app"
+        self.baseline_path = self.temporary / "baseline.json"
+        (self.temporary / "tmp").mkdir()
+        (self.temporary / "home").mkdir(
+            exist_ok=True
+        )  # scratch_checkout makes its git dir
+        self.env = {
+            "PATH": os.environ.get("PATH", ""),
+            "HOME": str(self.temporary / "home"),
+            "TMPDIR": str(self.temporary / "tmp"),
+            "XDG_STATE_HOME": str(self.state_home),
+            "XDG_CONFIG_HOME": str(self.config_home),
+            "AGENTS_BASELINE": str(self.baseline_path),
+            "AGENTS_NIXPKGS": os.environ.get("AGENTS_NIXPKGS", ""),
+            "AGENTS_SYSTEM": os.environ.get("AGENTS_SYSTEM", ""),
+            # A UI build plans no Claude half, so nothing reads this; the CLI's contract still
+            # names it, and this test pins the point that a UI update needs no claude-code.
+            "AGENTS_CLAUDE": "",
+            "AGENTS_UPDATE_LOCK_TIMEOUT": "600",
+        }
+        self.checkout = self.scratch_checkout()
+        self.env["AGENTS_CHECKOUT"] = str(self.checkout)
+        self.system = self.env["AGENTS_SYSTEM"] or self.nix_eval(
+            "builtins.currentSystem"
+        )
+        self.env["AGENTS_SYSTEM"] = self.system
+        self.nixpkgs = self.env["AGENTS_NIXPKGS"] or self.nix_eval(
+            f'(builtins.getFlake "path:{self.checkout}").inputs.nixpkgs.outPath'
+        )
+        self.env["AGENTS_NIXPKGS"] = self.nixpkgs
+        self.env["AGENTS_CLAUDE"] = self.nixpkgs
+        self.store = Path(self.nixpkgs).parent
+        self.pinned = Path(self.build_repo_artifact())
+        self.write_baseline(self.pinned, self.revision())
+
+    # -- helpers ---------------------------------------------------------------------
+
+    def repo(self):
+        root = HERE.parents[3]
+        if (
+            not (root / "flake.nix").is_file()
+            or not (root / "apps" / "herdr-ui" / "package.json").is_file()
+        ):
+            self.skipTest(f"{root} is not a checkout of the agents flake")
+        return root
+
+    def scratch_checkout(self):
+        """A clean checkout of this repository's HEAD, in the scratch directory.
+
+        A clone rather than the tree the test runs from: a developer's tree holds untracked
+        files and symlinks into their own home (session tooling does exactly that), and
+        `update` refuses a symlink that resolves outside the checkout. The published sources are
+        therefore HEAD's; the CLI under test is the one beside this file.
+
+        A fresh checkout is provisioned with those same session links, and what keeps them out
+        of a snapshot is the checkout owner's global ignore file - so this environment gets the
+        same entries, at the `$XDG_CONFIG_HOME/git/ignore` the CLI's git reads. Without them the
+        publish would see the links and refuse them, as it should.
+        """
+        ignore = self.config_home / "git" / "ignore"
+        ignore.parent.mkdir(parents=True, exist_ok=True)
+        ignore.write_text(
+            "".join(
+                f"/.agents/{name}\n"
+                for name in ("claude-memory", "store", "tmp", "workflows")
+            ),
+            encoding="utf-8",
+        )
+
+        clone = self.temporary / "checkout"
+        result = subprocess.run(
+            ["git", "clone", "--quiet", "--shared", str(self.repo()), str(clone)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            self.skipTest(f"cannot clone the checkout: {result.stderr.strip()}")
+        return clone
+
+    def nix_eval(self, expression):
+        result = subprocess.run(
+            ["nix", "eval", "--impure", "--raw", "--expr", expression],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout.strip()
+
+    def revision(self):
+        return subprocess.run(
+            ["git", "-C", str(self.checkout), "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+
+    def build_repo_artifact(self):
+        """`packages.<system>.herdr-ui` of this checkout: the artifact the baseline pins."""
+        result = subprocess.run(
+            [
+                "nix",
+                "build",
+                "--no-link",
+                "--print-out-paths",
+                "--extra-experimental-features",
+                "nix-command flakes",
+                f"path:{self.checkout}#herdr-ui",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+            env={**os.environ, "PATH": self.env["PATH"]},
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        paths = [line for line in result.stdout.splitlines() if line.startswith("/")]
+        self.assertTrue(paths, result.stdout)
+        return paths[-1]
+
+    def write_baseline(self, artifact, revision):
+        self.baseline_path.write_text(
+            json.dumps(
+                {
+                    "revision": revision,
+                    "plugins": {},
+                    "skills": {},
+                    "ui": {"herdr-ui": str(artifact)},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+    def run_cli(self, *argv):
+        out, err = io.StringIO(), io.StringIO()
+        code = cli.main(list(argv), dict(self.env), out, err)
+        return code, out.getvalue(), err.getvalue()
+
+    def ok(self, *argv):
+        code, out, err = self.run_cli(*argv)
+        self.assertEqual(code, 0, f"agents {argv}\nstdout:\n{out}\nstderr:\n{err}")
+        return out, err
+
+    def files(self, root):
+        return sorted(
+            path.relative_to(root).as_posix()
+            for path in Path(root).rglob("*")
+            if path.is_file() or path.is_symlink()
+        )
+
+    def artifact_files(self):
+        return {
+            relative: (self.pinned / relative).read_bytes()
+            for relative in self.files(self.pinned)
+        }
+
+    # -- the way round ---------------------------------------------------------------
+
+    def edit(self, relative, marker):
+        """Change one tracked artifact file in the checkout, the way a publish sees an edit."""
+        path = self.checkout / relative
+        path.write_text(path.read_text(encoding="utf-8") + marker, encoding="utf-8")
+
+    def tree(self, root):
+        return {
+            relative: (Path(root) / relative).read_bytes()
+            for relative in self.files(root)
+        }
+
+    def test_update_publishes_deploys_and_resets_both_real_artifacts(self):
+        pinned = self.tree(self.pinned)
+        self.assertTrue(pinned, "the pinned artifact is empty")
+        self.assertIn("mods/workqueue/main.js", pinned)
+        self.assertIn("layouts/nested.json", pinned)
+
+        # 1. Before anything is published, the baseline is what deploys.
+        out, _ = self.ok("deploy-ui", "herdr-ui")
+        self.assertIn("baseline", out)
+        self.assertEqual(self.tree(self.deployed), pinned)
+        resolved = json.loads(self.ok("resolve")[0])
+        self.assertEqual(resolved["ui"], {"herdr-ui": str(self.pinned)})
+        self.assertEqual(list(resolved), ["plugins", "skills", "ui"])
+
+        # 2. A real update of a checkout whose sources moved on: snapshot, build the artifact
+        #    from that flake, record it, deploy it.
+        self.edit("apps/herdr-ui/src/mods/nested-status/main.js", "// e2e-published\n")
+        out, _ = self.ok("update", "herdr-ui")
+        self.assertIn("published herdr-ui ui", out)
+        self.assertIn("herdr-ui ui: ", out)
+        self.assertIn("1 changed path", out)
+        record = json.loads(
+            (self.state_home / "agents-updates" / "current.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        published = Path(record["ui"]["herdr-ui"]["path"])
+        self.assertTrue(str(published).startswith(str(self.store) + "/"), published)
+        self.assertNotEqual(published, self.pinned)
+        self.assertEqual(record["ui"]["herdr-ui"]["baseline"], self.revision())
+        published_files = self.tree(published)
+        self.assertIn(
+            "// e2e-published", published_files["mods/nested-status/main.js"].decode()
+        )
+        # The artifact is the runtime UI and nothing else, and it is what the app now reads.
+        self.assertEqual(sorted(published_files), sorted(pinned))
+        self.assertEqual(self.tree(self.deployed), published_files)
+        deployment = json.loads(
+            (self.state_home / "agents-updates" / "ui" / "herdr-ui.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(deployment["source"], str(published))
+        self.assertEqual(deployment["destination"], str(self.deployed))
+
+        # 3. status says what is published; resolve merges it over the pin.
+        status, _ = self.ok("status")
+        self.assertIn(f"herdr-ui: {published}", status)
+        self.assertIn("pinned", status)
+        resolved = json.loads(self.ok("resolve")[0])
+        self.assertEqual(resolved["ui"], {"herdr-ui": str(published)})
+
+        # 4. A second deploy writes nothing: the switch that changes nothing is silent.
+        out, _ = self.ok("deploy-ui", "herdr-ui")
+        self.assertIn("deployed 0 written", out)
+        self.assertNotIn("no restart", out)
+
+        # 5. What the person edits in the writable tree comes back from the artifact.
+        edited = self.deployed / "mods" / "nested-status" / "main.js"
+        edited.write_text("// edited by hand\n", encoding="utf-8")
+        out, _ = self.ok("deploy-ui", "herdr-ui")
+        self.assertIn("deployed 1 written", out)
+        self.assertEqual(
+            edited.read_bytes(), published_files["mods/nested-status/main.js"]
+        )
+        self.assertEqual(self.tree(self.deployed), published_files)
+
+        # 6. check is clean with a publication that matches the pin.
+        out, err = self.ok("check")
+        self.assertEqual((out, err), ("", ""))
+
+        # 7. reset drops the override and puts the pinned artifact back - the edit goes away.
+        out, _ = self.ok("reset", "herdr-ui")
+        self.assertIn("herdr-ui (ui)", out)
+        self.assertIn("deployed", out)
+        record = json.loads(
+            (self.state_home / "agents-updates" / "current.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(record["ui"], {})
+        resolved = json.loads(self.ok("resolve")[0])
+        self.assertEqual(resolved["ui"], {"herdr-ui": str(self.pinned)})
+        self.assertEqual(self.tree(self.deployed), pinned)
+        self.assertNotIn(
+            "// e2e-published",
+            (self.deployed / "mods" / "nested-status" / "main.js").read_text(
+                encoding="utf-8"
+            ),
+        )
+        # The generation root a running app may still load is still there.
+        self.assertTrue(list((self.state_home / "agents-updates" / "roots").iterdir()))
+
+    def test_a_published_artifact_survives_a_corrupt_record_and_a_moved_pin(self):
+        self.ok("update", "herdr-ui")
+        published = json.loads(
+            (self.state_home / "agents-updates" / "current.json").read_text(
+                encoding="utf-8"
+            )
+        )["ui"]["herdr-ui"]["path"]
+        # The pin moves (a switch happened): the publication still wins, and check says so.
+        self.write_baseline(self.pinned, "2222222222222222222222222222222222222222")
+        self.assertEqual(json.loads(self.ok("resolve")[0])["ui"]["herdr-ui"], published)
+        out, _ = self.ok("check")
+        self.assertIn("herdr-ui was published from", out)
+        # And the deployer still deploys it rather than the pin.
+        out, _ = self.ok("deploy-ui", "herdr-ui")
+        self.assertIn(published, out)
 
 
 @unittest.skipUnless(
