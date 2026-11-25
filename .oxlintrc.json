@@ -16,6 +16,17 @@
     "apps/site/.astro/**"
   ],
   "overrides": [
+    // Herdr's own UI is the app's files as the NixOS configuration ships them, byte for byte: the
+    // migration that moved them here compares the two, so a linter's rewrite of them is the app's to
+    // make, not this repo's. Everything else oxlint checks applies to them still.
+    {
+      "files": ["apps/herdr-ui/src/mods/**"],
+      "rules": {
+        "no-unused-vars": "off",
+        "no-unused-expressions": "off",
+        "unicorn/no-useless-fallback-in-spread": "off"
+      }
+    },
     // A component's `internal.ts` is for its own files and the catalogue. An override replaces a
     // rule's options whole, so each one below that sets `no-restricted-imports` restates this pattern.
     {
@@ -201,6 +212,14 @@
       "rules": {
         "no-restricted-imports": "off",
         "no-restricted-globals": "off"
+      }
+    },
+    {
+      "files": ["apps/herdr-ui/src/mods/**"],
+      "rules": {
+        "no-unused-vars": "off",
+        "no-unused-expressions": "off",
+        "unicorn/no-useless-fallback-in-spread": "off"
       }
     },
     {

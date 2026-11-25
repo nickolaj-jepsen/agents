@@ -1,0 +1,4 @@
+# What `herdr-app check <mod>` writes beside a mod it checks. The spec checks a scratch copy, so these
+# appear here only when someone runs the check on the app's own sources.
+**/gpui-kit.d.ts
+**/jsconfig.json

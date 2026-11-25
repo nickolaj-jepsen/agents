@@ -1,0 +1,12 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    // The mods are the files Herdr loads, as they are: there is no bundle to build.
+    "test": {
+      "command": ["./node_modules/.bin/vitest", "run"]
+    },
+    "check-types": {
+      "command": ["./node_modules/.bin/tsc", "-b", "tsconfig.json"]
+    }
+  }
+}

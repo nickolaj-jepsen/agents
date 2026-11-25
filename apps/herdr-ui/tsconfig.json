@@ -1,0 +1,7 @@
+{
+  "extends": "../../tsconfig.base.node.json",
+  // The mods are plain JavaScript, which Herdr loads as it is: the specs type-check against what they
+  // infer, and nothing here is emitted.
+  "compilerOptions": { "allowJs": true },
+  "include": ["src"]
+}
