@@ -7,7 +7,7 @@ You need Node 24 (`.node-version`), pnpm (`corepack enable` gives you the versio
 ```bash
 pnpm install                  # every package's dependencies, from pnpm-lock.yaml
 pnpm hooks                    # run the fast checks before each commit; once per checkout
-pnpm turbo run test           # specs for the libs, kits and build tools, and run-handoff's pytest; runs no agent
+pnpm turbo run test           # specs for the libs, kits and tools, and the pytest suites; runs no agent
 pnpm turbo run check-types    # tsc -b in each package
 pnpm turbo run lint           # oxlint over the TypeScript sources
 pnpm turbo run fmt            # format the checkout: oxfmt, and ruff for Python
@@ -23,16 +23,16 @@ A local run never writes the remote cache, so CI re-runs what you ran; what CI h
 
 ## Layout
 
-| Path          | What it holds                                                                                                                                                                 |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/<name>` | A plugin: a Claude Code mod, a pi extension, or both. `apps/site` is the Astro site and no plugin.                                                                            |
-| `lib/kits/`   | The UI kit, one package per component (`@agents/kit-<component>`), plus `core` (lines, tokens, painters), `legacy` and `catalog`. See [the kit guide](../lib/kits/README.md). |
-| `lib/tools/`  | `build` (the bundler, manifests, README generator), `drive` (`pnpm drive`: real agents, screen tests, recordings) and `lint` (oxlint, oxfmt, shellcheck).                     |
-| `skills/`     | Installable skills, one folder each with a `SKILL.md`.                                                                                                                        |
-| `docs/`       | These pages. They feed the site's developer section; `_intro.md` and `_install.md` feed the root README.                                                                      |
-| `pkgs/`       | Nix: how the apps are built, the recording environment, and the hash that pins the dependency fetch.                                                                          |
+| Path          | What it holds                                                                                                                                                                                                                                                                                   |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/<name>` | A plugin: a Claude Code mod, a pi extension, or both. `apps/site` is the Astro site and no plugin.                                                                                                                                                                                              |
+| `lib/kits/`   | The UI kit, one package per component (`@agents/kit-<component>`), plus `core` (lines, tokens, painters), `legacy` and `catalog`. See [the kit guide](../lib/kits/README.md).                                                                                                                   |
+| `lib/tools/`  | `build` (the bundler, manifests, README generator), `drive` (`pnpm drive`: real agents, screen tests, recordings), `lint` (oxlint, oxfmt, shellcheck) and `updates` (the `agents` publication CLI, its refresh helper and pi's reload bridge; see [its guide](../lib/tools/updates/README.md)). |
+| `skills/`     | Installable skills, one folder each with a `SKILL.md`.                                                                                                                                                                                                                                          |
+| `docs/`       | These pages. They feed the site's developer section; `_intro.md` and `_install.md` feed the root README.                                                                                                                                                                                        |
+| `pkgs/`       | Nix: how the apps are built, the recording environment, and the hash that pins the dependency fetch.                                                                                                                                                                                            |
 
-Everything under `apps/`, `lib/kits/` and `lib/tools/` is a pnpm workspace package with its own `turbo.json`, which holds the commands of the tasks it takes part in.
+Everything under `apps/`, `lib/kits/` and `lib/tools/` is a pnpm workspace package with its own `turbo.json`, which holds the commands of the tasks it takes part in. A package with a Python half also holds a `pyproject.toml` that is a member of the root's uv workspace, in a subdirectory (`lib/tools/updates/python`); turbo runs that member as a package of its own.
 
 ## Tasks
 
@@ -44,7 +44,7 @@ Run focused tasks as `pnpm turbo run <task> --filter=<package>`. A per-package t
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `build`             | Per app: bundle it into its gitignored `dist/`, in the shape Claude Code and pi load. At the root it also writes the generated files (README, `COMPONENTS.md`, the kit index in `AGENTS.md`), records the media and builds the site.                                 | The package's sources and the kits and build tool it imports, less its tests, scenarios and README.              |
 | `dev`               | `astro dev` for the site at http://localhost:4321/agents/. Reloads when a plugin README, skill, doc or kit manifest changes.                                                                                                                                         | Not cached.                                                                                                      |
-| `test`              | Each package's vitest specs, and run-handoff's pytest. Runs no agent.                                                                                                                                                                                                | The package's sources and what it imports.                                                                       |
+| `test`              | Each package's vitest specs, and the pytest suite of every uv workspace member (`run-handoff`, `agents-updates`). Runs no agent.                                                                                                                                     | The package's sources and what it imports.                                                                       |
 | `check-types`       | `tsc -b` per package. An app with a Claude half checks it too, against its `.claude-types/` snapshot (`tsconfig.claude.json`).                                                                                                                                       | The package, the root tsconfigs and its `types`.                                                                 |
 | `types`             | Claude writes the mod API types only when it loads a mod. `drive types <app>` loads the build in a hermetic Claude and waits for them. Run it after a Claude Code upgrade.                                                                                           | The app's build and the `claude` version.                                                                        |
 | `test:claude`       | `claude plugin validate --strict` and `claude plugin test` on an app's built mod, with the flake's Claude Code (`CLAUDE_BIN`) and a scratch `HOME`.                                                                                                                  | The app's build.                                                                                                 |
@@ -113,7 +113,7 @@ Put the instructions in `skills/<name>/SKILL.md`. Set `metadata.summary` and pic
 
 To validate frontmatter, copy `skills/` into a temporary plugin directory and run `claude plugin validate --strict --json <dir>`. Don't symlink the skills.
 
-`check` lints a skill's scripts too: ruff for Python and shellcheck, at warning level, for shell. `fmt` formats the Python. A script folder with a `pyproject.toml` and tests joins the uv workspace (`skills/run-handoff/scripts` is the first); add its path to `members` in the root `pyproject.toml`.
+`check` lints a skill's scripts too: ruff for Python and shellcheck, at warning level, for shell. `fmt` formats the Python. A script folder with a `pyproject.toml` and tests joins the uv workspace (`skills/run-handoff/scripts` and `lib/tools/updates/python` are the two); add its path to `members` in the root `pyproject.toml`, and run `uv lock`. Its `test` task is inferred as pytest, so a member whose tests are not pytest overrides `test` in its own `turbo.json`.
 
 ## Build, publish and use the plugins with nix
 
@@ -123,16 +123,17 @@ When `pnpm-lock.yaml` changes the hash, `nix run .#update-deps-hash` rewrites it
 
 On every push to `main`, after `CI gate` passes, the `publish` job of [`ci.yml`](../.github/workflows/ci.yml) builds `.#plugins` and appends one commit with the result to the `dist` branch ([`publish-dist.sh`](../.github/publish-dist.sh)); it creates the branch when it is missing, never force-pushes, and commits nothing when the build is unchanged. The marketplace entries are `git-subdir` sources on that branch, so a Claude install gets a built plugin, not the app's source. The `skills` entry stays `./` on `main`.
 
-| Entry                                                   | What you get                                                                                                                                  |
-| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages.<system>.<name>`, `packages.<system>.plugins` | A plugin's build, and all of them (`<name>/`).                                                                                                |
-| `lib.plugins`                                           | Map by plugin name; entries have `claude`, `pi` and `subagents`. Their `path` throws: a build belongs to a system, which `lib` does not know. |
-| `lib.pluginsFor pkgs`                                   | `lib.plugins` with `path` set to the app built for `pkgs.stdenv.hostPlatform.system`: a store path, the folder pi loads as a package.         |
-| `lib.skills`                                            | Map from name to skill directory.                                                                                                             |
-| `lib.mkClaudePlugin { pkgs; claude-code; } <name>`      | One Claude half, validated (`--strict`) and tested with the supplied Claude Code.                                                             |
-| `apps.media`, `apps.update-deps-hash`                   | `nix run .#media -- <command>` runs a command in the recording environment; `nix run .#update-deps-hash` refreshes the pinned hash.           |
+| Entry                                                   | What you get                                                                                                                                                  |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages.<system>.<name>`, `packages.<system>.plugins` | A plugin's build, and all of them (`<name>/`).                                                                                                                |
+| `packages.<system>.agents-updates`                      | The explicit publication tool: `bin/agents`, `bin/agents-refresh`, and the pi package at `share/agents-updates/pi`. Nothing npm-built; the consumer wraps it. |
+| `lib.plugins`                                           | Map by plugin name; entries have `claude`, `pi` and `subagents`. Their `path` throws: a build belongs to a system, which `lib` does not know.                 |
+| `lib.pluginsFor pkgs`                                   | `lib.plugins` with `path` set to the app built for `pkgs.stdenv.hostPlatform.system`: a store path, the folder pi loads as a package.                         |
+| `lib.skills`                                            | Map from name to skill directory.                                                                                                                             |
+| `lib.mkClaudePlugin { pkgs; claude-code; } <name>`      | One Claude half, validated (`--strict`) and tested with the supplied Claude Code.                                                                             |
+| `apps.media`, `apps.update-deps-hash`                   | `nix run .#media -- <command>` runs a command in the recording environment; `nix run .#update-deps-hash` refreshes the pinned hash.                           |
 
-The repo's own checks run in turbo: Claude Code is pinned by nixpkgs in `flake.lock`, and pi by `pnpm-lock.yaml`. CI runs the gate in `nix develop`; recordings get the same Claude from `nix run .#media`. Turbo hashes `flake.lock` and `CLAUDE_BIN` so changing Claude invalidates cached checks. `nix flake check` (`check:nix`) builds every plugin and runs each Claude half through `lib.mkClaudePlugin` with nixpkgs' `claude-code`. A consumer's flake that sets `inputs.agents.inputs.nixpkgs.follows` builds with its own nixpkgs: if its `pnpm_12` fetches differently, `agents-pnpm-deps` fails with a hash mismatch, and the answer is to drop the `follows` for `agents`. Marketplace installs aren't checked against your local Claude version.
+The repo's own checks run in turbo: Claude Code is pinned by nixpkgs in `flake.lock`, and pi by `pnpm-lock.yaml`. CI runs the gate in `nix develop`; recordings get the same Claude from `nix run .#media`. Turbo hashes `flake.lock` and `CLAUDE_BIN` so changing Claude invalidates cached checks. `nix flake check` (`check:nix`) builds every plugin, runs the updates tool's Python tests (`checks.agents-updates`), and runs each Claude half through `lib.mkClaudePlugin` with nixpkgs' `claude-code`. A consumer's flake that sets `inputs.agents.inputs.nixpkgs.follows` builds with its own nixpkgs: if its `pnpm_12` fetches differently, `agents-pnpm-deps` fails with a hash mismatch, and the answer is to drop the `follows` for `agents`. Marketplace installs aren't checked against your local Claude version.
 
 ### Binary cache for Nix consumers
 

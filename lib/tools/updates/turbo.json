@@ -1,0 +1,10 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    // The pi reload bridge against a real temporary state directory and a stub refresh: no
+    // session, no build and no network. The Python half is the uv member in `python/`.
+    "test": {
+      "command": ["./node_modules/.bin/vitest", "run"]
+    }
+  }
+}

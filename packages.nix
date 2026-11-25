@@ -5,6 +5,7 @@
     ...
   }: let
     built = pkgs.callPackage ./pkgs/plugin-apps.nix {root = ./.;};
+    agentsUpdates = pkgs.callPackage ./pkgs/agents-updates.nix {};
   in {
     packages =
       # One per plugin: the app's `dist/`, the folder Claude Code and pi load.
@@ -19,12 +20,21 @@
           mkdir $out
           ${lib.concatStringsSep "\n" (lib.mapAttrsToList (name: app: "cp -r --no-preserve=mode ${app} $out/${name}") built.apps)}
         '';
+
+        # The explicit publication tool: `bin/agents`, `bin/agents-refresh` and the pi package
+        # at `share/agents-updates/pi`, with the environment left to the consumer's wrapper.
+        # See lib/tools/updates/README.md.
+        agents-updates = agentsUpdates;
       };
 
     # Each Claude half through `lib.mkClaudePlugin` too, against this flake's own claude-code, so
     # `nix flake check` builds, validates and tests everything the marketplace serves.
     checks =
-      {inherit (self.packages.${pkgs.stdenv.hostPlatform.system}) plugins;}
+      {
+        inherit (self.packages.${pkgs.stdenv.hostPlatform.system}) plugins;
+        # The tool's own tests, from the scripts the package installs: no store and no network.
+        agents-updates = agentsUpdates.passthru.tests;
+      }
       // lib.mapAttrs' (name: _:
         lib.nameValuePair "claude-${name}" (self.lib.mkClaudePlugin {
             inherit pkgs;

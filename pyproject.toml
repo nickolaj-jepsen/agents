@@ -12,7 +12,7 @@ dev = ["ruff"]
 package = false
 
 [tool.uv.workspace]
-members = ["skills/run-handoff/scripts"]
+members = ["skills/run-handoff/scripts", "lib/tools/updates/python"]
 
 [tool.turbo]
 name = "agents-python"
