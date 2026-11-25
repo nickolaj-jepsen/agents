@@ -41,6 +41,11 @@ test("the artifact is the mods and the layout, and the files Herdr needs to load
     "mods/open-in/mod.json",
     "mods/repo-agent-menu/main.js",
     "mods/repo-agent-menu/mod.json",
+    "mods/workqueue/inbox.svg",
+    "mods/workqueue/main.js",
+    "mods/workqueue/message.svg",
+    "mods/workqueue/mod.json",
+    "mods/workqueue/queue.js",
   ]);
 });
 

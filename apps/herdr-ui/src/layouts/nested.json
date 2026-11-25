@@ -122,6 +122,13 @@
                           "content": {
                             "mod": "changes"
                           }
+                        },
+                        {
+                          "id": "workqueue",
+                          "type": "block",
+                          "content": {
+                            "mod": "workqueue"
+                          }
                         }
                       ],
                       "active": "files"
@@ -160,6 +167,19 @@
         "px": 8
       },
       "children": []
+    },
+    {
+      "id": "workqueue-feed",
+      "type": "block",
+      "size": {
+        "px": 0
+      },
+      "content": {
+        "mod": "workqueue",
+        "props": {
+          "feed": true
+        }
+      }
     }
   ],
   "background": "canvas",

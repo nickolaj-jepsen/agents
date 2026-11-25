@@ -23,6 +23,18 @@ export default class Tabs extends View {
   syncPanel(space, panel, body, enabled) {
     if (!space || !panel) return;
     const now = panel.hidden ? null : (body?.active ?? null);
+    // The queue isn't about one space: it stays open across switches and isn't
+    // remembered; closing it brings back this space's own choice.
+    if (now === "workqueue") {
+      this.space = space.id;
+      this.pending = null;
+      this.queue = true;
+      return;
+    }
+    if (this.queue) {
+      this.queue = false;
+      if (now === null) this.space = null;
+    }
     if (space.id !== this.space) {
       const first = this.space === undefined;
       this.space = space.id;
@@ -174,7 +186,7 @@ export default class Tabs extends View {
       body = find(root, "panel-body");
     const enabled = shared("workspace.panels") ?? ["files", "changes"];
     this.syncPanel(space, panel, body, enabled);
-    const panelButton = (id, label, icon) => {
+    const panelButton = (id, label, icon, count = 0) => {
       const on = panel && !panel.hidden && body?.active === id;
       return h_flex()
         .id(`panel-${id}`)
@@ -197,8 +209,13 @@ export default class Tabs extends View {
           }
         })
         .child(svg(icon).size(14))
-        .child(label);
+        .child(label)
+        .when(count > 0, (el) =>
+          el.child(div().text_size(11).text_color(t.dim).child(String(count))),
+        );
     };
+    const queue = shared("workqueue");
+    const waiting = (queue?.work ?? 0) + (queue?.personal ?? 0);
     const sidebarWidth = sidebar?.hidden ? 0 : (sidebar?.size?.px ?? 268);
     const compact = sidebarWidth < 160;
     const toggle = () => {
@@ -286,6 +303,7 @@ export default class Tabs extends View {
       )
       .when(enabled.includes("changes"), (el) =>
         el.child(panelButton("changes", "Changes", "mods/changes/changes.svg")),
-      );
+      )
+      .child(panelButton("workqueue", "Queue", "mods/workqueue/inbox.svg", waiting));
   }
 }
