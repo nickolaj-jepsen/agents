@@ -134,6 +134,23 @@ On every push to `main`, after `CI gate` passes, the `publish` job of [`ci.yml`]
 
 The repo's own checks run in turbo: Claude Code is pinned by nixpkgs in `flake.lock`, and pi by `pnpm-lock.yaml`. CI runs the gate in `nix develop`; recordings get the same Claude from `nix run .#media`. Turbo hashes `flake.lock` and `CLAUDE_BIN` so changing Claude invalidates cached checks. `nix flake check` (`check:nix`) builds every plugin and runs each Claude half through `lib.mkClaudePlugin` with nixpkgs' `claude-code`. A consumer's flake that sets `inputs.agents.inputs.nixpkgs.follows` builds with its own nixpkgs: if its `pnpm_12` fetches differently, `agents-pnpm-deps` fails with a hash mismatch, and the answer is to drop the `follows` for `agents`. Marketplace installs aren't checked against your local Claude version.
 
+### Binary cache for Nix consumers
+
+CI publishes each plugin output to `https://agents.cachix.org`, including outputs reused from another cache. The publish job uses repository variable `CACHIX_CACHE=agents` and secret `CACHIX_AUTH_TOKEN` (write access). The aggregate `plugins` output copies the builds, so its runtime closure alone does not retain the individual plugin outputs; CI pushes those explicitly too.
+
+Configure consumers declaratively:
+
+```nix
+nix.settings = {
+  extra-substituters = [ "https://agents.cachix.org" ];
+  extra-trusted-public-keys = [
+    "agents.cachix.org-1:k9+CaEjlEzDvRfdzFNIBtDxvBjgq0tmNYTrH/CHMlvU="
+  ];
+};
+```
+
+Keep agents' own nixpkgs pin: do not set `agents.inputs.nixpkgs.follows`. The consumer must use the same agents revision and build inputs as CI for the store paths to match. CI currently publishes `x86_64-linux` builds; other systems still build locally. A cache miss builds only the missing derivations. Configuring this cache does not bypass `lib.mkClaudePlugin` checks against the consumer's own Claude.
+
 Stage new files before running nix commands; otherwise Nix won't see them.
 
 ## Preview the published site
