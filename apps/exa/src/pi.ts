@@ -7,6 +7,7 @@ import { Type } from "typebox";
 import type { ExtensionAPI, ExtensionToolContext } from "@earendil-works/pi-coding-agent";
 import { readFileSync } from "node:fs";
 import { contextBudget, fetchPlan, resultCount, searchCap } from "./lib/budget.ts";
+import { type ExaRemark, noticeLines, warningMessages } from "./lib/notices.ts";
 
 const API = "https://api.exa.ai";
 // Exa's fee as tool-result usage, which pi counts in the session total even under codemode.
@@ -44,6 +45,8 @@ interface ExaResponse {
   results?: ExaResult[];
   statuses?: ExaStatus[];
   costDollars?: { total?: number };
+  notices?: ExaRemark[];
+  warnings?: ExaRemark[];
 }
 
 /** Total chars one call may add to the context, and the window used for result counts. */
@@ -193,22 +196,25 @@ export default function (pi: ExtensionAPI) {
 
       const results = data.results ?? [];
       const costUsd = data.costDollars?.total;
+      const notices = noticeLines(data.notices);
+      const lead = notices.length > 0 ? `${notices.join("\n")}\n\n` : "";
+      const warnings = warningMessages(data.warnings);
       const truncated = results
         .map((r) => truncatedUrl(r, mode, cap))
         .filter((url): url is string => Boolean(url));
 
       if (results.length === 0) {
         return {
-          content: [{ type: "text" as const, text: `No results for "${params.query}".` }],
-          details: { numResults, mode, costUsd, truncated: [] },
+          content: [{ type: "text" as const, text: `${lead}No results for "${params.query}".` }],
+          details: { numResults, mode, costUsd, truncated: [], warnings },
           ...fee(costUsd),
         };
       }
       const notes =
         truncated.length > 0 ? [`Capped at ~${cap} chars: ${shortList(truncated)}`] : [];
       return {
-        content: [{ type: "text" as const, text: format(results, true) + footer(notes) }],
-        details: { numResults, mode, costUsd, truncated },
+        content: [{ type: "text" as const, text: lead + format(results, true) + footer(notes) }],
+        details: { numResults, mode, costUsd, truncated, warnings },
         ...fee(costUsd),
       };
     },
