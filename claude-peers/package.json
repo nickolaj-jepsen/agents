@@ -1,0 +1,19 @@
+{
+  "name": "@nickolaj-jepsen/claude-peers",
+  "version": "0.1.0",
+  "description": "Make a pi session a peer in Claude Code's cross-session messaging: list_agents and send_message reach Claude Code and other pi sessions on this machine",
+  "keywords": [
+    "pi-package"
+  ],
+  "type": "module",
+  "pi": {
+    "extensions": [
+      "./pi/index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  }
+}
