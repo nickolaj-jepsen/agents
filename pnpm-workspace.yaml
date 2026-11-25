@@ -12,10 +12,10 @@ allowBuilds:
 # rerun the whole suite on every Dependabot bump. That is why the root holds turbo alone and the
 # linters live in lib/tools/lint/. The catalog states each shared version once; Dependabot updates it here.
 catalog:
-  "@earendil-works/pi-agent-core": 1.6.0
-  "@earendil-works/pi-ai": 1.6.0
-  "@earendil-works/pi-coding-agent": 1.6.0
-  "@earendil-works/pi-tui": 1.6.0
+  "@earendil-works/pi-agent-core": 1.6.1
+  "@earendil-works/pi-ai": 1.6.1
+  "@earendil-works/pi-coding-agent": 1.6.1
+  "@earendil-works/pi-tui": 1.6.1
   "@microsoft/tui-test": ^0.1.1
   "@types/node": ^26.6.6
   chokidar: 6.0.0
@@ -30,3 +30,12 @@ catalog:
 # A plugin's peerDependencies name the packages pi supplies and stay "*"; its devDependencies pin the
 # one copy it is checked against. autoInstallPeers would add a second, unpinned copy of each peer.
 autoInstallPeers: false
+minimumReleaseAgeExclude:
+  - "@earendil-works/pi-agent-core@1.6.1"
+  - "@earendil-works/pi-ai@1.6.1"
+  - "@earendil-works/pi-codemode@1.6.1"
+  - "@earendil-works/pi-coding-agent@1.6.1"
+  - "@earendil-works/pi-mcp@1.6.1"
+  - "@earendil-works/pi-schema@1.6.1"
+  - "@earendil-works/pi-telemetry@1.6.1"
+  - "@earendil-works/pi-tui@1.6.1"
