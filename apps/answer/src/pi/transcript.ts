@@ -50,7 +50,11 @@ type Row = { line: Line; editorWidth?: number };
 /** A control on a painted row: its cells, and what pressing it does. */
 type ActCell<A> = { start: number; end: number; act: A };
 type Hit<A> = { text: string; cells: ActCell<A>[] };
-type Field = { kind: "write" | "note"; step: number; editor: Editor };
+/** An open field's address: the form and step it belongs to, and what it is. */
+export type Typing = { form: string; kind: "write" | "note"; step: number };
+/** An open field and what is in it: what a redraw has to give back, and to which round. */
+export type Typed = Typing & { text: string };
+type Field = Typing & { editor: Editor };
 type Item = NonNullable<View["item"]>;
 
 /** The control at `x` on a row, if the pointer is over one. */
@@ -375,6 +379,21 @@ export class AnswerGuide implements Component, Focusable {
     return this.field;
   }
 
+  /** What the open field holds, and the form it belongs to, for a redraw that takes it away. */
+  get typed(): Typed | undefined {
+    const field = this.field;
+    if (!field) return undefined;
+    const { form, kind, step } = field;
+    return { form, kind, step, text: field.editor.getText() };
+  }
+
+  /** Drops the open field without saving it: its text has gone to the round it was typed into. */
+  forget(): void {
+    if (!this.field) return;
+    this.field = undefined;
+    this.tui.requestRender();
+  }
+
   constructor(
     private readonly tui: TUI,
     private readonly theme: Theme,
@@ -396,7 +415,12 @@ export class AnswerGuide implements Component, Focusable {
     return this.field !== undefined;
   }
 
-  edit(kind: Field["kind"], step: number, text: string, done: (text?: string) => void): void {
+  edit(
+    field: Typing,
+    text: string,
+    done: (text?: string) => void,
+    changed?: (text: string) => void,
+  ): void {
     const editor = new Editor(this.tui, {
       borderColor: (s) => paintSpan(this.theme, span(s, { role: "border" })),
       selectList: getSelectListTheme(),
@@ -404,7 +428,9 @@ export class AnswerGuide implements Component, Focusable {
     editor.setText(text);
     editor.focused = this.focused;
     editor.onSubmit = (value) => this.finishEdit(value);
-    this.field = { kind, step, editor, done };
+    // The prefill is the draft as it already was: only what follows it is worth keeping.
+    if (changed) editor.onChange = changed;
+    this.field = { ...field, editor, done };
     this.tui.requestRender();
   }
 

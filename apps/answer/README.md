@@ -4,7 +4,7 @@ featured: true
 order: 4
 ---
 
-When a turn ends with questions, click a choice, write your own answer, or add a note. You can leave questions unanswered. **Fill prompt** puts the reply above your draft. **Send reply**, where available, sends it without disturbing the draft.
+When a turn ends with questions, click a choice, write your own answer, or add a note. You can leave questions unanswered. **Fill prompt** puts the reply above your draft. In pi, filling again replaces that reply without touching the draft, its whitespace included. **Send reply**, where available, sends it without disturbing the draft.
 
 What counts as a question:
 
@@ -36,7 +36,7 @@ To use the keys below, give the cards the keyboard first: in Claude Code press `
 
 The row after the last card counts the answered questions. Click the count to go back to the first question, or **Fill prompt** to put the reply in the prompt. A card with an answer has a green rail.
 
-In the editor, `Shift+Enter` adds a line and `Enter` saves. In Claude Code, click the field or focus the band before typing. In pi, `Esc` cancels editing; a click on the prompt gives it focus.
+In the editor, `Shift+Enter` adds a line and `Enter` saves. In Claude Code, click the field or focus the band before typing. In pi, `Esc` cancels editing; a click on the prompt gives it focus. A write-in or note you have typed but not saved stays with its round: it is there again after `/reload`, and it is kept when the cards are redrawn or a new round takes their place. An answer pi refuses to send, for a missing model or an expired sign-in, leaves the round open with its answers.
 
 The cards are made for each client's fullscreen renderer, which is the default. pi's regular terminal mode takes keys only: the terminal owns the scrollback there, so the mouse does nothing on a card and you scroll to it yourself. Claude Code's classic renderer is not supported. In Claude Code, `/answer` brings the current card into view.
 
