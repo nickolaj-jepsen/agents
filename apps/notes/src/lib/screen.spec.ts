@@ -8,6 +8,7 @@ import {
   BUTTONS,
   drawScreen,
   emptyText,
+  isReaderLive,
   isScreenHit,
   keyIntent,
   pathOf,
@@ -349,6 +350,18 @@ describe("the small words", () => {
     expect(artefactsText(GROUPS)).toBe("1 artefact in plans and 2 in screens.");
     expect(artefactsText(shelve("/s", [{ path: "a/x.png", mtimeMs: 0 }]))).toBe("1 artefact in a.");
     expect(artefactsText(STORE.filter((g) => g.artefacts === 0))).toBeUndefined();
+  });
+});
+
+describe("a reader that Escape can leave", () => {
+  it("is one on a note that is on the shelf", () => {
+    expect(isReaderLive(GROUPS, { id: RETRY })).toBe(true);
+    expect(isReaderLive(GROUPS, { id: "plans:plans/gone.md" })).toBe(false);
+    expect(isReaderLive(GROUPS, null)).toBe(false);
+    expect(isReaderLive(GROUPS, undefined)).toBe(false);
+    // The list is what a reader on a gone note draws, so there is nothing to go back from.
+    const stale = readingState(startState(GROUPS), "plans:plans/gone.md");
+    expect(has(shown(stale, TALL), /❯ retry-after\.md/)).toBe(true);
   });
 });
 

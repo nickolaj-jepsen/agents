@@ -153,6 +153,13 @@ const focused = (s: ScreenState): Note | undefined => {
 const reading = (s: ScreenState): Note | undefined =>
   s.reader ? notesOf(s.groups).find((n) => n.id === s.reader?.id) : undefined;
 
+/**
+ * Whether a reader is on a note that is still on the shelf. One that is not shows the list, so
+ * Escape on it has nothing to go back from: it closes the pane.
+ */
+export const isReaderLive = (groups: readonly Group[], reader: { id: string } | null | undefined) =>
+  !!reader && notesOf(groups).some((n) => n.id === reader.id);
+
 const groupOf = (s: ScreenState, note: Note) =>
   s.groups.find((g) => g.notes.some((n) => n.id === note.id));
 
@@ -629,9 +636,14 @@ export type Band = { text: string; newest: string };
 /**
  * The band for the store's notes written since `since`, the newest named; nothing when none was.
  * Memory is the harness's own and never shows here.
+ * @param within Whether a time is one this session wrote in (`duringTurns`).
  */
-export function bandOf(groups: readonly Group[], since: number): Band | undefined {
-  const notes = written(groups, since);
+export function bandOf(
+  groups: readonly Group[],
+  since: number,
+  within?: (at: number) => boolean,
+): Band | undefined {
+  const notes = written(groups, since, within);
   const text = writtenLabel(notes, groups);
   return text && notes[0] ? { text, newest: notes[0].id } : undefined;
 }

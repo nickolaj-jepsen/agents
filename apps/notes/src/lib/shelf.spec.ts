@@ -6,6 +6,7 @@ import {
   isWalked,
   memoryGroup,
   notesOf,
+  projectKey,
   shelve,
   written,
   writtenLabel,
@@ -130,5 +131,60 @@ describe("the small words", () => {
     expect(claudeMemoryDir("/home/me/.claude", "/home/me/dev/my.repo")).toBe(
       "/home/me/.claude/projects/-home-me-dev-my-repo/memory",
     );
+  });
+});
+
+/** Claude Code 2.1.330's own rule for a project's folder, written out again. */
+const claudeKey = (path: string) => {
+  const slug = path.replace(/[^a-zA-Z0-9]/g, "-");
+  if (slug.length <= 200) return slug;
+  let h = 0;
+  for (let i = 0; i < path.length; i++) h = ((h << 5) - h + path.charCodeAt(i)) | 0;
+  return `${slug.slice(0, 200)}-${Math.abs(h).toString(36)}`;
+};
+
+describe("projectKey", () => {
+  it("names a path of 200 characters or fewer by its slug alone", () => {
+    const path = `/${"a".repeat(199)}`;
+    expect(projectKey(path)).toBe(`-${"a".repeat(199)}`);
+    expect(projectKey(path)).toHaveLength(200);
+  });
+
+  it("cuts a longer path at 200 and adds the hash of the whole path", () => {
+    const path = `/home/me/${"client-projects/".repeat(15)}billing.service`;
+    expect(path.length).toBeGreaterThan(250);
+    expect(projectKey(path)).toBe(claudeKey(path));
+    expect(projectKey(path)).toMatch(/^.{200}-[0-9a-z]+$/);
+    // Two long paths that share their first 200 characters still have two folders.
+    expect(projectKey(`${path}2`)).not.toBe(projectKey(path));
+  });
+
+  it("hashes the UTF-16 units, so an emoji is two", () => {
+    const path = `/home/me/🎉/${"x".repeat(220)}`;
+    expect(projectKey(path)).toBe(claudeKey(path));
+    expect(projectKey("/home/me/🎉")).toBe("-home-me---");
+  });
+
+  it("is the folder under the configuration directory's projects", () => {
+    const main = `/home/me/${"d/".repeat(130)}repo`;
+    expect(claudeMemoryDir("/c", main)).toBe(`/c/projects/${claudeKey(main)}/memory`);
+  });
+});
+
+describe("control characters in names", () => {
+  it("are drawn as U+FFFD, while the file keeps its real name", () => {
+    const groups = shelve("/s", [
+      { path: "pl\u001b]0;x\u0007ans/a\u001b[1m.md", mtimeMs: at(1) },
+      { path: "readme\f.md", mtimeMs: at(2) },
+    ]);
+    const notes = notesOf(groups);
+    for (const n of notes)
+      expect(`${n.id}${n.name}`).not.toMatch(/[\u0000-\u0008\u000B-\u001F\u007F-\u009F]/);
+    expect(groups.map((g) => g.label)).toEqual(["pl�]0;x�ans", "store"]);
+    expect(notes[0]?.name).toBe("a�[1m.md");
+    expect(notes[0]?.file).toBe("/s/pl\u001b]0;x\u0007ans/a\u001b[1m.md");
+    const memory = memoryGroup("/m", [{ path: "a\u001b.md", mtimeMs: at(1) }]);
+    expect(memory?.notes[0]?.name).toBe("a�.md");
+    expect(memory?.notes[0]?.file).toBe("/m/a\u001b.md");
   });
 });

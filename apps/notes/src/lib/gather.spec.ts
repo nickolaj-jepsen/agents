@@ -14,15 +14,21 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { nodeHost } from "../pi/host.ts";
 import {
+  BACKOFF_MS,
+  createLinks,
   ensureAt,
+  ENSURE_TIMEOUT_MS,
   handNote,
+  linkNotice,
   loadGroups,
   memoryDirOf,
+  noticeText,
   placeOf,
   readBody,
   shelfOf,
 } from "./gather.ts";
-import { notesOf, type Note } from "./shelf.ts";
+import { notesOf, projectKey, type Note } from "./shelf.ts";
+import type { Ensured } from "./store.ts";
 
 const base = () => realpathSync(mkdtempSync(join(tmpdir(), "notes-gather-")));
 
@@ -126,6 +132,147 @@ describe("memoryDirOf", () => {
       "/c/projects/-h-dev-my-repo/memory",
     );
     expect(memoryDirOf({ ...o, setting: undefined, main: undefined })).toBeUndefined();
+  });
+
+  it("counts a relative path or a bare ~ as unset, as Claude Code does", () => {
+    const o = { configDir: undefined, home: "/h", main: "/h/dev/my.repo" };
+    const dflt = "/h/.claude/projects/-h-dev-my-repo/memory";
+    for (const setting of ["~", "notes/memory", "./m", "~me/m", "  "])
+      expect(memoryDirOf({ ...o, setting })).toBe(dflt);
+    expect(memoryDirOf({ ...o, setting: "~/x" })).toBe("/h/x");
+    expect(memoryDirOf({ ...o, setting: 5 })).toBe(dflt);
+  });
+
+  it("names a long main checkout as Claude Code does", () => {
+    const main = `/h/${"projects/".repeat(30)}repo`;
+    const path = memoryDirOf({ setting: undefined, configDir: "/c", home: "/h", main });
+    expect(path).toBe(`/c/projects/${projectKey(main)}/memory`);
+    expect(path?.split("/")[3]).toMatch(/^.{200}-[0-9a-z]+$/);
+  });
+});
+
+describe("control characters", () => {
+  it("never reach the reader: a note's text and a read error are cleaned", async () => {
+    const w = world();
+    const file = join(w.root, "evil.md");
+    write(file, "a \u001b]52;c;eA==\u0007 b\r\nc\fd\n");
+    expect(await readBody(w.host, note(file))).toEqual({
+      text: "a �]52;c;eA==� b\nc�d\n",
+    });
+    const host = {
+      ...w.host,
+      size: async () => 10,
+      read: async () => {
+        throw new Error("no \u001b[2J here");
+      },
+    };
+    expect(await readBody(host, note(file))).toEqual({
+      problem: "Couldn't read this note: no �[2J here",
+    });
+  });
+
+  it("are gone from a link's notice, which names paths", () => {
+    const text = noticeText({ state: "foreign", detail: "/x/\u001b]0;t\u0007y" });
+    expect(text).toBe(
+      ".agents/store links to /x/�]0;t�y, not to this repository's store. Left alone.",
+    );
+    expect(linkNotice({ state: "failed", detail: "cannot write /a\u001bb" })).not.toMatch(/\u001b/);
+  });
+});
+
+describe("the link's back-off", () => {
+  const failed: Ensured = { state: "failed", detail: "cannot link" };
+  const linked: Ensured = { state: "linked", root: "/r" };
+
+  /** A clock that moves when told, and an `ensure` that answers from a list and counts. */
+  function rig(answers: Ensured[], delay = 0) {
+    let now = 1_000_000;
+    let runs = 0;
+    const shared = createLinks();
+    const ensure = async () => {
+      const answer = answers[Math.min(runs, answers.length - 1)] as Ensured;
+      runs++;
+      now += delay;
+      return answer;
+    };
+    const links = {
+      get: (cwd: string, o: { fresh?: boolean } = {}) =>
+        shared.get(cwd, { ensure, clock: () => now, ...o }),
+    };
+    return { links, runs: () => runs, pass: (ms: number) => void (now += ms) };
+  }
+
+  it("runs a link that is there once, however often it is asked", async () => {
+    const r = rig([linked]);
+    for (let i = 0; i < 5; i++) expect(await r.links.get("/r")).toBe(linked);
+    r.pass(10 * 60_000);
+    await r.links.get("/r");
+    expect(r.runs()).toBe(1);
+  });
+
+  it("leaves a failed, busy or timed-out folder alone for 30 s, then asks again", async () => {
+    for (const state of [{ state: "busy" } as Ensured, failed]) {
+      const r = rig([state, linked]);
+      expect((await r.links.get("/r")).state).toBe(state.state);
+      for (let i = 0; i < 4; i++) expect((await r.links.get("/r")).state).toBe(state.state);
+      expect(r.runs()).toBe(1);
+      r.pass(BACKOFF_MS - 1);
+      expect((await r.links.get("/r")).state).toBe(state.state);
+      expect(r.runs()).toBe(1);
+      r.pass(1);
+      expect((await r.links.get("/r")).state).toBe("linked");
+      expect(r.runs()).toBe(2);
+    }
+  });
+
+  it("counts the back-off from when the run ended, not when it began", async () => {
+    const r = rig([failed, linked], 10_000);
+    await r.links.get("/r");
+    r.pass(BACKOFF_MS - 1);
+    expect((await r.links.get("/r")).state).toBe("failed");
+    expect(r.runs()).toBe(1);
+  });
+
+  it("runs a script that threw as a failed link", async () => {
+    let now = 0;
+    const shared = createLinks();
+    const links = {
+      get: (cwd: string) =>
+        shared.get(cwd, { ensure: () => Promise.reject(new Error("x")), clock: () => now }),
+    };
+    expect((await links.get("/r")).state).toBe("failed");
+    await links.get("/r");
+    now += BACKOFF_MS;
+    expect((await links.get("/r")).state).toBe("failed");
+  });
+
+  it("asks at once when the person opens /notes, and keeps the answer", async () => {
+    const r = rig([failed, linked]);
+    await r.links.get("/r");
+    expect((await r.links.get("/r", { fresh: true })).state).toBe("linked");
+    expect((await r.links.get("/r")).state).toBe("linked");
+    expect(r.runs()).toBe(2);
+  });
+
+  it("keeps a folder's back-off apart from another's, and runs two asks together once", async () => {
+    const r = rig([failed, linked]);
+    const [a, b] = await Promise.all([r.links.get("/a"), r.links.get("/a")]);
+    expect(a).toBe(b);
+    expect(r.runs()).toBe(1);
+    expect((await r.links.get("/b")).state).toBe("linked");
+    expect(r.runs()).toBe(2);
+  });
+
+  it("hears busy, and says why, from a store another session holds, inside the run's time", async () => {
+    const w = world();
+    const first = await ensureAt(w.host, w.repo, w.stores);
+    mkdirSync(join(w.stores, `.${first.id}.lock`));
+    const started = Date.now();
+    const held = await ensureAt(w.host, w.repo, w.stores);
+    expect(held.state).toBe("busy");
+    // The script waits about four seconds on a lock; the run is given well over that.
+    expect(Date.now() - started).toBeLessThan(ENSURE_TIMEOUT_MS - 2000);
+    expect(linkNotice(held)).toMatch(/^Another session is setting up this repository's store/);
   });
 });
 

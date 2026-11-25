@@ -9,18 +9,21 @@
  */
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { TUI } from "@earendil-works/pi-tui";
+import { clean } from "./lib/clean.ts";
 import {
+  createLinks,
   ensureAt,
   handNote,
-  isSettled,
   linkNotice,
   loadGroups,
+  noticeText,
   placeOf,
   readBody,
 } from "./lib/gather.ts";
 import { BAND, bandOf, readingState, startState, type Band } from "./lib/screen.ts";
 import { notesOf } from "./lib/shelf.ts";
-import { CONTEXT, hasStore, noticeOf, storeRoot, type Ensured } from "./lib/store.ts";
+import { CONTEXT, hasStore, isShared, storeRoot, type Ensured } from "./lib/store.ts";
+import { beginTurn, duringTurns, endTurn, startTurns, type Turns } from "./lib/turns.ts";
 import { NotesBand } from "./pi/band.ts";
 import { nodeHost } from "./pi/host.ts";
 import { NotesPanel, sidebarOptions } from "./pi/panel.ts";
@@ -33,7 +36,10 @@ export default function notes(pi: ExtensionAPI) {
   const host = nodeHost();
   /** The session's start, then when the person last looked: notes written after it are news. */
   let since = Date.now();
-  let linked: Ensured | undefined;
+  /** The session's turns: the store is shared by every worktree, so only notes written in these are news. */
+  let turns: Turns = startTurns(since);
+  /** The links of the folders the session ran in; one that failed or was busy is left alone for a while. */
+  const links = createLinks();
   /** What the widget says, while there is news. */
   let band: Band | undefined;
   let widget: TUI | undefined;
@@ -43,10 +49,13 @@ export default function notes(pi: ExtensionAPI) {
   const told = new Set<string>();
 
   /** Links the session's checkout to its store and says once what a link not simply there means. */
-  async function link(ctx: ExtensionContext): Promise<Ensured> {
-    const ensured = await ensureAt(host, ctx.cwd, storeRoot(process.env));
-    linked = ensured;
-    const text = noticeOf(ensured);
+  async function link(ctx: ExtensionContext, fresh = false): Promise<Ensured> {
+    const ensured = await links.get(ctx.cwd, {
+      fresh,
+      clock: Date.now,
+      ensure: (cwd) => ensureAt(host, cwd, storeRoot(process.env)),
+    });
+    const text = noticeText(ensured);
     if (text && ctx.hasUI && !told.has(ensured.state)) {
       told.add(ensured.state);
       ctx.ui.notify(`notes: ${text}`, "warning");
@@ -66,11 +75,12 @@ export default function notes(pi: ExtensionAPI) {
   /** Opens the sidebar on the list, or with `id` on the reader for that note. */
   async function show(ctx: ExtensionContext, id?: string) {
     looked();
-    const ensured = linked && isSettled(linked) ? linked : await link(ctx);
+    // The person asks: a link that was left alone after a failure is asked about now.
+    const ensured = await link(ctx, true);
     const groups = await loadGroups(host, ensured);
     const notice = linkNotice(ensured);
     if (!ctx.hasUI || ctx.mode !== "tui") {
-      const list = notesOf(groups).map((n) => n.file);
+      const list = notesOf(groups).map((n) => clean(n.file));
       ctx.ui.notify(
         [notice, list.length ? list.join("\n") : "No notes in this repository's store."]
           .filter(Boolean)
@@ -122,6 +132,7 @@ export default function notes(pi: ExtensionAPI) {
 
   pi.on("session_start", async (_event, ctx) => {
     since = Date.now();
+    turns = startTurns(since);
     band = undefined;
     told.clear();
     await link(ctx).catch(() => undefined);
@@ -144,21 +155,25 @@ export default function notes(pi: ExtensionAPI) {
   // Where the agent's files go, as a section of the system prompt: pi sends a section again only
   // when it changes, so the agent reads it once.
   pi.on("before_agent_start", async (event, ctx) => {
-    // A link another session held, or that failed, is asked about again before each run.
-    if (!linked || !isSettled(linked)) await link(ctx).catch(() => undefined);
+    // A run starts here: its notes are the session's.
+    turns = beginTurn(turns, Date.now());
+    // A link another session held, or that failed, is asked about again after a while.
+    const ensured = await link(ctx).catch(() => undefined);
     const sections = event.systemPromptOptions.sections;
-    if (linked && hasStore(linked)) sections[SECTION] = CONTEXT;
+    // Only the shared store: a tracked folder is the repository's own, and git keeps it.
+    if (ensured && isShared(ensured)) sections[SECTION] = CONTEXT;
     else delete sections[SECTION];
   });
 
   // After a run the store is walked again: notes written since the person last looked show above
   // the prompt.
   pi.on("agent_settled", async (_event, ctx) => {
-    if (!linked || !isSettled(linked)) await link(ctx).catch(() => undefined);
-    if (ctx.mode !== "tui" || !linked || !hasStore(linked)) return;
-    const groups = await loadGroups(host, linked).catch(() => undefined);
+    turns = endTurn(turns, Date.now(), since);
+    const ensured = await link(ctx).catch(() => undefined);
+    if (ctx.mode !== "tui" || !ensured || !hasStore(ensured)) return;
+    const groups = await loadGroups(host, ensured).catch(() => undefined);
     if (!groups) return;
-    band = bandOf(groups, since);
+    band = bandOf(groups, since, (at) => duringTurns(turns, at));
     redraw();
   });
 

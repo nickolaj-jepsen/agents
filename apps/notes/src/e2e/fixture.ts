@@ -9,6 +9,7 @@ import { mkdirSync, readFileSync, realpathSync, utimesSync, writeFileSync } from
 import { dirname, join } from "node:path";
 import type { SetupContext } from "@agents/drive/lib/session.ts";
 import type { StartOptions } from "@agents/drive/lib/harness.ts";
+import { projectKey } from "../lib/shelf.ts";
 
 /** The store's name, written where the plugin reads it: every scenario's store is this one. */
 export const STORE_ID = "shop-api-1a2b3c4d";
@@ -26,13 +27,7 @@ export const storeOf = (ctx: SetupContext) => join(ctx.runDir, "data", "agents",
  * checkout under the run's configuration folder.
  */
 export const memoryOf = (ctx: SetupContext) =>
-  join(
-    ctx.runDir,
-    "claude-config",
-    "projects",
-    realpathSync(ctx.cwd).replace(/[^A-Za-z0-9]/g, "-"),
-    "memory",
-  );
+  join(ctx.runDir, "claude-config", "projects", projectKey(realpathSync(ctx.cwd)), "memory");
 
 /** Writes `text` to `file`, last written `hours` ago: in the middle of an age, so it stays one. */
 function put(file: string, text: string, hours: number) {

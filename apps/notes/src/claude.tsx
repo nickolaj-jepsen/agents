@@ -24,12 +24,13 @@ import {
 import type { Platform } from "@agents/launch/apps.ts";
 import { configPath } from "@agents/launch/apps.ts";
 import {
+  createLinks,
   ensureAt,
   handNote,
-  isSettled,
   linkNotice,
   loadGroups,
   memoryDirOf,
+  noticeText,
   placeOf,
   readBody,
   type Host,
@@ -39,6 +40,7 @@ import {
   bandLine,
   bandOf,
   drawScreen,
+  isReaderLive,
   isScreenHit,
   keyIntent,
   reduce,
@@ -51,7 +53,8 @@ import {
   type ScreenState,
 } from "./lib/screen.ts";
 import { notesOf } from "./lib/shelf.ts";
-import { CONTEXT, hasStore, noticeOf, storeRoot, type Ensured } from "./lib/store.ts";
+import { beginTurn, duringTurns, endTurn, startTurns, type Turns } from "./lib/turns.ts";
+import { CONTEXT, isShared, storeRoot, type Ensured } from "./lib/store.ts";
 import type { Listed } from "./lib/walk.ts";
 import { MORE, notesBand, notesPane } from "./claude/gui.tsx";
 import type { Band, Shelf, View } from "./claude/types.d.ts";
@@ -80,14 +83,22 @@ const keys = atom({ plugin: "notes", key: "keys" } as const, false, { shape: "ke
 
 // ---- the session's checkouts
 
-/** Where every repository's store is, read once a session starts: no `$.env` at a spawn. */
-let stores: string | undefined;
 /** The session's start, then when the person last looked: notes written after it are news. */
 let since = 0;
-/** The link of each folder a session ran in, made once (`ensureAt`). */
-const linked = new Map<string, Promise<Ensured>>();
+/**
+ * The session's turns. The store is shared by every worktree, so only a note written during one
+ * of these is this session's news.
+ */
+let turns: Turns = startTurns(0);
+/** The link of each folder a session ran in: made once, a failed or busy one left alone for a while. */
+const links = createLinks();
 /** `<root>\0<state>` for each notice told: once a session for each. */
 const told = new Set<string>();
+/**
+ * Whether the last `prompt.context` answer held the store's line; nothing before the first. That
+ * answer stands for the conversation, so a change of it is asked for again.
+ */
+let contextSent: boolean | undefined;
 let isMac: Promise<boolean> | undefined;
 
 /** The engine as the lib's host: its processes, files and settings. */
@@ -134,35 +145,58 @@ function engineHost($: EngineInterface): Host {
   };
 }
 
-/**
- * Links the checkout `cwd` is in to its store, once for each folder, and tells the person once a
- * session what a link that is not simply there means. Never throws.
- */
-function linkFolder($: EngineInterface, cwd: string): Promise<Ensured> {
-  const known = linked.get(cwd);
-  if (known) return known;
-  const made = ensureAt(engineHost($), cwd, stores).then((ensured) => {
-    // Asked again next time: another session held the store, or the link could not be made.
-    if (!isSettled(ensured)) linked.delete(cwd);
-    const text = noticeOf(ensured);
-    const key = `${ensured.root ?? cwd}\0${ensured.state}`;
-    if (text && !told.has(key)) {
-      told.add(key);
-      try {
-        $.ui.toast(`notes: ${text}`);
-      } catch {
-        // Where no session is bound (a spawn), the list says it when it opens.
-      }
-    }
-    return ensured;
-  });
-  linked.set(cwd, made);
-  return made;
+/** Tells the person what a link that is not simply there means, once a session for each. */
+function tell($: EngineInterface, cwd: string, ensured: Ensured) {
+  const text = noticeText(ensured);
+  const key = `${ensured.root ?? cwd}\0${ensured.state}`;
+  if (!text || told.has(key)) return;
+  try {
+    $.ui.toast(`notes: ${text}`);
+    // Only once it was shown.
+    told.add(key);
+  } catch {
+    // Where no session is bound (a spawn), the list says it when it opens.
+  }
 }
 
-/** The link of the folder the session runs in now. */
-async function linkHere($: EngineInterface): Promise<Ensured> {
-  return linkFolder($, await $.session.cwd());
+/**
+ * Links the checkout `cwd` is in to its store, once for each folder. A link that failed or was
+ * busy is not asked about again for a while (`createLinks`); `fresh`, the person opening /notes,
+ * asks at once. Never throws.
+ */
+function linkFolder($: EngineInterface, cwd: string, fresh = false): Promise<Ensured> {
+  return links.get(cwd, {
+    fresh,
+    clock: () => $.clock.now(),
+    ensure: async (folder) => {
+      // Read now: a worktree made for the session can be linked before `session.start` ran.
+      const stores = storeRoot({
+        XDG_DATA_HOME: await $.env.get("XDG_DATA_HOME"),
+        HOME: await $.env.get("HOME"),
+      });
+      const ensured = await ensureAt(engineHost($), folder, stores);
+      tell($, folder, ensured);
+      return ensured;
+    },
+  });
+}
+
+/**
+ * The link of the folder the session runs in now. The line for the agent is answered once a
+ * conversation, so when the folder gains or loses the shared store since it was answered, the
+ * engine is asked for it again.
+ */
+async function linkHere($: EngineInterface, fresh = false): Promise<Ensured> {
+  const ensured = await linkFolder($, await $.session.cwd(), fresh);
+  if (contextSent !== undefined && contextSent !== isShared(ensured)) {
+    contextSent = undefined;
+    try {
+      $.ui.invalidate("prompt.context");
+    } catch {
+      // Nothing is bound to ask yet; the first answer is not made either.
+    }
+  }
+  return ensured;
 }
 
 /** Claude Code's memory of the project: the setting, else the folder named after the main checkout. */
@@ -175,18 +209,29 @@ async function memoryDir($: EngineInterface, ensured: Ensured) {
   });
 }
 
-/** The store's groups and the session's memory, walked now, into `shelf`. */
-async function loadShelf($: EngineInterface): Promise<Shelf> {
-  const ensured = await linkHere($);
-  const groups = await loadGroups(engineHost($), ensured, await memoryDir($, ensured));
-  const next: Shelf = { groups, place: placeOf(ensured), notice: linkNotice(ensured) ?? null };
+/**
+ * The store's groups and the session's memory, walked now, into `shelf`; a reader on a note that
+ * is no longer there is dropped.
+ * @param ensured The link, when the hook has asked for it already: no second ask in one event.
+ */
+async function loadShelf($: EngineInterface, ensured?: Ensured): Promise<Shelf> {
+  const linkedNow = ensured ?? (await linkHere($));
+  const groups = await loadGroups(engineHost($), linkedNow, await memoryDir($, linkedNow));
+  const next: Shelf = {
+    groups,
+    place: placeOf(linkedNow),
+    notice: linkNotice(linkedNow) ?? null,
+  };
   await update($, shelf, () => next);
+  const reading = (await read($, view)).reader;
+  if (reading && !isReaderLive(groups, reading))
+    await update($, view, (v) => ({ ...v, reader: null }));
   return next;
 }
 
-/** Shows the band for notes written since the person last looked, or takes it down. */
+/** Shows the band for this session's notes written since the person last looked, or takes it down. */
 async function showBand($: EngineInterface, groups: Shelf["groups"]) {
-  const next = bandOf(groups, since) ?? null;
+  const next = bandOf(groups, since, (at) => duringTurns(turns, at)) ?? null;
   const now = await read($, band);
   if (next?.text !== now?.text || next?.newest !== now?.newest) await update($, band, () => next);
 }
@@ -227,12 +272,15 @@ async function reclaim($: EngineInterface) {
 /** Opens /notes: the list, or with `id` the reader on that note. */
 async function openPane($: EngineInterface, id?: string) {
   await looked($);
-  const { groups } = await loadShelf($);
+  // The person asks: a link that was left alone after a failure is asked about now.
+  const { groups } = await loadShelf($, await linkHere($, true));
   const first = notesOf(groups)[0]?.id ?? null;
+  // A note that is no longer on the shelf (the band's, a moment ago) is the list.
+  const wanted = id ? notesOf(groups).find((n) => n.id === id) : undefined;
   await update($, view, () => ({
-    focus: id ?? first,
+    focus: wanted?.id ?? first,
     top: 0,
-    reader: id ? { id, offset: 0 } : null,
+    reader: wanted ? { id: wanted.id, offset: 0 } : null,
     said: null,
   }));
   await update($, keys, () => false);
@@ -245,8 +293,8 @@ async function openPane($: EngineInterface, id?: string) {
     $.ui.toast(`The notes pane can't show yet: ${opened.reason}`);
     return;
   }
-  const note = id ? notesOf(groups).find((n) => n.id === id) : undefined;
-  if (note) await act($, { do: "loaded", id: note.id, body: await readBody(engineHost($), note) });
+  if (wanted)
+    await act($, { do: "loaded", id: wanted.id, body: await readBody(engineHost($), wanted) });
 }
 
 /** Where the pane was last drawn: the graphical surfaces keep their own pane and close. */
@@ -349,11 +397,9 @@ async function pressBand($: EngineInterface, hit: string) {
 export const register: Register = (on) => {
   on("session.start", async ($, e, next) => {
     const started = await next(e);
-    stores = storeRoot({
-      XDG_DATA_HOME: await $.env.get("XDG_DATA_HOME"),
-      HOME: await $.env.get("HOME"),
-    });
     since = await $.clock.now();
+    turns = startTurns(since);
+    contextSent = undefined;
     await $.command
       .register({
         name: "notes",
@@ -370,6 +416,7 @@ export const register: Register = (on) => {
   // as it is there, so what an agent writes in it lands in the store.
   on("vcs.isolate", async ($, e, next) => {
     const made = await next(e);
+    // Maybe before `session.start`: the store's folder is read from the environment when linking.
     if ("path" in made && made.path) await linkFolder($, made.path).catch(() => undefined);
     return made;
   });
@@ -386,15 +433,23 @@ export const register: Register = (on) => {
 
   // The session may have moved since the last prompt: the new checkout is linked before the turn.
   on("prompt.submit", async ($, e, next) => {
+    // A turn starts here: its notes are the session's.
+    turns = beginTurn(turns, await $.clock.now());
     await linkHere($).catch(() => undefined);
     return next(e);
   });
 
-  // Where the agent's files go, once a conversation, where the checkout has a store.
+  // Where the agent's files go, once a conversation, where `.agents/store` is the shared store
+  // (not a tracked folder of the repository's own, which git keeps).
   on("prompt.context", async ($, e, next) => {
     const context = await next(e);
-    const ensured = await linkHere($).catch(() => undefined);
-    if (!ensured || !hasStore(ensured)) return context;
+    const ensured = await $.session
+      .cwd()
+      .then((cwd) => linkFolder($, cwd))
+      .catch(() => undefined);
+    const isTold = ensured !== undefined && isShared(ensured);
+    contextSent = isTold;
+    if (!isTold) return context;
     return { ...context, blocks: [...context.blocks, { name: CONTEXT_BLOCK, text: CONTEXT }] };
   });
 
@@ -402,10 +457,11 @@ export const register: Register = (on) => {
   // above the prompt, and an open list takes them in.
   on("turn.complete", async ($, e, next) => {
     const done = await next(e);
-    // A subagent's hooks see its own folder: linked too, in case it moved.
-    await linkHere($).catch(() => undefined);
+    // A subagent's hooks see its own folder: linked too, in case it moved. Once for the event.
+    const ensured = await linkHere($).catch(() => undefined);
     if (e.agentId !== undefined) return done;
-    const loaded = await loadShelf($).catch(() => undefined);
+    turns = endTurn(turns, await $.clock.now(), since);
+    const loaded = await loadShelf($, ensured).catch(() => undefined);
     if (loaded) await showBand($, loaded.groups);
     return done;
   });
@@ -418,7 +474,10 @@ export const register: Register = (on) => {
   // In the terminal, Escape or the close mark leaves the reader first, and closes the list. On a
   // graphical surface closing closes. An unload closes without asking.
   on("ui.close", { id: PANE }, async ($, e, next) => {
-    if (e.origin.kind !== "unload" && paneSurface === "terminal" && (await read($, view)).reader) {
+    // Only a reader on a note still on the shelf has anything to go back from: the screen shows
+    // the list for one whose note is gone, and refusing the close there would only reopen it.
+    const isReading = isReaderLive((await read($, shelf)).groups, (await read($, view)).reader);
+    if (e.origin.kind !== "unload" && paneSurface === "terminal" && isReading) {
       await act($, { do: "escape" });
       // After the close is refused, once the engine has moved the keys to the prompt.
       $.clock.after(50, () => void reclaim($));

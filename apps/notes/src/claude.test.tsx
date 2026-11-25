@@ -67,6 +67,18 @@ type World = {
   launched: string[][];
   toasts: string[];
   opened: string[];
+  closed: string[];
+  /** The events the plugin asked to be drawn again (`$.ui.invalidate`). */
+  invalidated: string[];
+  /** The folders the link script ran for, in order. */
+  ensured: string[];
+  /** The folder the session runs in now. */
+  cwd: string;
+  /** What the link script says: a state, or all of its output; changed by a test. */
+  state: string;
+  /** What a run of the link script does instead of answering `state`. */
+  ensure?: (cwd: string) => ReturnType<typeof ok> | { deny: string };
+  clock: ReturnType<typeof mock.clock>;
 };
 
 const ok = (stdout: string, exitCode = 0) => ({
@@ -101,12 +113,27 @@ const STORE_FILES: Record<string, File> = {
 
 /** A machine with a repository at ROOT whose store holds `files`, Code and a browser installed. */
 function world(on: On, { state = "linked", files = STORE_FILES } = {}): World {
-  const w: World = { files: new Map(Object.entries(files)), launched: [], toasts: [], opened: [] };
-  mock.clock(on, { now: NOW });
+  const w: World = {
+    files: new Map(Object.entries(files)),
+    launched: [],
+    toasts: [],
+    opened: [],
+    closed: [],
+    invalidated: [],
+    ensured: [],
+    cwd: ROOT,
+    state,
+    clock: mock.clock(on, { now: NOW }),
+  };
   on("session.start", (_$, e) => ({ cwd: e.cwd }));
   on("command.register", (_$, e) => ({ value: { command: e.name } }));
   on("ui.log", () => ({ value: undefined }));
-  on("session.cwd", () => ({ value: ROOT }));
+  on("session.cwd", () => ({ value: w.cwd }));
+  on("vcs.isolate", () => ({ path: "/repo-wt", vcs: "git" }));
+  on("ui.invalidate", (_$, e) => {
+    w.invalidated.push(e.event);
+    return { value: undefined };
+  });
   on("env.get", (_$, e) => ({
     value: (
       { HOME: "/home/me", XDG_DATA_HOME: "/data", CLAUDE_CONFIG_DIR: "/cfg" } as Record<
@@ -124,7 +151,10 @@ function world(on: On, { state = "linked", files = STORE_FILES } = {}): World {
     w.opened.push(e.id);
     return { value: { isPlaced: true } };
   });
-  on("ui.close", () => ({ value: undefined }));
+  on("ui.close", (_$, e) => {
+    w.closed.push(e.id);
+    return { value: undefined };
+  });
   on("ui.focus", () => ({}));
   on("ui.toast", (_$, e) => {
     w.toasts.push(e.text);
@@ -176,7 +206,10 @@ function world(on: On, { state = "linked", files = STORE_FILES } = {}): World {
       const found = ["code", "xdg-open"].filter((name) => argv.includes(name));
       return ok(found.map((name) => `c\t${name}\t/usr/bin/${name}\n`).join(""));
     }
-    if (argv[0] === "sh" && argv[2]?.includes("agents-store-id")) return ok(ensured(state));
+    if (argv[0] === "sh" && argv[2]?.includes("agents-store-id")) {
+      w.ensured.push(argv[4] ?? "");
+      return w.ensure ? w.ensure(argv[4] ?? "") : ok(ensured(w.state));
+    }
     return ok("", 1);
   });
   return w;
@@ -396,3 +429,235 @@ for (const surface of ["desktop", "vscode"] as const) {
     await after.unmount();
   });
 }
+
+// ---- control characters: the engine refuses a tree that holds one, and a terminal obeys it
+
+const ESC = "\u001b";
+const ODD = `plans/odd${ESC}]0;owned\u0007.md`;
+const ODD_SHOWN = "plans/odd�]0;owned�.md";
+
+for (const surface of ["terminal", "vscode"] as const) {
+  test(`${surface}: an escape in a file name and in a note still draws the list and the reader`, async ($, on) => {
+    world(on, {
+      files: {
+        ...STORE_FILES,
+        [`${STORE}/${ODD}`]: {
+          text: `# Odd\n\nline${ESC}[2J one\fmore\r\nline two ${ESC}]52;c;eA==\u0007\n`,
+          at: NOW - 2 * HOUR,
+        },
+        [`${STORE}/pl${ESC}[1mans/other.md`]: { text: "# Other\n", at: NOW - 3 * HOUR },
+      },
+    });
+    const ui = await openList($, surface);
+    expect(await ui.find({ text: /odd�\]0;owned�\.md/ })).toBeDefined();
+    expect(await ui.find({ text: /retry-after\.md/ })).toBeDefined();
+    if (surface !== "terminal") await expectNative(ui);
+    await ui.press({ key: `row:${ODD_SHOWN.replace("plans/", "plans:plans/")}` });
+    expect(await ui.find({ text: /line�\[2J one�more/ })).toBeDefined();
+    expect(await ui.find({ text: /line two �\]52;c;eA==�/ })).toBeDefined();
+    if (surface !== "terminal") await expectNative(ui);
+    await ui.unmount();
+  });
+}
+
+// ---- a link that failed or was busy is left alone, a turn's hooks run it at most once
+
+const turn = ($: Engine) =>
+  $.prompt.submit({ text: "hi", origin: { kind: "composer" }, wait: false });
+
+for (const [name, ensure] of [
+  ["busy", () => ok("root\t/repo\nstate\tbusy\n")],
+  ["failed", () => ok("root\t/repo\nstate\tfailed\ndetail\tcannot link\n", 1)],
+  ["timed out", () => ({ deny: "timed out" })],
+] as const) {
+  test(`a ${name} link is not run again for 30 s, whatever the hook; /notes asks at once`, async ($, on) => {
+    const w = world(on);
+    w.ensure = ensure;
+    await start($);
+    expect(w.ensured).toHaveLength(1);
+    await turn($);
+    await $.prompt.context({ blocks: [] });
+    await $.turn.complete(TURN);
+    await $.turn.complete(TURN);
+    expect(w.ensured).toHaveLength(1);
+    await w.clock.advance(29_000);
+    await turn($);
+    await $.turn.complete(TURN);
+    expect(w.ensured).toHaveLength(1);
+    await w.clock.advance(1_000);
+    // Once for the event, not once at its start and again for the shelf.
+    await $.turn.complete(TURN);
+    expect(w.ensured).toHaveLength(2);
+    await turn($);
+    expect(w.ensured).toHaveLength(2);
+    // The person asking does not wait out the back-off.
+    await $.command.run(COMMAND);
+    expect(w.ensured).toHaveLength(3);
+  });
+}
+
+test("a busy store says so in the list, and the next /notes asks again", async ($, on) => {
+  const w = world(on);
+  w.ensure = () => ok("root\t/repo\nstate\tbusy\n");
+  await start($);
+  await $.command.run(COMMAND);
+  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+  expect(await shows(ui, /Another session is setting up this repository's store/)).toBe(true);
+  await ui.unmount();
+  w.ensure = undefined;
+  await $.command.run(COMMAND);
+  const again = await $.ui.mount({ ...PANE, surface: "terminal" });
+  expect(await shows(again, /Another session is setting up/)).toBe(false);
+  expect(await shows(again, /retry-after\.md/)).toBe(true);
+  await again.unmount();
+});
+
+const ISOLATE = { name: "wt", from: ROOT, for: "session", base: "head" } as const;
+
+test("a worktree made before the session starts is linked from the environment, with no false notice", async ($, on) => {
+  const w = world(on);
+  const made = await $.vcs.isolate(ISOLATE);
+  expect("path" in made && made.path).toBe("/repo-wt");
+  expect(w.ensured).toEqual(["/repo-wt"]);
+  expect(w.toasts).toEqual([]);
+  await start($);
+  expect(w.toasts).toEqual([]);
+});
+
+test("a notice is told once it was shown, then no more", async ($, on) => {
+  const w = world(on, { state: "adopted" });
+  await $.vcs.isolate(ISOLATE);
+  await start($);
+  await turn($);
+  expect(w.toasts).toHaveLength(1);
+});
+
+// ---- Escape on a reader whose note is gone
+
+// The `ui.close` hook goes back from a reader and closes from the list, and the engine raises it
+// for Escape, which a test's `$` cannot (the decision is `isReaderLive`, specced in
+// `lib/screen.spec.ts`). These show the pane the walk and the band leave: the list, never a reader
+// on a note that is gone, and a reader on one that is still there kept.
+
+test("a reader on a note that left the store is dropped when the shelf is walked again", async ($, on) => {
+  const w = world(on);
+  const ui = await openList($);
+  await ui.press({ key: RETRY });
+  // Still there after a walk: Escape goes back from it.
+  await $.turn.complete(TURN);
+  expect(await shows(ui, /The sync worker honours it now\./)).toBe(true);
+  // Gone: the list, so Escape closes instead of being reclaimed.
+  w.files.delete(`${STORE}/plans/retry-after.md`);
+  await $.turn.complete(TURN);
+  expect(await shows(ui, /The sync worker honours it now\./)).toBe(false);
+  expect(await shows(ui, /hub\/PLAN\.md/)).toBe(true);
+  await ui.unmount();
+});
+
+test("the band's way in to a note that is gone opens the list, with no reader to leave", async ($, on) => {
+  const w = world(on);
+  await start($);
+  w.files.set(`${STORE}/plans/new.md`, { text: "# New", at: NOW + 1 });
+  await $.turn.complete(TURN);
+  w.files.delete(`${STORE}/plans/new.md`);
+  const band = await $.ui.mount({ ...BAND, surface: "terminal" });
+  await band.press({ key: "notes:read" });
+  await band.unmount();
+  const ui = await $.ui.mount({ ...PANE, surface: "terminal" });
+  expect(await shows(ui, /❯ retry-after\.md/)).toBe(true);
+  expect(w.opened).toEqual(["notes"]);
+  await ui.unmount();
+});
+
+// ---- the line for the agent is for the shared store, and is sent again when that changes
+
+for (const state of ["tracked", "conflict", "foreign", "file", "failed", "busy"]) {
+  test(`${state}: the agent is not told the folder is the shared store`, async ($, on) => {
+    world(on, { state });
+    await start($);
+    const context = await $.prompt.context({ blocks: [] });
+    expect(context.blocks).toEqual([]);
+  });
+}
+
+for (const state of ["ok", "linked", "adopted"]) {
+  test(`${state}: the agent is told where its files go`, async ($, on) => {
+    world(on, { state });
+    await start($);
+    const context = await $.prompt.context({ blocks: [] });
+    expect(context.blocks.map((b) => b.name)).toEqual(["agentsStore"]);
+  });
+}
+
+test("the line is asked for again when the first link failed and a later one made the store", async ($, on) => {
+  const w = world(on, { state: "failed" });
+  await start($);
+  expect((await $.prompt.context({ blocks: [] })).blocks).toEqual([]);
+  expect(w.invalidated).toEqual([]);
+  w.state = "linked";
+  // Still within the back-off: nothing has changed that the plugin knows of.
+  await turn($);
+  expect(w.invalidated).toEqual([]);
+  await w.clock.advance(30_000);
+  await turn($);
+  expect(w.invalidated).toEqual(["prompt.context"]);
+  expect((await $.prompt.context({ blocks: [] })).blocks.map((b) => b.name)).toEqual([
+    "agentsStore",
+  ]);
+  // Answered with the line: further prompts leave it be.
+  await turn($);
+  expect(w.invalidated).toEqual(["prompt.context"]);
+});
+
+test("the line is asked for again when the session moves into a repository", async ($, on) => {
+  const w = world(on);
+  w.cwd = "/plain";
+  w.ensure = (cwd) => (cwd === "/plain" ? ok("state\tnot-git\n") : ok(ensured("linked")));
+  await $.session.start({ cwd: "/plain", surface: "terminal", isInteractive: true });
+  expect((await $.prompt.context({ blocks: [] })).blocks).toEqual([]);
+  w.cwd = ROOT;
+  await turn($);
+  expect(w.invalidated).toEqual(["prompt.context"]);
+  expect((await $.prompt.context({ blocks: [] })).blocks).toHaveLength(1);
+});
+
+// ---- the band is this session's
+
+test("the band counts the notes written in this session's turns, not another session's", async ($, on) => {
+  const w = world(on);
+  await start($);
+  const band = async () => {
+    const mounted = await $.ui.mount({ ...BAND, surface: "terminal" });
+    const found = await mounted.find({ type: "Button", key: "notes:read" });
+    await mounted.unmount();
+    return found?.text;
+  };
+  const dismiss = async () => {
+    const mounted = await $.ui.mount({ ...BAND, surface: "terminal" });
+    await mounted.press({ key: "notes:dismiss" });
+    await mounted.unmount();
+  };
+  await turn($);
+  await w.clock.advance(5000);
+  w.files.set(`${STORE}/plans/mine.md`, { text: "# Mine", at: w.clock.now() - 1000 });
+  await $.turn.complete(TURN);
+  expect(await band()).toMatch(/Note written: plans\/mine\.md/);
+  await dismiss();
+
+  // Another session writes between this one's turns: the store is shared, the note is not news.
+  await w.clock.advance(60_000);
+  w.files.set(`${STORE}/plans/theirs.md`, { text: "# Theirs", at: w.clock.now() });
+  await w.clock.advance(10_000);
+  await turn($);
+  await w.clock.advance(1000);
+  await $.turn.complete(TURN);
+  expect(await band()).toBeUndefined();
+
+  // One it writes while this session's turn runs is counted, whoever's it is.
+  await turn($);
+  await w.clock.advance(1000);
+  w.files.set(`${STORE}/plans/during.md`, { text: "# During", at: w.clock.now() });
+  await w.clock.advance(1000);
+  await $.turn.complete(TURN);
+  expect(await band()).toMatch(/Note written: plans\/during\.md/);
+});

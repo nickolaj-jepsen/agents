@@ -3,6 +3,8 @@
  * and a count of everything else. A harness walks the folders; this decides what the walk means.
  */
 
+import { clean } from "./clean.ts";
+
 /** A file as a harness found it. */
 export type Entry = {
   /** Its path below the folder that was walked, with `/` between the parts. */
@@ -63,7 +65,8 @@ const newestFirst = (a: Note, b: Note) => b.at - a.at || a.name.localeCompare(b.
 export function shelve(root: string, entries: readonly Entry[]): Group[] {
   const groups = new Map<string, Group>();
   for (const entry of entries) {
-    const parts = entry.path.split("/").filter(Boolean);
+    // What is drawn holds no control character; `file` below keeps the name the disk has.
+    const parts = clean(entry.path).split("/").filter(Boolean);
     if (parts.length === 0 || parts.some((part) => part.startsWith("."))) continue;
     const label = parts.length > 1 ? (parts[0] as string) : LOOSE;
     const group = groups.get(label) ?? { label, notes: [], artefacts: 0 };
@@ -74,7 +77,7 @@ export function shelve(root: string, entries: readonly Entry[]): Group[] {
       continue;
     }
     group.notes.push({
-      id: `${label}:${entry.path}`,
+      id: `${label}:${parts.join("/")}`,
       name: parts.length > 1 ? parts.slice(1).join("/") : (parts[0] as string),
       file: `${root}/${entry.path}`,
       kind,
@@ -95,8 +98,8 @@ export function memoryGroup(root: string, entries: readonly Entry[]): Group | un
   const notes = entries
     .filter((entry) => kindOf(entry.path) === "markdown")
     .map((entry): Note => ({
-      id: `${MEMORY}:${entry.path}`,
-      name: entry.path,
+      id: `${MEMORY}:${clean(entry.path)}`,
+      name: clean(entry.path),
       file: `${root}/${entry.path}`,
       kind: "markdown",
       at: entry.mtimeMs,
@@ -124,12 +127,18 @@ export const artefactsLabel = (count: number): string | undefined =>
 /**
  * The store's notes written since `since`, newest first: what the band tells the person about.
  * Memory is the harness's own and is left out.
+ * @param within Whether a time is one this session wrote in (`duringTurns`): the store is shared
+ *   by every worktree, so a note's time says whose it is. Every time when left out.
  */
-export const written = (groups: readonly Group[], since: number): Note[] =>
+export const written = (
+  groups: readonly Group[],
+  since: number,
+  within: (at: number) => boolean = () => true,
+): Note[] =>
   groups
     .filter((group) => !group.isMemory)
     .flatMap((group) => group.notes)
-    .filter((note) => note.at > since)
+    .filter((note) => note.at > since && within(note.at))
     .sort(newestFirst);
 
 /** What the band says about notes written this session; nothing when there are none. */
@@ -143,11 +152,27 @@ export function writtenLabel(notes: readonly Note[], groups: readonly Group[]): 
     : `${notes.length} notes written, last ${path}`;
 }
 
+/** Claude Code's longest folder name for a project before it adds a hash. */
+const KEY_MAX = 200;
+
+/**
+ * Claude Code's name for a project's folder (2.1.330): the path with every character that is not a
+ * letter or digit as `-`; one over 200 is cut there and followed by `-` and the base-36 of a hash
+ * of the whole path, a 32-bit sum over its UTF-16 units.
+ */
+export function projectKey(path: string): string {
+  const slug = path.replace(/[^a-zA-Z0-9]/g, "-");
+  if (slug.length <= KEY_MAX) return slug;
+  let hash = 0;
+  for (let i = 0; i < path.length; i++) hash = ((hash << 5) - hash + path.charCodeAt(i)) | 0;
+  return `${slug.slice(0, KEY_MAX)}-${Math.abs(hash).toString(36)}`;
+}
+
 /**
  * Where Claude Code keeps a project's memory when no setting moves it: a folder named after the
- * main checkout's path, under the configuration directory the session runs with.
+ * main checkout's path (`projectKey`), under the configuration directory the session runs with.
  * @param configDir `$CLAUDE_CONFIG_DIR`, else `~/.claude`.
  * @param main The main checkout's root, which every worktree of a repository shares.
  */
 export const claudeMemoryDir = (configDir: string, main: string) =>
-  `${configDir}/projects/${main.replace(/[^A-Za-z0-9]/g, "-")}/memory`;
+  `${configDir}/projects/${projectKey(main)}/memory`;
