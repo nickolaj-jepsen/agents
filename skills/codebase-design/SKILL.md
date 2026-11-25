@@ -3,6 +3,7 @@ name: codebase-design
 description: Evaluate module depth, interfaces and seams.
 disable-model-invocation: true
 metadata:
+  version: 0.1.0
   summary: Evaluate module depth, interfaces and seams.
   category: modified-public
   credit: "Adapted from [Matt Pocock’s codebase-design](https://github.com/mattpocock/skills)."

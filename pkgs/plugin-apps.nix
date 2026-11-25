@@ -39,6 +39,10 @@
 
   plugins = lib.filterAttrs (_: w: lib.hasPrefix "apps/" w.dir && (w.pkg ? claude || w.pkg ? pi)) workspace;
 
+  # An app whose package.json sets `"private": true` is unreleased: built as `packages.<name>` (so
+  # `pnpm drive` and `nix flake check` still run it) but not one the `dist` branch holds.
+  released = lib.filterAttrs (_: w: !(w.pkg.private or false)) plugins;
+
   # The workspace packages a package imports, and what those import in turn, itself included.
   workspaceDeps = pkg:
     lib.filter (n: workspace ? ${n} && !lib.elem n devOnly) (
@@ -110,5 +114,8 @@
     };
 in {
   inherit pnpmDeps;
+  # Every plugin, unreleased ones included (`packages.<name>`).
   apps = lib.mapAttrs' (name: w: lib.nameValuePair (baseNameOf w.dir) (mkApp name w)) plugins;
+  # The same, minus the private apps: what `packages.plugins` copies, one `<name>/` folder each.
+  releasedApps = lib.mapAttrs' (name: w: lib.nameValuePair (baseNameOf w.dir) (mkApp name w)) released;
 }

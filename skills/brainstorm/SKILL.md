@@ -4,9 +4,9 @@ description: Find an approach for a goal that has none yet; stops once you pick 
 disable-model-invocation: true
 argument-hint: "[goal]"
 metadata:
+  version: 0.0.1
   summary: "finds an approach for a goal that has none yet."
   category: understand-decide
-  status: in-progress
 ---
 
 The arguments name the goal to find an approach for; none means what the conversation is about. This skill finds the approach and starts nothing else: no detailed design, no code.

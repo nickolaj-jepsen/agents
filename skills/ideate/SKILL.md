@@ -4,9 +4,9 @@ description: Find what is worth doing with a repo, one area of it or a tool, and
 disable-model-invocation: true
 argument-hint: "<area, question or problem> [--big|--quick] [--no-web]"
 metadata:
+  version: 0.0.1
   summary: "finds what is worth doing with a repo or one area of it, as ranked ideas with evidence, approaches or a sourced answer."
   category: understand-decide
-  status: in-progress
 ---
 
 The user has an open question about what to do with something: where a repo could improve, what to build with a technology, how to redesign a part that grew unwieldy, whether a tool or workflow exists for a problem. Find out what's worth doing and show the evidence for it. Nothing is built until the user picks.

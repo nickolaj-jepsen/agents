@@ -3,6 +3,7 @@ name: prune-docs
 description: Review an overgrown repository's documentation, agree an aggressive removal scope, extract scattered project decisions, then delete and rebuild the surviving reader paths. Use for repo refreshes in prototypes and shared or published projects. Use decisions mode for the decision cleanup alone.
 argument-hint: "[audit|refresh|decisions] [path]"
 metadata:
+  version: 0.1.0
   summary: "audits overgrown docs, reviews what can go, and consolidates owner-approved project direction."
   category: clean-up
 ---

@@ -1,6 +1,6 @@
 {
   "name": "@nickolaj-jepsen/linear-issue",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Draft a Linear issue from a note or the recent conversation with /linear, review it in a sheet, and file it",
   "keywords": [
     "pi-package"
@@ -35,7 +35,6 @@
   },
   "claude": {
     "name": "linear-issue",
-    "version": "1.0.0",
     "description": "Drafts Linear issues for approval from the You should know card (Learn more, 3) or /linear",
     "author": {
       "name": "Nickolaj Jepsen"

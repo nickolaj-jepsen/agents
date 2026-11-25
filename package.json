@@ -10,7 +10,8 @@
     "gate:nix": "turbo run check:nix --concurrency=1",
     "gate:pages": "turbo run check:pages --concurrency=2",
     "gate:all": "pnpm gate && pnpm gate:nix && pnpm gate:pages",
-    "hooks": "git config core.hooksPath .githooks"
+    "hooks": "git config core.hooksPath .githooks",
+    "test": "turbo run test"
   },
   "devDependencies": {
     "turbo": "2.11.13"

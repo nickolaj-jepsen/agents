@@ -3,6 +3,7 @@ name: to-spec
 description: "Write the agreed feature and test seams to a workflow spec."
 disable-model-invocation: true
 metadata:
+  version: 0.1.0
   summary: "Write the agreed feature and test seams to a workflow spec."
   category: modified-public
   credit: "Adapted from [Matt Pocock’s to-spec](https://github.com/mattpocock/skills)."

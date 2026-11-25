@@ -3,6 +3,7 @@ name: implement-spec
 description: "Implement a workflow’s ticket graph on an integration branch."
 disable-model-invocation: true
 metadata:
+  version: 0.1.0
   summary: "Implement a workflow’s ticket graph on an integration branch."
   category: modified-public
   credit: "Adapted from [Matt Pocock’s implement-spec](https://github.com/mattpocock/skills)."

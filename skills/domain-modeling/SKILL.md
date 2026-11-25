@@ -3,6 +3,7 @@ name: domain-modeling
 description: Record domain terms and architectural decisions as they become clear.
 disable-model-invocation: true
 metadata:
+  version: 0.1.0
   summary: Record domain terms and architectural decisions as they become clear.
   category: modified-public
   credit: "Adapted from [Matt Pocock’s domain-modeling](https://github.com/mattpocock/skills)."

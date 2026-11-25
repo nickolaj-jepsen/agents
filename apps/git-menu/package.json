@@ -1,7 +1,6 @@
 {
   "name": "@nickolaj-jepsen/git-menu",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.0.1",
   "type": "module",
   "devDependencies": {
     "@agents/build": "workspace:*",
@@ -16,7 +15,6 @@
   },
   "claude": {
     "name": "git-menu",
-    "version": "0.1.0",
     "description": "The checkout's git and folder menus from /git and /open: forge links, copies, desktop apps and the checkout's notes",
     "author": {
       "name": "Nickolaj Jepsen"

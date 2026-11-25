@@ -1,6 +1,6 @@
 {
   "name": "@nickolaj-jepsen/claude-compat",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Claude Code habits in pi: its slash commands and the ctrl+s prompt stash",
   "keywords": [
     "pi-package"

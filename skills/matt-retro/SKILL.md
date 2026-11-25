@@ -3,6 +3,7 @@ name: matt-retro
 description: "Find changes to the agent environment that would have helped a session."
 disable-model-invocation: true
 metadata:
+  version: 0.1.0
   summary: "Find changes to the agent environment that would have helped a session."
   category: modified-public
   credit: "Adapted from [Matt Pocock’s retro](https://github.com/mattpocock/skills)."

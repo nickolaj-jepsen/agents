@@ -107,14 +107,15 @@ export const pluginInstall = (p: Plugin) =>
     .filter((h) => p.install[h])
     .map((h) => ({ h, label: HARNESS[h], command: p.install[h]! }));
 
-/** Said under a Claude install: what CI checks and a marketplace install doesn't. */
-export const CLAUDE_NOTE =
-  "Checked against the Claude Code version the repo pins; a newer Claude Code can break it before the next check.";
+/** Said under a Claude install: the version Claude Code keeps, and what CI checks that it doesn't. */
+export const CLAUDE_NOTE = (version: string) =>
+  `Pinned to ${version}: Claude Code keeps this version until a release changes it. Checked against the Claude Code version the repo pins; a newer Claude Code can break it before the next check.`;
 
 /** A skill's install: one command, and the other ways behind "More ways". */
 export const skillInstall = (s: Skill) => ({
   commands: s.install.map((command) => ({ command })),
   more: [
+    { label: "This version", command: s.pinnedInstall },
     { label: "Every skill", command: "npx skills add nickolaj-jepsen/agents" },
     {
       label: "Every skill, as a Claude Code plugin",

@@ -3,6 +3,7 @@ name: implement
 description: "Implement a ticket at agreed seams and review the change."
 disable-model-invocation: true
 metadata:
+  version: 0.1.0
   summary: "Implement a ticket at agreed seams and review the change."
   category: modified-public
   credit: "Adapted from [Matt Pocock’s implement](https://github.com/mattpocock/skills)."

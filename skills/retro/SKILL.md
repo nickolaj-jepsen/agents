@@ -4,9 +4,9 @@ description: Improve a skill, tool, doc, prompt or harness setting, using one Cl
 disable-model-invocation: true
 argument-hint: "[session-id] [what bothered you]"
 metadata:
+  version: 0.0.1
   summary: "improves a skill, tool or doc from what bothered you in one agent session."
   category: utilities
-  status: in-progress
 ---
 
 The user ran this because something about how a session went should go better next time. They usually know what: a skill that produced the wrong kind of output, a tool that kept failing, a wait that was too long. Find what caused it and help them change that. The session is the evidence, and the improvement is the point.

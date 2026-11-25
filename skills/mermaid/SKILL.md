@@ -2,6 +2,7 @@
 name: mermaid
 description: Render the fenced Mermaid diagrams in a markdown file to SVG images linked above each block. Use whenever you write a Mermaid diagram into a markdown report, note or plan that a person will read outside GitHub, or when another skill says to render diagrams.
 metadata:
+  version: 0.1.0
   summary: "renders the Mermaid diagrams in a markdown file to SVGs."
   category: utilities
 ---

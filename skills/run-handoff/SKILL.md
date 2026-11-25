@@ -4,6 +4,7 @@ description: Build a plan written by /handoff in one long-running session — ke
 disable-model-invocation: true
 argument-hint: "[handoff-dir] [--auto] [--review-model MODEL]"
 metadata:
+  version: 0.1.0
   summary: "builds a handoff with one subagent and worktree per item, re-verifying each."
   category: plan-build-ship
 ---

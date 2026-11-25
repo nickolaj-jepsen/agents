@@ -2,7 +2,7 @@
  * `node build.ts <app> [--watch]`: bundles one app (`apps/<name>`, or the catalogue's package) into
  * its gitignored `dist/`, in the shape Claude Code and pi load:
  *
- *   dist/.claude-plugin/plugin.json   the package.json's `claude` field (`types` points at ./types.d.ts)
+ *   dist/.claude-plugin/plugin.json   the package.json's `claude` field plus its `version` (`types` points at ./types.d.ts)
  *   dist/hooks/hooks.json             the module (`../register.js`) and any settings-style `claude.hooks`
  *   dist/register.js                  `src/claude.tsx`, with the kit and `src/lib` bundled in
  *   dist/claude.test.ts               `src/claude.test.tsx`, which `claude plugin test` runs
@@ -63,7 +63,8 @@ function writeMetadata() {
       put(join(dist, "types.d.ts"), readFileSync(typesFile));
       (manifest as Record<string, unknown>).types = "./types.d.ts";
     }
-    put(join(dist, ".claude-plugin/plugin.json"), json(manifest));
+    // The package.json version is the plugin's only one: the `claude` object carries none.
+    put(join(dist, ".claude-plugin/plugin.json"), json({ ...manifest, version: pkg.version }));
     put(join(dist, "hooks/hooks.json"), json({ ...hooks, modules: ["../register.js"] }));
   }
   if (pi) {

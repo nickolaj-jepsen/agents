@@ -4,6 +4,7 @@ description: Build a plan written by /slices, unattended, on one branch — work
 disable-model-invocation: true
 argument-hint: "[plan-dir]"
 metadata:
+  version: 0.1.0
   summary: "builds a sliced plan one slice at a time on one branch, re-checking each and escalating instead of retrying."
   category: plan-build-ship
 ---

@@ -5,6 +5,7 @@ disable-model-invocation: true
 argument-hint: "[diff|touched|branch|repo|<path>]"
 arguments: scope
 metadata:
+  version: 0.1.0
   summary: "removes tests, docs and structure that must change whenever something else does."
   category: clean-up
 ---

@@ -1,6 +1,6 @@
 {
   "name": "@nickolaj-jepsen/spellfix",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Review the prompt draft's spelling in pi: hunspell plus one model call, with the misspellings underlined as you type",
   "keywords": [
     "pi-package"
@@ -31,7 +31,6 @@
   },
   "claude": {
     "name": "spellfix",
-    "version": "1.2.0",
     "description": "Pick fixes for misspelled words in the prompt draft with hunspell and Haiku",
     "author": {
       "name": "Nickolaj Jepsen"

@@ -776,7 +776,11 @@ pre {
 .tag.wip {
   color: var(--yellow);
 }
-/* An in-progress page says so under its title, on a yellow rule. */
+.tag.pre {
+  color: var(--muted);
+  margin-left: var(--u);
+}
+/* An unfinished page says so under its title, on a yellow rule. */
 .notice {
   margin-top: calc(3 * var(--u));
   padding: var(--u) 0 var(--u) calc(2 * var(--u));

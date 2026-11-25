@@ -3,6 +3,7 @@ name: find-skills
 description: Find and vet installable skills for a specific task.
 disable-model-invocation: true
 metadata:
+  version: 0.1.0
   summary: Find and vet installable skills for a specific task.
   category: modified-public
   credit: "Adapted from [Vercel’s find-skills](https://github.com/vercel-labs/skills/tree/main/skills/find-skills)."

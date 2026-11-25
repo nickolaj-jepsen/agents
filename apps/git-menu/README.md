@@ -1,7 +1,6 @@
 ---
 tagline: "Open the checkout's repository, branch, commit or pull request, or hand it to an editor or file manager."
 featured: true
-status: in-progress
 requires:
   - "`git`"
   - "`gh`, for the pull request"

@@ -19,6 +19,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",
+        "!CHANGELOG.md",
         "!e2e/**",
         "!src/e2e/**",
         "!**/__snapshots__/**",
@@ -41,6 +42,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",
+        "!CHANGELOG.md",
         "!e2e/**",
         "!src/e2e/**",
         "!**/__snapshots__/**",
@@ -77,7 +79,14 @@
     // A package's specs and what they import: not its README, scenarios or snapshots.
     "test": {
       "dependsOn": ["topo"],
-      "inputs": ["$TURBO_DEFAULT$", "!README.md", "!e2e/**", "!src/e2e/**", "!**/__snapshots__/**"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!README.md",
+        "!CHANGELOG.md",
+        "!e2e/**",
+        "!src/e2e/**",
+        "!**/__snapshots__/**"
+      ]
     },
     "test:claude": {
       "dependsOn": ["build"],
@@ -92,6 +101,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",
+        "!CHANGELOG.md",
         "!**/site.scenarios.ts",
         "!**/vscode.scenarios.ts",
         "!**/desktop.scenarios.ts",
@@ -141,6 +151,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",
+        "!CHANGELOG.md",
         "!src/e2e/claude.scenarios.ts",
         "!src/e2e/pi.scenarios.ts",
         "!src/e2e/vscode.scenarios.ts",
@@ -172,6 +183,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",
+        "!CHANGELOG.md",
         "!src/e2e/claude.scenarios.ts",
         "!src/e2e/pi.scenarios.ts",
         "!src/e2e/desktop.scenarios.ts",

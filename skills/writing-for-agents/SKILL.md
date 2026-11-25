@@ -3,6 +3,7 @@ name: writing-for-agents
 description: "Write instructions that agents can follow and verify."
 disable-model-invocation: true
 metadata:
+  version: 0.1.0
   summary: "Write instructions that agents can follow and verify."
   category: modified-public
   credit: "Adapted from [Matt Pocock’s writing-for-agents](https://github.com/mattpocock/skills)."

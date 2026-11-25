@@ -72,11 +72,11 @@ const summaries = new Map(await Promise.all(c.skills.map(async (s) => [s.name, a
                 <h3 id={`p-${p.name}`}>
                   <a href={pluginHref(p.name)}>{p.name}</a>
                 </h3>
-                {p.status === 'in-progress' && <Wip />}
+                {p.tier === 'unfinished' && <Wip />}
                 <Marks harnesses={harnesses(p)} short />
                 <span class="grow" />
                 {pluginInstall(p).length > 0 && (
-                  <Install what={p.name} commands={pluginInstall(p)} note={p.install.claude ? CLAUDE_NOTE : undefined} align="end" />
+                  <Install what={p.name} commands={pluginInstall(p)} note={p.install.claude ? CLAUDE_NOTE(p.version) : undefined} align="end" />
                 )}
               </div>
               <p class="tagline" set:html={taglines.get(p.name)} />
@@ -106,13 +106,13 @@ const summaries = new Map(await Promise.all(c.skills.map(async (s) => [s.name, a
             {cat.skills.map((s) => {
               const inst = skillInstall(s);
               return (
-                <li class:list={{ wip: s.status === 'in-progress' }}>
+                <li class:list={{ wip: s.tier === 'unfinished' }}>
                   <a class="name" href={skillHref(s.name)}>
                     {s.name}
                   </a>
                   <span class="what" set:html={summaries.get(s.name)} />
                   <span class="end">
-                    {s.status === 'in-progress' && <Wip />}
+                    {s.tier === 'unfinished' && <Wip />}
                     <Install what={s.name} commands={inst.commands} more={inst.more} align="end" />
                   </span>
                 </li>

@@ -4,9 +4,9 @@ description: Guide a human reviewer through a pull request or a stack of them, o
 disable-model-invocation: true
 argument-hint: "[<pr>…] [--all]"
 metadata:
+  version: 0.0.1
   summary: "walks you through a PR or a stack of them, one PR at a time."
   category: plan-build-ship
-  status: in-progress
 ---
 
 The user reads the code; you make that reading short. You explain what changed and where the choices are, so they spend their time on structure and decisions instead of on noise. You don't hunt bugs, grade, praise or give a verdict.

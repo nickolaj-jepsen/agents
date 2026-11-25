@@ -3,6 +3,7 @@ import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
 import Install from '../../components/Install.astro';
 import Notice from '../../components/Notice.astro';
+import Pre from '../../components/Pre.astro';
 import Pager from '../../components/Pager.astro';
 import Wip from '../../components/Wip.astro';
 import { content, github, href, skillHref, skillInstall, type Skill } from '../../lib/content.ts';
@@ -12,7 +13,7 @@ import '../../styles/skill.css';
 
 export const getStaticPaths = (async () => {
   const c = await content();
-  // The order of the home page: by category, in-progress last in each.
+  // The order of the home page: by category, unfinished last in each.
   const order = c.categories.flatMap((cat) => cat.skills.map((skill) => ({ skill, cat })));
   return order.map(({ skill, cat }, i) => ({
     params: { name: skill.name },
@@ -50,16 +51,21 @@ const inst = skillInstall(s);
     </p>
     <div class="title-row">
       <h1 class="mono">{s.name}</h1>
-      {s.status === 'in-progress' && <Wip />}
+      {s.tier === 'unfinished' && <Wip />}
     </div>
     <p class="lead" set:html={lead} />
     <div class="head-meta">
       <Install what={s.name} commands={inst.commands} more={inst.more} />
     </div>
-    {s.status === 'in-progress' && <Notice />}
+    {s.tier === 'unfinished' && <Notice />}
   </header>
 
   <dl class="facts glance">
+    <dt>Version</dt>
+    <dd>
+      <code>{s.version}</code>
+      {s.tier === 'pre-release' && <Pre />}
+    </dd>
     <dt>Invoke</dt>
     <dd><code>{usage}</code></dd>
     <dt>Used when</dt>

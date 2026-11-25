@@ -4,9 +4,9 @@ description: Answer a question or complaint about how your agents have been work
 disable-model-invocation: true
 argument-hint: "<question, complaint or target>"
 metadata:
+  version: 0.0.1
   summary: "answers a question about how your agents have been working from past sessions, and improves what's behind it."
   category: utilities
-  status: in-progress
 ---
 
 The user has a hunch or a complaint about how their agents have been working, and the past transcripts hold the evidence: "the hub keeps announcing the wrong state", "why is it lazier in this repo?", "how well do the mod tools work?". Find out whether it's true, what causes it and what to change, then help change it.

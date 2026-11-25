@@ -1,6 +1,6 @@
 {
   "name": "@nickolaj-jepsen/questions",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "An ask_user_question tool: one to four multiple-choice questions in a dialog, answered for the model as data",
   "keywords": [
     "pi-package"

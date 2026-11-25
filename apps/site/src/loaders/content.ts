@@ -32,7 +32,7 @@ const parts: Record<Part, (c: Content) => Entries> = {
 
 /** The files of the sources the model reads, as paths under the checkout. */
 const sources = [
-  /^apps\/[^/]+\/(package\.json|README\.md)$/,
+  /^apps\/[^/]+\/(package\.json|README\.md|CHANGELOG\.md)$/,
   /^apps\/site\/media\/[^/]+\/media(-vscode)?\.json$/,
   /^skills\//,
   /^docs\/[^/]+\.md$/,

@@ -5,6 +5,7 @@ disable-model-invocation: true
 argument-hint: "[diff|touched|branch|repo|<path>]"
 arguments: scope
 metadata:
+  version: 0.1.0
   summary: "cuts comments and docstrings down to the load-bearing why."
   category: clean-up
 ---

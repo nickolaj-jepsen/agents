@@ -3,6 +3,7 @@ name: dms-plugin-dev
 description: Run and drive a DankMaterialShell (DMS) plugin by observation, in real DMS inside an isolated headless sway — keys, pointer, screenshots and QML logs — with no effect on the live desktop. Use when developing, fixing or reviewing a DMS bar plugin or its QML, when a QML change needs loading before a switch, or when asking how a plugin renders or responds.
 compatibility: Requires nix, plus dms on PATH.
 metadata:
+  version: 0.1.0
   summary: "DankMaterialShell plugins, in a headless sway."
   category: harnesses
 ---

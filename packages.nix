@@ -8,17 +8,20 @@
     agentsUpdates = pkgs.callPackage ./pkgs/agents-updates.nix {};
   in {
     packages =
-      # One per plugin: the app's `dist/`, the folder Claude Code and pi load.
+      # One per plugin, unreleased ones included: the app's `dist/`, the folder Claude Code and pi
+      # load. `pnpm drive live <name>` and `claude --plugin-dir apps/<name>/dist` run it.
       built.apps
       // {
         # The dependencies alone (what `pkgs/pnpm-deps.hash` pins), so a stale hash fails without
         # building an app.
         inherit (built) pnpmDeps;
 
-        # Every plugin, one folder each (`<name>/`): what the `dist` branch holds.
+        # Every released plugin, one folder each (`<name>/`): what the `dist` branch holds. An
+        # unreleased app (`"private": true`) is built as `packages.<name>` alone, and no page, README
+        # count or marketplace entry lists it either.
         plugins = pkgs.runCommand "agents-plugins" {} ''
           mkdir $out
-          ${lib.concatStringsSep "\n" (lib.mapAttrsToList (name: app: "cp -r --no-preserve=mode ${app} $out/${name}") built.apps)}
+          ${lib.concatStringsSep "\n" (lib.mapAttrsToList (name: app: "cp -r --no-preserve=mode ${app} $out/${name}") built.releasedApps)}
         '';
 
         # The explicit publication tool: `bin/agents`, `bin/agents-refresh` and the pi package

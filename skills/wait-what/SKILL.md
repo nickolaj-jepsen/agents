@@ -3,6 +3,7 @@ name: wait-what
 description: "Explain the last message again in plain technical English."
 disable-model-invocation: true
 metadata:
+  version: 0.1.0
   summary: "Explain the last message again in plain technical English."
   category: modified-public
   credit: "Adapted from [Matt Pocock’s wait-what](https://github.com/mattpocock/skills)."

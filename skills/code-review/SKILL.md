@@ -3,6 +3,7 @@ name: code-review
 description: "Review a diff separately for standards and spec compliance."
 disable-model-invocation: true
 metadata:
+  version: 0.1.0
   summary: "Review a diff separately for standards and spec compliance."
   category: modified-public
   credit: "Adapted from [Matt Pocock’s code-review](https://github.com/mattpocock/skills)."

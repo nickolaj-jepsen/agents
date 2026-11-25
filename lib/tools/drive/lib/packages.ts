@@ -33,7 +33,10 @@ const dirs = (root: string): string[] =>
         .sort()
     : [];
 
-/** Every package with an e2e folder: apps first, then the kit's. */
+/**
+ * Every package with an e2e folder: apps first, then the kit's. An app's package.json `private`
+ * flag does not hide it here: an unreleased plugin still plays from its local build.
+ */
 export function e2ePackages(): E2EPackage[] {
   const out: E2EPackage[] = [];
   for (const name of dirs(join(repoRoot, "apps"))) {

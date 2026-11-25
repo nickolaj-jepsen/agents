@@ -4,6 +4,7 @@ description: Search and compare Danish prices on PriceRunner.dk — product sear
 disable-model-invocation: true
 argument-hint: "<product, category or question>"
 metadata:
+  version: 0.1.0
   summary: "searches and compares Danish prices on PriceRunner.dk."
   category: utilities
 ---

@@ -7,6 +7,7 @@ import Gallery from '../../components/Gallery.astro';
 import Install from '../../components/Install.astro';
 import Marks from '../../components/Marks.astro';
 import Notice from '../../components/Notice.astro';
+import Pre from '../../components/Pre.astro';
 import Pager from '../../components/Pager.astro';
 import Wip from '../../components/Wip.astro';
 import {
@@ -46,14 +47,14 @@ const install = pluginInstall(p);
     <p class="crumb"><a href={href('#plugins')}>Plugins</a></p>
     <div class="title-row">
       <h1 class="mono">{p.name}</h1>
-      {p.status === 'in-progress' && <Wip />}
+      {p.tier === 'unfinished' && <Wip />}
     </div>
     <p class="lead" set:html={tagline} />
     <div class="head-meta">
       <Marks harnesses={harnesses(p)} />
-      {install.length > 0 && <Install what={p.name} commands={install} note={p.install.claude ? CLAUDE_NOTE : undefined} />}
+      {install.length > 0 && <Install what={p.name} commands={install} note={p.install.claude ? CLAUDE_NOTE(p.version) : undefined} />}
     </div>
-    {p.status === 'in-progress' && <Notice />}
+    {p.tier === 'unfinished' && <Notice />}
   </header>
 
   <Gallery plugin={p} />
@@ -61,6 +62,23 @@ const install = pluginInstall(p);
   <div class="spread">
     <div class="prose body" set:html={body} />
     <dl class="facts rail">
+      <dt>Version</dt>
+      <dd>
+        <code>{p.version}</code>
+        {p.tier === 'pre-release' && <Pre />}
+      </dd>
+      {
+        p.changelog && (
+          <>
+            <dt>Changelog</dt>
+            <dd>
+              <a href={github(p.changelog)}>
+                <code>CHANGELOG.md</code>
+              </a>
+            </dd>
+          </>
+        )
+      }
       {
         requires.length > 0 && (
           <>
@@ -88,7 +106,7 @@ const install = pluginInstall(p);
                   <Command command={c.command} what={`${p.name} for ${c.label}`} />
                 </div>
               ))}
-              {p.install.claude && <p class="inst-note" set:html={CLAUDE_NOTE} />}
+              {p.install.claude && <p class="inst-note" set:html={CLAUDE_NOTE(p.version)} />}
             </dd>
           </>
         )

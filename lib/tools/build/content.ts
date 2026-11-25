@@ -4,6 +4,9 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
+import { isSemver, tierOf, type Tier } from "./version.ts";
+
+export type { Tier };
 
 export const SITE_URL = "https://nickolaj-jepsen.github.io/agents";
 export const REPO_URL = "https://github.com/nickolaj-jepsen/agents";
@@ -36,12 +39,16 @@ export type Media = { videos: Video[]; stills: Still[] };
 
 export type Plugin = {
   name: string;
+  /** The one version (`version` in its package.json). */
+  version: string;
+  /** Its `CHANGELOG.md`, repo-relative, when it ships one. */
+  changelog?: string;
   tagline: string;
   featured: boolean;
   requires: string[];
   order: number;
-  /** Unfinished: listed after every other plugin, flagged on its page. */
-  status?: "in-progress";
+  /** How finished it is, read from the version: an unfinished one is listed last, under a notice. */
+  tier: Tier;
   harness: { claude: boolean; pi: boolean };
   install: { claude?: string; pi?: string };
   body: string;
@@ -51,13 +58,18 @@ export type Plugin = {
 
 export type Skill = {
   name: string;
+  /** The one version (`metadata.version` in its SKILL.md). */
+  version: string;
   description: string;
   summary: string;
   category: string;
-  status?: "in-progress";
+  /** How finished it is, read from the version: an unfinished one is listed last in its category. */
+  tier: Tier;
   credit?: string;
   argumentHint?: string;
   install: string[];
+  /** The same install at its release tag: what pins a skill to the version it shows. */
+  pinnedInstall: string;
   body: string;
   path: string;
   files: string[];
@@ -84,7 +96,7 @@ export type Content = {
   docs: Doc[];
 };
 
-/** The skill categories in display order. A skill marked `status: in-progress` stays in its own, listed last. */
+/** The skill categories in display order. An unfinished skill (0.0.x) stays in its own, listed last. */
 export const CATEGORIES: { slug: string; title: string; blurb?: string }[] = [
   { slug: "plan-build-ship", title: "Plan, build and ship" },
   { slug: "understand-decide", title: "Understand and decide" },
@@ -102,8 +114,11 @@ export const CATEGORIES: { slug: string; title: string; blurb?: string }[] = [
   },
 ];
 
-/** What an in-progress plugin or skill says about itself. */
+/** What an unfinished plugin or skill (0.0.x) says about itself. */
 export const IN_PROGRESS = "Unfinished, and not ready for anyone else to use.";
+
+/** Where the skills CLI installs a skill from. */
+export const SKILLS_REPO = "nickolaj-jepsen/agents";
 
 /** Adds the marketplace once per machine; a plugin's Claude install runs it first. */
 export const MARKETPLACE_ADD = "claude plugin marketplace add nickolaj-jepsen/agents";
@@ -135,6 +150,20 @@ function str(file: string, data: Record<string, any>, key: string): string {
   if (typeof v !== "string" || v === "")
     throw new Error(`${file}: frontmatter \`${key}\` must be a non-empty string`);
   return v;
+}
+
+/** A version is one semver string, wherever it is written. */
+function version(file: string, value: unknown, field: string): string {
+  if (!isSemver(value)) throw new Error(`${file}: ${field} must be a semver version`);
+  return value;
+}
+
+/** `status` was a flag kept by hand; the version says it now (`tierOf`). */
+function noStatus(file: string, data: Record<string, unknown>, field: string): void {
+  if (data.status !== undefined)
+    throw new Error(
+      `${file}: drop ${field}: the version says how finished it is (0.0.x is unfinished, below 1.0.0 a pre-release)`,
+    );
 }
 
 function readMedia(root: string, name: string): Media | undefined {
@@ -181,29 +210,36 @@ function loadPlugins(root: string): Plugin[] {
       };
       // An app that is neither (the site) is not a plugin.
       if (!harness.claude && !harness.pi) return [];
+      // `"private": true` is the unreleased state: it is dropped before it becomes a plugin, so it
+      // has no page, no home-page row and no README count, and the marketplace must not list it.
+      if (pkg.private === true) return [];
+      const pluginVersion = version(pkgFile, pkg.version, "`version`");
       const file = join(dir, "README.md");
       const { data, body } = frontmatter(file);
       if (
         !Array.isArray(data.requires ?? []) ||
         typeof data.featured !== "boolean" ||
-        !Number.isInteger(data.order) ||
-        (data.status !== undefined && data.status !== "in-progress")
+        !Number.isInteger(data.order)
       )
         throw new Error(
-          `${file}: frontmatter needs \`featured\` (boolean), \`requires\` (list) and \`order\` (integer); \`status\` may only be \`in-progress\``,
+          `${file}: frontmatter needs \`featured\` (boolean), \`requires\` (list) and \`order\` (integer)`,
         );
+      noStatus(file, data, "`status`");
       const install: Plugin["install"] = {};
       if (harness.claude && listed.has(name))
         install.claude = `${MARKETPLACE_ADD} && claude plugin install ${name}@nickolaj-jepsen`;
       if (harness.pi) install.pi = `git clone ${REPO_URL} && pi install ./agents/apps/${name}`;
+      const changelog = join(dir, "CHANGELOG.md");
       return [
         {
           name,
+          version: pluginVersion,
+          ...(existsSync(changelog) ? { changelog: `apps/${name}/CHANGELOG.md` } : {}),
           tagline: str(file, data, "tagline"),
           featured: data.featured,
           requires: (data.requires ?? []).map(String),
           order: data.order,
-          ...(data.status === "in-progress" ? { status: "in-progress" as const } : {}),
+          tier: tierOf(pluginVersion),
           harness,
           install,
           body: body.trimEnd(),
@@ -214,7 +250,7 @@ function loadPlugins(root: string): Plugin[] {
     })
     .sort(
       (a, b) =>
-        Number(!!a.status) - Number(!!b.status) ||
+        Number(a.tier === "unfinished") - Number(b.tier === "unfinished") ||
         a.order - b.order ||
         a.name.localeCompare(b.name),
     );
@@ -234,6 +270,8 @@ function listFiles(dir: string, base = dir): string[] {
 
 function loadSkills(root: string): Skill[] {
   const known = new Set(CATEGORIES.map((c) => c.slug));
+  // Only `skills/` is read. An unreleased skill sits under `unreleased/skills/`, which no path here
+  // touches: its folder is the state, so moving it into `skills/` is what lists it.
   return dirs(join(root, "skills")).map((name): Skill => {
     const dir = join(root, "skills", name);
     const file = join(dir, "SKILL.md");
@@ -246,15 +284,19 @@ function loadSkills(root: string): Skill[] {
       );
     if (typeof meta.summary !== "string" || meta.summary === "")
       throw new Error(`${file}: metadata.summary must be a non-empty string`);
+    const skillVersion = version(file, meta.version, "metadata.version");
+    noStatus(file, meta, "`metadata.status`");
     return {
       name,
+      version: skillVersion,
       description: str(file, data, "description"),
       summary: meta.summary,
       category,
-      ...(meta.status === "in-progress" ? { status: "in-progress" as const } : {}),
+      tier: tierOf(skillVersion),
       ...(typeof meta.credit === "string" ? { credit: meta.credit } : {}),
       ...(typeof data["argument-hint"] === "string" ? { argumentHint: data["argument-hint"] } : {}),
-      install: [`npx skills add nickolaj-jepsen/agents --skill ${name}`],
+      install: [`npx skills add ${SKILLS_REPO} --skill ${name}`],
+      pinnedInstall: `npx skills add ${SKILLS_REPO}@${name}-v${skillVersion} --skill ${name}`,
       body: body.trimEnd(),
       path: `skills/${name}`,
       files: listFiles(dir).filter((f) => f !== "SKILL.md"),
@@ -294,7 +336,11 @@ export function loadContent(root: string = repoRoot): Content {
     ...c,
     skills: skills
       .filter((s) => s.category === c.slug)
-      .sort((a, b) => Number(!!a.status) - Number(!!b.status) || a.name.localeCompare(b.name)),
+      .sort(
+        (a, b) =>
+          Number(a.tier === "unfinished") - Number(b.tier === "unfinished") ||
+          a.name.localeCompare(b.name),
+      ),
   })).filter((c) => c.skills.length > 0);
   return {
     meta: {

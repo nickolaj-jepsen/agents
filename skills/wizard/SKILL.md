@@ -3,6 +3,7 @@ name: wizard
 description: "Generate a guided shell script for the steps only a human can do."
 disable-model-invocation: true
 metadata:
+  version: 0.1.0
   summary: "Generate a guided shell script for the steps only a human can do."
   category: modified-public
   credit: "Adapted from [Matt Pocock’s wizard](https://github.com/mattpocock/skills)."

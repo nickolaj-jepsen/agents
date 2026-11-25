@@ -3,6 +3,7 @@ name: evals-start
 description: Choose and run an evaluation workflow for an LLM application.
 disable-model-invocation: true
 metadata:
+  version: 0.1.0
   summary: Choose and run an evaluation workflow for an LLM application.
   category: modified-public
   credit: "Adapted from [AI Evals Course’s evals-skills](https://github.com/ai-evals-course/evals-skills)."

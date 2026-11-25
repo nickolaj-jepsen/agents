@@ -4,6 +4,7 @@ description: Research a choice between tools, libraries, services or products an
 disable-model-invocation: true
 argument-hint: "<candidates, category or question> [--quick]"
 metadata:
+  version: 0.1.0
   summary: "researches a choice or a whole category and says whether to pick, keep or build, with sourced evidence."
   category: understand-decide
 ---

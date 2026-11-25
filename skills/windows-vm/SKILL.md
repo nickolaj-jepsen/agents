@@ -2,9 +2,9 @@
 name: windows-vm
 description: Operate a Windows guest under libvirt from the Linux host without a human relaying screens — find the VM and its disks, start and stop it safely, take screenshots, type and click, and run PowerShell through the QEMU guest agent. Use when asked to do something "in Windows" or "in the VM", to drive a dual-boot Windows install booted as a VM, or when a libvirt Windows guest needs inspecting or controlling.
 metadata:
+  version: 0.0.1
   summary: "drives a libvirt Windows guest with screenshots, keys and PowerShell."
   category: harnesses
-  status: in-progress
 ---
 
 # windows-vm

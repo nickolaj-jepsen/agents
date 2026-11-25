@@ -4,6 +4,7 @@ description: Take finished work to landed commits — shape the dirty tree into 
 disable-model-invocation: true
 argument-hint: "[local|pr|draft|pr on green] [worktree-or-branch]"
 metadata:
+  version: 0.1.0
   summary: "takes finished work to landed commits or a PR, after checks and a review gate."
   category: plan-build-ship
 ---

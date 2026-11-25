@@ -4,6 +4,7 @@ description: Learn how an unfamiliar project works, how to run it, what its user
 disable-model-invocation: true
 argument-hint: "[subsystem] [--quick]"
 metadata:
+  version: 0.1.0
   summary: "teaches you an unfamiliar project by running it and tracing one real action."
   category: understand-decide
 ---
