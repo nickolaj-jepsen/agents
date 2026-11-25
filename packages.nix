@@ -16,6 +16,9 @@
         # building an app.
         inherit (built) pnpmDeps;
 
+        # Herdr's UI, which is no plugin: `mods/` and `layouts/` at the root, the folder Herdr loads.
+        herdr-ui = pkgs.callPackage ./pkgs/herdr-ui.nix {};
+
         # Every released plugin, one folder each (`<name>/`): what the `dist` branch holds. An
         # unreleased app (`"private": true`) is built as `packages.<name>` alone, and no page, README
         # count or marketplace entry lists it either.
@@ -34,7 +37,7 @@
     # `nix flake check` builds, validates and tests everything the marketplace serves.
     checks =
       {
-        inherit (self.packages.${pkgs.stdenv.hostPlatform.system}) plugins;
+        inherit (self.packages.${pkgs.stdenv.hostPlatform.system}) plugins herdr-ui;
         # The tool's own tests, from the scripts the package installs: no store and no network.
         agents-updates = agentsUpdates.passthru.tests;
       }
