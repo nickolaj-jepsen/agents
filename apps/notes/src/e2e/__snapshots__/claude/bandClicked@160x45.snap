@@ -1,0 +1,91 @@
+# notes/claude/bandClicked 160x45 @88,0 (72x41)
+│                                                                     ✕
+│ ─ Notes ── 1 note ────────────────────────────────────────── Close × ─
+│
+│   plans/backoff.md
+│ ─ plans ── <age>
+│   Back off in the sync worker
+│
+│   The worker retries a 429 at once, three times, and the API locks
+│   the key for a minute.
+│
+│   Steps
+│
+│   1. Read Retry-After from the response, seconds or a date.
+│   2. Sleep that long before the next attempt, capped at five
+│      minutes.
+│   3. Count the wait against the job's deadline, not the attempt's.
+│
+│   Open questions
+│
+│   • Does the bulk endpoint send the header too?
+│   • Should a wait past the deadline fail the job or park it?
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│
+│ ──────────────────────────────────────────────────────────────────────
+│   Back ↵  Open [o]
+│   Keys here  ctrl+x tab
+│
+--- styles
+1 .x69 2
+1 . 2 . 3x5 . 2x2 . 2x6 . 2x42 .x9 2
+1
+1 .x3 4x16
+1 . 2 . 2x5 . 2x2 . 2x3 . 2
+1 .x3 4x27
+1
+1
+1
+1
+1 .x3 4x5
+1
+1 .x3 2x2 .x6 5x11
+1 .x3 2x2
+1
+1 .x3 2x2
+1
+1 .x3 4x14
+1
+1 .x3 2
+1 .x3 2
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1 . 2x70
+1 .x8 2 .x7 2x3
+1 .x3 4x10 6x12
+1
+--- legend
+1 dim
+2 fg=#999999
+3 fg=#d77757 bold
+4 bold
+5 fg=#b1b9f9
+6 bg=#373737 bold

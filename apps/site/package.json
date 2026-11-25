@@ -30,6 +30,7 @@
     "@nickolaj-jepsen/exa": "workspace:*",
     "@nickolaj-jepsen/image-preview": "workspace:*",
     "@nickolaj-jepsen/linear-issue": "workspace:*",
+    "@nickolaj-jepsen/notes": "workspace:*",
     "@nickolaj-jepsen/open": "workspace:*",
     "@nickolaj-jepsen/questions": "workspace:*",
     "@nickolaj-jepsen/spellfix": "workspace:*",

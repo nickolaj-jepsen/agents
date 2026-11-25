@@ -1,0 +1,10 @@
+{
+  "extends": "./.claude-types/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": true,
+    "allowImportingTsExtensions": true,
+    "tsBuildInfoFile": "./node_modules/.cache/tsc-claude.tsbuildinfo"
+  },
+  "include": ["src/claude.tsx", "src/claude.test.tsx", "src/claude"]
+}

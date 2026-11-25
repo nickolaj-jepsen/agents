@@ -1,0 +1,64 @@
+# notes/claude/extreme 112x32 @62,0 (50x28)
+│                                               ✕
+│ ─ Notes ── 27 notes ────────────────── Close × ─
+│
+│   plans
+│   ❯ …/and/several/nested/levels/the-plan    1h
+│     -with-the-longest-name-yet.md
+│
+│   調査                              1 artefact
+│     日本語のファイル名がとても長いノート    2h
+│     .md
+│
+│   reports
+│     sync-latency-under-load-for-the-eu-r    3h
+│     egion.html
+│
+│   findings
+│     finding-01.md                           4h
+│     finding-02.md                           1d
+│     finding-03.md                           2d
+│     finding-04.md                           3d
+│     finding-05.md                           4d
+│     finding-06.md                           5d
+│     finding-07.md                           6d
+│   ↓ 17 more
+│ ────────────────────────────────────────────────
+│   Read ↵  Open [o]
+│
+│
+--- styles
+1 .x47 2
+1 . 2 . 3x5 . 2x2 . 2x8 . 2x18 .x9 2
+1
+1 .x3 4x5
+1 .x3 5 . 5x36 .x2 2x4
+1 .x5 5x29
+1
+1 .x3 2x4 .x29 2x11
+1 .x43 2x4
+1
+1
+1 .x3 2x7
+1 .x43 2x4
+1
+1
+1 .x3 2x8
+1 .x43 2x4
+1 .x43 2x4
+1 .x43 2x4
+1 .x43 2x4
+1 .x43 2x4
+1 .x43 2x4
+1 .x43 2x4
+1 .x3 2x9
+1 . 2x48
+1 .x8 2 .x7 2x3
+1
+1
+--- legend
+1 dim
+2 fg=#999999
+3 fg=#d77757 bold
+4 fg=#d77757
+5 bold

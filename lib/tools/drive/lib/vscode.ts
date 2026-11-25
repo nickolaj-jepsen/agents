@@ -33,7 +33,7 @@ import {
   STUB_KEY,
   type Turn,
 } from "./harness.ts";
-import { runEnv } from "./setup.ts";
+import { runEnv, startEnv } from "./setup.ts";
 import type { Pattern } from "./screen.ts";
 import type { Target } from "./session.ts";
 import { endRun } from "./procs.ts";
@@ -237,7 +237,7 @@ async function startWorkbench(
       WLR_HEADLESS_OUTPUTS: "1",
     }),
     ...(fonts && { FONTCONFIG_FILE: fonts }),
-    ...start.env,
+    ...startEnv(start.env, runDir),
     // The bundled Claude runs non-interactively, where the native mod watcher is off by default.
     ...(watchPlugins && modWatchEnv),
   });

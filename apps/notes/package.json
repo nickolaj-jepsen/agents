@@ -1,0 +1,52 @@
+{
+  "name": "@nickolaj-jepsen/notes",
+  "version": "0.0.1",
+  "private": true,
+  "description": "A store per repository for an agent's notes, shared by its worktrees and kept out of git; /notes lists and reads them",
+  "keywords": [
+    "pi-package"
+  ],
+  "type": "module",
+  "devDependencies": {
+    "@agents/build": "workspace:*",
+    "@agents/drive": "workspace:*",
+    "@agents/kit-band": "workspace:*",
+    "@agents/kit-buttons": "workspace:*",
+    "@agents/kit-core": "workspace:*",
+    "@agents/kit-detail": "workspace:*",
+    "@agents/kit-frame": "workspace:*",
+    "@agents/kit-list": "workspace:*",
+    "@agents/kit-notice": "workspace:*",
+    "@agents/kit-prose": "workspace:*",
+    "@agents/launch": "workspace:*",
+    "@earendil-works/pi-ai": "catalog:",
+    "@earendil-works/pi-coding-agent": "catalog:",
+    "@earendil-works/pi-tui": "catalog:",
+    "@types/node": "catalog:",
+    "tsdown": "catalog:",
+    "typebox": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "agentTools": {
+    "subagents": true
+  },
+  "claude": {
+    "name": "notes",
+    "description": "A store per repository for an agent's notes, shared by its worktrees and kept out of git; /notes lists and reads them",
+    "author": {
+      "name": "Nickolaj Jepsen"
+    },
+    "types": "./src/claude/types.d.ts"
+  },
+  "pi": {
+    "extensions": [
+      "./src/pi.ts"
+    ]
+  }
+}

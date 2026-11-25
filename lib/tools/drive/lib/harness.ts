@@ -3,7 +3,7 @@ import { chmodSync, existsSync, mkdirSync, readdirSync, symlinkSync, writeFileSy
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { distOf, repoRoot } from "./packages.ts";
-import { runEnv } from "./setup.ts";
+import { runEnv, startEnv } from "./setup.ts";
 import type { LaunchSpec } from "./term.ts";
 
 export type HarnessName = "claude" | "pi";
@@ -44,6 +44,7 @@ export type StartOptions = {
    */
   mcp?: Record<string, { command: string; args?: string[]; env?: Record<string, string> }>;
   args?: string[];
+  /** `{run}` in a value is the run's own folder (`startEnv`): `XDG_DATA_HOME: "{run}/data"`. */
   env?: Record<string, string>;
   /** Assistant turns to replay, in order, instead of a real model. */
   turns?: Turn[];
@@ -280,7 +281,7 @@ export const claude: Harness = {
         CLAUDE_CODE_PLUGIN_DIRS: "",
         ...(hermetic ? { ...hermetic, ...HERMETIC_ENV } : {}),
         ...path,
-        ...start.env,
+        ...startEnv(start.env, run.runDir),
       },
       unset: hermetic ? [...UNSET, ...HERMETIC_UNSET] : UNSET,
       ...size,
@@ -301,7 +302,7 @@ export const pi: Harness = {
       ...COMMON_ENV,
       ...runEnv(run.runDir),
       PI_OFFLINE: "1",
-      ...start.env,
+      ...startEnv(start.env, run.runDir),
     };
     // Offline, pi warns at startup about each of fd and rg it can't find, which moves everything
     // under it: a hermetic session never finds them, so it draws the same on every machine.

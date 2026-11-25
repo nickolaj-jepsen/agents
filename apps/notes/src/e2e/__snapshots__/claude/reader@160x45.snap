@@ -1,0 +1,90 @@
+# notes/claude/reader 160x45 @88,0 (72x41)
+│                                                                     ✕
+│ ─ Notes ── 1 note ────────────────────────────────────────── Close × ─
+│
+│   plans/retry-after.md
+│ ─ plans ── 1h ────────────────────────────────────────────────────────
+│   Honour Retry-After in the sync worker
+│
+│   The worker retries a 429 at once, three times, and the API locks
+│   the key for a minute.
+│
+│   Steps
+│
+│   1. Read Retry-After from the response, seconds or a date.
+│   2. Sleep that long before the next attempt, capped at five
+│      minutes.
+│   3. Count the wait against the job's deadline, not the attempt's.
+│
+│   Open questions
+│
+│   • Does the bulk endpoint send the header too?
+│   • Should a wait past the deadline fail the job or park it?
+│
+│   Step 1
+│
+│   The worker reads the header, waits, and tries again; step 1 of the
+│   plan covers one more case of the API's answers, so the paragraph
+│   runs over a line or two.
+│
+│   • One case.
+│   • Another case.
+│
+│   Step 2
+│
+│   The worker reads the header, waits, and tries again; step 2 of the
+│   plan covers one more case of the API's answers, so the paragraph
+│   runs over a line or two.
+│   ↓ 93 more
+│ ──────────────────────────────────────────────────────────────────────
+│   Back ↵  Open [o]
+│
+│
+--- styles
+1 .x69 2
+1 . 2 . 3x5 . 2x2 . 2x6 . 2x42 .x9 2
+1
+1 .x3 4x20
+1 . 2 . 2x5 . 2x2 . 2x2 . 2x56
+1 .x3 4x37
+1
+1
+1
+1
+1 .x3 4x5
+1
+1 .x3 2x2 .x6 5x11
+1 .x3 2x2
+1
+1 .x3 2x2
+1
+1 .x3 4x14
+1
+1 .x3 2
+1 .x3 2
+1
+1 .x3 4x6
+1
+1
+1
+1
+1
+1 .x3 2
+1 .x3 2
+1
+1 .x3 4x6
+1
+1
+1
+1
+1 .x3 2x9
+1 . 2x70
+1 .x8 2 .x7 2x3
+1
+1
+--- legend
+1 dim
+2 fg=#999999
+3 fg=#d77757 bold
+4 bold
+5 fg=#b1b9f9

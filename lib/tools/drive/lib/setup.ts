@@ -51,6 +51,18 @@ export const runEnv = (runDir: string) => ({
   WORDLIST: join(runDir, "hunspell", "personal.dic"),
 });
 
+/** What a scenario writes in a `start.env` value for the run's own folder, which it cannot know. */
+export const RUN_DIR = "{run}";
+
+/**
+ * A scenario's `start.env` for one run: `{run}` in a value is the run's folder, so a scenario can
+ * keep what a plugin writes inside it (`XDG_DATA_HOME: "{run}/data"`).
+ */
+export const startEnv = (env: Record<string, string> | undefined, runDir: string) =>
+  Object.fromEntries(
+    Object.entries(env ?? {}).map(([name, value]) => [name, value.replaceAll(RUN_DIR, runDir)]),
+  );
+
 /** The `SetupContext` of a run: its folder for the agent and the scratch beside it. */
 export function setupContext(runDir: string, cwd: string): SetupContext {
   const env = { ...process.env, HOME: realHome, ...FIXTURE_GIT_ENV, ...runEnv(runDir) };

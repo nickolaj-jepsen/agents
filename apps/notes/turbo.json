@@ -1,0 +1,63 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "command": ["node", "../../lib/tools/build/build.ts"]
+    },
+    "test": {
+      "command": ["./node_modules/.bin/vitest", "run"]
+    },
+    "test:claude": {
+      "command": ["sh", "../../lib/tools/build/claude-plugin-test.sh"]
+    },
+    "e2e": {
+      "command": ["node", "../../lib/tools/drive/drive.ts", "test", "notes"]
+    },
+    "e2e:update": {
+      "command": ["node", "../../lib/tools/drive/drive.ts", "test", "notes", "--update"]
+    },
+    "types": {
+      "command": ["node", "../../lib/tools/drive/drive.ts", "types", "notes"]
+    },
+    "check-types": {
+      "command": ["./node_modules/.bin/tsc", "-b", "tsconfig.json", "tsconfig.claude.json"]
+    },
+    "media": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "notes",
+        "--harness",
+        "terminal"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/notes/**",
+        "!$TURBO_ROOT$/apps/site/media/notes/vscode-*",
+        "!$TURBO_ROOT$/apps/site/media/notes/media-vscode.json"
+      ]
+    },
+    "media:vscode": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "notes",
+        "--harness",
+        "vscode"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/apps/site/media/notes/vscode-*",
+        "$TURBO_ROOT$/apps/site/media/notes/media-vscode.json"
+      ]
+    }
+  }
+}
