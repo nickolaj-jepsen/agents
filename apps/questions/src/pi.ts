@@ -11,7 +11,8 @@
  */
 import { Type } from "typebox";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { QuestionsDialog } from "./pi/dialog.ts";
+import { QuestionsDialog, isQuestionsDraft, type QuestionsDraft } from "./pi/dialog.ts";
+
 import {
   HEADER_MAX,
   LABEL_MAX,
@@ -25,6 +26,18 @@ import {
   TYPE_SOMETHING,
   validateQuestions,
 } from "./pi/types.ts";
+
+const DRAFT_ENTRY = "questions-draft";
+interface PendingDraft {
+  key: string;
+  draft: QuestionsDraft;
+}
+interface QuestionLifecycle {
+  saved?: QuestionsDraft;
+  suspend(draft: QuestionsDraft): void;
+  complete(): void;
+  interrupt(close: (() => void) | undefined): void;
+}
 
 const DESCRIPTION = `Ask the user multiple-choice questions and wait for the answers. Use it when you can't proceed without the user's decision, with every question in one call. Each question already gets a "Type something." row and Esc, so don't write "Other" or "Type something." options. Put a recommended option first, its label ending in "(Recommended)". Give options a \`preview\` only to compare concrete artifacts such as mockups, code, diagrams or configs.`;
 
@@ -62,6 +75,9 @@ export function answerLines(answers: readonly QuestionAnswer[]): string[] {
 
 /** What the model sees: the answers as a list it can act on, or the refusal. */
 export function formatResult(result: QuestionsResult): string {
+  if (result.interrupted) {
+    return "The questions were interrupted, not answered or declined. Do not treat this as a decision.";
+  }
   if (result.cancelled) {
     return "The user cancelled the questions without answering. Do not treat this as a decision.";
   }
@@ -78,35 +94,79 @@ export async function askQuestions(
   questions: readonly Question[],
   signal: AbortSignal | undefined,
   previous?: readonly QuestionAnswer[],
+  lifecycle?: QuestionLifecycle,
 ): Promise<QuestionsResult> {
   if (ctx.mode !== "tui") return askSequentially(ctx, questions);
-  const cancelled: QuestionsResult = { answers: [], cancelled: true };
-  if (signal?.aborted) return cancelled;
+  const interrupted: QuestionsResult = { answers: [], cancelled: true, interrupted: true };
+  if (signal?.aborted) return interrupted;
 
-  return ctx.ui.custom<QuestionsResult>(
-    (tui, theme, _keys, done) => {
-      const abort = () => done(cancelled);
-      signal?.addEventListener("abort", abort, { once: true });
-      const dispose = () => signal?.removeEventListener("abort", abort);
-      const dialog = new QuestionsDialog(
-        tui,
-        theme,
-        questions,
-        (result) => {
-          dispose();
-          done(result);
-        },
-        previous,
-      );
-      // The factory can run after the initial check, as the turn is interrupted.
-      if (signal?.aborted) queueMicrotask(abort);
-      return Object.assign(dialog, { dispose });
-    },
-    {
-      overlay: false,
-      blocked: { kind: "question", message: questions[0]?.question ?? "Answer questions" },
-    },
-  );
+  // Persistence can fail (or the extension can already be invalidated during teardown).
+  // It must never prevent done() from releasing the host's attention state.
+  const persist = (action: () => void) => {
+    try {
+      action();
+    } catch {
+      try {
+        ctx.ui.notify("Could not save the question draft to this session.", "warning");
+      } catch {
+        // A shutting-down host may no longer accept notifications either.
+      }
+    }
+  };
+  let cleanup = () => {};
+  try {
+    return await ctx.ui.custom<QuestionsResult>(
+      (tui, theme, _keys, done) => {
+        let closed = false;
+        const dialog = new QuestionsDialog(
+          tui,
+          theme,
+          questions,
+          (result) => {
+            if (closed) return;
+            closed = true;
+            persist(() => lifecycle?.complete());
+            cleanup();
+            done(result);
+          },
+          previous,
+          lifecycle?.saved,
+        );
+        const suspend = () => {
+          if (closed) return;
+          closed = true;
+          persist(() => lifecycle?.suspend(dialog.snapshot()));
+        };
+        const abort = () => {
+          if (closed) return;
+          suspend();
+          cleanup();
+          // Let the host unmount the dialog and clear its blocked state.
+          done(interrupted);
+        };
+        cleanup = () => {
+          signal?.removeEventListener("abort", abort);
+          lifecycle?.interrupt(undefined);
+        };
+        lifecycle?.interrupt(abort);
+        signal?.addEventListener("abort", abort, { once: true });
+        // The factory can run after the initial check, as the turn is interrupted.
+        if (signal?.aborted) queueMicrotask(abort);
+        return Object.assign(dialog, {
+          dispose() {
+            suspend();
+            cleanup();
+          },
+        });
+      },
+      {
+        overlay: false,
+        blocked: { kind: "question", message: questions[0]?.question ?? "Answer questions" },
+      },
+    );
+  } finally {
+    cleanup();
+  }
 }
 
 /**
@@ -169,6 +229,22 @@ async function askMultiSelect(
 }
 
 export default function (pi: ExtensionAPI) {
+  let pending: PendingDraft | null = null;
+  let interrupt: (() => void) | undefined;
+  const restore = (ctx: ExtensionContext) => {
+    pending = null;
+    for (const entry of ctx.sessionManager.getBranch()) {
+      if (entry.type !== "custom" || entry.customType !== DRAFT_ENTRY) continue;
+      const data = entry.data as Partial<PendingDraft> | null;
+      if (data === null) pending = null;
+      else if (typeof data?.key === "string" && isQuestionsDraft(data.draft))
+        pending = { key: data.key, draft: data.draft };
+    }
+  };
+  pi.on("session_start", (_event, ctx) => restore(ctx));
+  pi.on("session_tree", (_event, ctx) => restore(ctx));
+  pi.on("session_shutdown", () => interrupt?.());
+
   pi.registerTool({
     name: TOOL_NAME,
     label: "Ask",
@@ -182,7 +258,34 @@ export default function (pi: ExtensionAPI) {
     async execute(_toolCallId, params, signal, _onUpdate, ctx) {
       const invalid = validateQuestions(params.questions);
       if (invalid) throw new Error(`ask_user_question: ${invalid}`);
-      const result = await askQuestions(ctx, params.questions, signal);
+      // Property order in model-authored JSON is not part of a questionnaire's identity.
+      const key = JSON.stringify(
+        params.questions.map(({ header, question, options, multiSelect }) => ({
+          header,
+          question,
+          multiSelect: multiSelect ?? false,
+          options: options.map(({ label, description, preview }) => ({
+            label,
+            description,
+            preview,
+          })),
+        })),
+      );
+      const result = await askQuestions(ctx, params.questions, signal, undefined, {
+        saved: pending?.key === key ? pending.draft : undefined,
+        suspend(draft) {
+          pending = { key, draft };
+          pi.appendEntry(DRAFT_ENTRY, pending);
+        },
+        complete() {
+          if (pending && pending.key !== key) return;
+          pending = null;
+          pi.appendEntry(DRAFT_ENTRY, null);
+        },
+        interrupt(close) {
+          interrupt = close;
+        },
+      });
       return {
         content: [{ type: "text" as const, text: formatResult(result) }],
         details: result,

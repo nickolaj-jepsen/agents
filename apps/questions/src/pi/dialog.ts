@@ -57,6 +57,38 @@ interface Draft {
   text: string;
 }
 
+/** Session-owned work, including text that has not been confirmed with Enter. */
+export interface QuestionsDraft {
+  drafts: Draft[];
+  notes: string[];
+  tab: number;
+  row: number;
+  editing?: "answer" | "note";
+}
+
+/** Ignore incompatible session records rather than letting them break the terminal renderer. */
+export function isQuestionsDraft(value: unknown): value is QuestionsDraft {
+  if (!value || typeof value !== "object") return false;
+  const { drafts, notes, tab, row, editing } = value as Partial<QuestionsDraft>;
+  return (
+    Array.isArray(drafts) &&
+    drafts.every(
+      (draft) =>
+        draft &&
+        Array.isArray(draft.picked) &&
+        draft.picked.every((index: unknown) => Number.isInteger(index) && (index as number) >= 0) &&
+        typeof draft.text === "string",
+    ) &&
+    Array.isArray(notes) &&
+    notes.every((note) => typeof note === "string") &&
+    Number.isInteger(tab) &&
+    (tab as number) >= 0 &&
+    Number.isInteger(row) &&
+    (row as number) >= 0 &&
+    (editing === undefined || editing === "answer" || editing === "note")
+  );
+}
+
 /** A rendered row and the click target it carries, if any. */
 interface BodyRow {
   text: string;
@@ -146,6 +178,7 @@ export class QuestionsDialog implements Component, Focusable {
     private readonly done: (result: QuestionsResult) => void,
     /** Answers from an earlier round, preselected so re-answering starts from them. */
     previous: readonly QuestionAnswer[] = [],
+    saved?: QuestionsDraft,
   ) {
     this.tabs = questions.map((_, index) => ({ kind: "question", index }) as const);
     // The review step earns its rows only when there is more than one answer to check.
@@ -164,6 +197,31 @@ export class QuestionsDialog implements Component, Focusable {
     this.row = this.firstChoice();
     this.input = new Input({ prompt: "", placeholder: "Your answer" });
     this.noteInput = new Input({ prompt: "", placeholder: "Your note" });
+    if (
+      isQuestionsDraft(saved) &&
+      saved.drafts.length === questions.length &&
+      saved.notes.length === questions.length
+    ) {
+      this.drafts = saved.drafts.map((draft, index) => ({
+        ...draft,
+        picked: draft.picked.filter((picked) => picked < questions[index]!.options.length),
+      }));
+      this.notes = [...saved.notes];
+      this.tab = Math.max(0, Math.min(saved.tab, this.tabs.length - 1));
+      this.row = Math.min(saved.row, Math.max(0, this.items().length - 1));
+      if (saved.editing) this.startEditing(saved.editing);
+    }
+  }
+
+  snapshot(): QuestionsDraft {
+    this.keepDraft();
+    return {
+      drafts: this.drafts.map((draft) => ({ ...draft, picked: [...draft.picked] })),
+      notes: [...this.notes],
+      tab: this.tab,
+      row: this.row,
+      ...(this.editing ? { editing: this.editing } : {}),
+    };
   }
 
   /** Inline rather than an overlay: the transcript stays readable behind it. */
@@ -285,6 +343,7 @@ export class QuestionsDialog implements Component, Focusable {
     this.input.focused = this.isFocused && field === "answer";
     this.noteInput.focused = this.isFocused && field === "note";
     this.editingInput.setValue(field === "note" ? this.notes[index]! : this.drafts[index]!.text);
+    this.editingInput.handleInput("\x05"); // continue the saved draft at its end
     this.tui.requestRender();
   }
 

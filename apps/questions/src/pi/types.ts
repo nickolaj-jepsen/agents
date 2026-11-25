@@ -42,6 +42,8 @@ export interface QuestionAnswer {
 export interface QuestionsResult {
   readonly answers: readonly QuestionAnswer[];
   readonly cancelled: boolean;
+  /** Interrupted by the host, not a decision to discard the form. */
+  readonly interrupted?: boolean;
 }
 
 /**

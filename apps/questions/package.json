@@ -18,7 +18,8 @@
     "@types/node": "catalog:",
     "tsdown": "catalog:",
     "typebox": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
