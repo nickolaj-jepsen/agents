@@ -1,0 +1,27 @@
+{
+  "name": "@nickolaj-jepsen/open",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@agents/build": "workspace:*",
+    "@agents/drive": "workspace:*",
+    "@agents/kit-core": "workspace:*",
+    "@agents/kit-frame": "workspace:*",
+    "@agents/kit-list": "workspace:*",
+    "@agents/kit-notice": "workspace:*",
+    "@agents/launch": "workspace:*",
+    "@types/node": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "claude": {
+    "name": "open",
+    "description": "The checkout in your apps and on its forge, from /open and /git: editors, a file manager, a terminal, forge links and copies",
+    "author": {
+      "name": "Nickolaj Jepsen"
+    },
+    "types": "./src/claude/types.d.ts"
+  }
+}

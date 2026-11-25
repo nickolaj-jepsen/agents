@@ -26,7 +26,7 @@ const CROPS: Record<string, Partial<Record<Harness, Crop>>> = {
     pi: { still: "pi.png", rect: R(20, 207, 652, 290) },
   },
   exa: { pi: { rect: R(16, 84, 620, 280) } },
-  "git-menu": { claude: { still: "git.png", rect: R(724, 16, 508, 190) } },
+  open: { claude: { still: "git.png", rect: R(724, 16, 508, 190) } },
   "linear-issue": { claude: { rect: R(724, 30, 508) } },
   spellfix: { claude: { rect: R(0, 470, 640) } },
   "transcript-tweaks": { pi: { rect: R(16, 324, 620, 244) } },

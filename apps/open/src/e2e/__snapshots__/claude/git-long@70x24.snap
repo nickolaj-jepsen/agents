@@ -1,0 +1,24 @@
+# open/claude/git-long 70x24 @0,11 (70x8)
+╭──────────────────────────────────────────────────────────────────✕─╮
+│ ─ Git ── acme/orders-api ─────────────────────────────── Close × ─ │
+│     1 Open repository                                   github.com │
+│   ❯ 2 Open branch                                                  │
+│     3 Create pull request into                                     │
+│       release/2026-11-payments-integration-train-for-…             │
+│   ↓ 1 more                                                         │
+╰────────────────────────────────────────────────────────────────────╯
+--- styles
+1x67 2 1x2
+1 . 2 . 3x3 . 2x2 . 2x15 . 2x31 .x9 2 . 1
+1 .x5 4 .x51 2x10 . 1
+1 .x3 5 . 4 . 5x11 .x50 1
+1 .x5 4 .x62 1
+1 .x68 1
+1 .x3 2x8 .x57 1
+1x70
+--- legend
+1 dim
+2 fg=#999999
+3 fg=#d77757 bold
+4 fg=#d77757
+5 bold

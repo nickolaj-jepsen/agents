@@ -215,34 +215,23 @@ export type Installed = {
   paths: ReadonlySet<string>;
 };
 
-// Prints `c<TAB>name<TAB>path` for a command and `p<TAB>path` for a path that exists. A command is
-// looked for on PATH, then in the folders of `$1`: the nix profiles a trimmed PATH may miss.
-const PROBE = `dirs=$1; shift; mode=c
+// Prints `c<TAB>name<TAB>path` for a command on PATH and `p<TAB>path` for a path that exists.
+const PROBE = `mode=c
 for a; do
   if [ "$a" = -- ]; then mode=p; continue; fi
   if [ "$mode" = p ]; then [ -e "$a" ] && printf 'p\\t%s\\n' "$a"; continue; fi
-  found=$(command -v "$a" 2>/dev/null) || found=
-  if [ -z "$found" ]; then
-    old=$IFS; IFS=:
-    for d in $dirs; do if [ -x "$d/$a" ]; then found="$d/$a"; break; fi; done
-    IFS=$old
-  fi
-  [ -n "$found" ] && printf 'c\\t%s\\t%s\\n' "$a" "$found"
+  found=$(command -v "$a" 2>/dev/null) && [ -n "$found" ] && printf 'c\\t%s\\t%s\\n' "$a" "$found"
 done
 exit 0`;
 
 /**
  * The command that finds out which of the apps are installed; `readProbe` reads what it prints.
- * @param env The session's `HOME` and `USER`, for the profile folders.
+ * A command is looked for on the session's `PATH`, so one that is elsewhere is named by its path.
  */
-export function probeArgv(apps: readonly App[], env: { HOME?: string; USER?: string }): string[] {
-  const dirs = [
-    ...(env.USER ? [`/etc/profiles/per-user/${env.USER}/bin`] : []),
-    ...(env.HOME ? [`${env.HOME}/.nix-profile/bin`] : []),
-  ];
+export function probeArgv(apps: readonly App[]): string[] {
   const commands = [...new Set(apps.flatMap((app) => app.command))];
   const paths = [...new Set(apps.flatMap((app) => (app.requires ? [app.requires] : [])))];
-  return ["sh", "-c", PROBE, "sh", dirs.join(":"), ...commands, "--", ...paths];
+  return ["sh", "-c", PROBE, "sh", ...commands, "--", ...paths];
 }
 
 export function readProbe(stdout: string): Installed {

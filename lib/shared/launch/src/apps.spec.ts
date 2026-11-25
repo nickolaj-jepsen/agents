@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -199,21 +199,20 @@ describe("choices", () => {
 });
 
 describe("the probe", () => {
-  it("finds commands on PATH and in the profile folders, and paths that exist", () => {
+  it("finds commands on PATH, by name or by path, and paths that exist", () => {
     const home = mkdtempSync(join(tmpdir(), "launch-probe-"));
-    const profile = join(home, ".nix-profile", "bin");
-    mkdirSync(profile, { recursive: true });
-    writeFileSync(join(profile, "only-in-profile"), "#!/bin/sh\n");
-    chmodSync(join(profile, "only-in-profile"), 0o755);
+    const tool = join(home, "tool");
+    writeFileSync(tool, "#!/bin/sh\n");
+    chmodSync(tool, 0o755);
     const apps: App[] = [
       { id: "a", label: "a", command: ["sh", "surely-not-a-command"], dir: [] },
-      { id: "b", label: "b", command: ["only-in-profile"], requires: home, dir: [] },
+      { id: "b", label: "b", command: [tool], requires: home, dir: [] },
       { id: "c", label: "c", command: ["sh"], requires: join(home, "missing"), dir: [] },
     ];
-    const [command, ...args] = probeArgv(apps, { HOME: home });
+    const [command, ...args] = probeArgv(apps);
     const found = readProbe(execFileSync(command as string, args, { encoding: "utf8" }));
-    expect([...found.commands.keys()].sort()).toEqual(["only-in-profile", "sh"]);
-    expect(found.commands.get("only-in-profile")).toBe(join(profile, "only-in-profile"));
+    expect([...found.commands.keys()].sort()).toEqual([tool, "sh"].sort());
+    expect(found.commands.get(tool)).toBe(tool);
     expect(found.commands.get("sh")).toMatch(/^\//);
     expect([...found.paths]).toEqual([home]);
   });

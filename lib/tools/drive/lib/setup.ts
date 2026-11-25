@@ -33,14 +33,20 @@ export const FIXTURE_GIT_ENV = {
 };
 
 /**
+ * Where a run's `$XDG_CONFIG_HOME` is: a folder of the run's own, so a session reads no
+ * configuration of the person's (`~/.config/agents/open.json`), and a fixture can write its own.
+ */
+export const configHome = (runDir: string) => join(runDir, "config");
+
+/**
  * Folders in the run's own folder for the tools a session the drivers start may write with, so a
- * fixture never makes one in the person's home: `agent-notes` keeps its store and scratch there (a
- * hook or a mod runs `agent-notes root --ensure`), and `wt` its worktrees.
+ * fixture never makes one in the person's home: `wt` its worktrees, and `configHome` the
+ * configuration the plugins read. `XDG_DATA_HOME` is left as it is, so the `notes` plugin's store
+ * (`$XDG_DATA_HOME/agents/store`) is the person's own in a run that installs it.
  */
 export const runEnv = (runDir: string) => ({
-  AGENT_NOTES_DATA: join(runDir, "agent-notes", "data"),
-  AGENT_NOTES_STATE: join(runDir, "agent-notes", "state"),
   WT_WORKTREE_ROOT: join(runDir, "worktrees"),
+  XDG_CONFIG_HOME: configHome(runDir),
   // hunspell's personal word list: the person's own would accept words a scenario expects flagged.
   WORDLIST: join(runDir, "hunspell", "personal.dic"),
 });

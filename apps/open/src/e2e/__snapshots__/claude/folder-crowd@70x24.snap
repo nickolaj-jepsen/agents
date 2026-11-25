@@ -1,0 +1,24 @@
+# open/claude/folder-crowd 70x24 @0,11 (70x8)
+╭──────────────────────────────────────────────────────────────────✕─╮
+│ ─ Open folder ────────────────────────────────────────── Close × ─ │
+│   ❯ 1 Neovim in the terminal with the project's                    │
+│       long-named profile and plugins                               │
+│     2 日本語のエディタ（プロジェクトを開く）         not installed │
+│     3 Review the checkout in the browser-based edi…                │
+│   ↓ 11 more                                                        │
+╰────────────────────────────────────────────────────────────────────╯
+--- styles
+1x67 2 1x2
+1 . 2 . 3x11 . 2x42 .x9 2 . 1
+1 .x3 4 . 5 . 4x41 .x20 1
+1 .x7 4x30 .x31 1
+1 .x5 2 . 2x38 .x9 2x13 . 1
+1 .x5 5 .x62 1
+1 .x3 2x9 .x56 1
+1x70
+--- legend
+1 dim
+2 fg=#999999
+3 fg=#d77757 bold
+4 bold
+5 fg=#d77757
