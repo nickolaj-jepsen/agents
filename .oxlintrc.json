@@ -169,7 +169,7 @@
     // the kit's packages, which keeps it clear of pi-tui and the legacy kit, and runs in the mod engine,
     // which has no Node. This is where "no node: imports" is held, in place of a tsconfig without Node types.
     {
-      "files": ["apps/*/src/lib/**"],
+      "files": ["apps/*/src/lib/**", "lib/shared/*/src/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -183,6 +183,7 @@
                   "!../**",
                   "!@agents/kit-*/**",
                   "!@agents/kit-legacy/**",
+                  "!@agents/launch/**",
                   "@agents/kit-*/internal.ts",
                   "../pi/**",
                   "../../pi/**",
@@ -191,7 +192,7 @@
                   "../../claude/**",
                   "../claude.*"
                 ],
-                "message": "A lib has no Node builtin and no package but the kit's (@agents/kit-*), and imports only its own files; a component's `internal.ts` is not its API. See docs/development.md#change-or-add-a-plugin."
+                "message": "A lib has no Node builtin and no package but the kit's (@agents/kit-*) and the launcher (@agents/launch), and imports only its own files; a component's `internal.ts` is not its API. See docs/development.md#change-or-add-a-plugin."
               }
             ]
           }
@@ -208,7 +209,7 @@
     },
     // A lib's specs run under vitest in Node and load nowhere else: they may read fixtures and use packages.
     {
-      "files": ["apps/*/src/lib/**/*.spec.ts"],
+      "files": ["apps/*/src/lib/**/*.spec.ts", "lib/shared/*/src/**/*.spec.ts"],
       "rules": {
         "no-restricted-imports": "off",
         "no-restricted-globals": "off"

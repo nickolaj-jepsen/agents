@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - lib/kits/*
+  - lib/shared/*
   - lib/tools/*
 allowBuilds:
   "@google/genai": false

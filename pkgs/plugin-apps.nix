@@ -27,7 +27,7 @@
   workspaceDirs = lib.concatMap (parent:
     map (name: "${parent}/${name}") (
       lib.attrNames (lib.filterAttrs (_: type: type == "directory") (builtins.readDir (root + "/${parent}")))
-    )) ["apps" "lib/kits" "lib/tools"];
+    )) ["apps" "lib/kits" "lib/shared" "lib/tools"];
   manifest = dir: lib.importJSON (root + "/${dir}/package.json");
   workspace = lib.listToAttrs (map (dir: {
     inherit (manifest dir) name;
