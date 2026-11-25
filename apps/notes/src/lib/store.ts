@@ -27,7 +27,7 @@ export const storeRoot = (env: { XDG_DATA_HOME?: string; HOME?: string }) => {
  * - `conflict`: a real folder holds files the store already has under the same names; nothing
  *   was moved, so every file stays where the agent wrote it.
  * - `tracked`: git tracks files under it, or git could not say, so it is left as the repository's.
- * - `busy`: another session held the store for longer than the script waits; run it again later.
+ * - `busy`: another session held the store for the few seconds the script waits; run it again later.
  * - `foreign`: a link to somewhere else.
  * - `file`: a file is in the way.
  * - `not-git`: the folder is in no repository, so it has no store.
@@ -99,15 +99,28 @@ say id "$id"
 say store "$store"
 mkdir -p "$store" 2>/dev/null || { say state failed; say detail "cannot create $store"; exit 0; }
 
-# One run at a time for a store. A lock older than a minute was left by a run that was killed.
+# One run at a time for a store. The lock names the run holding it; a lock whose run is gone, or
+# that names none and is over a minute old (a run killed before it wrote its name), is taken over.
+# Two runs could still both take over one dead lock, so every move below refuses to overwrite.
+# The wait stays well under the harness's own timeout, so a held lock is told as busy.
 lock=$stores/.$id.lock
 tries=0
 while ! mkdir "$lock" 2>/dev/null; do
+  holder=$(cat "$lock/pid" 2>/dev/null)
+  if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then
+    [ "$(cat "$lock/pid" 2>/dev/null)" = "$holder" ] && rm -f "$lock/pid" && rmdir "$lock" 2>/dev/null
+    continue
+  fi
+  if [ -z "$holder" ] && [ -n "$(find "$lock" -prune -mmin +1 2>/dev/null)" ]; then
+    rmdir "$lock" 2>/dev/null
+    continue
+  fi
   tries=$((tries + 1))
-  [ "$tries" -le 10 ] || { say state busy; exit 0; }
-  if [ -n "$(find "$lock" -prune -mmin +1 2>/dev/null)" ]; then rmdir "$lock" 2>/dev/null; else sleep 1; fi
+  [ "$tries" -le 4 ] || { say state busy; exit 0; }
+  sleep 1
 done
-trap 'rmdir "$lock" 2>/dev/null' EXIT
+printf '%s\n' "$$" > "$lock/pid"
+trap 'rm -f "$lock/pid"; rmdir "$lock" 2>/dev/null' EXIT
 trap 'exit 1' HUP INT TERM
 
 # Counts the names below $1 that $2 already has: what moving $1 into $2 would overwrite.
@@ -123,6 +136,22 @@ clash() {
     fi
   done
 }
+# Moves $1 to the free name $2. Each step that claims $2 (a link, a hard link, a new folder) fails
+# when the name is taken, so a move never overwrites, even beside another run doing the same.
+put() {
+  if [ -L "$1" ]; then
+    ln -s "$(readlink "$1")" "$2" 2>/dev/null && rm -f "$1"
+  elif [ -d "$1" ]; then
+    if mkdir "$2" 2>/dev/null || { [ -d "$2" ] && [ ! -L "$2" ]; }; then merge "$1" "$2"; fi
+  elif ln "$1" "$2" 2>/dev/null; then
+    rm -f "$1"
+  elif [ ! -e "$2" ] && [ ! -L "$2" ]; then
+    # Another filesystem: copy beside the name, then claim it.
+    part=$(dirname "$2")/.$(basename "$2").adopting.$$
+    if cp -p "$1" "$part" 2>/dev/null && ln "$part" "$2" 2>/dev/null; then rm -f "$1"; fi
+    rm -f "$part"
+  fi
+}
 # Moves what is in $1 into $2, going into a folder both have. Run only once clash found nothing.
 merge() {
   for entry in "$1"/* "$1"/.[!.]* "$1"/..?*; do
@@ -130,8 +159,8 @@ merge() {
     name=$(basename "$entry")
     if [ -d "$entry" ] && [ ! -L "$entry" ] && [ -d "$2/$name" ] && [ ! -L "$2/$name" ]; then
       merge "$entry" "$2/$name"
-    elif [ ! -e "$2/$name" ] && [ ! -L "$2/$name" ]; then
-      mv "$entry" "$2/$name" 2>/dev/null
+    else
+      put "$entry" "$2/$name"
     fi
   done
   rmdir "$1" 2>/dev/null
@@ -220,6 +249,13 @@ export function readEnsure(stdout: string): Ensured {
     detail: said.get("detail"),
   };
 }
+
+/**
+ * Whether `.agents/store` is the shared store, out of git: what the agent may be told it is. A
+ * tracked or clashing folder is the checkout's own, and a foreign link is somewhere else.
+ */
+export const isShared = (ensured: Ensured) =>
+  ensured.state === "ok" || ensured.state === "linked" || ensured.state === "adopted";
 
 /** Whether the checkout has a folder to write notes in and read them from. */
 export const hasStore = (ensured: Ensured) =>

@@ -68,6 +68,8 @@ const ensureAsync = (cwd: string, stores: string, extra: Record<string, string> 
     );
   });
 
+const dirnameOf = (file: string) => file.slice(0, file.lastIndexOf("/"));
+
 const legacyId = (main: string) =>
   `${basename(main)}-${createHash("sha256").update(main).digest("hex").slice(0, 8)}`;
 
@@ -215,6 +217,60 @@ describe("the ensure script", () => {
     utimesSync(lock, old, old);
     expect(ensure(repo, stores).state).toBe("linked");
     expect(existsSync(lock)).toBe(false);
+  });
+
+  it("takes over a lock whose run has ended", () => {
+    const { repo, stores } = world();
+    const lock = join(stores, `.${legacyId(repo)}.lock`);
+    mkdirSync(lock, { recursive: true });
+    // A pid that has just exited: the run that held the lock is gone.
+    const gone = Number(execFileSync("sh", ["-c", "sh -c 'echo $$'"], { encoding: "utf8" }));
+    writeFileSync(join(lock, "pid"), `${gone}\n`);
+    expect(ensure(repo, stores).state).toBe("linked");
+    expect(existsSync(lock)).toBe(false);
+  });
+
+  it("says busy, within a few seconds, while a live run holds the lock", () => {
+    const { repo, stores } = world();
+    const lock = join(stores, `.${legacyId(repo)}.lock`);
+    mkdirSync(lock, { recursive: true });
+    writeFileSync(join(lock, "pid"), `${process.pid}\n`);
+    const started = Date.now();
+    const made = ensure(repo, stores);
+    expect(made.state).toBe("busy");
+    expect(Date.now() - started).toBeLessThan(7_000);
+    expect(hasStore(made)).toBe(false);
+    expect(existsSync(join(repo, ".agents/store"))).toBe(false);
+    expect(readFileSync(join(lock, "pid"), "utf8")).toBe(`${process.pid}\n`);
+  });
+
+  it("loses no file when sessions take over one dead lock at once", async () => {
+    for (let round = 0; round < 8; round++) {
+      const { base, repo, stores } = world();
+      const checkouts = [repo];
+      for (const name of ["one", "two"]) {
+        const tree = join(base, name);
+        git(repo, "worktree", "add", "-q", tree, "-b", name);
+        checkouts.push(tree);
+      }
+      for (const [i, checkout] of checkouts.entries()) {
+        mkdirSync(join(checkout, ".agents/store"), { recursive: true });
+        writeFileSync(join(checkout, ".agents/store/plan.md"), `from ${i}\n`);
+      }
+      const store = join(stores, legacyId(repo));
+      const lock = join(stores, `.${legacyId(repo)}.lock`);
+      mkdirSync(lock, { recursive: true });
+      const old = new Date(Date.now() - 5 * 60_000);
+      utimesSync(lock, old, old);
+      await Promise.all(checkouts.map((checkout) => ensureAsync(checkout, stores)));
+      const kept = [store, ...checkouts.map((checkout) => join(checkout, ".agents/store"))]
+        .map((folder) => join(folder, "plan.md"))
+        .filter((file, i) => i === 0 || !lstatSync(dirnameOf(file)).isSymbolicLink())
+        .filter((file) => existsSync(file))
+        .map((file) => readFileSync(file, "utf8"))
+        .sort();
+      expect(kept).toEqual(["from 0\n", "from 1\n", "from 2\n"]);
+    }
   });
 
   it("loses no file when sessions start at once in two worktrees", async () => {
