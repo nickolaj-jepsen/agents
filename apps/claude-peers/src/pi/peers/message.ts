@@ -5,7 +5,14 @@
  */
 import type { Theme } from "@earendil-works/pi-coding-agent";
 import type { Component } from "@earendil-works/pi-tui";
-import { line, span, truncateSpans, type Line } from "@agents/kit-core/lines.ts";
+import {
+  line,
+  span,
+  truncateSpans,
+  wrapSpans,
+  type Line,
+  type Span,
+} from "@agents/kit-core/lines.ts";
 import { paintLines } from "@agents/kit-core/paint/pi.ts";
 
 export type PeerMessageKind = "message" | "idle" | "status";
@@ -42,16 +49,22 @@ export class PeerMessage implements Component {
     const label = labelOf(this.details.kind, this.details.fromName);
     const rows: Line[] = [];
     if (this.expanded) {
-      rows.push(line([span(label, { role: "accent" })]));
-      for (const text of this.details.body.split("\n")) rows.push(line([span(text)]));
-      if (this.details.replyTo)
-        rows.push(line([span(`(reply to ${this.details.replyTo})`, { role: "dim" })]));
+      // Expanded, the message is read whole: each row wraps onto the next instead of being cut, so
+      // a narrow screen still shows all of it, and the reply address in full.
+      const blocks: Span[][] = [
+        ...wrapSpans([span(label, { role: "accent" })], room),
+        ...wrapSpans([span(this.details.body)], room),
+        ...(this.details.replyTo
+          ? wrapSpans([span(`(reply to ${this.details.replyTo})`, { role: "dim" })], room)
+          : []),
+      ];
+      for (const spans of blocks) rows.push(line(spans));
     } else {
+      // Folded, it is one line: the sender, and as much of the message as the width allows.
       const [first = ""] = this.details.body.split("\n");
       const cut = first.length > PREVIEW_CHARS ? `${first.slice(0, PREVIEW_CHARS)}…` : first;
-      rows.push(line([span(`${label}: `, { role: "dim" }), span(cut)]));
+      rows.push(line(truncateSpans([span(`${label}: `, { role: "dim" }), span(cut)], room)));
     }
-    const kept = rows.map((row) => ({ ...row, spans: truncateSpans(row.spans, room) }));
-    return paintLines(this.theme, kept, room).lines.map((text) => " ".repeat(this.pad) + text);
+    return paintLines(this.theme, rows, room).lines.map((text) => " ".repeat(this.pad) + text);
   }
 }

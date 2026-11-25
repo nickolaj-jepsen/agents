@@ -545,8 +545,9 @@ export function sendFrame(socketPath: string, frame: object, timeoutMs = 5000): 
       if (error) reject(error);
       else resolve();
     };
-    // A socket's own timeout is an *idle* one, and a write stuck part way through a buffer is never
-    // idle: the deadline here is the frame's, so a peer that stops reading cannot hold a turn open.
+    // A socket's own timeout is an *idle* one, and a receiver that drains slowly keeps resetting it,
+    // so a frame could sit in the buffer indefinitely: this deadline belongs to the frame, not to the
+    // socket's activity, and a peer that stops reading cannot hold a turn open.
     timer = setTimeout(() => settle(new Error(`timed out sending to ${socketPath}`)), timeoutMs);
     c.on("error", (error) => settle(error));
     c.on("connect", () => c.end(line, () => (wrote = true)));

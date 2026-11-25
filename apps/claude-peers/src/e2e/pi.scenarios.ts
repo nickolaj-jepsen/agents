@@ -24,22 +24,32 @@ const PEER = {
   body: "The retry in src/sync.ts is capped at a minute; is that what you meant?",
 };
 
+/** More than fits any screen, and wide characters that take two cells each. */
+const LONG = {
+  fromName: "peer-with-a-name-long-enough-to-wrap-the-header",
+  body:
+    "日本語のメッセージです。The retry in src/sync.ts is capped at a minute, and the upload path tries five " +
+    "times before it gives up — is that what you meant, or should the cap be lower?",
+};
+
 /**
  * Folder paths for the session's own environment, written where the fixture extension reads them.
  * `HOME` is forced on a session by the driver, so isolation cannot come through `start.env`; the
  * extension loaded below sets these before the plugin reads them. All of it is under the run's
  * folder, which the driver removes with the run.
  */
-const isolate = (ctx: SetupContext) => {
-  const where = {
-    home: join(ctx.runDir, "home"),
-    claudeConfig: join(ctx.runDir, "home", ".claude"),
-    runtime: join(ctx.runDir, "runtime"),
-    message: PEER,
+const isolate =
+  (message: { body: string; fromName: string } = PEER) =>
+  (ctx: SetupContext) => {
+    const where = {
+      home: join(ctx.runDir, "home"),
+      claudeConfig: join(ctx.runDir, "home", ".claude"),
+      runtime: join(ctx.runDir, "runtime"),
+      message,
+    };
+    writeFileSync(join(ctx.cwd, ".e2e-isolation.json"), JSON.stringify(where));
+    ctx.initRepo();
   };
-  writeFileSync(join(ctx.cwd, ".e2e-isolation.json"), JSON.stringify(where));
-  ctx.initRepo();
-};
 
 const start = {
   hermetic: true,
@@ -59,7 +69,7 @@ const asked: Step[] = [
 /** The transcript from the peer's message to the answer, so the footer and composer stay out of it. */
 const transcript: Region = (grid) => {
   const lines = gridLines(grid);
-  const top = lines.findIndex((line) => line.includes("Message from @peer-fixture"));
+  const top = lines.findIndex((line) => line.includes("Message from @"));
   const bottom = lines.findIndex((line) => line.includes("Nobody else answers"));
   if (top < 0 || bottom < 0) return undefined;
   return { x: 0, y: top, w: grid[0]?.length ?? 0, h: bottom - top + 1 };
@@ -81,16 +91,25 @@ export default scenarios({
     reachable: {
       about:
         "a peer's message arrives and is folded to one line, then list_agents answers with no peers and no error",
-      setup: isolate,
+      setup: isolate(),
       sizes: [[112, 32]],
       steps: asked,
     },
     expanded: {
       about: "ctrl+o opens the peer's message whole, with the address a reply goes to",
       from: "reachable",
-      // Wide enough for the whole reply address, which the mask replaces as one span.
       sizes: [[160, 45]],
       steps: [{ press: "Ctrl+o" }, { wait: "reply to", timeout: 10_000 }],
+    },
+    extreme: {
+      about:
+        "a peer's message longer than any screen, with wide characters: folded it is one line, opened it wraps instead of being cut",
+      setup: isolate(LONG),
+      // Nothing snapshot: the four sizes are looked at with `drive sweep`, where the wrapping of a
+      // sentence and an address is the point rather than a passing pixel diff.
+      snapshots: false,
+      extreme: true,
+      steps: [...asked, { press: "Ctrl+o" }, { wait: "reply to", timeout: 10_000 }],
     },
   },
 });
