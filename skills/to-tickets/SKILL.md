@@ -14,7 +14,7 @@ metadata:
 
 Break a plan, spec, or conversation into a set of **tickets**: tracer-bullet vertical slices, each declaring the tickets that **block** it.
 
-Use the [workflow notes convention](../to-spec/workflow-notes.md) to resolve `.agents/workflows/<slug>/`.
+Use the [workflow notes convention](../to-spec/workflow-notes.md) to resolve `.agents/store/workflows/<slug>/`.
 
 ## Process
 

@@ -32,7 +32,7 @@ Every subagent brief repeats these.
 
 ## Files
 
-- Reports are `onboard/overview.md` and `onboard/<subsystem slug>.md` in the project's store, each with its evidence file `<report name>-evidence.md` beside it, with `onboard/files/assets/` for images and `onboard/files/devshell/` for a generated flake. `agent-notes root --ensure` gives the store's path, and the checkout sees it as `.agents/store`. Never commit them.
+- Reports are `onboard/overview.md` and `onboard/<subsystem slug>.md` in the project's store (`.agents/store/` at the checkout's root, shared by all its checkouts when the notes plugin is installed; create the folder if it is missing), each with its evidence file `<report name>-evidence.md` beside it, with `onboard/files/assets/` for images and `onboard/files/devshell/` for a generated flake. Never commit them.
 - Clones live under `/tmp/onboard/<checkout path as a slug>/`, as `trace/` and `dive-<subsystem>/`. They're disposable: a rerun resets them, so nothing there is kept.
 - If the target file exists, this is a rerun. Read it, then go by its state:
   - Marked **short** or **not run:** unfinished. Run from stage 1, keeping what still holds.
@@ -41,7 +41,7 @@ Every subagent brief repeats these.
 
 ## 1. Scan
 
-Record `git rev-parse HEAD` as the report's commit. Read the README, manifests, CI, Dockerfiles and compose files, task runners, env examples and existing dev environments (`flake.nix`, `shell.nix`, `.envrc`; never `direnv allow`). Read docs, top-level agent files (`AGENTS.md`, `CLAUDE.md`) and any plans or handoffs in the notes directory as claims. List the store root (`agent-notes root`) and read every design or plan there that mentions the target: it often says what the user is building on it. Read committed agent config (`.claude/`, `.cursor/`, `.mcp.json`, hooks) as evidence and note what would execute.
+Record `git rev-parse HEAD` as the report's commit. Read the README, manifests, CI, Dockerfiles and compose files, task runners, env examples and existing dev environments (`flake.nix`, `shell.nix`, `.envrc`; never `direnv allow`). Read docs, top-level agent files (`AGENTS.md`, `CLAUDE.md`) and any plans or handoffs in the notes directory as claims. List the store root (`.agents/store/`) and read every design or plan there that mentions the target: it often says what the user is building on it. Read committed agent config (`.claude/`, `.cursor/`, `.mcp.json`, hooks) as evidence and note what would execute.
 
 With a subsystem, read its own files first, then only the root files that build or run it. Grep the repo for its name and entry points, and read what wires it in and what talks to it; its edges are half the map.
 

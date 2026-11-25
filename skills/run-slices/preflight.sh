@@ -25,6 +25,6 @@ $status"
 for skill in "$@"; do
   [ -f "$skill" ] && [ -r "$skill" ] || fail "skill file is not readable: $skill"
 done
-store=$(agent-notes root --ensure) || fail 'cannot resolve the project store'
-[ -n "$store" ] && [ .agents/store -ef "$store" ] || fail "store link does not match: .agents/store -> $store"
+store=$root/.agents/store
+mkdir -p "$store" || fail "cannot create the project store: $store"
 printf 'Ready: %s at %s (store: %s)\n' "$branch" "$actual" "$store"

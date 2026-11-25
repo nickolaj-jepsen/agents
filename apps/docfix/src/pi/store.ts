@@ -1,7 +1,7 @@
 /**
  * Where a checkout's suggestions live and the file IO on them:
- * `<repo>/.agents/store/docfix/`, the note store every worktree of the repo
- * shares, so a gap one worktree hit is in the next one's queue too.
+ * `<repo>/.agents/store/docfix/`, shared by every worktree of the repo when the notes plugin links
+ * the store, so a gap one worktree hit is in the next one's queue too.
  */
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -30,19 +30,20 @@ export const repoRoot = async (cwd: string) => {
 export const isTracked = async (root: string, target: string) =>
   (await git(root, ["ls-files", "--error-unmatch", "--", target])).ok;
 
-/** Whether the checkout has a note store, without repairing its links. */
+/** Whether the checkout has a store folder. */
 export const hasStore = (root: string) => existsSync(join(root, ".agents", "store"));
 
-/** The suggestions folder, the note store's links repaired first when they are missing. */
-export async function storeDir(root: string): Promise<string | undefined> {
-  const store = join(root, ".agents", "store");
-  if (!existsSync(store)) {
-    await run("agent-notes", ["root", "--ensure", "--path", root], { timeout: 10_000 }).catch(
-      () => undefined,
-    );
-    if (!existsSync(store)) return undefined;
+/** The suggestions folder; `make` creates it when it is missing, undefined when that fails. */
+export async function storeDir(root: string, make = true): Promise<string | undefined> {
+  const dir = join(root, ".agents", "store", STORE_DIR);
+  if (make && !existsSync(dir)) {
+    try {
+      await mkdir(dir, { recursive: true });
+    } catch {
+      return undefined;
+    }
   }
-  return join(store, STORE_DIR);
+  return dir;
 }
 
 export async function loadAll(dir: string): Promise<Suggestion[]> {

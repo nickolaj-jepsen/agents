@@ -118,16 +118,16 @@ async function rootOf($: EngineInterface, cwd: string) {
   return top?.exitCode === 0 ? top.stdout.trim() : "";
 }
 
-async function place($: EngineInterface): Promise<Place | string> {
+/** The suggestions folder under the checkout's store; `make` creates it when it is missing. */
+async function place($: EngineInterface, make = true): Promise<Place | string> {
   const root = await rootOf($, await $.session.cwd());
   if (!root) return "not inside a git repository, so there are no repo docs to file against";
-  const store = `${root}/.agents/store`;
-  if (!(await $.fs.exists(store))) {
-    await $.process.run(["agent-notes", "root", "--ensure", "--path", root]).catch(() => null);
-    if (!(await $.fs.exists(store)))
-      return "this checkout has no note store (.agents/store); run `agent-notes root --ensure`";
+  const dir = `${root}/.agents/store/${STORE_DIR}`;
+  if (make && !(await $.fs.exists(dir))) {
+    const made = await $.process.run(["mkdir", "-p", "--", dir]).catch(() => null);
+    if (made?.exitCode !== 0) return `cannot create ${dir}`;
   }
-  return { root, dir: `${store}/${STORE_DIR}` };
+  return { root, dir };
 }
 
 /** `<session>\0<doc>` for each doc a session was reminded of, so each gets one reminder. */
@@ -183,7 +183,7 @@ const removeFile = ($: EngineInterface, dir: string, s: Suggestion) =>
   $.process.run(["rm", "-f", "--", `${dir}/${fileName(s.id)}`]);
 
 async function refresh($: EngineInterface, where?: Place | string) {
-  const at = where ?? (await place($));
+  const at = where ?? (await place($, false));
   const all = typeof at === "string" ? [] : await loadAll($, at.dir);
   const open = openQueue(all);
   await update($, queue, () => open);

@@ -17,7 +17,7 @@ Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
 
 Both axes run as **parallel sub-agents** so they don't pollute each other's context, then this skill aggregates their findings. Start every sub-agent with a fresh context window.
 
-Use the [workflow notes convention](../to-spec/workflow-notes.md) to resolve `.agents/workflows/<slug>/`.
+Use the [workflow notes convention](../to-spec/workflow-notes.md) to resolve `.agents/store/workflows/<slug>/`.
 
 ## Process
 

@@ -10,7 +10,7 @@ metadata:
   credit: "Adapted from [Matt Pocock’s implement-spec](https://github.com/mattpocock/skills)."
 ---
 
-Use the [workflow notes convention](../to-spec/workflow-notes.md) to resolve `.agents/workflows/<slug>/`.
+Use the [workflow notes convention](../to-spec/workflow-notes.md) to resolve `.agents/store/workflows/<slug>/`.
 
 Read `spec.md` and `tickets/*.md`. Treat blockers as a graph: stop and report cycles or missing tickets. Skip tickets marked done. Capture the starting commit and use a dedicated integration branch. Confirm the test seams with the user if the spec leaves them open.
 

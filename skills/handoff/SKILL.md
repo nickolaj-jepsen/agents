@@ -33,7 +33,7 @@ metadata:
    - each selected item, restated in full from the conversation;
    - an explicit out-of-scope list;
    - a kebab-case slug;
-   - the directory: `plans/<slug>/` in the project's store. `agent-notes root --ensure` gives the store's path, and the checkout sees it as `.agents/store`.
+   - the directory: `plans/<slug>/` in the project's store (`.agents/store/` at the checkout's root, shared by all its checkouts when the notes plugin is installed; create the folder if it is missing).
 
    Then:
    - If the directory already holds a `HANDOFF.md`, ask before overwriting.

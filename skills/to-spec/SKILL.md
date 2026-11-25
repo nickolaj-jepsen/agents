@@ -11,7 +11,7 @@ metadata:
 
 This skill takes the current conversation context and codebase understanding and produces a spec. Do NOT interview the user; just synthesize what you already know.
 
-Use the [workflow notes convention](../to-spec/workflow-notes.md) to resolve `.agents/workflows/<slug>/`.
+Use the [workflow notes convention](../to-spec/workflow-notes.md) to resolve `.agents/store/workflows/<slug>/`.
 
 ## Process
 

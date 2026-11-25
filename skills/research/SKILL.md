@@ -10,7 +10,7 @@ metadata:
   credit: "Adapted from [Matt Pocock’s research](https://github.com/mattpocock/skills)."
 ---
 
-Use the [workflow notes convention](../to-spec/workflow-notes.md) to resolve `.agents/workflows/<slug>/`.
+Use the [workflow notes convention](../to-spec/workflow-notes.md) to resolve `.agents/store/workflows/<slug>/`.
 
 Spin up a **background agent** to do the research, so you keep working while it reads. Start it with a fresh context window.
 

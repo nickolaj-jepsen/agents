@@ -1,6 +1,6 @@
 /**
- * A checkout with a note store of its own, so no scenario reads or writes the real
- * `.agents/store`, which is a link into `~/.local/share/agents/store`.
+ * A checkout with a store folder of its own, so no scenario reads or writes the real
+ * `.agents/store`, which the `notes` plugin links into `~/.local/share/agents/store`.
  */
 import { fileName, serialize, STORE_DIR, type Suggestion } from "../lib/docfix.ts";
 import type { SetupContext } from "@agents/drive/lib/session.ts";

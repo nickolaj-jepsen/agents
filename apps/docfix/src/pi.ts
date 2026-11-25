@@ -33,19 +33,18 @@ const stringEnum = <const T extends readonly string[]>(values: T) =>
 
 type Place = { root: string; dir: string };
 
-async function place(cwd: string): Promise<Place | string> {
+async function place(cwd: string, make = true): Promise<Place | string> {
   const root = await repoRoot(cwd);
   if (!root) return "not inside a git repository, so there are no repo docs to file against";
-  const dir = await storeDir(root);
-  if (!dir)
-    return "this checkout has no note store (.agents/store); run `agent-notes root --ensure`";
+  const dir = await storeDir(root, make);
+  if (!dir) return `cannot create ${root}/.agents/store/docfix`;
   return { root, dir };
 }
 
 export default function (pi: ExtensionAPI) {
   async function refresh(ctx: ExtensionContext) {
     if (!ctx.hasUI) return;
-    const where = await place(ctx.cwd);
+    const where = await place(ctx.cwd, false);
     const open = typeof where === "string" ? 0 : openQueue(await loadAll(where.dir)).length;
     ctx.ui.setStatus(STATUS_KEY, statusText(open));
   }

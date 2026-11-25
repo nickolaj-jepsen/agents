@@ -82,6 +82,6 @@ Skip (<n>, marked viewed)   <n> moved, <n> renamed, <n> format-only, <files or g
 ## Questions
 
 - Answer in 10 lines or fewer unless asked for more, citing `path:line`.
-- "Explain <topic>", or a deep-dive number, gets a deep dive: how that part works and why, in about 15 lines. Add a diagram only when it shows a flow or relationship faster than prose: write the dive to `tour/<pr>-<topic slug>.md` in the project's store (`agent-notes root --ensure` gives its path; without it, use `$TMPDIR`), render it with the `mermaid` skill (Claude Code: the Skill tool; pi: read its SKILL.md), and give the SVG path along with the answer in chat.
+- "Explain <topic>", or a deep-dive number, gets a deep dive: how that part works and why, in about 15 lines. Add a diagram only when it shows a flow or relationship faster than prose: write the dive to `tour/<pr>-<topic slug>.md` in the project's store (`.agents/store/` at the checkout's root, shared by all its checkouts when the notes plugin is installed; create the folder if it is missing), render it with the `mermaid` skill (Claude Code: the Skill tool; pi: read its SKILL.md), and give the SVG path along with the answer in chat.
 - Don't edit code, post comments, submit reviews or approve, even when a question sounds like a finding; answer it and leave the action to the user.
 - On "done", remove any worktree you created and switch a checkout you changed back to where it was.

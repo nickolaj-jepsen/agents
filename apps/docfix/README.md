@@ -2,11 +2,11 @@
 tagline: "Agents file doc suggestions instead of editing docs outside their change; you review them and hand the ones you want back to the agent."
 featured: true
 requires:
-  - "A git repository with a note store (`.agents/store`, `agent-notes root --ensure`)"
+  - "A git repository"
 order: 7
 ---
 
-Use `/docfix` to review suggestions for tracked Markdown files. Suggestions live in the shared `.agents/store/docfix/` directory, so every worktree sees the same queue. Repeat reports increase the seen count. Claude Code shows the count above the prompt; pi shows it in the footer.
+Use `/docfix` to review suggestions for tracked Markdown files. Suggestions live in the `.agents/store/docfix/` directory of the repository; with the `notes` plugin, the store is shared by all the repository's checkouts, so every worktree sees the same queue. Repeat reports increase the seen count. Claude Code shows the count above the prompt; pi shows it in the footer.
 
 In the terminal, `/docfix` opens a sidebar on the right: the queue grouped by doc, and at the bottom the suggestion the keyboard is on, with its newest evidence. Drag the sidebar's left edge to resize it.
 

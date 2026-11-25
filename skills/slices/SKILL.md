@@ -44,7 +44,7 @@ The plan is an ordered list of slices. A **slice** is one reviewable change that
 
 ## Procedure
 
-1. **Pin the scope** in one message: each selected item restated in full, an out-of-scope list, a kebab-case slug, and the directory `plans/<slug>/` in the project's store (`agent-notes root --ensure` gives its path; the checkout sees it as `.agents/store`). Ask before overwriting an existing `SLICES.md`. Continue unless the scope itself holds an open decision.
+1. **Pin the scope** in one message: each selected item restated in full, an out-of-scope list, a kebab-case slug, and the directory `plans/<slug>/` in the project's store (`.agents/store/` at the checkout's root, shared by all its checkouts when the notes plugin is installed; create the folder if it is missing). Ask before overwriting an existing `SLICES.md`. Continue unless the scope itself holds an open decision.
 2. **Harvest decisions.** Keep the choices the builder needs, each with its reason when known and where it applies.
    - **Owner decisions:** the user stated it, typed their own answer, or picked an option you didn't recommend. These lock.
    - **Defaults:** a bare "yes" to your recommendation, or an implementation call. The builder may change one when evidence shows it's wrong. When the tier is unclear, it's a default.
