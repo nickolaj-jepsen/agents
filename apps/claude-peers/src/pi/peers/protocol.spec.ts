@@ -131,15 +131,47 @@ describe("sendFrame", () => {
     ).rejects.toThrow(/frame limit/);
   });
 
-  it("settles when the receiver hangs up before the frame is written", async () => {
+  it("settles when the receiver hangs up without reading", async () => {
     const socketPath = join(dir(), "3.sock");
     const server = createServer((socket) => socket.end());
     await new Promise<void>((done) => server.listen(socketPath, () => done()));
     cleanups.push(() => server.close());
     const started = Date.now();
-    // Either way out is fine; what must not happen is the send staying pending until the timeout.
+    // A frame small enough to be written either way; what must not happen is the old hang.
     await sendFrame(socketPath, userFrame({ content: "hi" }), 10_000).catch(() => {});
     expect(Date.now() - started).toBeLessThan(2000);
+  });
+
+  it("rejects when the receiver is gone before a frame too large to have been written", async () => {
+    const socketPath = join(dir(), "3.sock");
+    const server = createServer((socket) => socket.destroy());
+    await new Promise<void>((done) => server.listen(socketPath, () => done()));
+    cleanups.push(() => server.close());
+    // Past what a socket buffer takes at once, so the write cannot have completed when the peer
+    // goes: reporting that as sent would be a lie about a message nobody can receive.
+    const big = userFrame({ content: "x".repeat(512 * 1024) });
+    await expect(sendFrame(socketPath, big, 5000)).rejects.toThrow();
+  });
+
+  it("gives up on a peer that accepts and then never reads", async () => {
+    const socketPath = join(dir(), "3.sock");
+    // Accepts the connection and holds it, reading nothing: the frame's deadline is what ends it.
+    const server = createServer(() => {});
+    await new Promise<void>((done) => server.listen(socketPath, () => done()));
+    cleanups.push(() => server.close());
+    const started = Date.now();
+    const big = userFrame({ content: "x".repeat(512 * 1024) });
+    await expect(sendFrame(socketPath, big, 300)).rejects.toThrow(/timed out/);
+    expect(Date.now() - started).toBeLessThan(2000);
+  });
+
+  it("rejects when a receiver at its connection ceiling refuses it", async () => {
+    const inbox = await inboxIn(() => {});
+    const held: Socket[] = [];
+    for (let i = 0; i < MAX_INBOX_CONNECTIONS; i++) held.push(await clientTo(inbox.socketPath));
+    cleanups.push(() => held.forEach((socket) => socket.destroy()));
+    // The refused connection is destroyed on accept, so the send cannot finish writing.
+    await expect(sendFrame(inbox.socketPath, userFrame({ content: "hi" }))).rejects.toThrow();
   });
 
   it("delivers a frame to a bound inbox", async () => {

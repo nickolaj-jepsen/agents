@@ -34,30 +34,43 @@ type Isolation = {
 
 const FILE = ".e2e-isolation.json";
 
-const read = (): Isolation | undefined => {
+/**
+ * The folders the scenario's setup wrote. Anything missing or malformed is fatal: a fixture that
+ * quietly carried on would fall back to the person's own home and join their real registry, which
+ * is the one thing this isolation exists to prevent.
+ */
+function read(): Isolation {
+  const file = join(process.cwd(), FILE);
+  let parsed: unknown;
   try {
-    return JSON.parse(readFileSync(join(process.cwd(), FILE), "utf8")) as Isolation;
-  } catch {
-    return undefined;
+    parsed = JSON.parse(readFileSync(file, "utf8"));
+  } catch (error) {
+    throw new Error(`claude-peers e2e fixture: cannot read ${file}: ${String(error)}`);
   }
-};
+  const where = parsed as Partial<Isolation>;
+  for (const key of ["home", "claudeConfig", "runtime"] as const)
+    if (typeof where[key] !== "string" || !where[key])
+      throw new Error(`claude-peers e2e fixture: ${file} has no \`${key}\``);
+  const message = where.message;
+  if (!message || typeof message.body !== "string" || typeof message.fromName !== "string")
+    throw new Error(`claude-peers e2e fixture: ${file} has no message to deliver`);
+  return where as Isolation;
+}
 
 const isolation = read();
 
-if (isolation) {
-  // `os.homedir()` reads the environment on every call, so the plugin, which reads it in its own
-  // handlers, sees the fixture's folders.
-  process.env.HOME = isolation.home;
-  process.env.CLAUDE_CONFIG_DIR = isolation.claudeConfig;
-  process.env.XDG_RUNTIME_DIR = isolation.runtime;
-  mkdirSync(isolation.claudeConfig, { recursive: true, mode: 0o700 });
-}
+// `os.homedir()` reads the environment on every call, so the plugin, which reads it in its own
+// handlers, sees the fixture's folders.
+process.env.HOME = isolation.home;
+process.env.CLAUDE_CONFIG_DIR = isolation.claudeConfig;
+process.env.XDG_RUNTIME_DIR = isolation.runtime;
+mkdirSync(isolation.claudeConfig, { recursive: true, mode: 0o700 });
 
 /** The registry entry the session wrote for itself, once the plugin has written it. */
 function ownSocket(sessionId: string): { socketPath: string; sessionId: string } | undefined {
   try {
     const entry = JSON.parse(
-      readFileSync(join(isolation!.claudeConfig, "sessions", `${process.pid}.json`), "utf8"),
+      readFileSync(join(isolation.claudeConfig, "sessions", `${process.pid}.json`), "utf8"),
     ) as { messagingSocketPath?: string; sessionId?: string };
     if (entry.messagingSocketPath && entry.sessionId === sessionId)
       return { socketPath: entry.messagingSocketPath, sessionId: entry.sessionId };
@@ -68,7 +81,6 @@ function ownSocket(sessionId: string): { socketPath: string; sessionId: string }
 const wait = (ms: number) => new Promise((done) => setTimeout(done, ms));
 
 export default function (pi: ExtensionAPI) {
-  if (!isolation) return;
   // A PID-shaped name, so this inbox is addressed like any session's.
   const socketPath = join(isolation.runtime, "cc-socks", "999999.sock");
   const address = encodeAddress(socketPath);

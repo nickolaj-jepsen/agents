@@ -84,8 +84,8 @@ const RATE_WINDOW_MS = 60_000;
 const EXIT_NOTICE_TIMEOUT_MS = 1000;
 // Inbound work other sessions can pile on this one. Each is a ceiling, not a target: what arrives
 // past it gets a receipt saying why, so a sender learns instead of waiting.
-const MAX_QUEUED_MESSAGES = 50;
-const MAX_PENDING_APPROVALS = 4;
+export const MAX_QUEUED_MESSAGES = 50;
+export const MAX_PENDING_APPROVALS = 4;
 const MAX_IDLE_SUBSCRIBERS = 64;
 const MAX_SENDER_BUCKETS = 64;
 const MAX_SUBSCRIPTIONS = 64;
@@ -294,7 +294,8 @@ export default function claudePeers(pi: ExtensionAPI) {
             { timeout: HOLD_DIALOG_MS },
           ));
       } finally {
-        approvals--;
+        // A shutdown during the dialog has already taken the count to zero; it must not go below.
+        approvals = Math.max(0, approvals - 1);
         announceApprovals();
       }
       if (!approved) {

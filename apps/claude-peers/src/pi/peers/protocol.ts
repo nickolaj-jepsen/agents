@@ -518,9 +518,14 @@ export function controlFrame(
 }
 
 /**
- * Write one frame and wait for the receiver to close. Resolves once the connection is gone, which
- * says nothing about whether the receiver delivered the frame: a peer that hangs up on a clean
- * close settles the send too, rather than leaving it pending until the timeout.
+ * Write one frame and wait for the receiver to close. Resolving means the frame was written to this
+ * side's socket and the receiver then closed cleanly: nothing more. It is not a delivery receipt —
+ * only the receiver's own `peer_message_status` can say what became of it.
+ *
+ * Rejects when the write did not complete: a connection error, the timeout, or a receiver that
+ * closed before our write callback ran. That last one is why `wrote` is tracked: a clean close on
+ * its own used to leave the promise pending for its whole timeout, and resolving on any close would
+ * report a send that may never have been written.
  */
 export function sendFrame(socketPath: string, frame: object, timeoutMs = 5000): Promise<void> {
   const line = `${JSON.stringify(frame)}\n`;
@@ -528,23 +533,28 @@ export function sendFrame(socketPath: string, frame: object, timeoutMs = 5000): 
     return Promise.reject(new Error("message is over the 1 MiB frame limit"));
   return new Promise((resolve, reject) => {
     const c = connect({ path: socketPath });
+    let wrote = false;
     let settled = false;
+    let timer: NodeJS.Timeout | undefined;
     // Every way out goes through here, so no path leaves the promise pending and none settles twice.
     const settle = (error?: Error) => {
       if (settled) return;
       settled = true;
+      clearTimeout(timer);
       c.destroy();
       if (error) reject(error);
       else resolve();
     };
-    c.setTimeout(timeoutMs, () => settle(new Error(`timed out sending to ${socketPath}`)));
+    // A socket's own timeout is an *idle* one, and a write stuck part way through a buffer is never
+    // idle: the deadline here is the frame's, so a peer that stops reading cannot hold a turn open.
+    timer = setTimeout(() => settle(new Error(`timed out sending to ${socketPath}`)), timeoutMs);
     c.on("error", (error) => settle(error));
-    c.on("connect", () => c.end(line));
-    // The receiver may close before our write completes; the frame was handed to the kernel either
-    // way, so that is the end of it.
-    c.on("close", (hadError) =>
-      settle(hadError ? new Error(`closed with an error before the frame was sent`) : undefined),
-    );
+    c.on("connect", () => c.end(line, () => (wrote = true)));
+    c.on("close", (hadError) => {
+      if (hadError) settle(new Error(`connection to ${socketPath} closed with an error`));
+      else if (wrote) settle();
+      else settle(new Error(`connection to ${socketPath} closed before the frame was written`));
+    });
     // The receiver may answer on this connection; nothing in v1 needs it.
     c.on("data", () => {});
   });
