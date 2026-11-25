@@ -1,6 +1,14 @@
 import { describe, expect, test } from "vitest";
 
-import { contextBudget, fetchPlan, MAX_PAGE_CHARS, resultCount, searchCap } from "./budget.ts";
+import {
+  ADAPTIVE_MIN_CHARS,
+  contextBudget,
+  fetchPlan,
+  fixedHighlights,
+  MAX_PAGE_CHARS,
+  resultCount,
+  searchCap,
+} from "./budget.ts";
 
 describe("contextBudget", () => {
   test("takes a share of the window while the context is empty", () => {
@@ -71,5 +79,16 @@ describe("fetchPlan", () => {
   test("never plans more than the pages it was given, or fewer than one", () => {
     expect(fetchPlan(120_000, 2).maxPages).toBe(2);
     expect(fetchPlan(1, 5).maxPages).toBe(1);
+  });
+});
+
+describe("fixedHighlights", () => {
+  test("leaves the size to Exa when each item has room", () => {
+    expect(fixedHighlights(ADAPTIVE_MIN_CHARS)).toBe(false);
+  });
+
+  test("fixes the size on a small share or when the caller set one", () => {
+    expect(fixedHighlights(ADAPTIVE_MIN_CHARS - 1)).toBe(true);
+    expect(fixedHighlights(20_000, 20_000)).toBe(true);
   });
 });

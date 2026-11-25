@@ -47,3 +47,13 @@ export function fetchPlan(total: number, urlCount: number, maxChars?: number) {
   const perPage = Math.max(1, Math.min(pageCap, Math.floor(total / maxPages)));
   return { maxPages, perPage };
 }
+
+// Below this share per item, ask Exa for a fixed highlights size instead of sizing by relevance.
+export const ADAPTIVE_MIN_CHARS = 3_000;
+
+/**
+ * Whether highlights need Exa's `maxCharacters`: when the caller set `maxChars`, or the item's
+ * share is too small to leave the size to Exa (which sizes by relevance, and is then only cut).
+ */
+export const fixedHighlights = (cap: number, maxChars?: number) =>
+  maxChars !== undefined || cap < ADAPTIVE_MIN_CHARS;

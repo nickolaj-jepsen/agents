@@ -6,8 +6,9 @@
 import { Type } from "typebox";
 import type { ExtensionAPI, ExtensionToolContext } from "@earendil-works/pi-coding-agent";
 import { readFileSync } from "node:fs";
-import { contextBudget, fetchPlan, resultCount, searchCap } from "./lib/budget.ts";
+import { contextBudget, fetchPlan, fixedHighlights, resultCount, searchCap } from "./lib/budget.ts";
 import { type ExaRemark, noticeLines, warningMessages } from "./lib/notices.ts";
+import { withRetries } from "./lib/retry.ts";
 
 const API = "https://api.exa.ai";
 // Exa's fee as tool-result usage, which pi counts in the session total even under codemode.
@@ -78,12 +79,21 @@ async function post<T extends ExaResponse>(
   body: unknown,
   signal?: AbortSignal,
 ): Promise<T> {
-  const res = await fetch(`${API}${path}`, {
+  const init = {
     method: "POST",
     headers: { "content-type": "application/json", "x-api-key": exaKey() },
     body: JSON.stringify(body),
-    signal,
-  });
+  };
+  let res: Response;
+  try {
+    res = await withRetries(
+      (attempt) => fetch(`${API}${path}`, { ...init, signal: attempt }),
+      signal,
+    );
+  } catch (err) {
+    if (signal?.aborted) throw err;
+    throw new Error(`Exa ${path}: ${(err as Error).message}`);
+  }
   if (!res.ok) {
     const detail = (await res.text()).slice(0, 300);
     throw new Error(`Exa ${path} HTTP ${res.status}: ${detail}`);
@@ -91,11 +101,16 @@ async function post<T extends ExaResponse>(
   return (await res.json()) as T;
 }
 
-/** `contents` for one mode. `cap` is the share of the call budget for this item. */
-function contents(mode: Mode, cap: number, query: string) {
+/**
+ * `contents` for one mode. `cap` is the share of the call budget for this item; with `fixed`
+ * unset, highlights are left for Exa to size by relevance and only cut here. `query` is what
+ * highlights and summaries pick for.
+ */
+function contents(mode: Mode, cap: number, fixed: boolean, query?: string) {
   if (mode === "text") return { text: { maxCharacters: cap } };
-  if (mode === "summary") return { summary: { query } };
-  return { highlights: { maxCharacters: cap } };
+  if (mode === "summary") return { summary: query ? { query } : true };
+  const highlights = { ...(query ? { query } : {}), ...(fixed ? { maxCharacters: cap } : {}) };
+  return { highlights: Object.keys(highlights).length > 0 ? highlights : true };
 }
 
 const excerpt = (r: ExaResult) => {
@@ -103,13 +118,13 @@ const excerpt = (r: ExaResult) => {
   return highlights || r.text || r.summary || "";
 };
 
-/** One block per result: rank, title, bare URL for copying, then the evidence. */
-function format(results: ExaResult[], numbered: boolean) {
+/** One block per result: rank, title, bare URL for copying, then the evidence cut to `cap`. */
+function format(results: ExaResult[], numbered: boolean, cap: number) {
   return results
     .map((r, i) => {
       const head = [numbered ? `[${i + 1}]` : "", r.title ?? ""].filter(Boolean).join(" ");
       const date = r.publishedDate ? ` (${r.publishedDate.slice(0, 10)})` : "";
-      return `${head}${date}\n${r.url ?? ""}\n${excerpt(r)}`;
+      return `${head}${date}\n${r.url ?? ""}\n${excerpt(r).slice(0, cap)}`;
     })
     .join("\n\n");
 }
@@ -155,7 +170,7 @@ export default function (pi: ExtensionAPI) {
       }),
       objective: Type.String({
         description:
-          "Which pages should rank first or be left out, and which facts to pull from them.",
+          "Goal for this search turn; say which documents should rank first, which should be excluded, and what specific facts or figures to pull from them.",
       }),
       mode: modeParam(
         "highlights",
@@ -189,7 +204,7 @@ export default function (pi: ExtensionAPI) {
           objective: params.objective,
           includeDomains: params.includeDomains,
           startPublishedDate: params.startPublishedDate,
-          contents: contents(mode, cap, params.objective),
+          contents: contents(mode, cap, fixedHighlights(cap, params.maxChars), params.objective),
         },
         signal,
       );
@@ -213,7 +228,9 @@ export default function (pi: ExtensionAPI) {
       const notes =
         truncated.length > 0 ? [`Capped at ~${cap} chars: ${shortList(truncated)}`] : [];
       return {
-        content: [{ type: "text" as const, text: lead + format(results, true) + footer(notes) }],
+        content: [
+          { type: "text" as const, text: lead + format(results, true, cap) + footer(notes) },
+        ],
         details: { numResults, mode, costUsd, truncated, warnings },
         ...fee(costUsd),
       };
@@ -239,12 +256,18 @@ export default function (pi: ExtensionAPI) {
       maxChars: capParam(
         "Per-page character cap; summary ignores it. Defaults to a share of the call budget.",
       ),
+      query: Type.Optional(
+        Type.String({
+          description:
+            "What you want from the pages. Picks the highlights and focuses the summary; without it a summary is general.",
+        }),
+      ),
       maxAgeHours: Type.Optional(
         Type.Integer({
           minimum: -1,
           maximum: 720,
           description:
-            "Oldest cached copy to accept, in hours: 0 always fetches fresh, -1 always uses the cache. Defaults to 24.",
+            "Oldest cached copy to accept, in hours: 0 always fetches fresh, -1 only uses the cache. By default a cached copy of any age is used and missing pages are fetched.",
         }),
       ),
     }),
@@ -259,8 +282,8 @@ export default function (pi: ExtensionAPI) {
         "/contents",
         {
           urls,
-          maxAgeHours: params.maxAgeHours ?? 24,
-          ...contents(mode, perPage, urls.join(" ")),
+          maxAgeHours: params.maxAgeHours,
+          ...contents(mode, perPage, fixedHighlights(perPage, params.maxChars), params.query),
         },
         signal,
       );
@@ -287,7 +310,7 @@ export default function (pi: ExtensionAPI) {
         };
       }
       return {
-        content: [{ type: "text" as const, text: format(results, false) + footer(notes) }],
+        content: [{ type: "text" as const, text: format(results, false, perPage) + footer(notes) }],
         details: { mode, pages: results.length, costUsd, truncated, skipped, failed },
         ...fee(costUsd),
       };
