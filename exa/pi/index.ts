@@ -42,6 +42,94 @@ function fetchPlan(total, urlCount, maxChars) {
 		perPage: Math.max(1, Math.min(pageCap, Math.floor(total / maxPages)))
 	};
 }
+const ADAPTIVE_MIN_CHARS = 3e3;
+/**
+* Whether highlights need Exa's `maxCharacters`: when the caller set `maxChars`, or the item's
+* share is too small to leave the size to Exa (which sizes by relevance, and is then only cut).
+*/
+const fixedHighlights = (cap, maxChars) => maxChars !== void 0 || cap < 3e3;
+
+// src/lib/notices.ts
+const messages = (remarks) => (remarks ?? []).map((r) => r.message?.trim() || r.code).filter((m) => Boolean(m));
+/** One `Note:` line per notice, to put above the results. */
+const noticeLines = (notices) => messages(notices).map((m) => `Note: ${m}`);
+/** The warnings' messages, for the tool's details and never the model. */
+const warningMessages = (warnings) => messages(warnings);
+
+// src/lib/retry.ts
+/**
+* Retries for Exa's transient failures, as its error-code docs ask: 429 waits for `Retry-After`
+* when sent, 500/502/503/504 and network errors back off exponentially, and every other status
+* fails at once. Each attempt has its own timeout; the caller's abort ends everything.
+*/
+const MAX_ATTEMPTS = 3;
+const ATTEMPT_TIMEOUT_MS = 6e4;
+const BASE_DELAY_MS = 1e3;
+const MAX_WAIT_MS = 2e4;
+const RETRY_STATUSES = /* @__PURE__ */ new Set([
+	429,
+	500,
+	502,
+	503,
+	504
+]);
+const retryable = (status) => RETRY_STATUSES.has(status);
+/**
+* How long to wait before attempt `attempt + 1` (`attempt` counts from 0), from `Retry-After`
+* (seconds or an HTTP date) when present, else exponential: 1s, 2s, 4s. Undefined when the
+* server asks for longer than `MAX_WAIT_MS`.
+*/
+function retryDelay(attempt, retryAfter, now = Date.now()) {
+	let ms = BASE_DELAY_MS * 2 ** attempt;
+	if (retryAfter) {
+		const seconds = Number(retryAfter);
+		const date = Date.parse(retryAfter);
+		if (Number.isFinite(seconds)) ms = seconds * 1e3;
+		else if (Number.isFinite(date)) ms = date - now;
+	}
+	ms = Math.max(0, ms);
+	return ms > 2e4 ? void 0 : ms;
+}
+/** Resolves after `ms`, or rejects with the signal's reason once it aborts. */
+function sleep(ms, signal) {
+	return new Promise((resolve, reject) => {
+		if (signal?.aborted) return reject(signal.reason);
+		const onAbort = () => {
+			clearTimeout(timer);
+			reject(signal?.reason);
+		};
+		const timer = setTimeout(() => {
+			signal?.removeEventListener("abort", onAbort);
+			resolve();
+		}, ms);
+		signal?.addEventListener("abort", onAbort, { once: true });
+	});
+}
+/**
+* Runs `attempt` until it gives a response that is ok or not worth retrying, and returns that
+* response. A network error is retried like a 5xx; an abort by `signal` or a timeout is not.
+*/
+async function withRetries(attempt, signal, wait = sleep, timeoutMs = ATTEMPT_TIMEOUT_MS) {
+	for (let n = 0;; n++) {
+		const timeout = AbortSignal.timeout(timeoutMs);
+		const combined = signal ? AbortSignal.any([signal, timeout]) : timeout;
+		let res;
+		try {
+			res = await attempt(combined);
+		} catch (err) {
+			if (signal?.aborted) throw err;
+			if (timeout.aborted) throw new Error(`timed out after ${timeoutMs / 1e3}s`);
+			if (n + 1 >= 3) throw err;
+			await wait(retryDelay(n, null) ?? 0, signal);
+			continue;
+		}
+		if (res.ok || !retryable(res.status) || n + 1 >= 3) return res;
+		const delay = retryDelay(n, res.headers.get("retry-after"));
+		if (delay === void 0) return res;
+		await res.body?.cancel().catch(() => {});
+		await wait(delay, signal);
+	}
+}
 
 // src/pi.ts
 /**
@@ -85,34 +173,51 @@ function exaKey() {
 	return apiKey = key;
 }
 async function post(path, body, signal) {
-	const res = await fetch(`${API}${path}`, {
+	const init = {
 		method: "POST",
 		headers: {
 			"content-type": "application/json",
 			"x-api-key": exaKey()
 		},
-		body: JSON.stringify(body),
-		signal
-	});
+		body: JSON.stringify(body)
+	};
+	let res;
+	try {
+		res = await withRetries((attempt) => fetch(`${API}${path}`, {
+			...init,
+			signal: attempt
+		}), signal);
+	} catch (err) {
+		if (signal?.aborted) throw err;
+		throw new Error(`Exa ${path}: ${err.message}`);
+	}
 	if (!res.ok) {
 		const detail = (await res.text()).slice(0, 300);
 		throw new Error(`Exa ${path} HTTP ${res.status}: ${detail}`);
 	}
 	return await res.json();
 }
-/** `contents` for one mode. `cap` is the share of the call budget for this item. */
-function contents(mode, cap, query) {
+/**
+* `contents` for one mode. `cap` is the share of the call budget for this item; with `fixed`
+* unset, highlights are left for Exa to size by relevance and only cut here. `query` is what
+* highlights and summaries pick for.
+*/
+function contents(mode, cap, fixed, query) {
 	if (mode === "text") return { text: { maxCharacters: cap } };
-	if (mode === "summary") return { summary: { query } };
-	return { highlights: { maxCharacters: cap } };
+	if (mode === "summary") return { summary: query ? { query } : true };
+	const highlights = {
+		...query ? { query } : {},
+		...fixed ? { maxCharacters: cap } : {}
+	};
+	return { highlights: Object.keys(highlights).length > 0 ? highlights : true };
 }
 const excerpt = (r) => {
 	return r.highlights?.join("\n…\n").trim() || r.text || r.summary || "";
 };
-/** One block per result: rank, title, bare URL for copying, then the evidence. */
-function format(results, numbered) {
+/** One block per result: rank, title, bare URL for copying, then the evidence cut to `cap`. */
+function format(results, numbered, cap) {
 	return results.map((r, i) => {
-		return `${[numbered ? `[${i + 1}]` : "", r.title ?? ""].filter(Boolean).join(" ")}${r.publishedDate ? ` (${r.publishedDate.slice(0, 10)})` : ""}\n${r.url ?? ""}\n${excerpt(r)}`;
+		return `${[numbered ? `[${i + 1}]` : "", r.title ?? ""].filter(Boolean).join(" ")}${r.publishedDate ? ` (${r.publishedDate.slice(0, 10)})` : ""}\n${r.url ?? ""}\n${excerpt(r).slice(0, cap)}`;
 	}).join("\n\n");
 }
 function truncatedUrl(r, mode, cap) {
@@ -139,7 +244,7 @@ function pi_default(pi) {
 		promptSnippet: "Search the web for passages that answer a query.",
 		parameters: Type.Object({
 			query: Type.String({ description: "Describe the page you want in plain language, not keywords." }),
-			objective: Type.String({ description: "Which pages should rank first or be left out, and which facts to pull from them." }),
+			objective: Type.String({ description: "Goal for this search turn; say which documents should rank first, which should be excluded, and what specific facts or figures to pull from them." }),
 			mode: modeParam("highlights", "Per result: \"highlights\" (excerpts for the query), \"text\" (page body) or \"summary\" (LLM digest)."),
 			numResults: Type.Optional(Type.Number({
 				minimum: 1,
@@ -161,21 +266,25 @@ function pi_default(pi) {
 				objective: params.objective,
 				includeDomains: params.includeDomains,
 				startPublishedDate: params.startPublishedDate,
-				contents: contents(mode, cap, params.objective)
+				contents: contents(mode, cap, fixedHighlights(cap, params.maxChars), params.objective)
 			}, signal);
 			const results = data.results ?? [];
 			const costUsd = data.costDollars?.total;
+			const notices = noticeLines(data.notices);
+			const lead = notices.length > 0 ? `${notices.join("\n")}\n\n` : "";
+			const warnings = warningMessages(data.warnings);
 			const truncated = results.map((r) => truncatedUrl(r, mode, cap)).filter((url) => Boolean(url));
 			if (results.length === 0) return {
 				content: [{
 					type: "text",
-					text: `No results for "${params.query}".`
+					text: `${lead}No results for "${params.query}".`
 				}],
 				details: {
 					numResults,
 					mode,
 					costUsd,
-					truncated: []
+					truncated: [],
+					warnings
 				},
 				...fee(costUsd)
 			};
@@ -183,13 +292,14 @@ function pi_default(pi) {
 			return {
 				content: [{
 					type: "text",
-					text: format(results, true) + footer(notes)
+					text: lead + format(results, true, cap) + footer(notes)
 				}],
 				details: {
 					numResults,
 					mode,
 					costUsd,
-					truncated
+					truncated,
+					warnings
 				},
 				...fee(costUsd)
 			};
@@ -208,10 +318,11 @@ function pi_default(pi) {
 			}),
 			mode: modeParam("text", "Per page: \"text\" (page body), \"highlights\" (excerpts) or \"summary\" (LLM digest)."),
 			maxChars: capParam("Per-page character cap; summary ignores it. Defaults to a share of the call budget."),
+			query: Type.Optional(Type.String({ description: "What you want from the pages. Picks the highlights and focuses the summary; without it a summary is general." })),
 			maxAgeHours: Type.Optional(Type.Integer({
 				minimum: -1,
 				maximum: 720,
-				description: "Oldest cached copy to accept, in hours: 0 always fetches fresh, -1 always uses the cache. Defaults to 24."
+				description: "Oldest cached copy to accept, in hours: 0 always fetches fresh, -1 only uses the cache. By default a cached copy of any age is used and missing pages are fetched."
 			}))
 		}),
 		async execute(_toolCallId, params, signal, _onUpdate, ctx) {
@@ -222,8 +333,8 @@ function pi_default(pi) {
 			const skipped = params.urls.slice(maxPages);
 			const data = await post("/contents", {
 				urls,
-				maxAgeHours: params.maxAgeHours ?? 24,
-				...contents(mode, perPage, urls.join(" "))
+				maxAgeHours: params.maxAgeHours,
+				...contents(mode, perPage, fixedHighlights(perPage, params.maxChars), params.query)
 			}, signal);
 			const results = (data.results ?? []).filter((r) => r.url);
 			const costUsd = data.costDollars?.total;
@@ -251,7 +362,7 @@ function pi_default(pi) {
 			return {
 				content: [{
 					type: "text",
-					text: format(results, false) + footer(notes)
+					text: format(results, false, perPage) + footer(notes)
 				}],
 				details: {
 					mode,
