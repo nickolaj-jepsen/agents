@@ -1,18 +1,43 @@
-# claude-peers/pi/reachable 112x32 @0,11 (112x6)
+# claude-peers/pi/reachable 112x32 @0,4 (112x17)
+ Message from @peer-fixture queued for your next prompt
+
+
+ Which other sessions can you reach?
+
+
+ › Message from @peer-fixture: The retry in src/sync.ts is capped at a minute; is that what you meant?
+
+ Checking which other sessions answer here.
+
+
  list_agents
- This session: pi-cwd [ref]
+ This session: <session>
  No other sessions are reachable.
 
 
- No other session is reachable, so there is nobody to message.
+ Nobody else answers, so there is no one to message.
 --- styles
-1 2x11 1x100
-1 3x26 .x3 1x82
-1 3x32 1x79
-1x112
+. 1x54
+-
+2x112
+2 3x35 2x76
+2x112
+-
+. 1x30
+-
+-
+-
+4x112
+4 5x11 4x100
+4 6x23 .x6 4x82
+4 6x32 4x79
+4x112
 -
 -
 --- legend
-1 bg=#254131
-2 fg=#dee0e1 bg=#254131 bold
-3 fg=#9da5a9 bg=#254131
+1 fg=#7e888e
+2 bg=#213b49
+3 fg=#dee0e1 bg=#213b49
+4 bg=#254131
+5 fg=#dee0e1 bg=#254131 bold
+6 fg=#9da5a9 bg=#254131

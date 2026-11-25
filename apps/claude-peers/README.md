@@ -22,10 +22,10 @@ pi only. The session you started has it; subagents don't.
   with a receipt, and so is a message past what this session can hold (50 waiting for your prompt,
   four approvals on screen).
 
-Same machine only. Unix sockets only, so not on Windows. The plugin joins one Claude profile: the
-one `CLAUDE_CONFIG_DIR` names when it is set, otherwise `~/.claude` and every `~/.claude-*` profile
-that already has a registry, so each login sees the session. It never reads a hub's environment
-variables, and writes nothing but its own registry entry.
+Same machine only. Unix sockets only, so not on Windows. The session registers in every Claude
+profile on the machine — `CLAUDE_CONFIG_DIR` when it is set, `~/.claude`, and each `~/.claude-*`
+profile that already has a registry — so a login signed in to any of them sees it. It never reads a
+hub's environment variables, and writes nothing but its own registry entry.
 
 ## What is documented, and what was read off a binary
 

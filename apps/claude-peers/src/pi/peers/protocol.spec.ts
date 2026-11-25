@@ -1,4 +1,12 @@
-import { chmodSync, existsSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { connect, createServer, type Socket } from "node:net";
 import { tmpdir } from "node:os";
 import path, { join } from "node:path";
@@ -8,6 +16,7 @@ import {
   buildEnvelope,
   controlFrame,
   MAX_INBOX_CONNECTIONS,
+  registryDirs,
   replySocket,
   socketDir,
   socketDirs,
@@ -138,6 +147,23 @@ describe("sendFrame", () => {
     const inbox = await inboxIn((frame) => frames.push(frame));
     await sendFrame(inbox.socketPath, controlFrame("notify_when_idle", { from: "uds:/x" }));
     expect(frames).toEqual([expect.objectContaining({ action: "notify_when_idle" })]);
+  });
+});
+
+describe("registryDirs", () => {
+  // The machine-wide lookup, which every session writes into: a test gives it a home of its own.
+  it("joins the configured profile and every profile that has a registry", () => {
+    const home = mkdtempSync(join("/tmp", "cp-home-"));
+    vi.stubEnv("HOME", home);
+    vi.stubEnv("CLAUDE_CONFIG_DIR", join(home, ".claude-work"));
+    for (const name of [".claude", ".claude-work", ".claude-other"])
+      mkdirSync(join(home, name, "sessions"), { recursive: true });
+    // No registry inside it, so nothing joins it.
+    mkdirSync(join(home, ".claude-empty"));
+    const real = (name: string) => realpathSync(join(home, name, "sessions"));
+    expect(registryDirs().sort()).toEqual(
+      [".claude", ".claude-work", ".claude-other"].map(real).sort(),
+    );
   });
 });
 

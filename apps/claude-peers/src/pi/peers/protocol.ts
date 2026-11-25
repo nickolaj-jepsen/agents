@@ -89,17 +89,15 @@ export interface Peer extends RegistryEntry {
 }
 
 /**
- * Claude config dirs this machine uses. A session started with CLAUDE_CONFIG_DIR joins that one
- * profile and no other, which is also how a test keeps out of the person's registry; without it,
- * `~/.claude` and every sibling profile such as `~/.claude-work` that already holds a registry, so
- * each login sees this session. Profiles keep their registries apart, so one left out hides every
- * session belonging to it.
+ * Claude config dirs this machine uses: the one CLAUDE_CONFIG_DIR names, `~/.claude`, and sibling
+ * profiles such as `~/.claude-work` that already hold a registry. Each profile keeps its own
+ * registry, so one without the others hides every session belonging to a different login.
  */
 function configDirs(): string[] {
-  const configured = process.env.CLAUDE_CONFIG_DIR;
-  if (configured) return [configured];
   const home = homedir();
-  const dirs = [path.join(home, ".claude")];
+  const dirs = [process.env.CLAUDE_CONFIG_DIR, path.join(home, ".claude")].filter(
+    (dir): dir is string => !!dir,
+  );
   for (const name of entries(home).sort())
     if (/^\.claude-[^.]+$/.test(name) && existsSync(path.join(home, name, "sessions")))
       dirs.push(path.join(home, name));
