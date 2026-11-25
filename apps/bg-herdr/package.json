@@ -1,0 +1,25 @@
+{
+  "name": "@nickolaj-jepsen/bg-herdr",
+  "version": "0.1.0",
+  "description": "Show bg tasks in read-only Herdr child terminals: lifecycle and live log tail, one terminal per task",
+  "keywords": [
+    "pi-package"
+  ],
+  "type": "module",
+  "devDependencies": {
+    "@agents/build": "workspace:*",
+    "@earendil-works/pi-coding-agent": "catalog:",
+    "@types/node": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./src/pi.ts"
+    ]
+  }
+}

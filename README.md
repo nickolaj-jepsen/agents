@@ -4,7 +4,7 @@
 
 Plugins and skills I use with [Claude Code](https://claude.com/claude-code) and [pi](https://github.com/earendil-works/pi). Plugins change what you can do in a session: [worktree](https://nickolaj-jepsen.github.io/agents/plugins/worktree/) moves a pi conversation into a Git worktree without starting over. Skills give the agent a procedure to follow: [grill-me](https://nickolaj-jepsen.github.io/agents/skills/grill-me/) interviews you about a plan before you commit to it.
 
-[Browse 11 plugins](https://nickolaj-jepsen.github.io/agents/plugins/) · [Browse 41 skills](https://nickolaj-jepsen.github.io/agents/skills/)
+[Browse 13 plugins](https://nickolaj-jepsen.github.io/agents/plugins/) · [Browse 41 skills](https://nickolaj-jepsen.github.io/agents/skills/)
 
 ## Try one
 
