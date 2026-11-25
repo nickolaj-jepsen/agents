@@ -4,6 +4,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
+import { type Bundle as BundleSpec, membersOf, readBundles } from "./bundles.ts";
 import { isSemver, tagName, tierOf, type Tier } from "./version.ts";
 
 export type { Tier };
@@ -72,6 +73,10 @@ export type Skill = {
   pinnedInstall: string;
   /** Its `CHANGELOG.md`, repo-relative, when it keeps one. */
   changelog?: string;
+  /** The skills it reads or loads (`metadata.uses`), which a bundle installs with it. */
+  uses: string[];
+  /** The bundles that install it, by name. */
+  bundles: string[];
   body: string;
   path: string;
   files: string[];
@@ -80,6 +85,13 @@ export type Skill = {
 };
 
 export type Category = { slug: string; title: string; blurb?: string; skills: Skill[] };
+
+/** A named set of skills installed together (bundles.ts), with the ways to install it. */
+export type Bundle = BundleSpec & {
+  /** Every skill it installs, in name order. */
+  members: string[];
+  install: { claude: string; skills: string; pi: string };
+};
 export type Doc = { slug: string; title: string; body: string; path: string };
 /** The constants both readers print, carried with the model so neither imports this module. */
 export type Meta = {
@@ -94,6 +106,7 @@ export type Content = {
   install: string;
   plugins: Plugin[];
   skills: Skill[];
+  bundles: Bundle[];
   categories: Category[];
   docs: Doc[];
 };
@@ -294,6 +307,7 @@ function loadSkills(root: string): Skill[] {
     if (typeof meta.summary !== "string" || meta.summary === "")
       throw new Error(`${file}: metadata.summary must be a non-empty string`);
     const skillVersion = version(file, meta.version, "metadata.version");
+    const uses = Array.isArray(meta.uses) ? meta.uses.map(String) : [];
     noStatus(file, meta, "`metadata.status`");
     return {
       name,
@@ -310,6 +324,8 @@ function loadSkills(root: string): Skill[] {
       ...(existsSync(join(dir, "CHANGELOG.md"))
         ? { changelog: `skills/${name}/CHANGELOG.md` }
         : {}),
+      uses,
+      bundles: [],
       body: body.trimEnd(),
       path: `skills/${name}`,
       // The changelog stays on main: it is not part of what a skill installs.
@@ -343,9 +359,33 @@ function readPart(root: string, name: string): string {
   return existsSync(file) ? readFileSync(file, "utf8").trim() : "";
 }
 
+/**
+ * The bundles, each with its install commands; and each skill told which bundles install it. A
+ * bundle the gate refuses (bundles.ts) is an error here too.
+ */
+function loadBundles(root: string, skills: Skill[]): Bundle[] {
+  const { bundles, problems } = readBundles(root);
+  if (problems.length > 0) throw new Error(problems.join("\n"));
+  const byName = new Map(skills.map((s) => [s.name, s]));
+  return bundles.map((b): Bundle => {
+    const members = membersOf(b);
+    for (const m of members) byName.get(m)?.bundles.push(b.name);
+    return {
+      ...b,
+      members,
+      install: {
+        claude: `${MARKETPLACE_ADD} && claude plugin install ${b.name}@nickolaj-jepsen`,
+        skills: `npx skills add ${REPO_URL}/tree/dist/${b.path}`,
+        pi: `git clone --branch dist ${REPO_URL} && pi install ./agents/${b.path}`,
+      },
+    };
+  });
+}
+
 export function loadContent(root: string = repoRoot): Content {
   const plugins = loadPlugins(root);
   const skills = loadSkills(root);
+  const bundles = loadBundles(root, skills);
   const categories = CATEGORIES.map((c) => ({
     ...c,
     skills: skills
@@ -367,6 +407,7 @@ export function loadContent(root: string = repoRoot): Content {
     install: readPart(root, "_install.md"),
     plugins,
     skills,
+    bundles,
     categories,
     docs: loadDocs(root),
   };

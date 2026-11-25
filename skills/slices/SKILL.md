@@ -6,6 +6,7 @@ argument-hint: "[scope] [--quick]"
 arguments: scope
 metadata:
   version: 0.1.0
+  uses: [grilling, run-slices]
   summary: "writes a finished plan up as ordered slices for another agent, riskiest path first."
   category: plan-build-ship
 ---

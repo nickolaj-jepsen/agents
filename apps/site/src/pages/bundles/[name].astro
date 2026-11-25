@@ -1,0 +1,103 @@
+---
+/**
+ * A bundle: what it is for, how to install it, and the skills it installs, the ones it names first
+ * and then the ones those read or load.
+ */
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import Install from '../../components/Install.astro';
+import Wip from '../../components/Wip.astro';
+import { bundleInstall, content, github, href, skillHref, type Bundle, type Skill } from '../../lib/content.ts';
+import { renderInline, renderMarkdown } from '../../lib/markdown.ts';
+
+export const getStaticPaths = (async () => {
+  const c = await content();
+  const byName = new Map(c.skills.map((s) => [s.name, s]));
+  return c.bundles.map((bundle) => ({
+    params: { name: bundle.name },
+    props: {
+      bundle,
+      listed: bundle.listed.map((n) => byName.get(n)!),
+      also: bundle.also.map((n) => byName.get(n)!),
+    },
+  }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  bundle: Bundle;
+  listed: Skill[];
+  also: Skill[];
+}
+const { bundle: b, listed, also } = Astro.props;
+const file = `${b.path}/README.md`;
+const lead = await renderInline(b.tagline, file);
+const credit = b.credit && (await renderInline(b.credit, file));
+const body = b.body ? await renderMarkdown(b.body, file) : '';
+const summaries = new Map(
+  await Promise.all([...listed, ...also].map(async (s) => [s.name, await renderInline(s.summary, `${s.path}/SKILL.md`)] as const)),
+);
+const groups = [
+  { id: 'named', title: 'Skills', blurb: undefined, skills: listed },
+  { id: 'also', title: 'Also installs', blurb: 'What the skills above read or load.', skills: also },
+].filter((g) => g.skills.length > 0);
+---
+
+<Base title={b.name} description={b.tagline.replace(/`/g, '')} nav="skills">
+  <header class="lede wide">
+    <p class="crumb">
+      <a href={href('#skills')}>Skills</a> / <a href={href('#bundles')}>Bundles</a>
+    </p>
+    <div class="title-row">
+      <h1 class="mono">{b.name}</h1>
+    </div>
+    <p class="lead" set:html={lead} />
+    <div class="head-meta">
+      <Install what={b.name} commands={bundleInstall(b)} />
+    </div>
+  </header>
+
+  <dl class="facts glance">
+    <dt>Skills</dt>
+    <dd>{b.members.length}</dd>
+    <dt>Version</dt>
+    <dd><code>{b.version}</code>, from its skills' versions</dd>
+    {
+      credit && (
+        <>
+          <dt>Credit</dt>
+          <dd set:html={credit} />
+        </>
+      )
+    }
+    <dt>Source</dt>
+    <dd><a href={github(file, false)}><code>{file}</code></a> on GitHub</dd>
+  </dl>
+
+  {body && <div class="prose body" set:html={body} />}
+
+  <section class="section" aria-label="The skills it installs">
+    {
+      groups.map((g) => (
+        <section class="group" id={g.id} aria-labelledby={`g-${g.id}`}>
+          <div class="group-head">
+            <h3 class="sc" id={`g-${g.id}`}>
+              {g.title}
+            </h3>
+            {g.blurb && <p class="blurb">{g.blurb}</p>}
+          </div>
+          <ul class="srows">
+            {g.skills.map((s) => (
+              <li class:list={{ wip: s.tier === 'unfinished' }}>
+                <a class="name" href={skillHref(s.name)}>
+                  {s.name}
+                </a>
+                <span class="what" set:html={summaries.get(s.name)} />
+                <span class="end">{s.tier === 'unfinished' && <Wip />}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </section>
+</Base>

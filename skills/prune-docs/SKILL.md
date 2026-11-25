@@ -4,6 +4,7 @@ description: Review an overgrown repository's documentation, agree an aggressive
 argument-hint: "[audit|refresh|decisions] [path]"
 metadata:
   version: 0.1.0
+  uses: [prune-comments]
   summary: "audits overgrown docs, reviews what can go, and consolidates owner-approved project direction."
   category: clean-up
 ---

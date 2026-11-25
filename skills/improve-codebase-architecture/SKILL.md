@@ -4,6 +4,7 @@ description: "Explore deeper module designs with a visual report and interview."
 disable-model-invocation: true
 metadata:
   version: 0.1.0
+  uses: [codebase-design, domain-modeling, grilling, to-spec]
   summary: "Explore deeper module designs with a visual report and interview."
   category: modified-public
   credit: "Adapted from [Matt Pocock’s improve-codebase-architecture](https://github.com/mattpocock/skills)."

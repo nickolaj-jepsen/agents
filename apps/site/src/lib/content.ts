@@ -4,16 +4,24 @@
  * renders, so `astro dev` shows an edited README on the next request.
  */
 import { getCollection, getEntry } from "astro:content";
-import type { Category, Content, Doc, Plugin, Skill } from "../../../../lib/tools/build/content.ts";
+import type {
+  Bundle,
+  Category,
+  Content,
+  Doc,
+  Plugin,
+  Skill,
+} from "../../../../lib/tools/build/content.ts";
 
-export type { Content, Doc, Plugin, Skill };
+export type { Bundle, Content, Doc, Plugin, Skill };
 
 /** The model, put together from its collections, in the order the loaders keep them. */
 export async function content(): Promise<Content> {
-  const [site, plugins, skills, categories, docs] = await Promise.all([
+  const [site, plugins, skills, bundles, categories, docs] = await Promise.all([
     getEntry("site", "site"),
     getCollection("plugins"),
     getCollection("skills"),
+    getCollection("bundles"),
     getCollection("categories"),
     getCollection("docs"),
   ]);
@@ -25,6 +33,7 @@ export async function content(): Promise<Content> {
     ...site!.data,
     plugins: sorted(plugins),
     skills: all,
+    bundles: sorted(bundles),
     categories: sorted(categories).map((c): Category => ({
       ...c,
       skills: c.skills.map((n) => byName.get(n)!),
@@ -50,6 +59,7 @@ export const mediaUrl = (path: string): string => href(path.replace(/^apps\/site
 
 export const pluginHref = (name: string) => href(`plugins/${name}/`);
 export const skillHref = (name: string) => href(`skills/${name}/`);
+export const bundleHref = (name: string) => href(`bundles/${name}/`);
 export const docHref = (slug: string) => href(`dev/${slug}/`);
 
 /** A repo path on GitHub: `tree` for a folder (trailing slash or none given), else `blob`. */
@@ -110,6 +120,13 @@ export const pluginInstall = (p: Plugin) =>
 /** Said under a Claude install: the version Claude Code keeps, and what CI checks that it doesn't. */
 export const CLAUDE_NOTE = (version: string) =>
   `Pinned to ${version}: Claude Code keeps this version until a release changes it. Checked against the Claude Code version the repo pins; a newer Claude Code can break it before the next check.`;
+
+/** A bundle's install: one command per way, each labelled. */
+export const bundleInstall = (b: Bundle) => [
+  { label: "Claude Code", command: b.install.claude },
+  { label: "skills CLI", command: b.install.skills },
+  { label: "pi", command: b.install.pi },
+];
 
 /** A skill's install: one command, and the other ways behind "More ways". */
 export const skillInstall = (s: Skill) => ({

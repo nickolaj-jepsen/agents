@@ -5,6 +5,7 @@ disable-model-invocation: true
 argument-hint: "[<pr>…] [--all]"
 metadata:
   version: 0.0.1
+  uses: [mermaid]
   summary: "walks you through a PR or a stack of them, one PR at a time."
   category: plan-build-ship
 ---

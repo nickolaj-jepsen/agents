@@ -112,13 +112,34 @@ To keep a plugin unreleased, set `"private": true` in its `package.json`. It is 
 
 ## Publish a skill
 
-Put the instructions in `skills/<name>/SKILL.md`, and start a `CHANGELOG.md` beside it. Set `metadata.version` (three numbers; see [releases](#release-a-plugin-or-skill) for what the number says), `metadata.summary` and pick a `metadata.category` from [the content loader](../lib/tools/build/content.ts). The site uses `argument-hint` for invocation help and takes the "Needs" list from bullets under `## Requirements` if present.
+Put the instructions in `skills/<name>/SKILL.md`, and start a `CHANGELOG.md` beside it. Set `metadata.version` (three numbers; see [releases](#release-a-plugin-or-skill) for what the number says), `metadata.summary`, `metadata.uses` when it reads or loads other skills (see [bundles](#bundle-skills)) and pick a `metadata.category` from [the content loader](../lib/tools/build/content.ts). The site uses `argument-hint` for invocation help and takes the "Needs" list from bullets under `## Requirements` if present.
 
 An unreleased skill's folder sits under `unreleased/skills/<name>/`, which nothing reads: the site and the root README never list it, CI publishes nothing from it, and `npx skills add ./unreleased/skills/<name> --skill <name>` installs it from a checkout. Move the folder into `skills/` to release it.
 
 To validate frontmatter, copy `skills/` into a temporary plugin directory and run `claude plugin validate --strict --json <dir>`. Don't symlink the skills.
 
 `check` lints a skill's scripts too: ruff for Python and shellcheck, at warning level, for shell. `fmt` formats the Python. A script folder with a `pyproject.toml` and tests joins the uv workspace (`skills/run-handoff/scripts` and `lib/tools/updates/python` are the two); add its path to `members` in the root `pyproject.toml`, and run `uv lock`. Its `test` task is inferred as pytest, so a member whose tests are not pytest overrides `test` in its own `turbo.json`.
+
+## Bundle skills
+
+A bundle is a named set of skills that install together: `bundles/<name>/README.md`, whose frontmatter names the skills and whose body is the bundle's page on the site.
+
+```markdown
+---
+title: Spec to ship
+tagline: "One line for the lists."
+skills: [to-spec, to-tickets, implement] # or `category: clean-up`: every skill of it but the 0.0.x ones
+credit: "Optional, as a skill's credit."
+---
+
+What the bundle is for, and where to start.
+```
+
+A skill that reads or loads another names it in `metadata.uses` (`uses: [grilling]`), and a bundle installs what its skills use, and what those use, as well; the site lists them under "Also installs". The gate fails a link to `../<skill>/` or a "the `<skill>` skill" in a SKILL.md whose skill `uses` does not name, a `uses` that names no skill, and a bundle it cannot resolve: an unknown skill or category, both or neither of `skills` and `category`, no skills, or a name that a skill or plugin has too.
+
+A bundle has no version of its own. Its version is made from the versions of the skills it installs, so CI writes it again on `dist` when one of them is released or its set changes, and at no other time; it gets no tag and no GitHub Release. On `dist` it is `bundles/<name>/`: copies of its skills as `dist` holds them, a Claude plugin manifest and a pi package manifest. List it in [the marketplace](../.claude-plugin/marketplace.json) as a `git-subdir` source on `bundles/<name>` (the invariants spec says so when it is missing). It installs with `claude plugin install <name>@nickolaj-jepsen`, `npx skills add https://github.com/nickolaj-jepsen/agents/tree/dist/bundles/<name>` or `pi install ./agents/bundles/<name>` from a clone of `dist`.
+
+The `skills` plugin is the bundle of every skill, and stays `dist`'s `skills/` folder. Claude Code names a plugin's skills after the plugin, so installing `skills` and a bundle gives the bundle's skills twice.
 
 ## Release a plugin or skill
 
@@ -165,6 +186,8 @@ When `pnpm-lock.yaml` changes the hash, `nix run .#update-deps-hash` rewrites it
 ### What CI publishes
 
 The `dist` branch is what an install reads, and the record of what is released: `<name>/` per plugin (its nix build), `skills/<name>/` per skill (what git tracks in its folder, less its changelog), `skills/.claude-plugin/plugin.json` (the `skills` plugin) and `releases.json`, which names each unit's version, the commit of `main` it was built from and the day.
+
+The bundles are written after the skills, from `dist`'s own `skills/`; see [bundles](#bundle-skills).
 
 On every run of [`ci.yml`](../.github/workflows/ci.yml), the `plan` job ([`plan.ts`](../lib/tools/build/plan.ts)) compares each released unit's version with the one in `releases.json`. A unit new to `dist`, or at a higher version, is published; one at the same version is left alone, whatever changed in its folder; one that `dist` holds and that is no longer released here is removed. The plan fails on a version that goes down or carries a suffix, a tag that already exists, a name that is both a plugin and a skill, and a version with no changelog section. It compares against `dist` and not against the push, so a publish that failed is planned again by the next run.
 

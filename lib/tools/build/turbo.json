@@ -16,6 +16,7 @@
         "$TURBO_ROOT$/apps/*/README.md",
         "$TURBO_ROOT$/apps/*/CHANGELOG.md",
         "$TURBO_ROOT$/skills/**",
+        "$TURBO_ROOT$/bundles/**",
         // Read by the spec that an unreleased skill stays out of the model.
         "$TURBO_ROOT$/unreleased/**",
         "!$TURBO_ROOT$/**/node_modules/**"

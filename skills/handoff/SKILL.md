@@ -6,6 +6,7 @@ argument-hint: "[scope] [--quick] [--review-model MODEL]"
 arguments: scope
 metadata:
   version: 0.1.0
+  uses: [grilling, run-handoff]
   summary: "writes a finished plan up as a self-contained handoff for another agent."
   category: plan-build-ship
 ---

@@ -5,6 +5,7 @@ disable-model-invocation: true
 argument-hint: "<candidates, category or question> [--quick]"
 metadata:
   version: 0.1.0
+  uses: [pricerunner]
   summary: "researches a choice or a whole category and says whether to pick, keep or build, with sourced evidence."
   category: understand-decide
 ---

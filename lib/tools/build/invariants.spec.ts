@@ -13,6 +13,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
+import { readBundles } from "./bundles.ts";
 import { checkChangelog } from "./changelog.ts";
 import { repoRoot } from "./content.ts";
 import { planRelease } from "./plan.ts";
@@ -51,6 +52,18 @@ const SKILLS_ENTRY = {
   ref: "dist",
 };
 
+/** A bundle's entry: its folder under `bundles/` on the `dist` branch. */
+const bundleEntry = (name: string) => ({ ...fromDist(name), path: `bundles/${name}` });
+
+/** The bundles a checkout defines, by name. */
+const bundleNames = (root: string): string[] =>
+  existsSync(join(root, "bundles"))
+    ? readdirSync(join(root, "bundles"), { withFileTypes: true })
+        .filter((e) => e.isDirectory())
+        .map((e) => e.name)
+        .sort()
+    : [];
+
 function entries(root: string): Entry[] {
   const file = join(root, ".claude-plugin/marketplace.json");
   return (JSON.parse(readFileSync(file, "utf8")) as { plugins: Entry[] }).plugins;
@@ -58,25 +71,31 @@ function entries(root: string): Entry[] {
 
 /**
  * What a marketplace's plugin list gets wrong: a released Claude half that is not listed from the
- * `dist` branch's `<name>/` folder, an unreleased one (`"private": true`) that is listed, or an
- * entry for an app that has no Claude half at all.
+ * `dist` branch's `<name>/` folder, an unreleased one (`"private": true`) that is listed, a bundle
+ * not listed from `bundles/<name>/`, or an entry that is neither a Claude half nor a bundle.
  */
 function problems(root: string): { missing: string[]; unreleased: string[]; stray: string[] } {
   // `skills` is the other entry: dist's `skills/` folder, which lists no skill by name.
   const published = entries(root).filter((p) => p.name !== "skills");
   const listed = new Map(published.map((p) => [p.name, p.source]));
   const facts = apps(root);
+  const bundles = bundleNames(root);
   return {
-    missing: facts
-      .filter((a) => a.claude && !a.private)
-      .map((a) => a.name)
-      .filter((name) => JSON.stringify(listed.get(name)) !== JSON.stringify(fromDist(name))),
+    missing: [
+      ...facts
+        .filter((a) => a.claude && !a.private)
+        .map((a) => a.name)
+        .filter((name) => JSON.stringify(listed.get(name)) !== JSON.stringify(fromDist(name))),
+      ...bundles.filter(
+        (name) => JSON.stringify(listed.get(name)) !== JSON.stringify(bundleEntry(name)),
+      ),
+    ],
     unreleased: facts
       .filter((a) => a.private)
       .map((a) => a.name)
       .filter((name) => listed.has(name)),
     stray: published
-      .filter((p) => !facts.some((a) => a.name === p.name && a.claude))
+      .filter((p) => !facts.some((a) => a.name === p.name && a.claude) && !bundles.includes(p.name))
       .map((p) => p.name),
   };
 }
@@ -177,6 +196,10 @@ describe("versions and changelogs", () => {
       );
     });
     expect(wrong.join("\n")).toBe("");
+  });
+
+  it("resolves every bundle, and every skill's uses", () => {
+    expect(readBundles(repoRoot).problems.join("\n")).toBe("");
   });
 
   it("could publish every unit as it stands: plain versions, one name each, notes for each", () => {

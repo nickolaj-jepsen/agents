@@ -1,6 +1,8 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { Ledger } from "./dist.ts";
-import { bare, cleanup, commit, folder, plugin, repo, skill, write } from "./fixtures.ts";
+import { bare, bundle, cleanup, commit, folder, plugin, repo, skill, write } from "./fixtures.ts";
 import { git } from "./git.ts";
 import { fetchState, planRelease, renderPlan } from "./plan.ts";
 import { publish } from "./publish.ts";
@@ -138,6 +140,50 @@ describe("release plan", () => {
     expect(planRelease(root, ledger).problems.join("\n")).toContain(
       "answer: apps/answer/CHANGELOG.md has no `## [0.3.0]` section",
     );
+  });
+
+  it("plans every bundle at the cutover, and a bundle whose set or skills moved", () => {
+    const { root, ledger } = checkout();
+    bundle(root, "grill", ["grill-me"]);
+    const cut = planRelease(root, undefined);
+    expect(cut.bundles).toEqual([
+      {
+        name: "grill",
+        title: "grill",
+        tagline: "The grill bundle.",
+        version: cut.bundles[0]?.version,
+        skills: ["grill-me"],
+      },
+    ]);
+    const held = {
+      ...ledger,
+      grill: { ...ledger.answer!, kind: "bundle" as const, version: cut.bundles[0]!.version },
+    };
+    expect(planRelease(root, held).bundles).toEqual([]);
+    expect(renderPlan(planRelease(root, held))).toContain("Nothing to release");
+    skill(root, "grill-me", "0.2.0");
+    const moved = planRelease(root, held);
+    expect(moved.bundles.map((b) => b.from)).toEqual([cut.bundles[0]!.version]);
+    expect(renderPlan(moved)).toContain("Bundles written again: grill (1 skills).");
+  });
+
+  it("fails a bundle that cannot be resolved, a bundle named like a plugin, and a missing use", () => {
+    const { root, ledger } = checkout();
+    bundle(root, "ghost", ["gone"]);
+    bundle(root, "answer", ["grill-me"]);
+    write(
+      root,
+      "skills/grill-me/SKILL.md",
+      readFileSync(join(root, "skills/grill-me/SKILL.md"), "utf8") +
+        "See [x](../answer-notes/SKILL.md).\n",
+    );
+    skill(root, "answer-notes", "0.1.0");
+    const problems = planRelease(root, ledger).problems.join("\n");
+    expect(problems).toContain(
+      "bundles/ghost/README.md: `skills` names what is no released skill: gone",
+    );
+    expect(problems).toContain("bundles/answer: `answer` is apps/answer too");
+    expect(problems).toContain("reads or loads `answer-notes`; add it to metadata.uses");
   });
 
   it("fails a name that is both a plugin and a skill", () => {

@@ -108,6 +108,15 @@ Do the thing.
   return text;
 }
 
+/** A bundle that names its skills. */
+export function bundle(root: string, name: string, skills: string[]): void {
+  write(
+    root,
+    `bundles/${name}/README.md`,
+    `---\ntitle: ${name}\ntagline: "The ${name} bundle."\nskills: [${skills.join(", ")}]\n---\n\nWhat it is for.\n`,
+  );
+}
+
 /** Adds a line under a unit's `[Unreleased]` section. */
 export function note(root: string, file: string, text: string, line: string): void {
   write(root, file, text.replace("## [Unreleased]\n", `## [Unreleased]\n\n- ${line}\n`));

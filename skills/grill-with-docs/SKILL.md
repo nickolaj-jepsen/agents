@@ -4,6 +4,7 @@ description: "Interview in rounds and capture agreed domain terms and decisions.
 disable-model-invocation: true
 metadata:
   version: 0.1.0
+  uses: [domain-modeling, grilling]
   summary: "Interview in rounds and capture agreed domain terms and decisions."
   category: modified-public
   credit: "Adapted from [Matt Pocock’s grill-with-docs](https://github.com/mattpocock/skills)."

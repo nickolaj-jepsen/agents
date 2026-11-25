@@ -4,6 +4,7 @@ description: Build one tested behavior at a time at an agreed seam.
 disable-model-invocation: true
 metadata:
   version: 0.1.0
+  uses: [code-review, codebase-design]
   summary: Build one tested behavior at a time at an agreed seam.
   category: modified-public
   credit: "Adapted from [Matt Pocock’s tdd](https://github.com/mattpocock/skills)."

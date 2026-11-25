@@ -98,7 +98,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
-      # Whether anything is published or retired.
+      # Whether anything is published, written again (a bundle) or retired.
       release: ${{ steps.plan.outputs.release }}
       # The plugins to build, as a JSON list of names.
       plugins: ${{ steps.plan.outputs.plugins }}
@@ -120,7 +120,7 @@ jobs:
         run: |
           node lib/tools/build/plan.ts --json plan.json --summary "$GITHUB_STEP_SUMMARY"
           {
-            echo "release=$(jq '(.publish | length) + (.retire | length) > 0' plan.json)"
+            echo "release=$(jq '(.publish | length) + (.bundles | length) + (.retire | length) > 0' plan.json)"
             echo "plugins=$(jq -c '[.publish[] | select(.kind == "plugin") | .name]' plan.json)"
             echo "plan=$(jq -c . plan.json)"
           } >> "$GITHUB_OUTPUT"

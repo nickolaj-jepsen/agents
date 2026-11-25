@@ -4,6 +4,7 @@ description: "Split a spec into local tickets with explicit blockers."
 disable-model-invocation: true
 metadata:
   version: 0.1.0
+  uses: [to-spec]
   summary: "Split a spec into local tickets with explicit blockers."
   category: modified-public
   credit: "Adapted from [Matt Pocock’s to-tickets](https://github.com/mattpocock/skills)."

@@ -9,6 +9,8 @@
  * - new on dist, or a higher version: published
  * - the same version: left alone, whatever changed in its folder
  * - on dist and no longer a released unit here: retired, its folder removed
+ * - a bundle (bundles.ts) whose version, made from its skills', differs from dist's: published,
+ *   with no tag or GitHub Release of its own
  * - a lower version, a suffixed one (`1.3.0-rc.1`), a tag that already exists, a name that is both
  *   a plugin and a skill, or no changelog section for the version: the plan fails
  *
@@ -21,7 +23,8 @@
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { notesOf, sectionOf } from "./changelog.ts";
-import { DIST_BRANCH, type Ledger, readLedger } from "./dist.ts";
+import { checkUses, membersOf, readBundles, readSkillFacts } from "./bundles.ts";
+import { DIST_BRANCH, type Kind, type Ledger, readLedger } from "./dist.ts";
 import { git, rootOf } from "./git.ts";
 import { releasedUnits, type Unit } from "./units.ts";
 import { compareSemver, isPlain, isPrerelease, tagName, type Tier, tierOf } from "./version.ts";
@@ -42,11 +45,24 @@ export type PlannedUnit = {
   notes: string;
 };
 
+export type PlannedBundle = {
+  name: string;
+  title: string;
+  tagline: string;
+  version: string;
+  /** The version dist holds now; absent for a bundle dist has never held. */
+  from?: string;
+  /** Every skill it installs, in name order. */
+  skills: string[];
+};
+
 export type Plan = {
   /** dist has no ledger yet: this run publishes every unit and makes no GitHub Release. */
   cutover: boolean;
   publish: PlannedUnit[];
-  retire: { name: string; kind: "plugin" | "skill"; version: string }[];
+  /** The bundles to write again: published after the skills, from the skills dist then holds. */
+  bundles: PlannedBundle[];
+  retire: { name: string; kind: Kind; version: string }[];
   /** Released units whose version dist already holds. */
   unchanged: number;
   problems: string[];
@@ -126,13 +142,36 @@ export function planRelease(
     });
   }
 
-  const names = new Set(units.map((unit) => unit.name));
+  const skills = readSkillFacts(root);
+  const resolved = readBundles(root, skills);
+  problems.push(...checkUses(skills), ...resolved.problems);
+  const bundles: PlannedBundle[] = [];
+  for (const bundle of resolved.bundles) {
+    if (seen.has(bundle.name)) {
+      problems.push(
+        `bundles/${bundle.name}: \`${bundle.name}\` is ${seen.get(bundle.name)!.folder} too; a bundle needs a name of its own`,
+      );
+      continue;
+    }
+    const held = ledger?.[bundle.name];
+    if (held?.kind === "bundle" && held.version === bundle.version) continue;
+    bundles.push({
+      name: bundle.name,
+      title: bundle.title,
+      tagline: bundle.tagline,
+      version: bundle.version,
+      ...(held ? { from: held.version } : {}),
+      skills: membersOf(bundle),
+    });
+  }
+
+  const names = new Set([...units, ...resolved.bundles].map((unit) => unit.name));
   const retire = Object.entries(ledger ?? {})
     .filter(([name]) => !names.has(name))
     .map(([name, held]) => ({ name, kind: held.kind, version: held.version }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  return { cutover: ledger === undefined, publish, retire, unchanged, problems };
+  return { cutover: ledger === undefined, publish, bundles, retire, unchanged, problems };
 }
 
 /** The plan as markdown: what CI shows on a run, and what a person reads before merging. */
@@ -146,7 +185,7 @@ export function renderPlan(plan: Plan): string {
       `\`${DIST_BRANCH}\` has no \`releases.json\` yet, so this is the cutover: every unit is published and tagged, and no GitHub Release is made.`,
       "",
     );
-  if (plan.publish.length === 0 && plan.retire.length === 0) {
+  if (plan.publish.length === 0 && plan.bundles.length === 0 && plan.retire.length === 0) {
     lines.push(`Nothing to release: ${plan.unchanged} units are at the version on \`dist\`.`);
     return lines.join("\n") + "\n";
   }
@@ -158,6 +197,11 @@ export function renderPlan(plan: Plan): string {
       );
     lines.push("");
   }
+  if (plan.bundles.length > 0)
+    lines.push(
+      `Bundles written again: ${plan.bundles.map((b) => `${b.name} (${b.skills.length} skills)`).join(", ")}.`,
+      "",
+    );
   if (plan.retire.length > 0)
     lines.push(
       `Removed from \`dist\`: ${plan.retire.map((unit) => `${unit.name} ${unit.version}`).join(", ")}.`,

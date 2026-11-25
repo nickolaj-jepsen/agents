@@ -5,7 +5,7 @@
  */
 import { defineCollection } from "astro:content";
 import { z } from "astro/zod";
-import type { Doc, Meta, Plugin, Skill } from "../../../lib/tools/build/content.ts";
+import type { Bundle, Doc, Meta, Plugin, Skill } from "../../../lib/tools/build/content.ts";
 import type { Pictures } from "../../../lib/kits/catalog/src/crops.ts";
 import type { ComponentModel } from "../../../lib/kits/catalog/src/model.ts";
 import { contentLoader } from "./loaders/content.ts";
@@ -30,6 +30,10 @@ export const collections = {
   skills: defineCollection({
     loader: contentLoader("skills"),
     schema: z.custom<Skill & Positioned>(),
+  }),
+  bundles: defineCollection({
+    loader: contentLoader("bundles"),
+    schema: z.custom<Bundle & Positioned>(),
   }),
   categories: defineCollection({
     loader: contentLoader("categories"),

@@ -6,7 +6,7 @@ import Notice from '../../components/Notice.astro';
 import Pre from '../../components/Pre.astro';
 import Pager from '../../components/Pager.astro';
 import Wip from '../../components/Wip.astro';
-import { content, github, href, skillHref, skillInstall, type Skill } from '../../lib/content.ts';
+import { bundleHref, content, github, href, skillHref, skillInstall, type Skill } from '../../lib/content.ts';
 import { renderInline, renderMarkdown } from '../../lib/markdown.ts';
 import { headings, linkReferences, requirements, whenToUse } from '../../lib/skill.ts';
 import '../../styles/skill.css';
@@ -74,6 +74,21 @@ const inst = skillInstall(s);
             <a href={github(s.changelog)}>
               <code>CHANGELOG.md</code>
             </a>
+          </dd>
+        </>
+      )
+    }
+    {
+      s.bundles.length > 0 && (
+        <>
+          <dt>In bundles</dt>
+          <dd>
+            {s.bundles.map((name, i) => (
+              <>
+                {i > 0 && ', '}
+                <a href={bundleHref(name)}>{name}</a>
+              </>
+            ))}
           </dd>
         </>
       )

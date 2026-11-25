@@ -1,5 +1,7 @@
 // A plugin's or skill's version, and what follows from it alone: how finished the unit is, and which
-// of two versions is the newer. No imports, so the publish script runs it with plain node.
+// of two versions is the newer. Only node's own modules, so the publish script runs it with plain
+// node.
+import { createHash } from "node:crypto";
 
 /** Semver 2.0.0, prerelease and build metadata included. */
 export const SEMVER =
@@ -63,6 +65,15 @@ export function compareSemver(a: string, b: string): number {
     else if (x !== y) return x < y ? -1 : 1;
   }
   return 0;
+}
+
+/**
+ * A version made from other versions: the `skills` plugin's and a bundle's, from their skills'
+ * `name@version`. It changes when one of them is released or the set changes, and at no other time.
+ */
+export function versionOf(members: { name: string; version: string }[]): string {
+  const lines = members.map((m) => `${m.name}@${m.version}`).sort();
+  return createHash("sha256").update(lines.join("\n")).digest("hex").slice(0, 12);
 }
 
 /** The tag naming a published version, in the form `claude plugin tag` makes. */

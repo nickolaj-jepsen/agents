@@ -2,7 +2,7 @@
 // (`skills/<name>/SKILL.md`). Shared by `pnpm release`, the release plan and the specs.
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { parse } from "yaml";
+import { frontmatter } from "./frontmatter.ts";
 import { isSemver } from "./version.ts";
 
 export type Unit = {
@@ -26,18 +26,6 @@ const dirs = (dir: string): string[] =>
         .map((e) => e.name)
         .sort()
     : [];
-
-/** The frontmatter a SKILL.md starts with. */
-function frontmatter(file: string, text: string): Record<string, any> {
-  const m = text.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
-  if (!m) throw new Error(`${file}: no frontmatter`);
-  try {
-    const data = parse(m[1] as string);
-    return data && typeof data === "object" ? (data as Record<string, any>) : {};
-  } catch (e) {
-    throw new Error(`${file}: frontmatter is not YAML: ${(e as Error).message}`);
-  }
-}
 
 function semver(file: string, value: unknown, field: string): string {
   if (!isSemver(value)) throw new Error(`${file}: ${field} must be a semver version`);
@@ -69,7 +57,7 @@ function pluginUnit(root: string, name: string): Unit | undefined {
 function skillUnit(root: string, name: string): Unit | undefined {
   const file = `skills/${name}/SKILL.md`;
   if (!existsSync(join(root, file))) return undefined;
-  const metadata = frontmatter(file, readFileSync(join(root, file), "utf8")).metadata;
+  const metadata = frontmatter(file, readFileSync(join(root, file), "utf8")).data.metadata;
   const value = metadata && typeof metadata === "object" ? metadata.version : undefined;
   return {
     name,

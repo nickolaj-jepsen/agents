@@ -4,6 +4,7 @@ description: "Save findings from primary sources to the workflow notes."
 disable-model-invocation: true
 metadata:
   version: 0.1.0
+  uses: [to-spec]
   summary: "Save findings from primary sources to the workflow notes."
   category: modified-public
   credit: "Adapted from [Matt Pocock’s research](https://github.com/mattpocock/skills)."

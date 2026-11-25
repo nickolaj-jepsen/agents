@@ -10,6 +10,8 @@ import {
   harnesses,
   pluginHref,
   pluginInstall,
+  bundleHref,
+  bundleInstall,
   skillHref,
   skillInstall,
 } from '../lib/content.ts';
@@ -22,6 +24,7 @@ const intro = await renderInline(c.intro, 'docs/_intro.md');
 const inline = (md: string, file = 'README.md') => renderInline(md, file);
 const taglines = new Map(await Promise.all(c.plugins.map(async (p) => [p.name, await inline(p.tagline)] as const)));
 const summaries = new Map(await Promise.all(c.skills.map(async (s) => [s.name, await inline(s.summary)] as const)));
+const bundleLines = new Map(await Promise.all(c.bundles.map(async (b) => [b.name, await inline(b.tagline, `${b.path}/README.md`)] as const)));
 ---
 
 <Base description="Plugins for Claude Code and the pi coding agent, and agent skills for any agent that reads them.">
@@ -93,6 +96,31 @@ const summaries = new Map(await Promise.all(c.skills.map(async (s) => [s.name, a
       <span class="count">{c.skills.length}</span>
       <span class="aside">For any agent that reads skills</span>
     </div>
+    {
+      c.bundles.length > 0 && (
+        <section class="group" id="bundles" aria-labelledby="c-bundles">
+          <div class="group-head">
+            <h3 class="sc" id="c-bundles">
+              Bundles
+            </h3>
+            <p class="blurb">Sets of skills that work together, installed in one go.</p>
+          </div>
+          <ul class="srows">
+            {c.bundles.map((b) => (
+              <li>
+                <a class="name" href={bundleHref(b.name)}>
+                  {b.name}
+                </a>
+                <span class="what" set:html={bundleLines.get(b.name)} />
+                <span class="end">
+                  <Install what={b.name} commands={bundleInstall(b)} align="end" />
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
     {
       c.categories.map((cat) => (
         <section class="group" id={cat.slug} aria-labelledby={`c-${cat.slug}`}>

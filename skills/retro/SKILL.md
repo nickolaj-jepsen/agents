@@ -4,6 +4,7 @@ description: "Find changes to the agent environment that would have helped a ses
 disable-model-invocation: true
 metadata:
   version: 0.1.0
+  uses: [writing-for-agents]
   summary: "Find changes to the agent environment that would have helped a session."
   category: modified-public
   credit: "Adapted from [Matt Pocock’s retro](https://github.com/mattpocock/skills)."

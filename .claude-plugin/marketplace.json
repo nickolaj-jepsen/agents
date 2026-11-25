@@ -62,6 +62,78 @@
         "path": "image-preview",
         "ref": "dist"
       }
+    },
+    {
+      "name": "clean-up",
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "bundles/clean-up",
+        "ref": "dist"
+      }
+    },
+    {
+      "name": "docs",
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "bundles/docs",
+        "ref": "dist"
+      }
+    },
+    {
+      "name": "harnesses",
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "bundles/harnesses",
+        "ref": "dist"
+      }
+    },
+    {
+      "name": "meta",
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "bundles/meta",
+        "ref": "dist"
+      }
+    },
+    {
+      "name": "plan-build-ship",
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "bundles/plan-build-ship",
+        "ref": "dist"
+      }
+    },
+    {
+      "name": "spec-to-ship",
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "bundles/spec-to-ship",
+        "ref": "dist"
+      }
+    },
+    {
+      "name": "understand-decide",
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "bundles/understand-decide",
+        "ref": "dist"
+      }
+    },
+    {
+      "name": "utilities",
+      "source": {
+        "source": "git-subdir",
+        "url": "nickolaj-jepsen/agents",
+        "path": "bundles/utilities",
+        "ref": "dist"
+      }
     }
   ]
 }

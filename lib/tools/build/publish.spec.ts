@@ -1,8 +1,8 @@
-import { chmodSync } from "node:fs";
+import { chmodSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { type Ledger, skillsVersion } from "./dist.ts";
-import { bare, cleanup, commit, folder, plugin, repo, skill, write } from "./fixtures.ts";
+import { bare, bundle, cleanup, commit, folder, plugin, repo, skill, write } from "./fixtures.ts";
 import { git } from "./git.ts";
 import { planRelease } from "./plan.ts";
 import { publish, type PublishOptions } from "./publish.ts";
@@ -291,5 +291,103 @@ describe("publish", () => {
     expect(files(w.remote).filter((f) => f.startsWith("answer/"))).toEqual([]);
     expect(files(w.remote)).toContain("skills/answer/SKILL.md");
     expect(ledgerOf(w.remote).answer).toMatchObject({ kind: "skill", version: "0.3.0" });
+  });
+});
+
+describe("publish bundles", () => {
+  /** The world with a second skill, and a bundle of both. */
+  function bundled(): World {
+    const w = world();
+    // The base world's untracked leftover would be committed with the rest here.
+    rmSync(join(w.root, "skills/grill-me/__pycache__"), { recursive: true });
+    skill(w.root, "grilling", "0.1.0");
+    bundle(w.root, "grill", ["grill-me", "grilling"]);
+    commit(w.root, "a bundle");
+    return { ...w, options: { ...w.options, source: git(w.root, ["rev-parse", "HEAD"]) } };
+  }
+
+  it("writes a bundle's skills as dist holds them, with a Claude plugin and a pi package", () => {
+    const w = bundled();
+    const result = publish(planRelease(w.root, undefined), w.options);
+
+    expect(files(w.remote).filter((f) => f.startsWith("bundles/"))).toEqual([
+      "bundles/grill/.claude-plugin/plugin.json",
+      "bundles/grill/grill-me/SKILL.md",
+      "bundles/grill/grill-me/scripts/run.sh",
+      "bundles/grill/grilling/SKILL.md",
+      "bundles/grill/package.json",
+    ]);
+    expect(show(w.remote, "bundles/grill/grill-me/SKILL.md")).toBe(
+      show(w.remote, "skills/grill-me/SKILL.md"),
+    );
+    expect(git(w.remote, ["ls-tree", "dist", "bundles/grill/grill-me/scripts/run.sh"])).toMatch(
+      /^100755 /,
+    );
+    const ledger = ledgerOf(w.remote);
+    expect(JSON.parse(show(w.remote, "bundles/grill/.claude-plugin/plugin.json"))).toEqual({
+      name: "grill",
+      version: ledger.grill?.version,
+      description: "The grill bundle.",
+      author: { name: "Nickolaj Jepsen" },
+      skills: "./",
+    });
+    expect(JSON.parse(show(w.remote, "bundles/grill/package.json"))).toMatchObject({
+      keywords: ["pi-package"],
+      pi: { skills: ["./"] },
+    });
+    expect(ledger.grill).toMatchObject({ kind: "bundle" });
+    // A bundle gets no tag of its own.
+    expect(result.tags.filter((t) => t.startsWith("grill--"))).toEqual([]);
+  });
+
+  it("writes a bundle again when one of its skills is released, and only then", () => {
+    const w = bundled();
+    publish(planRelease(w.root, undefined), w.options);
+    const first = ledgerOf(w.remote).grill?.version;
+
+    plugin(w.root, "spellfix", "1.3.0");
+    commit(w.root, "release(spellfix): 1.3.0");
+    expect(planRelease(w.root, ledgerOf(w.remote)).bundles).toEqual([]);
+
+    const text = skill(w.root, "grilling", "0.1.1");
+    write(w.root, "skills/grilling/SKILL.md", text.replace("Do the thing.", "Ask in rounds."));
+    commit(w.root, "release(grilling): 0.1.1");
+    const plan = planRelease(w.root, ledgerOf(w.remote));
+    expect(plan.bundles.map((b) => [b.name, b.from])).toEqual([["grill", first]]);
+    const result = publish(plan, w.options);
+
+    expect(show(w.remote, "bundles/grill/grilling/SKILL.md")).toContain("Ask in rounds.");
+    expect(ledgerOf(w.remote).grill?.version).not.toBe(first);
+    expect(result.releases.map((r) => r.tag)).toEqual(["spellfix--v1.3.0", "grilling--v0.1.1"]);
+  });
+
+  it("writes a bundle whose set changed, with nothing released", () => {
+    const w = bundled();
+    publish(planRelease(w.root, undefined), w.options);
+    bundle(w.root, "grill", ["grilling"]);
+    commit(w.root, "grill: grilling alone");
+    const plan = planRelease(w.root, ledgerOf(w.remote));
+    expect(plan.publish).toEqual([]);
+    publish(plan, w.options);
+
+    expect(files(w.remote).filter((f) => f.startsWith("bundles/grill/grill"))).toEqual([
+      "bundles/grill/grilling/SKILL.md",
+    ]);
+    expect(git(w.remote, ["log", "-1", "--format=%s", "dist"])).toBe("release: bundle grill");
+  });
+
+  it("removes a bundle that is gone, and the bundles folder with the last one", () => {
+    const w = bundled();
+    publish(planRelease(w.root, undefined), w.options);
+    git(w.root, ["rm", "-rq", "bundles"]);
+    commit(w.root, "no bundles");
+    const plan = planRelease(w.root, ledgerOf(w.remote));
+    expect(plan.retire).toEqual([
+      { name: "grill", kind: "bundle", version: ledgerOf(w.remote).grill?.version },
+    ]);
+    publish(plan, w.options);
+
+    expect(files(w.remote).filter((f) => f.startsWith("bundles/"))).toEqual([]);
+    expect(ledgerOf(w.remote).grill).toBeUndefined();
   });
 });

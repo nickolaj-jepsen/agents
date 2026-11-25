@@ -1,0 +1,19 @@
+---
+/** /bundles/ has no page of its own: the list is on the home page, above the skills. */
+import { href } from '../../lib/content.ts';
+const to = href('#bundles');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content={`0; url=${to}`} />
+    <meta name="robots" content="noindex" />
+    <link rel="canonical" href={to} />
+    <title>bundles · agents</title>
+  </head>
+  <body>
+    <a href={to}>The bundles are on the home page.</a>
+  </body>
+</html>

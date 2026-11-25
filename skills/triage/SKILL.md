@@ -4,6 +4,7 @@ description: Review local workflow tickets, resolve open questions, and decide w
 disable-model-invocation: true
 metadata:
   version: 0.1.0
+  uses: [grill-with-docs, to-spec]
   summary: Review workflow tickets and prepare them for an agent or a human.
   category: modified-public
   credit: "Adapted from [Matt Pocock’s triage](https://github.com/mattpocock/skills)."

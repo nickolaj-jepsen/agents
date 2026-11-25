@@ -5,12 +5,15 @@ import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { git } from "./git.ts";
+import { versionOf } from "./version.ts";
 
 export const DIST_BRANCH = "dist";
 export const LEDGER_FILE = "releases.json";
 
+export type Kind = "plugin" | "skill" | "bundle";
+
 export type Released = {
-  kind: "plugin" | "skill";
+  kind: Kind;
   version: string;
   /** The commit of main it was built from. */
   source: string;
@@ -20,9 +23,9 @@ export type Released = {
 /** `releases.json` on dist: every released unit by name. */
 export type Ledger = Record<string, Released>;
 
-/** Where a unit's folder is on dist. */
-export const distFolder = (unit: { name: string; kind: "plugin" | "skill" }): string =>
-  unit.kind === "plugin" ? unit.name : `skills/${unit.name}`;
+/** Where a unit's folder is on dist: `<name>/`, `skills/<name>/` or `bundles/<name>/`. */
+export const distFolder = (unit: { name: string; kind: Kind }): string =>
+  unit.kind === "plugin" ? unit.name : `${unit.kind}s/${unit.name}`;
 
 /**
  * The ledger at a ref, or undefined when the ref holds none: no `dist` branch yet, or one from
@@ -120,10 +123,9 @@ export function buildFiles(dir: string): string[] {
  * so Claude Code offers an update when a skill was released and at no other time. Without a version
  * it would use dist's commit, which every plugin release moves.
  */
-export function skillsVersion(ledger: Ledger): string {
-  const lines = Object.entries(ledger)
-    .filter(([, unit]) => unit.kind === "skill")
-    .map(([name, unit]) => `${name}@${unit.version}`)
-    .sort();
-  return createHash("sha256").update(lines.join("\n")).digest("hex").slice(0, 12);
-}
+export const skillsVersion = (ledger: Ledger): string =>
+  versionOf(
+    Object.entries(ledger)
+      .filter(([, unit]) => unit.kind === "skill")
+      .map(([name, unit]) => ({ name, version: unit.version })),
+  );

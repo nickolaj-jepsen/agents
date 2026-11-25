@@ -5,8 +5,11 @@
  * `dist` is what the marketplace, the skills CLI and a pi install read: `<name>/` per plugin (the
  * folder `nix build .#<name>` made, here `<built>/<name>`), `skills/<name>/` per skill (what git
  * tracks in the skill's folder, less its changelog), `skills/.claude-plugin/plugin.json` (the
- * `skills` plugin Claude Code installs) and `releases.json` (each unit's version: the ledger the
- * next plan compares against).
+ * `skills` plugin Claude Code installs), `bundles/<name>/` per bundle (its skills, copied from
+ * `skills/` as dist holds them once this run's skills are in, with a Claude plugin and a pi
+ * package manifest) and `releases.json` (each unit's and bundle's version: the ledger the next
+ * plan compares against). A bundle gets no tag and no GitHub Release: its version is made from
+ * its skills', which have theirs.
  *
  * Only the planned folders change. A unit whose version did not move keeps the bytes it was
  * released with; a retired one is removed. The branch is created (an orphan) when it is missing and
@@ -41,7 +44,7 @@ import {
   skillsVersion,
 } from "./dist.ts";
 import { git, rootOf } from "./git.ts";
-import type { Plan, PlannedUnit } from "./plan.ts";
+import type { Plan, PlannedBundle, PlannedUnit } from "./plan.ts";
 import { compareSemver } from "./version.ts";
 
 export type GithubRelease = {
@@ -85,6 +88,26 @@ const skillsManifest = (ledger: Ledger): string =>
     2,
   ) + "\n";
 
+/** A bundle's manifests: a Claude plugin and a pi package, each of the folder of skill folders. */
+function bundleManifests(bundle: PlannedBundle): Record<string, string> {
+  const json = (o: unknown) => JSON.stringify(o, null, 2) + "\n";
+  return {
+    ".claude-plugin/plugin.json": json({
+      name: bundle.name,
+      version: bundle.version,
+      description: bundle.tagline,
+      author: { name: "Nickolaj Jepsen" },
+      skills: "./",
+    }),
+    "package.json": json({
+      name: `@nickolaj-jepsen/bundle-${bundle.name}`,
+      description: bundle.tagline,
+      keywords: ["pi-package"],
+      pi: { skills: ["./"] },
+    }),
+  };
+}
+
 /**
  * Copies files as new ones that keep only their executable bit: a build comes out of the nix store
  * read-only, and the scratch clone is deleted afterwards.
@@ -119,10 +142,12 @@ function scratchEnv(token: string | undefined): NodeJS.ProcessEnv {
 }
 
 /** What the commit is called: the units by name while they fit on a line. */
-function subject(plan: Plan, published: PlannedUnit[]): string {
+function subject(plan: Plan, published: PlannedUnit[], bundles: PlannedBundle[]): string {
   if (plan.cutover) return `release: start gated releases with ${published.length} units`;
   const parts = [
     ...published.map((unit) => `${unit.name} ${unit.version}`),
+    // A bundle that changed because one of its skills was released goes without saying.
+    ...(published.length === 0 ? bundles.map((bundle) => `bundle ${bundle.name}`) : []),
     ...plan.retire.map((unit) => `retire ${unit.name}`),
   ];
   const text = `release: ${parts.join(", ")}`;
@@ -196,6 +221,35 @@ export function publish(plan: Plan, options: PublishOptions): PublishResult {
       delete ledger[unit.name];
     }
 
+    // After the skills: a bundle holds its skills as dist does once they are in.
+    const bundles = plan.bundles.filter((bundle) => {
+      const now = ledger[bundle.name];
+      return now?.kind !== "bundle" || now.version !== bundle.version;
+    });
+    for (const bundle of bundles) {
+      const now = ledger[bundle.name];
+      if (now && now.kind !== "bundle") remove(distFolder({ name: bundle.name, kind: now.kind }));
+      const target = distFolder({ name: bundle.name, kind: "bundle" });
+      remove(target);
+      for (const skill of bundle.skills) {
+        const from = join(work, distFolder({ name: skill, kind: "skill" }));
+        if (ledger[skill]?.kind !== "skill" || !existsSync(from))
+          throw new Error(`${bundle.name}: its skill ${skill} is not on ${DIST_BRANCH}`);
+        copyFiles(from, join(work, target, skill), filesUnder(from));
+      }
+      for (const [file, text] of Object.entries(bundleManifests(bundle))) {
+        mkdirSync(dirname(join(work, target, file)), { recursive: true });
+        writeFileSync(join(work, target, file), text);
+      }
+      ledger[bundle.name] = {
+        kind: "bundle",
+        version: bundle.version,
+        source: options.source,
+        date,
+      };
+    }
+    if (!Object.values(ledger).some((unit) => unit.kind === "bundle")) remove("bundles");
+
     const hasSkills = Object.values(ledger).some((unit) => unit.kind === "skill");
     if (hasSkills) {
       mkdirSync(join(work, "skills/.claude-plugin"), { recursive: true });
@@ -223,7 +277,7 @@ export function publish(plan: Plan, options: PublishOptions): PublishResult {
       "commit",
       "--quiet",
       "-m",
-      subject({ ...plan, cutover }, published),
+      subject({ ...plan, cutover }, published, bundles),
       "-m",
       `Built from ${options.source}.`,
     ]);
