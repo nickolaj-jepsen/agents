@@ -21,6 +21,21 @@ function files(dir: string, base = dir): string[] {
 const runtime = (): string[] =>
   RUNTIME.flatMap((name) => files(join(src, name)).map((f) => `${name}/${f}`)).sort();
 
+test("the package declares the Herdr UI artifact, which is what publishes it", () => {
+  // `agents update herdr-ui` finds this app by this field alone (`herdr: {ui: true}`), with no
+  // flag to pass, and builds `packages.<system>.herdr-ui` from it. An app with neither this nor
+  // a claude or pi half is no plugin and nothing to publish (see lib/tools/updates/README.md).
+  const pkg = JSON.parse(readFileSync(join(src, "..", "package.json"), "utf8")) as {
+    herdr?: { ui?: boolean };
+    claude?: unknown;
+    pi?: unknown;
+  };
+  expect(pkg.herdr?.ui).toBe(true);
+  // It stays no plugin: those fields are what the bundler and the marketplace look for.
+  expect(pkg.claude).toBeUndefined();
+  expect(pkg.pi).toBeUndefined();
+});
+
 test("the artifact is the mods and the layout, and the files Herdr needs to load them", () => {
   expect(runtime()).toEqual([
     "layouts/nested.json",

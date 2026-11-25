@@ -8,5 +8,8 @@
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "herdr": {
+    "ui": true
   }
 }

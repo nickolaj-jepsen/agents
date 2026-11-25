@@ -1,6 +1,6 @@
 # `agents-updates`
 
-Publish a checkout's plugins and skills as immutable store snapshots, and let each harness load what this generation pins until you say otherwise. The package is `packages.<system>.agents-updates`: `bin/agents`, `bin/agents-refresh`, and the pi package at `share/agents-updates/pi`.
+Publish a checkout's plugins, skills and Herdr UI as immutable store snapshots, and let each harness load what this generation pins until you say otherwise. The package is `packages.<system>.agents-updates`: `bin/agents`, `bin/agents-refresh`, and the pi package at `share/agents-updates/pi`.
 
 The design is one sentence: **a launch loads store paths, an update publishes new ones, and nothing links the checkout.** An agent never builds at startup, so a launch costs nothing and a broken working tree cannot take a session down. `agents update <name>` is the explicit act that publishes:
 
@@ -11,16 +11,20 @@ agents update answer --harness pi      # only pi's half
 agents update grilling --skill         # a skill
 agents update answer --dry-run         # what would be built, and nothing else
 agents update answer --live pi         # ...and ask running pi sessions to reload
+agents update herdr-ui                 # Herdr's UI artifact, deployed where the app reads it
 agents reset answer                    # drop the snapshot; the pinned baseline applies again
 agents check                           # drift report; always exits 0
 agents resolve                         # the effective paths as JSON, for a launcher
+agents deploy-ui herdr-ui              # put the effective artifact in place, publish nothing
 ```
 
 A build is the only backend: the snapshot is built with Nix against the nixpkgs the wrapper names, so a published half is the same derivation the pinned one would have been.
 
 ## What a snapshot is
 
-`agents update` copies the checkout's working tree — tracked files plus untracked files git does not ignore, read with `git ls-files`, nothing written to it — into a temporary directory, evaluates that copy as a flake, and builds only the halves you asked for plus (for a skill) the skills tree. One linkFarm holds the results, so a single `nix build --out-link` both builds and roots them.
+`agents update` copies the checkout's working tree — tracked files plus untracked files git does not ignore, read with `git ls-files`, nothing written to it — into a temporary directory, evaluates that copy as a flake, and builds only the halves you asked for plus (for a skill) the skills tree, or (for a UI artifact) the flake's own `packages.<system>.<name>`. One linkFarm holds the results, so a single `nix build --out-link` both builds and roots them.
+
+What an app is, is read from its `package.json`, with no flag to remember: a `claude` or `pi` field makes it a plugin, and `"herdr": {"ui": true}` makes it Herdr's UI artifact — a folder of `mods/` and `layouts/` that the app loads from a writable config directory, not from a store path.
 
 The published tree must be self-contained. A symlink in the checkout is refused when it resolves outside the checkout, or at a path the snapshot does not carry (ignored by git, or not committed), because a store copy that still pointed into the checkout could change under a session later. A kept link is rewritten to the snapshot's own copy of the end of its chain, so `a -> b` and `b -> skills/x` cannot make the result depend on the order git listed them in.
 
@@ -35,24 +39,27 @@ The wrapper (`agents`'s environment) names one JSON file, `AGENTS_BASELINE`. It 
     "answer": { "pi": "/nix/store/…-agents-answer", "claude": "/nix/store/…-claude-answer" },
     "docfix": { "pi": "/nix/store/…-agents-docfix", "claude": null }
   },
-  "skills": { "grilling": "/nix/store/…-agents-skills/grilling" }
+  "skills": { "grilling": "/nix/store/…-agents-skills/grilling" },
+  "ui": { "herdr-ui": "/nix/store/…-herdr-ui" }
 }
 ```
 
 - `plugins.<name>.pi` is the folder pi loads as a package (an app's `dist/`), and `.claude` is the folder Claude Code loads as a plugin. A variant the plugin does not have is `null`; a missing key reads as `null`.
 - `skills.<name>` is one skill directory, holding a `SKILL.md`.
+- `ui.<name>` is one UI artifact: `mods/` and `layouts/` at its root, the folder the app loads. It is deployed, not linked (see [Deploying a UI artifact](#deploying-a-ui-artifact)); a baseline written before there were UI artifacts simply has no `ui` key, which reads as nothing to deploy.
 - `revision` is only reported: `status` and `check` compare it with what each snapshot was published from.
 
 `agents resolve` merges `current.json` over that baseline — an override wins, and a variant a snapshot does not override falls back to the pin — so a partial update is safe, and a name that only the state knows still resolves. When the pin moves, published snapshots keep being used and `agents check` says what is older than the pin.
 
 State lives in `$XDG_STATE_HOME/agents-updates` (default `~/.local/state/agents-updates`):
 
-| Path                                | What it holds                                                                           |
-| ----------------------------------- | --------------------------------------------------------------------------------------- |
-| `current.json`                      | the published overrides: per plugin variant, per skill, and the revision each came from |
-| `roots/<stamp>-<pid>-<token>/build` | a GC root per generation: a link to the linkFarm that keeps its outputs alive           |
-| `sessions/*.json`, `requests/`      | pi sessions that advertised an update bridge, and the reload requests for them          |
-| `lock`                              | serialises updates and resets; `AGENTS_UPDATE_LOCK_TIMEOUT` (default 600) caps the wait |
+| Path                                | What it holds                                                                                            |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `current.json`                      | the published overrides: per plugin variant, per skill, per UI artifact, and the revision each came from |
+| `roots/<stamp>-<pid>-<token>/build` | a GC root per generation: a link to the linkFarm that keeps its outputs alive                            |
+| `ui/<name>.json`                    | the deployer's ownership record: which files it wrote, from where, into which directory                  |
+| `sessions/*.json`, `requests/`      | pi sessions that advertised an update bridge, and the reload requests for them                           |
+| `lock`                              | serialises updates and resets; `AGENTS_UPDATE_LOCK_TIMEOUT` (default 600) caps the wait                  |
 
 Roots are never removed. A running session may still be loading an older snapshot — pi holds the paths it started with, Claude Code resolved them at launch — so only a person knows when an old root is dead weight. `nix-collect-garbage` leaves those paths alone until the symlink is deleted by hand:
 
@@ -67,13 +74,15 @@ rm -r ~/.local/state/agents-updates/roots/<stamp>/  # only when no session uses 
 
 The flake exports the tool and the flake's own plugin and skill builds; a consumer supplies the environment and the wrapper. Env for `bin/agents`:
 
-| Variable          | What it is                                                                                                                                             |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `AGENTS_BASELINE` | the manifest above, as a file path                                                                                                                     |
-| `AGENTS_CHECKOUT` | the agents checkout `update` publishes from                                                                                                            |
-| `AGENTS_NIXPKGS`  | a nixpkgs source store path (`pkgs.path`): what a published snapshot is built against                                                                  |
-| `AGENTS_CLAUDE`   | the `claude-code` package store path, **unwrapped**: `mkClaudePlugin` runs `claude plugin validate`, and a wrapper's injected `--plugin-dir` breaks it |
-| `AGENTS_SYSTEM`   | the system to build for, e.g. `x86_64-linux`                                                                                                           |
+| Variable          | What it is                                                                                                                                                |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AGENTS_BASELINE` | the manifest above, as a file path                                                                                                                        |
+| `AGENTS_CHECKOUT` | the agents checkout `update` publishes from                                                                                                               |
+| `AGENTS_NIXPKGS`  | a nixpkgs source store path (`pkgs.path`): what a published snapshot is built against                                                                     |
+| `AGENTS_CLAUDE`   | the `claude-code` package store path, **unwrapped**: `mkClaudePlugin` runs `claude plugin validate`, and a wrapper's injected `--plugin-dir` breaks it    |
+| `AGENTS_SYSTEM`   | the system to build for, e.g. `x86_64-linux`                                                                                                              |
+| `XDG_CONFIG_HOME` | where a UI artifact is deployed (default `~/.config`): `$XDG_CONFIG_HOME/herdr-app` is Herdr's config directory                                           |
+| `AGENTS_UI_DIR`   | deploy a UI artifact here instead of `$XDG_CONFIG_HOME/<target>`: a test, or a second window whose config lives elsewhere. One directory, so one artifact |
 
 A minimal consumer: `agents`'s flake exports the tool and the flake's own plugin and skill builds, and you write the wrapper that pins them. With `agents` an input and `system` and `pkgs` your own, nothing here assumes your paths:
 
@@ -98,6 +107,8 @@ let
         else null;
     }) plugins;
     skills = agents.lib.skills;
+    # Herdr's UI is a folder the app loads from its writable config dir; the deployer puts it there.
+    ui = {herdr-ui = "''${agents.packages.''${system}.herdr-ui}";};
   });
 in
   # `home.packages` or `environment.systemPackages`: the same wrapper serves either.
@@ -142,6 +153,22 @@ Run it where a launch can reach it — a pi or Claude Code launcher, or home-man
 
 The Claude skill view is **per profile, not per session**: a publication reaches the next start, and a refresh rewrites the one view every session in that profile reads at its next start, so two sessions in one profile are not isolated from each other. Loaded instructions are not replaced, but a later file read in an older session can see another launch's view.
 
+## Deploying a UI artifact
+
+Herdr loads its own UI from a writable config directory, `$XDG_CONFIG_HOME/herdr-app`, not from a store path: the app writes editor metadata beside a mod, and its layout editor saves layouts. So a UI artifact is copied in rather than linked, and `agents deploy-ui <name>` is the command that does it. Home-manager's activation runs it on every switch, and `agents update <name>` and `agents reset <name>` run it too, so an explicit publication — and the reset that undoes one — leaves the app reading what was just chosen, with nothing to remember afterwards.
+
+What a deploy guarantees:
+
+- **Only what differs is written.** Every file is compared with the artifact's copy first; an unchanged artifact writes nothing at all, so a switch that changes nothing wakes no file watcher. A changed file is replaced by an atomic rename from a scratch directory inside the destination, so nothing reads a half-written file.
+- **Helpers before entry points, mods before layouts.** A watcher never sees a `main.js` that imports a helper the tree does not have yet, and no mod is behind a layout that places it.
+- **Only its own files are pruned.** `$XDG_STATE_HOME/agents-updates/ui/<name>.json` records what this tool wrote; a file the artifact drops is removed only if that record named it, and the directories it empties are removed unless someone else's files are in them. `shared.json`, `settings.json`, `keys.json`, the mods home-manager links and anything the person added are never touched. The record is written only after every write succeeds, and a record made for a different destination prunes nothing there.
+- **A symlink it did not write is left alone**, and reported, the way `agents-refresh` treats Claude's skill directory. A symlinked directory that resolves _outside_ the destination is refused: writing through it would escape the tree. So is an artifact file outside `mods/` and `layouts/`, since the artifact is the runtime UI and nothing else.
+- **A failure rolls back.** Whatever this run had already written, replaced or pruned is put back, and the record is left as it was.
+
+It restarts nothing. Herdr watches the deployed files and reloads what it sees, so there is no request to send and no acknowledgement to read, and the output says exactly that: the writes prove the tree is in place, not that a running window applied a revision. An empty error log is not evidence of a reload either.
+
+The one case that does not fail is a published snapshot whose store path is gone (someone deleted its GC root by hand): `deploy-ui` warns, deploys the pinned baseline instead, and exits 0, so a switch cannot be taken down by a hand-deleted root. `agents check` still reports the missing snapshot. `deploy-ui --dry-run` says what would be written and pruned, and touches nothing.
+
 ## Same-user live reload
 
 There is no reload API in either harness that another process can call, so `--live` is a best-effort request, and it never claims more than it knows:
@@ -159,7 +186,7 @@ Optional, in addition to the manifest and harness variables above: `XDG_STATE_HO
 
 ```bash
 pnpm turbo run test --filter=@agents/updates    # the pi bridge, in vitest
-pnpm turbo run test --filter=agents-updates     # the Python half, in pytest
+pnpm turbo run test --filter=agents-updates     # the Python half, in pytest (the CLI and the deployer)
 nix build .#agents-updates                      # bin/agents, bin/agents-refresh, the pi package
 nix flake check                                 # ...and the Python tests through `checks.agents-updates`
 ```

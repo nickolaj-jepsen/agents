@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
-"""Publish the agents checkout's plugins and skills as immutable store snapshots.
+"""Publish the agents checkout's plugins, skills and Herdr UI as immutable store snapshots.
 
 `agents update NAME` copies the checkout's working tree (tracked files plus untracked files
-that git does not ignore) into a temporary directory, builds the requested plugin halves and
-the skills tree from that snapshot with Nix, keeps a GC root for the result, and only then
-replaces `$XDG_STATE_HOME/agents-updates/current.json` in one atomic rename. The checkout
-itself is never written to: git is asked what its working tree holds, and nothing is
+that git does not ignore) into a temporary directory, builds the requested plugin halves, the
+skills tree or a UI artifact from that snapshot with Nix, keeps a GC root for the result, and
+only then replaces `$XDG_STATE_HOME/agents-updates/current.json` in one atomic rename. The
+checkout itself is never written to: git is asked what its working tree holds, and nothing is
 pulled, committed, stashed or switched.
 
-A launched harness asks `agents resolve` for the effective plugin and skill paths, which
+A launched harness asks `agents resolve` for the effective plugin, skill and UI paths, which
 merges those overrides over the baseline that Nix pins (AGENTS_BASELINE). A variant that
 current.json does not override falls back to the baseline, so a partial update is safe.
+
+A UI artifact is no plugin: Herdr loads its UI from a writable config directory, so publishing
+one is followed by deploying it there (`agents deploy-ui NAME`, which activation runs too).
+`agents update NAME` and `agents reset NAME` deploy the effective result as part of the
+operation; the deployer is agents_ui.py, and it rewrites only the files that differ.
 
 The published tree must be self-contained: a symlink that would resolve outside the snapshot
 (or at a file the snapshot does not carry) is refused rather than copied, because a store
@@ -24,14 +29,17 @@ paths until the root symlinks under roots/ are deleted by hand.
 Environment (set by the Nix wrapper):
   AGENTS_BASELINE  JSON file: {"revision": str,
                                "plugins": {name: {"pi": path|null, "claude": path|null}},
-                               "skills": {name: path}}
+                               "skills": {name: path},
+                               "ui": {name: path}}
   AGENTS_CHECKOUT  the agents checkout
   AGENTS_NIXPKGS   nixpkgs source store path
   AGENTS_CLAUDE    the claude-code package store path (unwrapped: mkClaudePlugin runs
                    `claude plugin validate`, which a wrapper's injected --plugin-dir breaks)
   AGENTS_SYSTEM    e.g. x86_64-linux
 Optional:
+  XDG_CONFIG_HOME           default ~/.config: where a UI artifact is deployed
   XDG_STATE_HOME            default ~/.local/state
+  AGENTS_UI_DIR             deploy a UI artifact here instead of $XDG_CONFIG_HOME/<target>
   AGENTS_UPDATE_LOCK_TIMEOUT  seconds to wait for a concurrent update (default 600)
   AGENTS_UPDATE_KEEP_SNAPSHOT=1  keep the temporary snapshot even on success
 """
@@ -53,11 +61,22 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
+# The deployer lives beside this script, both in the checkout and in the package's store copy.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import agents_ui  # noqa: E402  (after the path entry, so the store copy finds it)
+
+DeployError = agents_ui.DeployError
+
 PROG = "agents"
 STATE_DIR_NAME = "agents-updates"
 STATE_FILE = "current.json"
 HARNESSES = ("pi", "claude")
 LIVE_CHOICES = ("pi", "claude", "all")
+# The package.json field an app declares its Herdr UI artifact in: `"herdr": {"ui": true}`.
+# It says the app is no plugin but a folder Herdr loads, so `update` builds it as
+# `packages.<system>.<name>` and deploys it, with no flag to remember.
+UI_METADATA = "herdr"
 
 # A name becomes a directory under apps/ or skills/ and a Nix attribute name; keep it to
 # characters that are safe in both and cannot traverse (`..`, leading '.').
@@ -187,6 +206,7 @@ class Baseline:
     revision: str
     plugins: dict
     skills: dict
+    ui: dict = field(default_factory=dict)
 
 
 def _revision(value, where):
@@ -238,14 +258,27 @@ def load_baseline(path):
             raise UpdateError(f"{path}: skills.{name} must be a path")
         skills[name] = value
 
-    return Baseline(revision=revision, plugins=plugins, skills=skills)
+    # Herdr's UI artifacts: a folder of the runtime UI, deployed rather than linked. Absent in
+    # a baseline written before there was one, which reads as nothing to deploy.
+    ui = {}
+    raw_ui = raw.get("ui")
+    if raw_ui is None:
+        raw_ui = {}
+    if not isinstance(raw_ui, dict):
+        raise UpdateError(f"{path}: ui must be an object")
+    for name, value in raw_ui.items():
+        if not isinstance(value, str):
+            raise UpdateError(f"{path}: ui.{name} must be a path")
+        ui[name] = value
+
+    return Baseline(revision=revision, plugins=plugins, skills=skills, ui=ui)
 
 
 def load_state(state):
-    """(plugins, skills) from current.json; an absent file is an empty state."""
+    """(plugins, skills, ui) from current.json; an absent file is an empty state."""
     path = Path(state) / STATE_FILE
     if not path.exists():
-        return {}, {}
+        return {}, {}, {}
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
     except OSError as exc:
@@ -294,7 +327,28 @@ def load_state(state):
             ),
         }
 
-    return plugins, skills
+    # Absent in a state written before there were UI artifacts: an older current.json keeps
+    # working, and its UI names simply have no override.
+    ui = {}
+    raw_ui = raw.get("ui")
+    if raw_ui is None:
+        raw_ui = {}
+    if not isinstance(raw_ui, dict):
+        raise UpdateError(f"{path}: ui must be an object")
+    for name, entry in raw_ui.items():
+        if not isinstance(entry, dict):
+            raise UpdateError(f"{path}: ui.{name} must be an object")
+        path_value = entry.get("path")
+        if not isinstance(path_value, str):
+            raise UpdateError(f"{path}: ui.{name}.path must be a path")
+        ui[name] = {
+            "path": path_value,
+            "baseline": _revision(
+                entry.get("baseline", ""), f"{path}: ui.{name}.baseline"
+            ),
+        }
+
+    return plugins, skills, ui
 
 
 def write_json_atomic(path, data):
@@ -322,10 +376,11 @@ def write_json_atomic(path, data):
             os.close(descriptor)
 
 
-def save_state(state, plugins, skills):
+def save_state(state, plugins, skills, ui=None):
     payload = {
         "plugins": {name: _ordered_plugin(plugins[name]) for name in sorted(plugins)},
         "skills": {name: skills[name] for name in sorted(skills)},
+        "ui": {name: ui[name] for name in sorted(ui or {})},
     }
     write_json_atomic(Path(state) / STATE_FILE, payload)
 
@@ -371,7 +426,7 @@ def state_lock(state, timeout):
         os.close(descriptor)
 
 
-def effective(baseline, plugins, skills):
+def effective(baseline, plugins, skills, ui=None):
     """The paths a harness should load: overrides win, a missing variant inherits the baseline."""
     resolved_plugins = {}
     for name in sorted(set(baseline.plugins) | set(plugins)):
@@ -384,7 +439,13 @@ def effective(baseline, plugins, skills):
     for name in sorted(set(baseline.skills) | set(skills)):
         override = skills.get(name) or {}
         resolved_skills[name] = override.get("path") or baseline.skills.get(name)
-    return {"plugins": resolved_plugins, "skills": resolved_skills}
+    # A UI artifact has one variant, so the override is a path and not a per-harness map. Added
+    # after the keys that were there first: a consumer reading plugins and skills is unaffected.
+    resolved_ui = {}
+    for name in sorted(set(baseline.ui) | set(ui or {})):
+        override = (ui or {}).get(name) or {}
+        resolved_ui[name] = override.get("path") or baseline.ui.get(name)
+    return {"plugins": resolved_plugins, "skills": resolved_skills, "ui": resolved_ui}
 
 
 # --------------------------------------------------------------------------------------------
@@ -518,8 +579,8 @@ def snapshot_link(relative, source, destination, root):
     return os.path.relpath(target, (destination / relative).parent)
 
 
-def plugin_halves(snapshot_root, name):
-    """(pi?, claude?) as the checkout's package.json declares them; None when it is no plugin."""
+def app_manifest(snapshot_root, name):
+    """`apps/<name>/package.json` as an object, or None when the app has no manifest."""
     manifest = repository_path(snapshot_root, "apps", name, "package.json")
     if not manifest.is_file():
         return None
@@ -531,14 +592,36 @@ def plugin_halves(snapshot_root, name):
         raise UpdateError(f"{manifest} is not JSON: {exc}") from None
     if not isinstance(package, dict):
         raise UpdateError(f"{manifest} must hold a JSON object")
+    return package
+
+
+def plugin_halves(snapshot_root, name):
+    """(pi?, claude?) as the checkout's package.json declares them; None when it is no plugin."""
+    package = app_manifest(snapshot_root, name)
+    if package is None:
+        return None
     return tuple(harness for harness in HARNESSES if harness in package)
 
 
+def ui_artifact(snapshot_root, name):
+    """True when the app declares Herdr's UI artifact explicitly (`"herdr": {"ui": true}`).
+
+    Explicit, rather than "no claude and no pi half": an app whose manifest says nothing about
+    Herdr is no plugin and no UI, and publishing it would build something nobody loads.
+    """
+    package = app_manifest(snapshot_root, name)
+    if package is None:
+        return False
+    metadata = package.get(UI_METADATA)
+    return isinstance(metadata, dict) and metadata.get("ui") is True
+
+
 def plan_update(snapshot_root, names, skills, harness):
-    """(halves to build, skill names to publish, halves the checkout offers per plugin)."""
+    """(halves to build, skill names to publish, halves per plugin, UI artifacts to build)."""
     planned = []
     selected_skills = []
     supported = {}
+    ui_names = []
     if skills:
         for name in names:
             directory = repository_path(snapshot_root, "skills", name)
@@ -547,7 +630,7 @@ def plan_update(snapshot_root, names, skills, harness):
                     f"{name} is not a skill in the checkout: no skills/{name}"
                 )
             selected_skills.append(name)
-        return planned, selected_skills, supported
+        return planned, selected_skills, supported, ui_names
 
     for name in names:
         halves = plugin_halves(snapshot_root, name)
@@ -556,8 +639,16 @@ def plan_update(snapshot_root, names, skills, harness):
                 f"{name} is not a plugin in the checkout: no apps/{name}/package.json"
             )
         if not halves:
+            if ui_artifact(snapshot_root, name):
+                if harness is not None:
+                    raise UpdateError(
+                        f"{name} is a Herdr UI artifact, not a plugin: it has no --harness halves"
+                    )
+                ui_names.append(name)
+                continue
             raise UpdateError(
-                f"{name} declares neither a claude nor a pi half in its package.json"
+                f"{name} declares neither a claude nor a pi half in its package.json, nor "
+                f'"{UI_METADATA}": {{"ui": true}}, so there is nothing to publish for it'
             )
         if harness is not None:
             if harness not in halves:
@@ -569,7 +660,7 @@ def plan_update(snapshot_root, names, skills, harness):
             chosen = halves
         supported[name] = halves
         planned.extend((name, variant) for variant in chosen)
-    return planned, selected_skills, supported
+    return planned, selected_skills, supported, ui_names
 
 
 # --------------------------------------------------------------------------------------------
@@ -589,13 +680,14 @@ def nix_path(value):
     return text
 
 
-def build_expression(context, snapshot, plugin_targets, skills):
+def build_expression(context, snapshot, plugin_targets, skills, ui_names=None):
     """The linkFarm whose links are this generation's outputs.
 
-    One derivation graphs every requested half plus the whole snapshot, so a single
-    `nix build --out-link` both builds and roots all of it: a linkFarm's references keep
-    the plugin outputs and the skills snapshot alive for as long as the root exists.
+    One derivation graphs every requested half, the whole snapshot and every requested UI
+    artifact, so a single `nix build --out-link` both builds and roots all of it: a linkFarm's
+    references keep the outputs and the snapshot alive for as long as the root exists.
     """
+    ui_names = ui_names or []
     half_needed = [variant for _, variant in plugin_targets]
     lines = [
         "let",
@@ -604,6 +696,10 @@ def build_expression(context, snapshot, plugin_targets, skills):
         f"  pkgs = import {nix_path(context.nixpkgs)} {{ inherit system; config.allowUnfree = true; }};",
         "  plugins = flake.lib.pluginsFor pkgs;",
     ]
+    if ui_names:
+        # A UI artifact is the flake's own package, not plugin packaging: the checkout builds
+        # `mods/` and `layouts/` at the artifact's root (pkgs/herdr-ui.nix).
+        lines.append("  packages = flake.packages.${system} or {};")
     if "claude" in half_needed:
         # mkClaudePlugin runs the supplied claude-code; the wrapper Nix installs injects
         # --plugin-dir and breaks `claude plugin validate`, so the package (not finalPackage)
@@ -624,6 +720,15 @@ def build_expression(context, snapshot, plugin_targets, skills):
         lines.append(
             '    { name = "skills"; path = builtins.path '
             f'{{ path = {nix_path(snapshot)}; name = "agents-snapshot"; }}; }}'
+        )
+    for name in ui_names:
+        missing = (
+            f"the checkout has no packages.{context.system}.{name}: its flake predates "
+            f"that artifact, so commit its package file and packages.nix there first"
+        )
+        lines.append(
+            f"    {{ name = {nix_string('ui/' + name)}; path = "
+            f"(packages.{nix_string(name)} or (throw {nix_string(missing)})); }}"
         )
     lines.append("  ]")
     return "\n".join(lines) + "\n"
@@ -648,9 +753,12 @@ def store_link(path, store):
     return target
 
 
-def nix_build(context, snapshot, plugin_targets, skills, generation, console):
-    """Build this generation and root it. Returns (variant paths, skills store path)."""
-    expression = build_expression(context, snapshot, plugin_targets, skills)
+def nix_build(
+    context, snapshot, plugin_targets, skills, generation, console, ui_names=None
+):
+    """Build this generation and root it. Returns (variant paths, skills path, UI paths)."""
+    ui_names = ui_names or []
+    expression = build_expression(context, snapshot, plugin_targets, skills, ui_names)
     generation.mkdir(parents=True, exist_ok=True)
     link = generation / "build"
     command = [
@@ -699,7 +807,10 @@ def nix_build(context, snapshot, plugin_targets, skills, generation, console):
             raise UpdateError(
                 f"the skills snapshot {skills_store} lacks {', '.join(missing)}"
             )
-    return built, skills_store
+    ui_built = {
+        name: store_link(link / "ui" / name, context.store) for name in ui_names
+    }
+    return built, skills_store, ui_built
 
 
 # --------------------------------------------------------------------------------------------
@@ -716,11 +827,12 @@ def cmd_update(args, env, console):
     baseline = load_baseline(context.baseline_path)
 
     with state_lock(context.state, context.lock_timeout):
-        plugins, skills = load_state(context.state)
+        plugins, skills, ui = load_state(context.state)
         temporary = Path(tempfile.mkdtemp(prefix=f"{PROG}-update-"))
         keep = bool(env.get("AGENTS_UPDATE_KEEP_SNAPSHOT"))
-        planned, selected_skills, supported = [], [], {}
-        built, skills_store = {}, None
+        planned, selected_skills, supported, ui_names = [], [], {}, []
+        built, skills_store, ui_built = {}, None, {}
+        deployed = []
         generation = None
         try:
             snapshot = publish_snapshot(
@@ -730,32 +842,46 @@ def cmd_update(args, env, console):
                 console.warn(
                     f"{PROG}: left out of the snapshot (submodule or deleted): {path}"
                 )
-            planned, selected_skills, supported = plan_update(
+            planned, selected_skills, supported, ui_names = plan_update(
                 snapshot.root, names, args.skill, args.harness
             )
 
             if args.dry_run:
                 console.say(
-                    f"dry run: {describe_plan(planned, selected_skills)} from "
+                    f"dry run: {describe_plan(planned, selected_skills, ui_names)} from "
                     f"{short(snapshot.revision)} ({describe_tree(snapshot)})"
                 )
-                console.say("dry run: nothing built, state unchanged")
+                for name in ui_names:
+                    console.say(
+                        f"dry run: {name} would deploy into {agents_ui.destination(name, env)}"
+                    )
+                console.say("dry run: nothing built, deployed or recorded")
                 return 0
 
             generation = context.state / "roots" / generation_id()
             try:
-                built, skills_store = nix_build(
+                built, skills_store, ui_built = nix_build(
                     context,
                     snapshot.root,
                     planned,
                     selected_skills,
                     generation,
                     console,
+                    ui_names,
                 )
             except UpdateError:
                 # Keep the published tree so a failed pnpm or claude run can be inspected.
                 keep = True
                 raise
+
+            # Deploy before recording the publication: a build that cannot be put where Herdr
+            # reads it is not published, and the state keeps naming a snapshot that is in place.
+            deployed = deploy_ui(
+                context.state,
+                env,
+                console,
+                {name: (Path(path), "published") for name, path in ui_built.items()},
+            )
 
             plugins = apply_plugins(
                 plugins, baseline.revision, planned, supported, built, args.harness
@@ -763,7 +889,8 @@ def cmd_update(args, env, console):
             skills = apply_skills(
                 skills, baseline.revision, selected_skills, skills_store
             )
-            save_state(context.state, plugins, skills)
+            ui = apply_ui(ui, baseline.revision, ui_built)
+            save_state(context.state, plugins, skills, ui)
         finally:
             if keep:
                 console.warn(f"{PROG}: kept the published snapshot in {temporary}")
@@ -771,30 +898,41 @@ def cmd_update(args, env, console):
                 shutil.rmtree(temporary, ignore_errors=True)
 
     console.say(
-        f"published {describe_plan(planned, selected_skills)} from "
+        f"published {describe_plan(planned, selected_skills, ui_names)} from "
         f"{short(snapshot.revision)} ({describe_tree(snapshot)})"
     )
     for (name, variant), path in sorted(built.items()):
         console.say(f"  {name} {variant}: {path}")
     for name in sorted(selected_skills):
         console.say(f"  {name} skill: {Path(skills_store) / 'skills' / name}")
+    for name in sorted(ui_built):
+        console.say(f"  {name} ui: {ui_built[name]}")
     console.say(
         f"state: {context.state / STATE_FILE} (baseline {short(baseline.revision)})"
     )
     console.say(
         f"root: {generation / 'build'} (kept; older roots stay for running sessions)"
     )
+    report_deployed(console, deployed)
 
     if args.live:
-        harnesses = HARNESSES if args.live == "all" else (args.live,)
-        run_live(context.state, harnesses, console)
+        if ui_names:
+            console.say(
+                f"live {', '.join(sorted(ui_names))}: no reload request; Herdr watches the "
+                "deployed files and reloads them itself"
+            )
+        if planned or selected_skills:
+            harnesses = HARNESSES if args.live == "all" else (args.live,)
+            run_live(context.state, harnesses, console)
     return 0
 
 
-def describe_plan(planned, skills):
+def describe_plan(planned, skills, ui_names=None):
     parts = [f"{name} {variant}" for name, variant in planned]
     if skills:
         parts.append("skills " + ", ".join(sorted(skills)))
+    for name in ui_names or []:
+        parts.append(f"{name} ui")
     return ", ".join(parts) if parts else "nothing"
 
 
@@ -851,15 +989,143 @@ def apply_skills(skills, revision, selected, skills_store):
     return updated
 
 
+def apply_ui(ui, revision, built):
+    """Record this build's UI artifacts, stamped with the baseline it was published from."""
+    updated = {name: dict(entry) for name, entry in ui.items()}
+    for name, path in built.items():
+        updated[name] = {"path": path, "baseline": revision}
+    return updated
+
+
+def effective_ui_source(baseline, ui, name, console):
+    """(path, label) to deploy for `name`: the published snapshot, or the pinned baseline.
+
+    A published snapshot that left the store (someone deleted its GC root by hand) must not
+    fail an activation: the pinned artifact is in the store by construction, and `check`
+    already reports the missing snapshot. A pinned one that is missing is a broken generation
+    and is refused.
+    """
+    override = (ui.get(name) or {}).get("path")
+    pinned = baseline.ui.get(name)
+    if override:
+        if Path(override).is_dir():
+            return Path(override), "published"
+        console.warn(
+            f"{PROG}: the published {name} artifact {override} is gone from the store; "
+            f"deploying the pinned baseline instead (run `{PROG} update {name}` to republish it)"
+        )
+        if pinned and Path(pinned).is_dir():
+            return Path(pinned), "baseline"
+        raise UpdateError(
+            f"neither the published nor the pinned {name} artifact exists; "
+            f"run `{PROG} update {name}`"
+        )
+    if pinned:
+        if not Path(pinned).is_dir():
+            raise UpdateError(f"the pinned {name} artifact {pinned} does not exist")
+        return Path(pinned), "baseline"
+    raise UpdateError(
+        f"{name} is in neither the baseline nor the published state, so there is nothing to "
+        "deploy; add it to the baseline's `ui` map, or publish it with "
+        f"`{PROG} update {name}`"
+    )
+
+
+def deploy_ui(state, env, console, sources, dry_run=False):
+    """Deploy each (name: (path, label)) into its writable directory; returns the results.
+
+    Every caller that changes what Herdr should load goes through here, so an explicit update
+    and an activation converge on the same tree, and only the files that differ are written.
+    """
+    if len(sources) > 1 and env.get("AGENTS_UI_DIR"):
+        raise UpdateError(
+            "AGENTS_UI_DIR names one directory, so it cannot deploy "
+            f"{len(sources)} artifacts at once"
+        )
+    results = []
+    for name in sorted(sources):
+        path, label = sources[name]
+        destination = agents_ui.destination(name, env)
+        result = agents_ui.deploy(
+            name, path, destination, state, console, dry_run=dry_run
+        )
+        results.append((label, result))
+        for relative, reason in result.skipped:
+            console.warn(f"{PROG}: {name}: left {relative} alone: {reason}")
+    return results
+
+
+def report_deployed(console, results):
+    """Say what a deploy wrote, and say nothing about whether the app reloaded it.
+
+    Herdr watches the deployed files and reloads them itself, so there is no request to send
+    and no ack to read: a successful write proves the tree is in place, and nothing more. An
+    empty error log is not evidence that a running window applied a revision.
+    """
+    for label, result in results:
+        if result.dry_run:
+            console.say(
+                f"dry run: {result.name} would write {len(result.written)}, "
+                f"leave {result.unchanged} and prune {len(result.pruned)} in "
+                f"{result.destination} (from {result.source}, {label})"
+            )
+            for relative in result.written:
+                console.say(f"  would write {relative}")
+            for relative in result.pruned:
+                console.say(f"  would prune {relative}")
+            continue
+        console.say(
+            f"{result.name}: deployed {len(result.written)} written, "
+            f"{result.unchanged} unchanged, {len(result.pruned)} pruned in "
+            f"{result.destination} (from {result.source}, {label})"
+        )
+        if result.changed:
+            console.say(
+                f"{result.name}: no restart; Herdr watches these files and reloads what it "
+                "sees, and these writes prove the tree, not that a running app applied it"
+            )
+
+
+def cmd_deploy_ui(args, env, console):
+    """Put the effective artifact where Herdr loads it, without publishing anything.
+
+    Activation runs this on every switch: it converges the writable tree on whatever the
+    baseline and any published override select, and writes only the files that differ, so an
+    unchanged switch touches nothing a watcher would react to.
+    """
+    validate_names([args.name])
+    name = args.name
+    baseline_path = env.get("AGENTS_BASELINE")
+    if not baseline_path:
+        raise UpdateError("AGENTS_BASELINE is not set, so there is nothing to deploy")
+    baseline = load_baseline(baseline_path)
+    state = state_dir(env)
+    with state_lock(state, lock_timeout(env)):
+        try:
+            _, _, ui = load_state(state)
+        except UpdateError as exc:
+            # Enough of the state to deploy is not readable: the baseline still names a valid
+            # artifact, so deploy that and let `check` report the corrupt file.
+            console.warn(f"{PROG}: {exc}; deploying the baseline only")
+            ui = {}
+        source, label = effective_ui_source(baseline, ui, name, console)
+        results = deploy_ui(
+            state, env, console, {name: (source, label)}, dry_run=args.dry_run
+        )
+    report_deployed(console, results)
+    return 0
+
+
 def cmd_reset(args, env, console):
     validate_names(args.names)
     if args.skill and args.harness:
         raise UpdateError("--harness filters plugin variants; skills have none")
     state = state_dir(env)
+    names = list(dict.fromkeys(args.names))
+    deployed = []
     with state_lock(state, lock_timeout(env)):
-        plugins, skills = load_state(state)
+        plugins, skills, ui = load_state(state)
         changed = []
-        names = list(dict.fromkeys(args.names))
         if args.skill:
             for name in names:
                 if skills.pop(name, None) is not None:
@@ -877,12 +1143,60 @@ def cmd_reset(args, env, console):
                     if not any(entry.get(variant) for variant in HARNESSES):
                         plugins.pop(name)
                     changed.append(f"{name} ({args.harness})")
+
+        # A UI artifact is deployed, not linked: dropping the override is only the first half,
+        # so the writable tree is converged on the baseline as part of the reset.
+        if not args.skill:
+            sources = {}
+            for name in names:
+                if name not in ui:
+                    continue
+                if args.harness is not None:
+                    raise UpdateError(
+                        f"--harness filters plugin halves; {name} is a Herdr UI artifact"
+                    )
+                ui.pop(name)
+                changed.append(f"{name} (ui)")
+                source, label = _reset_ui_source(env, name, console)
+                if source is not None:
+                    sources[name] = (source, label)
+            if sources:
+                deployed = deploy_ui(state, env, console, sources)
+
         if changed:
-            save_state(state, plugins, skills)
+            save_state(state, plugins, skills, ui)
             console.say(f"reset to the baseline: {', '.join(changed)}")
         else:
             console.say("nothing to reset: no snapshot for those names")
+    report_deployed(console, deployed)
     return 0
+
+
+def _reset_ui_source(env, name, console):
+    """(path, label) the baseline pins for `name`, or (None, '') when it cannot be deployed."""
+    baseline_path = env.get("AGENTS_BASELINE")
+    if not baseline_path:
+        console.warn(
+            f"{PROG}: AGENTS_BASELINE is not set, so {name} is not redeployed now; "
+            "the deployed files stay until the next activation"
+        )
+        return None, ""
+    try:
+        baseline = load_baseline(baseline_path)
+    except UpdateError as exc:
+        console.warn(f"{PROG}: {exc}; {name} is not redeployed now")
+        return None, ""
+    pinned = baseline.ui.get(name)
+    if not pinned:
+        console.warn(
+            f"{PROG}: the baseline pins no {name} artifact; the deployed files stay until "
+            "the next activation"
+        )
+        return None, ""
+    if not Path(pinned).is_dir():
+        console.warn(f"{PROG}: the pinned {name} artifact {pinned} does not exist")
+        return None, ""
+    return Path(pinned), "baseline"
 
 
 def cmd_status(env, console):
@@ -900,10 +1214,10 @@ def cmd_status(env, console):
     )
 
     try:
-        plugins, skills = load_state(state)
+        plugins, skills, ui = load_state(state)
     except UpdateError as exc:
         console.warn(f"{PROG}: {exc}")
-        plugins, skills = {}, {}
+        plugins, skills, ui = {}, {}, {}
 
     console.say(f"plugins ({len(plugins)}):")
     for name in sorted(plugins):
@@ -925,6 +1239,20 @@ def cmd_status(env, console):
     if not skills:
         console.say("  none")
 
+    ui_names = sorted(set(ui) | set(baseline.ui if baseline else {}))
+    console.say(f"ui ({len(ui_names)}):")
+    for name in ui_names:
+        entry = ui.get(name) or {}
+        if entry.get("path"):
+            console.say(
+                f"  {name}: {entry['path']} (pinned {short(entry.get('baseline', ''))})"
+            )
+        else:
+            pinned = baseline.ui.get(name) if baseline else None
+            console.say(f"  {name}: baseline {pinned or 'unknown'}")
+    if not ui_names:
+        console.say("  none")
+
     sessions = load_sessions(state)
     if sessions:
         console.say(f"sessions ({len(sessions)}):")
@@ -938,10 +1266,10 @@ def cmd_check(env, console):
     state = state_dir(env)
     problems = []
     try:
-        plugins, skills = load_state(state)
+        plugins, skills, ui = load_state(state)
     except UpdateError as exc:
         problems.append(str(exc))
-        plugins, skills = {}, {}
+        plugins, skills, ui = {}, {}, {}
 
     baseline = None
     baseline_path = env.get("AGENTS_BASELINE")
@@ -981,6 +1309,18 @@ def cmd_check(env, console):
                 f"the {name} skill snapshot is gone from the store; "
                 f"run `{PROG} update {name} --skill`"
             )
+    for name, entry in sorted(ui.items()):
+        pinned = entry.get("baseline") or ""
+        if baseline is not None and pinned != baseline.revision:
+            problems.append(
+                f"{name} was published from {short(pinned)}, the pinned baseline is "
+                f"{short(baseline.revision)}; run `{PROG} update {name}`"
+            )
+        if not Path(entry["path"]).is_dir():
+            problems.append(
+                f"the {name} UI artifact is gone from the store; "
+                f"run `{PROG} update {name}`"
+            )
 
     for session in load_sessions(state):
         # Only a session that is still running can act on this: a dead session's failed ack
@@ -1004,12 +1344,12 @@ def cmd_resolve(env, console):
         raise UpdateError("AGENTS_BASELINE is not set, so there is nothing to resolve")
     baseline = load_baseline(baseline_path)
     try:
-        plugins, skills = load_state(state_dir(env))
+        plugins, skills, ui = load_state(state_dir(env))
     except UpdateError as exc:
         # A launch must not fail over a corrupt state file; the pinned baseline still loads.
         console.warn(f"{PROG}: {exc}; resolving the baseline only")
-        plugins, skills = {}, {}
-    json.dump(effective(baseline, plugins, skills), console.out, sort_keys=False)
+        plugins, skills, ui = {}, {}, {}
+    json.dump(effective(baseline, plugins, skills, ui), console.out, sort_keys=False)
     console.out.write("\n")
     console.out.flush()
     return 0
@@ -1223,7 +1563,9 @@ def report_ack(console, session, ack, what):
 def parser():
     main_parser = argparse.ArgumentParser(
         prog=PROG,
-        description="Publish the agents checkout's plugins and skills as immutable snapshots.",
+        description=(
+            "Publish the agents checkout's plugins, skills and Herdr UI as immutable snapshots."
+        ),
         epilog=(
             "state: $XDG_STATE_HOME/agents-updates/current.json; harnesses read the effective "
             "paths with `agents resolve`"
@@ -1234,7 +1576,8 @@ def parser():
     )
 
     update = commands.add_parser(
-        "update", help="snapshot plugins or skills from the checkout's working tree"
+        "update",
+        help="snapshot plugins, skills or UI artifacts from the checkout's working tree",
     )
     update.add_argument("names", nargs="+", metavar="NAME")
     update.add_argument(
@@ -1266,7 +1609,23 @@ def parser():
     commands.add_parser("status", help="show the snapshots and live session files")
     commands.add_parser("check", help="warn about drift; always exits 0")
     commands.add_parser(
-        "resolve", help="print the effective plugin and skill paths as JSON"
+        "resolve", help="print the effective plugin, skill and UI paths as JSON"
+    )
+
+    deploy = commands.add_parser(
+        "deploy-ui",
+        help="write a UI artifact's files where its app loads them; activation runs it",
+        description=(
+            "Deploy the effective UI artifact into the writable directory its app reads, "
+            "changing only the files that differ and pruning only files a previous deploy "
+            "wrote. Writes nothing else and restarts nothing: the app reloads what it watches."
+        ),
+    )
+    deploy.add_argument("name", metavar="NAME")
+    deploy.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="show what would change, and nothing else",
     )
     return main_parser
 
@@ -1286,8 +1645,10 @@ def main(argv=None, env=None, out=None, err=None):
             return cmd_check(environment, console)
         if args.command == "resolve":
             return cmd_resolve(environment, console)
+        if args.command == "deploy-ui":
+            return cmd_deploy_ui(args, environment, console)
         raise UpdateError(f"unknown command {args.command}")
-    except UpdateError as exc:
+    except (UpdateError, DeployError) as exc:
         console.warn(f"{PROG}: {exc}")
         return 1
     except OSError as exc:

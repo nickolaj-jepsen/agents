@@ -80,6 +80,23 @@ FAKE_NIX = textwrap.dedent(
       if [ -n "$snap" ] && [ -d "$snap/skills" ]; then cp -r "$snap/skills" "$store/snapshot/skills"; fi
       ln -sfn "$store/snapshot" "$farm/skills"
     fi
+    # UI artifacts: a folder of the runtime UI (`mods/`, `layouts/`). From FAKE_NIX_UI_SRC when
+    # the test names one, else a minimal tree, so a deploy has real files to write.
+    for entry in $(printf '%s\\n' "$expr" | sed -n 's/.*name = "ui\\/\\([^"]*\\)".*/\\1/p'); do
+      dir="$store/out-ui-$entry"
+      rm -rf "$dir"
+      mkdir -p "$dir"
+      if [ -n "${FAKE_NIX_UI_SRC:-}" ]; then
+        cp -r "$FAKE_NIX_UI_SRC"/. "$dir"/
+      else
+        mkdir -p "$dir/mods/$entry" "$dir/layouts"
+        printf '// main\\n' >"$dir/mods/$entry/main.js"
+        printf '{"place":"none"}\\n' >"$dir/mods/$entry/mod.json"
+        printf '{"id":"root"}\\n' >"$dir/layouts/nested.json"
+      fi
+      mkdir -p "$(dirname "$farm/ui/$entry")"
+      ln -sfn "$dir" "$farm/ui/$entry"
+    done
     ln -sfn "$farm" "$out"
     """
 )
@@ -89,8 +106,12 @@ def run_git(checkout, *args):
     subprocess.run(["git", "-C", str(checkout), *args], check=True, capture_output=True)
 
 
-def make_checkout(root, plugins=None, skills=None):
-    """A small agents-like git checkout: apps/<name>/package.json decides the halves."""
+def make_checkout(root, plugins=None, skills=None, ui=("herdr-ui",)):
+    """A small agents-like git checkout; `apps/<name>/package.json` decides what an app is.
+
+    A `claude` or `pi` field makes it a plugin; `herdr: {ui: true}` makes it Herdr's UI
+    artifact. The default checkout holds one of each, like the real one.
+    """
     checkout = Path(root) / "checkout"
     checkout.mkdir(parents=True)
     plugins = (
@@ -106,6 +127,32 @@ def make_checkout(root, plugins=None, skills=None):
             package[half] = {}
         (directory / "package.json").write_text(json.dumps(package), encoding="utf-8")
         (directory / "src" / "index.ts").write_text("export {};\n", encoding="utf-8")
+    for name in ui or ():
+        directory = checkout / "apps" / name
+        (directory / "src" / "mods" / "demo").mkdir(parents=True)
+        (directory / "src" / "mods" / "demo" / "queue.js").write_text(
+            "// helper\n", encoding="utf-8"
+        )
+        (directory / "src" / "mods" / "demo" / "main.js").write_text(
+            "// main\n", encoding="utf-8"
+        )
+        (directory / "src" / "mods" / "demo" / "mod.json").write_text(
+            '{"place": "none"}\n', encoding="utf-8"
+        )
+        (directory / "src" / "layouts").mkdir(parents=True)
+        (directory / "src" / "layouts" / "nested.json").write_text(
+            '{"id": "root"}\n', encoding="utf-8"
+        )
+        (directory / "package.json").write_text(
+            json.dumps(
+                {
+                    "name": f"@nickolaj-jepsen/{name}",
+                    "version": "0.1.0",
+                    "herdr": {"ui": True},
+                }
+            ),
+            encoding="utf-8",
+        )
     for name in skills if skills is not None else ["demo"]:
         directory = checkout / "skills" / name
         directory.mkdir(parents=True)
@@ -201,8 +248,85 @@ class BaselineStateTest(unittest.TestCase):
                 with self.assertRaises(cli.UpdateError):
                     cli.load_baseline(self.write_baseline(payload))
 
+    def test_a_baseline_without_ui_reads_as_nothing_to_deploy(self):
+        path = self.write_baseline({"revision": REVISION, "plugins": {}, "skills": {}})
+        self.assertEqual(cli.load_baseline(path).ui, {})
+
+    def test_a_baseline_reads_ui_paths_like_skills(self):
+        path = self.write_baseline(
+            {
+                "revision": REVISION,
+                "ui": {"herdr-ui": "/nix/store/herdr-ui", "other-ui": "/nix/store/o"},
+            }
+        )
+        self.assertEqual(
+            cli.load_baseline(path).ui,
+            {"herdr-ui": "/nix/store/herdr-ui", "other-ui": "/nix/store/o"},
+        )
+
+    def test_a_baseline_rejects_a_ui_that_is_not_paths(self):
+        for payload in (
+            {"ui": []},
+            {"ui": {"herdr-ui": 3}},
+            {"ui": {"herdr-ui": None}},
+        ):
+            with self.subTest(payload=payload):
+                path = self.write_baseline({"revision": REVISION, **payload})
+                with self.assertRaises(cli.UpdateError):
+                    cli.load_baseline(path)
+
+    def test_an_old_state_file_without_ui_still_loads(self):
+        state = self.temporary / "state"
+        state.mkdir()
+        (state / "current.json").write_text(
+            json.dumps(
+                {
+                    "plugins": {
+                        "answer": {
+                            "pi": "/nix/store/a",
+                            "claude": None,
+                            "baseline": REVISION,
+                        }
+                    },
+                    "skills": {"demo": {"path": "/nix/store/s", "baseline": REVISION}},
+                }
+            ),
+            encoding="utf-8",
+        )
+        plugins, skills, ui = cli.load_state(state)
+        self.assertIn("answer", plugins)
+        self.assertIn("demo", skills)
+        self.assertEqual(ui, {})
+
+    def test_state_roundtrips_a_ui_entry(self):
+        state = self.temporary / "state"
+        cli.save_state(
+            state,
+            {},
+            {},
+            {"herdr-ui": {"path": "/nix/store/out-ui-herdr-ui", "baseline": REVISION}},
+        )
+        raw = json.loads((state / "current.json").read_text(encoding="utf-8"))
+        self.assertEqual(list(raw), ["plugins", "skills", "ui"])
+        self.assertEqual(
+            raw["ui"],
+            {"herdr-ui": {"path": "/nix/store/out-ui-herdr-ui", "baseline": REVISION}},
+        )
+        self.assertEqual(cli.load_state(state)[2], raw["ui"])
+
+    def test_a_state_rejects_a_ui_entry_without_a_path(self):
+        state = self.temporary / "state"
+        state.mkdir()
+        for entry in ({}, {"path": 3}, "nope"):
+            with self.subTest(entry=entry):
+                (state / "current.json").write_text(
+                    json.dumps({"ui": {"herdr-ui": entry}}), encoding="utf-8"
+                )
+                with self.assertRaises(cli.UpdateError):
+                    cli.load_state(state)
+
     def test_absent_state_is_empty(self):
-        self.assertEqual(cli.load_state(self.temporary / "state"), ({}, {}))
+        self.assertEqual(cli.load_state(self.temporary / "state"), ({}, {}, {}))
 
     def test_state_roundtrip_sorts_and_keeps_the_schema(self):
         state = self.temporary / "state"
@@ -219,13 +343,14 @@ class BaselineStateTest(unittest.TestCase):
             {"demo": {"path": "/nix/store/skills/demo", "baseline": REVISION}},
         )
         raw = json.loads((state / "current.json").read_text(encoding="utf-8"))
-        self.assertEqual(list(raw), ["plugins", "skills"])
+        self.assertEqual(list(raw), ["plugins", "skills", "ui"])
         self.assertEqual(list(raw["plugins"]), ["answer", "zulu"])
         self.assertEqual(
             raw["plugins"]["answer"],
             {"pi": "/nix/store/a", "claude": "/nix/store/c", "baseline": REVISION},
         )
-        plugins, skills = cli.load_state(state)
+        plugins, skills, ui = cli.load_state(state)
+        self.assertEqual(ui, {})
         self.assertEqual(plugins["zulu"]["claude"], None)
         self.assertEqual(skills["demo"]["path"], "/nix/store/skills/demo")
         self.assertEqual(
@@ -282,8 +407,28 @@ class EffectiveTest(unittest.TestCase):
                     "docfix": {"pi": "/b/docfix", "claude": None},
                 },
                 "skills": {"demo": "/b/skills/demo"},
+                "ui": {},
             },
         )
+
+    def test_ui_resolves_from_the_baseline_and_the_override(self):
+        baseline = cli.Baseline(
+            revision=REVISION,
+            plugins={},
+            skills={},
+            ui={"herdr-ui": "/b/herdr-ui", "other-ui": "/b/other-ui"},
+        )
+        resolved = cli.effective(
+            baseline,
+            {},
+            {},
+            {"herdr-ui": {"path": "/s/herdr-ui", "baseline": REVISION}},
+        )
+        self.assertEqual(
+            resolved["ui"], {"herdr-ui": "/s/herdr-ui", "other-ui": "/b/other-ui"}
+        )
+        # The keys a consumer already reads keep their shape and their order.
+        self.assertEqual(list(resolved), ["plugins", "skills", "ui"])
 
     def test_override_wins_and_missing_variant_inherits(self):
         baseline = self.baseline({"answer": {"pi": "/b/pi", "claude": "/b/claude"}})
@@ -301,6 +446,7 @@ class EffectiveTest(unittest.TestCase):
             resolved["plugins"], {"brand-new": {"pi": "/s/pi", "claude": None}}
         )
         self.assertEqual(resolved["skills"], {})
+        self.assertEqual(resolved["ui"], {})
 
     def test_skills_override_and_union(self):
         baseline = self.baseline(
@@ -331,7 +477,7 @@ class EffectiveTest(unittest.TestCase):
             {},
             {},
         )
-        self.assertEqual(list(resolved), ["plugins", "skills"])
+        self.assertEqual(list(resolved), ["plugins", "skills", "ui"])
         self.assertEqual(list(resolved["plugins"]), ["answer", "zulu"])
         self.assertEqual(list(resolved["plugins"]["answer"]), ["pi", "claude"])
 
@@ -353,6 +499,15 @@ class Fixture(unittest.TestCase):
         self.store = self.temporary / "store"
         (self.store / "nixpkgs-source").mkdir(parents=True)
         (self.store / "claude-code-2.0").mkdir()
+        # A pinned UI artifact with content a test can tell apart from a published one.
+        (self.store / "baseline-herdr-ui" / "mods" / "demo").mkdir(parents=True)
+        (self.store / "baseline-herdr-ui" / "mods" / "demo" / "main.js").write_text(
+            "// pinned\n", encoding="utf-8"
+        )
+        (self.store / "baseline-herdr-ui" / "layouts").mkdir()
+        (self.store / "baseline-herdr-ui" / "layouts" / "nested.json").write_text(
+            '{"id": "pinned"}\n', encoding="utf-8"
+        )
         self.bin = self.temporary / "bin"
         self.bin.mkdir()
         fake = self.bin / "nix"
@@ -367,11 +522,13 @@ class Fixture(unittest.TestCase):
         self.write_baseline()
         self.state_home = self.temporary / "state"
         self.expr_log = self.temporary / "expr.log"
+        self.config_home = self.temporary / "config"
         self.env = {
             "PATH": f"{self.bin}{os.pathsep}{os.environ.get('PATH', '')}",
             "HOME": str(self.temporary / "home"),
             "TMPDIR": str(self.snapshots),
             "XDG_STATE_HOME": str(self.state_home),
+            "XDG_CONFIG_HOME": str(self.config_home),
             "AGENTS_BASELINE": str(self.baseline_path),
             "AGENTS_CHECKOUT": str(self.checkout),
             "AGENTS_NIXPKGS": str(self.store / "nixpkgs-source"),
@@ -380,6 +537,9 @@ class Fixture(unittest.TestCase):
             "AGENTS_UPDATE_LOCK_TIMEOUT": "5",
             "FAKE_NIX_STORE": str(self.store),
             "FAKE_NIX_LOG": str(self.expr_log),
+            # The artifact a publish builds is the checkout's own UI sources, so a deploy has
+            # real files to put where Herdr reads them.
+            "FAKE_NIX_UI_SRC": str(self.checkout / "apps" / "herdr-ui" / "src"),
         }
 
     # -- helpers ---------------------------------------------------------------------
@@ -399,7 +559,7 @@ class Fixture(unittest.TestCase):
     def current(self):
         return self.state / "current.json"
 
-    def write_baseline(self, revision=REVISION, plugins=None, skills=None):
+    def write_baseline(self, revision=REVISION, plugins=None, skills=None, ui=None):
         payload = {
             "revision": revision,
             "plugins": plugins
@@ -417,9 +577,15 @@ class Fixture(unittest.TestCase):
             "skills": skills
             if skills is not None
             else {"demo": str(self.store / "baseline-skills" / "demo")},
+            "ui": ui if ui is not None else {"herdr-ui": str(self.baseline_ui)},
         }
         self.baseline_path.write_text(json.dumps(payload), encoding="utf-8")
         return payload
+
+    @property
+    def baseline_ui(self):
+        """The pinned UI artifact: a store-shaped tree a deploy can read."""
+        return self.store / "baseline-herdr-ui"
 
     def run_cli(self, *argv, env=None):
         out, err = io.StringIO(), io.StringIO()
@@ -812,8 +978,8 @@ class UpdateTest(Fixture):
         code, out, err = self.update("answer", "--dry-run")
         self.assertEqual(code, 0, err)
         self.assertIn("dry run: answer pi, answer claude from", out)
-        self.assertIn("(6 files, clean)", out)
-        self.assertIn("dry run: nothing built, state unchanged", out)
+        self.assertIn("(11 files, clean)", out)
+        self.assertIn("dry run: nothing built, deployed or recorded", out)
         self.assertFalse(self.expr_log.exists())
         self.assertFalse(self.current.exists())
 
@@ -982,6 +1148,253 @@ class ResetTest(Fixture):
         )
 
 
+class UiTest(Fixture):
+    """The Herdr UI artifact: detected from its manifest, built as a package, deployed."""
+
+    @property
+    def deployed(self):
+        return self.config_home / "herdr-app"
+
+    def deployed_text(self, relative):
+        return (self.deployed / relative).read_text(encoding="utf-8")
+
+    def ui_state(self):
+        return self.read_state().get("ui", {})
+
+    def test_update_detects_the_ui_artifact_without_a_flag(self):
+        out, err = self.assert_ok(self.update("herdr-ui"))
+        self.assertIn("herdr-ui ui: ", out)
+        self.assertIn("deployed", out)
+        # The artifact is the flake's own package, not plugin packaging.
+        expression = self.expr()
+        self.assertIn("flake.packages.${system}", expression)
+        self.assertIn('name = "ui/herdr-ui"', expression)
+        self.assertNotIn("pluginsFor", expression.replace("pluginsFor pkgs", ""))
+        self.assertEqual(
+            self.ui_state()["herdr-ui"]["path"], str(self.store / "out-ui-herdr-ui")
+        )
+        self.assertEqual(self.ui_state()["herdr-ui"]["baseline"], REVISION)
+        self.assertEqual(self.deployed_text("mods/demo/main.js"), "// main\n")
+        self.assertEqual(self.deployed_text("layouts/nested.json"), '{"id": "root"}\n')
+        self.assertFalse((self.deployed / "shared.json").exists())
+
+    def test_update_says_it_did_not_restart_or_confirm_anything(self):
+        out, _ = self.assert_ok(self.update("herdr-ui"))
+        self.assertIn("no restart; Herdr watches these files", out)
+        # The honest half: a write is not proof that a running app applied anything.
+        self.assertIn("not that a running app applied it", out)
+
+    def test_a_second_update_writes_nothing(self):
+        self.assert_ok(self.update("herdr-ui"))
+        out, _ = self.assert_ok(self.update("herdr-ui"))
+        self.assertIn("deployed 0 written", out)
+        self.assertNotIn("no restart", out)
+
+    def test_update_dry_run_builds_and_deploys_nothing(self):
+        out, err = self.assert_ok(self.update("herdr-ui", "--dry-run"))
+        self.assertIn("herdr-ui ui", out)
+        self.assertIn(f"would deploy into {self.deployed}", out)
+        self.assertIn("nothing built, deployed or recorded", out)
+        self.assertFalse(self.expr())
+        self.assertFalse(self.current.exists())
+        self.assertFalse(self.deployed.exists())
+
+    def test_reset_drops_the_override_and_deploys_the_baseline(self):
+        self.assert_ok(self.update("herdr-ui"))
+        self.assertEqual(
+            len([path for path in self.deployed.rglob("*") if path.is_file()]), 4
+        )
+        out, err = self.assert_ok(self.run_cli("reset", "herdr-ui"))
+        self.assertIn("herdr-ui (ui)", out)
+        self.assertIn("deployed", out)
+        self.assertEqual(self.ui_state(), {})
+        # The pinned artifact's files are back, and the published ones it lacks are pruned.
+        self.assertEqual(self.deployed_text("mods/demo/main.js"), "// pinned\n")
+        self.assertEqual(
+            self.deployed_text("layouts/nested.json"), '{"id": "pinned"}\n'
+        )
+        self.assertFalse((self.deployed / "mods" / "demo" / "queue.js").exists())
+        self.assertFalse((self.deployed / "mods" / "demo" / "mod.json").exists())
+
+    def test_reset_refuses_a_harness_filter_for_a_ui_artifact(self):
+        self.assert_ok(self.update("herdr-ui"))
+        code, _, err = self.run_cli("reset", "herdr-ui", "--harness", "pi")
+        self.assertEqual(code, 1)
+        self.assertIn(
+            "no --harness halves".replace("no --harness halves", "Herdr UI artifact"),
+            err,
+        )
+        # Nothing was dropped on the way to the refusal.
+        self.assertIn("herdr-ui", self.ui_state())
+
+    def test_reset_keeps_the_old_root_for_a_running_session(self):
+        self.assert_ok(self.update("herdr-ui"))
+        roots = list((self.state / "roots").iterdir())
+        self.assert_ok(self.run_cli("reset", "herdr-ui"))
+        self.assertEqual(list((self.state / "roots").iterdir()), roots)
+
+    def test_deploy_ui_without_any_publication_deploys_the_baseline(self):
+        out, err = self.assert_ok(self.run_cli("deploy-ui", "herdr-ui"))
+        self.assertIn("deployed 2 written", out)
+        self.assertIn("baseline", out)
+        self.assertEqual(self.deployed_text("mods/demo/main.js"), "// pinned\n")
+        self.assertEqual(self.expr(), "")
+
+    def test_deploy_ui_is_idempotent_and_writes_only_what_changed(self):
+        self.assert_ok(self.run_cli("deploy-ui", "herdr-ui"))
+        out, err = self.assert_ok(self.run_cli("deploy-ui", "herdr-ui"))
+        self.assertIn("deployed 0 written, 2 unchanged", out)
+        self.assertNotIn("no restart", out)
+
+    def test_deploy_ui_honours_a_published_override(self):
+        self.assert_ok(self.update("herdr-ui"))
+        (self.deployed / "mods" / "demo" / "main.js").write_text(
+            "// edited\n", encoding="utf-8"
+        )
+        self.assert_ok(self.run_cli("deploy-ui", "herdr-ui"))
+        self.assertEqual(self.deployed_text("mods/demo/main.js"), "// main\n")
+
+    def test_deploy_ui_dry_run_writes_nothing(self):
+        out, err = self.assert_ok(self.run_cli("deploy-ui", "herdr-ui", "--dry-run"))
+        self.assertIn("would write", out)
+        self.assertIn("would write mods/demo/main.js", out)
+        self.assertFalse(self.deployed.exists())
+        self.assertFalse((self.state / "ui" / "herdr-ui.json").exists())
+
+    def test_a_published_artifact_that_left_the_store_falls_back_to_the_baseline(self):
+        self.assert_ok(self.update("herdr-ui"))
+        shutil.rmtree(self.store / "out-ui-herdr-ui")
+        out, err = self.assert_ok(self.run_cli("deploy-ui", "herdr-ui"))
+        self.assertIn("gone from the store", err)
+        self.assertIn("baseline", out)
+        self.assertEqual(self.deployed_text("mods/demo/main.js"), "// pinned\n")
+
+    def test_deploy_ui_ignores_a_corrupt_state(self):
+        self.state.mkdir(parents=True)
+        self.current.write_text("{not json", encoding="utf-8")
+        out, err = self.assert_ok(self.run_cli("deploy-ui", "herdr-ui"))
+        self.assertIn("deploying the baseline only", err)
+        self.assertEqual(self.deployed_text("mods/demo/main.js"), "// pinned\n")
+
+    def test_deploy_ui_refuses_a_target_it_cannot_place(self):
+        # In the baseline, so there is an artifact, but no deployment directory is known.
+        self.write_baseline(ui={"mystery-ui": str(self.store / "baseline-herdr-ui")})
+        code, _, err = self.run_cli("deploy-ui", "mystery-ui")
+        self.assertEqual(code, 1)
+        self.assertIn("no deployment directory is known", err)
+        # And AGENTS_UI_DIR says where it goes, which is how a test or a second window does it.
+        env = dict(self.env)
+        env["AGENTS_UI_DIR"] = str(self.temporary / "elsewhere")
+        code, out, err = self.run_cli("deploy-ui", "mystery-ui", env=env)
+        self.assertEqual(code, 0, err)
+        self.assertTrue(
+            (self.temporary / "elsewhere" / "mods" / "demo" / "main.js").is_file()
+        )
+
+    def test_deploy_ui_without_a_baseline_fails(self):
+        env = dict(self.env)
+        env.pop("AGENTS_BASELINE")
+        code, _, err = self.run_cli("deploy-ui", "herdr-ui", env=env)
+        self.assertEqual(code, 1)
+        self.assertIn("AGENTS_BASELINE is not set", err)
+
+    def test_deploy_ui_says_when_a_name_is_in_no_baseline(self):
+        self.write_baseline(ui={})
+        code, _, err = self.run_cli("deploy-ui", "herdr-ui")
+        self.assertEqual(code, 1)
+        self.assertIn("nothing to deploy", err)
+
+    def test_status_lists_the_ui_artifact(self):
+        self.assert_ok(self.update("herdr-ui"))
+        out, err = self.assert_ok(self.run_cli("status"))
+        self.assertIn("ui (1):", out)
+        self.assertIn(f"herdr-ui: {self.store / 'out-ui-herdr-ui'}", out)
+        self.assertIn("pinned 1111111", out)
+
+    def test_status_shows_the_pinned_artifact_when_nothing_is_published(self):
+        out, err = self.assert_ok(self.run_cli("status"))
+        self.assertIn(f"herdr-ui: baseline {self.store / 'baseline-herdr-ui'}", out)
+
+    def test_check_is_clean_after_an_update(self):
+        self.assert_ok(self.update("herdr-ui"))
+        out, err = self.assert_ok(self.run_cli("check"))
+        self.assertEqual(out, "")
+        self.assertEqual(err, "")
+
+    def test_check_warns_about_a_ui_snapshot_that_left_the_store(self):
+        self.assert_ok(self.update("herdr-ui"))
+        shutil.rmtree(self.store / "out-ui-herdr-ui")
+        out, _ = self.assert_ok(self.run_cli("check"))
+        self.assertIn("the herdr-ui UI artifact is gone from the store", out)
+        self.assertIn("agents update herdr-ui", out)
+
+    def test_check_warns_when_the_baseline_moved(self):
+        self.assert_ok(self.update("herdr-ui"))
+        self.write_baseline(revision="2222222222222222222222222222222222222222")
+        out, _ = self.assert_ok(self.run_cli("check"))
+        self.assertIn("herdr-ui was published from 1111111", out)
+
+    def test_resolve_includes_the_ui_paths(self):
+        resolved = json.loads(self.assert_ok(self.run_cli("resolve"))[0])
+        self.assertEqual(
+            resolved["ui"], {"herdr-ui": str(self.store / "baseline-herdr-ui")}
+        )
+        # The keys that were there first keep their order and shape.
+        self.assertEqual(list(resolved), ["plugins", "skills", "ui"])
+        self.assert_ok(self.update("herdr-ui"))
+        resolved = json.loads(self.assert_ok(self.run_cli("resolve"))[0])
+        self.assertEqual(
+            resolved["ui"], {"herdr-ui": str(self.store / "out-ui-herdr-ui")}
+        )
+
+    def test_an_app_that_is_neither_a_plugin_nor_a_ui_artifact_is_refused(self):
+        directory = self.checkout / "apps" / "mystery"
+        directory.mkdir(parents=True)
+        (directory / "package.json").write_text(
+            json.dumps({"name": "mystery", "version": "0.1.0"}), encoding="utf-8"
+        )
+        code, _, err = self.update("mystery")
+        self.assertEqual(code, 1)
+        self.assertIn("neither a claude nor a pi half", err)
+        self.assertIn('"herdr": {"ui": true}', err)
+        self.assertFalse(self.current.exists())
+
+    def test_the_ui_metadata_must_say_ui(self):
+        directory = self.checkout / "apps" / "mystery"
+        directory.mkdir(parents=True)
+        (directory / "package.json").write_text(
+            json.dumps({"name": "mystery", "version": "0.1.0", "herdr": {}}),
+            encoding="utf-8",
+        )
+        code, _, err = self.update("mystery")
+        self.assertEqual(code, 1)
+        self.assertIn("neither a claude nor a pi half", err)
+
+    def test_a_harness_filter_is_refused_for_a_ui_artifact(self):
+        code, _, err = self.update("herdr-ui", "--harness", "pi")
+        self.assertEqual(code, 1)
+        self.assertIn("no --harness halves", err)
+
+    def test_the_ui_half_does_not_need_a_claude_or_pi_build(self):
+        # No claude half in the plan, so the expression must not wire mkClaudePlugin at all.
+        self.assert_ok(self.update("herdr-ui"))
+        self.assertNotIn("mkClaude", self.expr())
+        self.assertNotIn("claude-code", self.expr())
+
+    def test_live_says_herdr_reloads_its_own_files(self):
+        out, err = self.assert_ok(self.update("herdr-ui", "--live", "pi"))
+        self.assertIn("no reload request; Herdr watches the deployed files", out)
+        self.assertNotIn("live pi:", out)
+
+    def test_a_ui_artifact_can_be_published_alongside_a_plugin(self):
+        out, err = self.assert_ok(self.update("answer", "herdr-ui"))
+        self.assertIn("answer pi", out)
+        self.assertIn("herdr-ui ui", out)
+        raw = self.read_state()
+        self.assertIn("answer", raw["plugins"])
+        self.assertIn("herdr-ui", raw["ui"])
+
+
 class StatusCheckTest(Fixture):
     def test_status_reports_the_pinned_revision_and_snapshots(self):
         self.assert_ok(self.update("answer"))
@@ -1147,6 +1560,7 @@ class ResolveCliTest(Fixture):
                     },
                 },
                 "skills": {"demo": str(self.store / "baseline-skills" / "demo")},
+                "ui": {"herdr-ui": str(self.store / "baseline-herdr-ui")},
             },
         )
 

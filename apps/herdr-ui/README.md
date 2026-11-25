@@ -33,6 +33,8 @@ $out/mods/<name>/main.js
 
 Herdr watches its `mods/` and `layouts/` folders and reloads a change on its own, so the artifact is a plain tree and there is nothing to build. Whoever installs it does it a file at a time (write, then rename into place, mods before layouts), which is why nothing here packs the folders into an archive.
 
+This app declares that in its `package.json` — `"herdr": {"ui": true}` — which is how the updates tool recognises it with no flag to remember: `agents update herdr-ui` builds `packages.<system>.herdr-ui` from the checkout and deploys it into `$XDG_CONFIG_HOME/herdr-app`, and `agents deploy-ui herdr-ui` deploys whatever is effective (the published artifact, or the pinned one). A switch runs that deploy, so the files there are writable copies: Herdr's layout editor and the metadata it writes beside a mod belong to the app, and the tree that lasts is this one.
+
 ## Checks
 
 ```bash
