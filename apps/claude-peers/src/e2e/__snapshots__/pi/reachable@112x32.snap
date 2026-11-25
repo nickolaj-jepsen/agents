@@ -1,0 +1,18 @@
+# claude-peers/pi/reachable 112x32 @0,11 (112x6)
+ list_agents
+ This session: pi-cwd [ref]
+ No other sessions are reachable.
+
+
+ No other session is reachable, so there is nobody to message.
+--- styles
+1 2x11 1x100
+1 3x26 .x3 1x82
+1 3x32 1x79
+1x112
+-
+-
+--- legend
+1 bg=#254131
+2 fg=#dee0e1 bg=#254131 bold
+3 fg=#9da5a9 bg=#254131
