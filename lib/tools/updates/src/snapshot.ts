@@ -10,6 +10,7 @@ import fs from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { UpdatesError, describeError } from "./core/errors.ts";
+import { InterruptError, interruptedChild, throwIfInterrupted } from "./interrupt.ts";
 import type { Environment } from "./core/paths.ts";
 
 export type Snapshot = {
@@ -46,6 +47,9 @@ function git(checkout: string, args: string[], environment?: Environment): Buffe
       `git ${args.join(" ")} in ${checkout} failed: ${describeError(result.error)}`,
     );
   }
+  // git handles SIGINT itself and exits the way a shell reports it; that is the person, not a
+  // broken repository.
+  if (interruptedChild(result)) throw new InterruptError("interrupted");
   if (result.status !== 0) {
     const stderr = result.stderr?.toString("utf8") ?? "";
     const stdout = result.stdout?.toString("utf8") ?? "";
@@ -78,6 +82,7 @@ export function publishSnapshot(
     ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
     environment,
   );
+  throwIfInterrupted();
 
   fs.mkdirSync(destination, { recursive: true });
   let files = 0;

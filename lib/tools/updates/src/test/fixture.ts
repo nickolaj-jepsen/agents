@@ -38,8 +38,12 @@ if [ -n "\${FAKE_NIX_FAIL:-}" ]; then
   echo "fake nix: the build failed" >&2
   exit 1
 fi
-# A publication that takes a moment, so a spec can hold one open across another process.
-if [ -n "\${FAKE_NIX_SLEEP:-}" ]; then sleep "$FAKE_NIX_SLEEP"; fi
+# A publication that takes a moment, so a spec can hold one open across another process, and a
+# marker so it can tell the build has started (the snapshot exists before the build does).
+if [ -n "\${FAKE_NIX_SLEEP:-}" ]; then
+  if [ -n "\${FAKE_NIX_MARKER:-}" ]; then : >"$FAKE_NIX_MARKER"; fi
+  sleep "$FAKE_NIX_SLEEP"
+fi
 store=\${FAKE_NIX_STORE:?}
 # A fresh directory per invocation, the way a real linkFarm build gets a new store path: the GC
 # root of an older generation must not see this build's outputs.

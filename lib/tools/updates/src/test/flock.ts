@@ -1,8 +1,10 @@
 /**
- * The real flock(2) helper for the specs. `agents-flock` is built by Nix and named by the wrapper
- * (`AGENTS_FLOCK`); a checkout without Nix gets the same program compiled once from its source with
- * the system compiler, and a machine with neither falls back to Perl's `flock`, which takes the same
- * kernel lock. Nothing here is shipped: the package's own helper is the C program.
+ * The real flock(2) helper for the specs.
+ *
+ * `agents-flock` is built by Nix and named by the wrapper (`AGENTS_FLOCK`); a checkout without Nix
+ * compiles the same C program once with the system compiler. There is deliberately no fallback
+ * interpreter: if an explicit helper is missing or the compiler fails, the specs fail here with
+ * the compiler's own output rather than quietly testing something else.
  */
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -10,7 +12,14 @@ import os from "node:os";
 import { delimiter, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-let cached: string | undefined;
+export type HelperLookup = {
+  env?: NodeJS.ProcessEnv;
+  /** Where a name would be found; the specs inject this to prove each failure mode. */
+  which?: (name: string) => string | undefined;
+  /** Build the C helper; the specs inject a failure to prove it is not masked. */
+  compile?: (compiler: string, source: string, target: string) => void;
+  makeDirectory?: () => string;
+};
 
 const isExecutable = (path: string): boolean => {
   try {
@@ -30,49 +39,54 @@ const onPath = (name: string): string | undefined => {
   return undefined;
 };
 
-const PERL_HELPER = `#!/usr/bin/env perl
-use strict;
-use warnings;
-use Fcntl qw(:flock O_CREAT O_RDWR);
-use Time::HiRes qw(time sleep);
-$| = 1;
-my ($path, $timeout, $poll) = @ARGV;
-$timeout = 0 unless defined $timeout;
-$poll = 0.1 unless defined $poll && $poll > 0;
-sysopen(my $fh, $path, O_RDWR | O_CREAT, 0644)
-  or die "agents-flock(perl): $path: $!\\n";
-my $deadline = $timeout < 0 ? -1 : time() + $timeout;
-my $waited = 0;
-while (1) {
-  last if flock($fh, LOCK_EX | LOCK_NB);
-  unless ($waited) { print "waiting\\n"; $waited = 1; }
-  my $left = $deadline < 0 ? $poll : $deadline - time();
-  if ($deadline >= 0 && $left <= 0) { close($fh); exit 75; }
-  my $nap = ($deadline < 0 || $left > $poll) ? $poll : $left;
-  sleep($nap) if $nap > 0;
-}
-print "locked\\n";
-while (1) {
-  my $got = sysread(STDIN, my $buffer, 4096);
-  last if !defined($got) || $got == 0;
-}
-close($fh);
-exit 0;
-`;
+export const helperSource = (): string =>
+  fileURLToPath(new URL("../../../../../pkgs/agents-flock.c", import.meta.url));
 
-/** The helper to point `AGENTS_FLOCK` at in the specs. */
-export function flockHelperForTests(): string {
-  if (cached !== undefined) return cached;
-  if (process.env.AGENTS_FLOCK) {
-    cached = process.env.AGENTS_FLOCK;
-    return cached;
+function compileHelper(compiler: string, source: string, target: string): void {
+  try {
+    execFileSync(compiler, ["-O2", "-o", target, source], {
+      stdio: ["ignore", "pipe", "pipe"],
+      encoding: "utf8",
+    });
+  } catch (error) {
+    const stderr = (error as { stderr?: string }).stderr ?? "";
+    const detail = stderr.trim() || (error instanceof Error ? error.message : String(error));
+    throw new Error(detail);
   }
-  const declared = onPath("agents-flock");
-  if (declared !== undefined) {
-    cached = declared;
-    return cached;
+}
+
+function makeDirectory(): string {
+  return fs.mkdtempSync(join(os.tmpdir(), "agents-flock-helpers-"));
+}
+
+/**
+ * The helper `AGENTS_FLOCK` names, else `agents-flock` on PATH, else the C source compiled once.
+ * A named-but-unusable helper and a failed compilation are errors: nothing here substitutes a
+ * different lock implementation, because the suites must exercise the one that ships.
+ */
+export function resolveFlockHelper(lookup: HelperLookup = {}): string {
+  const env = lookup.env ?? process.env;
+  const which = lookup.which ?? onPath;
+  if (env.AGENTS_FLOCK) {
+    if (!isExecutable(env.AGENTS_FLOCK)) {
+      throw new Error(
+        `AGENTS_FLOCK=${env.AGENTS_FLOCK} is not an executable file; point it at a build of ` +
+          `${helperSource()} (or unset it to compile it here)`,
+      );
+    }
+    return env.AGENTS_FLOCK;
   }
-  const directory = fs.mkdtempSync(join(os.tmpdir(), "agents-flock-helpers-"));
+  const declared = which("agents-flock");
+  if (declared !== undefined) return declared;
+  const compiler = which("cc") ?? which("gcc") ?? which("clang");
+  if (compiler === undefined) {
+    throw new Error(
+      "no flock helper for the specs: neither AGENTS_FLOCK nor agents-flock is usable, and no C " +
+        `compiler (cc, gcc, clang) is on PATH to build ${helperSource()}; install one or set ` +
+        "AGENTS_FLOCK to a build of it",
+    );
+  }
+  const directory = (lookup.makeDirectory ?? makeDirectory)();
   process.on("exit", () => {
     try {
       fs.rmSync(directory, { recursive: true, force: true });
@@ -80,23 +94,20 @@ export function flockHelperForTests(): string {
       // A helper left in /tmp is a nuisance, not a failed suite.
     }
   });
-  const compiler = onPath("cc") ?? onPath("gcc") ?? onPath("clang");
-  const perl = onPath("perl");
-  if (compiler !== undefined) {
-    const source = fileURLToPath(new URL("../../../../../pkgs/agents-flock.c", import.meta.url));
-    const binary = join(directory, "agents-flock");
-    execFileSync(compiler, ["-O2", "-o", binary, source], { stdio: "ignore" });
-    cached = binary;
-    return cached;
+  const target = join(directory, "agents-flock");
+  try {
+    (lookup.compile ?? compileHelper)(compiler, helperSource(), target);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`cannot build ${helperSource()} with ${compiler}: ${detail}`);
   }
-  if (perl !== undefined) {
-    const script = join(directory, "agents-flock");
-    fs.writeFileSync(script, PERL_HELPER, { mode: 0o755 });
-    cached = script;
-    return cached;
-  }
-  throw new Error(
-    "no flock helper for the specs: no AGENTS_FLOCK, no agents-flock on PATH, and no cc or perl " +
-      "to build pkgs/agents-flock.c; set AGENTS_FLOCK to it",
-  );
+  return target;
+}
+
+let cached: string | undefined;
+
+/** The helper every lock spec points `AGENTS_FLOCK` at. */
+export function flockHelperForTests(): string {
+  cached ??= resolveFlockHelper();
+  return cached;
 }

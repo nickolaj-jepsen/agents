@@ -41,6 +41,10 @@ if [ -n "${FAKE_NIX_FAIL:-}" ]; then
   echo "fake nix: the build failed" >&2
   exit 1
 fi
+if [ -n "${FAKE_NIX_SLEEP:-}" ]; then
+  if [ -n "${FAKE_NIX_MARKER:-}" ]; then : >"$FAKE_NIX_MARKER"; fi
+  sleep "$FAKE_NIX_SLEEP"
+fi
 store=${FAKE_NIX_STORE:?}
 farm=$(mktemp -d "$store/farm.XXXXXX")
 for entry in $(printf '%s\n' "$expr" | sed -n 's/.*name = "\(plugins\/[^"]*\)".*/\1/p'); do
@@ -149,6 +153,17 @@ set -e
 test "$status" -eq 1 || fail "an update behind a held lock should exit 1, not $status"
 grep -q 'another agents update holds' "$work/lock.err" || fail "the lock timeout message changed"
 
+# A negative timeout has already passed, as Python's deadline had: fail at once, not forever.
+start=$(date +%s)
+set +e
+AGENTS_UPDATE_LOCK_TIMEOUT=-1 cli update answer >/dev/null 2>"$work/negative.err"
+negative=$?
+set -e
+elapsed=$(($(date +%s) - start))
+test "$negative" -eq 1 || fail "a negative lock timeout should exit 1, not $negative"
+grep -q 'another agents update holds' "$work/negative.err" || fail "the negative timeout message changed"
+test "$elapsed" -lt 5 || fail "a negative lock timeout waited instead of failing at once"
+
 exec 9>&-
 wait "$holder"
 cli update answer >/dev/null || fail "an update after the lock was released failed"
@@ -163,6 +178,28 @@ kill -9 "$holder"
 exec 9>&-
 wait "$holder" 2>/dev/null || true
 cli update answer >/dev/null || fail "an update after a killed holder failed"
+
+# A Ctrl+C during a build: the prior publication survives, the snapshot is cleaned up, and the
+# process exits 130 with the message Python printed. The fake build says when it has started.
+cp "$current" "$work/before-sigint.json"
+# The node process itself is the background job, so the signal reaches the CLI and not a wrapper.
+set +e
+FAKE_NIX_SLEEP=2 FAKE_NIX_MARKER="$work/nix-started" \
+  node "$package/share/agents-updates/src/bin.ts" update answer >"$work/sigint.out" 2>"$work/sigint.err" &
+interrupted=$!
+set -e
+for _ in $(seq 100); do [ -f "$work/nix-started" ] && break; sleep 0.05; done
+test -f "$work/nix-started" || fail "the build never started"
+kill -INT "$interrupted"
+set +e
+wait "$interrupted"
+sigint_status=$?
+set -e
+test "$sigint_status" -eq 130 || fail "an interrupted update should exit 130, not $sigint_status"
+grep -q 'agents: interrupted' "$work/sigint.err" || fail "the interruption message changed"
+cmp -s "$current" "$work/before-sigint.json" || fail "an interrupted update changed the publication"
+left=$(find "$TMPDIR" -maxdepth 1 -name 'agents-update-*' | wc -l)
+test "$left" -eq 0 || fail "an interrupted update left $left snapshot(s) behind"
 
 # -- refresh ------------------------------------------------------------------------------------
 export AGENTS_CLI="$agents"

@@ -52,6 +52,7 @@ import {
   validateNames,
 } from "./core/protocol.ts";
 import { effective, loadBaseline, loadState, saveState } from "./core/selection.ts";
+import { InterruptError, settleAndThrowIfInterrupted, throwIfInterrupted } from "./interrupt.ts";
 import { withFileLock } from "./lock.ts";
 import { loadSessions, runLive } from "./live.ts";
 import {
@@ -134,7 +135,8 @@ export async function cmdUpdate(
   let skillsStore: string | null = null;
   let plan: UpdatePlan = { pluginTargets: [], skills: [], supported: {} };
 
-  const published = await withStateLock(context, env, console, () => {
+  const published = await withStateLock(context, env, console, async () => {
+    await settleAndThrowIfInterrupted();
     let state: State = loadState(context.state);
     const temporary = fs.mkdtempSync(join(tempDirectory(context.environment), `${PROG}-update-`));
     let keep = Boolean(env.AGENTS_UPDATE_KEEP_SNAPSHOT);
@@ -144,6 +146,7 @@ export async function cmdUpdate(
         join(temporary, "agents-snapshot"),
         context.environment,
       );
+      await settleAndThrowIfInterrupted();
       for (const path of snapshot.skipped.slice(0, 5)) {
         console.warn(`${PROG}: left out of the snapshot (submodule or deleted): ${path}`);
       }
@@ -171,11 +174,13 @@ export async function cmdUpdate(
         built = result.built;
         skillsStore = result.skillsStore;
       } catch (error) {
-        // Keep the published tree so a failed pnpm or claude run can be inspected.
-        keep = true;
+        // Keep the published tree so a failed pnpm or claude run can be inspected. An interrupt is
+        // Python's KeyboardInterrupt, which removed its snapshot and reported the interruption.
+        if (error instanceof UpdatesError) keep = true;
         throw error;
       }
 
+      await settleAndThrowIfInterrupted();
       state = {
         plugins: applyPlugins(
           state.plugins,
@@ -187,6 +192,7 @@ export async function cmdUpdate(
         ),
         skills: applySkills(state.skills, baseline.revision, plan.skills, skillsStore ?? ""),
       };
+      await settleAndThrowIfInterrupted();
       saveState(context.state, state.plugins, state.skills);
       return true;
     } finally {
@@ -220,6 +226,7 @@ export async function cmdUpdate(
   console.say(`root: ${join(generation!, "build")} (kept; older roots stay for running sessions)`);
 
   if (args.live) {
+    throwIfInterrupted();
     const harnesses: readonly string[] = args.live === "all" ? HARNESSES : [args.live];
     runLive(context.state, harnesses, console);
   }
@@ -320,7 +327,8 @@ export async function cmdReset(
       env,
       onWait: (path) => console.warn(`${PROG}: waiting for another update to finish (${path})`),
     },
-    () => {
+    async () => {
+      await settleAndThrowIfInterrupted();
       const loaded = loadState(state);
       const plugins = loaded.plugins;
       const skills = loaded.skills;
@@ -347,6 +355,7 @@ export async function cmdReset(
         }
       }
       if (changed.length > 0) {
+        await settleAndThrowIfInterrupted();
         saveState(state, plugins, skills);
         console.say(`reset to the baseline: ${changed.join(", ")}`);
       } else {
@@ -358,6 +367,7 @@ export async function cmdReset(
 }
 
 export function cmdStatus(env: Environment, console: Console): number {
+  throwIfInterrupted();
   const state = stateDir(env);
   console.say(`${PROG} updates: ${state}`);
   let baseline: Baseline | undefined;
@@ -407,6 +417,7 @@ export function cmdStatus(env: Environment, console: Console): number {
 
 /** Non-blocking drift report: one line per problem, nothing when all is well, always 0. */
 export function cmdCheck(env: Environment, console: Console): number {
+  throwIfInterrupted();
   const state = stateDir(env);
   const problems: string[] = [];
   let loaded: State = { plugins: {}, skills: {} };
@@ -482,6 +493,7 @@ export function cmdCheck(env: Environment, console: Console): number {
 }
 
 export function cmdResolve(env: Environment, console: Console): number {
+  throwIfInterrupted();
   const baselinePath = env.AGENTS_BASELINE;
   if (!baselinePath) {
     throw new UpdatesError("AGENTS_BASELINE is not set, so there is nothing to resolve");
@@ -511,7 +523,7 @@ async function withStateLock<T>(
   context: Context,
   env: Environment,
   console: Console,
-  fn: () => T,
+  fn: () => Promise<T> | T,
 ): Promise<T> {
   fs.mkdirSync(context.state, { recursive: true });
   return withFileLock(
@@ -744,6 +756,10 @@ export async function main(argv: readonly string[], options: MainOptions = {}): 
         throw new UpdatesError(`unknown command ${(command as { command: string }).command}`);
     }
   } catch (error) {
+    if (error instanceof InterruptError) {
+      console.warn(`${PROG}: interrupted`);
+      return 130;
+    }
     if (error instanceof UpdatesError) {
       console.warn(`${PROG}: ${error.message}`);
       return 1;

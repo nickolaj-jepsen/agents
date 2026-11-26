@@ -12,6 +12,7 @@ import { randomUUID } from "node:crypto";
 import { basename, join } from "node:path";
 import { UpdatesError, describeError } from "./core/errors.ts";
 import { readJsonObject, writeJsonAtomic } from "./core/json.ts";
+import { throwIfInterrupted } from "./interrupt.ts";
 import { sessionsDir } from "./core/paths.ts";
 import { type SessionRecord, REQUEST_TTL_SECONDS, isoSeconds } from "./core/protocol.ts";
 
@@ -191,6 +192,7 @@ export function runLive(state: string, harnesses: readonly string[], console: Li
       continue;
     }
     for (const session of usable) {
+      throwIfInterrupted();
       const result = deliver(session);
       if (result.outcome === "pending") {
         console.say(`live pi: ${session.sessionId} has an unanswered request; not queued again`);

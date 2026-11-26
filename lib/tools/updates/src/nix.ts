@@ -11,6 +11,12 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import { dirname, join } from "node:path";
 import { UpdatesError, describeError } from "./core/errors.ts";
+import {
+  InterruptError,
+  interruptRequested,
+  interruptedChild,
+  throwIfInterrupted,
+} from "./interrupt.ts";
 import { readJsonFile } from "./core/json.ts";
 import type { Environment } from "./core/paths.ts";
 import { HARNESSES, isObject } from "./core/protocol.ts";
@@ -200,6 +206,11 @@ export function nixBuild(
     }
     throw new UpdatesError(`cannot run nix: ${describeError(result.error)}`);
   }
+  // Ctrl+C reaches the build's process group too; that is the person interrupting, and the
+  // temporary snapshot is then removed exactly as a Python KeyboardInterrupt removed it.
+  if (interruptedChild(result) || interruptRequested()) {
+    throw new InterruptError("interrupted");
+  }
   if (result.status !== 0) {
     // The whole build log, so a pnpm or claude failure is visible here rather than in a log.
     for (const stream of [result.stderr ?? "", result.stdout ?? ""]) {
@@ -208,6 +219,7 @@ export function nixBuild(
     throw new UpdatesError("the snapshot build failed; the state in current.json is unchanged");
   }
 
+  throwIfInterrupted();
   const store = storeOf(context);
   const built: BuildResult["built"] = new Map();
   for (const { name, variant } of pluginTargets) {

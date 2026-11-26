@@ -39,9 +39,12 @@
     done
   '';
 
-  # Holds an exclusive flock(2) on a path until its stdin closes, so a Node process that dies (or is
-  # killed) releases the lock without leaving a stale file behind. An older Python `agents` used
-  # fcntl.flock on the same inode, so the two exclude each other across an upgrade.
+  # Holds an exclusive flock(2) on a path until the pipe on its stdin closes, so a Node process that
+  # dies (or is killed) releases the lock without leaving a stale file behind; while still waiting it
+  # watches the same pipe, so a waiter cannot outlive the process that asked for it. It ignores
+  # terminal signals on purpose: Ctrl+C reaches the whole group, and the lock must stay held until
+  # the holder's cleanup is done. An older Python `agents` used fcntl.flock on the same inode, so
+  # the two exclude each other across an upgrade.
   flock = stdenv.mkDerivation {
     pname = "agents-flock";
     version = "0";

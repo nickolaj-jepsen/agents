@@ -4,7 +4,9 @@
  * installed sources with no build step and no npm dependency.
  */
 import { main } from "./cli.ts";
+import { installInterruptHandler } from "./interrupt.ts";
 import { exitOnClosedPipe } from "./stdio.ts";
 
 exitOnClosedPipe();
+installInterruptHandler();
 process.exitCode = await main(process.argv.slice(2));

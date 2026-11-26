@@ -486,7 +486,7 @@ export async function run(env: Environment, deps: RefreshDeps = {}): Promise<num
 
   fs.mkdirSync(profile, { recursive: true });
   const home = env.HOME || homedir();
-  const release = await acquireFileLock(profileLockPath(profile), { timeout: -1, env });
+  const release = await acquireFileLock(profileLockPath(profile), { timeout: "forever", env });
   try {
     const manifestPath = profileManifestPath(profile);
     let manifest: ProfileManifest = {};
