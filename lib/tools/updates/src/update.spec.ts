@@ -177,8 +177,8 @@ test("a dry run builds nothing and writes nothing", async () => {
   const { code, out, err } = await f.update("answer", "--dry-run");
   assert.equal(code, 0, err);
   assert.match(out, /dry run: answer pi, answer claude from/);
-  assert.match(out, /\(6 files, clean\)/);
-  assert.match(out, /dry run: nothing built, state unchanged/);
+  assert.match(out, /\(11 files, clean\)/);
+  assert.match(out, /dry run: nothing built, deployed or recorded/);
   assert.equal(fs.existsSync(f.exprLog), false);
   assert.equal(fs.existsSync(f.current), false);
 });

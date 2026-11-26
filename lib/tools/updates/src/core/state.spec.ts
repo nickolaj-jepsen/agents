@@ -70,7 +70,7 @@ test("a baseline rejects bad shapes", () => {
 });
 
 test("an absent state is empty", () => {
-  assert.deepEqual(loadState(join(temporary(), "state")), { plugins: {}, skills: {} });
+  assert.deepEqual(loadState(join(temporary(), "state")), { plugins: {}, skills: {}, ui: {} });
 });
 
 test("the state roundtrips sorted and keeps the schema", () => {
@@ -84,7 +84,7 @@ test("the state roundtrips sorted and keeps the schema", () => {
     { demo: { path: "/nix/store/skills/demo", baseline: REVISION } },
   );
   const raw = JSON.parse(fs.readFileSync(join(state, "current.json"), "utf8"));
-  assert.deepEqual(Object.keys(raw), ["plugins", "skills"]);
+  assert.deepEqual(Object.keys(raw), ["plugins", "skills", "ui"]);
   assert.deepEqual(Object.keys(raw.plugins), ["answer", "zulu"]);
   assert.deepEqual(raw.plugins.answer, {
     pi: "/nix/store/a",
@@ -110,6 +110,7 @@ test("a failed rename leaves the old state and no temporary", () => {
       state,
       { answer: { pi: "new", claude: null, baseline: REVISION } },
       {},
+      {},
       {
         rename: () => {
           throw new Error("disk full");
@@ -127,7 +128,8 @@ test("a failed rename leaves the old state and no temporary", () => {
 const baseline = (
   plugins: Baseline["plugins"] = {},
   skills: Baseline["skills"] = {},
-): Baseline => ({ revision: REVISION, plugins, skills });
+  ui: Baseline["ui"] = {},
+): Baseline => ({ revision: REVISION, plugins, skills, ui });
 
 test("the baseline alone resolves to itself", () => {
   const resolved = effective(
@@ -147,6 +149,7 @@ test("the baseline alone resolves to itself", () => {
       docfix: { pi: "/b/docfix", claude: null },
     },
     skills: { demo: "/b/skills/demo" },
+    ui: {},
   });
 });
 
@@ -190,7 +193,7 @@ test("the resolution is sorted and has no extra keys", () => {
     {},
     {},
   );
-  assert.deepEqual(Object.keys(resolved), ["plugins", "skills"]);
+  assert.deepEqual(Object.keys(resolved), ["plugins", "skills", "ui"]);
   assert.deepEqual(Object.keys(resolved.plugins), ["answer", "zulu"]);
   assert.deepEqual(Object.keys(resolved.plugins.answer!), ["pi", "claude"]);
 });

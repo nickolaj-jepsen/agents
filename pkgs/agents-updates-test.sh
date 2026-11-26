@@ -59,6 +59,17 @@ if printf '%s\n' "$expr" | grep -q 'name = "skills"'; then
   if [ -n "$snap" ] && [ -d "$snap/skills" ]; then cp -r "$snap/skills" "$store/snapshot/skills"; fi
   ln -sfn "$store/snapshot" "$farm/skills"
 fi
+# UI artifacts: a folder of the runtime UI (mods/, layouts/).
+for entry in $(printf '%s\n' "$expr" | sed -n 's/.*name = "ui\/\([^"]*\)".*/\1/p'); do
+  dir="$store/out-ui-$entry"
+  rm -rf "$dir"
+  mkdir -p "$dir/mods/$entry" "$dir/layouts"
+  printf '// main\n' >"$dir/mods/$entry/main.js"
+  printf '{"place":"none"}\n' >"$dir/mods/$entry/mod.json"
+  printf '{"id":"root"}\n' >"$dir/layouts/nested.json"
+  mkdir -p "$(dirname "$farm/ui/$entry")"
+  ln -sfn "$dir" "$farm/ui/$entry"
+done
 ln -sfn "$farm" "$out"
 FAKE
 chmod +x "$work/bin/nix"
@@ -70,6 +81,14 @@ printf 'export {};\n' >"$checkout/apps/answer/src/index.ts"
 printf '{"name":"docfix","version":"0.1.0","pi":{}}\n' >"$checkout/apps/docfix/package.json"
 printf 'export {};\n' >"$checkout/apps/docfix/src/index.ts"
 printf '# demo\n' >"$checkout/skills/demo/SKILL.md"
+mkdir -p "$checkout/apps/herdr-ui/src/mods/herdr-ui" "$checkout/apps/herdr-ui/src/layouts"
+printf '{"name":"herdr-ui","version":"0.1.0","herdr":{"ui":true}}\n' >"$checkout/apps/herdr-ui/package.json"
+printf '// main\n' >"$checkout/apps/herdr-ui/src/mods/herdr-ui/main.js"
+printf '{"place":"none"}\n' >"$checkout/apps/herdr-ui/src/mods/herdr-ui/mod.json"
+printf '{"id":"root"}\n' >"$checkout/apps/herdr-ui/src/layouts/nested.json"
+mkdir -p "$store/baseline-herdr-ui/mods/herdr-ui" "$store/baseline-herdr-ui/layouts"
+printf '// pinned\n' >"$store/baseline-herdr-ui/mods/herdr-ui/main.js"
+printf '{"id":"pinned"}\n' >"$store/baseline-herdr-ui/layouts/nested.json"
 printf 'node_modules/\n' >"$checkout/.gitignore"
 git -C "$checkout" init -q -b main
 git -C "$checkout" add -A
@@ -78,7 +97,7 @@ revision=$(git -C "$checkout" rev-parse HEAD)
 
 baseline="$work/baseline.json"
 cat >"$baseline" <<JSON
-{"revision":"$revision","plugins":{"answer":{"pi":"$store/baseline-answer-pi","claude":"$store/baseline-answer-claude"},"docfix":{"pi":"$store/baseline-docfix-pi","claude":null}},"skills":{"demo":"$store/baseline-skills/demo"}}
+{"revision":"$revision","plugins":{"answer":{"pi":"$store/baseline-answer-pi","claude":"$store/baseline-answer-claude"},"docfix":{"pi":"$store/baseline-docfix-pi","claude":null}},"skills":{"demo":"$store/baseline-skills/demo"},"ui":{"herdr-ui":"$store/baseline-herdr-ui"}}
 JSON
 
 export AGENTS_BASELINE="$baseline"
@@ -88,6 +107,9 @@ export AGENTS_CLAUDE="$store/claude-code-2.0"
 export AGENTS_SYSTEM=x86_64-linux
 export AGENTS_UPDATE_LOCK_TIMEOUT=5
 export FAKE_NIX_STORE="$store"
+export XDG_CONFIG_HOME="$work/config"
+export FAKE_NIX_UI_SRC="$checkout/apps/herdr-ui/src"
+deployed="$XDG_CONFIG_HOME/herdr-app"
 
 agents="$package/bin/agents"
 refresh="$package/bin/agents-refresh"
@@ -200,6 +222,38 @@ grep -q 'agents: interrupted' "$work/sigint.err" || fail "the interruption messa
 cmp -s "$current" "$work/before-sigint.json" || fail "an interrupted update changed the publication"
 left=$(find "$TMPDIR" -maxdepth 1 -name 'agents-update-*' | wc -l)
 test "$left" -eq 0 || fail "an interrupted update left $left snapshot(s) behind"
+
+# -- Herdr's UI: deployed, not linked -------------------------------------------------------------
+# Activation runs `deploy-ui` fresh, with no publication and without AGENTS_CLAUDE: a UI artifact
+# is the flake's own package and a deploy builds nothing.
+( unset AGENTS_CLAUDE; "$agents" deploy-ui herdr-ui >"$work/ui-fresh.out" 2>"$work/ui-fresh.err" ) || {
+  cat "$work/ui-fresh.err" >&2
+  fail "deploy-ui without a publication or AGENTS_CLAUDE failed"
+}
+grep -q 'deployed 2 written' "$work/ui-fresh.out" || fail "the fresh deploy did not write the pinned artifact"
+grep -q '// pinned' "$deployed/mods/herdr-ui/main.js" || fail "the pinned artifact was not deployed"
+# A second activation writes nothing: an unchanged switch must not wake a watcher.
+"$agents" deploy-ui herdr-ui >"$work/ui-again.out" 2>/dev/null
+grep -q 'deployed 0 written, 2 unchanged' "$work/ui-again.out" || fail "a second deploy was not a no-op"
+
+# A publication builds the checkout's artifact as the flake's own package and deploys it.
+cli update herdr-ui >"$work/ui-update.out" 2>"$work/ui-update.err" || {
+  cat "$work/ui-update.err" >&2
+  fail "update herdr-ui failed"
+}
+grep -q 'herdr-ui ui: ' "$work/ui-update.out" || fail "the UI artifact was not built as a package"
+grep -q '// main' "$deployed/mods/herdr-ui/main.js" || fail "the published artifact was not deployed"
+grep -q '"ui"' "$current" || fail "the UI override is not in current.json"
+grep -q "$store/out-ui-herdr-ui" "$current" || fail "the UI override names no built artifact"
+"$agents" resolve | grep -q "$store/out-ui-herdr-ui" || fail "resolve does not name the UI artifact"
+
+# Reset drops the override and deploys the pinned artifact again.
+cli reset herdr-ui >"$work/ui-reset.out" 2>"$work/ui-reset.err" || {
+  cat "$work/ui-reset.err" >&2
+  fail "reset herdr-ui failed"
+}
+grep -q 'herdr-ui (ui)' "$work/ui-reset.out" || fail "reset did not report the UI entry"
+grep -q '// pinned' "$deployed/mods/herdr-ui/main.js" || fail "reset did not deploy the baseline"
 
 # -- refresh ------------------------------------------------------------------------------------
 export AGENTS_CLI="$agents"

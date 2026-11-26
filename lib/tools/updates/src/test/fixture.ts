@@ -60,6 +60,23 @@ if printf '%s\\n' "$expr" | grep -q 'name = "skills"'; then
   if [ -n "$snap" ] && [ -d "$snap/skills" ]; then cp -r "$snap/skills" "$store/snapshot/skills"; fi
   ln -sfn "$store/snapshot" "$farm/skills"
 fi
+# UI artifacts: a folder of the runtime UI (mods/, layouts/). From FAKE_NIX_UI_SRC when the
+# test names one, else a minimal tree, so a deploy has real files to write.
+for entry in $(printf '%s\\n' "$expr" | sed -n 's/.*name = "ui\\/\\([^"]*\\)".*/\\1/p'); do
+  dir="$store/out-ui-$entry"
+  rm -rf "$dir"
+  mkdir -p "$dir"
+  if [ -n "\${FAKE_NIX_UI_SRC:-}" ]; then
+    cp -r "$FAKE_NIX_UI_SRC"/. "$dir"/
+  else
+    mkdir -p "$dir/mods/$entry" "$dir/layouts"
+    printf '// main\n' >"$dir/mods/$entry/main.js"
+    printf '{"place":"none"}\n' >"$dir/mods/$entry/mod.json"
+    printf '{"id":"root"}\n' >"$dir/layouts/nested.json"
+  fi
+  mkdir -p "$(dirname "$farm/ui/$entry")"
+  ln -sfn "$dir" "$farm/ui/$entry"
+done
 ln -sfn "$farm" "$out"
 `;
 
@@ -80,6 +97,7 @@ export class Fixture {
   readonly checkout: string;
   readonly baselinePath: string;
   readonly stateHome: string;
+  readonly configHome: string;
   readonly exprLog: string;
   env: Environment;
 
@@ -109,6 +127,18 @@ export class Fixture {
       fs.writeFileSync(join(directory, "package.json"), JSON.stringify(packageJson));
       fs.writeFileSync(join(directory, "src", "index.ts"), "export {};\n");
     }
+    // Herdr's UI artifact: `"herdr": {"ui": true}` makes an app the folder Herdr loads.
+    const ui = join(this.checkout, "apps", "herdr-ui");
+    fs.mkdirSync(join(ui, "src", "mods", "demo"), { recursive: true });
+    fs.mkdirSync(join(ui, "src", "layouts"), { recursive: true });
+    fs.writeFileSync(
+      join(ui, "package.json"),
+      JSON.stringify({ name: "herdr-ui", version: "0.1.0", herdr: { ui: true } }),
+    );
+    fs.writeFileSync(join(ui, "src", "mods", "demo", "main.js"), "// main\n");
+    fs.writeFileSync(join(ui, "src", "mods", "demo", "mod.json"), '{"place":"none"}\n');
+    fs.writeFileSync(join(ui, "src", "mods", "demo", "queue.js"), "// queue\n");
+    fs.writeFileSync(join(ui, "src", "layouts", "nested.json"), '{"id":"root"}\n');
     for (const name of options.skills ?? ["demo"]) {
       const directory = join(this.checkout, "skills", name);
       fs.mkdirSync(directory, { recursive: true });
@@ -118,14 +148,26 @@ export class Fixture {
     runGit(this.checkout, "init", "-q", "-b", "main");
     commitAll(this.checkout, "init");
 
+    fs.mkdirSync(join(this.store, "baseline-herdr-ui", "mods", "demo"), { recursive: true });
+    fs.mkdirSync(join(this.store, "baseline-herdr-ui", "layouts"), { recursive: true });
+    fs.writeFileSync(
+      join(this.store, "baseline-herdr-ui", "mods", "demo", "main.js"),
+      "// pinned\n",
+    );
+    fs.writeFileSync(
+      join(this.store, "baseline-herdr-ui", "layouts", "nested.json"),
+      '{"id":"pinned"}\n',
+    );
     this.baselinePath = join(this.temporary, "baseline.json");
     this.stateHome = join(this.temporary, "state");
+    this.configHome = join(this.temporary, "config");
     this.exprLog = join(this.temporary, "expr.log");
     this.env = {
       PATH: `${this.bin}${process.platform === "win32" ? ";" : ":"}${process.env.PATH ?? ""}`,
       HOME: join(this.temporary, "home"),
       TMPDIR: this.snapshots,
       XDG_STATE_HOME: this.stateHome,
+      XDG_CONFIG_HOME: this.configHome,
       AGENTS_BASELINE: this.baselinePath,
       AGENTS_CHECKOUT: this.checkout,
       AGENTS_NIXPKGS: join(this.store, "nixpkgs-source"),
@@ -135,6 +177,9 @@ export class Fixture {
       AGENTS_FLOCK: flockHelperForTests(),
       FAKE_NIX_STORE: this.store,
       FAKE_NIX_LOG: this.exprLog,
+      // The artifact a publish builds is the checkout's own UI sources, so a deploy has real
+      // files to put where Herdr reads them.
+      FAKE_NIX_UI_SRC: join(this.checkout, "apps", "herdr-ui", "src"),
     };
     this.writeBaseline();
   }
@@ -156,6 +201,7 @@ export class Fixture {
       revision?: string;
       plugins?: Record<string, { pi: string | null; claude: string | null }>;
       skills?: Record<string, string>;
+      ui?: Record<string, string>;
     } = {},
   ): Record<string, unknown> {
     const payload = {
@@ -168,6 +214,7 @@ export class Fixture {
         docfix: { pi: join(this.store, "baseline-docfix-pi"), claude: null },
       },
       skills: options.skills ?? { demo: join(this.store, "baseline-skills", "demo") },
+      ui: options.ui ?? { "herdr-ui": join(this.store, "baseline-herdr-ui") },
     };
     fs.writeFileSync(this.baselinePath, JSON.stringify(payload));
     return payload;

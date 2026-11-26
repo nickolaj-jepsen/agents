@@ -183,6 +183,7 @@ test("resolve before any update is the baseline", async () => {
       docfix: { pi: join(f.store, "baseline-docfix-pi"), claude: null },
     },
     skills: { demo: join(f.store, "baseline-skills", "demo") },
+    ui: { "herdr-ui": join(f.store, "baseline-herdr-ui") },
   });
 });
 

@@ -20,6 +20,9 @@ export const SESSIONS_DIR = "sessions";
 export const REQUESTS_DIR = "requests";
 export const STATE_LOCK_FILE = "lock";
 
+/** The package.json field an app declares its Herdr UI artifact in: `"herdr": {"ui": true}`. */
+export const UI_METADATA = "herdr";
+
 /** What `agents-refresh` owns inside one profile. */
 export const PROFILE_MANIFEST = ".agents-updates.json";
 export const PROFILE_LOCK = ".agents-updates.lock";
@@ -46,20 +49,26 @@ export type Baseline = {
   revision: string;
   plugins: Record<string, VariantPaths>;
   skills: Record<string, string>;
+  /** Herdr UI artifacts: a folder of the runtime UI, deployed rather than linked. */
+  ui: Record<string, string>;
 };
 
 /** One plugin's entry in `current.json`; `baseline` is the revision it was published from. */
 export type PluginState = VariantPaths & { baseline: string };
 export type SkillState = { path: string; baseline: string };
+export type UiState = { path: string; baseline: string };
 export type State = {
   plugins: Record<string, PluginState>;
   skills: Record<string, SkillState>;
+  ui: Record<string, UiState>;
 };
 
 /** What both harnesses should load: overrides over the pin. What `agents resolve` prints. */
 export type Resolved = {
   plugins: Record<string, VariantPaths>;
   skills: Record<string, string | null>;
+  /** Added after the keys that were there first: a consumer of plugins and skills is unaffected. */
+  ui: Record<string, string | null>;
 };
 
 /** A session file a bridge advertised; every field is untrusted. */
@@ -130,11 +139,17 @@ export function parseBaseline(raw: unknown, path: string): Baseline {
     if (typeof value !== "string") throw new UpdatesError(`${path}: skills.${name} must be a path`);
     skills[name] = value;
   }
+  const ui: Record<string, string> = {};
+  for (const [name, value] of Object.entries(table(raw.ui, path, "ui"))) {
+    if (typeof value !== "string") throw new UpdatesError(`${path}: ui.${name} must be a path`);
+    ui[name] = value;
+  }
   const revisionText = raw.revision === undefined ? "" : raw.revision;
   return {
     revision: revision(revisionText, `${path}: revision`),
     plugins,
     skills,
+    ui,
   };
 }
 
@@ -167,7 +182,23 @@ export function parseState(raw: unknown, path: string): State {
       ),
     };
   }
-  return { plugins, skills };
+  // Absent in a state written before there were UI artifacts: an older current.json keeps working,
+  // and its UI names simply have no override.
+  const ui: Record<string, UiState> = {};
+  for (const [name, entry] of Object.entries(table(raw.ui, path, "ui"))) {
+    if (!isObject(entry)) throw new UpdatesError(`${path}: ui.${name} must be an object`);
+    if (typeof entry.path !== "string") {
+      throw new UpdatesError(`${path}: ui.${name}.path must be a path`);
+    }
+    ui[name] = {
+      path: entry.path,
+      baseline: revision(
+        entry.baseline === undefined ? "" : entry.baseline,
+        `${path}: ui.${name}.baseline`,
+      ),
+    };
+  }
+  return { plugins, skills, ui };
 }
 
 /** What `agents resolve` printed, as `agents-refresh` must read it. */
@@ -193,7 +224,14 @@ export function parseResolved(raw: unknown, cli: string): Resolved {
     }
     skills[name] = value;
   }
-  return { plugins, skills };
+  const ui: Record<string, string | null> = {};
+  for (const [name, value] of Object.entries(isObject(raw.ui) ? raw.ui : {})) {
+    if (value !== null && typeof value !== "string") {
+      throw new UpdatesError(`${cli} resolve printed an unexpected shape`);
+    }
+    ui[name] = value;
+  }
+  return { plugins, skills, ui };
 }
 
 /** A malformed request answers with an ack that names no id, so nothing reports it as applied. */

@@ -19,7 +19,7 @@ import {
 } from "./interrupt.ts";
 import { readJsonFile } from "./core/json.ts";
 import type { Environment } from "./core/paths.ts";
-import { HARNESSES, isObject } from "./core/protocol.ts";
+import { HARNESSES, UI_METADATA, isObject } from "./core/protocol.ts";
 import type { Harness } from "./core/protocol.ts";
 import { repositoryPath } from "./snapshot.ts";
 
@@ -107,6 +107,7 @@ export function buildExpression(
   snapshot: string,
   pluginTargets: readonly PluginTarget[],
   skills: readonly string[],
+  uiNames: readonly string[] = [],
 ): string {
   const halves = pluginTargets.map((target) => target.variant);
   const lines = [
@@ -116,6 +117,11 @@ export function buildExpression(
     `  pkgs = import ${nixPath(context.nixpkgs)} { inherit system; config.allowUnfree = true; };`,
     "  plugins = flake.lib.pluginsFor pkgs;",
   ];
+  if (uiNames.length > 0) {
+    // A UI artifact is the flake's own package, not plugin packaging: the checkout builds `mods/`
+    // and `layouts/` at the artifact's root (pkgs/herdr-ui.nix).
+    lines.push("  packages = flake.packages.${system} or {};");
+  }
   if (halves.includes("claude")) {
     // mkClaudePlugin runs the supplied claude-code; the wrapper Nix installs injects
     // --plugin-dir and breaks `claude plugin validate`, so the package (not finalPackage) is the
@@ -134,6 +140,15 @@ export function buildExpression(
     lines.push(
       '    { name = "skills"; path = builtins.path ' +
         `{ path = ${nixPath(snapshot)}; name = "agents-snapshot"; }; }`,
+    );
+  }
+  for (const name of uiNames) {
+    const missing =
+      `the checkout has no packages.${context.system}.${name}: its flake predates that ` +
+      "artifact, so commit its package file and packages.nix there first";
+    lines.push(
+      `    { name = ${nixString(`ui/${name}`)}; path = ` +
+        `(packages.${nixString(name)} or (throw ${nixString(missing)})); }`,
     );
   }
   lines.push("  ]");
@@ -171,6 +186,8 @@ export type BuildResult = {
   /** Keyed `${name}\0${variant}`, so two variants of one plugin cannot collide. */
   built: Map<string, { name: string; variant: Harness; path: string }>;
   skillsStore: string | null;
+  /** The built UI artifacts, by name. */
+  uiBuilt: Record<string, string>;
 };
 
 /** Build this generation and root it, with the whole build log on failure. */
@@ -181,8 +198,9 @@ export function nixBuild(
   skills: readonly string[],
   generation: string,
   log: (text: string) => void,
+  uiNames: readonly string[] = [],
 ): BuildResult {
-  const expression = buildExpression(context, snapshot, pluginTargets, skills);
+  const expression = buildExpression(context, snapshot, pluginTargets, skills, uiNames);
   fs.mkdirSync(generation, { recursive: true });
   const link = join(generation, "build");
   const command = [
@@ -227,6 +245,10 @@ export function nixBuild(
     built.set(`${name}\0${variant}`, { name, variant, path });
   }
   const skillsStore = skills.length > 0 ? storeLink(join(link, "skills"), store) : null;
+  const uiBuilt: Record<string, string> = {};
+  for (const name of uiNames) {
+    uiBuilt[name] = storeLink(join(link, "ui", name), store);
+  }
   if (skillsStore !== null) {
     const missing = skills.filter(
       (name) =>
@@ -236,17 +258,36 @@ export function nixBuild(
       throw new UpdatesError(`the skills snapshot ${skillsStore} lacks ${missing.join(", ")}`);
     }
   }
-  return { built, skillsStore };
+  return { built, skillsStore, uiBuilt };
 }
 
-/** Whether the checkout's package.json declares each half; null when it is no plugin at all. */
-export function pluginHalves(snapshotRoot: string, name: string): Harness[] | null {
+/** `apps/<name>/package.json` as an object, or null when the app has no manifest. */
+export function appManifest(snapshotRoot: string, name: string): Record<string, unknown> | null {
   const manifest = repositoryPath(snapshotRoot, "apps", name, "package.json");
   const stat = fs.statSync(manifest, { throwIfNoEntry: false });
   if (!stat?.isFile()) return null;
   const packageJson = readJsonFile(manifest);
   if (!isObject(packageJson)) throw new UpdatesError(`${manifest} must hold a JSON object`);
+  return packageJson;
+}
+
+/** Whether the checkout's package.json declares each half; null when it is no plugin at all. */
+export function pluginHalves(snapshotRoot: string, name: string): Harness[] | null {
+  const packageJson = appManifest(snapshotRoot, name);
+  if (packageJson === null) return null;
   return HARNESSES.filter((harness) => Object.hasOwn(packageJson, harness));
+}
+
+/**
+ * True when the app declares Herdr's UI artifact explicitly (`"herdr": {"ui": true}`). Explicit,
+ * rather than "no claude and no pi half": an app whose manifest says nothing about Herdr is no
+ * plugin and no UI, and publishing it would build something nobody loads.
+ */
+export function uiArtifact(snapshotRoot: string, name: string): boolean {
+  const packageJson = appManifest(snapshotRoot, name);
+  if (packageJson === null) return false;
+  const metadata = packageJson[UI_METADATA];
+  return isObject(metadata) && metadata.ui === true;
 }
 
 export type UpdatePlan = {
@@ -256,6 +297,8 @@ export type UpdatePlan = {
   skills: string[];
   /** The halves the checkout offers per plugin, which decides what a variant should become. */
   supported: Record<string, Harness[]>;
+  /** Herdr UI artifacts to build (and, after publication, deploy). */
+  uiNames: string[];
 };
 
 /** What `update` will build, and what the checkout offers per plugin. */
@@ -268,6 +311,7 @@ export function planUpdate(
   const pluginTargets: PluginTarget[] = [];
   const selectedSkills: string[] = [];
   const supported: Record<string, Harness[]> = {};
+  const uiNames: string[] = [];
   if (skills) {
     for (const name of names) {
       const directory = repositoryPath(snapshotRoot, "skills", name);
@@ -276,7 +320,7 @@ export function planUpdate(
       }
       selectedSkills.push(name);
     }
-    return { pluginTargets, skills: selectedSkills, supported };
+    return { pluginTargets, skills: selectedSkills, supported, uiNames };
   }
 
   for (const name of names) {
@@ -287,7 +331,19 @@ export function planUpdate(
       );
     }
     if (halves.length === 0) {
-      throw new UpdatesError(`${name} declares neither a claude nor a pi half in its package.json`);
+      if (uiArtifact(snapshotRoot, name)) {
+        if (harness !== undefined) {
+          throw new UpdatesError(
+            `${name} is a Herdr UI artifact, not a plugin: it has no --harness halves`,
+          );
+        }
+        uiNames.push(name);
+        continue;
+      }
+      throw new UpdatesError(
+        `${name} declares neither a claude nor a pi half in its package.json, nor ` +
+          `"${UI_METADATA}": {"ui": true}, so there is nothing to publish for it`,
+      );
     }
     let chosen: Harness[];
     if (harness !== undefined) {
@@ -303,5 +359,5 @@ export function planUpdate(
     supported[name] = halves;
     for (const variant of chosen) pluginTargets.push({ name, variant });
   }
-  return { pluginTargets, skills: selectedSkills, supported };
+  return { pluginTargets, skills: selectedSkills, supported, uiNames };
 }

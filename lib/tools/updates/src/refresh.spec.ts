@@ -71,7 +71,7 @@ class RefreshFixture {
 
   async runRefresh(plugins: Plugins): Promise<Record<string, any>> {
     const code = await run(this.env, {
-      resolve: () => ({ plugins, skills: {} }),
+      resolve: () => ({ plugins, skills: {}, ui: {} }),
       console: quiet,
     });
     assert.equal(code, 0);
@@ -169,7 +169,7 @@ test("a claude refresh preserves native synced data and user skills", () => {
 test("a failed claude refresh keeps the journal for a later reset", async () => {
   const f = set();
   const env = { ...f.env, AGENTS_HARNESS: "claude" };
-  const desired = { plugins: {}, skills: { a: "/nix/store/a", b: "/nix/store/b" } };
+  const desired = { plugins: {}, skills: { a: "/nix/store/a", b: "/nix/store/b" }, ui: {} };
   await assert.rejects(
     run(env, {
       resolve: () => desired,
@@ -182,7 +182,7 @@ test("a failed claude refresh keeps the journal for a later reset", async () => 
     UpdatesError,
   );
   assert.ok(fs.lstatSync(join(f.profile, "skills", "a")).isSymbolicLink());
-  await run(env, { resolve: () => ({ plugins: {}, skills: {} }), console: quiet });
+  await run(env, { resolve: () => ({ plugins: {}, skills: {}, ui: {} }), console: quiet });
   assert.equal(fs.existsSync(join(f.profile, "skills", "a")), false);
 });
 

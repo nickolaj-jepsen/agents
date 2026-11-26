@@ -33,6 +33,7 @@
  */
 import fs from "node:fs";
 import os from "node:os";
+import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { UpdatesError, isSystemError } from "./core/errors.ts";
 import { jsonLine } from "./core/json.ts";
@@ -48,6 +49,7 @@ import {
   type PluginState,
   type SkillState,
   type State,
+  type UiState,
   shortRevision,
   validateNames,
 } from "./core/protocol.ts";
@@ -67,6 +69,12 @@ import {
   planUpdate,
 } from "./nix.ts";
 import { type Snapshot, publishSnapshot } from "./snapshot.ts";
+import {
+  type DeployConsole,
+  type DeployResult,
+  deploy as deployArtifact,
+  destination as uiDestination,
+} from "./ui.ts";
 
 const PROG = "agents";
 
@@ -133,7 +141,9 @@ export async function cmdUpdate(
   let generation: string | undefined;
   let built: BuildResult["built"] = new Map();
   let skillsStore: string | null = null;
-  let plan: UpdatePlan = { pluginTargets: [], skills: [], supported: {} };
+  let uiBuilt: Record<string, string> = {};
+  let deployed: [string, DeployResult][] = [];
+  let plan: UpdatePlan = { pluginTargets: [], skills: [], supported: {}, uiNames: [] };
 
   const published = await withStateLock(context, env, console, async () => {
     await settleAndThrowIfInterrupted();
@@ -157,7 +167,10 @@ export async function cmdUpdate(
           `dry run: ${describePlan(plan)} from ${shortRevision(snapshot.revision)} ` +
             `(${describeTree(snapshot)})`,
         );
-        console.say("dry run: nothing built, state unchanged");
+        for (const name of plan.uiNames) {
+          console.say(`dry run: ${name} would deploy into ${uiDestination(name, env)}`);
+        }
+        console.say("dry run: nothing built, deployed or recorded");
         return false;
       }
 
@@ -170,9 +183,11 @@ export async function cmdUpdate(
           plan.skills,
           generation,
           (text) => console.stderr(text),
+          plan.uiNames,
         );
         built = result.built;
         skillsStore = result.skillsStore;
+        uiBuilt = result.uiBuilt;
       } catch (error) {
         // Keep the published tree so a failed pnpm or claude run can be inspected. An interrupt is
         // Python's KeyboardInterrupt, which removed its snapshot and reported the interruption.
@@ -191,9 +206,35 @@ export async function cmdUpdate(
           args.harness,
         ),
         skills: applySkills(state.skills, baseline.revision, plan.skills, skillsStore ?? ""),
+        ui: applyUi(state.ui, baseline.revision, uiBuilt),
       };
       await settleAndThrowIfInterrupted();
-      saveState(context.state, state.plugins, state.skills);
+      // The state file first, the deployed tree second. A failure to deploy is undone by putting
+      // the state file back: publishing before the tree is in place would leave `resolve` naming
+      // an artifact the app is not reading.
+      const previousState = stateBytes(context.state);
+      saveState(context.state, state.plugins, state.skills, state.ui);
+      if (Object.keys(uiBuilt).length > 0) {
+        try {
+          deployed = deployUi(
+            context.state,
+            env,
+            console,
+            Object.fromEntries(
+              Object.entries(uiBuilt).map(([name, path]) => [name, { path, label: "published" }]),
+            ),
+          );
+        } catch (error) {
+          try {
+            restoreState(context.state, previousState);
+          } catch (restoreError) {
+            console.warn(
+              `${PROG}: could not put ${STATE_FILE} back after a failed deploy: ${expectedMessage(restoreError)}`,
+            );
+          }
+          throw error;
+        }
+      }
       return true;
     } finally {
       if (keep) {
@@ -220,15 +261,28 @@ export async function cmdUpdate(
   for (const name of [...plan.skills].sort()) {
     console.say(`  ${name} skill: ${join(skillsStore!, "skills", name)}`);
   }
+  for (const name of Object.keys(uiBuilt).sort()) {
+    console.say(`  ${name} ui: ${uiBuilt[name]}`);
+  }
   console.say(
     `state: ${join(context.state, STATE_FILE)} (baseline ${shortRevision(baseline.revision)})`,
   );
   console.say(`root: ${join(generation!, "build")} (kept; older roots stay for running sessions)`);
 
+  reportDeployed(console, deployed);
+
   if (args.live) {
     throwIfInterrupted();
-    const harnesses: readonly string[] = args.live === "all" ? HARNESSES : [args.live];
-    runLive(context.state, harnesses, console);
+    if (plan.uiNames.length > 0) {
+      console.say(
+        `live ${[...plan.uiNames].sort().join(", ")}: no reload request; Herdr watches the ` +
+          "deployed files and reloads them itself",
+      );
+    }
+    if (plan.pluginTargets.length > 0 || plan.skills.length > 0) {
+      const harnesses: readonly string[] = args.live === "all" ? HARNESSES : [args.live];
+      runLive(context.state, harnesses, console);
+    }
   }
   return 0;
 }
@@ -244,6 +298,7 @@ function byNameThenVariant(
 export function describePlan(plan: UpdatePlan): string {
   const parts = plan.pluginTargets.map(({ name, variant }) => `${name} ${variant}`);
   if (plan.skills.length > 0) parts.push(`skills ${[...plan.skills].sort().join(", ")}`);
+  for (const name of plan.uiNames) parts.push(`${name} ui`);
   return parts.length > 0 ? parts.join(", ") : "nothing";
 }
 
@@ -320,6 +375,7 @@ export async function cmdReset(
   }
   const state = stateDir(env);
   const names = [...new Set(args.names)];
+  let resetDeployed: [string, DeployResult][] = [];
   fs.mkdirSync(state, { recursive: true });
   await withFileLock(
     stateLockPath(state),
@@ -333,6 +389,7 @@ export async function cmdReset(
       const loaded = loadState(state);
       const plugins = loaded.plugins;
       const skills = loaded.skills;
+      const ui = loaded.ui;
       const changed: string[] = [];
       if (args.skill) {
         for (const name of names) {
@@ -355,15 +412,51 @@ export async function cmdReset(
           }
         }
       }
+      // A UI artifact is deployed, not linked: dropping the override is only the first half, so
+      // the writable tree is converged on the baseline as part of the reset.
+      const sources: Record<string, { path: string; label: string }> = {};
+      if (!args.skill) {
+        for (const name of names) {
+          if (!Object.hasOwn(ui, name)) continue;
+          if (args.harness !== undefined) {
+            throw new UpdatesError(
+              `--harness filters plugin halves; ${name} is a Herdr UI artifact`,
+            );
+          }
+          delete ui[name];
+          changed.push(`${name} (ui)`);
+          const source = resetUiSource(env, name, console);
+          if (source !== null) sources[name] = source;
+        }
+      }
+
+      // Same order as an update, for the same reason: the state file is one atomic write, and a
+      // deploy that fails is undone by putting it back.
+      const previousState = stateBytes(state);
       if (changed.length > 0) {
         await settleAndThrowIfInterrupted();
-        saveState(state, plugins, skills);
+        saveState(state, plugins, skills, ui);
         console.say(`reset to the baseline: ${changed.join(", ")}`);
       } else {
         console.say("nothing to reset: no snapshot for those names");
       }
+      if (Object.keys(sources).length > 0) {
+        try {
+          resetDeployed = deployUi(state, env, console, sources);
+        } catch (error) {
+          try {
+            restoreState(state, previousState);
+          } catch (restoreError) {
+            console.warn(
+              `${PROG}: could not put ${STATE_FILE} back after a failed deploy: ${expectedMessage(restoreError)}`,
+            );
+          }
+          throw error;
+        }
+      }
     },
   );
+  reportDeployed(console, resetDeployed);
   return 0;
 }
 
@@ -384,7 +477,7 @@ export function cmdStatus(env: Environment, console: Console): number {
     `baseline: ${baseline ? shortRevision(baseline.revision) : "unknown (AGENTS_BASELINE not set)"}`,
   );
 
-  let loaded: State = { plugins: {}, skills: {} };
+  let loaded: State = { plugins: {}, skills: {}, ui: {} };
   try {
     loaded = loadState(state);
   } catch (error) {
@@ -408,6 +501,21 @@ export function cmdStatus(env: Environment, console: Console): number {
   }
   if (skillNames.length === 0) console.say("  none");
 
+  const uiNames = [
+    ...new Set([...Object.keys(loaded.ui), ...Object.keys(baseline?.ui ?? {})]),
+  ].sort();
+  console.say(`ui (${uiNames.length}):`);
+  for (const name of uiNames) {
+    const entry = loaded.ui[name];
+    if (entry?.path) {
+      console.say(`  ${name}: ${entry.path} (pinned ${shortRevision(entry.baseline)})`);
+    } else {
+      const pinned = baseline && Object.hasOwn(baseline.ui, name) ? baseline.ui[name] : undefined;
+      console.say(`  ${name}: baseline ${pinned || "unknown"}`);
+    }
+  }
+  if (uiNames.length === 0) console.say("  none");
+
   const sessions = loadSessions(state);
   if (sessions.length > 0) {
     console.say(`sessions (${sessions.length}):`);
@@ -421,7 +529,7 @@ export function cmdCheck(env: Environment, console: Console): number {
   throwIfInterrupted();
   const state = stateDir(env);
   const problems: string[] = [];
-  let loaded: State = { plugins: {}, skills: {} };
+  let loaded: State = { plugins: {}, skills: {}, ui: {} };
   try {
     loaded = loadState(state);
   } catch (error) {
@@ -478,6 +586,22 @@ export function cmdCheck(env: Environment, console: Console): number {
     }
   }
 
+  for (const name of Object.keys(loaded.ui).sort()) {
+    const entry = loaded.ui[name]!;
+    const pinned = entry.baseline || "";
+    if (baseline !== undefined && pinned !== baseline.revision) {
+      problems.push(
+        `${name} was published from ${shortRevision(pinned)}, the pinned baseline is ` +
+          `${shortRevision(baseline.revision)}; run \`${PROG} update ${name}\``,
+      );
+    }
+    if (!fs.statSync(entry.path, { throwIfNoEntry: false })?.isDirectory()) {
+      problems.push(
+        `the ${name} UI artifact is gone from the store; run \`${PROG} update ${name}\``,
+      );
+    }
+  }
+
   for (const session of loadSessions(state)) {
     // Only a session that is still running can act on this: a dead session's failed ack (or a
     // request the bridge rejected while it was alive) would otherwise warn forever.
@@ -500,14 +624,261 @@ export function cmdResolve(env: Environment, console: Console): number {
     throw new UpdatesError("AGENTS_BASELINE is not set, so there is nothing to resolve");
   }
   const baseline = loadBaseline(baselinePath);
-  let loaded: State = { plugins: {}, skills: {} };
+  let loaded: State = { plugins: {}, skills: {}, ui: {} };
   try {
     loaded = loadState(stateDir(env));
   } catch (error) {
     // A launch must not fail over a corrupt state file; the pinned baseline still loads.
     console.warn(`${PROG}: ${expectedMessage(error)}; resolving the baseline only`);
   }
-  console.stdout(jsonLine(effective(baseline, loaded.plugins, loaded.skills)));
+  console.stdout(jsonLine(effective(baseline, loaded.plugins, loaded.skills, loaded.ui)));
+  return 0;
+}
+
+/** `current.json` as it is now, or null when there is no state to put back. */
+export function stateBytes(state: string): Buffer | null {
+  try {
+    return fs.readFileSync(join(state, STATE_FILE));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+/**
+ * Put `previous` (from `stateBytes`) back, or drop the file when there was none.
+ *
+ * Used when an operation fails after it has written the state: a publication is only real if what
+ * the tree reads and what `resolve` reports agree, so a half-done operation puts the state file
+ * back the way it was rather than leaving the two disagreeing.
+ */
+export function restoreState(state: string, previous: Buffer | null): void {
+  const path = join(state, STATE_FILE);
+  if (previous === null) {
+    try {
+      fs.unlinkSync(path);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+    return;
+  }
+  fs.mkdirSync(state, { recursive: true });
+  const temporary = join(state, `.${STATE_FILE}.${randomUUID().slice(0, 8)}`);
+  try {
+    const descriptor = fs.openSync(
+      temporary,
+      fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_WRONLY,
+      0o600,
+    );
+    try {
+      fs.writeFileSync(descriptor, previous);
+      fs.fsyncSync(descriptor);
+    } finally {
+      fs.closeSync(descriptor);
+    }
+    fs.renameSync(temporary, path);
+  } catch (error) {
+    try {
+      fs.unlinkSync(temporary);
+    } catch {
+      // The failure may have happened before the temporary existed.
+    }
+    throw error;
+  }
+}
+
+/** Record this build's UI artifacts, stamped with the baseline they were published from. */
+export function applyUi(
+  ui: Record<string, UiState>,
+  revision: string,
+  built: Record<string, string>,
+): Record<string, UiState> {
+  const updated: Record<string, UiState> = {};
+  for (const [name, entry] of Object.entries(ui)) updated[name] = { ...entry };
+  for (const [name, path] of Object.entries(built)) {
+    updated[name] = { path, baseline: revision };
+  }
+  return updated;
+}
+
+/**
+ * The path to deploy for `name`: the published snapshot, or the pinned baseline. A published
+ * snapshot that left the store (someone deleted its GC root by hand) must not fail an activation:
+ * the pinned artifact is in the store by construction, and `check` reports the missing snapshot.
+ */
+export function effectiveUiSource(
+  baseline: Baseline,
+  ui: Record<string, UiState>,
+  name: string,
+  console: Console,
+): { path: string; label: string } {
+  const override = Object.hasOwn(ui, name) ? ui[name]!.path : undefined;
+  const pinned = Object.hasOwn(baseline.ui, name) ? baseline.ui[name] : undefined;
+  if (override) {
+    if (fs.statSync(override, { throwIfNoEntry: false })?.isDirectory()) {
+      return { path: override, label: "published" };
+    }
+    console.warn(
+      `${PROG}: the published ${name} artifact ${override} is gone from the store; ` +
+        `deploying the pinned baseline instead (run \`${PROG} update ${name}\` to republish it)`,
+    );
+    if (pinned && fs.statSync(pinned, { throwIfNoEntry: false })?.isDirectory()) {
+      return { path: pinned, label: "baseline" };
+    }
+    throw new UpdatesError(
+      `neither the published nor the pinned ${name} artifact exists; run \`${PROG} update ${name}\``,
+    );
+  }
+  if (pinned) {
+    if (!fs.statSync(pinned, { throwIfNoEntry: false })?.isDirectory()) {
+      throw new UpdatesError(`the pinned ${name} artifact ${pinned} does not exist`);
+    }
+    return { path: pinned, label: "baseline" };
+  }
+  throw new UpdatesError(
+    `${name} is in neither the baseline nor the published state, so there is nothing to deploy; ` +
+      `add it to the baseline's \`ui\` map, or publish it with \`${PROG} update ${name}\``,
+  );
+}
+
+/**
+ * Deploy each artifact into its writable directory. Every caller that changes what Herdr should
+ * load goes through here, so an explicit update and an activation converge on the same tree, and
+ * only the files that differ are written.
+ */
+export function deployUi(
+  state: string,
+  env: Environment,
+  console: Console,
+  sources: Record<string, { path: string; label: string }>,
+  dryRun = false,
+): [string, DeployResult][] {
+  const names = Object.keys(sources).sort();
+  if (names.length > 1 && env.AGENTS_UI_DIR) {
+    throw new UpdatesError(
+      `AGENTS_UI_DIR names one directory, so it cannot deploy ${names.length} artifacts at once`,
+    );
+  }
+  const results: [string, DeployResult][] = [];
+  for (const name of names) {
+    const entry = sources[name]!;
+    const result = deployArtifact(
+      name,
+      entry.path,
+      uiDestination(name, env),
+      state,
+      console as DeployConsole,
+      dryRun,
+    );
+    results.push([entry.label, result]);
+    for (const [relative, reason] of result.skipped) {
+      console.warn(`${PROG}: ${name}: left ${relative} alone: ${reason}`);
+    }
+  }
+  return results;
+}
+
+/**
+ * Say what a deploy wrote, and say nothing about whether the app reloaded it. Herdr watches the
+ * deployed files and reloads them itself, so there is no request to send and no ack to read.
+ */
+export function reportDeployed(console: Console, results: readonly [string, DeployResult][]): void {
+  for (const [label, result] of results) {
+    if (result.dryRun) {
+      console.say(
+        `dry run: ${result.name} would write ${result.written.length}, leave ` +
+          `${result.unchanged} and prune ${result.pruned.length} in ${result.destination} ` +
+          `(from ${result.source}, ${label})`,
+      );
+      for (const relative of result.written) console.say(`  would write ${relative}`);
+      for (const relative of result.pruned) console.say(`  would prune ${relative}`);
+      continue;
+    }
+    console.say(
+      `${result.name}: deployed ${result.written.length} written, ${result.unchanged} unchanged, ` +
+        `${result.pruned.length} pruned in ${result.destination} (from ${result.source}, ${label})`,
+    );
+    if (result.changed) {
+      console.say(
+        `${result.name}: no restart; Herdr watches these files and reloads what it sees, and ` +
+          "these writes prove the tree, not that a running app applied it",
+      );
+    }
+  }
+}
+
+/** The baseline's artifact for `name`, or nothing to deploy now, with the reason said out loud. */
+export function resetUiSource(
+  env: Environment,
+  name: string,
+  console: Console,
+): { path: string; label: string } | null {
+  const baselinePath = env.AGENTS_BASELINE;
+  if (!baselinePath) {
+    console.warn(
+      `${PROG}: AGENTS_BASELINE is not set, so ${name} is not redeployed now; ` +
+        "the deployed files stay until the next activation",
+    );
+    return null;
+  }
+  let baseline: Baseline;
+  try {
+    baseline = loadBaseline(baselinePath);
+  } catch (error) {
+    console.warn(`${PROG}: ${expectedMessage(error)}; ${name} is not redeployed now`);
+    return null;
+  }
+  const pinned = Object.hasOwn(baseline.ui, name) ? baseline.ui[name] : undefined;
+  if (!pinned) {
+    console.warn(
+      `${PROG}: the baseline pins no ${name} artifact; the deployed files stay until ` +
+        "the next activation",
+    );
+    return null;
+  }
+  if (!fs.statSync(pinned, { throwIfNoEntry: false })?.isDirectory()) {
+    console.warn(`${PROG}: the pinned ${name} artifact ${pinned} does not exist`);
+    return null;
+  }
+  return { path: pinned, label: "baseline" };
+}
+
+/** Put the effective artifact where Herdr loads it, without publishing anything. */
+export async function cmdDeployUi(
+  args: { name: string; dryRun: boolean },
+  env: Environment,
+  console: Console,
+): Promise<number> {
+  validateNames([args.name]);
+  const baselinePath = env.AGENTS_BASELINE;
+  if (!baselinePath) {
+    throw new UpdatesError("AGENTS_BASELINE is not set, so there is nothing to deploy");
+  }
+  const baseline = loadBaseline(baselinePath);
+  const state = stateDir(env);
+  fs.mkdirSync(state, { recursive: true });
+  let results: [string, DeployResult][] = [];
+  await withFileLock(
+    stateLockPath(state),
+    {
+      timeout: lockTimeout(env),
+      env,
+      onWait: (path) => console.warn(`${PROG}: waiting for another update to finish (${path})`),
+    },
+    () => {
+      let loaded: State = { plugins: {}, skills: {}, ui: {} };
+      try {
+        loaded = loadState(state);
+      } catch (error) {
+        // Enough of the state to deploy is not readable: the baseline still names a valid artifact,
+        // so deploy that and let `check` report the corrupt file.
+        console.warn(`${PROG}: ${expectedMessage(error)}; deploying the baseline only`);
+      }
+      const source = effectiveUiSource(baseline, loaded.ui, args.name, console);
+      results = deployUi(state, env, console, { [args.name]: source }, args.dryRun);
+    },
+  );
+  reportDeployed(console, results);
   return 0;
 }
 
@@ -546,7 +917,8 @@ type Command =
   | ({ command: "reset" } & ResetArgs)
   | { command: "status" }
   | { command: "check" }
-  | { command: "resolve" };
+  | { command: "resolve" }
+  | { command: "deploy-ui"; name: string; dryRun: boolean };
 
 export type ParseResult =
   | { kind: "run"; command: Command }
@@ -555,7 +927,7 @@ export type ParseResult =
 
 const MAIN_HELP = `usage: agents [-h] COMMAND ...
 
-Publish the agents checkout's plugins and skills as immutable snapshots.
+Publish the agents checkout's plugins, skills and Herdr UI as immutable snapshots.
 
 positional arguments:
   COMMAND
@@ -563,7 +935,8 @@ positional arguments:
     reset       drop snapshots so the pinned baseline applies again
     status      show the snapshots and live session files
     check       warn about drift; always exits 0
-    resolve     print the effective plugin and skill paths as JSON
+    resolve     print the effective plugin, skill and UI paths as JSON
+    deploy-ui   write a UI artifact where its app loads it; activation runs it
 
 options:
   -h, --help    show this help message and exit
@@ -629,11 +1002,12 @@ export function parseArguments(argv: readonly string[]): ParseResult {
     command !== "reset" &&
     command !== "status" &&
     command !== "check" &&
-    command !== "resolve"
+    command !== "resolve" &&
+    command !== "deploy-ui"
   ) {
     return usageError(
       undefined,
-      `argument COMMAND: invalid choice: ${JSON.stringify(command)} (choose from 'update', 'reset', 'status', 'check', 'resolve')`,
+      `argument COMMAND: invalid choice: ${JSON.stringify(command)} (choose from 'update', 'reset', 'status', 'check', 'resolve', 'deploy-ui')`,
     );
   }
   const rest = argv.slice(1);
@@ -645,7 +1019,30 @@ export function parseArguments(argv: readonly string[]): ParseResult {
     if (rest.length > 0) return usageError(command, `unrecognized arguments: ${rest.join(" ")}`);
     return { kind: "run", command: { command } };
   }
+  if (command === "deploy-ui") return parseDeployUi(rest);
   return parseNames(command, rest);
+}
+
+function parseDeployUi(rest: readonly string[]): ParseResult {
+  const names: string[] = [];
+  let dryRun = false;
+  for (const token of rest) {
+    if (token === "--dry-run") {
+      dryRun = true;
+      continue;
+    }
+    if (token !== "-" && token.startsWith("-")) {
+      return usageError("deploy-ui", `unrecognized arguments: ${token}`);
+    }
+    names.push(token);
+  }
+  if (names.length === 0) {
+    return usageError("deploy-ui", "the following arguments are required: NAME");
+  }
+  if (names.length > 1) {
+    return usageError("deploy-ui", `unrecognized arguments: ${names.slice(1).join(" ")}`);
+  }
+  return { kind: "run", command: { command: "deploy-ui", name: names[0]!, dryRun } };
 }
 
 function parseNames(command: "update" | "reset", rest: readonly string[]): ParseResult {
@@ -753,6 +1150,8 @@ export async function main(argv: readonly string[], options: MainOptions = {}): 
         return cmdCheck(env, console);
       case "resolve":
         return cmdResolve(env, console);
+      case "deploy-ui":
+        return await cmdDeployUi(command, env, console);
       default:
         throw new UpdatesError(`unknown command ${(command as { command: string }).command}`);
     }

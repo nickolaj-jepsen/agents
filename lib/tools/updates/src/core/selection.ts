@@ -11,6 +11,7 @@ import type {
   Resolved,
   SkillState,
   State,
+  UiState,
   VariantPaths,
 } from "./protocol.ts";
 import { type WriteJsonOptions, readJsonFile, writeJsonAtomic } from "./json.ts";
@@ -23,7 +24,7 @@ export function loadBaseline(path: string): Baseline {
 /** What `current.json` holds; an absent file is an empty state, a broken one is an error. */
 export function loadState(state: string): State {
   const path = stateFilePath(state);
-  if (!fs.existsSync(path)) return { plugins: {}, skills: {} };
+  if (!fs.existsSync(path)) return { plugins: {}, skills: {}, ui: {} };
   return parseState(readJsonFile(path), path);
 }
 
@@ -32,14 +33,19 @@ export function saveState(
   state: string,
   plugins: Record<string, PluginState>,
   skills: Record<string, SkillState>,
+  ui: Record<string, UiState> = {},
   options: WriteJsonOptions = {},
 ): void {
-  const payload: State = { plugins: {}, skills: {} };
+  const payload: State = { plugins: {}, skills: {}, ui: {} };
   for (const name of Object.keys(plugins).sort())
     payload.plugins[name] = orderedPlugin(plugins[name]!);
   for (const name of Object.keys(skills).sort()) {
     const entry = skills[name]!;
     payload.skills[name] = { path: entry.path, baseline: entry.baseline ?? "" };
+  }
+  for (const name of Object.keys(ui).sort()) {
+    const entry = ui[name]!;
+    payload.ui[name] = { path: entry.path, baseline: entry.baseline ?? "" };
   }
   writeJsonAtomic(stateFilePath(state), payload, options);
 }
@@ -56,8 +62,9 @@ export function effective(
   baseline: Baseline,
   plugins: Record<string, Partial<PluginState> | undefined>,
   skills: Record<string, Partial<SkillState> | undefined>,
+  ui: Record<string, Partial<UiState> | undefined> = {},
 ): Resolved {
-  const resolved: Resolved = { plugins: {}, skills: {} };
+  const resolved: Resolved = { plugins: {}, skills: {}, ui: {} };
   const pluginNames = sortedUnion(Object.keys(baseline.plugins), Object.keys(plugins));
   for (const name of pluginNames) {
     const base = baseline.plugins[name];
@@ -69,6 +76,13 @@ export function effective(
   const skillNames = sortedUnion(Object.keys(baseline.skills), Object.keys(skills));
   for (const name of skillNames) {
     resolved.skills[name] = skills[name]?.path || baseline.skills[name] || null;
+  }
+  // A UI artifact has one variant, so the override is a path and not a per-harness map. Added
+  // after the keys that were there first: a consumer reading plugins and skills is unaffected.
+  for (const name of sortedUnion(Object.keys(baseline.ui), Object.keys(ui))) {
+    const override = Object.hasOwn(ui, name) ? ui[name] : undefined;
+    const pinned = Object.hasOwn(baseline.ui, name) ? baseline.ui[name] : undefined;
+    resolved.ui[name] = override?.path || pinned || null;
   }
   return resolved;
 }
