@@ -2,7 +2,7 @@
 
 ## Set up and check a change
 
-You need Node 24 (`.node-version`), pnpm (`corepack enable` gives you the version `packageManager` pins) and uv, which fetches the Python in `.python-version`. `nix develop` gives the same tools, and `direnv allow` loads that shell. Claude Code comes from this flake's pinned nixpkgs (currently 2.1.330): use `nix develop` for Claude tests and `drive`, or `nix develop -c pnpm gate` for the full gate. The shell exports `CLAUDE_BIN` to the exact store binary; outside it, hermetic drive and plugin tests require an explicit `CLAUDE_BIN` (use an immutable, version-specific path so Turbo can hash the pin). They fail rather than silently using a different Claude on PATH. Pi still comes from pnpm. Nix also records site media, checks nix files and builds the plugins the way CI publishes them.
+You need Node 24 (`.node-version`), pnpm (`corepack enable` gives you the version `packageManager` pins) and uv, which fetches the Python in `.python-version`. `nix develop` gives the same tools, and `direnv allow` loads that shell: it is the shell for the install, the specs, `nix fmt` and the site, and it holds no Claude Code. Claude Code comes from this flake's pinned nixpkgs (currently 2.1.330) and is unfree, so no binary cache builds or serves it: only a machine that can reach `downloads.claude.ai` realises it, and that shell is `nix develop .#full`. Use it for Claude tests and `drive`, or `nix develop .#full -c pnpm gate` for the full gate. It exports `CLAUDE_BIN` to the exact store binary; outside it, hermetic drive and plugin tests require an explicit `CLAUDE_BIN` (use an immutable, version-specific path so Turbo can hash the pin). They fail rather than silently using a different Claude on PATH. Pi still comes from pnpm. Nix also records site media, checks nix files and builds the plugins the way CI publishes them.
 
 ```bash
 pnpm install                  # every package's dependencies, from pnpm-lock.yaml
@@ -209,7 +209,7 @@ A `dist` with no `releases.json` is from before releases were gated. The first r
 | `lib.mkClaudePlugin { pkgs; claude-code; } <name>`      | One Claude half, validated (`--strict`) and tested with the supplied Claude Code.                                                                             |
 | `apps.media`, `apps.update-deps-hash`                   | `nix run .#media -- <command>` runs a command in the recording environment; `nix run .#update-deps-hash` refreshes the pinned hash.                           |
 
-The repo's own checks run in turbo: Claude Code is pinned by nixpkgs in `flake.lock`, and pi by `pnpm-lock.yaml`. CI runs the gate in `nix develop`; recordings get the same Claude from `nix run .#media`. Turbo hashes `flake.lock` and `CLAUDE_BIN` so changing Claude invalidates cached checks. `nix flake check` (`check:nix`) builds every plugin, runs the packaged updates tool as a black box (`checks.agents-updates`: the CLI, the UI deployer, the refresh helper, the kernel lock and the pi package, against a fake store), and runs each Claude half through `lib.mkClaudePlugin` with nixpkgs' `claude-code`. A consumer's flake that sets `inputs.agents.inputs.nixpkgs.follows` builds with its own nixpkgs: if its `pnpm_12` fetches differently, `agents-pnpm-deps` fails with a hash mismatch, and the answer is to drop the `follows` for `agents`. Marketplace installs aren't checked against your local Claude version.
+The repo's own checks run in turbo: Claude Code is pinned by nixpkgs in `flake.lock`, and pi by `pnpm-lock.yaml`. CI runs the gate in `nix develop .#full`; recordings get the same Claude from `nix run .#media`. Turbo hashes `flake.lock` and `CLAUDE_BIN` so changing Claude invalidates cached checks. `nix flake check` (`check:nix`) builds every plugin, runs the packaged updates tool as a black box (`checks.agents-updates`: the CLI, the UI deployer, the refresh helper, the kernel lock and the pi package, against a fake store), and runs each Claude half through `lib.mkClaudePlugin` with nixpkgs' `claude-code`. A consumer's flake that sets `inputs.agents.inputs.nixpkgs.follows` builds with its own nixpkgs: if its `pnpm_12` fetches differently, `agents-pnpm-deps` fails with a hash mismatch, and the answer is to drop the `follows` for `agents`. Marketplace installs aren't checked against your local Claude version.
 
 ### Binary cache for Nix consumers
 
@@ -235,8 +235,11 @@ Stage new files before running nix commands; otherwise Nix won't see them.
 ```bash
 pnpm turbo run dev --filter=@agents/site     # serve http://localhost:4321/agents/
 pnpm turbo run build --filter=@agents/site   # build the static site in apps/site/dist
+pnpm turbo run build --filter=@agents/site --only  # the site alone: no plugin build, no recording
 pnpm turbo run readme                        # regenerate the GitHub README after changing its inputs
 ```
+
+`build` waits on every recording, which needs Claude and VS Code; `--only` runs the site's own `astro build` and nothing it depends on, so a machine with the default shell and no Claude can still render the whole site. The media it has no picture for are left out, never failed on.
 
 Edit plugin READMEs, skill files and `docs/*.md`, not the generated pages. Developer pages take their title from the first `#` heading and their URL from the filename. `docs/_intro.md` feeds the site and the GitHub README; `docs/_install.md` feeds only the README. If the images are missing, see [recording site media](../lib/tools/drive/README.md#site-media): the site builds without them.
 

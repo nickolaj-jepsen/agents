@@ -17,29 +17,46 @@
         ++ [media.FONTCONFIG_FILE]
       )
     );
-  in {
-    # The toolchain the repo pins (`.node-version`, `packageManager`, `.python-version`), for a
-    # machine that would rather get it from nix. Pi and the linters come from `pnpm install`.
-    devShells.default = pkgs.mkShell {
-      name = "agents";
-      # treefmt plus every formatter `nix fmt` runs, at the same versions.
+
+    # What both shells hold: the toolchain the repo pins (`.node-version`, `packageManager`,
+    # `.python-version`), and treefmt with every formatter `nix fmt` runs, at the same versions. All
+    # of it is free software a binary cache carries, so a machine whose store is empty and whose only
+    # network is the package registries and `cache.nixos.org` can realise the shell: that is what a
+    # docs agent in a VM needs, and `default` is what it gets.
+    base = {
       inputsFrom = [config.treefmt.build.devShell];
       packages = [
         pkgs.nodejs_24
         pkgs.pnpm_12
         pkgs.uv
         pkgs.python313
-        pkgs.claude-code
       ];
       # uv's own Pythons are generic Linux builds, which NixOS cannot run.
       UV_PYTHON_DOWNLOADS = "never";
-      CLAUDE_BIN = pkgs.lib.getExe pkgs.claude-code;
       # The `pi` in node_modules is a bare one; the system's wrapper is what exports the
       # key's location to plugins, so the exa tools would otherwise throw.
       shellHook = ''
         export PI_EXA_KEY_FILE="''${PI_EXA_KEY_FILE:-''${HOME:-}/.pi/agent/exa-api-key}"
       '';
     };
+  in {
+    # The default shell: install, the specs, the site and `nix fmt`, and no Claude Code. A VM realises
+    # this one (nothing else is asked for by name), and `claude-code` is unfree, which no binary cache
+    # builds or serves: a shell that held it could only be realised where Anthropic's own download is
+    # reachable. Claude Code, and so the gate, `drive` and the recordings, are `.#full`.
+    devShells.default = pkgs.mkShell (base
+      // {
+        name = "agents";
+      });
+
+    # The same shell plus the Claude Code the repo pins: the gate's `test:claude` and `e2e` tasks,
+    # `pnpm drive`, and `CLAUDE_BIN` for anything that starts a session. `nix develop .#full`.
+    devShells.full = pkgs.mkShell (base
+      // {
+        name = "agents-full";
+        packages = base.packages ++ [pkgs.claude-code];
+        CLAUDE_BIN = pkgs.lib.getExe pkgs.claude-code;
+      });
 
     packages.mediaEnvironment = mediaEnvironment;
 

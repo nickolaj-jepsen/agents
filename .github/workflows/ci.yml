@@ -53,7 +53,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
       - name: Check
-        run: nix develop -c pnpm gate
+        run: nix develop .#full -c pnpm gate
       # A report, never a failure: the units whose build or folder differs from what `dist` holds at
       # the same version, or that have lines under `[Unreleased]`. The gate built every plugin, so a
       # kit or dependency change that reached one shows here.
@@ -63,7 +63,7 @@ jobs:
       - name: Does the nix check need to run
         id: nix
         run: |
-          status=$(nix develop -c pnpm turbo run check:nix --dry=json | jq -r '.tasks[] | select(.taskId == "//#check:nix") | .cache.status')
+          status=$(nix develop .#full -c pnpm turbo run check:nix --dry=json | jq -r '.tasks[] | select(.taskId == "//#check:nix") | .cache.status')
           echo "check:nix is ${status:-unknown}"
           if [ "$status" = HIT ]; then echo "run=false" >> "$GITHUB_OUTPUT"; else echo "run=true" >> "$GITHUB_OUTPUT"; fi
       # Pulls what earlier runs built and pushes what this one builds; read-only without the token,
@@ -75,7 +75,7 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - if: steps.nix.outputs.run == 'true'
         name: Check the nix files
-        run: nix develop -c pnpm gate:nix
+        run: nix develop .#full -c pnpm gate:nix
         env:
           NIX_CONFIG: access-tokens = github.com=${{ github.token }}
       # A mismatch writes `.actual.snap` and `.actual.png` beside the snapshot; failed steps leave
