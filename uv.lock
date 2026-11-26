@@ -4,25 +4,9 @@ requires-python = ">=3.13"
 
 [manifest]
 members = [
-    "agents-updates",
     "agents-uv-root",
     "run-handoff",
 ]
-
-[[package]]
-name = "agents-updates"
-version = "0.0.0"
-source = { virtual = "lib/tools/updates/python" }
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-]
-
-[package.metadata]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pytest" }]
 
 [[package]]
 name = "agents-uv-root"

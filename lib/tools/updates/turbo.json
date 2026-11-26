@@ -1,8 +1,8 @@
 {
   "extends": ["//"],
   "tasks": {
-    // The pi reload bridge against a real temporary state directory and a stub refresh: no
-    // session, no build and no network. The Python half is the uv member in `python/`.
+    // The CLI, the refresh helper and the pi reload bridge against a real temporary state directory,
+    // a fake nix, a real git checkout and the real flock helper: no session, no store and no network.
     "test": {
       "command": ["./node_modules/.bin/vitest", "run"]
     }

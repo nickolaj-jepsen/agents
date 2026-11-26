@@ -1,7 +1,7 @@
 import { defineConfig } from "vitest/config";
 
-// The bridge's specs: one extension handed a scripted pi API and a temporary state directory,
-// with no session, no package built and no agent logged in.
+// The CLI, the refresh helper and the bridge: real temporary directories and processes, a fake nix,
+// and the flock(2) helper compiled once from pkgs/agents-flock.c. No store, network or agent.
 export default defineConfig({
   esbuild: { tsconfigRaw: "{}" },
   test: {

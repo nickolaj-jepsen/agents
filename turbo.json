@@ -307,9 +307,6 @@
     "run-handoff#check-types": {
       "command": null
     },
-    "agents-updates#check-types": {
-      "command": null
-    },
     "agents-python#check": {
       "command": null,
       "dependsOn": ["agents-python#lint:py", "agents-python#fmt:check", "run-handoff#test"]

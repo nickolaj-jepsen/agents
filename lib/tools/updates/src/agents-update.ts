@@ -1,10 +1,17 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { join } from "node:path";
-import { homedir } from "node:os";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { writeJsonAtomic } from "./core/json.ts";
+import {
+  requestFilePath,
+  requestsDir,
+  sessionFilePath,
+  sessionsDir,
+  stateDir,
+} from "./core/paths.ts";
+import { type ReloadRequest, parseReloadRequest, sessionRecord } from "./core/protocol.ts";
 
 const run = promisify(execFile);
 const pendingKey = "AGENTS_PENDING_RELOAD";
@@ -13,14 +20,11 @@ const pendingKey = "AGENTS_PENDING_RELOAD";
 export default function (pi: ExtensionAPI) {
   const refresh = process.env.AGENTS_REFRESH;
   if (process.env.AGENTS_UPDATES_ENABLED !== "1" || !refresh) return;
-  const root = join(
-    process.env.XDG_STATE_HOME ?? join(homedir(), ".local/state"),
-    "agents-updates",
-  );
+  const state = stateDir(process.env);
   const token = process.env.AGENTS_BRIDGE_TOKEN ?? randomUUID();
   process.env.AGENTS_BRIDGE_TOKEN = token;
-  const registry = join(root, "sessions", `${process.pid}-${token}.json`);
-  const requestPath = join(root, "requests", `${process.pid}-${token}.json`);
+  const registry = sessionFilePath(state, process.pid, token);
+  const requestPath = requestFilePath(state, process.pid, token);
   const ackPath = `${requestPath}.ack`;
   const command = `agents-apply-update-${token}`;
   let timer: ReturnType<typeof setInterval> | undefined;
@@ -29,19 +33,15 @@ export default function (pi: ExtensionAPI) {
   let applying = false;
   let context: ExtensionContext | undefined;
 
+  // The same files the CLI and the refresh helper read: atomic rename, 0600, JSON.
   function put(path: string, value: unknown) {
-    const temp = `${path}.${randomUUID()}.tmp`;
-    writeFileSync(temp, JSON.stringify(value), { mode: 0o600 });
-    renameSync(temp, path);
+    writeJsonAtomic(path, value, { mode: 0o600, sync: false });
   }
   function advertise(ctx: ExtensionContext) {
-    put(registry, {
-      pid: process.pid,
-      harness: "pi",
-      sessionId: ctx.sessionManager.getSessionId(),
-      status: ctx.isIdle() ? "idle" : "busy",
-      requestPath,
-    });
+    put(
+      registry,
+      sessionRecord(process.pid, ctx.sessionManager.getSessionId(), ctx.isIdle(), requestPath),
+    );
   }
   function poll() {
     if (!context || applying || !context.isIdle()) return;
@@ -73,10 +73,9 @@ export default function (pi: ExtensionAPI) {
         queued = false;
         return;
       }
-      let request: { id: string };
+      let request: ReloadRequest;
       try {
-        request = JSON.parse(readFileSync(claimed, "utf8"));
-        if (!request || typeof request.id !== "string") throw new Error("Missing request id");
+        request = parseReloadRequest(JSON.parse(readFileSync(claimed, "utf8")));
       } catch (error) {
         put(ackPath, {
           id: null,
@@ -126,8 +125,8 @@ export default function (pi: ExtensionAPI) {
       }
       return;
     }
-    mkdirSync(join(root, "sessions"), { recursive: true, mode: 0o700 });
-    mkdirSync(join(root, "requests"), { recursive: true, mode: 0o700 });
+    mkdirSync(sessionsDir(state), { recursive: true, mode: 0o700 });
+    mkdirSync(requestsDir(state), { recursive: true, mode: 0o700 });
     const pending = process.env[pendingKey];
     if (pending) {
       const ack = JSON.parse(pending);

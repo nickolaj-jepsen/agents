@@ -1,16 +1,21 @@
 # `agents-updates`: the explicit publication CLI (`agents`), the profile refresh helper
 # (`agents-refresh`) and the pi package that lets a running pi session ask for a reload.
 #
-# Plain stdlib Python and one TypeScript file, so nothing is bundled and no npm dependency is
-# fetched: `nix build .#agents-updates` is a copy and two wrappers. The consumer's own wrapper
-# supplies the environment (the pinned manifest and the harness paths) and lists
-# `share/agents-updates/pi` in pi's `settings.packages`; see lib/tools/updates/README.md.
+# TypeScript run as it is: Node 24 strips the types, so there is no bundle step and no npm
+# dependency. The package is a copy of the sources, two wrappers, one small C program and the pi
+# package. The C program is the flock(2) holder both wrappers need — Node has no flock binding — and
+# it is compiled here for whatever Unix this is built on, because no portable `flock` executable
+# exists (util-linux has one, macOS does not). The consumer's own wrapper supplies the environment
+# (the pinned manifest and the harness paths) and lists `share/agents-updates/pi` in pi's
+# `settings.packages`; see lib/tools/updates/README.md.
 {
+  lib,
+  stdenv,
   stdenvNoCC,
   runCommandLocal,
   writeShellApplication,
   writeText,
-  python3,
+  nodejs_24,
   git,
   nix,
   bash,
@@ -19,26 +24,54 @@
   gnugrep,
 }: let
   src = ../lib/tools/updates;
+  node = "${nodejs_24}/bin/node";
 
-  # The scripts, as a consumer's own wrapper runs them: the interpreter comes from the wrapper,
-  # so a caller that bakes in its own environment needs nothing but the file.
-  scripts = runCommandLocal "agents-updates-scripts" {} ''
+  # The runtime sources, without the specs and their fixtures: what a store copy runs.
+  sources = runCommandLocal "agents-updates-src" {} ''
     mkdir -p $out
-    install -Dm644 ${src}/python/agents-update.py $out/agents-update.py
-    install -Dm644 ${src}/python/agents-refresh.py $out/agents-refresh.py
-    # The UI deployer: agents-update.py puts this directory on sys.path, so the two travel
-    # together (it is imported, not executed).
-    install -Dm644 ${src}/python/agents_ui.py $out/agents_ui.py
+    shopt -s globstar nullglob
+    cd ${src}
+    for file in src/**/*.ts; do
+      case "$file" in
+        *.spec.ts | src/test/*) continue ;;
+      esac
+      install -Dm644 "$file" "$out/$file"
+    done
   '';
+
+  # Holds an exclusive flock(2) on a path until its stdin closes, so a Node process that dies (or is
+  # killed) releases the lock without leaving a stale file behind. An older Python `agents` used
+  # fcntl.flock on the same inode, so the two exclude each other across an upgrade.
+  flock = stdenv.mkDerivation {
+    pname = "agents-flock";
+    version = "0";
+    src = ./agents-flock.c;
+    dontUnpack = true;
+    buildPhase = ''
+      runHook preBuild
+      $CC -O2 -Wall -Wextra -o agents-flock $src
+      runHook postBuild
+    '';
+    installPhase = ''
+      runHook preInstall
+      install -Dm755 agents-flock $out/bin/agents-flock
+      runHook postInstall
+    '';
+    meta = {
+      description = "Hold an exclusive flock(2) on a file until stdin closes";
+      platforms = lib.platforms.unix;
+    };
+  };
 
   # `agents`: the publication CLI. A build is the only backend, so nix, git and coreutils are on
   # PATH; the manifest and the checkout come from the caller's environment (AGENTS_BASELINE,
   # AGENTS_CHECKOUT, AGENTS_NIXPKGS, AGENTS_CLAUDE, AGENTS_SYSTEM).
   cli = writeShellApplication {
     name = "agents";
-    runtimeInputs = [python3 git nix coreutils];
+    runtimeInputs = [nodejs_24 git nix coreutils flock];
     text = ''
-      exec ${python3.interpreter} ${scripts}/agents-update.py "$@"
+      export AGENTS_FLOCK=${flock}/bin/agents-flock
+      exec ${node} ${sources}/src/bin.ts "$@"
     '';
   };
 
@@ -47,18 +80,23 @@
   # overrides that.
   refresh = writeShellApplication {
     name = "agents-refresh";
-    runtimeInputs = [cli python3 coreutils];
+    runtimeInputs = [cli nodejs_24 coreutils flock];
     text = ''
-      exec ${python3.interpreter} ${scripts}/agents-refresh.py "$@"
+      export AGENTS_FLOCK=${flock}/bin/agents-flock
+      exec ${node} ${sources}/src/refresh-bin.ts "$@"
     '';
   };
 
-  # The pi package a consumer lists in `settings.packages`: pi loads it from its store path
-  # without copying it. The bridge is opt-in through AGENTS_UPDATES_ENABLED and does nothing
-  # without AGENTS_REFRESH.
+  # The pi package a consumer lists in `settings.packages`: pi loads it from its store path without
+  # copying it, and its jiti loader resolves the relative `.ts` imports of the shared core. The
+  # bridge is opt-in through AGENTS_UPDATES_ENABLED and does nothing without AGENTS_REFRESH.
   pi = runCommandLocal "agents-updates-pi" {} ''
-    mkdir -p $out/extensions
+    mkdir -p $out/extensions/core
     install -Dm644 ${src}/src/agents-update.ts $out/extensions/agents-update.ts
+    for file in ${src}/src/core/*.ts; do
+      case "$file" in *.spec.ts) continue ;; esac
+      install -Dm644 "$file" "$out/extensions/core/$(basename "$file")"
+    done
     install -Dm644 ${writeText "agents-updates-pi.manifest.json" (builtins.toJSON {
       name = "agents-updates";
       version = "0.0.0";
@@ -70,39 +108,33 @@
       $out/package.json
   '';
 
-  # The Python half's own tests, from the installed scripts: the fake nix and the git checkouts
-  # need bash, git and coreutils, and no store or network is touched.
-  tests =
-    runCommandLocal "agents-updates-tests" {
-      nativeBuildInputs = [python3 git bash coreutils gnused gnugrep];
-    } ''
-      # The installed scripts, beside their specs: the tests read the CLI from their own
-      # directory, and a store copy is read-only.
-      mkdir tests
-      cd tests
-      install -m644 ${scripts}/agents-update.py ${scripts}/agents-refresh.py ${scripts}/agents_ui.py .
-      install -m644 ${src}/python/test_agents_update.py ${src}/python/test_agents_refresh.py ${src}/python/test_agents_ui.py .
-      export HOME="$TMPDIR/home"
-      mkdir -p "$HOME"
-      python3 -m unittest discover -s . -p 'test_agents_*.py'
-      touch "$out"
-    '';
-in
-  stdenvNoCC.mkDerivation {
+  package = stdenvNoCC.mkDerivation {
     pname = "agents-updates";
     version = "0";
     dontUnpack = true;
     dontBuild = true;
     installPhase = ''
       runHook preInstall
-      mkdir -p $out/bin $out/share/agents-updates/python
+      mkdir -p $out/bin $out/share/agents-updates
       ln -s ${cli}/bin/agents $out/bin/agents
       ln -s ${refresh}/bin/agents-refresh $out/bin/agents-refresh
-      install -Dm644 ${scripts}/agents-update.py $out/share/agents-updates/python/agents-update.py
-      install -Dm644 ${scripts}/agents-refresh.py $out/share/agents-updates/python/agents-refresh.py
-      install -Dm644 ${scripts}/agents_ui.py $out/share/agents-updates/python/agents_ui.py
+      cp -r ${sources}/src $out/share/agents-updates/src
       ln -s ${pi} $out/share/agents-updates/pi
       runHook postInstall
     '';
     passthru = {inherit cli refresh pi tests;};
-  }
+  };
+
+  # The package as a consumer gets it, run as a black box: the fake store and checkout, the state
+  # file, the kernel lock (including a holder killed mid-update), and both refresh harnesses. The
+  # specs that cover each command are `pnpm turbo run test --filter=@agents/updates`; this checks
+  # what only the packaged artifact can show.
+  tests =
+    runCommandLocal "agents-updates-tests" {
+      nativeBuildInputs = [bash coreutils gnused gnugrep git nodejs_24 flock];
+    } ''
+      bash ${./agents-updates-test.sh} ${package}
+      touch $out
+    '';
+in
+  package
