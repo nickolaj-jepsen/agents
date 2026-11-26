@@ -1,6 +1,6 @@
 {
   "name": "@nickolaj-jepsen/docfix",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Agents file doc suggestions instead of editing docs outside their change; /docs reviews them and hands an apply back to the agent",
   "keywords": [
     "pi-package"

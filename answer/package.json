@@ -1,6 +1,6 @@
 {
   "name": "@nickolaj-jepsen/answer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Answer the question round or pick list a turn ended on from a form: number keys or clicks, then the reply is written into the prompt",
   "keywords": [
     "pi-package"

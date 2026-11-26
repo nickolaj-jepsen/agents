@@ -1,0 +1,12 @@
+{
+  "name": "@nickolaj-jepsen/bundle-utilities",
+  "description": "Small tools an agent reaches for: diagrams and prices.",
+  "keywords": [
+    "pi-package"
+  ],
+  "pi": {
+    "skills": [
+      "./"
+    ]
+  }
+}

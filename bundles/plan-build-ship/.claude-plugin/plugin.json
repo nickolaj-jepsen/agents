@@ -1,0 +1,9 @@
+{
+  "name": "plan-build-ship",
+  "version": "789f6765dc92",
+  "description": "Hand a finished plan to another agent, build it, and land it.",
+  "author": {
+    "name": "Nickolaj Jepsen"
+  },
+  "skills": "./"
+}

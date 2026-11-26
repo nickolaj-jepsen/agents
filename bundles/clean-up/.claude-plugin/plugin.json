@@ -1,0 +1,9 @@
+{
+  "name": "clean-up",
+  "version": "14eb24b955e7",
+  "description": "Remove the comments, docs and tests that cost more than they say.",
+  "author": {
+    "name": "Nickolaj Jepsen"
+  },
+  "skills": "./"
+}

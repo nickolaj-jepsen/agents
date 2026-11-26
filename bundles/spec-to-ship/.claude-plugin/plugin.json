@@ -1,0 +1,9 @@
+{
+  "name": "spec-to-ship",
+  "version": "78913332b172",
+  "description": "From an agreed spec to reviewed code: grill the plan, write the spec and tickets, build test-first, review.",
+  "author": {
+    "name": "Nickolaj Jepsen"
+  },
+  "skills": "./"
+}

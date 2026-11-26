@@ -1,0 +1,12 @@
+{
+  "name": "@nickolaj-jepsen/bundle-understand-decide",
+  "description": "Learn a project, compare the options, and decide what to do.",
+  "keywords": [
+    "pi-package"
+  ],
+  "pi": {
+    "skills": [
+      "./"
+    ]
+  }
+}

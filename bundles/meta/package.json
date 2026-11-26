@@ -1,0 +1,12 @@
+{
+  "name": "@nickolaj-jepsen/bundle-meta",
+  "description": "Skills about agents and skills: find them, write them, test them, and learn from a session.",
+  "keywords": [
+    "pi-package"
+  ],
+  "pi": {
+    "skills": [
+      "./"
+    ]
+  }
+}

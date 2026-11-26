@@ -1,0 +1,12 @@
+{
+  "name": "@nickolaj-jepsen/bundle-docs",
+  "description": "Write docs and instructions that are read, cut the ones that are not, and draw what prose cannot.",
+  "keywords": [
+    "pi-package"
+  ],
+  "pi": {
+    "skills": [
+      "./"
+    ]
+  }
+}

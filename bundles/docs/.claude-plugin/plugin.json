@@ -1,0 +1,9 @@
+{
+  "name": "docs",
+  "version": "87a5d615b157",
+  "description": "Write docs and instructions that are read, cut the ones that are not, and draw what prose cannot.",
+  "author": {
+    "name": "Nickolaj Jepsen"
+  },
+  "skills": "./"
+}

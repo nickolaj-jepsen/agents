@@ -1,0 +1,12 @@
+{
+  "name": "@nickolaj-jepsen/bundle-clean-up",
+  "description": "Remove the comments, docs and tests that cost more than they say.",
+  "keywords": [
+    "pi-package"
+  ],
+  "pi": {
+    "skills": [
+      "./"
+    ]
+  }
+}

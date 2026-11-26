@@ -1,0 +1,12 @@
+{
+  "name": "@nickolaj-jepsen/bundle-plan-build-ship",
+  "description": "Hand a finished plan to another agent, build it, and land it.",
+  "keywords": [
+    "pi-package"
+  ],
+  "pi": {
+    "skills": [
+      "./"
+    ]
+  }
+}

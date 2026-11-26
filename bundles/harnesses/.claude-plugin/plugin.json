@@ -1,0 +1,9 @@
+{
+  "name": "harnesses",
+  "version": "1bcc62fab498",
+  "description": "Start the real program and drive it with keys, screenshots and logs.",
+  "author": {
+    "name": "Nickolaj Jepsen"
+  },
+  "skills": "./"
+}

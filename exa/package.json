@@ -1,6 +1,6 @@
 {
   "name": "@nickolaj-jepsen/exa",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Exa web search and page fetch tools",
   "keywords": [
     "pi-package"

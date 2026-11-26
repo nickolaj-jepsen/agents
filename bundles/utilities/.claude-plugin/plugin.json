@@ -1,0 +1,9 @@
+{
+  "name": "utilities",
+  "version": "235fe27bcc6c",
+  "description": "Small tools an agent reaches for: diagrams and prices.",
+  "author": {
+    "name": "Nickolaj Jepsen"
+  },
+  "skills": "./"
+}

@@ -1,0 +1,362 @@
+{
+  "agent-plugin-dev": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "answer": {
+    "kind": "plugin",
+    "version": "0.2.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "bg": {
+    "kind": "plugin",
+    "version": "0.2.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "bg-herdr": {
+    "kind": "plugin",
+    "version": "0.0.1",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "brainstorm": {
+    "kind": "skill",
+    "version": "0.0.1",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "claude-compat": {
+    "kind": "plugin",
+    "version": "0.2.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "claude-peers": {
+    "kind": "plugin",
+    "version": "0.2.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "clean-up": {
+    "kind": "bundle",
+    "version": "14eb24b955e7",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "code-review": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "codebase-design": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "compare": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "dispatch": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "dms-plugin-dev": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "docfix": {
+    "kind": "plugin",
+    "version": "0.0.1",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "docs": {
+    "kind": "bundle",
+    "version": "87a5d615b157",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "domain-modeling": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "evals-start": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "exa": {
+    "kind": "plugin",
+    "version": "0.2.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "find-skills": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "grill-me": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "grill-with-docs": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "grilling": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "handoff": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "harnesses": {
+    "kind": "bundle",
+    "version": "1bcc62fab498",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "ideate": {
+    "kind": "skill",
+    "version": "0.0.1",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "image-preview": {
+    "kind": "plugin",
+    "version": "0.2.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "implement": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "implement-spec": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "improve-codebase-architecture": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "land": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "linear-issue": {
+    "kind": "plugin",
+    "version": "0.2.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "mermaid": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "meta": {
+    "kind": "bundle",
+    "version": "af84a24b256c",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "mine": {
+    "kind": "skill",
+    "version": "0.0.1",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "onboard": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "plan-build-ship": {
+    "kind": "bundle",
+    "version": "789f6765dc92",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "pricerunner": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "prune-churn": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "prune-comments": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "prune-docs": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "questions": {
+    "kind": "plugin",
+    "version": "0.2.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "research": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "retro": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "run-handoff": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "run-slices": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "slices": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "spec-to-ship": {
+    "kind": "bundle",
+    "version": "78913332b172",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "spellfix": {
+    "kind": "plugin",
+    "version": "0.2.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "tdd": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "to-spec": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "to-tickets": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "tour": {
+    "kind": "skill",
+    "version": "0.0.1",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "transcript-tweaks": {
+    "kind": "plugin",
+    "version": "0.0.1",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "triage": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "understand-decide": {
+    "kind": "bundle",
+    "version": "ff0c5d5f5d4d",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "utilities": {
+    "kind": "bundle",
+    "version": "235fe27bcc6c",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "wait-what": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "wizard": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "worktree": {
+    "kind": "plugin",
+    "version": "0.2.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  },
+  "writing-for-agents": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "date": "2026-11-26"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "@nickolaj-jepsen/claude-peers",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Make a pi session a peer in Claude Code's cross-session messaging: list_agents and send_message reach Claude Code and other pi sessions on this machine",
   "keywords": [
     "pi-package"

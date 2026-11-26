@@ -1,0 +1,12 @@
+{
+  "name": "@nickolaj-jepsen/bundle-spec-to-ship",
+  "description": "From an agreed spec to reviewed code: grill the plan, write the spec and tickets, build test-first, review.",
+  "keywords": [
+    "pi-package"
+  ],
+  "pi": {
+    "skills": [
+      "./"
+    ]
+  }
+}

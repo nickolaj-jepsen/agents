@@ -1,0 +1,9 @@
+{
+  "name": "skills",
+  "version": "8b06fea842a3",
+  "description": "Agent skills from nickolaj-jepsen/agents",
+  "author": {
+    "name": "Nickolaj Jepsen"
+  },
+  "skills": "./"
+}

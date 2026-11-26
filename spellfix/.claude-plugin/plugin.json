@@ -1,6 +1,5 @@
 {
   "name": "spellfix",
-  "version": "1.2.0",
   "description": "Pick fixes for misspelled words in the prompt draft with hunspell and Haiku",
   "author": {
     "name": "Nickolaj Jepsen"
@@ -25,5 +24,6 @@
       "default": ""
     }
   },
-  "types": "./types.d.ts"
+  "types": "./types.d.ts",
+  "version": "0.2.0"
 }

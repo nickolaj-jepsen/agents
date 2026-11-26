@@ -1,0 +1,12 @@
+{
+  "name": "@nickolaj-jepsen/bundle-harnesses",
+  "description": "Start the real program and drive it with keys, screenshots and logs.",
+  "keywords": [
+    "pi-package"
+  ],
+  "pi": {
+    "skills": [
+      "./"
+    ]
+  }
+}

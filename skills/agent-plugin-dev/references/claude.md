@@ -1,0 +1,68 @@
+# Claude Code mods
+
+Use `plugin-authoring` for the installed version or the [offline mod manuals](upstream.md#claude-code). For the app layout, manifest and the API types (`pnpm turbo run types`), see [Development](../../../docs/development.md#change-or-add-a-plugin).
+
+## Panes, bands, and focus
+
+- Draw a pane to `e.props.bodyColumns` and `e.props.scroll.bodyRows`. Claude chooses whether it docks or goes inline. If a pane opens on a wide terminal but not a narrow one, check whether it was opened on the user's action or by background work. The [pane manual](upstream/claude/mods-interface.md#when-a-pane-waits-for-a-wider-terminal) describes the width thresholds.
+- A band (`AbovePrompt`) doesn't own the keys until it has focus. Test shortcuts with a draft in the prompt. If opening a pane replaces the band, hide the band **before** `$.ui.open` so the inline render uses the right space.
+- Terminal button focus follows the button's position across redraws. Keep the button order stable while focus moves. A click can press a button without moving the keyboard focus.
+- Closing a pane from the mod skips that mod's own `ui.close` hook. Do the submit or cleanup work before calling `$.ui.close`, as [docfix](../../../apps/docfix/src/claude.tsx) does.
+- Keep state writes out of `ui.render`. If a mod shows nothing, check the session's debug log for rejected hooks or element trees. To send `Escape` then a letter in a terminal replay, put a short delay between them so the host doesn't read the sequence as Alt+letter.
+
+## The kit's own focus and hover on the terminal
+
+The engine draws focus and hover its own way, and the [kit's painter](../../../lib/kits/core/src/paint/claude.tsx) works round each. These were observed in Claude Code 2.1.325; recheck them after upgrading.
+
+- The engine inverts the `Button` its focus ring rests on. To show the kit's pointer and bold label instead, keep the ring on a zero-size button (`ring`) and turn its moves into your own focus in a `ui.focus` hook (`ringMove`), answering `next({ ...e, element: RING.park })`. The site then owns the focus order of everything in it.
+- The engine inverts a `Button` under the pointer too. The painter gives a control's runs a `hover` with their colours swapped, so the inversion puts them back and the row sits on a fill. A `hover` on a `Text` outside a keyed `Box` makes the engine refuse the whole tree.
+- A plain `Button` with a `hotkey` prints `a: ` before its label. Bind letters on zero-size buttons instead. They are focus stops, so the same `ui.focus` hook has to move the ring off them.
+- The transcript keeps no focus ring. A card placed there takes its keys from the band, sharing one state with it.
+- A click on a transcript row hands the keyboard to the prompt, and `$.ui.focus` cannot take it back. Escape hands it back with no event at all. A mod hears the keyboard arrive (`ui.focus` in its site) and leave by typing (`prompt.edit`, `prompt.change`) or by a transcript click (`ui.press` on a `Placed`). Draw `keysHint` so the person can see where their keys go.
+- `$` may only be passed to a function declared at the top of the file or imported from the mod's own files. A helper defined inside `register` that takes `$` stops the mod from loading. The build bundles the mod into one scope, so a top-level function that takes `$` (`open($)`) also fails `claude plugin validate` when any `let open` exists anywhere in the bundle: name it for what it does (`openForm`). Across files it must be a `function` declaration, not an arrow in a `const`. `read` and `update` take an atom only in the file that declares it, so a helper in another file is handed closures over them, as [linear-issue's host](../../../apps/linear-issue/src/claude/linear.ts) is.
+- The `ring` draws nothing but still takes a row of the pane, so a screen drawn to the pane's height leaves it one (docfix leaves two: the keyboard hint's and the ring's). A tree taller than `bodyRows` scrolls, and the engine keeps the parked ring in view, so the top goes first.
+- With `closeOnEscape`, Escape hands the keys to the prompt even when a `ui.close` hook refuses the close. Opening the open pane again with `focus: true` (from `$.clock.after`, once the hook has answered) takes them back while the prompt is empty, as docfix does when Escape leaves its reader or asks before discarding.
+- Above the prompt of a 70x24 terminal a pane gets six body rows, whatever `rows` asks for. Draw something useful in that.
+- The engine keeps its ring by a button's place among the site's buttons, not by its key. Draw `ring` first in the site: after rows that come and go, the ring lands on a row, which the engine then inverts, and the next arrow is spent putting it back.
+- A pane binds letters, digits, Enter and the arrows. Escape closes it before the mod hears, and any other key, Space included, goes to the prompt and takes the keyboard with it. Don't offer either as a key there.
+- While a pane holds the keyboard, a word typed for the prompt presses the pane's letters. Let a letter open, select or tick; keep anything that cannot be undone on Enter.
+- To put the ring on an `Input` that was just drawn, call `$.ui.focus({ requestId, key })` after the state change, and again with `RING.park` when the field goes: `autoFocus` only applies when the site takes the keyboard. Escape takes the ring off a field without an event, so keep `ring` drawn while a field is open: the next arrow or Enter lands on it, and the mod can leave the field then.
+- An `Input` of several rows that holds line breaks must stand at the pane's left edge. Set in by a padding or a margin, it cuts each line with `…` and hides what is typed, because it measures itself by the pane. A plain column `Box` round it is fine. A `label` gives it a hanging indent: `X: ` before the first row, the others under its words. Focused, it keeps a column at the right for its own hint (`⏎ · shift+⏎ new line`); without the ring it shows its text at full width and no hint.
+- Escape in an `Input` moves the ring to the control before it, as Up from its first row does, and the `ui.focus` event is the same for both. Don't let that move throw away what was typed: keep the text from `onInput`, park the ring, and save on the Enter that lands there. Down from the last row moves the ring to the control after it.
+- An `Input` of one row shows a long value's start and hides what is typed past it. Give it `rows` of two or more and rows of its own: beside other text, or in a box with a height or a width, it cuts the value instead of wrapping. Its hint after the text cannot be removed, so give a key or a name as its `label` and let the painter's `input` slot set it in.
+
+## Graphical surfaces
+
+Use the [kit](../../../lib/kits/README.md#draw-on-claude-desktop-and-vs-code) for Desktop and VS Code: a component's `gui.tsx` takes `(g: Gui, props)` with the same props as its `terminal.ts`, and `g.press(hit)` is the one reducer both surfaces share. Build the `Gui` with `guiOf(els, e, press)` and choose a drawing with `forSurface(e, { tui, gui })`, both from `@agents/kit-core/paint/host.tsx`. [linear-issue](../../../apps/linear-issue/src/claude.tsx) draws both its terminal and its graphical pane this way. A component without a `gui.tsx` has no graphical drawing: add one with the component rather than drawing by hand.
+
+What each graphical host can and cannot do is in the capability table, [`lib/kits/core/src/surfaces.ts`](../../../lib/kits/core/src/surfaces.ts), with the evidence for each fact; the kit's types, a manifest's answers and a drawing follow it. The types treat `unverified()` facts as absent. Several Desktop facts are sourced from the engine's API types, not a live Desktop session. Read the table for a quirk and add a fact to it when you find one; don't repeat it here. A drawing asks `can(ctx, "inputRows:many")`, never which surface it is.
+
+Typing doesn't emit the terminal's prompt-edit events or redraw the band. The band redraws only when its props change: a turn starts or ends, or the prompt box changes width. A band that reads `$.prompt.read()` when it renders can stay blank or stale until then. See the [driver guide](../../../lib/tools/drive/README.md#vs-code) for a resize workaround.
+
+For scripted native inputs or selects, use the setter and dispatch the corresponding event, as in [linear-issue's VS Code scenarios](../../../apps/linear-issue/src/e2e/vscode.scenarios.ts). `wait` can't see placeholder text, and clicking a button that reveals an input doesn't necessarily focus it: test Tab and typing.
+
+## Test a mod
+
+Use `await $.ui.mount({ ...PANE, surface })` for `vscode` and `desktop`. Exercise actions with `ui.press({ key })` and call the kit's `expectNative` from `@agents/kit-core/paint/checks.tsx`. This tests the element tree, not how the host closes a pane or transfers focus. Use the VS Code driver below and check [Desktop](../../../lib/tools/drive/README.md#claude-desktop) by hand.
+
+If a wrapper injects flags before `plugin test` and Claude reports “not run from this spelling,” use the repo's pinned Claude, which the `test:claude` task runs with a scratch `HOME`:
+
+```bash
+pnpm turbo run test:claude --filter=@nickolaj-jepsen/docfix  # validate and test one mod
+```
+
+### Looking at a graphical screen
+
+Run from the repo root with the [VS Code driver prerequisites](../../../lib/tools/drive/README.md#vs-code). Inspect the real narrow and wide layouts before lifting any height caps. The full-height shot shows the contents below the scroll edge, not what fits on screen.
+
+```bash
+out=$(mktemp -d)                                      # keep screenshots together
+pnpm drive goto docfix open --harness vscode --size 420x800 # open the narrow panel with evidence expanded
+pnpm drive shot "$out/narrow.png"               # check wrapping, clipping and scroll
+pnpm drive resize 1280 720                      # switch to the wide layout
+pnpm drive shot "$out/wide.png"                 # check the wide panel before changing its CSS
+pnpm drive resize 420 1500                      # return to a narrow viewport with extra height
+pnpm drive eval '(() => { const s = document.createElement("style"); s.textContent = "[class*=paneBody_],[class*=abovePrompt_],[class*=band_]{max-height:none!important}"; document.head.appendChild(s); })()'  # lift caps in this webview only
+pnpm drive shot "$out/full.png"                 # inspect content below the usual scroll edge
+pnpm drive stop                                # close the test window
+```

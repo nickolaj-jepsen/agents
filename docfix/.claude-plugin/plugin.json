@@ -1,9 +1,9 @@
 {
   "name": "docfix",
-  "version": "0.1.0",
   "description": "Agents file doc suggestions instead of editing docs outside their change; /docs reviews them and hands an apply back to the agent",
   "author": {
     "name": "Nickolaj Jepsen"
   },
-  "types": "./types.d.ts"
+  "types": "./types.d.ts",
+  "version": "0.0.1"
 }

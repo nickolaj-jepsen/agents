@@ -1,0 +1,9 @@
+{
+  "name": "meta",
+  "version": "af84a24b256c",
+  "description": "Skills about agents and skills: find them, write them, test them, and learn from a session.",
+  "author": {
+    "name": "Nickolaj Jepsen"
+  },
+  "skills": "./"
+}
