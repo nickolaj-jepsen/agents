@@ -33,8 +33,8 @@
  */
 import fs from "node:fs";
 import os from "node:os";
-import { randomUUID } from "node:crypto";
 import { join } from "node:path";
+import { commitState } from "./core/commit.ts";
 import { UpdatesError, isSystemError } from "./core/errors.ts";
 import { jsonLine } from "./core/json.ts";
 import { type Environment, stateDir, stateLockPath } from "./core/paths.ts";
@@ -209,32 +209,22 @@ export async function cmdUpdate(
         ui: applyUi(state.ui, baseline.revision, uiBuilt),
       };
       await settleAndThrowIfInterrupted();
-      // The state file first, the deployed tree second. A failure to deploy is undone by putting
-      // the state file back: publishing before the tree is in place would leave `resolve` naming
-      // an artifact the app is not reading.
-      const previousState = stateBytes(context.state);
-      saveState(context.state, state.plugins, state.skills, state.ui);
-      if (Object.keys(uiBuilt).length > 0) {
-        try {
-          deployed = deployUi(
+      // The state file first, the deployed tree second, in one transaction: a deploy that fails puts
+      // the state file back, so `resolve` never names an artifact the app is not reading.
+      deployed = commitState({
+        state: context.state,
+        warn: (message) => console.warn(message),
+        save: () => saveState(context.state, state.plugins, state.skills, state.ui),
+        deploy: () =>
+          deployUi(
             context.state,
             env,
             console,
             Object.fromEntries(
               Object.entries(uiBuilt).map(([name, path]) => [name, { path, label: "published" }]),
             ),
-          );
-        } catch (error) {
-          try {
-            restoreState(context.state, previousState);
-          } catch (restoreError) {
-            console.warn(
-              `${PROG}: could not put ${STATE_FILE} back after a failed deploy: ${expectedMessage(restoreError)}`,
-            );
-          }
-          throw error;
-        }
-      }
+          ),
+      });
       return true;
     } finally {
       if (keep) {
@@ -430,30 +420,27 @@ export async function cmdReset(
         }
       }
 
-      // Same order as an update, for the same reason: the state file is one atomic write, and a
-      // deploy that fails is undone by putting it back.
-      const previousState = stateBytes(state);
+      // Same order as an update, and the same transaction: the state is one atomic write, and a
+      // deploy that fails is undone by putting it back. A reset that drops nothing passes no `save`
+      // at all, so the commit writes no state and has no state to undo.
       if (changed.length > 0) {
         await settleAndThrowIfInterrupted();
-        saveState(state, plugins, skills, ui);
-        console.say(`reset to the baseline: ${changed.join(", ")}`);
       } else {
         console.say("nothing to reset: no snapshot for those names");
       }
-      if (Object.keys(sources).length > 0) {
-        try {
-          resetDeployed = deployUi(state, env, console, sources);
-        } catch (error) {
-          try {
-            restoreState(state, previousState);
-          } catch (restoreError) {
-            console.warn(
-              `${PROG}: could not put ${STATE_FILE} back after a failed deploy: ${expectedMessage(restoreError)}`,
-            );
-          }
-          throw error;
-        }
-      }
+      resetDeployed = commitState({
+        state,
+        warn: (message) => console.warn(message),
+        save:
+          changed.length === 0
+            ? undefined
+            : () => {
+                saveState(state, plugins, skills, ui);
+                console.say(`reset to the baseline: ${changed.join(", ")}`);
+              },
+        deploy: () =>
+          Object.keys(sources).length > 0 ? deployUi(state, env, console, sources) : [],
+      });
     },
   );
   reportDeployed(console, resetDeployed);
@@ -633,58 +620,6 @@ export function cmdResolve(env: Environment, console: Console): number {
   }
   console.stdout(jsonLine(effective(baseline, loaded.plugins, loaded.skills, loaded.ui)));
   return 0;
-}
-
-/** `current.json` as it is now, or null when there is no state to put back. */
-export function stateBytes(state: string): Buffer | null {
-  try {
-    return fs.readFileSync(join(state, STATE_FILE));
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
-    throw error;
-  }
-}
-
-/**
- * Put `previous` (from `stateBytes`) back, or drop the file when there was none.
- *
- * Used when an operation fails after it has written the state: a publication is only real if what
- * the tree reads and what `resolve` reports agree, so a half-done operation puts the state file
- * back the way it was rather than leaving the two disagreeing.
- */
-export function restoreState(state: string, previous: Buffer | null): void {
-  const path = join(state, STATE_FILE);
-  if (previous === null) {
-    try {
-      fs.unlinkSync(path);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    }
-    return;
-  }
-  fs.mkdirSync(state, { recursive: true });
-  const temporary = join(state, `.${STATE_FILE}.${randomUUID().slice(0, 8)}`);
-  try {
-    const descriptor = fs.openSync(
-      temporary,
-      fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_WRONLY,
-      0o600,
-    );
-    try {
-      fs.writeFileSync(descriptor, previous);
-      fs.fsyncSync(descriptor);
-    } finally {
-      fs.closeSync(descriptor);
-    }
-    fs.renameSync(temporary, path);
-  } catch (error) {
-    try {
-      fs.unlinkSync(temporary);
-    } catch {
-      // The failure may have happened before the temporary existed.
-    }
-    throw error;
-  }
 }
 
 /** Record this build's UI artifacts, stamped with the baseline they were published from. */

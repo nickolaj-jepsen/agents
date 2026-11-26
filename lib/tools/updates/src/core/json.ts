@@ -46,12 +46,21 @@ export type WriteJsonOptions = {
   rename?: (from: string, to: string) => void;
 };
 
-export function writeJsonAtomic(
+/**
+ * Write `bytes` to `path` through a temporary file and one atomic rename, so a reader sees the old
+ * file or the new one and never half of either.
+ *
+ * Both writers of the published state go through here — the forward one in `writeJsonAtomic` and
+ * the undo that puts the previous bytes back — because they need the same mechanics: the same
+ * temporary name beside the target, the same 0600, and the same fsyncs. Neither may write in
+ * place: a launch reads `current.json`, and a truncating write would hand it a partial document.
+ */
+export function writeBytesAtomic(
   path: string,
-  value: unknown,
+  bytes: Buffer | string,
   options: WriteJsonOptions = {},
 ): void {
-  const { mode = 0o600, indent = 2, sync = true, rename = fs.renameSync } = options;
+  const { mode = 0o600, sync = true, rename = fs.renameSync } = options;
   const directory = dirname(path);
   fs.mkdirSync(directory, { recursive: true });
   const temporary = join(directory, `.${basename(path)}.${randomUUID().slice(0, 8)}`);
@@ -62,7 +71,7 @@ export function writeJsonAtomic(
       mode,
     );
     try {
-      fs.writeFileSync(descriptor, jsonDocument(value, indent));
+      fs.writeFileSync(descriptor, bytes);
       if (sync) fs.fsyncSync(descriptor);
     } finally {
       fs.closeSync(descriptor);
@@ -86,6 +95,24 @@ export function writeJsonAtomic(
     }
   } catch {
     // A filesystem that cannot fsync a directory still has the rename.
+  }
+}
+
+/** `value` as the JSON text both entry points write, in one atomic rename. */
+export function writeJsonAtomic(
+  path: string,
+  value: unknown,
+  options: WriteJsonOptions = {},
+): void {
+  writeBytesAtomic(path, jsonDocument(value, options.indent), options);
+}
+
+/** Remove `path` if it is there: the undo of a first write, where absent is the success. */
+export function removeFileIfPresent(path: string): void {
+  try {
+    fs.unlinkSync(path);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
 }
 
