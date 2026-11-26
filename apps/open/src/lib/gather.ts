@@ -3,18 +3,8 @@
  * commands, reads `open.json` and talks to the person. Pure: the Claude mod's host is the engine,
  * pi's is node, and the commands, their order and the words said are the same in both.
  */
-import {
-  BROWSER,
-  choices,
-  type Config,
-  type Installed,
-  type Platform,
-  preferred,
-  probeArgv,
-  readyChecks,
-  readConfig,
-  readProbe,
-} from "@agents/launch/apps.ts";
+import { BROWSER, choices, type Platform, preferred } from "@agents/launch/apps.ts";
+import { type Loaded, loadApps as loadOver } from "@agents/launch/load.ts";
 import {
   chooseRemote,
   folderMenu,
@@ -132,19 +122,14 @@ async function defaultBranch(host: Host, cwd: string, remote: string) {
 }
 
 /** The apps on offer and which of them are installed, asked once for each menu that opens. */
-export type Apps = { config: Config; installed: Installed };
+export type Apps = Loaded;
 
-export async function loadApps(host: Host): Promise<Apps> {
-  const { text, platform } = await host.config();
-  const config = readConfig(text, platform);
-  const probe = await host.run(probeArgv(config.apps), GIT_TIMEOUT_MS);
-  const found = readProbe(probe?.stdout ?? "");
-  // An app that is installed but says it is not set up (no terminal chosen) is no row to press.
-  const checks = readyChecks(config.apps, found);
-  const ran = await Promise.all(checks.map((check) => host.run(check.argv, READY_TIMEOUT_MS)));
-  const unready = new Set(checks.filter((_, i) => ran[i]?.exitCode !== 0).map((check) => check.id));
-  return { config, installed: unready.size ? { ...found, unready } : found };
-}
+/**
+ * `open.json` read, the session probed and each installed app's `ready` check run: the steps
+ * `@agents/launch` keeps in order, with the probe getting the time git does and a check less.
+ */
+export const loadApps = (host: Host): Promise<Apps> =>
+  loadOver(host, { probeMs: GIT_TIMEOUT_MS, readyMs: READY_TIMEOUT_MS });
 
 const report = (host: Host, problems: readonly string[]) => {
   if (problems.length) host.report(problems);

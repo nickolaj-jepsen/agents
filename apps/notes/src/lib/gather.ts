@@ -3,7 +3,8 @@
  * harness's memory, read a note, and hand one to an app. Pure: Claude Code's host is the
  * engine, pi's is node, and the commands and the words said are the same in both.
  */
-import { DETACH, type Platform, probeArgv, readConfig, readProbe } from "@agents/launch/apps.ts";
+import { DETACH, type Platform } from "@agents/launch/apps.ts";
+import { type LoadHost, loadApps } from "@agents/launch/load.ts";
 import { clean } from "./clean.ts";
 import { handOff, tooLarge, type Way } from "./hand.ts";
 import type { Body, Place } from "./screen.ts";
@@ -191,14 +192,22 @@ export async function readBody(host: Host, note: Note): Promise<Body> {
 export type Handing = { app: string } | { problem: string };
 
 /**
+ * The loading `@agents/launch` does, over this host: a probe and a readiness check run to their
+ * end in a given time, in no folder of their own, and `open.json` is read through the host.
+ */
+const loaderOf = (host: Host): LoadHost => ({
+  run: (argv, timeoutMs) => host.run(argv, { timeoutMs }),
+  config: () => host.config(),
+});
+
+/**
  * Hands a note to the first installed app that takes a file, or an HTML note to the first that
  * takes a link, from the person's `open.json` over the built-in table, and starts it detached.
+ * Apps are loaded the way a menu loads them: one that says it is not set up is passed over.
  */
 export async function handNote(host: Host, note: Note, way: Way): Promise<Handing> {
-  const { text, platform } = await host.config();
-  const config = readConfig(text, platform);
-  const probe = await host.run(probeArgv(config.apps), { timeoutMs: PROBE_TIMEOUT_MS });
-  const handed = handOff(config.apps, readProbe(probe?.stdout ?? ""), note.file, way);
+  const { config, installed } = await loadApps(loaderOf(host), { probeMs: PROBE_TIMEOUT_MS });
+  const handed = handOff(config.apps, installed, note.file, way);
   if ("problem" in handed) return { problem: clean(handed.problem) };
   // Detached: a run that waits would wait for a graphical app's output to close.
   const ran = await host

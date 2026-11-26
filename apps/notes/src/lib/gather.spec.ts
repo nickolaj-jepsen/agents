@@ -306,6 +306,20 @@ describe("handing a note to an app", () => {
     return existsSync(log) ? readFileSync(log, "utf8") : "";
   };
 
+  /** A stand-in that answers a `ready` check with `exitCode` and logs every other run. */
+  const readyStub = (w: ReturnType<typeof world>, name: string, exitCode: number) => {
+    const file = join(w.root, "bin", name);
+    writeFileSync(
+      file,
+      `#!/bin/sh\nif [ "$1" = "--print-id" ]; then exit ${exitCode}; fi\necho "${name} $*" >> "${join(w.root, "launched.log")}"\n`,
+    );
+    chmodSync(file, 0o755);
+  };
+
+  /** Writes the person's `open.json` with these apps, and nothing else in it. */
+  const openJson = (w: ReturnType<typeof world>, apps: unknown[]) =>
+    write(join(w.root, "config/agents/open.json"), JSON.stringify({ apps }));
+
   it("starts the first app open.json and the built-in table give, detached", async () => {
     const w = world();
     stub(w, "my-editor");
@@ -328,6 +342,97 @@ describe("handing a note to an app", () => {
       app: "Browser",
     });
     expect(await launched(w)).toBe(`xdg-open file://${join(w.root, "r.html")}\n`);
+  });
+
+  it("passes over an app that says it is not set up, and starts the next one", async () => {
+    const w = world();
+    readyStub(w, "needs-setup", 1);
+    readyStub(w, "ready-editor", 0);
+    openJson(w, [
+      {
+        id: "mine",
+        label: "Mine",
+        command: "needs-setup",
+        file: ["{file}"],
+        ready: ["--print-id"],
+      },
+      {
+        id: "next",
+        label: "Next",
+        command: "ready-editor",
+        file: ["{file}"],
+        ready: ["--print-id"],
+      },
+    ]);
+    const file = join(w.root, "a note.md");
+    expect(await handNote(w.host, note(file), "app")).toEqual({ app: "Next" });
+    // The app that is not set up is never started.
+    expect(await launched(w)).toBe(`ready-editor ${file}\n`);
+  });
+
+  it("passes over an app whose readiness check never answered", async () => {
+    const w = world();
+    readyStub(w, "slow-editor", 0);
+    readyStub(w, "ready-editor", 0);
+    openJson(w, [
+      { id: "slow", command: "slow-editor", file: ["{file}"], ready: ["--print-id"] },
+      {
+        id: "next",
+        label: "Next",
+        command: "ready-editor",
+        file: ["{file}"],
+        ready: ["--print-id"],
+      },
+    ]);
+    // A check that ran out of time is a run that answered nothing.
+    const host = {
+      ...w.host,
+      run: (argv: string[], o?: { cwd?: string; timeoutMs?: number }) =>
+        argv[1] === "--print-id" && argv[0]?.endsWith("/slow-editor")
+          ? Promise.resolve(undefined)
+          : w.host.run(argv, o),
+    };
+    const file = join(w.root, "a note.md");
+    expect(await handNote(host, note(file), "app")).toEqual({ app: "Next" });
+    expect(await launched(w)).toBe(`ready-editor ${file}\n`);
+  });
+
+  it("does not hand a note to a program whose terminal is not set up", async () => {
+    const w = world();
+    readyStub(w, "term-none", 1);
+    readyStub(w, "lg-stub", 0);
+    readyStub(w, "plain-editor", 0);
+    openJson(w, [
+      {
+        id: "terminal",
+        label: "Terminal",
+        command: "term-none",
+        dir: ["--dir={dir}"],
+        ready: ["--print-id"],
+      },
+      { id: "lazygit", label: "Lazygit", command: "lg-stub", file: ["{file}"], terminal: true },
+      { id: "plain", label: "Plain", command: "plain-editor", file: ["{file}"] },
+    ]);
+    const file = join(w.root, "a note.md");
+    // The terminal program has no window to run in, so the plain editor takes the note.
+    expect(await handNote(w.host, note(file), "app")).toEqual({ app: "Plain" });
+    expect(await launched(w)).toBe(`plain-editor ${file}\n`);
+  });
+
+  it("says which app would not start", async () => {
+    const w = world();
+    stub(w, "my-editor");
+    openJson(w, [{ id: "mine", label: "Mine", command: "my-editor", file: ["{file}"] }]);
+    // The start is the run that carries the app's found path; the probe asks for its name only.
+    const path = join(w.root, "bin", "my-editor");
+    const host = {
+      ...w.host,
+      run: (argv: string[], o?: { cwd?: string; timeoutMs?: number }) =>
+        argv[0] === "sh" && argv.includes(path) ? Promise.resolve(undefined) : w.host.run(argv, o),
+    };
+    expect(await handNote(host, note(join(w.root, "a.md")), "app")).toEqual({
+      problem: `Couldn't start Mine (${path}).`,
+    });
   });
 
   it("says so when no app takes it", async () => {

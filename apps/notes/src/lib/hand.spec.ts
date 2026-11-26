@@ -1,4 +1,4 @@
-import { builtinApps, type Installed } from "@agents/launch/apps.ts";
+import { builtinApps, type Installed, readConfig } from "@agents/launch/apps.ts";
 import { describe, expect, it } from "vitest";
 import { fileUrl, handOff, MAX_READ_BYTES, sizeText, tooLarge } from "./hand.ts";
 
@@ -64,6 +64,71 @@ describe("handOff", () => {
     });
     expect(handOff(LINUX, installed("code"), FILE, "browser")).toMatchObject({
       problem: expect.stringMatching(/^No app that opens a link/),
+    });
+  });
+
+  it("names an app that is installed but not set up, for a file and for a link", () => {
+    // Every app that takes a file is installed, and the only one says it is not set up.
+    const notSetUp = { ...installed("xdg-open"), unready: new Set(["browser"]) };
+    expect(handOff(LINUX, notSetUp, FILE, "app")).toEqual({
+      problem: "No app that opens a file is installed. Add one to ~/.config/agents/open.json.",
+    });
+    expect(handOff(LINUX, notSetUp, "/s/r/a.html", "browser")).toEqual({
+      problem: "Browser is not set up, so there is nothing to open the note in.",
+    });
+    const mine = readConfig(
+      JSON.stringify({
+        apps: [{ id: "mine", label: "Mine", command: "mine", file: ["{file}"], ready: ["--ok"] }],
+      }),
+      "linux",
+    ).apps;
+    expect(
+      handOff(mine, { ...installed("mine"), unready: new Set(["mine"]) }, FILE, "app"),
+    ).toEqual({ problem: "Mine is not set up, so there is nothing to open the note in." });
+  });
+
+  it("says a terminal program has no terminal, not that no app is installed", () => {
+    const apps = readConfig(
+      JSON.stringify({
+        apps: [{ id: "nvim", label: "Neovim", command: "nvim", file: ["{file}"], terminal: true }],
+      }),
+      "linux",
+    ).apps;
+    const has = installed("nvim", "xdg-terminal-exec");
+    // With a terminal to run it in, the note goes there; with none, the note says which piece is missing.
+    expect(handOff(apps, has, FILE, "app")).toMatchObject({
+      argv: [
+        "/usr/bin/xdg-terminal-exec",
+        "--dir=/data/store/shop-api/plans",
+        "/usr/bin/nvim",
+        FILE,
+      ],
+      label: "Neovim",
+    });
+    expect(handOff(apps, { ...has, unready: new Set(["terminal"]) }, FILE, "app")).toEqual({
+      problem: "Neovim has no terminal to run it in, so there is nothing to open the note in.",
+    });
+  });
+
+  it("counts the apps it cannot use, and keeps the note's words about them", () => {
+    const apps = readConfig(
+      JSON.stringify({
+        apps: [
+          { id: "one", label: "One", command: "one", file: ["{file}"], ready: ["--ok"] },
+          {
+            id: "two",
+            label: "Two",
+            command: "two",
+            file: ["{file}"],
+            terminal: true,
+          },
+        ],
+      }),
+      "linux",
+    ).apps;
+    const has = { ...installed("one", "two"), unready: new Set(["one", "terminal"]) };
+    expect(handOff(apps, has, FILE, "app")).toEqual({
+      problem: "One is not set up (and 1 more), so there is nothing to open the note in.",
     });
   });
 });

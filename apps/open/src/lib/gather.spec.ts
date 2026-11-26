@@ -259,6 +259,42 @@ describe("buildFolder", () => {
     expect(row(menu, "terminal").action?.kind).toBe("launch");
   });
 
+  test("an app of open.json that says it is not set up is no row to press", async () => {
+    const { host } = fakeHost({
+      installed: ["my-editor", "code"],
+      printId: 1,
+      config: JSON.stringify({
+        apps: [
+          {
+            id: "mine",
+            label: "Mine",
+            command: "my-editor",
+            dir: ["{dir}"],
+            ready: ["--print-id"],
+          },
+        ],
+      }),
+    });
+    const menu = await buildFolder(host, CWD);
+    expect(row(menu, "mine").unavailable).toBe("not set up");
+    // The row keeps its place, and the keyboard starts on the first app that can run.
+    expect(ids(menu)?.[0]).toBe("mine");
+    expect(menu.preferred).toBe("code");
+  });
+
+  test("a program of open.json that runs in a terminal is left without one", async () => {
+    const { host } = fakeHost({
+      installed: ["xdg-terminal-exec", "nvim"],
+      printId: 1,
+      config: JSON.stringify({
+        apps: [{ id: "nvim", command: "nvim", dir: ["{dir}"], terminal: true }],
+      }),
+    });
+    const menu = await buildFolder(host, CWD);
+    expect(row(menu, "nvim").unavailable).toBe("no terminal to run it in");
+    expect(row(menu, "terminal").unavailable).toBe("not set up");
+  });
+
   test("macOS's apps come from the platform the host names", async () => {
     const menu = await buildFolder(fakeHost({ platform: "mac", installed: ["open"] }).host, CWD);
     expect(row(menu, "files").label).toBe("Finder");
