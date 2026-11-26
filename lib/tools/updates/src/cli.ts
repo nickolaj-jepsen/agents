@@ -320,6 +320,7 @@ export async function cmdReset(
   }
   const state = stateDir(env);
   const names = [...new Set(args.names)];
+  fs.mkdirSync(state, { recursive: true });
   await withFileLock(
     stateLockPath(state),
     {
@@ -335,15 +336,15 @@ export async function cmdReset(
       const changed: string[] = [];
       if (args.skill) {
         for (const name of names) {
-          if (skills[name] !== undefined) {
+          if (Object.hasOwn(skills, name)) {
             delete skills[name];
             changed.push(`${name} (skill)`);
           }
         }
       } else {
         for (const name of names) {
-          const entry = plugins[name];
-          if (entry === undefined) continue;
+          if (!Object.hasOwn(plugins, name)) continue;
+          const entry = plugins[name]!;
           if (args.harness === undefined) {
             delete plugins[name];
             changed.push(name);

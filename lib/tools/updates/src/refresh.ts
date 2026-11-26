@@ -199,7 +199,7 @@ export function syncSkills(
     }
   }
   for (const name of previous) {
-    if (name in desired) continue;
+    if (Object.hasOwn(desired, name)) continue;
     const path = join(directory, name);
     const stat = fs.lstatSync(path, { throwIfNoEntry: false });
     if (stat?.isSymbolicLink() && roots.some((root) => fs.readlinkSync(path).startsWith(root))) {
@@ -223,7 +223,7 @@ export function managedPaths(
     if (path) owned[path] = name;
   }
   for (const [name, path] of Object.entries(manifest[key] ?? {})) {
-    if (path && owned[path] === undefined) owned[path] = name;
+    if (path && !Object.hasOwn(owned, path)) owned[path] = name;
   }
   return owned;
 }
@@ -250,12 +250,14 @@ export function rewrite(
       result.push(entry);
       continue;
     }
-    const name = owned[entry];
+    const name = Object.hasOwn(owned, entry) ? owned[entry] : undefined;
     if (name === undefined) {
       result.push(entry);
       continue;
     }
-    const target = picked[name] || pinned[name];
+    const target =
+      (Object.hasOwn(picked, name) ? picked[name] : undefined) ||
+      (Object.hasOwn(pinned, name) ? pinned[name] : undefined);
     if (target === undefined) continue;
     result.push(target);
     seen.add(name);
@@ -272,7 +274,9 @@ export function rewrite(
   }
   const wrote: Record<string, string> = {};
   for (const name of [...new Set([...seen, ...Object.keys(picked)])].sort()) {
-    const target = picked[name] || pinned[name];
+    const target =
+      (Object.hasOwn(picked, name) ? picked[name] : undefined) ||
+      (Object.hasOwn(pinned, name) ? pinned[name] : undefined);
     if (target) wrote[name] = target;
   }
   return { entries: result, wrote };
@@ -366,7 +370,7 @@ export function syncPiSettings(
     const twinNames = new Set<string>();
     for (const entry of current) {
       if (typeof entry !== "string") continue;
-      const name = twinOwned[entry];
+      const name = Object.hasOwn(twinOwned, entry) ? twinOwned[entry] : undefined;
       if (name !== undefined) twinNames.add(name);
     }
     const pickedTwins: Record<string, string | undefined> = {};
@@ -402,7 +406,7 @@ export function claudeSettings(env: Environment, resolved: Resolved): string | n
     if (isObject(loaded) && isObject(loaded.env)) base = { ...loaded.env };
   }
   const order = (env.AGENTS_PLUGIN_ORDER ?? "").split(/\s+/).filter(Boolean);
-  const ordered = order.filter((name) => name in resolved.plugins);
+  const ordered = order.filter((name) => Object.hasOwn(resolved.plugins, name));
   const chosen = new Set(order);
   ordered.push(
     ...Object.keys(resolved.plugins)

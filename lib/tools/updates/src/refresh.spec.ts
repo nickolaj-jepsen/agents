@@ -11,7 +11,7 @@ import type { Environment } from "./core/paths.ts";
 import { UpdatesError } from "./core/errors.ts";
 import { parseBaseline } from "./core/protocol.ts";
 import { flockHelperForTests } from "./test/flock.ts";
-import { type RefreshConsole, run, syncPiSkills, syncSkills } from "./refresh.ts";
+import { type RefreshConsole, rewrite, run, syncPiSkills, syncSkills } from "./refresh.ts";
 
 const quiet: RefreshConsole = { say: () => undefined, out: () => undefined };
 
@@ -80,6 +80,40 @@ class RefreshFixture {
 }
 
 const set = (): RefreshFixture => new RefreshFixture();
+
+test("refresh preserves unmanaged prototype-like package and twin entries", async () => {
+  const f = set();
+  const entries = ["constructor", "toString", "hasOwnProperty", "__proto__"];
+  fs.writeFileSync(
+    f.settings,
+    JSON.stringify({
+      packages: entries,
+      piAgents: { twinExtensions: entries },
+    }),
+  );
+  const result = await f.runRefresh(f.baseline.plugins as Plugins);
+  for (const entry of entries) assert.ok(result.packages.includes(entry), entry);
+  assert.deepEqual(result.piAgents.twinExtensions, entries);
+});
+
+test("a removed managed plugin cannot fall back to inherited paths", () => {
+  assert.deepEqual(
+    rewrite(["/nix/store/old"], { "/nix/store/old": "constructor" }, {}, {}, "packages"),
+    { entries: [], wrote: {} },
+  );
+});
+
+test("stale prototype-like skill names are removed, but desired ones remain", () => {
+  const f = set();
+  const names = ["constructor", "toString", "hasOwnProperty"];
+  const directory = join(f.profile, "skills");
+  fs.mkdirSync(directory);
+  for (const name of names) fs.symlinkSync(`/nix/store/old-${name}`, join(directory, name));
+  const desired = { constructor: "/nix/store/new-constructor" };
+  syncSkills(f.profile, desired, new Set(names), ["/nix/store/"], { say: quiet.say });
+  assert.deepEqual(fs.readdirSync(directory), ["constructor"]);
+  assert.equal(fs.readlinkSync(join(directory, "constructor")), desired.constructor);
+});
 
 test("only existing twins are updated", async () => {
   const f = set();

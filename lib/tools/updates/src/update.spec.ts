@@ -327,6 +327,29 @@ test("an update is idempotent and keeps every root", async () => {
   assert.match(second.out, /older roots stay for running sessions/);
 });
 
+test("reset on a fresh installation creates its lock directory and is a no-op", async () => {
+  const f = set();
+  for (const flags of [[], ["--skill"]]) {
+    fs.rmSync(f.stateHome, { recursive: true, force: true });
+    const { code, out, err } = await f.runCli("reset", "answer", ...flags);
+    assert.equal(code, 0, err);
+    assert.match(out, /nothing to reset/);
+    assert.equal(fs.existsSync(f.current), false);
+  }
+});
+
+test("reset does not treat inherited properties as published names", async () => {
+  const f = set();
+  assert.equal((await f.update("answer")).code, 0);
+  const before = fs.readFileSync(f.current, "utf8");
+  for (const flags of [[], ["--skill"], ["--harness", "pi"]]) {
+    const { code, out, err } = await f.runCli("reset", "constructor", ...flags);
+    assert.equal(code, 0, err);
+    assert.match(out, /nothing to reset/);
+    assert.equal(fs.readFileSync(f.current, "utf8"), before);
+  }
+});
+
 test("reset one harness keeps the other", async () => {
   const f = set();
   assert.equal((await f.update("answer")).code, 0);
