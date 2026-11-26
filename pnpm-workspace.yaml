@@ -40,3 +40,8 @@ minimumReleaseAgeExclude:
   - "@earendil-works/pi-schema@1.6.1"
   - "@earendil-works/pi-telemetry@1.6.1"
   - "@earendil-works/pi-tui@1.6.1"
+patchedDependencies:
+  "@astrojs/compiler-binding@0.5.3": patches/@astrojs__compiler-binding@0.5.3.patch
+  rolldown@1.2.19: patches/rolldown@1.2.19.patch
+  rolldown@1.3.3: patches/rolldown@1.3.3.patch
+  satteri@0.11.7: patches/satteri@0.11.7.patch

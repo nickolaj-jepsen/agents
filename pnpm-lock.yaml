@@ -210,6 +210,12 @@ catalogs:
       specifier: ^4.6.7
       version: 4.6.7
 
+patchedDependencies:
+  '@astrojs/compiler-binding@0.5.3': 4f211b370bc58476a31d2e98cd70ddfec6ba13652e9dfdc1cebadb1ea40f7dc1
+  rolldown@1.2.19: b1afab3066445c0431b796c10dbdf4c7107d0b51acf6ce540e41cb09d5c2ec31
+  rolldown@1.3.3: 30e3d4cfbf13fc2b14b2ac8c1d36b84859bc5d5173120cee3120bb604ba073c1
+  satteri@0.11.7: d080d77024ca33aa550d0e883cb8493c4f3ac40afc2bea2573a58462f8a9a460
+
 importers:
 
   .:
@@ -5237,7 +5243,7 @@ snapshots:
   '@astrojs/compiler-binding-win32-x64-msvc@0.5.3':
     optional: true
 
-  '@astrojs/compiler-binding@0.5.3':
+  '@astrojs/compiler-binding@0.5.3(patch_hash=4f211b370bc58476a31d2e98cd70ddfec6ba13652e9dfdc1cebadb1ea40f7dc1)':
     optionalDependencies:
       '@astrojs/compiler-binding-android-arm64': 0.5.3
       '@astrojs/compiler-binding-darwin-arm64': 0.5.3
@@ -5252,7 +5258,7 @@ snapshots:
 
   '@astrojs/compiler-rs@0.5.3':
     dependencies:
-      '@astrojs/compiler-binding': 0.5.3
+      '@astrojs/compiler-binding': 0.5.3(patch_hash=4f211b370bc58476a31d2e98cd70ddfec6ba13652e9dfdc1cebadb1ea40f7dc1)
 
   '@astrojs/internal-helpers@0.13.2':
     dependencies:
@@ -5297,7 +5303,7 @@ snapshots:
       '@astrojs/internal-helpers': 0.13.2
       '@astrojs/prism': 4.1.2
       github-slugger: 2.0.0
-      satteri: 0.11.7
+      satteri: 0.11.7(patch_hash=d080d77024ca33aa550d0e883cb8493c4f3ac40afc2bea2573a58462f8a9a460)
 
   '@astrojs/prism@4.1.2':
     dependencies:
@@ -5323,7 +5329,7 @@ snapshots:
       common-ancestor-path: 2.0.0
       devalue: 6.0.3
       magic-string: 1.4.5
-      rolldown: 1.2.19
+      rolldown: 1.2.19(patch_hash=b1afab3066445c0431b796c10dbdf4c7107d0b51acf6ce540e41cb09d5c2ec31)
       smol-toml: 1.9.1
       vite: 8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
       zod: 4.6.7
@@ -6795,7 +6801,7 @@ snapshots:
       package-manager-detector: 1.9.0
       piccolore: 0.1.3
       picomatch: 4.0.7
-      rolldown: 1.3.3
+      rolldown: 1.3.3(patch_hash=30e3d4cfbf13fc2b14b2ac8c1d36b84859bc5d5173120cee3120bb604ba073c1)
       shiki: 4.6.0
       smol-toml: 1.9.1
       svgo: 4.1.0
@@ -8617,12 +8623,12 @@ snapshots:
       semver-compare: 1.0.0
       sprintf-js: 1.1.3
 
-  rolldown-plugin-dts@0.30.2(rolldown@1.3.3)(typescript@7.0.2):
+  rolldown-plugin-dts@0.30.2(rolldown@1.3.3(patch_hash=30e3d4cfbf13fc2b14b2ac8c1d36b84859bc5d5173120cee3120bb604ba073c1))(typescript@7.0.2):
     dependencies:
       dts-resolver: 3.0.0
       get-tsconfig: 5.0.0-beta.6
       obug: 3.0.0
-      rolldown: 1.3.3
+      rolldown: 1.3.3(patch_hash=30e3d4cfbf13fc2b14b2ac8c1d36b84859bc5d5173120cee3120bb604ba073c1)
       yuku: 0.28.1
     optionalDependencies:
       typescript: 7.0.2
@@ -8630,12 +8636,12 @@ snapshots:
       - '@yuku-toolchain/wasm'
       - oxc-resolver
 
-  rolldown-plugin-dts@0.30.2(rolldown@1.3.3)(typescript@7.1.0-beta):
+  rolldown-plugin-dts@0.30.2(rolldown@1.3.3(patch_hash=30e3d4cfbf13fc2b14b2ac8c1d36b84859bc5d5173120cee3120bb604ba073c1))(typescript@7.1.0-beta):
     dependencies:
       dts-resolver: 3.0.0
       get-tsconfig: 5.0.0-beta.6
       obug: 3.0.0
-      rolldown: 1.3.3
+      rolldown: 1.3.3(patch_hash=30e3d4cfbf13fc2b14b2ac8c1d36b84859bc5d5173120cee3120bb604ba073c1)
       yuku: 0.28.1
     optionalDependencies:
       typescript: 7.1.0-beta
@@ -8643,7 +8649,7 @@ snapshots:
       - '@yuku-toolchain/wasm'
       - oxc-resolver
 
-  rolldown@1.2.19:
+  rolldown@1.2.19(patch_hash=b1afab3066445c0431b796c10dbdf4c7107d0b51acf6ce540e41cb09d5c2ec31):
     dependencies:
       '@oxc-project/types': 0.156.0
       '@rolldown/pluginutils': 1.1.1
@@ -8665,7 +8671,7 @@ snapshots:
       '@rolldown/binding-win32-arm64-msvc': 1.2.19
       '@rolldown/binding-win32-x64-msvc': 1.2.19
 
-  rolldown@1.3.3:
+  rolldown@1.3.3(patch_hash=30e3d4cfbf13fc2b14b2ac8c1d36b84859bc5d5173120cee3120bb604ba073c1):
     dependencies:
       '@oxc-project/types': 0.159.0
       '@rolldown/pluginutils': 1.1.1
@@ -8691,7 +8697,7 @@ snapshots:
 
   safe-buffer@5.2.1: {}
 
-  satteri@0.11.7:
+  satteri@0.11.7(patch_hash=d080d77024ca33aa550d0e883cb8493c4f3ac40afc2bea2573a58462f8a9a460):
     dependencies:
       '@types/estree-jsx': 1.0.5
       '@types/hast': 3.0.5
@@ -8950,8 +8956,8 @@ snapshots:
       import-without-cache: 0.4.1
       obug: 3.0.0
       picomatch: 4.0.7
-      rolldown: 1.3.3
-      rolldown-plugin-dts: 0.30.2(rolldown@1.3.3)(typescript@7.0.2)
+      rolldown: 1.3.3(patch_hash=30e3d4cfbf13fc2b14b2ac8c1d36b84859bc5d5173120cee3120bb604ba073c1)
+      rolldown-plugin-dts: 0.30.2(rolldown@1.3.3(patch_hash=30e3d4cfbf13fc2b14b2ac8c1d36b84859bc5d5173120cee3120bb604ba073c1))(typescript@7.0.2)
       tinyexec: 1.3.1
       tinyglobby: 0.2.17
       tinyps: 0.5.2
@@ -8976,8 +8982,8 @@ snapshots:
       import-without-cache: 0.4.1
       obug: 3.0.0
       picomatch: 4.0.7
-      rolldown: 1.3.3
-      rolldown-plugin-dts: 0.30.2(rolldown@1.3.3)(typescript@7.1.0-beta)
+      rolldown: 1.3.3(patch_hash=30e3d4cfbf13fc2b14b2ac8c1d36b84859bc5d5173120cee3120bb604ba073c1)
+      rolldown-plugin-dts: 0.30.2(rolldown@1.3.3(patch_hash=30e3d4cfbf13fc2b14b2ac8c1d36b84859bc5d5173120cee3120bb604ba073c1))(typescript@7.1.0-beta)
       tinyexec: 1.3.1
       tinyglobby: 0.2.17
       tinyps: 0.5.2
@@ -9182,7 +9188,7 @@ snapshots:
       lightningcss: 1.33.0
       picomatch: 4.0.7
       postcss: 8.5.33
-      rolldown: 1.2.19
+      rolldown: 1.2.19(patch_hash=b1afab3066445c0431b796c10dbdf4c7107d0b51acf6ce540e41cb09d5c2ec31)
       tinyglobby: 0.2.17
     optionalDependencies:
       '@types/node': 26.6.6

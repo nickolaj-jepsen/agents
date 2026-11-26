@@ -7,7 +7,7 @@
   // CI signs what it uploads with TURBO_REMOTE_CACHE_SIGNATURE_KEY; a machine that reads the remote
   // cache needs the same key.
   "remoteCache": { "signature": true },
-  "globalDependencies": [".node-version", "flake.lock"],
+  "globalDependencies": [".node-version", "flake.lock", "patches/**"],
   "globalEnv": ["CLAUDE_BIN"],
   "tasks": {
     // What a package contributes to the tasks of those that import it: its sources, not its tests,

@@ -1,0 +1,27 @@
+diff --git a/index.js b/index.js
+index b8bc7cbaa7286bace301708c00025b4790d2c9f5..c6e29abb8f37dfa77744fa038410b717cacc7ce8 100644
+--- a/index.js
++++ b/index.js
+@@ -11,10 +11,21 @@ const { readFileSync } = require('fs')
+ let nativeBinding = null
+ const loadErrors = []
+ 
++const isGlibcFromReport = () => {
++  if (!process.report || typeof process.report.getReport !== 'function') return false
++  process.report.excludeNetwork = true
++  const report = process.report.getReport()
++  return Boolean(report.header && report.header.glibcVersionRuntime)
++}
++
++// The libc this process is linked against decides, and the report is the only source that
++// describes the process: `/usr/bin/ldd` describes the system's rootfs. A glibc Node on a musl
++// system, which is Nix's Node in an Alpine guest, would otherwise load the musl build that
++// pnpm (which asks the report first) never installed.
+ const isMusl = () => {
+   let musl = false
+   if (process.platform === 'linux') {
+-    musl = isMuslFromFilesystem()
++    musl = isGlibcFromReport() ? false : isMuslFromFilesystem()
+     if (musl === null) {
+       musl = isMuslFromReport()
+     }

@@ -68,6 +68,9 @@
     (root + "/package.json")
     (root + "/pnpm-lock.yaml")
     (root + "/pnpm-workspace.yaml")
+    # What `patchedDependencies` names: pnpm applies a patch from the tree, so the fetch and every
+    # app's install read these files too.
+    (root + "/patches")
   ];
   sourceOf = names:
     fileset.toSource {

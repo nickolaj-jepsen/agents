@@ -1,0 +1,26 @@
+diff --git a/dist/shared/binding-XhiChhlU.mjs b/dist/shared/binding-XhiChhlU.mjs
+index 0a75d2fda147a6fbb88574c6cb3eeb90fdc215ca..57381783583a3e8f52e7669606007d865be582c0 100644
+--- a/dist/shared/binding-XhiChhlU.mjs
++++ b/dist/shared/binding-XhiChhlU.mjs
+@@ -28,10 +28,20 @@ var require_binding = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+ 	let __napiLoadedBindingTarget = "native";
+ 	let __napiRequiredNativeBinding = null;
+ 	const loadErrors = [];
++	const isGlibcFromReport = () => {
++		if (!process.report || typeof process.report.getReport !== "function") return false;
++		process.report.excludeNetwork = true;
++		const report = process.report.getReport();
++		return Boolean(report.header && report.header.glibcVersionRuntime);
++	};
++	// The libc this process is linked against decides, and the report is the only source that
++	// describes the process: `/usr/bin/ldd` describes the system's rootfs. A glibc Node on a musl
++	// system, which is Nix's Node in an Alpine guest, would otherwise load the musl binding that
++	// pnpm (which asks the report first) never installed.
+ 	const isMusl = () => {
+ 		let musl = false;
+ 		if (process.platform === "linux") {
+-			musl = isMuslFromFilesystem();
++			musl = isGlibcFromReport() ? false : isMuslFromFilesystem();
+ 			if (musl === null) musl = isMuslFromReport();
+ 			if (musl === null) musl = isMuslFromChildProcess();
+ 		}
