@@ -5,6 +5,12 @@
     "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
     "date": "2026-11-26"
   },
+  "agent-setup": {
+    "kind": "skill",
+    "version": "0.1.0",
+    "source": "907e08f21abddbc9175d3f06d0e9cb72769c256a",
+    "date": "2026-11-26"
+  },
   "answer": {
     "kind": "plugin",
     "version": "0.2.0",
@@ -139,8 +145,8 @@
   },
   "harnesses": {
     "kind": "bundle",
-    "version": "1bcc62fab498",
-    "source": "8882c40301ba8d6e2f9d2788a6ef941c4d33aa0e",
+    "version": "fa9549e63db4",
+    "source": "907e08f21abddbc9175d3f06d0e9cb72769c256a",
     "date": "2026-11-26"
   },
   "ideate": {
