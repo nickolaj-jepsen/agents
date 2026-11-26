@@ -310,6 +310,9 @@ importers:
       '@agents/build':
         specifier: workspace:*
         version: link:../../lib/tools/build
+      '@agents/drive':
+        specifier: workspace:*
+        version: link:../../lib/tools/drive
       '@earendil-works/pi-coding-agent':
         specifier: 'catalog:'
         version: 1.6.1(@smithy/signature-v4@5.7.5)(google-auth-library@10.9.1)(ws@8.23.0)(zod@4.6.7)

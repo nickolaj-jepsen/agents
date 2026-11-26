@@ -9,6 +9,21 @@
     },
     "check-types": {
       "command": ["./node_modules/.bin/tsc", "-b", "tsconfig.json"]
+    },
+    "media": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "bg-herdr",
+        "--harness",
+        "terminal"
+      ],
+      "outputs": ["$TURBO_ROOT$/apps/site/media/bg-herdr/**"]
     }
   }
 }

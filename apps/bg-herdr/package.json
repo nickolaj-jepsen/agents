@@ -8,6 +8,7 @@
   "type": "module",
   "devDependencies": {
     "@agents/build": "workspace:*",
+    "@agents/drive": "workspace:*",
     "@earendil-works/pi-coding-agent": "catalog:",
     "@types/node": "catalog:",
     "tsdown": "catalog:",
