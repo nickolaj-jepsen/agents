@@ -11,5 +11,5 @@ test("Claude uses the supplied Nix binary", () => {
 
 test("hermetic Claude requires an explicit binary, never PATH or stale npm", () => {
   vi.stubEnv("CLAUDE_BIN", undefined);
-  expect(() => agentBin("claude")).toThrow("nix develop");
+  expect(() => agentBin("claude")).toThrow("nix develop .#full");
 });

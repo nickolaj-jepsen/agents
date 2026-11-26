@@ -5,7 +5,7 @@
 # the person's ~/.claude.
 set -eu
 
-: "${CLAUDE_BIN:?CLAUDE_BIN is required; run tests inside nix develop}"
+: "${CLAUDE_BIN:?CLAUDE_BIN is required; run tests inside nix develop .#full}"
 claude_bin=$CLAUDE_BIN
 home=$(mktemp -d)
 trap 'rm -rf "$home"' EXIT
