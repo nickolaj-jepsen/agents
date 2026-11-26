@@ -38,7 +38,6 @@ import {
 import {
   BAND,
   bandLine,
-  bandOf,
   drawScreen,
   isReaderLive,
   isScreenHit,
@@ -53,7 +52,7 @@ import {
   type ScreenState,
 } from "./lib/screen.ts";
 import { notesOf } from "./lib/shelf.ts";
-import { beginTurn, duringTurns, endTurn, startTurns, type Turns } from "./lib/turns.ts";
+import { beginTurn, endTurn, markLooked, news, startSession, type Session } from "./lib/session.ts";
 import { CONTEXT, isShared, storeRoot, type Ensured } from "./lib/store.ts";
 import type { Listed } from "./lib/walk.ts";
 import { MORE, notesBand, notesPane } from "./claude/gui.tsx";
@@ -83,13 +82,11 @@ const keys = atom({ plugin: "notes", key: "keys" } as const, false, { shape: "ke
 
 // ---- the session's checkouts
 
-/** The session's start, then when the person last looked: notes written after it are news. */
-let since = 0;
 /**
- * The session's turns. The store is shared by every worktree, so only a note written during one
- * of these is this session's news.
+ * This session's news: when the person last looked and the turns it worked in (`lib/session.ts`).
+ * The store is shared by every worktree, so only a note written during one of these turns is news.
  */
-let turns: Turns = startTurns(0);
+let session: Session = startSession(0);
 /** The link of each folder a session ran in: made once, a failed or busy one left alone for a while. */
 const links = createLinks();
 /** `<root>\0<state>` for each notice told: once a session for each. */
@@ -231,14 +228,14 @@ async function loadShelf($: EngineInterface, ensured?: Ensured): Promise<Shelf> 
 
 /** Shows the band for this session's notes written since the person last looked, or takes it down. */
 async function showBand($: EngineInterface, groups: Shelf["groups"]) {
-  const next = bandOf(groups, since, (at) => duringTurns(turns, at)) ?? null;
+  const next = news(session, groups) ?? null;
   const now = await read($, band);
   if (next?.text !== now?.text || next?.newest !== now?.newest) await update($, band, () => next);
 }
 
 /** The person has looked: notes written so far are no news. */
 async function looked($: EngineInterface) {
-  since = await $.clock.now();
+  session = markLooked(session, await $.clock.now());
   await update($, band, () => null);
   await update($, bandFocus, () => null);
 }
@@ -397,8 +394,7 @@ async function pressBand($: EngineInterface, hit: string) {
 export const register: Register = (on) => {
   on("session.start", async ($, e, next) => {
     const started = await next(e);
-    since = await $.clock.now();
-    turns = startTurns(since);
+    session = startSession(await $.clock.now());
     contextSent = undefined;
     await $.command
       .register({
@@ -434,7 +430,7 @@ export const register: Register = (on) => {
   // The session may have moved since the last prompt: the new checkout is linked before the turn.
   on("prompt.submit", async ($, e, next) => {
     // A turn starts here: its notes are the session's.
-    turns = beginTurn(turns, await $.clock.now());
+    session = beginTurn(session, await $.clock.now());
     await linkHere($).catch(() => undefined);
     return next(e);
   });
@@ -460,7 +456,7 @@ export const register: Register = (on) => {
     // A subagent's hooks see its own folder: linked too, in case it moved. Once for the event.
     const ensured = await linkHere($).catch(() => undefined);
     if (e.agentId !== undefined) return done;
-    turns = endTurn(turns, await $.clock.now(), since);
+    session = endTurn(session, await $.clock.now());
     const loaded = await loadShelf($, ensured).catch(() => undefined);
     if (loaded) await showBand($, loaded.groups);
     return done;

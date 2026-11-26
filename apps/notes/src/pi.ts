@@ -20,10 +20,10 @@ import {
   placeOf,
   readBody,
 } from "./lib/gather.ts";
-import { BAND, bandOf, readingState, startState, type Band } from "./lib/screen.ts";
+import { BAND, readingState, startState, type Band } from "./lib/screen.ts";
 import { notesOf } from "./lib/shelf.ts";
+import { beginTurn, endTurn, markLooked, news, startSession, type Session } from "./lib/session.ts";
 import { CONTEXT, hasStore, isShared, storeRoot, type Ensured } from "./lib/store.ts";
-import { beginTurn, duringTurns, endTurn, startTurns, type Turns } from "./lib/turns.ts";
 import { NotesBand } from "./pi/band.ts";
 import { nodeHost } from "./pi/host.ts";
 import { NotesPanel, sidebarOptions } from "./pi/panel.ts";
@@ -34,10 +34,11 @@ const WIDGET = "notes";
 
 export default function notes(pi: ExtensionAPI) {
   const host = nodeHost();
-  /** The session's start, then when the person last looked: notes written after it are news. */
-  let since = Date.now();
-  /** The session's turns: the store is shared by every worktree, so only notes written in these are news. */
-  let turns: Turns = startTurns(since);
+  /**
+   * This session's news: when the person last looked and the turns it worked in (`lib/session.ts`).
+   * The store is shared by every worktree, so only a note written in these turns is news.
+   */
+  let session: Session = startSession(Date.now());
   /** The links of the folders the session ran in; one that failed or was busy is left alone for a while. */
   const links = createLinks();
   /** What the widget says, while there is news. */
@@ -67,7 +68,7 @@ export default function notes(pi: ExtensionAPI) {
 
   /** The person has looked: notes written so far are no news. */
   const looked = () => {
-    since = Date.now();
+    session = markLooked(session, Date.now());
     band = undefined;
     redraw();
   };
@@ -131,8 +132,7 @@ export default function notes(pi: ExtensionAPI) {
   }
 
   pi.on("session_start", async (_event, ctx) => {
-    since = Date.now();
-    turns = startTurns(since);
+    session = startSession(Date.now());
     band = undefined;
     told.clear();
     await link(ctx).catch(() => undefined);
@@ -156,7 +156,7 @@ export default function notes(pi: ExtensionAPI) {
   // when it changes, so the agent reads it once.
   pi.on("before_agent_start", async (event, ctx) => {
     // A run starts here: its notes are the session's.
-    turns = beginTurn(turns, Date.now());
+    session = beginTurn(session, Date.now());
     // A link another session held, or that failed, is asked about again after a while.
     const ensured = await link(ctx).catch(() => undefined);
     const sections = event.systemPromptOptions.sections;
@@ -168,12 +168,12 @@ export default function notes(pi: ExtensionAPI) {
   // After a run the store is walked again: notes written since the person last looked show above
   // the prompt.
   pi.on("agent_settled", async (_event, ctx) => {
-    turns = endTurn(turns, Date.now(), since);
+    session = endTurn(session, Date.now());
     const ensured = await link(ctx).catch(() => undefined);
     if (ctx.mode !== "tui" || !ensured || !hasStore(ensured)) return;
     const groups = await loadGroups(host, ensured).catch(() => undefined);
     if (!groups) return;
-    band = bandOf(groups, since, (at) => duringTurns(turns, at));
+    band = news(session, groups);
     redraw();
   });
 
