@@ -102,6 +102,13 @@ const write = (path: string, text: string): void => {
 
 // -- where a target goes ------------------------------------------------------------------------
 
+test("prototype-like names are not known deployment targets", () => {
+  for (const name of ["constructor", "toString", "__proto__"]) {
+    assert.throws(() => destination(name, { HOME: "/home/u" }), DeployError);
+    assert.equal(destination(name, { AGENTS_UI_DIR: "/scratch/ui" }), "/scratch/ui");
+  }
+});
+
 test("herdr-ui goes to the app's config directory", () => {
   assert.equal(
     destination("herdr-ui", { XDG_CONFIG_HOME: "/home/u/.config" }),

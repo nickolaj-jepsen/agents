@@ -113,7 +113,7 @@ export function configHome(env: Environment): string {
 export function destination(name: string, env: Environment): string {
   const override = env.AGENTS_UI_DIR;
   if (override) return override;
-  const folder = UI_TARGETS[name];
+  const folder = Object.hasOwn(UI_TARGETS, name) ? UI_TARGETS[name] : undefined;
   if (folder === undefined) {
     throw new DeployError(
       `no deployment directory is known for ${JSON.stringify(name)} ` +
