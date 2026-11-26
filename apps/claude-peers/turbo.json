@@ -15,6 +15,21 @@
     },
     "e2e:update": {
       "command": ["node", "../../lib/tools/drive/drive.ts", "test", "claude-peers", "--update"]
+    },
+    "media": {
+      "command": [
+        "nix",
+        "run",
+        "../..#media",
+        "--",
+        "node",
+        "../../lib/tools/drive/drive.ts",
+        "record",
+        "claude-peers",
+        "--harness",
+        "terminal"
+      ],
+      "outputs": ["$TURBO_ROOT$/apps/site/media/claude-peers/**"]
     }
   }
 }
