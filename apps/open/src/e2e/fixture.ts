@@ -5,6 +5,7 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { assetPath } from "@agents/drive/lib/harness.ts";
 import { configHome } from "@agents/drive/lib/setup.ts";
 import type { SetupContext } from "@agents/drive/lib/session.ts";
 
@@ -75,6 +76,23 @@ export const clipboard = {
 
 /** An app that is on the PATH but cannot start: its interpreter does not exist. */
 export const BROKEN = "#!/nonexistent/interpreter\n";
+
+/**
+ * The notes plugin beside open, with the driver's `invoke-action` counter: the Notes row and
+ * `/open plan` lead to notes' own experience, so its command must be the one that runs. Its store
+ * is the run's own folder, never the person's.
+ */
+export const withNotes = {
+  ...start("pr"),
+  plugins: ["open", "notes"],
+  args: ["-e", assetPath("invoke-action.ts")],
+  env: {
+    ...clipboard.env,
+    INVOKED_ACTION: "notes",
+    INVOKED_LOG: "{run}/invoked.log",
+    XDG_DATA_HOME: "{run}/data",
+  },
+};
 
 /**
  * The person's `open.json` for a run, in the run's own `$XDG_CONFIG_HOME` (`configHome`): no

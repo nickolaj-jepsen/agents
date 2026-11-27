@@ -7,7 +7,9 @@ export type MenuKind = "git" | "folder";
 export type Action =
   | { kind: "url"; url: string }
   | { kind: "copy"; text: string; what: string }
-  | { kind: "launch"; argv: string[]; cwd?: string };
+  | { kind: "launch"; argv: string[]; cwd?: string }
+  /** Runs another plugin's command. Only pi's half offers such a row, and its host runs it. */
+  | { kind: "command"; command: string };
 
 export type Row = {
   id: string;

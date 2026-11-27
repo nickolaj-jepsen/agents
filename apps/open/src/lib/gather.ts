@@ -33,6 +33,18 @@ export const SETTLE_MS = 600;
 
 export const TITLES: Record<MenuKind, string> = { git: "Git", folder: "Open folder" };
 
+/** `/open plan` is the checkout's notes, as the personal frame offered before open owned `/open`. */
+export const PLAN_ARG = "plan";
+
+/** Whether `/open`'s arguments ask for the notes rather than the folder menu. */
+export const planRequested = (args: string) => args.trim() === PLAN_ARG;
+
+/** The one argument `/open` takes, offered while it is typed. */
+export const openArgumentCompletions = (prefix: string) =>
+  PLAN_ARG.startsWith(prefix.trim())
+    ? [{ value: PLAN_ARG, label: PLAN_ARG, description: "this checkout's notes" }]
+    : null;
+
 /** The two commands: the name typed, the menu it opens, and what the command list says of it. */
 export const COMMANDS = [
   {
@@ -70,6 +82,12 @@ export type PressHost = Host & {
   start(argv: string[], cwd?: string): Promise<boolean>;
   /** One line to the person: what happened, or as a `warning` what did not. */
   say(text: string, tone: "info" | "warning"): void;
+  /**
+   * Takes a row that names another plugin's command: whether a plugin owns it. The host runs it
+   * once the menu is closed, since the command opens an experience of its own. Absent on a host
+   * that cannot run one, and then the row says so.
+   */
+  runCommand?(command: string): boolean;
 };
 
 /** The row the keyboard is on: the one it was moved to, else the menu's own pick, else the first. */
@@ -186,6 +204,11 @@ export async function pressRow(host: PressHost, row: Row): Promise<"stay" | "clo
     return "stay";
   }
   const action = row.action;
+  if (action.kind === "command") {
+    if (host.runCommand?.(action.command)) return "close";
+    host.say(`No /${action.command} plugin is installed`, "warning");
+    return "stay";
+  }
   if (action.kind === "copy") {
     const r = await host.copy(action.text);
     if (r.isCopied) host.say(`Copied the ${action.what}`, "info");
@@ -216,7 +239,9 @@ export function menuText(m: Menu): string {
         ? row.action.url
         : row.action.kind === "copy"
           ? row.action.text
-          : row.action.argv.join(" ");
+          : row.action.kind === "command"
+            ? `runs /${row.action.command}`
+            : row.action.argv.join(" ");
     const note = row.action && row.description ? ` (${row.description})` : "";
     return `${i + 1}. ${row.label}${note}: ${what}`;
   });

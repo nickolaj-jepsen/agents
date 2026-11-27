@@ -1,0 +1,101 @@
+# chrome/pi/waiting-dialog 160x45 @0,0 (160x45)
+
+ Warning: fd not found. Offline mode enabled, skipping download.
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
+
+ Session name set: Release cleanup
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                         Choose a destination? · enter approves, escape declines
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+── Release cleanup ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  ──  ── •• / 200k ──
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  fixture  Replay (fixture)  lint ok  build one two 一斉                                                           <tmp>                feature/frame-extract
+--- styles
+-
+. 1x63
+. 1x68
+-
+. 2x33
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+.x41 3x21 . 2x33
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+4x18 . 4x118 . 2 4x4 5 4x4 2x9 4x3
+6
+4x160
+.x2 2x7 .x2 7x16 .x2 2x7 .x2 2x18 .x59 2x5 .x15 8 2x22
+--- legend
+1 fg=#cd9a22
+2 fg=#7e888e
+3 fg=#a798d7
+4 fg=#6c767b
+5 fg=#a798d7 bold
+6 inverse
+7 fg=#7e888e bold
+8 fg=#68b78d

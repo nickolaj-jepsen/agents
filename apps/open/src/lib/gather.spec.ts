@@ -3,6 +3,9 @@ import { probeArgv, readConfig } from "@agents/launch/apps.ts";
 import {
   browse,
   buildFolder,
+  openArgumentCompletions,
+  PLAN_ARG,
+  planRequested,
   buildGit,
   buildMenu,
   COMMANDS,
@@ -35,6 +38,8 @@ type Machine = {
   platform?: "mac" | "linux";
   copy?: Awaited<ReturnType<PressHost["copy"]>>;
   starts?: boolean;
+  /** What the host owns of another plugin's commands; absent means a host that cannot run one. */
+  owns?: string[];
   /** What `xdg-terminal-exec --print-id` exits with; none for a program that cannot run. */
   printId?: number;
 };
@@ -87,6 +92,7 @@ function fakeHost(m: Machine = {}) {
       return m.starts ?? true;
     },
     say: (text, tone) => void said.push([text, tone]),
+    ...("owns" in m ? { runCommand: (command: string) => (m.owns ?? []).includes(command) } : {}),
   };
   return { host, calls, reported, said, copied, started };
 }
@@ -420,5 +426,52 @@ describe("words", () => {
       ["git", "git"],
       ["open", "folder"],
     ]);
+  });
+});
+
+describe("a row that names another plugin's command", () => {
+  const notes: Row = { id: "notes", label: "Notes", action: { kind: "command", command: "notes" } };
+
+  test("closes the menu when a plugin owns the command, and runs nothing itself", async () => {
+    const { host, said, started, copied } = fakeHost({ owns: ["notes"] });
+    expect(await pressRow(host, notes)).toBe("close");
+    expect(said).toEqual([]);
+    expect(started).toEqual([]);
+    expect(copied).toEqual([]);
+  });
+
+  test("says which command has no owner and keeps the menu, so the row is not a dead press", async () => {
+    const { host, said } = fakeHost({ owns: [] });
+    expect(await pressRow(host, notes)).toBe("stay");
+    expect(said).toEqual([["No /notes plugin is installed", "warning"]]);
+  });
+
+  test("is unavailable on a host that cannot run another plugin's command", async () => {
+    const { host, said } = fakeHost();
+    expect(await pressRow(host, notes)).toBe("stay");
+    expect(said).toEqual([["No /notes plugin is installed", "warning"]]);
+  });
+
+  test("reads in the text menu as the command it runs", () => {
+    expect(menuText({ kind: "folder", title: "Open folder", rows: [notes] })).toBe(
+      "Open folder\n1. Notes: runs /notes",
+    );
+  });
+});
+
+describe("/open plan", () => {
+  test("is the notes, as it was before /open had a menu", () => {
+    expect(planRequested(" plan ")).toBe(true);
+    expect(planRequested("plan")).toBe(true);
+    expect(planRequested("")).toBe(false);
+    expect(planRequested("plans")).toBe(false);
+  });
+
+  test("is offered while it is typed, and nothing else is", () => {
+    expect(openArgumentCompletions("pl")).toEqual([
+      { value: PLAN_ARG, label: PLAN_ARG, description: "this checkout's notes" },
+    ]);
+    expect(openArgumentCompletions("")).toHaveLength(1);
+    expect(openArgumentCompletions("gi")).toBeNull();
   });
 });

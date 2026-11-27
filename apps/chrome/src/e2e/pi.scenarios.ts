@@ -3,6 +3,7 @@ import { assetPath } from "@agents/drive/lib/harness.ts";
 import {
   findText,
   gridLines,
+  matches,
   region,
   type Pattern,
   type Region,
@@ -20,7 +21,10 @@ import {
   GIT_ENV,
   LONG_BRANCH,
   merging,
+  cherryPicking,
   plain,
+  rebasing,
+  reverting,
   staged,
   start,
   wideBranch,
@@ -68,6 +72,12 @@ const PASTED = Array.from(
   { length: 40 },
   (_, i) => `line ${i + 1}: the worker honours Retry-After and doubles the delay.`,
 ).join("\n");
+
+/** A reply big enough that pi's compaction has history to cut: it keeps 20k tokens by default. */
+const LONG_REPLY = Array.from(
+  { length: 4000 },
+  (_, i) => `line ${i + 1}: the worker honours Retry-After and doubles the delay between attempts.`,
+).join(" ");
 
 /** One fix for the review's side call, as spellfix's own scenarios answer it. */
 const FIX = { text: '<word text="teh" verdict="fix">the</word>' };
@@ -130,6 +140,19 @@ const litByHover = (what: Pattern, text: string): Step => ({
     const after = (await s.term.grid())[at.y]?.[at.x]?.fg;
     if (after === before)
       throw new Error(`the pointer on ${text} changed nothing; it is still ${String(before)}`);
+  },
+});
+
+/**
+ * Throws when the screen shows `what`: for a reading that must be absent rather than zero, or a
+ * state word the frame must not claim while a dialog the person opened is up.
+ */
+const absent = (what: Pattern, why: string): Step => ({
+  run: async (s: Session) => {
+    await sleep(300);
+    const lines = gridLines(await s.term.grid());
+    const hit = lines.find((line) => matches(line, what));
+    if (hit) throw new Error(`${why}: the screen still says "${hit.trim()}"`);
   },
 });
 
@@ -613,6 +636,36 @@ export default scenarios({
         { sleep: 300 },
       ],
     },
+    "waiting-peer": {
+      about:
+        "a peer's inbound approval, opened by another plugin while no tool call runs: the border says waiting, on the signal that plugin publishes",
+      setup: checkout,
+      start: withStandIn(false),
+      sizes: [[160, 45]],
+      steps: [
+        ...name,
+        { type: "/stand-in-approval" },
+        { press: "Enter" },
+        { wait: "Approve the peer's message?" },
+        { wait: "waiting" },
+        { sleep: 300 },
+      ],
+    },
+    "waiting-dialog": {
+      about:
+        "the same dialog with nobody's agent behind it: the frame draws it and says nothing about waiting, because the person was asked, not the run",
+      setup: checkout,
+      start: withStandIn(false),
+      region: region.full,
+      sizes: [[160, 45]],
+      steps: [
+        ...name,
+        { type: "/stand-in-dialog" },
+        { press: "Enter" },
+        { wait: "Choose a destination?" },
+        absent("waiting", "a dialog opened for the person"),
+      ],
+    },
     detached: {
       about:
         "a detached HEAD: the commit stands in for the branch, with the glyph that says there is none",
@@ -642,6 +695,196 @@ export default scenarios({
         [70, 24],
         [160, 45],
       ],
+    },
+    "notes-row": {
+      about:
+        "a click on the checkout opens open's folder menu, whose Notes row runs /notes: the notes plugin's own sidebar over the draft",
+      setup: withRemote,
+      start: { ...companions, plugins: ["chrome", "open", "notes"] },
+      region: surface,
+      sizes: [[160, 45]],
+      steps: [
+        ...name,
+        { type: DRAFT },
+        { click: "cwd" },
+        { wait: "Open folder" },
+        // A press within 600 ms of the rows arriving is ignored, so the click is meant.
+        { sleep: 700 },
+        { click: "Notes" },
+        { wait: /─ Notes ─/ },
+        { sleep: 700 },
+        logged("invoked.log", () => "open=1 git=1 notes=1"),
+      ],
+    },
+    "notes-row-closed": {
+      about: "Escape closes the notes the row opened, and the draft under it is where it was",
+      from: "notes-row",
+      region: frame,
+      sizes: [[160, 45]],
+      steps: [
+        { press: "Escape" },
+        { wait: /─ Notes ─/, gone: true },
+        { type: " for the release" },
+        { wait: `${DRAFT} for the release` },
+      ],
+    },
+    "open-plan": {
+      about:
+        "/open plan, which the personal frame offered before /open owned the name: the checkout's notes, through their own plugin",
+      setup: withRemote,
+      start: { ...companions, plugins: ["chrome", "open", "notes"] },
+      region: surface,
+      sizes: [[160, 45]],
+      steps: [
+        ...name,
+        { type: "/open plan" },
+        // Escape closes the argument completion with the text intact; Enter then submits it. A
+        // first Enter would take the completion instead, which is not the same prompt twice.
+        { press: ["Escape", "Enter"] },
+        { wait: /─ Notes ─/ },
+        { sleep: 700 },
+        logged("invoked.log", () => "open=1 git=1 notes=1"),
+      ],
+    },
+    "open-plan-closed": {
+      about:
+        "Escape closes the notes /open plan opened, and the prompt is ready for the next thing",
+      from: "open-plan",
+      region: frame,
+      sizes: [[160, 45]],
+      steps: [
+        { press: "Escape" },
+        { wait: /─ Notes ─/, gone: true },
+        { type: DRAFT },
+        { wait: DRAFT },
+      ],
+    },
+    "cost-zero": {
+      about:
+        "a model that charges and a session that has spent nothing: the footer says $0.00, which is the reading, not a substitute for a missing one",
+      setup: checkout,
+      start: {
+        ...start,
+        turns: [
+          { text: "The frame is drawn by the chrome plugin.", usage: { input: 400, output: 20 } },
+        ],
+        env: {
+          FIXTURE_MODEL: JSON.stringify({
+            cost: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
+          }),
+        },
+      },
+      sizes: [[160, 45]],
+      steps: [
+        ...name,
+        { type: "Summarise the retry work" },
+        { press: "Enter" },
+        { wait: "The frame is drawn by the chrome plugin." },
+        { wait: "$0.00" },
+        { sleep: 500 },
+      ],
+    },
+    "cost-absent": {
+      about:
+        "a model that charges nothing: the footer draws no cost at all, since a zero there would read as a measurement of free",
+      setup: checkout,
+      start: {
+        ...start,
+        turns: [
+          { text: "The frame is drawn by the chrome plugin.", usage: { input: 400, output: 20 } },
+        ],
+      },
+      sizes: [[160, 45]],
+      steps: [
+        ...name,
+        { type: "Summarise the retry work" },
+        { press: "Enter" },
+        { wait: "The frame is drawn by the chrome plugin." },
+        absent(/\$\d/, "a session on a model with no price"),
+      ],
+    },
+    routed: {
+      about:
+        "a router model whose reply came back from a physical provider: the footer names both, because the model's own name hides where it went",
+      setup: withConfig('{"routed": ["auto/replay"]}'),
+      start: {
+        ...start,
+        args: ["--provider", "auto", "--model", "replay", "--models", "auto/replay"],
+        env: {
+          ...CONFIG_ENV,
+          FIXTURE_PROVIDER: "auto",
+          FIXTURE_ANSWER_PROVIDER: "fixture",
+        },
+        turns: [
+          { text: "The frame is drawn by the chrome plugin.", usage: { input: 400, output: 20 } },
+        ],
+      },
+      sizes: [[160, 45]],
+      steps: [
+        ...name,
+        { type: "Summarise the retry work" },
+        { press: "Enter" },
+        { wait: "The frame is drawn by the chrome plugin." },
+        { wait: /Replay \(fixture\) \(/ },
+        { sleep: 500 },
+      ],
+    },
+    compacting: {
+      about:
+        "a compaction rewrites the context: the cache reading it had is dropped, since a rate across a rewritten context is not a rate",
+      setup: checkout,
+      region: frame,
+      // Two replies: the second is long enough that pi has history to cut (it keeps 20k tokens),
+      // and the third answers the compaction's own request.
+      start: {
+        ...start,
+        turns: [
+          { text: "First reply.", usage: { input: 0, cacheRead: 3000, cost: 0.01 } },
+          { text: LONG_REPLY, usage: { input: 3000, cacheRead: 0, cost: 0.02, output: 60000 } },
+          // The compaction asks for the turn's prefix and then for the history, one request each.
+          { text: "The turn in brief." },
+          { text: "The session in brief." },
+          { text: "The session in brief, again." },
+        ],
+      },
+      sizes: [[160, 45]],
+      steps: [
+        ...name,
+        { type: "One" },
+        { press: "Enter" },
+        { wait: "First reply." },
+        { type: "Two" },
+        { press: "Enter" },
+        { wait: "cache 0%" },
+        { type: "/compact" },
+        { press: ["Enter", "Enter"] },
+        { sleep: 3000 },
+        absent("cache ", "a compaction, which resets the cache reading"),
+      ],
+    },
+    rebasing: {
+      about:
+        "a rebase stopped on a conflict: the detached HEAD, the step it is on and the conflict it stopped at",
+      setup: rebasing,
+      mask: [
+        { pattern: /\uf417 [0-9a-f]{7}/g, with: "\uf417 <sha>" },
+        { pattern: /\d+\/\d+/g, with: "<step>" },
+      ],
+      sizes: [[160, 45]],
+      steps: [...name, { wait: /rebase/ }, { sleep: 700 }],
+    },
+    "cherry-picking": {
+      about:
+        "a cherry-pick stopped on a conflict: the branch, the operation and the conflict count",
+      setup: cherryPicking,
+      sizes: [[160, 45]],
+      steps: [...name, { wait: /cherry-pick/ }, { sleep: 700 }],
+    },
+    reverting: {
+      about: "a revert stopped on a conflict: the branch, the operation and the conflict count",
+      setup: reverting,
+      sizes: [[160, 45]],
+      steps: [...name, { wait: /revert/ }, { sleep: 700 }],
     },
     "model-change": {
       about:

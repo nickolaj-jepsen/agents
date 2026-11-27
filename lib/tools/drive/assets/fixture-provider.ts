@@ -51,6 +51,22 @@ function modelOverrides(): Partial<Model<Api>> {
   return JSON.parse(raw) as Partial<Model<Api>>;
 }
 
+/**
+ * The provider's own id: "fixture" unless a scenario names another, as a router model's provider
+ * is named in the catalogue.
+ */
+function providerId(): string {
+  return process.env.FIXTURE_PROVIDER || "fixture";
+}
+
+/**
+ * The provider a reply claims answered it. A router answers through a physical provider, so a
+ * scenario can make the session's model one thing and its replies another.
+ */
+function answerProviding(): string | undefined {
+  return process.env.FIXTURE_ANSWER_PROVIDER || undefined;
+}
+
 /** A second, third... model of the same provider, so a scenario can switch between them. */
 function extraModels(): Partial<Model<Api>>[] {
   const raw = process.env.FIXTURE_MODELS;
@@ -82,7 +98,7 @@ function streamFixture(model: Model<Api>): AssistantMessageEventStream {
       role: "assistant",
       content: [],
       api: model.api,
-      provider: model.provider,
+      provider: answerProviding() ?? model.provider,
       model: model.id,
       usage: {
         input: 0,
@@ -183,7 +199,7 @@ function streamFixture(model: Model<Api>): AssistantMessageEventStream {
 export default function (pi: ExtensionAPI) {
   const duration = process.env.FIXTURE_TOOL_DURATION_MS;
   if (duration !== undefined) fixedToolDuration(pi, Number(duration));
-  pi.registerProvider("fixture", {
+  pi.registerProvider(providerId(), {
     baseUrl: "http://fixture.invalid",
     apiKey: "fixture",
     api: "fixture-api",

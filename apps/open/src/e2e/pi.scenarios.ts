@@ -11,6 +11,7 @@ import {
   clipboard,
   LONG_BASE,
   start,
+  withNotes,
   withBrokenApp,
   withBrokenConfig,
   withConfig,
@@ -242,6 +243,39 @@ export default scenarios({
         settled,
         { press: "Enter" },
         { wait: "Couldn't start" },
+      ],
+    },
+    "folder-notes": {
+      about:
+        "/open's Notes row: it runs /notes rather than holding a list of its own, so the notes plugin's sidebar is what opens",
+      setup: checkout,
+      start: withNotes,
+      region: region.any(region.sidebar, region.standing, region.box(/Open folder/)),
+      sizes: [[160, 45]],
+      steps: [
+        ...folder,
+        { wait: "Notes" },
+        settled,
+        { click: "Notes" },
+        { wait: /─ Notes ─/ },
+        { wait: "No notes yet" },
+        logged("invoked.log", () => "open=1 git=1 notes=1"),
+      ],
+    },
+    "open-plan": {
+      about:
+        "/open plan, which the personal frame offered before /open owned the name: the checkout's notes, from their own plugin",
+      setup: checkout,
+      start: withNotes,
+      region: region.any(region.sidebar, region.box(/Open folder/)),
+      sizes: [[160, 45]],
+      steps: [
+        { type: "/open plan" },
+        // Escape closes the argument completion with the text intact; Enter then submits it.
+        { press: ["Escape", "Enter"] },
+        { wait: /─ Notes ─/ },
+        { wait: "No notes yet" },
+        logged("invoked.log", () => "open=1 git=1 notes=1"),
       ],
     },
     invoked: {

@@ -3,6 +3,8 @@ import { builtinApps, choices, type Installed } from "@agents/launch/apps.ts";
 import {
   chooseRemote,
   folderMenu,
+  NOTES_ROW,
+  withNotesRow,
   forgesOf,
   gitMenu,
   parseRemote,
@@ -424,5 +426,35 @@ describe("folderMenu", () => {
       argv: ["/usr/bin/xdg-terminal-exec", "--dir=/a b"],
       cwd: "/a b",
     });
+  });
+});
+
+describe("the notes row", () => {
+  const offered = (installed: Installed) =>
+    choices(builtinApps("linux"), installed, { kind: "dir", dir: "/repo" });
+  const installed: Installed = {
+    commands: new Map([["code", "/usr/bin/code"]]),
+    paths: new Set(),
+  };
+
+  it("sits before Copy path, after the apps, as the personal frame's folder menu had it", () => {
+    const menu = withNotesRow(folderMenu("/repo", offered(installed)));
+    const ids = menu.rows?.map((r) => r.id) ?? [];
+    expect(ids.slice(-2)).toEqual(["notes", "copy"]);
+    expect(ids.indexOf("notes")).toBe(ids.length - 2);
+    expect(menu.rows?.find((r) => r.id === "notes")).toEqual(NOTES_ROW);
+  });
+
+  it("leans on the notes plugin rather than drawing notes of its own", () => {
+    expect(NOTES_ROW.action).toEqual({ kind: "command", command: "notes" });
+  });
+
+  it("leaves a git menu, an empty menu and an already-visited one alone", () => {
+    const git: Menu = { kind: "git", title: "Git", rows: [{ id: "copy", label: "Copy" }] };
+    expect(withNotesRow(git).rows).toEqual(git.rows);
+    const open: Menu = { kind: "folder", title: "Open folder", rows: null };
+    expect(withNotesRow(open).rows).toBeNull();
+    const once = withNotesRow(folderMenu("/repo", offered(installed)));
+    expect(withNotesRow(once).rows?.filter((r) => r.id === "notes")).toHaveLength(1);
   });
 });

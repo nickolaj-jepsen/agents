@@ -685,6 +685,9 @@ importers:
 
   apps/open:
     devDependencies:
+      '@agents/actions':
+        specifier: workspace:*
+        version: link:../../lib/shared/actions
       '@agents/build':
         specifier: workspace:*
         version: link:../../lib/tools/build

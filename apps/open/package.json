@@ -8,6 +8,7 @@
   ],
   "type": "module",
   "devDependencies": {
+    "@agents/actions": "workspace:*",
     "@agents/build": "workspace:*",
     "@agents/drive": "workspace:*",
     "@agents/kit-core": "workspace:*",

@@ -4,7 +4,7 @@
  * whether a dialog has the person waiting.
  */
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { oneLine } from "../lib/format.ts";
+import { oneLine, sanitizeLabel } from "../lib/format.ts";
 import type { UserWait } from "./user-wait.ts";
 
 export type Label = { text: string };
@@ -52,7 +52,9 @@ export const createIdentity = (pi: ExtensionAPI, userWait: UserWait) => {
 
   return {
     current: (): Label | undefined => {
-      const name = pi.getSessionName();
+      // The label lands in the border and in the terminal's title, so nothing it carries may move
+      // the cursor there.
+      const name = sanitizeLabel(pi.getSessionName() ?? "");
       return name ? { text: name } : undefined;
     },
     // Sub-agent widgets already own `●`, `○`, `⟳` and `▸`, so states that need you are words and

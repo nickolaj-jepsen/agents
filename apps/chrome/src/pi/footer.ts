@@ -157,9 +157,11 @@ export const createFooter = (
       });
 
     const { cost, speed } = meterTexts(ctx, model);
+    // A catalogue's model name and a provider's display name are somebody else's text: sanitised
+    // here, since the row is where they land.
     const reached = model ? routedName(ctx, model) : undefined;
     const modelText = model
-      ? `${model.name || model.id}${reached ? ` (${reached})` : ""}`
+      ? sanitizeLabel(`${model.name || model.id}${reached ? ` (${reached})` : ""}`)
       : "no model";
 
     const statuses = [...footerData.getExtensionStatuses()]
@@ -176,8 +178,8 @@ export const createFooter = (
           ? undefined
           : {
               id: "model",
-              text: provider,
-              short: providerShortName(provider),
+              text: sanitizeLabel(provider),
+              short: providerShortName(sanitizeLabel(provider)),
               role: roleFor(config, "provider"),
               action: "model",
             },

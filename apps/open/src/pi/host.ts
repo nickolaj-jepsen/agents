@@ -5,7 +5,9 @@
 import { execFile, spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { copyToClipboard } from "@earendil-works/pi-coding-agent";
+import { ACTIONS, type Action } from "@agents/actions/invoke.ts";
 import { configPath } from "@agents/launch/apps.ts";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import type { Host, PressHost, Ran } from "../lib/gather.ts";
 
 /** What git, gh and the probe may print: far more than any of them does. */
@@ -77,12 +79,25 @@ export async function copy(text: string): ReturnType<PressHost["copy"]> {
 /** A host that says what `open.json` got wrong through `report`. */
 export const nodeHost = (report: Host["report"]): Host => ({ run, config, report });
 
-/** A host that also carries a press out, and says how it went through `say`. */
-export const nodePressHost = (report: Host["report"], say: PressHost["say"]): PressHost => ({
+/** Whether `name` is one of the checkout actions another plugin may own. */
+const isAction = (name: string): name is Action => (ACTIONS as readonly string[]).includes(name);
+
+/**
+ * A host that also carries a press out, and says how it went through `say`. A row that names
+ * another plugin's command is handed to `runCommand`, which runs it once the menu is closed: the
+ * command opens an experience of its own, and one overlay over another is not the person's.
+ */
+export const nodePressHost = (
+  pi: ExtensionAPI,
+  report: Host["report"],
+  say: PressHost["say"],
+  runCommand: (command: string) => boolean,
+): PressHost => ({
   run,
   config,
   report,
   copy,
   start,
   say,
+  runCommand: (command) => isAction(command) && runCommand(command),
 });

@@ -12,12 +12,17 @@ export const oneLine = (text: string) => text.replace(/\s+/g, " ").trim();
 // Any CSI (private and colon forms too), then OSC, DCS, PM and APC strings up to BEL or ST.
 const TERMINAL_SEQUENCE = /\x1b\[[0-?]*[ -/]*[@-~]|\x1b[\]P^_][\s\S]*?(?:\x07|\x1b\\)/g;
 
+// Every C0 control and DEL, then the C1 range: their own escape-free forms still move a cursor,
+// clear a line or start a sequence where a terminal reads them, so none survives into the row.
+const CONTROLS = /[\u0000-\u001f\u007f-\u009f]/g;
+
 /**
- * A label another extension or a repository supplied, as one plain line: terminal sequences gone,
- * newlines and tabs collapsed, runs of spaces squeezed. It is drawn in the frame, so nothing it
- * carries may move the cursor or break the row.
+ * A label another extension, a repository or a model catalogue supplied, as one plain line:
+ * terminal sequences and every C0, DEL and C1 control gone, runs of spaces squeezed. It is drawn in
+ * the frame, so nothing it carries may move the cursor, clear a row or break the line.
  */
-export const sanitizeLabel = (text: string): string => oneLine(text.replace(TERMINAL_SEQUENCE, ""));
+export const sanitizeLabel = (text: string): string =>
+  oneLine(text.replace(TERMINAL_SEQUENCE, "").replace(CONTROLS, " "));
 
 /**
  * A token count as a person reads it: `840`, `12.5k`, `200k`, `1.5M`. The window and the meters

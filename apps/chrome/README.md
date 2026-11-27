@@ -25,10 +25,12 @@ The model and the checkout it is working in are what the footer is for, so they 
 Only pi. It draws without any other plugin, and the controls that have no owner say so (`chrome: no /open plugin is installed`) instead of doing nothing. Beside [`open`](../open/), [`notes`](../notes/) and [`spellfix`](../spellfix/) it is the frame a session is written in:
 
 - **open** owns `/open` and `/git`, which the footer's path and branch invoke.
-- **notes** owns the checkout's notes; the frame draws no second entry point for them.
+- **notes** owns the checkout's notes; the frame draws no second entry point for them. A click on the checkout opens open's folder menu, whose **Notes** row runs `/notes`, and `/open plan` reaches the same place.
 - **spellfix** underlines the draft's misspellings through the editor's bridge, whichever of the two plugins loads first.
 
 No Agent Hub, no daemon and no desktop service is involved. Herdr is not needed either: the frame draws in an ordinary terminal, and inside a Herdr terminal nothing about it changes.
+
+`waiting` covers both a dialog a tool of the turn opens and a dialog another plugin opens for the agent while no tool runs: [`claude-peers`](../claude-peers/) announces an inbound approval it is holding for the person on `agents:claude-peers:approval-state`, and the frame listens for that channel rather than for a host feature beside it. A dialog the person opened themselves counts as neither.
 
 ## Configuration
 

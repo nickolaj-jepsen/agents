@@ -8,10 +8,11 @@ requires:
 order: 2
 ---
 
-| Command | What to use it for                                                                                                                                       |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/git`  | Open a repository, branch, commit or pull request on GitHub, GitLab or Codeberg, or copy the branch, SHA or PR URL. For a new PR, open the compare page. |
-| `/open` | Open the checkout in an editor, the file manager or a terminal, or copy its path.                                                                        |
+| Command      | What to use it for                                                                                                                                       |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/git`       | Open a repository, branch, commit or pull request on GitHub, GitLab or Codeberg, or copy the branch, SHA or PR URL. For a new PR, open the compare page. |
+| `/open`      | Open the checkout in an editor, the file manager or a terminal, or copy its path.                                                                        |
+| `/open plan` | The checkout's notes, which the [`notes`](../notes/) plugin draws.                                                                                       |
 
 Both commands work in Claude Code and in pi, with the same rows in the same order. Press the row's number in a terminal or click its action in Desktop or VS Code. A press in the first 600 ms after the rows appear or change is ignored, so a second Enter meant for the command doesn't open the preselected row, and a press while another is still being carried out is dropped. A row that can't run keeps its place and says why, for example `not installed` or `not set up`. The keyboard starts on the first app that is installed. Links open in the first installed app that takes a link, which is the browser unless you say otherwise.
 
@@ -23,6 +24,8 @@ The menu is a sheet over the transcript that stands on the prompt's top rule. Th
 - Copy uses pi's clipboard, the same one `/copy` uses.
 - Apps start detached from pi, so closing pi leaves them open.
 - The commands are the only owners of these actions: a plugin that draws a control for them in pi's frame invokes `/open` and `/git` instead of registering its own, so a click and a typed command open the same menu, and a draft in the prompt is left as it was. See [`@agents/actions`](../../lib/shared/actions/README.md).
+- The folder menu's **Notes** row is the notes plugin's, not a list of its own: it runs `/notes` with the menu closed, so the sidebar, the reader and the store are the ones `/notes` opens. Where the notes plugin is not installed the row says so and the menu stays.
+- `/open plan` is the same entry point the personal frame had: it runs `/notes` too, and it is offered while you type.
 - In RPC mode, where pi draws no terminal UI, the command shows the menu as a numbered list of what each row would open or copy and doesn't run anything.
 
 ## Apps

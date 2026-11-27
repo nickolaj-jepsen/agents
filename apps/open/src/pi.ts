@@ -5,17 +5,20 @@
  * words.
  */
 import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
+import { ACTIONS, invokeAction, type Action } from "@agents/actions/invoke.ts";
 import type { TUI } from "@earendil-works/pi-tui";
 import {
   buildMenu,
   COMMANDS,
   menuText,
+  openArgumentCompletions,
+  planRequested,
   pressRow,
   problemsText,
   TITLES,
   type Host,
 } from "./lib/gather.ts";
-import type { MenuKind } from "./lib/menus.ts";
+import { withNotesRow, type MenuKind } from "./lib/menus.ts";
 import { nodeHost, nodePressHost } from "./pi/host.ts";
 import {
   MenuSheet,
@@ -37,7 +40,19 @@ export default function open(pi: ExtensionAPI) {
   async function tell(ctx: ExtensionCommandContext, kind: MenuKind) {
     const report: Host["report"] = (problems) =>
       ctx.ui.notify(problemsText(problems) ?? "", "warning");
-    ctx.ui.notify(menuText(await buildMenu(nodeHost(report), kind, ctx.cwd)), "info");
+    const menu = await buildMenu(nodeHost(report), kind, ctx.cwd);
+    ctx.ui.notify(menuText(kind === "folder" ? withNotesRow(menu) : menu), "info");
+  }
+
+  /**
+   * Runs the checkout action another plugin owns, through pi's own command path. The notes are the
+   * notes plugin's experience: `/open plan` and the folder menu's Notes row lead to it rather than
+   * drawing a second one.
+   */
+  function runAction(ctx: ExtensionCommandContext, name: Action): boolean {
+    if (invokeAction(pi, name)) return true;
+    ctx.ui.notify(`open: no /${name} plugin is installed`, "warning");
+    return false;
   }
 
   async function showMenu(ctx: ExtensionCommandContext, kind: MenuKind) {
@@ -52,6 +67,8 @@ export default function open(pi: ExtensionAPI) {
       return mark;
     });
     let surface: TUI | undefined;
+    // A row that names another plugin's command: taken here, run once the sheet is out of the way.
+    let pending: Action | undefined;
     // The prompt and what is under it are measured once for a render, which asks several times.
     let measured: number | undefined;
     const below = () => {
@@ -81,13 +98,21 @@ export default function open(pi: ExtensionAPI) {
               done,
               async press(row): Promise<Pressed> {
                 const said: Said[] = [];
-                const host = nodePressHost(report, (text, tone) => said.push({ text, tone }));
+                const host = nodePressHost(
+                  pi,
+                  report,
+                  (text, tone) => said.push({ text, tone }),
+                  (command) => {
+                    pending = ACTIONS.includes(command as Action) ? (command as Action) : undefined;
+                    return pending !== undefined;
+                  },
+                );
                 return { outcome: await pressRow(host, row), said };
               },
             },
           );
           void buildMenu(nodeHost(report), kind, ctx.cwd).then(
-            (menu) => sheet.show(menu),
+            (menu) => sheet.show(kind === "folder" ? withNotesRow(menu) : menu),
             (error) => sheet.show({ kind, title, rows: [], error: String(error) }),
           );
           return sheet;
@@ -96,6 +121,8 @@ export default function open(pi: ExtensionAPI) {
       );
       // What a press that closed the menu said, now that the transcript is in sight.
       for (const { text, tone } of said ?? []) ctx.ui.notify(text, tone);
+      // The command a row names runs now: the sheet is closed, so its own experience has the screen.
+      if (pending) runAction(ctx, pending);
     } finally {
       closeOpen = undefined;
       ctx.ui.setWidget(WIDGET, undefined);
@@ -103,7 +130,18 @@ export default function open(pi: ExtensionAPI) {
   }
 
   for (const { name, kind, description } of COMMANDS)
-    pi.registerCommand(name, { description, handler: (_args, ctx) => showMenu(ctx, kind) });
+    pi.registerCommand(name, {
+      description,
+      handler: async (args, ctx) => {
+        if (name === "open" && planRequested(args)) {
+          runAction(ctx, "notes");
+          return;
+        }
+        await showMenu(ctx, kind);
+      },
+      // The one argument: `/open plan` is the checkout's notes, as it was before open owned /open.
+      ...(name === "open" ? { getArgumentCompletions: openArgumentCompletions } : {}),
+    });
 
   pi.on("session_shutdown", () => closeOpen?.());
 }

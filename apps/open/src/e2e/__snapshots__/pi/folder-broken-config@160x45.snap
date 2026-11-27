@@ -1,4 +1,4 @@
-# open/pi/folder-broken-config 160x45 @44,29 (72x12)
+# open/pi/folder-broken-config 160x45 @44,28 (72x13)
 ╭─ Open folder ────────────────────────────────────────────── Close × ─╮
 │                                                                      │
 │  ❯ 1 VS Code                                                         │
@@ -6,7 +6,8 @@
 │    3 Sublime Merge                                     not installed │
 │    4 Files                                                           │
 │    5 Terminal                                                        │
-│    6 Copy path                                                       │
+│    6 Notes                                                           │
+│    7 Copy path                                                       │
 │  open.json: open.json is not JSON: Expected property name or '}' in  │
 │  JSON at position 2 (line 1 column 3)                                │
 │  Enter picks · Esc closes                                            │
@@ -19,6 +20,7 @@
 1 .x4 6 . 6x13 .x37 6x13 . 1
 1 .x4 5 . 3x5 .x59 1
 1 .x4 5 . 3x8 .x56 1
+1 .x4 5 . 3x5 .x59 1
 1 .x4 5 . 3x9 .x55 1
 1 .x2 7x66 .x2 1
 1 .x2 7x36 .x32 1

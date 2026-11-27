@@ -125,3 +125,52 @@ export const withConfig = (config: string) => (ctx: SetupContext) => {
 
 /** Where a scenario's `PI_CHROME_CONFIG` points: the run's own folder, never the person's. */
 export const CONFIG_ENV = { PI_CHROME_CONFIG: `${RUN_DIR}/chrome.json` };
+
+/**
+ * A rebase stopped on a conflict: git leaves `rebase-merge/` with its step, and HEAD detached
+ * until it is finished or aborted.
+ */
+export const rebasing = (ctx: SetupContext) => {
+  checkout(ctx);
+  ctx.git("checkout", "-q", "-b", "feature/retry-policy");
+  ctx.write("README.md", "# orders-api\n\nRetry twice, then give up.\n");
+  ctx.git("commit", "-q", "-am", "Retry twice");
+  ctx.git("checkout", "-q", BRANCH);
+  ctx.write("README.md", "# orders-api\n\nRetry five times, with jitter.\n");
+  ctx.git("commit", "-q", "-am", "Retry with jitter");
+  try {
+    ctx.git("rebase", "feature/retry-policy");
+  } catch {
+    // The conflict is the fixture: git stops and leaves the rebase in progress.
+  }
+};
+
+/** A cherry-pick stopped on a conflict: git leaves `CHERRY_PICK_HEAD` behind. */
+export const cherryPicking = (ctx: SetupContext) => {
+  checkout(ctx);
+  ctx.git("checkout", "-q", "-b", "feature/retry-policy");
+  ctx.write("README.md", "# orders-api\n\nRetry twice, then give up.\n");
+  ctx.git("commit", "-q", "-am", "Retry twice");
+  ctx.git("checkout", "-q", BRANCH);
+  ctx.write("README.md", "# orders-api\n\nRetry five times, with jitter.\n");
+  ctx.git("commit", "-q", "-am", "Retry with jitter");
+  try {
+    ctx.git("cherry-pick", "feature/retry-policy");
+  } catch {
+    // A conflicting pick stops with CHERRY_PICK_HEAD, which is the state to draw.
+  }
+};
+
+/** A revert stopped on a conflict: git leaves `REVERT_HEAD` behind. */
+export const reverting = (ctx: SetupContext) => {
+  checkout(ctx);
+  ctx.write("README.md", "# orders-api\n\nRetry twice, then give up.\n");
+  ctx.git("commit", "-q", "-am", "Retry twice");
+  ctx.write("README.md", "# orders-api\n\nRetry five times, with jitter.\n");
+  ctx.git("commit", "-q", "-am", "Retry with jitter");
+  try {
+    ctx.git("revert", "--no-edit", "HEAD~1");
+  } catch {
+    // Reverting the older change over the newer one stops with REVERT_HEAD.
+  }
+};

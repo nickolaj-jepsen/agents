@@ -11,7 +11,12 @@ export type MenuKind = "git" | "folder";
 export type Action =
   | { kind: "url"; url: string }
   | { kind: "copy"; text: string; what: string }
-  | { kind: "launch"; argv: string[]; cwd?: string };
+  | { kind: "launch"; argv: string[]; cwd?: string }
+  /**
+   * Runs another plugin's command: the row for an experience this one does not draw. Its owner
+   * draws it, so this menu keeps no copy of it and the row says nothing of its own.
+   */
+  | { kind: "command"; command: string };
 
 export type Row = {
   id: string;
@@ -376,6 +381,27 @@ export const gitMenu = ({ status, remote, base, pr, remoteNames: names }: GitFac
 };
 
 /** The checkout in the apps that take a folder; one that cannot run keeps its row, so the order never moves. */
+/** The row that leads to the checkout's notes: the notes plugin draws them, so the row runs its command. */
+export const NOTES_ROW: Row = {
+  id: "notes",
+  label: "Notes",
+  action: { kind: "command", command: "notes" },
+};
+
+/**
+ * A folder menu with the notes row before Copy path, in the order the personal frame offered it.
+ * A host that cannot run another plugin's command leaves the menu alone rather than offering a row
+ * that does nothing, so this is applied by the half that can.
+ */
+export const withNotesRow = (menu: Menu): Menu => {
+  if (menu.kind !== "folder" || !menu.rows) return menu;
+  if (menu.rows.some((row) => row.id === NOTES_ROW.id)) return menu;
+  const copy = menu.rows.findIndex((row) => row.id === "copy");
+  const rows = [...menu.rows];
+  rows.splice(copy < 0 ? rows.length : copy, 0, NOTES_ROW);
+  return { ...menu, rows };
+};
+
 export const folderMenu = (cwd: string, offered: readonly Choice[]): Menu => ({
   kind: "folder",
   title: "Open folder",

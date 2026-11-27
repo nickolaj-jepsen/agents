@@ -93,4 +93,22 @@ describe("a label the frame did not write", () => {
   it("leaves wide characters alone", () => {
     expect(sanitizeLabel("ビルド 完了")).toBe("ビルド 完了");
   });
+
+  it("removes every C0 control, DEL and C1 control, not only the ones a terminal prints", () => {
+    // NULL, bell, backspace, vertical tab, form feed, ESC's working range, DEL, and C1 (0x80-0x9F).
+    for (const char of ["\u0000", "\u0007", "\u0008", "\u000b", "\u000c", "\u001b", "\u007f"])
+      expect(sanitizeLabel(`a${char}b`)).toBe("a b");
+    for (let code = 0x80; code <= 0x9f; code++)
+      expect(sanitizeLabel(`a${String.fromCharCode(code)}b`)).toBe("a b");
+  });
+
+  it("keeps a row from being cleared or retitled by what it carries", () => {
+    // A bare C1 CSI, and an OSC title, reach a terminal without an ESC in front of them.
+    expect(sanitizeLabel("a\u009b2Jb")).toBe("a 2Jb");
+    expect(sanitizeLabel("a\u009d0;title\u0007b")).toBe("a 0;title b");
+  });
+
+  it("keeps printable non-ASCII text, marks and emoji", () => {
+    expect(sanitizeLabel("café · naïve — 日本語 🎉")).toBe("café · naïve — 日本語 🎉");
+  });
 });
