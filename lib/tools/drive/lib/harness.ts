@@ -70,6 +70,13 @@ export interface Harness {
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const checkoutRoot = repoRoot;
+
+/**
+ * A file of `assets/`, the stand-in extensions a scenario loads with `-e` or `--extension`
+ * (`start.args`): the driver's own, so no scenario writes out a path to this checkout.
+ */
+export const assetPath = (name: string) => join(here, "..", "assets", name);
+
 export const modWatchEnv = { CLAUDE_CODE_PLUGIN_DIR_WATCH: "1" };
 
 /**

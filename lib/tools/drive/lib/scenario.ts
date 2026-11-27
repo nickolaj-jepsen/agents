@@ -5,6 +5,7 @@
  *
  * A file `<harness>.scenarios.ts` in a package's e2e folder (`lib/packages.ts`) default-exports `scenarios({...})`.
  */
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { HarnessName, StartOptions } from "./harness.ts";
@@ -199,6 +200,26 @@ export const slashCommand = (name: string, about: string): Step => ({
 });
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Waits for a file of the run to hold `line` (`s` gives the session's paths), else fails with what
+ * it holds: what a stand-in program or extension wrote, such as a launched app or the actions a
+ * session's plugins registered.
+ */
+export const logged = (file: string, line: (s: Session) => string): Step => ({
+  run: async (s) => {
+    const path = join(s.runDir, file);
+    const want = line(s);
+    const deadline = Date.now() + 5000;
+    for (;;) {
+      const text = existsSync(path) ? readFileSync(path, "utf8") : "";
+      if (text.split("\n").includes(want)) return;
+      if (Date.now() > deadline)
+        throw new Error(`${file} has no line "${want}"; it holds:\n${text}`);
+      await new Promise((r) => setTimeout(r, 100));
+    }
+  },
+});
 
 /** Claude's `● <mod>: hooks module did not load: …` and the lines it wraps onto, if shown. */
 export function modLoadError(text: string): string | undefined {

@@ -33,7 +33,7 @@ When `.agents/store` is already a real folder, because something wrote there bef
 
 Opening uses the apps of the `open` plugin and your `~/.config/agents/open.json`: a note goes to the first installed app that takes a file (VS Code, then Zed, by default), an HTML note to the first that takes a link. There is no editing, deleting or searching: hand the note to your editor for that.
 
-In pi `/notes` is a sidebar on the right; drag its left edge to resize it. In Claude Code the pane has the keyboard after `/notes`, a click in it or `ctrl+x tab`. Desktop and VS Code show the same list as a pane, each row with **Read**, or **Open** for an HTML note, and the reader with **Back** and **Open**.
+In pi `/notes` is a sidebar on the right; drag its left edge to resize it. It is the only owner of the notes experience: a plugin that draws a control for it in pi's frame invokes `/notes` instead of registering its own, so a click and a typed command open the same sidebar. In Claude Code the pane has the keyboard after `/notes`, a click in it or `ctrl+x tab`. Desktop and VS Code show the same list as a pane, each row with **Read**, or **Open** for an HTML note, and the reader with **Back** and **Open**.
 
 ## After a turn
 

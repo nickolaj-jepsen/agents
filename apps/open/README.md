@@ -22,6 +22,7 @@ The menu is a sheet over the transcript that stands on the prompt's top rule. Th
 - The menu shows its own messages under the rows: why a row can't run, that no app takes a link, and what's wrong with `open.json`. After a press closes the menu, the transcript says what happened, such as `Copied the branch name` or `Couldn't start …`.
 - Copy uses pi's clipboard, the same one `/copy` uses.
 - Apps start detached from pi, so closing pi leaves them open.
+- The commands are the only owners of these actions: a plugin that draws a control for them in pi's frame invokes `/open` and `/git` instead of registering its own, so a click and a typed command open the same menu, and a draft in the prompt is left as it was. See [`@agents/actions`](../../lib/shared/actions/README.md).
 - In RPC mode, where pi draws no terminal UI, the command shows the menu as a numbered list of what each row would open or copy and doesn't run anything.
 
 ## Apps

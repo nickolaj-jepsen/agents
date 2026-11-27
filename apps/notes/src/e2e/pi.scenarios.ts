@@ -1,5 +1,6 @@
+import { assetPath } from "@agents/drive/lib/harness.ts";
 import { findText, region, type Region } from "@agents/drive/lib/screen.ts";
-import { scenarios } from "@agents/drive/lib/scenario.ts";
+import { logged, scenarios } from "@agents/drive/lib/scenario.ts";
 import {
   APPS,
   checkout,
@@ -15,6 +16,18 @@ import {
 } from "./fixture.ts";
 
 const open = [{ type: "/notes" }, { press: "Enter" }];
+
+/** A half-written prompt: what a control beside it must leave where it found it. */
+const DRAFT = "Summarise the retry work";
+
+/**
+ * A frame with no command of its own (the extracted chrome, stood in for by the driver's
+ * `invoke-action`): `alt+c` invokes the canonical /notes, as a click on the frame will.
+ */
+const invoked = {
+  args: ["-e", assetPath("invoke-action.ts")],
+  env: { INVOKED_ACTION: "notes", INVOKED_LOG: "{run}/invoked.log" },
+};
 
 /**
  * The sidebar: from its divider to the right of the screen, and from its caption rule, which
@@ -171,6 +184,30 @@ export default scenarios({
       // The note was written moments ago: its age and the rule after it, which keep one width.
       mask: [{ pattern: /(?<=── )(?:now|\d+m) ─+/g, with: "<age>" }],
       steps: [{ click: "Note written" }, { wait: "Back ↵" }],
+    },
+    invoked: {
+      about:
+        "a frame control invokes /notes over a draft in the prompt: the canonical sidebar, and the store it lists",
+      setup: withNotes,
+      start: invoked,
+      steps: [
+        { type: DRAFT },
+        { press: "Alt+c" },
+        { wait: "retry-after.md" },
+        logged("invoked.log", () => "open=0 git=0 notes=1"),
+      ],
+    },
+    "invoked-closed": {
+      about:
+        "Escape closes the invoked sidebar and the draft it opened beside is whole, ready for more",
+      from: "invoked",
+      region: region.full,
+      steps: [
+        { press: "Escape" },
+        { wait: "Close ×", gone: true },
+        { type: " for the release notes" },
+        { wait: `${DRAFT} for the release notes` },
+      ],
     },
   },
 });

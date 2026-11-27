@@ -1,7 +1,8 @@
-import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { realpathSync } from "node:fs";
 import { join } from "node:path";
+import { assetPath } from "@agents/drive/lib/harness.ts";
 import { region } from "@agents/drive/lib/screen.ts";
-import { scenarios, type Step } from "@agents/drive/lib/scenario.ts";
+import { logged, scenarios, type Step } from "@agents/drive/lib/scenario.ts";
 import type { Session } from "@agents/drive/lib/session.ts";
 import {
   BRANCH,
@@ -36,22 +37,6 @@ const machine = (gh: "pr" | "none", bin: Record<string, string> = {}, hide: stri
   };
 };
 
-/** Waits for a file of the run to hold `line` (`s` gives the session's paths), else fails with what it holds. */
-const logged = (file: string, line: (s: Session) => string): Step => ({
-  run: async (s) => {
-    const path = join(s.runDir, file);
-    const want = line(s);
-    const deadline = Date.now() + 5000;
-    for (;;) {
-      const text = existsSync(path) ? readFileSync(path, "utf8") : "";
-      if (text.split("\n").includes(want)) return;
-      if (Date.now() > deadline)
-        throw new Error(`${file} has no line "${want}"; it holds:\n${text}`);
-      await new Promise((r) => setTimeout(r, 100));
-    }
-  },
-});
-
 /** The folder pi runs in, as the app is handed it. */
 const cwd = (s: Session) => realpathSync(s.cwd);
 
@@ -67,6 +52,23 @@ const wheel = (down: boolean, x: number, y: number, times = 1): Step => ({
 
 /** The menu is gone, the prompt in front again. */
 const closed = (title: string): Step => ({ wait: new RegExp(`╭─ ${title}`), gone: true });
+
+/** A half-written prompt: what a control beside it must leave where it found it. */
+const DRAFT = "Summarise the retry work";
+
+/**
+ * A session with a frame that has no command of its own (the extracted chrome, stood in for by
+ * the driver's `invoke-action`): `alt+c` invokes the canonical action, as a click on the frame
+ * will, and `invoked.log` says how many plugins registered each one.
+ */
+const invoked = (action: "open" | "git") => {
+  const base = machine("pr");
+  return {
+    ...base,
+    args: ["-e", assetPath("invoke-action.ts")],
+    env: { ...base.env, INVOKED_ACTION: action, INVOKED_LOG: "{run}/invoked.log" },
+  };
+};
 
 export default scenarios({
   plugin: "open",
@@ -240,6 +242,43 @@ export default scenarios({
         settled,
         { press: "Enter" },
         { wait: "Couldn't start" },
+      ],
+    },
+    invoked: {
+      about:
+        "a frame control invokes /open over a draft in the prompt: the canonical sheet, its rows and the apps this machine has",
+      setup: checkout,
+      start: invoked("open"),
+      steps: [
+        { type: DRAFT },
+        { press: "Alt+c" },
+        { wait: "Sublime Merge" },
+        { wait: "not installed" },
+        logged("invoked.log", () => "open=1 git=1 notes=0"),
+      ],
+    },
+    "invoked-closed": {
+      about:
+        "Escape closes the invoked sheet and the draft it opened over is whole, ready for more",
+      from: "invoked",
+      region: region.full,
+      steps: [
+        { press: "Escape" },
+        closed("Open folder"),
+        { type: " for the release notes" },
+        { wait: `${DRAFT} for the release notes` },
+      ],
+    },
+    "invoked-git": {
+      about:
+        "a frame control invokes /git over a draft in the prompt: the same git sheet a command opens",
+      setup: checkout,
+      start: invoked("git"),
+      steps: [
+        { type: DRAFT },
+        { press: "Alt+c" },
+        { wait: "Open pull request" },
+        logged("invoked.log", () => "open=1 git=1 notes=0"),
       ],
     },
   },

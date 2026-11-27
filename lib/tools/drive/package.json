@@ -12,6 +12,7 @@
     "commander": "catalog:"
   },
   "devDependencies": {
+    "@agents/actions": "workspace:*",
     "@earendil-works/pi-ai": "catalog:",
     "@earendil-works/pi-coding-agent": "catalog:",
     "@microsoft/tui-test": "catalog:",
