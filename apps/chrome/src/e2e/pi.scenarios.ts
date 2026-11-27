@@ -160,6 +160,25 @@ const absent = (what: Pattern, why: string): Step => ({
 });
 
 /**
+ * Throws when any cell of the screen holds a C0, DEL or C1 control: a label the frame did not
+ * write must not reach a terminal as anything but text, on the wide row or the squeezed one.
+ */
+const noControls: Step = {
+  run: async (s: Session) => {
+    const grid = await s.term.grid();
+    const row = grid.findIndex((cells) =>
+      cells.some((cell) => /[\u0000-\u001f\u007f-\u009f]/.test(cell.char)),
+    );
+    if (row >= 0)
+      throw new Error(
+        `a control character reached the screen on row ${row}: ${String(
+          gridLines(grid)[row],
+        ).trim()}`,
+      );
+  },
+};
+
+/**
  * The apps a press may start, stubbed so a scenario never opens a real editor or browser: each
  * writes its own name and arguments to `launched.log` beside the run's `bin`.
  */
@@ -901,6 +920,25 @@ export default scenarios({
       setup: reverting,
       sizes: [[160, 45]],
       steps: [...name, { wait: /revert/ }, { sleep: 700 }],
+    },
+    "unsafe-name": {
+      about:
+        "a catalogue model name carrying a colour and a bell, long enough that 70 columns squeeze it to its short form: the row draws both as plain words",
+      setup: checkout,
+      start: {
+        ...start,
+        env: {
+          FIXTURE_MODEL: JSON.stringify({
+            name: "MiniMax\u009b2J M2 retry worker fixture model with a long tail\u0007",
+          }),
+        },
+        ready: /fixture model/,
+      },
+      sizes: [
+        [70, 24],
+        [160, 45],
+      ],
+      steps: [...name, { wait: BRANCH }, noControls, { sleep: 300 }],
     },
     "model-change": {
       about:

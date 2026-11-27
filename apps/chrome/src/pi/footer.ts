@@ -186,7 +186,11 @@ export const createFooter = (
       model: {
         id: "model",
         text: modelText,
-        ...(model ? { short: nameFor(config, { id: model.id }, modelAlias(model)) } : {}),
+        // The squeezed form is sized to the row, so it is measured in cells: a catalogue name or a
+        // host's own alias carries no control character into it either.
+        ...(model
+          ? { short: sanitizeLabel(nameFor(config, { id: model.id }, modelAlias(model))) }
+          : {}),
         // A provider whose spend the person watches is the one word on the line in alarm colour.
         role: model && config.watched.includes(model.provider) ? "error" : roleFor(config, "model"),
         bold: true,
