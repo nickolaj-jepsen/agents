@@ -118,11 +118,14 @@ const withStandIn = (before: boolean) => ({
 
 /**
  * The context share pi estimates is a property of the prompt, so it moves between machines: the
- * snapshot keeps its cells and loses its digits, as the built-in context meter's is.
+ * snapshot keeps its cells and loses its digits, as the built-in context meter's is. pi animates
+ * its working spinner in the border, so the frame it caught is masked to one glyph, which is the
+ * one cell the spinner takes.
  */
 const contextMask = [
   { pattern: /\d+(?:\.\d+)?%(?= \/ \d+k)/g },
   { pattern: /(?<=ctx )\d+(?:\.\d+)?%/g },
+  { pattern: /[\u2800-\u28ff]/g, with: "•" },
 ];
 
 /**
@@ -613,6 +616,19 @@ export default scenarios({
         { wait: "The frame is drawn by the chrome plugin." },
         { click: /\d+% \/ 200k/ },
         { wait: /Session tree|tree/i },
+      ],
+    },
+    "tree-navigated": {
+      about:
+        "a move through the session tree: pi rewinds the conversation, and the frame comes back with its readings after the move",
+      from: "tree",
+      region: region.full,
+      sizes: [[160, 45]],
+      steps: [
+        { press: "Up" },
+        { press: "Enter" },
+        { wait: /Session Tree/, gone: true },
+        { sleep: 700 },
       ],
     },
     waiting: {
