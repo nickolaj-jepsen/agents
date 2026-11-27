@@ -20,6 +20,20 @@ export type Turn = {
   thinking?: string;
   toolCall?: { name: string; arguments: unknown };
   error?: string;
+  /**
+   * pi's replay provider only: what the reply reports it used, so a plugin that reads cost, cache
+   * or context is checked against a known figure instead of an empty one.
+   */
+  usage?: {
+    input?: number;
+    output?: number;
+    cacheRead?: number;
+    cacheWrite?: number;
+    /** What the reply would be priced at, in dollars. */
+    cost?: number;
+  };
+  /** pi's replay provider only: hold the stream open this long, giving the reply a measured speed. */
+  delayMs?: number;
 };
 
 export type StartOptions = {

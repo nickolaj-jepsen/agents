@@ -3,6 +3,9 @@
  * configuration (`FIXTURE_GIT_ENV` in the driver), so no scenario touches a real repository, hook
  * or notes store.
  */
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { RUN_DIR } from "@agents/drive/lib/setup.ts";
 import type { SetupContext } from "@agents/drive/lib/session.ts";
 
 /** A branch whose name says what the session is doing, in a repository that is not pushed. */
@@ -60,3 +63,65 @@ export const start = {
   turns: [{ text: "The frame is drawn by the chrome plugin." }],
   ready: /Replay \(fixture\)/,
 };
+
+/** The same checkout with its HEAD detached, so the footer has no branch name to show. */
+export const detached = (ctx: SetupContext) => {
+  checkout(ctx);
+  ctx.git("checkout", "-q", "--detach", "HEAD");
+};
+
+/** A changed file that is staged but not committed: the branch's mark is the quieter one. */
+export const staged = (ctx: SetupContext) => {
+  checkout(ctx);
+  ctx.write("README.md", "# orders-api\n\nThe retry honours Retry-After.\n");
+  ctx.git("add", "README.md");
+};
+
+/**
+ * A merge in progress that stopped on a conflict: the footer has an operation to name, a conflict
+ * count, and a branch that is still checked out.
+ */
+export const merging = (ctx: SetupContext) => {
+  checkout(ctx);
+  ctx.git("checkout", "-q", "-b", "feature/retry-policy");
+  ctx.write("README.md", "# orders-api\n\nRetry twice, then give up.\n");
+  ctx.git("commit", "-q", "-am", "Retry twice");
+  ctx.git("checkout", "-q", BRANCH);
+  ctx.write("README.md", "# orders-api\n\nRetry five times, with jitter.\n");
+  ctx.git("commit", "-q", "-am", "Retry with jitter");
+  try {
+    ctx.git("merge", "feature/retry-policy");
+  } catch {
+    // The conflict is the fixture: git exits non-zero and leaves MERGE_HEAD behind.
+  }
+};
+
+/** A branch whose name is wide characters, so the row's measure is cells and not characters. */
+export const WIDE_BRANCH = "功能/重构分支名称很长";
+export const wideBranch = (ctx: SetupContext) => checkout(ctx, WIDE_BRANCH);
+
+/**
+ * `git` and its identity for a scenario where the session itself runs git: the person's global and
+ * system configuration stay out of it, as they do for the fixture's own commits.
+ */
+export const GIT_ENV = {
+  GIT_CONFIG_GLOBAL: "/dev/null",
+  GIT_CONFIG_NOSYSTEM: "1",
+  GIT_AUTHOR_NAME: "e2e",
+  GIT_AUTHOR_EMAIL: "e2e@example.invalid",
+  GIT_COMMITTER_NAME: "e2e",
+  GIT_COMMITTER_EMAIL: "e2e@example.invalid",
+};
+
+/**
+ * A configuration file of the host's own beside the checkout, and the variable that names it: what
+ * a machine's Home Manager would write for the frame. `config` is the JSON text, so a scenario can
+ * hand in one that parses and one that does not.
+ */
+export const withConfig = (config: string) => (ctx: SetupContext) => {
+  checkout(ctx);
+  writeFileSync(join(ctx.runDir, "chrome.json"), config);
+};
+
+/** Where a scenario's `PI_CHROME_CONFIG` points: the run's own folder, never the person's. */
+export const CONFIG_ENV = { PI_CHROME_CONFIG: `${RUN_DIR}/chrome.json` };

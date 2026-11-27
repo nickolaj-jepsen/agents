@@ -1,0 +1,107 @@
+# chrome/pi/tree 160x45 @0,0 (160x45)
+
+ Warning: fd not found. Offline mode enabled, skipping download.
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
+
+ Session name set: Release cleanup
+
+
+ Summarise the retry work
+
+
+ The frame is drawn by the chrome plugin.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   Session Tree
+  ↑/↓ move · ←/→ page · ctrl+←/→ branch · ctrl+x copy · shift+l label · shift+t label time · filters ctrl+d/t/u/l/a · cycle ctrl+o/shift+ctrl+o
+  Type to search:
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+  • [system]
+  • user: Summarise the retry work
+› • assistant: The frame is drawn by the chrome plugin.
+  (3/3)
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  fixture  Replay (fixture)                                                                         ctx ••  •••••  <tmp>                feature/frame-extract
+--- styles
+-
+. 1x63
+. 1x68
+-
+. 2x33
+-
+3x160
+3 4x24 3x135
+3x160
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+5x160
+. 6x14
+7x143
+.x2 7x15 . 8
+5x160
+-
+.x2 9x2 2x8
+.x2 9x8
+ax4 bx11 cx40
+7x7
+-
+5x160
+.x2 2x7 .x2 dx16 .x73 2x6 .x9 2x5 .x15 e 2x22
+--- legend
+1 fg=#cd9a22
+2 fg=#7e888e
+3 bg=#213b49
+4 fg=#dee0e1 bg=#213b49
+5 fg=#5fa8cc
+6 bold
+7 fg=#9da5a9
+8 inverse
+9 fg=#a798d7
+a fg=#a798d7 bg=#213b49
+b fg=#68b78d bg=#213b49 bold
+c bg=#213b49 bold
+d fg=#7e888e bold
+e fg=#68b78d

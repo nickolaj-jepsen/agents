@@ -1,17 +1,18 @@
 # chrome/pi/dirty 70x24 @0,20 (70x4)
-── Release cleanup ───────────────────────────────────────────────────
+── Release cleanup ────────────────────────────  ──  ── •• / 200k ──
 
 ──────────────────────────────────────────────────────────────────────
-  fixture  Replay (fixture)                feature/frame-extract* ?
+  Replay (fixture)    <tmp>                feature/frame-extract* ?
 --- styles
-1x18 . 1x51
-2
+1x18 . 1x28 . 2 1x4 3 1x4 2x9 1x3
+4
 1x70
-.x2 3x7 .x2 4x16 .x15 5 3x22 5 6x2
+.x2 5x16 .x4 2x5 .x15 6 2x22 6 7x2
 --- legend
 1 fg=#6c767b
-2 inverse
-3 fg=#7e888e
-4 fg=#7e888e bold
-5 fg=#ea7f81
-6 fg=#cd9a22
+2 fg=#7e888e
+3 fg=#a798d7 bold
+4 inverse
+5 fg=#7e888e bold
+6 fg=#ea7f81
+7 fg=#cd9a22

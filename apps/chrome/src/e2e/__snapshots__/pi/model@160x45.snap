@@ -14,7 +14,7 @@ tab scope (all/scoped)
 
   Enter to select · Ctrl+S to set as default · Escape/Ctrl+C to cancel
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  fixture  Replay (fixture)                                                                                        <tmp>                feature/frame-extract
+  fixture  Replay (fixture)                                                                                ctx ••  <tmp>                feature/frame-extract
 --- styles
 1x160
 -
@@ -31,7 +31,7 @@ tab scope (all/scoped)
 -
 4x70
 1x160
-.x2 4x7 .x2 7x16 .x88 4x5 .x15 6 4x22
+.x2 4x7 .x2 7x16 .x80 4x6 .x2 4x5 .x15 6 4x22
 --- legend
 1 fg=#5fa8cc
 2 fg=#9da5a9

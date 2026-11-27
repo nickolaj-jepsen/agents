@@ -24,11 +24,38 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { readFileSync } from "node:fs";
 import { fixedToolDuration } from "./fixed-tool-duration.ts";
 
+interface TurnUsage {
+  input?: number;
+  output?: number;
+  cacheRead?: number;
+  cacheWrite?: number;
+  /** What pi would price this reply at, in dollars; a session's cost adds these up. */
+  cost?: number;
+}
+
 interface Turn {
   text?: string;
   thinking?: string;
   toolCall?: { name: string; arguments: unknown };
   error?: string;
+  /** What the reply reports it used, so a plugin that reads cost, context or cache can be checked. */
+  usage?: TurnUsage;
+  /** Milliseconds to hold the stream open, so pi measures a reply long enough to have a speed. */
+  delayMs?: number;
+}
+
+/** The model's own numbers, when a scenario needs one that reasons, prices or has a small window. */
+function modelOverrides(): Partial<Model<Api>> {
+  const raw = process.env.FIXTURE_MODEL;
+  if (!raw) return {};
+  return JSON.parse(raw) as Partial<Model<Api>>;
+}
+
+/** A second, third... model of the same provider, so a scenario can switch between them. */
+function extraModels(): Partial<Model<Api>>[] {
+  const raw = process.env.FIXTURE_MODELS;
+  if (!raw) return [];
+  return JSON.parse(raw) as Partial<Model<Api>>[];
 }
 
 // Pi reloads extensions when the session moves. Keep the replay position for this process.
@@ -121,6 +148,24 @@ function streamFixture(model: Model<Api>): AssistantMessageEventStream {
         stream.push({ type: "toolcall_end", contentIndex: at, toolCall, partial: output });
       }
 
+      if (turn.usage) {
+        const usage = turn.usage;
+        output.usage.input = usage.input ?? 0;
+        output.usage.output = usage.output ?? 0;
+        output.usage.cacheRead = usage.cacheRead ?? 0;
+        output.usage.cacheWrite = usage.cacheWrite ?? 0;
+        output.usage.totalTokens =
+          output.usage.input +
+          output.usage.output +
+          output.usage.cacheRead +
+          output.usage.cacheWrite;
+        output.usage.cost.total = usage.cost ?? 0;
+      }
+
+      // pi measures a reply's duration on the stream it saw, so a hold here is what gives a
+      // finished reply a measurable speed.
+      if (turn.delayMs) await new Promise((resolve) => setTimeout(resolve, turn.delayMs));
+
       output.stopReason = turn.toolCall ? "toolUse" : "stop";
       stream.push({ type: "done", reason: output.stopReason, message: output });
       stream.end();
@@ -151,7 +196,18 @@ export default function (pi: ExtensionAPI) {
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
         contextWindow: 200000,
         maxTokens: 8192,
+        ...modelOverrides(),
       },
+      ...extraModels().map((model) => ({
+        id: "replay",
+        name: "Replay (fixture)",
+        reasoning: false,
+        input: ["text"] as const,
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+        contextWindow: 200000,
+        maxTokens: 8192,
+        ...model,
+      })),
     ],
     streamSimple: streamFixture,
   });

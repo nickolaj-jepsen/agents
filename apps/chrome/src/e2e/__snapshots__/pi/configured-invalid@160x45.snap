@@ -1,0 +1,100 @@
+# chrome/pi/configured-invalid 160x45 @0,0 (160x45)
+
+ Warning: fd not found. Offline mode enabled, skipping download.
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
+
+ Warning: chrome: <tmp>                       colour: unknown setting, ignored
+
+ Warning: chrome: <tmp>                       roles.effort: expected one of text, dim, accent, success, warning, error, code, link, border, thinking
+
+ Session name set: Release cleanup
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+── Release cleanup ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────  ──  ── •• / 200k ──
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  fixture  Replay (fixture)                                                                                        <tmp>                feature/frame-extract
+--- styles
+-
+. 1x63
+. 1x68
+-
+. 1x22 .x22 1x33
+-
+. 1x22 .x22 1x103
+-
+. 2x33
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+3x18 . 3x118 . 2 3x4 4 3x4 2x9 3x3
+5
+3x160
+.x2 2x7 .x2 6x16 .x88 2x5 .x15 7 2x22
+--- legend
+1 fg=#cd9a22
+2 fg=#7e888e
+3 fg=#6c767b
+4 fg=#a798d7 bold
+5 inverse
+6 fg=#7e888e bold
+7 fg=#68b78d

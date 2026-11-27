@@ -9,6 +9,42 @@
 /** `text` on one line, whitespace collapsed. */
 export const oneLine = (text: string) => text.replace(/\s+/g, " ").trim();
 
+// Any CSI (private and colon forms too), then OSC, DCS, PM and APC strings up to BEL or ST.
+const TERMINAL_SEQUENCE = /\x1b\[[0-?]*[ -/]*[@-~]|\x1b[\]P^_][\s\S]*?(?:\x07|\x1b\\)/g;
+
+/**
+ * A label another extension or a repository supplied, as one plain line: terminal sequences gone,
+ * newlines and tabs collapsed, runs of spaces squeezed. It is drawn in the frame, so nothing it
+ * carries may move the cursor or break the row.
+ */
+export const sanitizeLabel = (text: string): string => oneLine(text.replace(TERMINAL_SEQUENCE, ""));
+
+/**
+ * A token count as a person reads it: `840`, `12.5k`, `200k`, `1.5M`. The window and the meters
+ * share it, so two readings on the same row are set the same way.
+ */
+export const formatTokens = (count: number): string => {
+  if (count < 1000) return `${Math.round(count)}`;
+  if (count < 10_000) return `${(count / 1000).toFixed(1)}k`;
+  if (count < 1_000_000) return `${Math.round(count / 1000)}k`;
+  if (count < 10_000_000) {
+    const millions = count / 1_000_000;
+    return `${Number.isInteger(millions) ? millions : millions.toFixed(1)}M`;
+  }
+  return `${Math.round(count / 1_000_000)}M`;
+};
+
+/**
+ * What pi reports the session has cost, as dollars. It is the estimate pi computes from the
+ * model's own prices, not a bill; below a tenth of a cent a rounded figure would read as nothing.
+ */
+export const formatCost = (cost: number): string => {
+  if (cost === 0) return "$0.00";
+  if (cost < 0.001) return "<$0.001";
+  if (cost < 0.01) return `$${cost.toFixed(3)}`;
+  return `$${cost.toFixed(2)}`;
+};
+
 /** A coarse age: minutes, hours up to two days, then days; `fresh` under a minute. */
 export const formatAge = (ms: number, fresh: string) => {
   const minutes = Math.floor(ms / 60_000);

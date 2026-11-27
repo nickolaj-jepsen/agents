@@ -15,6 +15,12 @@ export type ChromeState = {
   tui: Renderer | undefined;
   /** The prompt editor; pi copies its app keybinding handlers onto it, so controls can reuse them. */
   editor: CustomEditor | undefined;
+  /**
+   * Whether the editor drew the frame's top border in this frame. The footer renders after the
+   * editor and clears it: while a dialog holds the editor's slot nothing draws the border, and the
+   * footer has to carry the measurements itself.
+   */
+  borderDrawn: boolean;
   /** Group of the clickable thing under the pointer. */
   hover: string | undefined;
   /** Moves the hover; it lapses on its own because pi never reports the pointer leaving. */
@@ -31,6 +37,7 @@ export const createState = (): ChromeState => {
     live: false,
     tui: undefined,
     editor: undefined,
+    borderDrawn: false,
     hover: undefined,
     setHover: (group) => {
       if (timer) clearTimeout(timer);
