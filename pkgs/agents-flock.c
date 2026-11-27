@@ -18,6 +18,11 @@
  *   exit:   0 released, 75 the wait ran out, 76 stdin closed while waiting, 1 error, 2 usage.
  */
 #define _POSIX_C_SOURCE 200809L
+/* _POSIX_C_SOURCE alone hides every BSD extension in Darwin's headers, flock(2) and LOCK_* with
+ * it; _DARWIN_C_SOURCE puts them back without giving up the POSIX declarations. */
+#ifdef __APPLE__
+#define _DARWIN_C_SOURCE
+#endif
 
 #include <errno.h>
 #include <fcntl.h>
