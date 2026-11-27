@@ -1,0 +1,16 @@
+# chrome/pi/model-hover 70x24 @0,20 (70x4)
+── Release cleanup ───────────────────────────────────────────────────
+
+──────────────────────────────────────────────────────────────────────
+  fixture  Replay (fixture)                   feature/frame-extract
+--- styles
+1x18 . 1x51
+2
+1x70
+.x2 3x7 .x2 4x16 .x18 5 3x22
+--- legend
+1 fg=#6c767b
+2 inverse
+3 fg=#7e888e
+4 fg=#7e888e bold
+5 fg=#68b78d

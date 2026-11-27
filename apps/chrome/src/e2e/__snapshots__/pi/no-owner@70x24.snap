@@ -1,0 +1,57 @@
+# chrome/pi/no-owner 70x24 @0,0 (70x24)
+
+ Warning: fd not found. Offline mode enabled, skipping download.
+ Warning: ripgrep not found. Offline mode enabled, skipping download.
+
+ Session name set: Release cleanup
+
+ Warning: chrome: no /git plugin is installed
+
+
+
+
+
+
+
+
+
+
+
+
+
+── Release cleanup ───────────────────────────────────────────────────
+Summarise the retry work
+──────────────────────────────────────────────────────────────────────
+  fixture  Replay (fixture)                   feature/frame-extract
+--- styles
+-
+. 1x63
+. 1x68
+-
+. 2x33
+-
+. 1x44
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+3x18 . 3x51
+.x24 4
+3x70
+.x2 2x7 .x2 5x16 .x18 6 2x22
+--- legend
+1 fg=#cd9a22
+2 fg=#7e888e
+3 fg=#6c767b
+4 inverse
+5 fg=#7e888e bold
+6 fg=#68b78d

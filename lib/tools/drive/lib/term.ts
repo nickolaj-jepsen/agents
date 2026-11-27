@@ -12,6 +12,7 @@ import { delimiter, join } from "node:path";
 import { promisify } from "node:util";
 import { TuiTest } from "@microsoft/tui-test";
 import { FONT_FAMILIES, fakeFontHome, realHome } from "./fonts.ts";
+import type { Pattern } from "./screen.ts";
 import { fetchedBin } from "./tui-test-release.ts";
 
 const run = promisify(execFile);
@@ -66,6 +67,8 @@ export type LaunchSpec = {
   unset: string[];
   cols: number;
   rows: number;
+  /** What says the agent took input, in place of the harness's own signal. */
+  ready?: Pattern;
 };
 
 export interface Term {

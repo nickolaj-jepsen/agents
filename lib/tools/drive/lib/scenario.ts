@@ -129,6 +129,7 @@ const merge = (a: StartOptions, b: StartOptions = {}): StartOptions => ({
   plugins: b.plugins ?? a.plugins,
   bin: b.bin ?? a.bin,
   hide: b.hide ?? a.hide,
+  ready: b.ready ?? a.ready,
 });
 
 export function resolveScenario(set: ScenarioSet, name: string, seen: string[] = []): Resolved {

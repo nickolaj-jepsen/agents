@@ -128,12 +128,23 @@ export class Session {
   /** Where a demo's `poster` step writes its picture. */
   poster?: { path: string; opts: ImageOptions };
 
-  constructor(term: Term, harness: HarnessName, runDir: string, ownsRun: boolean, project = "cwd") {
+  /** What says the agent took input, when the scenario names it instead of the harness. */
+  private readonly ready: Pattern | undefined;
+
+  constructor(
+    term: Term,
+    harness: HarnessName,
+    runDir: string,
+    ownsRun: boolean,
+    project = "cwd",
+    ready?: Pattern,
+  ) {
     this.term = term;
     this.harness = harness;
     this.runDir = runDir;
     this.cwd = join(runDir, project);
     this.ownsRun = ownsRun;
+    this.ready = ready;
   }
 
   /**
@@ -183,7 +194,7 @@ export class Session {
       stopStub(runDir);
       throw err;
     }
-    const session = new Session(term, o.harness, runDir, ownsRun, o.project);
+    const session = new Session(term, o.harness, runDir, ownsRun, o.project, spec.ready);
     if (o.backend === "lib") track(session);
     try {
       await session.waitReady();
@@ -212,7 +223,7 @@ export class Session {
       if (keys) {
         await this.term.press(...keys);
         await sleep(1000);
-      } else if (h.ready(text)) {
+      } else if (this.ready === undefined ? h.ready(text) : matches(text, this.ready)) {
         // Fullscreen keeps the prompt at the bottom; the classic renderer prints it under the banner.
         const rows = text.split("\n");
         const at = rows.findIndex((r) => r.startsWith("❯"));

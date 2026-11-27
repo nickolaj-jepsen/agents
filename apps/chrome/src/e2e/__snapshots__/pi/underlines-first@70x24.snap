@@ -1,0 +1,17 @@
+# chrome/pi/underlines-first 70x24 @0,20 (70x4)
+── Release cleanup ───────────────────────────────────────────────────
+Please fix teh handler before the release
+──────────────────────────────────────────────────────────────────────
+  fixture  Replay (fixture)                   feature/frame-extract
+--- styles
+1x18 . 1x51
+.x11 2x3 .x27 3
+1x70
+.x2 4x7 .x2 5x16 .x18 6 4x22
+--- legend
+1 fg=#6c767b
+2 fg=#ea7f81 underline=single
+3 inverse
+4 fg=#7e888e
+5 fg=#7e888e bold
+6 fg=#68b78d

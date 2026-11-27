@@ -1,0 +1,54 @@
+/**
+ * Whether the agent is blocked on the user: a dialog is open while a tool call is in flight, as
+ * with a tool's own ask. A dialog opened between runs, such as a menu the person called up, does
+ * not count.
+ */
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+
+type SessionWait = { prompting: boolean; tools: Set<string> };
+
+/**
+ * Registers the handlers that keep the per-session state current; create it before any
+ * `ui_prompt_start` handler that reads `waitingOnUser`.
+ */
+export const createUserWait = (pi: ExtensionAPI) => {
+  const sessions = new Map<string, SessionWait>();
+
+  const state = (ctx: ExtensionContext): SessionWait => {
+    const id = ctx.sessionManager.getSessionId();
+    let wait = sessions.get(id);
+    if (!wait) sessions.set(id, (wait = { prompting: false, tools: new Set() }));
+    return wait;
+  };
+
+  // `tool_execution_start` fires before `tool_call` hooks, so an ask raised from one counts as in
+  // flight.
+  pi.on("tool_execution_start", (event, ctx) => {
+    state(ctx).tools.add(event.toolCallId);
+  });
+  pi.on("tool_execution_end", (event, ctx) => {
+    state(ctx).tools.delete(event.toolCallId);
+  });
+  pi.on("agent_settled", (_event, ctx) => {
+    state(ctx).tools.clear();
+  });
+  pi.on("ui_prompt_start", (_event, ctx) => {
+    state(ctx).prompting = true;
+  });
+  pi.on("ui_prompt_end", (_event, ctx) => {
+    state(ctx).prompting = false;
+  });
+  pi.on("session_shutdown", (_event, ctx) => {
+    sessions.delete(ctx.sessionManager.getSessionId());
+  });
+
+  return {
+    /** True while `ctx`'s session has a dialog open and a tool call in flight. */
+    waitingOnUser(ctx: ExtensionContext): boolean {
+      const wait = sessions.get(ctx.sessionManager.getSessionId());
+      return !!wait?.prompting && wait.tools.size > 0;
+    },
+  };
+};
+
+export type UserWait = ReturnType<typeof createUserWait>;

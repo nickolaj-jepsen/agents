@@ -3,6 +3,7 @@ import { chmodSync, existsSync, mkdirSync, readdirSync, symlinkSync, writeFileSy
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { distOf, repoRoot } from "./packages.ts";
+import type { Pattern } from "./screen.ts";
 import { runEnv, startEnv } from "./setup.ts";
 import type { LaunchSpec } from "./term.ts";
 
@@ -48,6 +49,11 @@ export type StartOptions = {
   env?: Record<string, string>;
   /** Assistant turns to replay, in order, instead of a real model. */
   turns?: Turn[];
+  /**
+   * What says the agent took input, when pi's own footer is not there to say it: a plugin that
+   * replaces the footer removes the context meter `pi.ready` looks for.
+   */
+  ready?: Pattern;
 };
 
 export type Run = {
@@ -373,6 +379,7 @@ export const pi: Harness = {
       cwd: run.cwd,
       env,
       unset: UNSET,
+      ...(start.ready ? { ready: start.ready } : {}),
       ...size,
     };
   },

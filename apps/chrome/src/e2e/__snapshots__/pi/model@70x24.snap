@@ -1,0 +1,42 @@
+# chrome/pi/model 70x24 @0,8 (70x16)
+──────────────────────────────────────────────────────────────────────
+
+Scope: all | scoped
+tab scope (all/scoped)
+
+>
+
+→ ✓ replay (Replay (fixture)) [fixture]
+
+  Model Name: Replay (fixture)
+
+  Model catalogs refreshed.
+
+  Enter to select · Ctrl+S to set as default · Escape/Ctrl+C to cancel
+──────────────────────────────────────────────────────────────────────
+  fixture  Replay (fixture)                   feature/frame-extract
+--- styles
+1x70
+-
+2x13 3x6
+4x3 2x19
+-
+.x2 5
+-
+3x10 2x19 . 2x9
+-
+2x30
+-
+6x27
+-
+4x70
+1x70
+.x2 4x7 .x2 7x16 .x18 6 4x22
+--- legend
+1 fg=#5fa8cc
+2 fg=#9da5a9
+3 fg=#a798d7
+4 fg=#7e888e
+5 inverse
+6 fg=#68b78d
+7 fg=#7e888e bold
