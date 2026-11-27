@@ -304,12 +304,20 @@
     "agents-python#check-types": {
       "command": null
     },
+    "pricerunner#check-types": {
+      "command": null
+    },
     "run-handoff#check-types": {
       "command": null
     },
     "agents-python#check": {
       "command": null,
-      "dependsOn": ["agents-python#lint:py", "agents-python#fmt:check", "run-handoff#test"]
+      "dependsOn": [
+        "agents-python#lint:py",
+        "agents-python#fmt:check",
+        "pricerunner#test",
+        "run-handoff#test"
+      ]
     },
     "agents-python#lint:py": {
       "command": ["uv", "run", "--frozen", "ruff", "check"],

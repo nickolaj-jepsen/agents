@@ -6,6 +6,7 @@ exit code 1. See ../SKILL.md for the workflow and filter syntax.
 """
 
 import argparse
+import datetime as dt
 import json
 import os
 import re
@@ -69,6 +70,89 @@ def product_id(s):
 
 def money(p):
     return float(p["amount"]) if p and p.get("amount") else None
+
+
+def timestamp(s):
+    return dt.datetime.fromisoformat(s.replace("Z", "+00:00")) if s else None
+
+
+def offer_price(o, now):
+    """Return (price now, regular price or None, campaign end or None) for one offer.
+
+    `price` is the shop's regular price. A running `campaignPrice` (a shop's sale, e.g.
+    Black Friday) replaces it, as the product page shows.
+    """
+    regular = money(o.get("price"))
+    campaign = o.get("campaignPrice") or {}
+    when = campaign.get("salePriceEffectiveDate") or {}
+    start, end = timestamp(when.get("start")), timestamp(when.get("end"))
+    sale = money(campaign.get("price"))
+    if sale is not None and (not start or start <= now) and (not end or now <= end):
+        return sale, regular, when.get("end")
+    return regular, None, None
+
+
+def slim_offer(o, merchants, now):
+    m = merchants.get(o["merchantId"], {})
+    price, regular, ends = offer_price(o, now)
+    ship = money(o.get("shippingCost"))
+    labels = o.get("labels") or {}
+    condition = next(
+        (
+            a.get("value")
+            for a in labels.get("attributeLabels") or []
+            if a.get("filterId") == "af_ITEM_CONDITION"
+        ),
+        None,
+    )
+    return {
+        k: v
+        for k, v in {
+            "merchant": m.get("name"),
+            "merchantId": o["merchantId"],
+            "price": price,
+            "regularPrice": regular,
+            "campaignEnds": ends,
+            "shipping": ship,
+            "total": round(price + ship, 2)
+            if price is not None and ship is not None
+            else None,
+            "stock": o.get("stockStatus"),
+            "condition": condition,
+            "delivery": o.get("deliveryTime"),
+            "country": m.get("internationalCountryCode"),
+            "merchantRating": (m.get("rating") or {}).get("averageRating"),
+            "offerName": o.get("name"),
+            "labels": labels.get("propertyLabels") or None,
+            "url": o.get("url"),
+        }.items()
+        if v not in (None, "", [])
+    }
+
+
+def fetch_offers(
+    pid, international=False, used=False, all_stock=False, sort="total", now=None
+):
+    """Return (offersSummary, offers sorted cheapest first by `sort`)."""
+    params = {
+        "af_ORIGIN": None if international else "NATIONAL",
+        "af_ITEM_CONDITION": "NEW,UNKNOWN" if not used else None,
+        "af_STOCK_STATUS": None
+        if all_stock
+        else "IN_STOCK,BACKORDER,PREORDER,SPECIAL_ORDER,COLLECT_IN_STORE",
+        "sortByPreset": "PRICE_WITH_SHIPPING" if sort == "total" else "PRICE",
+        "languageCode": "da",
+    }
+    d = get(
+        "product-detail-edge-rest",
+        f"/public/product-detail/v0/offers/{CC}/{pid}",
+        params,
+    )
+    now = now or dt.datetime.now(dt.timezone.utc)
+    merchants = d.get("merchants") or {}
+    offers = [slim_offer(o, merchants, now) for o in d.get("offers", [])]
+    offers.sort(key=lambda o: (o.get(sort) is None, o.get(sort) or 0))
+    return d.get("offersSummary"), offers
 
 
 def slim_product(p):
@@ -241,7 +325,7 @@ def cmd_filters(a):
 def cmd_facets(a):
     params = {"ids": ",".join(a.ids), **filters(a.filter)}
     d = get(
-        "search-edge-rest", f"/public/search/category/facets/{CC}/{a.category}/", params
+        "search-edge-rest", f"/public/search/category/facets/{CC}/{a.category}", params
     )
     res = []
     for fid, v in d["facets"].items():
@@ -308,48 +392,8 @@ def cmd_list(a):
 
 def cmd_offers(a):
     _, pid = product_id(a.product)
-    params = {
-        "af_ORIGIN": None if a.international else "NATIONAL",
-        "af_ITEM_CONDITION": "NEW,UNKNOWN" if not a.used else None,
-        "af_STOCK_STATUS": None
-        if a.all_stock
-        else "IN_STOCK,BACKORDER,PREORDER,SPECIAL_ORDER,COLLECT_IN_STORE",
-        "sortByPreset": "PRICE_WITH_SHIPPING" if a.sort == "total" else "PRICE",
-        "languageCode": "da",
-    }
-    d = get(
-        "product-detail-edge-rest",
-        f"/public/product-detail/v0/offers/{CC}/{pid}",
-        params,
-    )
-    merchants = d.get("merchants") or {}
-    offers = []
-    for o in d.get("offers", [])[: a.limit]:
-        m = merchants.get(o["merchantId"], {})
-        price, ship = money(o.get("price")), money(o.get("shippingCost"))
-        offers.append(
-            {
-                k: v
-                for k, v in {
-                    "merchant": m.get("name"),
-                    "merchantId": o["merchantId"],
-                    "price": price,
-                    "shipping": ship,
-                    "total": round(price + ship, 2)
-                    if price is not None and ship is not None
-                    else None,
-                    "stock": o.get("stockStatus"),
-                    "delivery": o.get("deliveryTime"),
-                    "country": m.get("internationalCountryCode"),
-                    "merchantRating": (m.get("rating") or {}).get("averageRating"),
-                    "offerName": o.get("name"),
-                    "labels": (o.get("labels") or {}).get("propertyLabels") or None,
-                    "url": o.get("url"),
-                }.items()
-                if v not in (None, "", [])
-            }
-        )
-    out({"productId": pid, "summary": d.get("offersSummary"), "offers": offers})
+    summary, offers = fetch_offers(pid, a.international, a.used, a.all_stock, a.sort)
+    out({"productId": pid, "summary": summary, "offers": offers[: a.limit]})
 
 
 def cmd_history(a):
@@ -407,6 +451,8 @@ def cmd_info(a):
         {"productIds": pid},
     )
     info = (d.get("productInfoSet") or [{}])[0]
+    summary, offers = fetch_offers(pid)
+    cheapest = offers[0] if offers else None
     r = (
         get("review-edge-rest", f"/public/v2/products/reviews/overview/{CC}/{pid}/")
         or {}
@@ -415,11 +461,22 @@ def cmd_info(a):
         {
             "name": info.get("productName"),
             "url": BASE + info["productUrl"] if info.get("productUrl") else None,
-            "lowest": {
-                k: {"price": v["price"], "merchantId": v["merchantId"]}
-                for k, v in (info.get("offerPrices") or {}).items()
-                if v
+            "cheapest": cheapest
+            and {
+                k: cheapest.get(k)
+                for k in (
+                    "merchant",
+                    "price",
+                    "regularPrice",
+                    "shipping",
+                    "total",
+                    "stock",
+                )
+                if k in cheapest
             },
+            "internationalFrom": money(
+                ((summary or {}).get("internationalOffer") or {}).get("minPrice")
+            ),
             "reviews": {
                 k: r.get(k)
                 for k in (
@@ -474,7 +531,7 @@ def cmd_compare(a):
     ids = ",".join(product_id(p)[1] for p in a.products)
     d = get("similar-edge-rest", f"/public/search/compare/v2/{CC}", {"productIds": ids})
     names = {p["id"]: p["name"] for p in d.get("products", [])}
-    specs = {}
+    specs = []
     for c in d.get("categories", []):
         for g in c.get("attributeGroups", []):
             for at in g.get("attributes", []):
@@ -484,7 +541,9 @@ def cmd_compare(a):
                     for pid, v in at["values"].items()
                 }
                 if a.all or len(set(vals.values())) > 1 or len(vals) < len(names):
-                    specs[f"{g.get('name')} / {at['name']}"] = vals
+                    specs.append(
+                        {"group": g.get("name"), "spec": at["name"], "values": vals}
+                    )
     out({"products": [slim_product(p) for p in d.get("products", [])], "specs": specs})
 
 
@@ -611,9 +670,7 @@ def main():
     s.add_argument("-p", "--points", type=int, default=30, help="max series points")
     s.set_defaults(fn=cmd_history)
 
-    s = sub.add_parser(
-        "info", help="lowest national/international price + review scores"
-    )
+    s = sub.add_parser("info", help="cheapest Danish in-stock offer + review scores")
     s.add_argument("product")
     s.set_defaults(fn=cmd_info)
 
